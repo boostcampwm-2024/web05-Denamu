@@ -11,7 +11,7 @@ interface PostCardContentProps {
 
 export const PostCardContent = ({ post }: PostCardContentProps) => {
   const authorInitial = post.author?.charAt(0)?.toUpperCase() || "?";
-  const data = `https://api.denamu.site/files/${post.blogPlatform}-icon.svg`;
+  const data = `https://denamu.site/files/${post.blogPlatform}-icon.svg`;
   return (
     <CardContent className="p-0">
       <div className="relative -mt-6 ml-4 mb-3">

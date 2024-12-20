@@ -10,7 +10,7 @@ export function createMailContent(
   <div style="font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', '맑은 고딕', sans-serif; margin: 0; padding: 1px; background-color: #f4f4f4;">
     <div style="max-width: 600px; margin: 20px auto; background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
       <div style="text-align: center; padding: 20px 0; border-bottom: 2px solid #f0f0f0;">
-        <img src="https://api.denamu.site/files/Denamu_Logo_KOR.png" alt="Denamu Logo" width="244" height="120">
+        <img src="https://denamu.site/files/Denamu_Logo_KOR.png" alt="Denamu Logo" width="244" height="120">
       </div>
       <div style="padding: 20px 0;">
         ${

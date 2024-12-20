@@ -13,7 +13,7 @@ export const useTrendingPosts = () => {
   });
 
   useEffect(() => {
-    const eventSource = new EventSource("https://api.denamu.site/api/feed/trend/sse");
+    const eventSource = new EventSource("https://denamu.site/api/feed/trend/sse");
 
     eventSource.onmessage = (event) => {
       try {

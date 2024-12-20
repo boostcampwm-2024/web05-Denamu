@@ -1,0 +1,32 @@
+name: Client Deployment
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "client/**"
+  workflow_dispatch: # 수동 실행을 허용하는 이벤트
+
+jobs:
+  deployment:
+    runs-on: ubuntu-latest
+    steps:
+      # public 서버로 ssh 접속
+      - name: ssh connection
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.PORT }}
+          script: |
+            export NVM_DIR=~/.nvm
+            source ~/.nvm/nvm.sh
+
+            cd /var/web05-Denamu
+            git pull origin main
+            cd client/
+
+            npm ci
+            npm run build
