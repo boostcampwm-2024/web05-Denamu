@@ -13,6 +13,7 @@ export interface Post {
   likes?: number;
   blogPlatform: string;
   summary: string;
+  isNew?: boolean;
 }
 
 export interface InfiniteScrollResponse<T> {
@@ -36,4 +37,9 @@ export interface PostCommentType {
     userName: string;
     profileImage: string | null;
   };
+}
+
+export interface UpdatePostsApiResponse {
+  message: string;
+  data: Post[];
 }

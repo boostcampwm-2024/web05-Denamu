@@ -1,7 +1,7 @@
 import { BLOG } from "@/constants/endpoints";
 
 import { axiosInstance } from "@/api/instance";
-import { InfiniteScrollResponse, LatestPostsApiResponse, Post, PostDetailType } from "@/types/post";
+import { InfiniteScrollResponse, LatestPostsApiResponse, Post, PostDetailType, UpdatePostsApiResponse } from "@/types/post";
 
 export const posts = {
   latest: async (params: { limit: number; lastId: number; tags: string[] }): Promise<InfiniteScrollResponse<Post>> => {
@@ -21,5 +21,12 @@ export const posts = {
   detail: async (postId: number): Promise<PostDetailType> => {
     const response = await axiosInstance.get<PostDetailType>(`${BLOG.POST}/${postId}`);
     return response.data;
+  },
+  update: async (): Promise<UpdatePostsApiResponse> => {
+    const response = await axiosInstance.get<UpdatePostsApiResponse>("/api/feed/recent");
+    return {
+      message: response.data.message,
+      data: response.data.data,
+    };
   },
 };
