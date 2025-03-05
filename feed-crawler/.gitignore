@@ -2,3 +2,4 @@
 .env
 /dist
 feed-crawler.log
+/test/coverage

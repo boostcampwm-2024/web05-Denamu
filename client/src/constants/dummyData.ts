@@ -1,44 +1,49 @@
 import { ChatType } from "@/types/chat";
-import { Post } from "@/types/post";
+import { PostDetailType } from "@/types/post";
 
-export const TRENDING_POSTS: Post[] = [
-  {
-    id: 1,
-    createdAt: new Date().toISOString(),
-    title: "Next.js 14로 풀스택 웹 개발하기",
-    viewCount: 0,
-    path: "/",
-    author: "김개발",
-    thumbnail: "https://picsum.photos/640/480?random=101",
-  },
-  {
-    id: 2,
-    createdAt: new Date().toISOString(),
-    title: "실무에서 바로 쓰는 React 성능 최적화 팁",
-    viewCount: 0,
-    path: "/",
-    author: "박프론트",
-    thumbnail: "https://picsum.photos/640/480?random=102",
-  },
-  {
-    id: 3,
-    createdAt: new Date().toISOString(),
-    title: "TypeScript 5.0 새로운 기능 톺아보기",
-    viewCount: 0,
-    path: "/",
-    author: "이타스",
-    thumbnail: "https://picsum.photos/640/480?random=103",
-  },
-  {
-    id: 7,
-    createdAt: new Date().toISOString(),
-    title: "GraphQL과 Apollo로 데이터 관리하기",
-    viewCount: 0,
-    path: "/",
-    author: "윤백엔드",
-    thumbnail: "https://picsum.photos/640/480?random=104",
-  },
-];
+// export const TRENDING_POSTS: Post[] = [
+//   {
+//     id: 1,
+//     createdAt: new Date().toISOString(),
+//     title: "Next.js 14로 풀스택 웹 개발하기",
+//     viewCount: 0,
+//     path: "/",
+//     author: "김개발",
+//     thumbnail: "https://picsum.photos/640/480?random=101",
+//     blogPlatform: "etc",
+//   },
+//   {
+//     id: 2,
+//     createdAt: new Date().toISOString(),
+//     title: "실무에서 바로 쓰는 React 성능 최적화 팁",
+//     viewCount: 0,
+//     path: "/",
+//     author: "박프론트",
+//     thumbnail: "https://picsum.photos/640/480?random=102",
+//     blogPlatform: "etc",
+//   },
+//   {
+//     id: 3,
+//     createdAt: new Date().toISOString(),
+//     title: "TypeScript 5.0 새로운 기능 톺아보기",
+//     viewCount: 0,
+//     path: "/",
+//     author: "이타스",
+//     thumbnail: "https://picsum.photos/640/480?random=103",
+//     blogPlatform: "etc",
+//   },
+
+//   {
+//     id: 7,
+//     createdAt: new Date().toISOString(),
+//     title: "GraphQL과 Apollo로 데이터 관리하기",
+//     viewCount: 0,
+//     path: "/",
+//     author: "윤백엔드",
+//     thumbnail: "https://picsum.photos/640/480?random=104",
+//     blogPlatform: "etc",
+//   },
+// ];
 
 export const CHAT_ITEM: ChatType[] = [
   {
@@ -126,3 +131,23 @@ export const CHAT_ITEM: ChatType[] = [
     message: "다들 화이팅입니다!",
   },
 ];
+
+export const FULL_KEYWORD_ITEM = ["JavaScript", "React", "Node.js", "TypeScript", "Terraform"];
+export const ONE_KEYWORD_ITEM = ["MYSQL"];
+
+export const POST_MODAL_DATA: PostDetailType = {
+  message: "피드 상세 데이터 전송 완료",
+  data: {
+    id: 999,
+    author: "공룡똥 블로그",
+    blogPlatform: "Velog",
+    title: "Test Title",
+    path: "https://naver.com",
+    createdAt: "2025-01-16T01:00:00.000Z",
+    thumbnail: "https://velog.velcdn.com/images/seok3765/post/ae79f20a-b64c-4b6d-b246-6e501f9c868a/image.png",
+    viewCount: 999999,
+    summary:
+      "# React의 이벤트 시스템 심층 분석\nReact의 합성 이벤트(Synthetic Event) 시스템에 대한 상세한 기술 문서입니다. 이 글에서는 React가 어떻게 브라우저 간의 이벤트 처리 차이를 해결하고, 성능을 최적화하는지 다룹니다.\n\n주요 내용:\n- 브라우저 호환성을 위한 합성 이벤트 시스템 구현 원리\n- 이벤트 위임을 통한 성능 최적화 방식\n- React 17에서 달라진 이벤트 처리 메커니즘\n- 실제 코드 예제와 함께 보는 이벤트 핸들링 패턴\n\n특히 마우스 휠 이벤트나 클릭 이벤트 처리에서 브라우저별 차이를 어떻게 극복하는지, 그리고 1000개의 리스트 아이템을 어떻게 효율적으로 처리하는지 등 실무에서 마주치는 구체적인 사례들을 통해 React의 이벤트 시스템을 깊이 있게 이해할 수 있습니다.",
+    tag: ["JavaScript", "React", "Frontend"],
+  },
+};

@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { WinstonLoggerService } from '../logger/logger.service';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
 import { createMailContent } from './mail_content';
-import { Rss } from '../../rss/rss.entity';
+import { Rss } from '../../rss/entity/rss.entity';
 
 @Injectable()
 export class EmailService {

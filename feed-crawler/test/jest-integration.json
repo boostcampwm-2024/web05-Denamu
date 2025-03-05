@@ -1,0 +1,13 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "testRegex": "test/.*\\.(e2e-spec|spec).ts$",
+  "transform": {
+    "^.+\\.(t|j)s$": "ts-jest"
+  },
+  "testEnvironment": "node",
+  "rootDir": "..",
+  "coverageDirectory": "test/coverage",
+  "globalSetup": "./test/setup/jest.global-setup.ts",
+  "setupFilesAfterEnv": ["./test/setup/truncate-tables.setup.ts"],
+  "testTimeout": 10000
+}

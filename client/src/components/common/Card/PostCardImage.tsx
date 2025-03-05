@@ -10,7 +10,7 @@ interface PostCardImageProps {
 export const PostCardImage = ({ thumbnail, alt }: PostCardImageProps) => {
   return (
     <div
-      className="h-[120px] relative bg-muted flex items-center justify-center overflow-hidden rounded-t-xl"
+      className="h-full md:h-[120px] relative bg-muted flex items-center justify-center overflow-hidden rounded md:rounded-t-xl"
       data-testid="image-container"
     >
       {thumbnail ? (

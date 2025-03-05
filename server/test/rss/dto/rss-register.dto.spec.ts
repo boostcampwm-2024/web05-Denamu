@@ -1,11 +1,11 @@
 import { validate } from 'class-validator';
-import { RssRegisterDto } from '../../../src/rss/dto/rss-register.dto';
+import { RssRegisterRequestDto } from '../../../src/rss/dto/request/rss-register.dto';
 
 describe('RssRegisterDto Test', () => {
-  let dto: RssRegisterDto;
+  let dto: RssRegisterRequestDto;
 
   beforeEach(() => {
-    dto = new RssRegisterDto({
+    dto = new RssRegisterRequestDto({
       blog: 'test',
       name: 'test',
       email: 'test@test.com',

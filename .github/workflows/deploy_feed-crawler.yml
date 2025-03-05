@@ -1,0 +1,50 @@
+name: Feed-Crawler-Deployment
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "feed-crawler/**"
+  workflow_dispatch: # 수동 실행을 허용하는 이벤트
+
+jobs:
+  deployment:
+    runs-on: ubuntu-latest
+    steps:
+      # public 서버로 ssh 접속
+      - name: ssh connection
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.CLOUD_PUBLIC_INSTANCE_HOST }}
+          username: ${{ secrets.CLOUD_PUBLIC_INSTANCE_USERNAME }}
+          key: ${{ secrets.CLOUD_PUBLIC_INSTANCE_SSH_KEY }}
+          port: ${{ secrets.CLOUD_PUBLIC_INSTANCE_PORT }}
+          script: |
+            export NVM_DIR=~/.nvm
+            source ~/.nvm/nvm.sh
+
+            cd /var/web05-Denamu
+            git pull origin main
+            cd /var/web05-Denamu/feed-crawler/
+
+            echo "DB_PORT=${{ secrets.FEED_CRAWLER_DB_PORT }}" > .env
+            echo "DB_HOST=${{ secrets.FEED_CRAWLER_DB_HOST }}" >> .env
+            echo "DB_NAME=${{ secrets.FEED_CRAWLER_DB_NAME }}" >> .env
+            echo "DB_USER=${{ secrets.FEED_CRAWLER_DB_USER }}" >> .env
+            echo "DB_PASS=${{ secrets.FEED_CRAWLER_DB_PASSWORD }}" >> .env
+            echo "TIME_INTERVAL=${{ vars.FEED_CRAWLER_TIME_INTERVAL }}" >> .env
+            echo "TEST_TIME_INTERVAL=${{ vars.FEED_CRAWLER_TEST_TIME_INTERVAL }}" >> .env
+            echo "REDIS_HOST=${{secrets.REDIS_HOST }}" >> .env
+            echo "REDIS_PORT=${{secrets.REDIS_PORT}}" >> .env
+            echo "REDIS_USERNAME=${{secrets.REDIS_USERNAME}}" >> .env
+            echo "REDIS_PASSWORD=${{secrets.REDIS_PASSWORD}}" >> .env
+            echo "AI_API_KEY=${{secrets.AI_API_KEY}}" >> .env
+            echo "AI_RATE_LIMIT_COUNT=${{ vars.AI_RATE_LIMIT_COUNT }}" >> .env
+
+            npm ci
+            npm run build
+            cd /var/web05-Denamu
+            
+            pm2 delete all
+            pm2 start ecosystem.config.js

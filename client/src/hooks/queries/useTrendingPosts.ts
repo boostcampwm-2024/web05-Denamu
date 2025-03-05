@@ -1,5 +1,8 @@
 import { useEffect } from "react";
 
+import { BASE_URL } from "@/constants/endpoints";
+import { BLOG } from "@/constants/endpoints";
+
 import { TrendingPostsApiResponse } from "@/types/post";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -13,7 +16,7 @@ export const useTrendingPosts = () => {
   });
 
   useEffect(() => {
-    const eventSource = new EventSource("https://denamu.site/api/feed/trend/sse");
+    const eventSource = new EventSource(`${BASE_URL}${BLOG.Trend}`);
 
     eventSource.onmessage = (event) => {
       try {

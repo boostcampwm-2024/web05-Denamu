@@ -16,20 +16,19 @@ jobs:
       - name: ssh connection
         uses: appleboy/ssh-action@v1.1.0
         with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.SSH_KEY }}
-          port: ${{ secrets.PORT }}
+          host: ${{ secrets.CLOUD_PUBLIC_INSTANCE_HOST }}
+          username: ${{ secrets.CLOUD_PUBLIC_INSTANCE_USERNAME }}
+          key: ${{ secrets.CLOUD_PUBLIC_INSTANCE_SSH_KEY }}
+          port: ${{ secrets.CLOUD_PUBLIC_INSTANCE_PORT }}
           script: |
             export NVM_DIR=~/.nvm
             source ~/.nvm/nvm.sh
 
             cd /var/web05-Denamu
             git pull origin main
-            cd server/
+            cd /var/web05-Denamu/server
 
             mkdir -p configs
-
             echo "PORT=${{ secrets.PRODUCT_PORT }}" > configs/.env.db.production
             echo "DB_TYPE=mysql" >> configs/.env.db.production
             echo "DB_DATABASE=${{ secrets.PRODUCT_DB_DATABASE }}" >> configs/.env.db.production
@@ -43,29 +42,11 @@ jobs:
             echo "REDIS_PASSWORD=${{secrets.REDIS_PASSWORD}}" >> configs/.env.db.production
             echo "EMAIL_USER=${{secrets.EMAIL_USER}}" >> configs/.env.db.production
             echo "EMAIL_PASSWORD=${{secrets.EMAIL_PASSWORD}}" >> configs/.env.db.production
+            echo "AI_API_KEY=${{secrets.AI_API_KEY}}" >> configs/.env.db.production
 
             npm ci
             npm run build
-
-            cd ..
-            cd feed-crawler/
-
-            echo "PORT=${{ secrets.RSS_NOTIFIER_PORT }}" > .env
-            echo "DB_HOST=${{ secrets.RSS_NOTIFIER_DB_HOST }}" >> .env
-            echo "DB_NAME=${{ secrets.RSS_NOTIFIER_DB_DATABASE }}" >> .env
-            echo "DB_USER=${{ secrets.RSS_NOTIFIER_DB_USER }}" >> .env
-            echo "DB_PASS=${{ secrets.RSS_NOTIFIER_DB_PASSWORD }}" >> .env
-            echo "DB_TABLE=${{ secrets.RSS_NOTIFIER_DB_TABLE }}" >> .env
-            echo "TIME_INTERVAL=${{ vars.RSS_NOTIFIER_TIME_INTERVAL }}" >> .env
-            echo "REDIS_HOST=${{secrets.REDIS_HOST }}" >> .env
-            echo "REDIS_PORT=${{secrets.REDIS_PORT}}" >> .env
-            echo "REDIS_USERNAME=${{secrets.REDIS_USERNAME}}" >> .env
-            echo "REDIS_PASSWORD=${{secrets.REDIS_PASSWORD}}" >> .env
-
-            npm ci
-            tsc
-
-            cd ..
-
+            
+            cd /var/web05-Denamu
             pm2 delete all
             pm2 start ecosystem.config.js

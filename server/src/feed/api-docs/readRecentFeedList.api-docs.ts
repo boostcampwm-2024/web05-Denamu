@@ -30,6 +30,12 @@ export function ApiReadRecentFeedList() {
                 thumbnail: { type: 'string' },
                 viewCount: { type: 'number' },
                 isNew: { type: 'boolean' },
+                tag: {
+                  type: 'array',
+                  items: {
+                    type: 'string',
+                  },
+                },
               },
             },
           },
@@ -48,6 +54,7 @@ export function ApiReadRecentFeedList() {
             thumbnail: 'https://test1.com/test.png',
             viewCount: 0,
             isNew: true,
+            tag: ['tag1', 'tag2'],
           },
         ],
       },

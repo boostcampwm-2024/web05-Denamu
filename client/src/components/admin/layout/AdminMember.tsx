@@ -23,7 +23,9 @@ export default function AdminMember() {
   };
 
   const onError = (error: AxiosError) => {
-    alert(`관리자 등록 실패: ${error.response?.data || error.message}`);
+    const errorMessage =
+      typeof error.response?.data === "string" ? error.response.data : error.response?.data || error.message;
+    alert(`관리자 등록 실패: ${JSON.stringify(errorMessage)}`);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>, name: string) => {

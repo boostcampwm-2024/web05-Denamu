@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+!.env.local
+!Dockerfile.local
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -23,7 +26,7 @@ dist-ssr
 *.sln
 *.sw?
 .env
-
+.scannerwork
 # vite test coverage
 /coverage
 

@@ -7,5 +7,9 @@
     "^.+\\.(t|j)s$": "ts-jest"
   },
   "coverageDirectory": "test/coverage",
-  "setupFilesAfterEnv": ["./test/jest.setup.ts"]
+  "setupFilesAfterEnv": ["./test/jest.setup.ts"],
+  "globalSetup": "./test/integration-test-global-setup.ts",
+  "globalTeardown": "./test/integration-test-global-teardown.ts",
+  "maxWorkers": 1,
+  "testTimeout": 20000
 }

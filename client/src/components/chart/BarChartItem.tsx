@@ -20,7 +20,7 @@ export default function BarChartItem({ data, title, description, color }: BarTyp
 
   useEffect(() => {
     const resizeObserver = new ResizeObserver((entries) => {
-      for (let entry of entries) {
+      for (const entry of entries) {
         setComponentWidth(entry.contentRect.width);
       }
     });
@@ -49,7 +49,7 @@ export default function BarChartItem({ data, title, description, color }: BarTyp
   } satisfies ChartConfig;
 
   return (
-    <Card ref={cardRef} className="w-[50%]">
+    <Card ref={cardRef} className="w-full md:w-[50%]">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>

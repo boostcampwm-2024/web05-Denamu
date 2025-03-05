@@ -1,0 +1,39 @@
+name: FEED-CRAWLER Test
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. 현재 PR 브랜치로 체크아웃 하기
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      # 2. Node.js 환경 설정
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      # 3. 의존성 설치
+      - name: Install dependencies
+        working-directory: ./feed-crawler
+        run: npm install
+
+      # 4. 통합 테스트 실행
+      - name: Run Integration Test
+        working-directory: ./feed-crawler
+        run: npm run test
+        env:
+          TEST_TIME_INTERVAL: ${{ vars.FEED_CRAWLER_TEST_TIME_INTERVAL }}
+
+      # TODO: 테스트 커버리지, 혹은 테스트 로그 커멘트 작성 로직 추가하기

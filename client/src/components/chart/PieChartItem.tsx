@@ -43,7 +43,7 @@ export default function PieChartItem({ data, title }: BarType) {
             <ChartTooltip content={<ChartTooltipContent hideLabel />} />
             <Pie data={data} dataKey="count" nameKey="platform">
               {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={chartConfig[entry.platform]?.color || "#ccc"} />
+                <Cell key={`cell-${index}`} fill={chartConfig[entry.platform]?.color ?? "#ccc"} />
               ))}
               <LabelList dataKey="platform" className="fill-background" stroke="none" fontSize={12} />
             </Pie>

@@ -1,24 +1,26 @@
-import * as mysql from "mysql2/promise";
-import { CONNECTION_LIMIT } from "./constant";
-import { PoolConnection } from "mysql2/promise";
-import logger from "./logger";
-import * as dotenv from "dotenv";
+import * as dotenv from 'dotenv';
+import * as mysql from 'mysql2/promise';
+import { CONNECTION_LIMIT } from './constant';
+import { PoolConnection } from 'mysql2/promise';
+import { DatabaseConnection } from '../types/database-connection';
+import logger from './logger';
 
 dotenv.config({
-  path: process.env.NODE_ENV === "production" ? "feed-crawler/.env" : ".env",
+  path: process.env.NODE_ENV === 'production' ? 'feed-crawler/.env' : '.env',
 });
 
-class MySQLConnection {
+export class MySQLConnection implements DatabaseConnection {
   private pool: mysql.Pool;
   private nameTag: string;
   constructor() {
     this.pool = this.createPool();
-    this.nameTag = "[MySQL]";
+    this.nameTag = '[MySQL]';
   }
 
   private createPool() {
     return mysql.createPool({
       host: process.env.DB_HOST,
+      port: parseInt(process.env.DB_PORT),
       user: process.env.DB_USER,
       password: process.env.DB_PASS,
       database: process.env.DB_NAME,
@@ -36,7 +38,7 @@ class MySQLConnection {
       logger.error(
         `${this.nameTag} 쿼리 ${query} 실행 중 오류 발생
           오류 메시지: ${error.message}
-          스택 트레이스: ${error.stack}`
+          스택 트레이스: ${error.stack}`,
       );
     } finally {
       if (connection) {
@@ -46,7 +48,7 @@ class MySQLConnection {
           logger.error(
             `${this.nameTag} connection release 중 오류 발생
             오류 메시지: ${error.message}
-            스택 트레이스: ${error.stack}`
+            스택 트레이스: ${error.stack}`,
           );
         }
       }
@@ -57,5 +59,3 @@ class MySQLConnection {
     await this.pool.end();
   }
 }
-
-export const mysqlConnection = new MySQLConnection();

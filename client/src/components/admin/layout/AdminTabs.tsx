@@ -4,9 +4,9 @@ import { AxiosError } from "axios";
 import { TriangleAlert } from "lucide-react";
 
 import { RejectModal } from "@/components/admin/rss/RejectModal";
-import AcceptedTab from "@/components/admin/taps/AcceptedTap";
-import PendingTab from "@/components/admin/taps/PendingTap";
-import RejectedTab from "@/components/admin/taps/RejectedTap";
+import AcceptedTab from "@/components/admin/tabs/AcceptedTab";
+import PendingTab from "@/components/admin/tabs/PendingTab";
+import RejectedTab from "@/components/admin/tabs/RejectedTab";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,8 +16,7 @@ import { useFetchRss, useFetchAccept, useFetchReject } from "@/hooks/queries/use
 import { useAdminAccept, useAdminReject } from "@/hooks/queries/useRssActions";
 
 import { useAdminSearchStore } from "@/store/useSearchStore";
-import { AdminRssData } from "@/types/rss";
-import { AdminRequest } from "@/types/rss";
+import { AdminRssData, AdminRequest } from "@/types/rss";
 
 type SelectedBlogType = {
   blogName: string;
@@ -74,7 +73,11 @@ export const AdminTabs = ({ setLogout }: { setLogout: () => void }) => {
   const { mutate: rejectMutate } = useAdminReject(onSuccess, onError);
 
   const handleActions = (data: AdminRequest, actions: "accept" | "reject") => {
-    actions === "accept" ? acceptMutate(data) : rejectMutate(data);
+    if (actions === "accept") {
+      acceptMutate(data);
+    } else {
+      rejectMutate(data);
+    }
   };
 
   const handleSelectedBlog = ({ blogName, blogId }: SelectedBlogType) => {

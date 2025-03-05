@@ -21,6 +21,10 @@ loadtest/FE_Report
 loadtest/BE_Report.html
 loadtest/FE_Report.html
 
+### HTTPS ###
+private.key
+certificate.crt
+
 ### VisualStudioCode ###
 .vscode/*
 !.vscode/settings.json

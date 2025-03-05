@@ -1,3 +1,5 @@
+import { POST_MODAL_DATA } from "@/constants/dummyData";
+
 import { TOTAL_POSTS, PAGE_SIZE_POSTS } from "@/api/mocks/data/posts";
 import { mock } from "@/api/mocks/mockSetup";
 
@@ -21,5 +23,13 @@ export const setupPostHandlers = () => {
         },
       },
     ];
+  });
+};
+
+export const mockDetailPost = (feedId: number) => {
+  POST_MODAL_DATA.data.id = feedId;
+  console.log(feedId);
+  mock.onGet(`/feed/${feedId}`).reply(() => {
+    return [200, POST_MODAL_DATA];
   });
 };

@@ -1,7 +1,6 @@
 import { usePostViewIncrement } from "@/hooks/queries/usePostViewIncrement";
 
-import { pipe } from "@/utils/pipe";
-
+// import { pipe } from "@/utils/pipe";
 import { Post } from "@/types/post";
 
 interface PostWithState {
@@ -24,6 +23,9 @@ export const usePostCardActions = (post: Post) => {
   const incrementView = ({ post, isWindowOpened }: PostWithState): PostWithState => {
     if (isWindowOpened) {
       mutate(undefined, {
+        onSuccess: () => {
+          console.log("조회수 증가 성공");
+        },
         onError: (error) => {
           console.error("조회수 증가 실패", error);
         },
@@ -32,10 +34,10 @@ export const usePostCardActions = (post: Post) => {
     return { post, isWindowOpened };
   };
 
-  const handlePostClick = () => {
-    if (!post.path) return;
-    pipe(openPost, incrementView)({ post });
-  };
+  // const handlePostClick = () => {
+  //   if (!post.path) return;
+  //   pipe(openPost, incrementView)({ post });
+  // };
 
-  return { handlePostClick };
+  return { openPost, incrementView };
 };

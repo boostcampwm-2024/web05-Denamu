@@ -34,14 +34,14 @@ export default function FilterButton() {
     <CommandGroup heading="필터">
       <div className="flex flex-col gap-1">
         {filterOptions.map(({ label, filter, icon }) => (
-          <div
+          <button
             key={filter}
             className={getItemClassName(currentFilter === filter)}
             onClick={() => handleFilterClick(filter)}
           >
             {icon}
             <span>{label}</span>
-          </div>
+          </button>
         ))}
       </div>
     </CommandGroup>

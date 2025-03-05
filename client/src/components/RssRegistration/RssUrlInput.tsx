@@ -7,7 +7,6 @@ interface RssUrlInputProps {
   platform: PlatformType;
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  placeholder?: string;
 }
 
 export const RssUrlInput = ({ platform, value, onChange }: RssUrlInputProps) => {
