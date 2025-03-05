@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import FormInput from "@/components/RssRegistration/FormInput";
+import { FormInput } from "@/components/RssRegistration/FormInput";
 import { PlatformSelector } from "@/components/RssRegistration/PlatformSelector.tsx";
 import { RssUrlInput } from "@/components/RssRegistration/RssUrlInput";
 import Alert from "@/components/common/Alert";
@@ -20,7 +20,7 @@ import { useRegisterRss } from "@/hooks/queries/useRegisterRss.ts";
 import { AlertType } from "@/types/alert.ts";
 import { RegisterRss } from "@/types/rss.ts";
 
-export default function RssRegistrationModal({ onClose, rssOpen }: { onClose: () => void; rssOpen: boolean }) {
+export function RssRegistrationModal({ onClose, rssOpen }: { onClose: () => void; rssOpen: boolean }) {
   const [alertOpen, setAlertOpen] = useState<AlertType>({ title: "", content: "", isOpen: false });
 
   const { platform, values, handlers, formState } = useRssRegistrationForm();
@@ -75,6 +75,7 @@ export default function RssRegistrationModal({ onClose, rssOpen }: { onClose: ()
           <div className="space-y-4">
             <FormInput
               id="blog"
+              type="text"
               label="블로그명"
               onChange={handlers.handleBloggerName}
               placeholder="블로그명을 입력하세요"
@@ -82,6 +83,7 @@ export default function RssRegistrationModal({ onClose, rssOpen }: { onClose: ()
             />
             <FormInput
               id="name"
+              type="text"
               label="신청자 이름"
               onChange={handlers.handleUserName}
               placeholder="이름을 입력하세요"
@@ -89,6 +91,7 @@ export default function RssRegistrationModal({ onClose, rssOpen }: { onClose: ()
             />
             <FormInput
               id="email"
+              type="email"
               label="이메일"
               onChange={handlers.handleEmail}
               placeholder="example@denamu.com"

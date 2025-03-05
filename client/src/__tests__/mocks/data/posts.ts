@@ -7,8 +7,10 @@ export const createMockPost = (override = {}) => ({
   author: "작성자",
   thumbnail: "test-thumbnail.jpg",
   authorImageUrl: "author-image.jpg",
-  tags: ["React", "Testing"],
+  tag: ["React", "Testing"],
   likes: 50,
+  blogPlatform: "etc",
+  summary: "# test",
   ...override,
 });
 

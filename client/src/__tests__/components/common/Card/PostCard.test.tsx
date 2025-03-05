@@ -33,7 +33,8 @@ describe("PostCard", () => {
   it("카드 클릭 시 handlePostClick이 호출되는지 확인", () => {
     const mockHandlePostClick = vi.fn();
     vi.mocked(PostCardActions.usePostCardActions).mockReturnValue({
-      handlePostClick: mockHandlePostClick,
+      incrementView: mockHandlePostClick,
+      openPost: vi.fn(),
     });
 
     render(<PostCard post={createLongTitlePost()} />);
@@ -60,6 +61,10 @@ describe("PostCard", () => {
       viewCount: 100,
       path: "/test-post",
       author: "작성자",
+      thumbnail: "",
+      blogPlatform: "etc",
+      tag: ["JavaScript", "React"],
+      summary: "# test",
     };
 
     render(<PostCard post={minimalPost} />);

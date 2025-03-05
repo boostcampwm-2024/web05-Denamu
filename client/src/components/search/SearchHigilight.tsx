@@ -1,3 +1,5 @@
+import { useMemo } from "react";
+
 interface SearchHighlightProps {
   text: string;
   highlight: string;
@@ -8,8 +10,11 @@ function escapeRegExp(string: string): string {
 }
 
 export default function SearchHighlight({ text, highlight }: SearchHighlightProps) {
-  const escapedHighlight = escapeRegExp(highlight);
-  const parts = text.split(new RegExp(`(${escapedHighlight})`, "gi"));
+  const parts = useMemo(() => {
+    if (!highlight) return [text];
+    const escapedHighlight = escapeRegExp(highlight);
+    return text.split(new RegExp(`(${escapedHighlight})`, "gi"));
+  }, [text, highlight]);
 
   return (
     <>

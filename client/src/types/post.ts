@@ -5,11 +5,12 @@ export interface Post {
   viewCount: number;
   path: string;
   author: string;
-  thumbnail?: string;
+  thumbnail: string;
   authorImageUrl?: string;
-  tags?: string[];
+  tag: string[];
   likes?: number;
-  blogPlatform?: string;
+  blogPlatform: string;
+  summary: string;
 }
 
 export interface LatestPostsApiResponse {
@@ -30,4 +31,9 @@ export interface InfiniteScrollResponse<T> {
   result: T[];
   hasMore: boolean;
   lastId: number | null;
+}
+
+export interface PostDetailType {
+  message: string;
+  data: Post;
 }

@@ -13,7 +13,7 @@ import { AlertType } from "@/types/alert";
 export default function Alert({ alertOpen, onClose }: { alertOpen: AlertType; onClose: () => void }) {
   return (
     <AlertDialog open={alertOpen.isOpen}>
-      <AlertDialogContent>
+      <AlertDialogContent data-testid="alert-dialog">
         <AlertDialogHeader>
           <AlertDialogTitle>{alertOpen.title}</AlertDialogTitle>
           <AlertDialogDescription>{alertOpen.content}</AlertDialogDescription>

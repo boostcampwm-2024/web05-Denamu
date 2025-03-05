@@ -1,4 +1,4 @@
-import { Rss } from '../../rss/rss.entity';
+import { Rss } from '../../rss/entity/rss.entity';
 
 export function createMailContent(
   rss: Rss,

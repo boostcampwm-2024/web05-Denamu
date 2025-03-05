@@ -19,7 +19,7 @@ export function useInfiniteScrollQuery<T extends Identifiable>({
     queryFn: ({ pageParam = 0 }) =>
       fetchFn({
         limit: 12,
-        lastId: pageParam as number,
+        lastId: pageParam,
       }),
     getNextPageParam: (lastPage) => {
       if (!lastPage.hasMore) return undefined;

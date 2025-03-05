@@ -36,9 +36,9 @@ export default function LatestSection() {
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   return (
-    <section className="flex flex-col p-4 min-h-[300px]">
+    <section className="flex flex-col md:p-4 min-h-[300px]">
       <SectionHeader icon={Rss} text="최신 포스트" description="최근에 작성된 포스트" iconColor="text-orange-500" />
-      <div className="flex-1 mt-4 p-4 rounded-lg">
+      <div className="flex-1 mt-4 md:p-6 md:pt-0 rounded-lg">
         {isLoading ? (
           <PostGridSkeleton count={8} />
         ) : (

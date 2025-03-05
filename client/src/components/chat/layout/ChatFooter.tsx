@@ -6,11 +6,10 @@ import { SheetFooter } from "@/components/ui/sheet";
 
 import { useKeyboardShortcut } from "@/hooks/common/useKeyboardShortcut";
 
-import { useChatValueStroe } from "@/store/useChatStore";
-import { useChatStore } from "@/store/useChatStore";
+import { useChatValueStore, useChatStore } from "@/store/useChatStore";
 
 export default function ChatFooter() {
-  const { message, setMessage } = useChatValueStroe();
+  const { message, setMessage } = useChatValueStore();
   const { sendMessage } = useChatStore();
 
   const handleSendMessage = () => {
@@ -23,7 +22,7 @@ export default function ChatFooter() {
   useKeyboardShortcut("Enter", () => handleSendMessage(), false);
 
   return (
-    <SheetFooter className="flex items-center p-2">
+    <SheetFooter className="flex flex-row items-center p-2">
       <Input
         placeholder="메시지를 입력하세요"
         value={message}

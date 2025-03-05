@@ -1,13 +1,23 @@
-import { Admin } from '../../src/admin/admin.entity';
+import { Admin } from '../../src/admin/entity/admin.entity';
+import * as bcrypt from 'bcrypt';
 
 export class AdminFixture {
   static readonly GENERAL_ADMIN = {
     loginId: 'test1234',
-    password: '$2b$10$TGsf41ADKaziH5NgaDwec.JLue60QHk8DIZrFnJ9S6dZObN5humAe', // test1234!
+    password: 'test1234!',
   };
-  static createAdminFixture(overwrites: Partial<Admin> = {}): Admin {
+  static async createAdminCryptFixture(overwrites: Partial<Admin> = {}) {
     const admin = new Admin();
     Object.assign(admin, this.GENERAL_ADMIN);
-    return Object.assign(admin, overwrites);
+    Object.assign(admin, overwrites);
+    admin.password = await bcrypt.hash(admin.password, 1);
+    return admin;
+  }
+
+  static createAdminFixture(overwrites: Partial<Admin> = {}) {
+    const admin = new Admin();
+    Object.assign(admin, this.GENERAL_ADMIN);
+    Object.assign(admin, overwrites);
+    return admin;
   }
 }

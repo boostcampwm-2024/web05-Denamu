@@ -3,20 +3,12 @@ import {
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
-  ApiParam,
 } from '@nestjs/swagger';
 
 export function ApiUpdateFeedViewCount() {
   return applyDecorators(
     ApiOperation({
       summary: `피드 조회수 업데이트 API`,
-    }),
-    ApiParam({
-      name: 'feedId',
-      required: true,
-      type: Number,
-      description: '클릭한 피드의 id',
-      example: 1,
     }),
     ApiOkResponse({
       description: 'Ok',

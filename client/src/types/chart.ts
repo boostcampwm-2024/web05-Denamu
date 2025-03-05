@@ -15,3 +15,8 @@ export type ChartPlatforms = {
   message: string;
   data: ChartPlatform[];
 };
+export type ChartsType = {
+  chartAll: ChartResponse;
+  chartToday: ChartResponse;
+  chartPlatform: ChartPlatforms;
+};

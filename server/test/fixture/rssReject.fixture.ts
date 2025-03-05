@@ -1,4 +1,4 @@
-import { RssReject } from '../../src/rss/rss.entity';
+import { RssReject } from '../../src/rss/entity/rss.entity';
 
 export class RssRejectFixture {
   static createRssRejectFixture(

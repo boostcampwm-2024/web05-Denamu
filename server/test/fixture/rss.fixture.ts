@@ -1,4 +1,4 @@
-import { Rss } from '../../src/rss/rss.entity';
+import { Rss } from '../../src/rss/entity/rss.entity';
 
 export class RssFixture {
   static createRssFixture(

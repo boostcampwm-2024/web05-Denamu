@@ -18,8 +18,8 @@ export default function SearchResults() {
     page,
     pageSize: RESULT_PER_PAGE,
   });
-  const totalItems = data?.data.totalCount || 0;
-  const totalPages = data?.data.totalPages || 0;
+  const totalItems = data?.data.totalCount ?? 0;
+  const totalPages = data?.data.totalPages ?? 0;
   const results = data?.data.result || [];
   const renderContent = {
     //검색 전

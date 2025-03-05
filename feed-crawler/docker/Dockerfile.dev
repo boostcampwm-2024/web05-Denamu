@@ -1,0 +1,21 @@
+FROM node:22-alpine AS builder
+
+WORKDIR /var/web05-Denamu/feed-crawler
+
+COPY ../package*.json ./
+
+RUN npm ci
+
+FROM node:22-alpine
+
+WORKDIR /var/web05-Denamu/feed-crawler
+
+COPY .. .
+
+COPY --from=builder /var/web05-Denamu/feed-crawler/node_modules ./node_modules
+
+RUN touch /var/log/feed-crawler.log
+
+RUN echo "*/30 * * * * cd /var/web05-Denamu/feed-crawler && npm run start:dev >> /var/log/feed-crawler.log 2>&1" >> /etc/crontabs/root
+
+CMD ["sh", "-c", "crond && tail -f /var/log/feed-crawler.log"]

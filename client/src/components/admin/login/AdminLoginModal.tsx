@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import FormInput from "@/components/RssRegistration/FormInput";
+import { FormInput } from "@/components/RssRegistration/FormInput";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,9 +29,8 @@ export default function AdminLogin({ setLogin }: { setLogin: () => void }) {
     setLogin();
   };
 
-  const onError = (error: any) => {
+  const onError = () => {
     setLoginError(true);
-    console.log(error);
   };
   const { mutate } = useAdminAuth(onSuccess, onError);
 

@@ -1,17 +1,16 @@
-import { RegisterAdminDto } from '../../../src/admin/dto/register-admin.dto';
+import { RegisterAdminRequestDto } from '../../../src/admin/dto/request/register-admin.dto';
 import { validate } from 'class-validator';
+import { AdminFixture } from '../../fixture/admin.fixture';
 
 describe('LoginAdminDto Test', () => {
-  let registerAdminDto: RegisterAdminDto;
-
-  beforeEach(() => {
-    registerAdminDto = new RegisterAdminDto();
-  });
-
   it('ID의 길이가 6 이상, 255 이하가 아니라면 유효성 검사에 실패한다.', async () => {
     //given
-    registerAdminDto.loginId = 'test';
-    registerAdminDto.password = 'testAdminPassword!';
+    const registerAdminDto = new RegisterAdminRequestDto(
+      AdminFixture.createAdminFixture({
+        loginId: 'test',
+        password: 'testAdminPassword!',
+      }),
+    );
 
     //when
     const errors = await validate(registerAdminDto);
@@ -23,8 +22,12 @@ describe('LoginAdminDto Test', () => {
 
   it('패스워드의 길이가 6 이상, 60 이하가 아니라면 유효성 검사에 실패한다.', async () => {
     //given
-    registerAdminDto.loginId = 'testId';
-    registerAdminDto.password = 'test';
+    const registerAdminDto = new RegisterAdminRequestDto(
+      AdminFixture.createAdminFixture({
+        loginId: 'testId',
+        password: 'test',
+      }),
+    );
 
     //when
     const errors = await validate(registerAdminDto);
@@ -36,8 +39,12 @@ describe('LoginAdminDto Test', () => {
 
   it('패스워드에 특수문자가 하나 이상 없다면 유효성 검사에 실패한다.', async () => {
     //given
-    registerAdminDto.loginId = 'testAdminId';
-    registerAdminDto.password = 'testAdminPassword';
+    const registerAdminDto = new RegisterAdminRequestDto(
+      AdminFixture.createAdminFixture({
+        loginId: 'testAdminId',
+        password: 'testAdminPassword',
+      }),
+    );
 
     //when
     const errors = await validate(registerAdminDto);
@@ -49,8 +56,12 @@ describe('LoginAdminDto Test', () => {
 
   it('ID에 null이 입력되면 유효성 검사에 실패한다.', async () => {
     //given
-    registerAdminDto.loginId = null;
-    registerAdminDto.password = 'testAdminPassword!';
+    const registerAdminDto = new RegisterAdminRequestDto(
+      AdminFixture.createAdminFixture({
+        loginId: null,
+        password: 'testAdminPassword!',
+      }),
+    );
 
     //when
     const errors = await validate(registerAdminDto);
@@ -62,8 +73,12 @@ describe('LoginAdminDto Test', () => {
 
   it('패스워드에 null이 입력되면 유효성 검사에 실패한다.', async () => {
     //given
-    registerAdminDto.loginId = 'testAdminId';
-    registerAdminDto.password = null;
+    const registerAdminDto = new RegisterAdminRequestDto(
+      AdminFixture.createAdminFixture({
+        loginId: 'testAdminId',
+        password: null,
+      }),
+    );
 
     //when
     const errors = await validate(registerAdminDto);

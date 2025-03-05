@@ -29,6 +29,12 @@ export function ApiReadTrendFeedList() {
                 },
                 thumbnail: { type: 'string' },
                 viewCount: { type: 'number' },
+                tag: {
+                  type: 'array',
+                  items: {
+                    type: 'string',
+                  },
+                },
               },
             },
           },
@@ -49,6 +55,7 @@ export function ApiReadTrendFeedList() {
                 createdAt: '2024-11-24T01:00:00.000Z',
                 thumbnail: 'https://test1.com/test.png',
                 viewCount: 0,
+                tag: ['tag1', 'tag2'],
               },
               {
                 id: 2,
@@ -59,6 +66,7 @@ export function ApiReadTrendFeedList() {
                 createdAt: '2024-11-24T02:00:00.000Z',
                 thumbnail: 'https://test2.com/test.png',
                 viewCount: 0,
+                tag: ['tag1', 'tag2'],
               },
             ],
           },
@@ -77,6 +85,7 @@ export function ApiReadTrendFeedList() {
                 createdAt: '2024-11-24T03:00:00.000Z',
                 thumbnail: 'https://test3.com/test.png',
                 viewCount: 0,
+                tag: ['tag1', 'tag2'],
               },
               {
                 id: 4,
@@ -87,6 +96,7 @@ export function ApiReadTrendFeedList() {
                 createdAt: '2024-11-24T04:00:00.000Z',
                 thumbnail: 'https://test4.com/test.png',
                 viewCount: 0,
+                tag: ['tag1', 'tag2'],
               },
             ],
           },
