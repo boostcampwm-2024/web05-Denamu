@@ -28,21 +28,21 @@ jobs:
             git pull origin main
             cd /var/web05-Denamu/server
 
-            mkdir -p configs
-            echo "PORT=${{ secrets.PRODUCT_PORT }}" > configs/.env.prod
-            echo "DB_TYPE=mysql" >> configs/.env.prod
-            echo "DB_DATABASE=${{ secrets.PRODUCT_DB_DATABASE }}" >> configs/.env.prod
-            echo "DB_HOST=${{ secrets.PRODUCT_DB_HOST }}" >> configs/.env.prod
-            echo "DB_PORT=${{ secrets.PRODUCT_DB_PORT }}" >> configs/.env.prod
-            echo "DB_USERNAME=${{ secrets.PRODUCT_DB_USERNAME }}" >> configs/.env.prod
-            echo "DB_PASSWORD=${{ secrets.PRODUCT_DB_PASSWORD }}" >> configs/.env.prod
-            echo "REDIS_HOST=${{secrets.REDIS_HOST }}" >> configs/.env.prod
-            echo "REDIS_PORT=${{secrets.REDIS_PORT}}" >> configs/.env.prod
-            echo "REDIS_USERNAME=${{secrets.REDIS_USERNAME}}" >> configs/.env.prod
-            echo "REDIS_PASSWORD=${{secrets.REDIS_PASSWORD}}" >> configs/.env.prod
-            echo "EMAIL_USER=${{secrets.EMAIL_USER}}" >> configs/.env.prod
-            echo "EMAIL_PASSWORD=${{secrets.EMAIL_PASSWORD}}" >> configs/.env.prod
-            echo "AI_API_KEY=${{secrets.AI_API_KEY}}" >> configs/.env.prod
+            mkdir -p env
+            echo "PORT=${{ secrets.PRODUCT_PORT }}" > env/.env.prod
+            echo "DB_TYPE=mysql" >> env/.env.prod
+            echo "DB_DATABASE=${{ secrets.PRODUCT_DB_DATABASE }}" >> env/.env.prod
+            echo "DB_HOST=${{ secrets.PRODUCT_DB_HOST }}" >> env/.env.prod
+            echo "DB_PORT=${{ secrets.PRODUCT_DB_PORT }}" >> env/.env.prod
+            echo "DB_USERNAME=${{ secrets.PRODUCT_DB_USERNAME }}" >> env/.env.prod
+            echo "DB_PASSWORD=${{ secrets.PRODUCT_DB_PASSWORD }}" >> env/.env.prod
+            echo "REDIS_HOST=${{secrets.REDIS_HOST }}" >> env/.env.prod
+            echo "REDIS_PORT=${{secrets.REDIS_PORT}}" >> env/.env.prod
+            echo "REDIS_USERNAME=${{secrets.REDIS_USERNAME}}" >> env/.env.prod
+            echo "REDIS_PASSWORD=${{secrets.REDIS_PASSWORD}}" >> env/.env.prod
+            echo "EMAIL_USER=${{secrets.EMAIL_USER}}" >> env/.env.prod
+            echo "EMAIL_PASSWORD=${{secrets.EMAIL_PASSWORD}}" >> env/.env.prod
+            echo "AI_API_KEY=${{secrets.AI_API_KEY}}" >> env/.env.prod
 
             npm ci
             npm run build
