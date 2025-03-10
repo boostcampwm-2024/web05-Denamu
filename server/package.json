@@ -12,14 +12,14 @@
     "start:dev": "nest start --watch",
     "start:debug": "cross-env NODE_ENV=debug nest start --debug --watch",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "test:unit": "jest --config test/jest-unit.json",
-    "test:unit:cov": "jest --config test/jest-unit.json --coverage",
-    "test:e2e": "jest --config test/jest-e2e.json",
+    "test:unit": "cross-env NODE_ENV=test jest --config test/jest-unit.json",
+    "test:unit:cov": "cross-env NODE_ENV=test jest --config test/jest-unit.json --coverage",
+    "test:e2e": "cross-env NODE_ENV=test jest --config test/jest-e2e.json",
     "test:e2e:debug": "cross-env NODE_ENV=debug jest --config test/jest-e2e.json",
-    "test:e2e:cov": "jest --config test/jest-e2e.json --coverage",
-    "test": "jest --config test/jest-integration.json",
-    "test:watch": "jest --config test/jest-integration.json --watch",
-    "test:cov": "jest --config test/jest-integration.json --coverage"
+    "test:e2e:cov": "cross-env NODE_ENV=test jest --config test/jest-e2e.json --coverage",
+    "test": "cross-env NODE_ENV=test jest --config test/jest-integration.json",
+    "test:watch": "cross-env NODE_ENV=test jest --config test/jest-integration.json --watch",
+    "test:cov": "cross-env NODE_ENV=test jest --config test/jest-integration.json --coverage"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.3",

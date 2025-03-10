@@ -28,9 +28,8 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.6.3"
   },
-  "rootDir": "src",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc --project tsconfig.build.json",
     "start": "node dist/src/main.js",
     "start:dev": "ts-node src/main.ts",
     "test": "cross-env NODE_ENV=test jest --config test/jest-integration.json",

@@ -1,0 +1,10 @@
+FROM nginx:1.18.0
+
+COPY ./scripts /etc/nginx/scripts
+
+RUN apt-get update && apt-get install dos2unix
+RUN dos2unix /etc/nginx/scripts/generate_cert.sh
+RUN bash "/etc/nginx/scripts/generate_cert.sh"
+
+
+CMD ["nginx","-g","daemon off;"]

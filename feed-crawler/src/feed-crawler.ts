@@ -3,13 +3,12 @@ import { RssRepository } from './repository/rss.repository';
 import logger from './common/logger';
 import { RssObj, FeedDetail, RawFeed } from './common/types';
 import { XMLParser } from 'fast-xml-parser';
-import { parse } from 'node-html-parser';
-import { unescape } from 'html-escaper';
 import {
   ONE_MINUTE,
-  INTERVAL,
+  TIME_INTERVAL,
   FEED_AI_SUMMARY_IN_PROGRESS_MESSAGE,
 } from './common/constant';
+import { RssParser } from './common/rss-parser';
 
 export class FeedCrawler {
   constructor(
@@ -25,7 +24,6 @@ export class FeedCrawler {
     await this.feedRepository.deleteRecentFeed();
 
     const rssObjects = await this.rssRepository.selectAllRss();
-
     if (!rssObjects || !rssObjects.length) {
       logger.info('등록된 RSS가 없습니다.');
       return;
@@ -39,7 +37,6 @@ export class FeedCrawler {
       return;
     }
     logger.info(`총 ${newFeeds.length}개의 새로운 피드가 있습니다.`);
-
     const insertedData: FeedDetail[] = await this.feedRepository.insertFeeds(
       newFeeds,
     );
@@ -58,9 +55,7 @@ export class FeedCrawler {
     now: number,
   ): Promise<FeedDetail[]> {
     try {
-      const TIME_INTERVAL = INTERVAL;
       const feeds = await this.fetchRss(rssObj.rssUrl);
-
       const filteredFeeds = feeds.filter((item) => {
         const pubDate = new Date(item.pubDate).setSeconds(0, 0);
         const timeDiff = (now - pubDate) / (ONE_MINUTE * TIME_INTERVAL);
@@ -144,59 +139,5 @@ export class FeedCrawler {
         ? feed.description
         : feed['content:encoded'],
     }));
-  }
-}
-
-export class RssParser {
-  async getThumbnailUrl(feedUrl: string) {
-    const response = await fetch(feedUrl, {
-      headers: {
-        Accept: 'text/html',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`${feedUrl}에 GET 요청 실패`);
-    }
-
-    const htmlData = await response.text();
-    const htmlRootElement = parse(htmlData);
-    const metaImage = htmlRootElement.querySelector(
-      'meta[property="og:image"]',
-    );
-    let thumbnailUrl = metaImage?.getAttribute('content') ?? '';
-
-    if (!thumbnailUrl.length) {
-      logger.warn(`${feedUrl}에서 썸네일 추출 실패`);
-      return thumbnailUrl;
-    }
-
-    if (!this.isUrlPath(thumbnailUrl)) {
-      thumbnailUrl = this.getHttpOriginPath(feedUrl) + thumbnailUrl;
-    }
-    return thumbnailUrl;
-  }
-
-  private isUrlPath(thumbnailUrl: string) {
-    const reg = /^(http|https):\/\//;
-    return reg.test(thumbnailUrl);
-  }
-
-  private getHttpOriginPath(feedUrl: string) {
-    return new URL(feedUrl).origin;
-  }
-
-  customUnescape(feedTitle: string): string {
-    const escapeEntity = {
-      '&middot;': '·',
-      '&nbsp;': ' ',
-    };
-    Object.keys(escapeEntity).forEach((escapeKey) => {
-      const value = escapeEntity[escapeKey];
-      const regex = new RegExp(escapeKey, 'g');
-      feedTitle = feedTitle.replace(regex, value);
-    });
-
-    return unescape(feedTitle);
   }
 }

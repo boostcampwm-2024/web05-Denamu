@@ -19,8 +19,5 @@
     "commitizen": {
       "path": "cz-customizable"
     }
-  },
-  "dependencies": {
-    "pm2": "^5.4.2"
   }
 }

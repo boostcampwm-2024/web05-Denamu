@@ -1,0 +1,91 @@
+name: denamu-dev
+
+include:
+  - docker-compose.infra.yml
+
+services:
+  # NGINX 서비스
+  nginx:
+    build:
+      context: ../nginx
+      dockerfile: Dockerfile.dev
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - Denamu
+    depends_on:
+      - app
+    volumes:
+      - ../nginx/logs:/var/log/nginx
+      - ../nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ../static:/var/web05-Denamu/static
+    develop:
+      watch:
+        - path: ../nginx/nginx.conf
+          action: restart
+        - path: ../nginx/scripts/generate_cert.sh
+          action: rebuild
+
+  # Client 서비스
+  web:
+    build:
+      context: ../client
+      dockerfile: docker/Dockerfile.dev
+    ports:
+      - "5173:5173"
+    networks:
+      - Denamu
+    volumes:
+      - ../client:/var/web05-Denamu/client
+      - /var/web05-Denamu/client/node_modules
+    develop:
+      watch:
+        - path: ../client/package.json
+          action: rebuild
+
+  # WAS 서비스
+  app:
+    build:
+      context: ../server
+      dockerfile: docker/Dockerfile.dev
+    ports:
+      - "8080:8080"
+    networks:
+      - Denamu
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ../server:/var/web05-Denamu/server
+      - /var/web05-Denamu/server/node_modules
+    environment:
+      NODE_ENV: "DEV"
+    develop:
+      watch:
+        - path: ../server/package.json
+          action: rebuild
+
+  # Feed Crawler 서비스
+  feed-crawler:
+    build:
+      context: ../feed-crawler
+      dockerfile: docker/Dockerfile.dev
+    networks:
+      - Denamu
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ../feed-crawler:/var/web05-Denamu/feed-crawler
+      - /var/web05-Denamu/feed-crawler/node_modules
+    environment:
+      NODE_ENV: "DEV"
+    develop:
+      watch:
+        - path: ../feed-crawler/package.json
+          action: rebuild
