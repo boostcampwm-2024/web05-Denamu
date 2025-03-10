@@ -28,7 +28,10 @@ export class LoggingInterceptor implements NestInterceptor {
     }
     return next.handle().pipe(
       finalize(() => {
-        if (process.env.NODE_ENV === 'development') {
+        if (
+          process.env.NODE_ENV === 'LOCAL' ||
+          process.env.NODE_ENV === 'DEV'
+        ) {
           const endTime = Date.now();
           const elapsedTime = endTime - startTime;
           console.log(`Request Processing Time ${elapsedTime}ms`);

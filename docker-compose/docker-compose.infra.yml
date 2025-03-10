@@ -1,0 +1,65 @@
+services:
+  # DB 서비스
+  mysql-db:
+    image: "mysql:8.0.39"
+    ports:
+      - "3306:3306"
+    volumes:
+      - denamu-mysql:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - Denamu
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --skip-character-set-client-handshake
+    environment:
+      MYSQL_ROOT_PASSWORD: "denamu-db"
+      MYSQL_DATABASE: "denamu"
+      MYSQL_USER: "denamu-db-user"
+      MYSQL_PASSWORD: "denamu-db-pw"
+      MYSQL_ROOT_HOST: "%"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-pdenamu-db",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Redis 서비스
+  redis:
+    image: "redis:6.0.16-alpine"
+    ports:
+      - "6379:6379"
+    volumes:
+      - denamu-redis:/data
+    networks:
+      - Denamu
+    entrypoint:
+      [
+        "sh",
+        "-c",
+        "redis-server & sleep 5 && echo 'ACL SETUSER denamu-redis-user on >denamu-redis-pw allkeys allcommands' | redis-cli && tail -f /dev/null",
+      ]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  denamu-mysql:
+  denamu-redis:
+
+networks:
+  Denamu:
+    driver: bridge

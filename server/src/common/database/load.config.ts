@@ -9,7 +9,8 @@ export function loadDBSetting(configService: ConfigService) {
   const password = configService.get<string>('DB_PASSWORD');
   const entities = [`${__dirname}/../../**/*.entity.{js,ts}`];
   const synchronize = true;
-  const logging = process.env.NODE_ENV === 'debug' ? true : false;
+  const logging =
+    process.env.NODE_ENV === 'LOCAL' || process.env.NODE_ENV === 'DEV';
 
   return {
     type,
