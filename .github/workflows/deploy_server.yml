@@ -29,24 +29,24 @@ jobs:
             cd /var/web05-Denamu/server
 
             mkdir -p configs
-            echo "PORT=${{ secrets.PRODUCT_PORT }}" > configs/.env.db.production
-            echo "DB_TYPE=mysql" >> configs/.env.db.production
-            echo "DB_DATABASE=${{ secrets.PRODUCT_DB_DATABASE }}" >> configs/.env.db.production
-            echo "DB_HOST=${{ secrets.PRODUCT_DB_HOST }}" >> configs/.env.db.production
-            echo "DB_PORT=${{ secrets.PRODUCT_DB_PORT }}" >> configs/.env.db.production
-            echo "DB_USERNAME=${{ secrets.PRODUCT_DB_USERNAME }}" >> configs/.env.db.production
-            echo "DB_PASSWORD=${{ secrets.PRODUCT_DB_PASSWORD }}" >> configs/.env.db.production
-            echo "REDIS_HOST=${{secrets.REDIS_HOST }}" >> configs/.env.db.production
-            echo "REDIS_PORT=${{secrets.REDIS_PORT}}" >> configs/.env.db.production
-            echo "REDIS_USERNAME=${{secrets.REDIS_USERNAME}}" >> configs/.env.db.production
-            echo "REDIS_PASSWORD=${{secrets.REDIS_PASSWORD}}" >> configs/.env.db.production
-            echo "EMAIL_USER=${{secrets.EMAIL_USER}}" >> configs/.env.db.production
-            echo "EMAIL_PASSWORD=${{secrets.EMAIL_PASSWORD}}" >> configs/.env.db.production
-            echo "AI_API_KEY=${{secrets.AI_API_KEY}}" >> configs/.env.db.production
+            echo "PORT=${{ secrets.PRODUCT_PORT }}" > configs/.env.prod
+            echo "DB_TYPE=mysql" >> configs/.env.prod
+            echo "DB_DATABASE=${{ secrets.PRODUCT_DB_DATABASE }}" >> configs/.env.prod
+            echo "DB_HOST=${{ secrets.PRODUCT_DB_HOST }}" >> configs/.env.prod
+            echo "DB_PORT=${{ secrets.PRODUCT_DB_PORT }}" >> configs/.env.prod
+            echo "DB_USERNAME=${{ secrets.PRODUCT_DB_USERNAME }}" >> configs/.env.prod
+            echo "DB_PASSWORD=${{ secrets.PRODUCT_DB_PASSWORD }}" >> configs/.env.prod
+            echo "REDIS_HOST=${{secrets.REDIS_HOST }}" >> configs/.env.prod
+            echo "REDIS_PORT=${{secrets.REDIS_PORT}}" >> configs/.env.prod
+            echo "REDIS_USERNAME=${{secrets.REDIS_USERNAME}}" >> configs/.env.prod
+            echo "REDIS_PASSWORD=${{secrets.REDIS_PASSWORD}}" >> configs/.env.prod
+            echo "EMAIL_USER=${{secrets.EMAIL_USER}}" >> configs/.env.prod
+            echo "EMAIL_PASSWORD=${{secrets.EMAIL_PASSWORD}}" >> configs/.env.prod
+            echo "AI_API_KEY=${{secrets.AI_API_KEY}}" >> configs/.env.prod
 
             npm ci
             npm run build
-            
+
             cd /var/web05-Denamu
-            pm2 delete all
-            pm2 start ecosystem.config.js
+            docker-compose -f docker-compose/docker-compose.prod.yml up --build -d app
+            docker image prune -f

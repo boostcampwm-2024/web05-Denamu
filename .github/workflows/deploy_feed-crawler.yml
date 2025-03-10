@@ -34,7 +34,6 @@ jobs:
             echo "DB_USER=${{ secrets.FEED_CRAWLER_DB_USER }}" >> .env
             echo "DB_PASS=${{ secrets.FEED_CRAWLER_DB_PASSWORD }}" >> .env
             echo "TIME_INTERVAL=${{ vars.FEED_CRAWLER_TIME_INTERVAL }}" >> .env
-            echo "TEST_TIME_INTERVAL=${{ vars.FEED_CRAWLER_TEST_TIME_INTERVAL }}" >> .env
             echo "REDIS_HOST=${{secrets.REDIS_HOST }}" >> .env
             echo "REDIS_PORT=${{secrets.REDIS_PORT}}" >> .env
             echo "REDIS_USERNAME=${{secrets.REDIS_USERNAME}}" >> .env
@@ -45,6 +44,5 @@ jobs:
             npm ci
             npm run build
             cd /var/web05-Denamu
-            
-            pm2 delete all
-            pm2 start ecosystem.config.js
+            docker-compose -f docker-compose/docker-compose.prod.yml up --build -d feed-crawler
+            docker image prune -f
