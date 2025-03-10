@@ -1,0 +1,41 @@
+name: denamu-production
+
+include:
+  - docker-compose.infra.yml
+
+services:
+  # WAS 서비스
+  app:
+    build:
+      context: ../server
+      dockerfile: docker/Dockerfile.local
+    ports:
+      - "8080:8080"
+    networks:
+      - Denamu
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ../server/logs:/var/web05-Denamu/server/logs
+    environment:
+      NODE_ENV: "PROD"
+
+  # Feed Crawler 서비스
+  feed-crawler:
+    build:
+      context: ../feed-crawler
+      dockerfile: docker/Dockerfile.local
+    networks:
+      - Denamu
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ../feed-crawler/logs:/var/web05-Denamu/feed-crawler/logs
+    environment:
+      NODE_ENV: "PROD"

@@ -18,7 +18,11 @@ import { ActivityModule } from './activity/module/activity.module';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath:
-        process.env.ENV_PATH || `${process.cwd()}/configs/.env.db.production`,
+        {
+          PROD: `${process.cwd()}/env/.env.prod`,
+          LOCAL: `${process.cwd()}/env/.env.local`,
+          DEV: `${process.cwd()}/env/.env.local`,
+        }[process.env.NODE_ENV] || '',
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
