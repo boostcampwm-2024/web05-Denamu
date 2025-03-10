@@ -6,7 +6,6 @@ services:
       - "3306:3306"
     volumes:
       - denamu-mysql:/var/lib/mysql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - Denamu
     command:
@@ -15,10 +14,10 @@ services:
       - --skip-character-set-client-handshake
     environment:
       MYSQL_ROOT_HOST: localhost
-      MYSQL_ROOT_PASSWORD: "denamu-db"
-      MYSQL_DATABASE: "denamu"
-      MYSQL_USER: "denamu-db-user"
-      MYSQL_PASSWORD: "denamu-db-pw"
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     healthcheck:
       test:
         [
@@ -48,7 +47,7 @@ services:
       [
         "sh",
         "-c",
-        "redis-server & sleep 5 && echo 'ACL SETUSER denamu-redis-user on >denamu-redis-pw allkeys allcommands' | redis-cli && tail -f /dev/null",
+        "redis-server & sleep 5 && echo 'ACL SETUSER ${REDIS_USER} on >${REDIS_PASSWORD} allkeys allcommands' | redis-cli && tail -f /dev/null",
       ]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
