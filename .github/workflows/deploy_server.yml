@@ -21,9 +21,6 @@ jobs:
           key: ${{ secrets.CLOUD_PUBLIC_INSTANCE_SSH_KEY }}
           port: ${{ secrets.CLOUD_PUBLIC_INSTANCE_PORT }}
           script: |
-            export NVM_DIR=~/.nvm
-            source ~/.nvm/nvm.sh
-
             cd /var/web05-Denamu
             git pull origin main
             cd /var/web05-Denamu/server
@@ -43,9 +40,6 @@ jobs:
             echo "EMAIL_USER=${{secrets.EMAIL_USER}}" >> env/.env.prod
             echo "EMAIL_PASSWORD=${{secrets.EMAIL_PASSWORD}}" >> env/.env.prod
             echo "AI_API_KEY=${{secrets.AI_API_KEY}}" >> env/.env.prod
-
-            npm ci
-            npm run build
 
             cd /var/web05-Denamu
             docker-compose -f docker-compose/docker-compose.prod.yml up --build -d app
