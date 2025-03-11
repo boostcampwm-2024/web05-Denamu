@@ -28,7 +28,7 @@ services:
           "localhost",
           "-u",
           "root",
-          "-pdenamu-db",
+          "-p$MYSQL_PASSWORD",
         ]
       interval: 10s
       timeout: 5s
