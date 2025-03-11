@@ -107,7 +107,11 @@ export class RssService {
       ]);
       return rejectRss;
     });
-    this.emailService.sendMail(rejectRss, false, rssRejectBodyDto.description);
+    this.emailService.sendRssMail(
+      rejectRss,
+      false,
+      rssRejectBodyDto.description,
+    );
   }
 
   async readAcceptHistory() {
@@ -167,6 +171,6 @@ export class RssService {
       rssAccept,
     );
     this.feedCrawlerService.saveAiQueue(feedsWithId);
-    this.emailService.sendMail(rssAccept, true);
+    this.emailService.sendRssMail(rssAccept, true);
   }
 }
