@@ -37,6 +37,7 @@ services:
       - ../server/logs:/var/web05-Denamu/server/logs
     environment:
       NODE_ENV: "LOCAL"
+      TZ: "Asia/Seoul"
 
   # Feed Crawler 서비스
   feed-crawler:
@@ -54,3 +55,4 @@ services:
       - ../feed-crawler/logs:/var/web05-Denamu/feed-crawler/logs
     environment:
       NODE_ENV: "LOCAL"
+      TZ: "Asia/Seoul"
