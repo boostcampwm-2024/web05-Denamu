@@ -18,6 +18,8 @@ services:
       - app
     volumes:
       - ../nginx/logs:/var/log/nginx
+    environment:
+      TZ: "Asia/Seoul"
 
   # WAS 서비스
   app:

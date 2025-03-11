@@ -26,6 +26,8 @@ services:
           action: restart
         - path: ../nginx/scripts/generate_cert.sh
           action: rebuild
+    environment:
+      TZ: "Asia/Seoul"
 
   # Client 서비스
   web:
