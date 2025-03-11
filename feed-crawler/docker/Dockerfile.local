@@ -19,6 +19,4 @@ COPY --from=builder /var/web05-Denamu/feed-crawler/env ./env
 
 RUN touch /var/log/feed-crawler.log
 
-RUN echo "*/30 * * * * cd /var/web05-Denamu/feed-crawler && npm run start >> /var/log/feed-crawler.log 2>&1" > /etc/crontabs/root
-
-CMD ["sh", "-c", "crond && tail -f /var/log/feed-crawler.log"]
+CMD ["sh", "-c", "npm run start && tail -f /var/log/feed-crawler.log"]

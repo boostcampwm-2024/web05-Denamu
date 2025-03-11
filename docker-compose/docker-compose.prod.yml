@@ -1,7 +1,7 @@
 name: denamu-production
 
 include:
-  - docker-compose.infra.yml
+  - docker-compose.prod.infra.yml
 
 services:
   # WAS 서비스
