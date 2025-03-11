@@ -43,6 +43,8 @@ services:
       watch:
         - path: ../client/package.json
           action: rebuild
+    environment:
+      TZ: "Asia/Seoul"
 
   # WAS 서비스
   app:
@@ -63,6 +65,7 @@ services:
       - /var/web05-Denamu/server/node_modules
     environment:
       NODE_ENV: "DEV"
+      TZ: "Asia/Seoul"
     develop:
       watch:
         - path: ../server/package.json
@@ -85,6 +88,7 @@ services:
       - /var/web05-Denamu/feed-crawler/node_modules
     environment:
       NODE_ENV: "DEV"
+      TZ: "Asia/Seoul"
     develop:
       watch:
         - path: ../feed-crawler/package.json
