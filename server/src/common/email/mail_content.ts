@@ -1,6 +1,7 @@
 import { Rss } from '../../rss/entity/rss.entity';
+export const PRODUCT_DOMAIN = 'https://denamu.site';
 
-export function createMailContent(
+export function createRssRegistrationContent(
   rss: Rss,
   approveFlag: boolean,
   serviceAddress: string,
@@ -51,4 +52,41 @@ function rejectContent(rss: Rss, description: string) {
     <div style="background-color: #f8f9fa; border-radius: 8px; padding: 15px 20px; margin: 15px 0; color: #666; line-height: 1.6;">${description}</div>
     <p>위 사유를 해결하신 후 다시 신청해 주시기 바랍니다.</p>
   `;
+}
+
+export function createVerificationMailContent(
+  userName: string,
+  verificationLink: string,
+  serviceAddress: string,
+) {
+  return `
+  <div style="font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', '맑은 고딕', sans-serif; margin: 0; padding: 1px; background-color: #f4f4f4;">
+    <div style="max-width: 600px; margin: 20px auto; background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+      <div style="text-align: center; padding: 20px 0; border-bottom: 2px solid #f0f0f0;">
+        <img src="https://denamu.site/files/Denamu_Logo_KOR.png" alt="Denamu Logo" width="244" height="120">
+      </div>
+      <div style="padding: 20px 0;">
+        <div style="color: #007bff; font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center;">회원가입 인증을 완료해주세요</div>
+          <div style="background-color: #f8f9fa; padding: 15px; border-radius: 4px; margin: 15px 0;">
+            <p><strong>안녕하세요, ${userName}님!</strong></p>
+            <p>Denamu 서비스에 가입해 주셔서 감사합니다.</p>
+            <p>아래 버튼을 클릭하여 회원가입 인증을 완료해 주세요.</p>
+          </div>
+          <center>
+            <a href="${verificationLink}" style="display: inline-block; padding: 12px 24px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; margin: 20px 0; font-weight: bold;">이메일 인증하기</a>
+          </center>
+          <div style="font-size: 14px; color: #6c757d; margin-top: 20px; text-align: center;">
+            <p>버튼이 작동하지 않는 경우, 아래 링크를 복사하여 브라우저에 붙여넣기 해주세요:</p>
+            <p style="word-break: break-all; background-color: #f8f9fa; padding: 10px; border-radius: 4px;">${verificationLink}</p>
+            <p>이 링크는 24시간 동안 유효합니다.</p>
+          </div>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; border-top: 2px solid #f0f0f0; color: #6c757d; font-size: 14px; height: 100px;">
+        <p>본 메일은 발신전용입니다.</p>
+        <p>문의사항이 있으시다면 ${serviceAddress}로 연락주세요.</p>
+      </div>
+    </div>
+  </div>
+`;
 }

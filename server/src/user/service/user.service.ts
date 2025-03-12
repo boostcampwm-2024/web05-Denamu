@@ -31,12 +31,14 @@ export class UserService {
       throw new ConflictException('이미 존재하는 이메일입니다.');
     }
 
+    const newUser = signupDto.toEntity();
+
     const uuid = uuidv4();
     await this.redisService.set(
-      USER_CONSTANTS.USER_AUTH_KEY + uuid,
-      JSON.stringify(signupDto.toEntity()),
+      `${USER_CONSTANTS.USER_AUTH_KEY}_${newUser.email}_${uuid}`,
+      JSON.stringify(newUser),
     );
 
-    this.emailService.sendMail();
+    this.emailService.sendUserCertificationMail(newUser, uuid);
   }
 }
