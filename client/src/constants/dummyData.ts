@@ -151,3 +151,17 @@ export const POST_MODAL_DATA: PostDetailType = {
     tag: ["JavaScript", "React", "Frontend"],
   },
 };
+export const POST_COMMENT_DATA = [
+  {
+    id: 1,
+    author: "나무보다 숲을",
+    content: "정말 유익한 포스트에요!!",
+    authorImage: "https://github.com/shadcn.png",
+  },
+  {
+    id: 2,
+    author: "월성참치",
+    content: "엌ㅋㅋㅋ 개추요",
+    authorImage: "https://github.com/shadcn.png",
+  },
+];
