@@ -25,13 +25,6 @@ jobs:
             git pull origin main
             cd /var/web05-Denamu/feed-crawler/
 
-            export REDIS_USER=${{secrets.REDIS_USERNAME}}
-            export REDIS_PASSWORD=${{secrets.REDIS_PASSWORD}}
-            export MYSQL_ROOT_PASSWORD=${{ secrets.PRODUCT_DB_DATABASE }}
-            export MYSQL_DATABASE=${{ secrets.PRODUCT_DB_DATABASE }}
-            export MYSQL_USER=${{ secrets.PRODUCT_DB_USERNAME }}
-            export MYSQL_PASSWORD=${{ secrets.PRODUCT_DB_PASSWORD }}
-
             mkdir -p env
             echo "DB_PORT=${{ secrets.FEED_CRAWLER_DB_PORT }}" > env/.env.prod
             echo "DB_HOST=${{ secrets.FEED_CRAWLER_DB_HOST }}" >> env/.env.prod
@@ -47,5 +40,5 @@ jobs:
             echo "AI_RATE_LIMIT_COUNT=${{ vars.AI_RATE_LIMIT_COUNT }}" >> env/.env.prod
 
             cd /var/web05-Denamu
-            docker-compose -f docker-compose/docker-compose.prod.yml up --build -d feed-crawler
+            docker-compose -f docker-compose/docker-compose.prod.yml up --build --no-deps -d feed-crawler
             docker image prune -f
