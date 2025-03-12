@@ -41,5 +41,5 @@ jobs:
             echo "EMAIL_PASSWORD=${{secrets.EMAIL_PASSWORD}}" >> env/.env.prod
 
             cd /var/web05-Denamu
-            docker-compose -f docker-compose/docker-compose.prod.yml up --build -d app
+            docker-compose -f docker-compose/docker-compose.prod.yml up --build --no-deps -d app
             docker image prune -f
