@@ -42,6 +42,7 @@ export class User extends BaseEntity {
 
   @Column({
     name: 'introduction',
+    nullable: true,
   })
   introduction: string;
 

@@ -1,13 +1,20 @@
 import { UserRepository } from '../repository/user.repository';
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { SignupDto } from '../dto/request/signup.dto';
 import { v4 as uuidv4 } from 'uuid';
+import { RedisService } from '../../common/redis/redis.service';
+import { USER_CONSTANTS } from '../user.constants';
+import { EmailService } from '../../common/email/email.service';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly userRepository: UserRepository) {}
+  constructor(
+    private readonly userRepository: UserRepository,
+    private readonly redisService: RedisService,
+    private readonly emailService: EmailService,
+  ) {}
 
-  async checkEmailDuplication(email: string) {
+  async checkEmailDuplication(email: string): Promise<boolean> {
     const user = await this.userRepository.findOne({
       where: { email },
     });
@@ -15,14 +22,21 @@ export class UserService {
     return !!user;
   }
 
-  async signupUser(signupDto: SignupDto) {
-    const { email, password, userName } = signupDto;
+  async signupUser(signupDto: SignupDto): Promise<void> {
+    const user = await this.userRepository.findOne({
+      where: { email: signupDto.email },
+    });
 
-    // UUID 생성
+    if (user) {
+      throw new ConflictException('이미 존재하는 이메일입니다.');
+    }
 
-    // 레디스에 사용자 정보 저장
-    // 이메일 발송
-    // check is user exist
-    // check is user confirmed
+    const uuid = uuidv4();
+    await this.redisService.set(
+      USER_CONSTANTS.USER_AUTH_KEY + uuid,
+      JSON.stringify(signupDto.toEntity()),
+    );
+
+    this.emailService.sendMail();
   }
 }
