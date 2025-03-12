@@ -25,6 +25,13 @@ jobs:
             git pull origin main
             cd /var/web05-Denamu/server
 
+            export REDIS_USER=${{secrets.REDIS_USERNAME}}
+            export REDIS_PASSWORD=${{secrets.REDIS_PASSWORD}}
+            export MYSQL_ROOT_PASSWORD=${{ secrets.PRODUCT_DB_DATABASE }}
+            export MYSQL_DATABASE=${{ secrets.PRODUCT_DB_DATABASE }}
+            export MYSQL_USER=${{ secrets.PRODUCT_DB_USERNAME }}
+            export MYSQL_PASSWORD=${{ secrets.PRODUCT_DB_PASSWORD }}
+
             mkdir -p env
             echo "PORT=${{ secrets.PRODUCT_PORT }}" > env/.env.prod
             echo "DB_TYPE=mysql" >> env/.env.prod
