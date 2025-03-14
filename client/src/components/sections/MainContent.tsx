@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+
 import LatestSection from "@/components/sections/LatestSection";
 import TrandingSection from "@/components/sections/TrendingSection";
 
@@ -5,6 +7,9 @@ import { useMediaStore } from "@/store/useMediaStore";
 
 export default function MainContent() {
   const isMobile = useMediaStore((state) => state.isMobile);
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   return (
     <div className="flex flex-col px-4 md:p-8 md:gap-8">
       <TrandingSection />
