@@ -1,8 +1,6 @@
 import { useState } from "react";
 
 import { FormInput } from "@/components/RssRegistration/FormInput";
-import { PlatformSelector } from "@/components/RssRegistration/PlatformSelector.tsx";
-import { RssUrlInput } from "@/components/RssRegistration/RssUrlInput";
 import Alert from "@/components/common/Alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,7 +21,7 @@ import { RegisterRss } from "@/types/rss.ts";
 export function RssRegistrationModal({ onClose, rssOpen }: { onClose: () => void; rssOpen: boolean }) {
   const [alertOpen, setAlertOpen] = useState<AlertType>({ title: "", content: "", isOpen: false });
 
-  const { platform, values, handlers, formState } = useRssRegistrationForm();
+  const { values, handlers, formState, blogPlatform } = useRssRegistrationForm();
   const { mutate } = useRegisterRss(
     () => {
       setAlertOpen({
@@ -69,8 +67,22 @@ export function RssRegistrationModal({ onClose, rssOpen }: { onClose: () => void
         </DialogHeader>
 
         <div className="space-y-6">
-          <PlatformSelector platform={platform} onPlatformChange={handlers.handlePlatformChange} />
-          <RssUrlInput platform={platform} value={values.urlUsername} onChange={handlers.handleUsernameChange} />
+          <div className="space-y-2">
+            <FormInput
+              id="blogUrl"
+              type="text"
+              label="블로그 주소"
+              onChange={handlers.handleBlogUrlChange}
+              placeholder="https://myblog.tistory.com"
+              value={values.blogUrl}
+            />
+            {values.blogUrl && blogPlatform && (
+              <div className="mt-2 text-sm">
+                <span className="text-muted-foreground">블로그 플랫폼: </span>
+                <span className="font-medium text-foreground">{blogPlatform}</span>
+              </div>
+            )}
+          </div>
 
           <div className="space-y-4">
             <FormInput
