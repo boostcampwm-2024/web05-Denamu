@@ -1,5 +1,9 @@
 import { UserRepository } from '../repository/user.repository';
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { SignupDto } from '../dto/request/signup.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { RedisService } from '../../common/redis/redis.service';
@@ -37,8 +41,22 @@ export class UserService {
     await this.redisService.set(
       `${USER_CONSTANTS.USER_AUTH_KEY}_${newUser.email}_${uuid}`,
       JSON.stringify(newUser),
+      'EX',
+      600,
     );
 
     this.emailService.sendUserCertificationMail(newUser, uuid);
+  }
+
+  async certificateUser(uuid: string): Promise<void> {
+    const user = await this.redisService.get(
+      `${USER_CONSTANTS.USER_AUTH_KEY}_${uuid}`,
+    );
+
+    if (!user) {
+      throw new NotFoundException('인증에 실패했습니다.');
+    }
+
+    await this.userRepository.save(JSON.parse(user));
   }
 }

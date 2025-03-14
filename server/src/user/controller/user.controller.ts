@@ -29,11 +29,20 @@ export class UserController {
   }
 
   @Post('/signup')
-  @HttpCode(HttpStatus.ACCEPTED)
+  @HttpCode(HttpStatus.CREATED)
   async signupUser(@Body() signupDto: SignupDto) {
     this.userService.signupUser(signupDto);
     return ApiResponse.responseWithNoContent(
       '회원가입이 요청이 성공적으로 처리되었습니다.',
+    );
+  }
+
+  @Post('/certificate')
+  @HttpCode(HttpStatus.OK)
+  async certificateUser(@Body() uuid: string) {
+    await this.userService.certificateUser(uuid);
+    return ApiResponse.responseWithNoContent(
+      '이메일 인증이 성공적으로 처리되었습니다.',
     );
   }
 }
