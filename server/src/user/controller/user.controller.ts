@@ -31,7 +31,7 @@ export class UserController {
   @Post('/signup')
   @HttpCode(HttpStatus.CREATED)
   async signupUser(@Body() signupDto: SignupDto) {
-    this.userService.signupUser(signupDto);
+    await this.userService.signupUser(signupDto);
     return ApiResponse.responseWithNoContent(
       '회원가입이 요청이 성공적으로 처리되었습니다.',
     );
