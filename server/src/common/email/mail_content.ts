@@ -24,7 +24,7 @@ export function createRssRegistrationContent(
             <p><strong>블로거 이름:</strong> ${rss.userName}</p>
             <p><strong>RSS 주소:</strong> ${rss.rssUrl}</p>
           </div>
-          ${approveFlag ? acceptContent(rss) : rejectContent(rss, description)}
+          ${approveFlag ? acceptContent() : rejectContent(description)}
           <center>
             <a href="https://denamu.site" style="display: inline-block; padding: 12px 24px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; margin: 20px 0;">${approveFlag ? '서비스 바로가기' : '다시 신청하러 가기'}</a>
           </center>
@@ -39,14 +39,14 @@ export function createRssRegistrationContent(
 `;
 }
 
-function acceptContent(rss: Rss) {
+function acceptContent() {
   return `
     <p>안녕하세요! 귀하의 블로그가 저희 서비스에 성공적으로 등록되었음을 알려드립니다.</p>
     <p>이제 귀하의 새로운 글이 업데이트될 때마다 저희 플랫폼에서 확인하실 수 있습니다.</p>
   `;
 }
 
-function rejectContent(rss: Rss, description: string) {
+function rejectContent(description: string) {
   return `
     <p><strong>거부 사유:</strong></p>
     <div style="background-color: #f8f9fa; border-radius: 8px; padding: 15px 20px; margin: 15px 0; color: #666; line-height: 1.6;">${description}</div>
@@ -78,7 +78,7 @@ export function createVerificationMailContent(
           <div style="font-size: 14px; color: #6c757d; margin-top: 20px; text-align: center;">
             <p>버튼이 작동하지 않는 경우, 아래 링크를 복사하여 브라우저에 붙여넣기 해주세요:</p>
             <p style="word-break: break-all; background-color: #f8f9fa; padding: 10px; border-radius: 4px;">${verificationLink}</p>
-            <p>이 링크는 24시간 동안 유효합니다.</p>
+            <p>이 링크는 10분 동안 유효합니다.</p>
           </div>
         </div>
       </div>
