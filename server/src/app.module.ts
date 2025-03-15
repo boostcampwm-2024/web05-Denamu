@@ -12,6 +12,7 @@ import { StatisticModule } from './statistic/module/statistic.module';
 import { TestModule } from './common/test/test.module';
 import { UserModule } from './user/module/user.module';
 import { ActivityModule } from './activity/module/activity.module';
+import { EmailModule } from './common/email/email.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { ActivityModule } from './activity/module/activity.module';
     ActivityModule,
     TestModule,
     StatisticModule,
+    EmailModule,
   ],
   controllers: [],
   providers: [],
