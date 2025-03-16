@@ -14,6 +14,7 @@ export function setupSwagger(app: INestApplication) {
     .addTag('Feed', '피드 관리와 검색 관련 API')
     .addTag('RSS', '관리자 전용 API')
     .addTag('Statistic', '통계 정보 조회 API')
+    .addTag('User', '사용자 관리와 인증 관련 API')
     .setLicense('MIT License', 'https://opensource.org/licenses/MIT')
     .build();
 
