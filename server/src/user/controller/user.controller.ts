@@ -11,12 +11,15 @@ import {
 import { ApiResponse } from '../../common/response/common.response';
 import { UserService } from '../service/user.service';
 import { SignupDto } from '../dto/request/signup.dto';
+import { ApiCheckEmailDuplication } from '../api-docs/checkEmailDuplication.api-docs';
+import { ApiSignupUser } from '../api-docs/signupUser.api-docs';
 
 @ApiTags('User')
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  @ApiCheckEmailDuplication()
   @Get('/email-check')
   @HttpCode(HttpStatus.OK)
   async checkEmailDuplication(@Query('email') email: string) {
@@ -28,6 +31,7 @@ export class UserController {
     );
   }
 
+  @ApiSignupUser()
   @Post('/signup')
   @HttpCode(HttpStatus.CREATED)
   async signupUser(@Body() signupDto: SignupDto) {
