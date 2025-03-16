@@ -3,10 +3,11 @@ import { AdminRepository } from '../../admin/repository/admin.repository';
 import { UserRepository } from '../repository/user.repository';
 import { UserService } from '../service/user.service';
 import { EmailModule } from '../../common/email/email.module';
+import { UserController } from '../controller/user.controller';
 
 @Module({
   imports: [],
-  controllers: [],
+  controllers: [UserController],
   providers: [UserService, AdminRepository, UserRepository],
 })
 export class UserModule {}
