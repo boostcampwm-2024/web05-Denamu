@@ -3,8 +3,13 @@ import * as nodemailer from 'nodemailer';
 import { ConfigService } from '@nestjs/config';
 import { WinstonLoggerService } from '../logger/logger.service';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
-import { createMailContent } from './mail_content';
+import {
+  createRssRegistrationContent,
+  createVerificationMailContent,
+  PRODUCT_DOMAIN,
+} from './mail_content';
 import { Rss } from '../../rss/entity/rss.entity';
+import { User } from '../../user/entity/user.entity';
 
 @Injectable()
 export class EmailService {
@@ -52,7 +57,32 @@ export class EmailService {
       approveFlag,
       description,
     );
+
     await this.sendMail(mailOptions);
+  }
+
+  async sendUserCertificationMail(user: User, uuid: string): Promise<void> {
+    const mailOptions = this.createCertificationMail(user, uuid);
+
+    await this.sendMail(mailOptions);
+  }
+
+  private createCertificationMail(
+    user: User,
+    uuid: string,
+  ): nodemailer.SendMailOptions {
+    const redirectUrl = `${PRODUCT_DOMAIN}/api/user/cert?token=${uuid}`;
+
+    return {
+      from: `Denamu<${this.emailUser}>`,
+      to: user.email,
+      subject: `[🎋 Denamu] 회원가입 인증 메일`,
+      html: createVerificationMailContent(
+        user.userName,
+        redirectUrl,
+        this.emailUser,
+      ),
+    };
   }
 
   private createRssRegistrationMail(
@@ -65,7 +95,12 @@ export class EmailService {
       from: `Denamu<${this.emailUser}>`,
       to: `${rss.userName}<${rss.email}>`,
       subject: `[🎋 Denamu] RSS 등록이 ${result} 되었습니다.`,
-      html: createMailContent(rss, approveFlag, this.emailUser, description),
+      html: createRssRegistrationContent(
+        rss,
+        approveFlag,
+        this.emailUser,
+        description,
+      ),
     };
   }
 }
