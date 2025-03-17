@@ -39,6 +39,7 @@ jobs:
             echo "REDIS_PASSWORD=${{secrets.REDIS_PASSWORD}}" >> env/.env.prod
             echo "EMAIL_USER=${{secrets.EMAIL_USER}}" >> env/.env.prod
             echo "EMAIL_PASSWORD=${{secrets.EMAIL_PASSWORD}}" >> env/.env.prod
+            echo "JWT_SECRET=${{secrets.JWT_SECRET}}" >> env/.env.prod
 
             cd /var/web05-Denamu
             docker-compose -f docker-compose/docker-compose.prod.yml up --build --no-deps -d app
