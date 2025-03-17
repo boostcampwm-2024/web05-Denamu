@@ -3,12 +3,19 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { SignupDto } from '../dto/request/signup.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { RedisService } from '../../common/redis/redis.service';
 import { USER_CONSTANTS } from '../user.constants';
 import { EmailService } from '../../common/email/email.service';
+import { LoginDto } from '../dto/request/login.dto';
+import { Response } from 'express';
+import * as bcrypt from 'bcrypt';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { cookieConfig } from '../../common/cookie/cookie.config';
 
 @Injectable()
 export class UserService {
@@ -16,6 +23,8 @@ export class UserService {
     private readonly userRepository: UserRepository,
     private readonly redisService: RedisService,
     private readonly emailService: EmailService,
+    private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
   ) {}
 
   async checkEmailDuplication(email: string): Promise<boolean> {
@@ -58,5 +67,47 @@ export class UserService {
     }
 
     await this.userRepository.save(JSON.parse(user));
+  }
+
+  async loginUser(loginDto: LoginDto, response: Response) {
+    const user = await this.userRepository.findOne({
+      where: { email: loginDto.email },
+    });
+    if (!user) {
+      throw new NotFoundException('계정을 찾을 수 없습니다.');
+    }
+
+    const password = user.password;
+    const isPasswordSame = await bcrypt.compare(loginDto.password, password);
+
+    if (!isPasswordSame) {
+      throw new UnauthorizedException('비밀번호가 다릅니다.');
+    }
+
+    const payload = {
+      id: user.id,
+      email: user.email,
+      userName: user.userName,
+      role: 'user',
+    };
+
+    const accessToken = this.jwtService.sign(payload, {
+      secret: this.configService.get('JWT_SECRET'),
+      expiresIn: '1h',
+    });
+
+    const refreshToken = this.jwtService.sign(payload, {
+      secret: this.configService.get('JWT_SECRET'),
+      expiresIn: '7d',
+    });
+
+    user.refreshToken = refreshToken;
+    await user.save();
+
+    response.setHeader('Authorization', `Bearer ${accessToken}`);
+    response.cookie('refresh_token', refreshToken, {
+      ...cookieConfig[process.env.NODE_ENV],
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+    });
   }
 }
