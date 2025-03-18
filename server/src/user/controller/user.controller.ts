@@ -68,7 +68,7 @@ export class UserController {
     @Body() loginDto: LoginDto,
     @Res({ passthrough: true }) response: Response,
   ) {
-    await this.userService.loginUser(loginDto, response);
-    return ApiResponse.responseWithNoContent('로그인을 성공했습니다.');
+    const accessToken = await this.userService.loginUser(loginDto, response);
+    return ApiResponse.responseWithData('로그인을 성공했습니다.', accessToken);
   }
 }

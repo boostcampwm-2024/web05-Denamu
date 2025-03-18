@@ -104,10 +104,11 @@ export class UserService {
     user.refreshToken = refreshToken;
     await user.save();
 
-    response.setHeader('Authorization', `Bearer ${accessToken}`);
     response.cookie('refresh_token', refreshToken, {
       ...cookieConfig[process.env.NODE_ENV],
       maxAge: 1000 * 60 * 60 * 24 * 7,
     });
+
+    return accessToken;
   }
 }
