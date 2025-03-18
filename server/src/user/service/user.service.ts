@@ -9,6 +9,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { RedisService } from '../../common/redis/redis.service';
 import { USER_CONSTANTS } from '../user.constants';
 import { EmailService } from '../../common/email/email.service';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
@@ -36,6 +37,7 @@ export class UserService {
     }
 
     const newUser = signupDto.toEntity();
+    newUser.password = await this.createHashedPassword(signupDto.password);
 
     const uuid = uuidv4();
     await this.redisService.set(
@@ -58,5 +60,10 @@ export class UserService {
     }
 
     await this.userRepository.save(JSON.parse(user));
+  }
+
+  private async createHashedPassword(password) {
+    const saltRounds = 10;
+    return await bcrypt.hash(password, saltRounds);
   }
 }
