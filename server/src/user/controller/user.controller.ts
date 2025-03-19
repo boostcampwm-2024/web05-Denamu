@@ -19,6 +19,7 @@ import { CertificateDto } from '../dto/request/certificate.dto';
 import { CheckEmailDuplicationRequestDto } from '../dto/request/CheckEmailDuplcation.dto';
 import { LoginDto } from '../dto/request/login.dto';
 import { Response } from 'express';
+import { ApiLoginUser } from '../api-docs/loginUser.api-docs';
 
 @ApiTags('User')
 @Controller('user')
@@ -62,6 +63,7 @@ export class UserController {
     );
   }
 
+  @ApiLoginUser()
   @Post('/login')
   @HttpCode(HttpStatus.OK)
   async loginUser(
