@@ -73,10 +73,8 @@ export class UserService {
     const user = await this.userRepository.findOne({
       where: { email: loginDto.email },
     });
-    const password = user.password;
-    const isPasswordSame = await bcrypt.compare(loginDto.password, password);
 
-    if (!user || !isPasswordSame) {
+    if (!user || !(await bcrypt.compare(loginDto.password, user.password))) {
       throw new NotFoundException('아이디 혹은 비밀번호가 잘못되었습니다.');
     }
 
