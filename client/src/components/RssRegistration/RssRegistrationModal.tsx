@@ -1,6 +1,8 @@
 import { useState } from "react";
 
 import { FormInput } from "@/components/RssRegistration/FormInput";
+import { PlatformBadge } from "@/components/RssRegistration/PlatformBadge";
+import { BlogPlatformSelector } from "@/components/RssRegistration/PlatformSelector";
 import Alert from "@/components/common/Alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 
 import { useRssRegistrationForm } from "@/hooks/common/useRssRegistrationForm.ts";
+import { PLATFORM_OPTIONS } from "@/hooks/common/useRssRegistrationForm.ts";
 import { useRegisterRss } from "@/hooks/queries/useRegisterRss.ts";
 
 import { AlertType } from "@/types/alert.ts";
@@ -21,7 +24,7 @@ import { RegisterRss } from "@/types/rss.ts";
 export function RssRegistrationModal({ onClose, rssOpen }: { onClose: () => void; rssOpen: boolean }) {
   const [alertOpen, setAlertOpen] = useState<AlertType>({ title: "", content: "", isOpen: false });
 
-  const { values, handlers, formState, blogPlatform } = useRssRegistrationForm();
+  const { values, handlers, formState, blogPlatform, selectedPlatformValue } = useRssRegistrationForm();
   const { mutate } = useRegisterRss(
     () => {
       setAlertOpen({
@@ -51,6 +54,7 @@ export function RssRegistrationModal({ onClose, rssOpen }: { onClose: () => void
       blog: values.bloggerName,
       name: values.userName,
       email: values.email,
+      blogType: values.platformValue,
     };
     mutate(data);
   };
@@ -75,15 +79,21 @@ export function RssRegistrationModal({ onClose, rssOpen }: { onClose: () => void
               onChange={handlers.handleBlogUrlChange}
               placeholder="https://myblog.tistory.com"
               value={values.blogUrl}
+            />            
+          </div>
+          <div className="space-y-2">
+            <BlogPlatformSelector 
+              platforms={PLATFORM_OPTIONS} 
+              value={selectedPlatformValue} 
+              onChange={handlers.handlePlatformSelection} 
             />
             {values.blogUrl && blogPlatform && (
-              <div className="mt-2 text-sm">
-                <span className="text-muted-foreground">블로그 플랫폼: </span>
-                <span className="font-medium text-foreground">{blogPlatform}</span>
-              </div>
+                <PlatformBadge 
+                  platform={blogPlatform} 
+                  onClick={handlers.handleBadgeClick}
+                />
             )}
           </div>
-
           <div className="space-y-4">
             <FormInput
               id="blog"
@@ -111,7 +121,6 @@ export function RssRegistrationModal({ onClose, rssOpen }: { onClose: () => void
             />
           </div>
         </div>
-
         <DialogFooter>
           <Button
             type="submit"
