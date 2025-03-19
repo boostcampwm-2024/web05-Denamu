@@ -1,13 +1,8 @@
-import * as dotenv from 'dotenv';
 import * as mysql from 'mysql2/promise';
 import { CONNECTION_LIMIT } from './constant';
 import { PoolConnection } from 'mysql2/promise';
 import { DatabaseConnection } from '../types/database-connection';
 import logger from './logger';
-
-dotenv.config({
-  path: process.env.NODE_ENV === 'production' ? 'feed-crawler/.env' : '.env',
-});
 
 export class MySQLConnection implements DatabaseConnection {
   private pool: mysql.Pool;
@@ -38,7 +33,7 @@ export class MySQLConnection implements DatabaseConnection {
       logger.error(
         `${this.nameTag} 쿼리 ${query} 실행 중 오류 발생
           오류 메시지: ${error.message}
-          스택 트레이스: ${error.stack}`,
+          스택 트레이스: ${error.stack}`
       );
     } finally {
       if (connection) {
@@ -48,7 +43,7 @@ export class MySQLConnection implements DatabaseConnection {
           logger.error(
             `${this.nameTag} connection release 중 오류 발생
             오류 메시지: ${error.message}
-            스택 트레이스: ${error.stack}`,
+            스택 트레이스: ${error.stack}`
           );
         }
       }

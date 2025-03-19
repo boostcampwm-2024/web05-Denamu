@@ -1,12 +1,7 @@
-import * as dotenv from 'dotenv';
 import Redis, { ChainableCommander } from 'ioredis';
 import Redis_Mock from 'ioredis-mock';
 import logger from '../common/logger';
 import { injectable } from 'tsyringe';
-
-dotenv.config({
-  path: process.env.NODE_ENV === 'production' ? 'feed-crawler/.env' : '.env',
-});
 
 @injectable()
 export class RedisConnection {

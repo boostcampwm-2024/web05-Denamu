@@ -1,17 +1,17 @@
 export const cookieConfig = {
-  production: {
+  PROD: {
     httpOnly: true,
     secure: true,
     sameSite: 'none',
     path: '/',
   },
-  development: {
+  LOCAL: {
     httpOnly: true,
-    secure: false,
-    sameSite: 'lax',
+    secure: true,
+    sameSite: 'none',
     path: '/',
   },
-  test: {
+  DEV: {
     httpOnly: true,
     secure: false,
     sameSite: 'lax',

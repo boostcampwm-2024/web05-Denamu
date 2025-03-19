@@ -13,14 +13,13 @@
     "stress-fe": "artillery run -o loadtest/FE_Report loadtest/FE_loadtest.json",
     "stress-be": "artillery run -o loadtest/BE_Report loadtest/BE_loadtest.json",
     "stress-fe-html": "artillery report loadtest/FE_Report",
-    "stress-be-html": "artillery report loadtest/BE_Report"
+    "stress-be-html": "artillery report loadtest/BE_Report",
+    "start:dev": "docker-compose -f docker-compose/docker-compose.dev.yml up",
+    "start:local": "docker-compose -f docker-compose/docker-compose.local.yml up"
   },
   "config": {
     "commitizen": {
       "path": "cz-customizable"
     }
-  },
-  "dependencies": {
-    "pm2": "^5.4.2"
   }
 }
