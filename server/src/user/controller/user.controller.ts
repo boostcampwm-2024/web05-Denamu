@@ -7,6 +7,7 @@ import {
   HttpStatus,
   Post,
   Query,
+  Res,
 } from '@nestjs/common';
 import { ApiResponse } from '../../common/response/common.response';
 import { UserService } from '../service/user.service';
@@ -16,6 +17,9 @@ import { ApiSignupUser } from '../api-docs/signupUser.api-docs';
 import { ApiCertificateUser } from '../api-docs/certificateUser.api-docs';
 import { CertificateDto } from '../dto/request/certificate.dto';
 import { CheckEmailDuplicationRequestDto } from '../dto/request/CheckEmailDuplcation.dto';
+import { LoginDto } from '../dto/request/login.dto';
+import { Response } from 'express';
+import { ApiLoginUser } from '../api-docs/loginUser.api-docs';
 
 @ApiTags('User')
 @Controller('user')
@@ -57,5 +61,16 @@ export class UserController {
     return ApiResponse.responseWithNoContent(
       '이메일 인증이 성공적으로 처리되었습니다.',
     );
+  }
+
+  @ApiLoginUser()
+  @Post('/login')
+  @HttpCode(HttpStatus.OK)
+  async loginUser(
+    @Body() loginDto: LoginDto,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const accessToken = await this.userService.loginUser(loginDto, response);
+    return ApiResponse.responseWithData('로그인을 성공했습니다.', accessToken);
   }
 }
