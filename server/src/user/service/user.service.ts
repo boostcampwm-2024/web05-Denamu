@@ -3,7 +3,6 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { SignupDto } from '../dto/request/signup.dto';
 import { v4 as uuidv4 } from 'uuid';
@@ -45,6 +44,7 @@ export class UserService {
     }
 
     const newUser = signupDto.toEntity();
+    newUser.password = await this.createHashedPassword(signupDto.password);
 
     const uuid = uuidv4();
     await this.redisService.set(
@@ -104,5 +104,10 @@ export class UserService {
     });
 
     return accessToken;
+  }
+
+  private async createHashedPassword(password) {
+    const saltRounds = 10;
+    return await bcrypt.hash(password, saltRounds);
   }
 }
