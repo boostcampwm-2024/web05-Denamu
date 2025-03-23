@@ -44,4 +44,8 @@ export class RegisterDto {
 
     return user;
   }
+
+  constructor(partial: Partial<RegisterDto>) {
+    Object.assign(this, partial);
+  }
 }
