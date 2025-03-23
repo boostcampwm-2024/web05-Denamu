@@ -16,7 +16,7 @@ export class UserFixture {
     return user;
   }
 
-  static async createUserFixture(overwrites: Partial<User> = {}) {
+  static createUserFixture(overwrites: Partial<User> = {}) {
     const user = new User();
     Object.assign(user, this.GENERAL_USER);
     Object.assign(user, overwrites);

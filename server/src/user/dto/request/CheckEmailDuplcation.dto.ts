@@ -11,4 +11,8 @@ export class CheckEmailDuplicationRequestDto {
   @IsNotEmpty({ message: '이메일을 입력해주세요.' })
   @Type(() => String)
   email: string;
+
+  constructor(email: string) {
+    this.email = email;
+  }
 }
