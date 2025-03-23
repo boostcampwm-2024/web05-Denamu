@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { SignupDto } from '../dto/request/signup.dto';
+import { RegisterDto } from '../dto/request/register.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { RedisService } from '../../common/redis/redis.service';
 import { USER_CONSTANTS } from '../user.constants';
@@ -34,17 +34,17 @@ export class UserService {
     return !!user;
   }
 
-  async signupUser(signupDto: SignupDto): Promise<void> {
+  async registerUser(registerDto: RegisterDto): Promise<void> {
     const user = await this.userRepository.findOne({
-      where: { email: signupDto.email },
+      where: { email: registerDto.email },
     });
 
     if (user) {
       throw new ConflictException('이미 존재하는 이메일입니다.');
     }
 
-    const newUser = signupDto.toEntity();
-    newUser.password = await this.createHashedPassword(signupDto.password);
+    const newUser = registerDto.toEntity();
+    newUser.password = await this.createHashedPassword(registerDto.password);
 
     const uuid = uuidv4();
     await this.redisService.set(

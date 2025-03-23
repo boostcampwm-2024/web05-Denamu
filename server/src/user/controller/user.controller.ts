@@ -11,9 +11,9 @@ import {
 } from '@nestjs/common';
 import { ApiResponse } from '../../common/response/common.response';
 import { UserService } from '../service/user.service';
-import { SignupDto } from '../dto/request/signup.dto';
+import { RegisterDto } from '../dto/request/register.dto';
 import { ApiCheckEmailDuplication } from '../api-docs/checkEmailDuplication.api-docs';
-import { ApiSignupUser } from '../api-docs/signupUser.api-docs';
+import { ApiRegisterUser } from '../api-docs/registerUser.api-docs';
 import { ApiCertificateUser } from '../api-docs/certificateUser.api-docs';
 import { CertificateDto } from '../dto/request/certificate.dto';
 import { CheckEmailDuplicationRequestDto } from '../dto/request/CheckEmailDuplcation.dto';
@@ -43,11 +43,11 @@ export class UserController {
     );
   }
 
-  @ApiSignupUser()
-  @Post('/signup')
+  @ApiRegisterUser()
+  @Post('/register')
   @HttpCode(HttpStatus.CREATED)
-  async signupUser(@Body() signupDto: SignupDto) {
-    await this.userService.signupUser(signupDto);
+  async registerUser(@Body() registerDto: RegisterDto) {
+    await this.userService.registerUser(registerDto);
     return ApiResponse.responseWithNoContent(
       '회원가입이 요청이 성공적으로 처리되었습니다.',
     );
