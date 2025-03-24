@@ -8,7 +8,7 @@ export default function EmptyPost() {
       </div>
       <div className="flex flex-col items-center ">
         <p className="font-bold">오늘의 트렌딩 포스트가 없습니다.</p>
-        <p className="text-gray-400 font-bold">아직 오늘 등록된 인기 포스트가 없습니다. 나중에 다시 확인해주세요.</p>
+        <p className="text-gray-400 font-bold">여러분의 읽은 글이 인기 포스트로 올라갈 수 있어요!</p>
       </div>
     </div>
   );
