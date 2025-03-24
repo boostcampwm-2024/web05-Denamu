@@ -72,9 +72,7 @@ export const useChatStore = create<ChatStore>((set) => {
         socket.emit("getHistory");
         socket.on("chatHistory", (data) => {
           set(() => ({
-            // chatHistory: data,
-            chatHistory: [],
-
+            chatHistory: data,
             isLoading: false,
           }));
         });

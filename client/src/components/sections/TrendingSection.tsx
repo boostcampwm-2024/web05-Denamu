@@ -22,7 +22,7 @@ export default function TrendingSection() {
       />
 
       <div className="flex flex-1 md:mt-4 md:p-6 bg-white rounded-2xl transition-all duration-300" style={sectionStyle}>
-        {isLoading || !posts.length ? <PostGridSkeleton count={4} /> : <AnimatedPostGrid posts={[]} />}
+        {isLoading || !posts.length ? <PostGridSkeleton count={4} /> : <AnimatedPostGrid posts={posts} />}
       </div>
     </section>
   );
