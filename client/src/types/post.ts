@@ -26,3 +26,16 @@ export type LatestPostsApiResponse = ApiData<InfiniteScrollResponse<Post>>;
 export type TrendingPostsApiResponse = ApiData<Post[]>;
 
 export type PostDetailType = ApiData<Post>;
+export interface PostDetailType {
+  message: string;
+  data: Post;
+}
+export interface PostCommentType {
+  id: number;
+  author: string;
+  content: string;
+  authorImage: string;
+  createdAt: string;
+  likes: number;
+  isLiked: boolean;
+}
