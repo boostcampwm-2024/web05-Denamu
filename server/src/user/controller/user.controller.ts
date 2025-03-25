@@ -16,7 +16,7 @@ import { ApiCheckEmailDuplication } from '../api-docs/checkEmailDuplication.api-
 import { ApiRegisterUser } from '../api-docs/registerUser.api-docs';
 import { ApiCertificateUser } from '../api-docs/certificateUser.api-docs';
 import { CertificateDto } from '../dto/request/certificate.dto';
-import { CheckEmailDuplicationRequestDto } from '../dto/request/CheckEmailDuplcation.dto';
+import { CheckEmailDuplicationRequestDto } from '../dto/request/checkEmailDuplcation.dto';
 import { LoginDto } from '../dto/request/login.dto';
 import { Response } from 'express';
 import { ApiLoginUser } from '../api-docs/loginUser.api-docs';
