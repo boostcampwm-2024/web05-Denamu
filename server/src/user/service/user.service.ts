@@ -48,7 +48,7 @@ export class UserService {
 
     const uuid = uuidv4();
     await this.redisService.set(
-      `${USER_CONSTANTS.USER_AUTH_KEY}_${newUser.email}_${uuid}`,
+      `${USER_CONSTANTS.USER_AUTH_KEY}_${uuid}`,
       JSON.stringify(newUser),
       'EX',
       600,
