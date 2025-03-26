@@ -1,5 +1,5 @@
 import { validate } from 'class-validator';
-import { CheckEmailDuplicationRequestDto } from '../../../src/user/dto/request/CheckEmailDuplcation.dto';
+import { CheckEmailDuplicationRequestDto } from '../../../src/user/dto/request/check-email-duplication.dto';
 
 describe('CheckEmailDuplicationRequestDto Test', () => {
   it('잘못된 이메일 형식이면 유효성 검사에 실패한다.', async () => {
