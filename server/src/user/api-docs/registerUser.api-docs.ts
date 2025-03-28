@@ -6,7 +6,7 @@ import {
   ApiOperation,
 } from '@nestjs/swagger';
 
-export function ApiSignupUser() {
+export function ApiRegisterUser() {
   return applyDecorators(
     ApiOperation({
       summary: '회원 가입 API',
