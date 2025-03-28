@@ -3,19 +3,11 @@ import { AdminRepository } from '../../admin/repository/admin.repository';
 import { UserRepository } from '../repository/user.repository';
 import { UserService } from '../service/user.service';
 import { UserController } from '../controller/user.controller';
-import { JwtModule, JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
+import { JwtAuthModule } from '../../common/auth/jwt.module';
 
 @Module({
-  imports: [
-    JwtModule.registerAsync({
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        secret: configService.get('JWT_SECRET'),
-      }),
-    }),
-  ],
+  imports: [JwtAuthModule],
   controllers: [UserController],
-  providers: [UserService, AdminRepository, UserRepository, JwtService],
+  providers: [UserService, AdminRepository, UserRepository],
 })
 export class UserModule {}
