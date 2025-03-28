@@ -43,3 +43,5 @@ certificate.crt
 # Ignore all local history of files
 .history
 .ionide
+
+PRD.md
