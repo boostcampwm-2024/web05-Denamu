@@ -79,19 +79,29 @@ export function RssRegistrationModal({ onClose, rssOpen }: { onClose: () => void
               onChange={handlers.handleBlogUrlChange}
               placeholder="https://myblog.tistory.com"
               value={values.blogUrl}
-            />            
+            />
           </div>
           <div className="space-y-2">
-            <BlogPlatformSelector 
-              platforms={PLATFORM_OPTIONS} 
-              value={selectedPlatformValue} 
-              onChange={handlers.handlePlatformSelection} 
+            <BlogPlatformSelector
+              platforms={PLATFORM_OPTIONS}
+              value={selectedPlatformValue}
+              onChange={handlers.handlePlatformSelection}
             />
             {values.blogUrl && blogPlatform && (
-                <PlatformBadge 
-                  platform={blogPlatform} 
-                  onClick={handlers.handleBadgeClick}
+              <PlatformBadge platform={blogPlatform} onClick={handlers.handleBadgeClick} />
+            )}
+            {selectedPlatformValue === "other" && (
+              <div className="mt-4">
+                <FormInput
+                  id="rssUrl"
+                  type="text"
+                  label="RSS URL"
+                  onChange={handlers.handleRssDirectInput}
+                  placeholder="https://myblog.com/rss"
+                  value={values.rssUrl}
                 />
+                <p className="text-xs text-muted-foreground mt-1">기타 플랫폼은 RSS URL을 직접 입력해주세요.</p>
+              </div>
             )}
           </div>
           <div className="space-y-4">

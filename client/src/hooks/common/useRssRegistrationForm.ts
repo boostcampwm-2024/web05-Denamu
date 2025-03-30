@@ -25,13 +25,18 @@ export const PLATFORM_OPTIONS = [
 
 const mapPlatformToValue = (platform: BlogPlatform | null): string => {
   if (!platform) return "other";
-  
+
   switch (platform) {
-    case "Tistory": return "tistory";
-    case "Velog": return "velog";
-    case "Medium": return "medium";
-    case "네이버 블로그": return "naver_blog";
-    default: return "other";
+    case "Tistory":
+      return "tistory";
+    case "Velog":
+      return "velog";
+    case "Medium":
+      return "medium";
+    case "네이버 블로그":
+      return "naver_blog";
+    default:
+      return "other";
   }
 };
 
@@ -73,7 +78,7 @@ export const useRssRegistrationForm = () => {
     if (blogPlatform) {
       const platformValue = mapPlatformToValue(blogPlatform);
       setSelectedPlatformValue(platformValue);
-      
+
       if (blogUrl) {
         const rssUrl = blogUrlToRss(blogUrl);
         store.handleInputChange(rssUrl, store.setRssUrl, store.setRssUrlValid, validateRssUrl);
@@ -101,6 +106,10 @@ export const useRssRegistrationForm = () => {
     }
   };
 
+  const handleRssDirectInput = (value: string) => {
+    store.handleInputChange(value, store.setRssUrl, store.setRssUrlValid, validateRssUrl);
+  };
+
   const getUsernameFromUrl = () => {
     const { prefix, suffix } = PLATFORMS[platform];
     return store.rssUrl.replace(prefix, "").replace(suffix, "");
@@ -124,6 +133,7 @@ export const useRssRegistrationForm = () => {
       handleBlogUrlChange,
       handlePlatformSelection,
       handleBadgeClick,
+      handleRssDirectInput,
       handleBloggerName: (value: string) =>
         store.handleInputChange(value, store.setBloggerName, store.setBloggerNameValid, validateBlogger),
       handleUserName: (value: string) =>
