@@ -8,6 +8,7 @@ import { ChatType } from "@/types/chat";
 interface ChatStore {
   chatHistory: ChatType[];
   userCount: number;
+  isLoading: boolean;
   connect: () => void;
   disconnect: () => void;
   getHistory: () => void;
@@ -16,7 +17,6 @@ interface ChatStore {
 
 export const useChatStore = create<ChatStore>((set) => {
   let socket: Socket | null = null;
-
   // 소켓 초기화 함수
   const initializeSocket = () => {
     if (socket) return socket; // 이미 존재하면 그대로 반환
@@ -53,7 +53,7 @@ export const useChatStore = create<ChatStore>((set) => {
   return {
     chatHistory: [],
     userCount: 0,
-
+    isLoading: true,
     // Socket 연결 함수
     connect: () => {
       if (socket) return; // 이미 연결된 경우 중복 방지
@@ -73,6 +73,7 @@ export const useChatStore = create<ChatStore>((set) => {
         socket.on("chatHistory", (data) => {
           set(() => ({
             chatHistory: data,
+            isLoading: false,
           }));
         });
       } else {
