@@ -67,25 +67,42 @@ export class FeedViewRepository extends Repository<FeedView> {
     super(FeedView, dataSource.createEntityManager());
   }
 
-  async findFeedPagination(lastId: number, limit: number) {
-    const query = this.createQueryBuilder()
-      .where((qb) => {
-        if (lastId) {
-          const subQuery = qb
-            .subQuery()
-            .select('order_id')
-            .from('feed_view', 'fv')
-            .where('fv.feed_id = :lastId', { lastId })
-            .getQuery();
-          return `order_id < (${subQuery})`;
-        }
-        return '';
-      })
-      .orderBy('order_id', 'DESC')
+  async findFeedPagination(lastId: number, limit: number, tag?: string) {
+    const query = this.createQueryBuilder('feed')
+      .leftJoinAndSelect('feed.tag', 'tagMap')
+      .orderBy('feed.createdAt', 'DESC')
       .take(limit + 1);
+
+    if (lastId) {
+      query.andWhere('feed.id < :lastId', { lastId });
+    }
+
+    if (tag) {
+      query.andWhere('tagMap.tag = :tag', { tag });
+    }
 
     return await query.getMany();
   }
+  //
+  // async findFeedPagination(lastId: number, limit: number) {
+  //   const query = this.createQueryBuilder()
+  //     .where((qb) => {
+  //       if (lastId) {
+  //         const subQuery = qb
+  //           .subQuery()
+  //           .select('order_id')
+  //           .from('feed_view', 'fv')
+  //           .where('fv.feed_id = :lastId', { lastId })
+  //           .getQuery();
+  //         return `order_id < (${subQuery})`;
+  //       }
+  //       return '';
+  //     })
+  //     .orderBy('order_id', 'DESC')
+  //     .take(limit + 1);
+  //
+  //   return await query.getMany();
+  // }
 
   async findFeedById(feedId: number) {
     const feed = await this.createQueryBuilder()
