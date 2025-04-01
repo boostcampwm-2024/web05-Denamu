@@ -21,10 +21,11 @@ export class FeedPaginationRequestDto {
 
   @IsOptional()
   @IsIn(ALLOWED_TAGS, {
+    each: true,
     message: `tag 값은 ${ALLOWED_TAGS.join(', ')} 목록에 포함 되어야 합니다.`,
   })
-  @Type(() => String)
-  tag: AllowedTag;
+  @Type(() => Array)
+  tags?: AllowedTag[];
 
   constructor(partial: Partial<FeedPaginationRequestDto>) {
     Object.assign(this, partial);
