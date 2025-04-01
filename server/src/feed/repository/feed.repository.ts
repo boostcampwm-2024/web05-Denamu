@@ -10,6 +10,45 @@ export class FeedRepository extends Repository<Feed> {
     super(Feed, dataSource.createEntityManager());
   }
 
+  async searchFeedListWithTags(
+    feedPaginationQueryDto: FeedPaginationRequestDto,
+  ) {
+    const { lastId, limit, tags } = feedPaginationQueryDto;
+
+    const qb = this.createQueryBuilder('feed')
+      .leftJoinAndSelect('feed.tag', 'tag_map')
+      .leftJoinAndSelect('feed.blog', 'rss_accept')
+      .select('feed')
+      .addSelect('ROW_NUMBER() OVER (ORDER BY feed.created_at) AS order_id')
+      .where((qb) => {
+        if (lastId) {
+          const subQuery = qb
+            .subQuery()
+            .select('order_id')
+            .from('feed', 'f')
+            .addSelect('ROW_NUMBER() OVER (ORDER BY f.created_at)', 'order_id')
+            .where('f.id = :lastId', { lastId })
+            .getQuery();
+          return `order_id < (${subQuery})`;
+        }
+        return '1=1';
+      })
+      .andWhere(tags && tags.length ? 'tag_map.tag IN (:...tags)' : '1=1', {
+        tags,
+      });
+
+    qb.groupBy('feed.id')
+      .addSelect('GROUP_CONCAT(DISTINCT tag_map.tag)', 'tag')
+      .orderBy('feed.created_at', 'DESC')
+      .limit(limit + 1);
+
+    const { raw, entities } = await qb.getRawAndEntities();
+    entities.forEach((feed, index) => {
+      feed.tag = raw[index].tag;
+    });
+    return entities;
+  }
+
   async searchFeedList(
     find: string,
     limit: number,
@@ -67,46 +106,30 @@ export class FeedViewRepository extends Repository<FeedView> {
     super(FeedView, dataSource.createEntityManager());
   }
 
-  async findFeedPagination(lastId: number, limit: number, tag?: string) {
-    const query = this.createQueryBuilder('feed')
-      .leftJoinAndSelect('feed.tag', 'tagMap')
-      .orderBy('feed.createdAt', 'DESC')
-      .take(limit + 1);
+  async findFeedPagination(feedPaginationQueryDto: FeedPaginationRequestDto) {
+    const { lastId, limit } = feedPaginationQueryDto;
 
-    if (lastId) {
-      query.andWhere('feed.id < :lastId', { lastId });
-    }
+    const query = this.createQueryBuilder().where((qb) => {
+      if (lastId) {
+        const subQuery = qb
+          .subQuery()
+          .select('order_id')
+          .from('feed_view', 'fv')
+          .where('fv.id = :lastId', { lastId })
+          .getQuery();
+        return `order_id < (${subQuery})`;
+      }
+      return '';
+    });
 
-    if (tag) {
-      query.andWhere('tagMap.tag = :tag', { tag });
-    }
+    query.orderBy('order_id', 'DESC').take(limit + 1);
 
     return await query.getMany();
   }
-  //
-  // async findFeedPagination(lastId: number, limit: number) {
-  //   const query = this.createQueryBuilder()
-  //     .where((qb) => {
-  //       if (lastId) {
-  //         const subQuery = qb
-  //           .subQuery()
-  //           .select('order_id')
-  //           .from('feed_view', 'fv')
-  //           .where('fv.feed_id = :lastId', { lastId })
-  //           .getQuery();
-  //         return `order_id < (${subQuery})`;
-  //       }
-  //       return '';
-  //     })
-  //     .orderBy('order_id', 'DESC')
-  //     .take(limit + 1);
-  //
-  //   return await query.getMany();
-  // }
 
   async findFeedById(feedId: number) {
     const feed = await this.createQueryBuilder()
-      .where('feed_id = :feedId', { feedId })
+      .where('id = :feedId', { feedId })
       .getOne();
     return feed;
   }
