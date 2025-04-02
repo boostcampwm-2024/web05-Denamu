@@ -84,18 +84,17 @@ export class Feed extends BaseEntity {
       .addSelect('rss_accept.blog_platform', 'blog_platform')
       .addSelect(
         `(
-  SELECT JSON_ARRAYAGG(t.tag)
-  FROM (
-    SELECT DISTINCT tag_map.tag AS tag
-    FROM tag_map
-    WHERE tag_map.feed_id = feed.id
-  ) t
-)`,
+          SELECT JSON_ARRAYAGG(t.tag)
+          FROM (
+            SELECT DISTINCT tag_map.tag AS tag
+            FROM tag_map
+            WHERE tag_map.feed_id = feed.id
+          ) t
+        )`,
         'tag',
       )
       .from(Feed, 'feed')
       .innerJoin(RssAccept, 'rss_accept', 'rss_accept.id = feed.blog_id')
-      .leftJoin(TagMap, 'tag_map', 'tag_map.feed_id = feed.id')
       .groupBy('feed.id'),
   name: 'feed_view',
 })
