@@ -11,7 +11,7 @@ export class FeedDetailResponseDto {
     private thumbnail: string,
     private viewCount: number,
     private summary: string,
-    private tag: string[],
+    private tag: string,
   ) {}
 
   static toResponseDto(feed: FeedView) {
@@ -25,7 +25,7 @@ export class FeedDetailResponseDto {
       feed.thumbnail,
       feed.viewCount,
       feed.summary,
-      feed.tag?.split(',') ?? [],
+      feed.tag,
     );
   }
 
