@@ -1,6 +1,5 @@
 import { usePostViewIncrement } from "@/hooks/queries/usePostViewIncrement";
 
-// import { pipe } from "@/utils/pipe";
 import { Post } from "@/types/post";
 
 interface PostWithState {
