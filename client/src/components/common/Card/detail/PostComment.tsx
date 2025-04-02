@@ -98,7 +98,7 @@ export default function PostComment({ comments }: PostCommentProps) {
       {/* 더보기 버튼 */}
       {comments.length > 1 && (
         <div className="flex justify-center">
-          <button className="px-4 py-2 border border-gray-200 rounded-full text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+          <button className="px-4 py-2 border border-gray-200 rounded-full text-sm text-black  hover:bg-gray-200 transition-colors">
             댓글 더보기
           </button>
         </div>

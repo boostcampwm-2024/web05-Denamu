@@ -7,8 +7,12 @@ export default function CommentAction({ id, handleModify }: { id: number; handle
   };
   return (
     <div className="flex gap-2 text-sm">
-      <button onClick={() => handleModify(id)}>수정</button>
-      <button onClick={handleOpen}>삭제</button>
+      <button onClick={() => handleModify(id)} className="text-gray-400">
+        수정
+      </button>
+      <button onClick={handleOpen} className="text-gray-400">
+        삭제
+      </button>
       {isOpen && <DeleteButton id={id} handleOpen={handleOpen} />}
     </div>
   );
