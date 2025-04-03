@@ -42,11 +42,10 @@ export class FeedService {
 
   async readFeedPagination(feedPaginationQueryDto: FeedPaginationRequestDto) {
     const feedList = await this.feedViewRepository.findFeedPagination(
-      feedPaginationQueryDto.lastId,
-      feedPaginationQueryDto.limit,
+      feedPaginationQueryDto,
     );
-    const hasMore = this.existNextFeed(feedList, feedPaginationQueryDto.limit);
 
+    const hasMore = this.existNextFeed(feedList, feedPaginationQueryDto.limit);
     if (hasMore) feedList.pop();
     const lastId = this.getLastIdFromFeedList(feedList);
     const newCheckFeedList = await this.checkNewFeeds(feedList);

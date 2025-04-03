@@ -25,7 +25,7 @@ export class FeedDetailResponseDto {
       feed.thumbnail,
       feed.viewCount,
       feed.summary,
-      feed.tag?.split(',') ?? [],
+      feed.tag ? feed.tag : [],
     );
   }
 

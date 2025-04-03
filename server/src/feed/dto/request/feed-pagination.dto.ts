@@ -1,5 +1,6 @@
-import { IsInt, IsOptional, Min } from 'class-validator';
+import { IsIn, IsInt, IsOptional, Min } from 'class-validator';
 import { Type } from 'class-transformer';
+import { ALLOWED_TAGS, AllowedTag } from '../../tagType.constants';
 
 export class FeedPaginationRequestDto {
   @IsOptional()
@@ -17,6 +18,14 @@ export class FeedPaginationRequestDto {
   })
   @Type(() => Number)
   limit?: number = 12;
+
+  @IsOptional()
+  @IsIn(ALLOWED_TAGS, {
+    each: true,
+    message: `tag 값은 ${ALLOWED_TAGS.join(', ')} 목록에 포함 되어야 합니다.`,
+  })
+  @Type(() => Array)
+  tags?: AllowedTag[];
 
   constructor(partial: Partial<FeedPaginationRequestDto>) {
     Object.assign(this, partial);

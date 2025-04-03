@@ -1,0 +1,26 @@
+export const ALLOWED_TAGS = [
+  '회고',
+  'Frontend',
+  'Backend',
+  'DB',
+  'Network',
+  'OS',
+  'Algorithm',
+  'Infra',
+  'TypeScript',
+  'JavaScript',
+  'Java',
+  'React',
+  'Vue.JS',
+  'Nest.JS',
+  'Express.JS',
+  'Spring',
+  'MySQL',
+  'SQLite',
+  'PostgreSQL',
+  'MongoDB',
+  'Redis',
+  'Docker',
+] as const;
+
+export type AllowedTag = (typeof ALLOWED_TAGS)[number];
