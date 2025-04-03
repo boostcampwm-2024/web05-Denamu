@@ -46,8 +46,6 @@ export class FeedService {
     );
 
     const hasMore = this.existNextFeed(feedList, feedPaginationQueryDto.limit);
-    console.log(feedList);
-
     if (hasMore) feedList.pop();
     const lastId = this.getLastIdFromFeedList(feedList);
     const newCheckFeedList = await this.checkNewFeeds(feedList);

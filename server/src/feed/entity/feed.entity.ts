@@ -152,5 +152,5 @@ export class FeedView {
   @ViewColumn({
     name: 'tag',
   })
-  tag: string;
+  tag: string[];
 }
