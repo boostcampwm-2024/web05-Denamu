@@ -8,15 +8,6 @@ export class ProviderRepository extends Repository<Provider> {
     super(Provider, dataSource.createEntityManager());
   }
 
-  async findByUserAndType(userId: number, providerType: string) {
-    return this.findOne({
-      where: {
-        user: { id: userId },
-        providerType,
-      },
-    });
-  }
-
   async findByProviderTypeAndId(providerType: string, providerUserId: string) {
     return this.findOne({
       where: {
