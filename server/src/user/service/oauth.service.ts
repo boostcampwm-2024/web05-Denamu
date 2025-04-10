@@ -24,7 +24,7 @@ export class OAuthService {
     const state = Buffer.from(JSON.stringify(stateData)).toString('base64');
 
     const options = {
-      redirect_uri: `http://localhost:8080/api/oauth/callback`,
+      redirect_uri: `https://denamu.site/api/oauth/callback`,
       client_id: process.env.GOOGLE_CLIENT_ID,
       access_type: 'offline',
       response_type: 'code',
@@ -38,7 +38,7 @@ export class OAuthService {
 
   async callback(req) {
     const { code, state } = req.query;
-    const { provider: providerType, timestamp } = JSON.parse(
+    const { provider: providerType } = JSON.parse(
       Buffer.from(state, 'base64').toString(),
     );
 
@@ -46,7 +46,7 @@ export class OAuthService {
       code,
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      redirectUri: `http://localhost:8080/api/oauth/callback`,
+      redirectUri: `https://denamu.site/api/oauth/callback`,
     });
 
     const {
@@ -57,14 +57,14 @@ export class OAuthService {
     } = tokenData;
 
     const googleUser = await this.getGoogleUser(idToken, accessToken);
-    const user = await this.saveGoogleUser(googleUser, {
+    await this.saveGoogleUser(googleUser, {
       providerType,
       accessToken,
       refreshToken,
       expiresIn,
     });
 
-    return 'http://localhost:5173';
+    return 'https://denamu.site';
   }
 
   private async getTokens({ code, clientId, clientSecret, redirectUri }) {
@@ -119,8 +119,6 @@ export class OAuthService {
         googleUser.id,
       );
 
-    console.log(JSON.stringify(googleUser));
-
     if (existingProvider) {
       existingProvider.accessToken = accessToken;
       if (refreshToken) {
@@ -136,23 +134,23 @@ export class OAuthService {
       }
       await this.providerRepository.save(existingProvider);
       this.logger.log(
-        '기존 사용자 인증 정보 업데이트 완료:',
-        existingProvider.user.email,
+        `기존 사용자 인증 정보 업데이트 완료: ${existingProvider.user.email}`,
       );
-      return existingProvider.user;
+      return;
     }
-    const user = await this.userRepository.findOne({
+
+    let user = await this.userRepository.findOne({
       where: { email: googleUser.email },
     });
 
     if (!user) {
-      await this.userRepository.save({
+      user = await this.userRepository.save({
         email: googleUser.email,
         userName: googleUser.name,
         profileImage: googleUser.picture,
         provider: providerType,
       });
-      this.logger.log('새로운 사용자 가입 완료:', user.email);
+      this.logger.log(`새로운 사용자 가입 완료: ${googleUser.email}`);
     }
 
     const accessTokenExpiresAt = new Date();
@@ -172,8 +170,7 @@ export class OAuthService {
     });
 
     this.logger.log(
-      '새로운 사용자 인증 정보 저장 완료:',
-      providerType + ' ' + user.email,
+      `새로운 사용자 인증 정보 저장 완료: ${providerType} ${user.email}`,
     );
   }
 }
