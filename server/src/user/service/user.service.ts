@@ -16,6 +16,7 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { cookieConfig } from '../../common/cookie/cookie.config';
+import { Payload } from '../../common/guard/jwt.guard';
 
 @Injectable()
 export class UserService {
@@ -87,10 +88,12 @@ export class UserService {
 
     const accessToken = this.jwtService.sign(payload, {
       expiresIn: this.configService.get('ACCESS_TOKEN_EXPIRE'),
+      secret: this.configService.get('JWT_ACCESS_SECRET'),
     });
 
     const refreshToken = this.jwtService.sign(payload, {
       expiresIn: this.configService.get('REFRESH_TOKEN_EXPIRE'),
+      secret: this.configService.get('JWT_REFRESH_SECRET'),
     });
 
     user.refreshToken = refreshToken;
@@ -102,5 +105,33 @@ export class UserService {
     });
 
     return accessToken;
+  }
+
+  tokenCreate(userInformation: Payload) {
+    const payload = {
+      id: userInformation.id,
+      email: userInformation.email,
+      userName: userInformation.userName,
+      role: 'user',
+    };
+
+    const accessToken = this.jwtService.sign(payload, {
+      expiresIn: this.configService.get('ACCESS_TOKEN_EXPIRE'),
+      secret: this.configService.get('JWT_ACCESS_SECRET'),
+    });
+
+    return accessToken;
+  }
+
+  async logoutUser(userInformation: Payload) {
+    const user = await this.userRepository.findOne({
+      where: {
+        id: parseInt(userInformation.id),
+        email: userInformation.email,
+        userName: userInformation.userName,
+      },
+    });
+    user.refreshToken = null;
+    await user.save();
   }
 }
