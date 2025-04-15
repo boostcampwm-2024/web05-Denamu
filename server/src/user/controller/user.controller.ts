@@ -94,7 +94,7 @@ export class UserController {
   @Post('/logout')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtGuard)
-  async logoutUser(@Res() res: Response, @Req() req) {
+  async logoutUser(@Res({ passthrough: true }) res, @Req() req) {
     const userInformation = req.user;
     await this.userService.logoutUser(userInformation);
     res.clearCookie('refresh_token');
