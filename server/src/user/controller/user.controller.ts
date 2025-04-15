@@ -23,6 +23,8 @@ import { LoginDto } from '../dto/request/login.dto';
 import { Response } from 'express';
 import { ApiLoginUser } from '../api-docs/loginUser.api-docs';
 import { JwtGuard, RefreshJwtGuard } from '../../common/guard/jwt.guard';
+import { ApiRefreshToken } from '../api-docs/refreshUser.api-docs';
+import { ApiLogoutUser } from '../api-docs/logoutUser.api-docs';
 
 @ApiTags('User')
 @Controller('user')
@@ -79,6 +81,7 @@ export class UserController {
     });
   }
 
+  @ApiRefreshToken()
   @Post('/refresh-token')
   @HttpCode(HttpStatus.OK)
   @UseGuards(RefreshJwtGuard)
@@ -91,6 +94,7 @@ export class UserController {
     );
   }
 
+  @ApiLogoutUser()
   @Post('/logout')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtGuard)
