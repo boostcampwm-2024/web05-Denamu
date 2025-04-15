@@ -1,8 +1,8 @@
 import { useState } from "react";
 
 import { FormInput } from "@/components/RssRegistration/FormInput";
-import { PlatformSelector } from "@/components/RssRegistration/PlatformSelector.tsx";
-import { RssUrlInput } from "@/components/RssRegistration/RssUrlInput";
+import { PlatformBadge } from "@/components/RssRegistration/PlatformBadge";
+import { BlogPlatformSelector } from "@/components/RssRegistration/PlatformSelector";
 import Alert from "@/components/common/Alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 
 import { useRssRegistrationForm } from "@/hooks/common/useRssRegistrationForm.ts";
+import { PLATFORM_OPTIONS } from "@/hooks/common/useRssRegistrationForm.ts";
 import { useRegisterRss } from "@/hooks/queries/useRegisterRss.ts";
 
 import { AlertType } from "@/types/alert.ts";
@@ -23,7 +24,7 @@ import { RegisterRss } from "@/types/rss.ts";
 export function RssRegistrationModal({ onClose, rssOpen }: { onClose: () => void; rssOpen: boolean }) {
   const [alertOpen, setAlertOpen] = useState<AlertType>({ title: "", content: "", isOpen: false });
 
-  const { platform, values, handlers, formState } = useRssRegistrationForm();
+  const { values, handlers, formState, blogPlatform, selectedPlatformValue } = useRssRegistrationForm();
   const { mutate } = useRegisterRss(
     () => {
       setAlertOpen({
@@ -53,6 +54,7 @@ export function RssRegistrationModal({ onClose, rssOpen }: { onClose: () => void
       blog: values.bloggerName,
       name: values.userName,
       email: values.email,
+      blogType: values.platformValue,
     };
     mutate(data);
   };
@@ -69,9 +71,39 @@ export function RssRegistrationModal({ onClose, rssOpen }: { onClose: () => void
         </DialogHeader>
 
         <div className="space-y-6">
-          <PlatformSelector platform={platform} onPlatformChange={handlers.handlePlatformChange} />
-          <RssUrlInput platform={platform} value={values.urlUsername} onChange={handlers.handleUsernameChange} />
-
+          <div className="space-y-2">
+            <FormInput
+              id="blogUrl"
+              type="text"
+              label="블로그 주소"
+              onChange={handlers.handleBlogUrlChange}
+              placeholder="https://myblog.tistory.com"
+              value={values.blogUrl}
+            />
+          </div>
+          <div className="space-y-2">
+            <BlogPlatformSelector
+              platforms={PLATFORM_OPTIONS}
+              value={selectedPlatformValue}
+              onChange={handlers.handlePlatformSelection}
+            />
+            {values.blogUrl && blogPlatform && (
+              <PlatformBadge platform={blogPlatform} onClick={handlers.handleBadgeClick} />
+            )}
+            {selectedPlatformValue === "other" && (
+              <div className="mt-4">
+                <FormInput
+                  id="rssUrl"
+                  type="text"
+                  label="RSS URL"
+                  onChange={handlers.handleRssDirectInput}
+                  placeholder="https://myblog.com/rss"
+                  value={values.rssUrl}
+                />
+                <p className="text-xs text-muted-foreground mt-1">기타 플랫폼은 RSS URL을 직접 입력해주세요.</p>
+              </div>
+            )}
+          </div>
           <div className="space-y-4">
             <FormInput
               id="blog"
@@ -99,7 +131,6 @@ export function RssRegistrationModal({ onClose, rssOpen }: { onClose: () => void
             />
           </div>
         </div>
-
         <DialogFooter>
           <Button
             type="submit"
