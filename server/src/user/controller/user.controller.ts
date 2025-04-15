@@ -74,7 +74,9 @@ export class UserController {
     @Res({ passthrough: true }) response: Response,
   ) {
     const accessToken = await this.userService.loginUser(loginDto, response);
-    return ApiResponse.responseWithData('로그인을 성공했습니다.', accessToken);
+    return ApiResponse.responseWithData('로그인을 성공했습니다.', {
+      accessToken,
+    });
   }
 
   @Post('/refresh-token')
