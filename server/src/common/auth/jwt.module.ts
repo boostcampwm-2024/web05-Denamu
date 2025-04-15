@@ -4,5 +4,6 @@ import { JwtGuard, RefreshJwtGuard } from '../guard/jwt.guard';
 
 @Module({
   providers: [JwtService, JwtGuard, RefreshJwtGuard],
+  exports: [JwtService],
 })
 export class JwtAuthModule {}
