@@ -4,6 +4,19 @@ import * as querystring from 'node:querystring';
 import axios from 'axios';
 import { ProviderRepository } from '../repository/provider.repository';
 import { WinstonLoggerService } from '../../common/logger/logger.service';
+import { Request } from 'express';
+
+const OAUTH_CONSTANTS = {
+  GOOGLE: {
+    AUTH_URL: `https://accounts.google.com/o/oauth2/v2/auth`,
+    TOKEN_URL: `https://oauth2.googleapis.com/token`,
+    USER_INFO_URL: `https://www.googleapis.com/oauth2/v1/userinfo`,
+  },
+  REDIRECT_PATH: {
+    CALLBACK: `api/oauth/callback`,
+  },
+  HOME: `https://denamu.site`,
+};
 
 @Injectable()
 export class OAuthService {
@@ -14,7 +27,7 @@ export class OAuthService {
   ) {}
 
   getGoogleAuthUrl() {
-    const googleOAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth`;
+    const googleOAuthUrl = OAUTH_CONSTANTS.GOOGLE.AUTH_URL;
 
     const stateData = {
       provider: 'google',
@@ -24,7 +37,7 @@ export class OAuthService {
     const state = Buffer.from(JSON.stringify(stateData)).toString('base64');
 
     const options = {
-      redirect_uri: `https://denamu.site/api/oauth/callback`,
+      redirect_uri: `${OAUTH_CONSTANTS.HOME}/${OAUTH_CONSTANTS.REDIRECT_PATH.CALLBACK}`,
       client_id: process.env.GOOGLE_CLIENT_ID,
       access_type: 'offline',
       response_type: 'code',
@@ -36,7 +49,7 @@ export class OAuthService {
     return `${googleOAuthUrl}?${querystring.stringify(options)}`;
   }
 
-  async callback(req) {
+  async callback(req: Request) {
     const { code, state } = req.query;
     const { provider: providerType } = JSON.parse(
       Buffer.from(state, 'base64').toString(),
@@ -46,7 +59,7 @@ export class OAuthService {
       code,
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      redirectUri: `https://denamu.site/api/oauth/callback`,
+      redirectUri: `${OAUTH_CONSTANTS.HOME}/${OAUTH_CONSTANTS.REDIRECT_PATH.CALLBACK}`,
     });
 
     const {
@@ -56,19 +69,21 @@ export class OAuthService {
       expires_in: expiresIn,
     } = tokenData;
 
-    const googleUser = await this.getGoogleUser(idToken, accessToken);
-    await this.saveGoogleUser(googleUser, {
-      providerType,
-      accessToken,
-      refreshToken,
-      expiresIn,
-    });
+    if (providerType === 'google') {
+      const googleUser = await this.getGoogleUser(idToken, accessToken);
+      await this.saveGoogleUser(googleUser, {
+        providerType,
+        accessToken,
+        refreshToken,
+        expiresIn,
+      });
+    }
 
-    return 'https://denamu.site';
+    return `${OAUTH_CONSTANTS.HOME}`;
   }
 
   private async getTokens({ code, clientId, clientSecret, redirectUri }) {
-    const url = 'https://oauth2.googleapis.com/token';
+    const tokenUrl = OAUTH_CONSTANTS.GOOGLE.TOKEN_URL;
     const values = {
       code,
       client_id: clientId,
@@ -78,11 +93,15 @@ export class OAuthService {
     };
 
     try {
-      const response = await axios.post(url, querystring.stringify(values), {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+      const response = await axios.post(
+        tokenUrl,
+        querystring.stringify(values),
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
         },
-      });
+      );
 
       return response.data;
     } catch (error) {
@@ -95,7 +114,7 @@ export class OAuthService {
   private async getGoogleUser(idToken: string, accessToken: string) {
     try {
       const response = await axios.get(
-        `https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${accessToken}`,
+        `${OAUTH_CONSTANTS.GOOGLE.USER_INFO_URL}?alt=json&access_token=${accessToken}`,
         {
           headers: {
             Authorization: `Bearer ${idToken}`,
