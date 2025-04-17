@@ -85,7 +85,7 @@ export class UserController {
   @Post('/refresh-token')
   @HttpCode(HttpStatus.OK)
   @UseGuards(RefreshJwtGuard)
-  async refreshToken(@Req() req) {
+  async refreshAccessToken(@Req() req) {
     const userInformation = req.user;
     const newAccessToken = this.userService.tokenCreate(userInformation);
     return ApiResponse.responseWithData(
