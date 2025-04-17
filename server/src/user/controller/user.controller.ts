@@ -87,10 +87,9 @@ export class UserController {
   @UseGuards(RefreshJwtGuard)
   async refreshAccessToken(@Req() req) {
     const userInformation = req.user;
-    const newAccessToken = this.userService.tokenCreate(userInformation);
     return ApiResponse.responseWithData(
       '엑세스 토큰을 재발급했습니다.',
-      newAccessToken,
+      this.userService.createAccessToken(userInformation),
     );
   }
 

@@ -80,16 +80,13 @@ export class UserService {
     }
 
     const payload = {
-      id: user.id,
+      id: String(user.id),
       email: user.email,
       userName: user.userName,
       role: 'user',
     };
 
-    const accessToken = this.jwtService.sign(payload, {
-      expiresIn: this.configService.get('ACCESS_TOKEN_EXPIRE'),
-      secret: this.configService.get('JWT_ACCESS_SECRET'),
-    });
+    const accessToken = this.createAccessToken(payload);
 
     const refreshToken = this.jwtService.sign(payload, {
       expiresIn: this.configService.get('REFRESH_TOKEN_EXPIRE'),
@@ -107,7 +104,7 @@ export class UserService {
     return accessToken;
   }
 
-  tokenCreate(userInformation: Payload) {
+  createAccessToken(userInformation: Payload) {
     const payload = {
       id: userInformation.id,
       email: userInformation.email,
