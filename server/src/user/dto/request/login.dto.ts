@@ -16,4 +16,8 @@ export class LoginDto {
   })
   @IsNotEmpty({ message: '비밀번호를 입력하세요.' })
   password: string;
+
+  constructor(partial: Partial<LoginDto>) {
+    Object.assign(this, partial);
+  }
 }
