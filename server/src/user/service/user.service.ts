@@ -86,14 +86,9 @@ export class UserService {
       role: 'user',
     };
 
-    const accessToken = this.createAccessToken(payload);
+    const accessToken = this.createToken(payload, 'access');
 
-    const refreshToken = this.jwtService.sign(payload, {
-      expiresIn: this.configService.get('REFRESH_TOKEN_EXPIRE'),
-      secret: this.configService.get('JWT_REFRESH_SECRET'),
-    });
-
-    user.refreshToken = refreshToken;
+    const refreshToken = this.createToken(payload, 'refresh');
     await user.save();
 
     response.cookie('refresh_token', refreshToken, {
@@ -104,7 +99,7 @@ export class UserService {
     return accessToken;
   }
 
-  createAccessToken(userInformation: Payload) {
+  createToken(userInformation: Payload, mode: string) {
     const payload = {
       id: userInformation.id,
       email: userInformation.email,
@@ -112,12 +107,17 @@ export class UserService {
       role: 'user',
     };
 
-    const accessToken = this.jwtService.sign(payload, {
-      expiresIn: this.configService.get('ACCESS_TOKEN_EXPIRE'),
-      secret: this.configService.get('JWT_ACCESS_SECRET'),
-    });
-
-    return accessToken;
+    if (mode === 'access') {
+      return this.jwtService.sign(payload, {
+        expiresIn: this.configService.get('ACCESS_TOKEN_EXPIRE'),
+        secret: this.configService.get('JWT_ACCESS_SECRET'),
+      });
+    } else if (mode === 'refresh') {
+      return this.jwtService.sign(payload, {
+        expiresIn: this.configService.get('REFRESH_TOKEN_EXPIRE'),
+        secret: this.configService.get('JWT_ACCESS_SECRET'),
+      });
+    }
   }
 
   async logoutUser(userInformation: Payload) {
