@@ -44,4 +44,6 @@ const jwtEnvSetup = () => {
   console.log('Starting Jwt Environment...');
   process.env.JWT_ACCESS_SECRET = 'temp';
   process.env.JWT_REFRESH_SECRET = 'temp';
+  process.env.ACCESS_TOKEN_EXPIRE = '1d';
+  process.env.REFRESH_TOKEN_EXPIRE = '1d';
 };
