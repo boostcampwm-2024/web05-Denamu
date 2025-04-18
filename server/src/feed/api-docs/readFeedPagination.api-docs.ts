@@ -26,6 +26,13 @@ export function ApiReadFeedPagination() {
       example: 5,
       default: 12,
     }),
+    ApiQuery({
+      name: 'tags',
+      required: false,
+      type: Array,
+      description: '태그 이름 목록',
+      example: '',
+    }),
     ApiOkResponse({
       description: 'Ok',
       schema: {

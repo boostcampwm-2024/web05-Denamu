@@ -1,4 +1,4 @@
-import { DataSource, Repository } from 'typeorm';
+import { Brackets, DataSource, Repository } from 'typeorm';
 import { Feed, FeedView } from '../entity/feed.entity';
 import { Injectable } from '@nestjs/common';
 import { FeedPaginationRequestDto } from '../dto/request/feed-pagination.dto';
@@ -67,29 +67,48 @@ export class FeedViewRepository extends Repository<FeedView> {
     super(FeedView, dataSource.createEntityManager());
   }
 
-  async findFeedPagination(lastId: number, limit: number) {
-    const query = this.createQueryBuilder()
-      .where((qb) => {
-        if (lastId) {
-          const subQuery = qb
-            .subQuery()
-            .select('order_id')
-            .from('feed_view', 'fv')
-            .where('fv.feed_id = :lastId', { lastId })
-            .getQuery();
-          return `order_id < (${subQuery})`;
-        }
-        return '';
-      })
-      .orderBy('order_id', 'DESC')
-      .take(limit + 1);
+  async findFeedPagination(feedPaginationQueryDto: FeedPaginationRequestDto) {
+    const { lastId, limit, tags } = feedPaginationQueryDto;
+
+    const query = this.createQueryBuilder().where((qb) => {
+      if (lastId) {
+        const subQuery = qb
+          .subQuery()
+          .select('order_id')
+          .from('feed_view', 'fv')
+          .where('fv.id = :lastId', { lastId })
+          .getQuery();
+        return `order_id < (${subQuery})`;
+      }
+      return '';
+    });
+
+    if (tags) {
+      if (typeof tags === 'string') {
+        query.andWhere('JSON_CONTAINS(tag, :tag) = 1', {
+          tag: JSON.stringify(tags),
+        });
+      } else {
+        query.andWhere(
+          new Brackets((qb) => {
+            tags.forEach((tag, index) => {
+              qb.orWhere(`JSON_CONTAINS(tag, :tag${index}) = 1`, {
+                [`tag${index}`]: JSON.stringify(tag),
+              });
+            });
+          }),
+        );
+      }
+    }
+
+    query.orderBy('order_id', 'DESC').take(limit + 1);
 
     return await query.getMany();
   }
 
   async findFeedById(feedId: number) {
     const feed = await this.createQueryBuilder()
-      .where('feed_id = :feedId', { feedId })
+      .where('id = :feedId', { feedId })
       .getOne();
     return feed;
   }
