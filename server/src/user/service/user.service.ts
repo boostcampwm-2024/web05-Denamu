@@ -3,6 +3,7 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { RegisterDto } from '../dto/request/register.dto';
 import { v4 as uuidv4 } from 'uuid';
@@ -15,6 +16,7 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { cookieConfig } from '../../common/cookie/cookie.config';
+import { Payload } from '../../common/guard/jwt.guard';
 
 @Injectable()
 export class UserService {
@@ -75,28 +77,18 @@ export class UserService {
     });
 
     if (!user || !(await bcrypt.compare(loginDto.password, user.password))) {
-      throw new NotFoundException('아이디 혹은 비밀번호가 잘못되었습니다.');
+      throw new UnauthorizedException('아이디 혹은 비밀번호가 잘못되었습니다.');
     }
 
     const payload = {
-      id: user.id,
+      id: String(user.id),
       email: user.email,
       userName: user.userName,
       role: 'user',
     };
 
-    const accessToken = this.jwtService.sign(payload, {
-      secret: this.configService.get('JWT_SECRET'),
-      expiresIn: this.configService.get('ACCESS_TOKEN_EXPIRE'),
-    });
-
-    const refreshToken = this.jwtService.sign(payload, {
-      secret: this.configService.get('JWT_SECRET'),
-      expiresIn: this.configService.get('REFRESH_TOKEN_EXPIRE'),
-    });
-
-    user.refreshToken = refreshToken;
-    await user.save();
+    const accessToken = this.createToken(payload, 'access');
+    const refreshToken = this.createToken(payload, 'refresh');
 
     response.cookie('refresh_token', refreshToken, {
       ...cookieConfig[process.env.NODE_ENV],
@@ -104,6 +96,22 @@ export class UserService {
     });
 
     return accessToken;
+  }
+
+  createToken(userInformation: Payload, mode: string) {
+    const payload = {
+      id: userInformation.id,
+      email: userInformation.email,
+      userName: userInformation.userName,
+      role: 'user',
+    };
+
+    return this.jwtService.sign(payload, {
+      expiresIn: this.configService.get(
+        `${mode === 'access' ? 'ACCESS_TOKEN_EXPIRE' : 'REFRESH_TOKEN_EXPIRE'}`,
+      ),
+      secret: this.configService.get('JWT_ACCESS_SECRET'),
+    });
   }
 
   private async createHashedPassword(password) {

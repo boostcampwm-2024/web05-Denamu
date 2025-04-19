@@ -7,7 +7,9 @@ import {
   HttpStatus,
   Post,
   Query,
+  Req,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiResponse } from '../../common/response/common.response';
 import { UserService } from '../service/user.service';
@@ -20,6 +22,9 @@ import { CheckEmailDuplicationRequestDto } from '../dto/request/check-email-dupl
 import { LoginDto } from '../dto/request/login.dto';
 import { Response } from 'express';
 import { ApiLoginUser } from '../api-docs/loginUser.api-docs';
+import { JwtGuard, RefreshJwtGuard } from '../../common/guard/jwt.guard';
+import { ApiRefreshToken } from '../api-docs/refreshUser.api-docs';
+import { ApiLogoutUser } from '../api-docs/logoutUser.api-docs';
 
 @ApiTags('User')
 @Controller('user')
@@ -71,6 +76,29 @@ export class UserController {
     @Res({ passthrough: true }) response: Response,
   ) {
     const accessToken = await this.userService.loginUser(loginDto, response);
-    return ApiResponse.responseWithData('로그인을 성공했습니다.', accessToken);
+    return ApiResponse.responseWithData('로그인을 성공했습니다.', {
+      accessToken,
+    });
+  }
+
+  @ApiRefreshToken()
+  @Post('/refresh-token')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(RefreshJwtGuard)
+  async refreshAccessToken(@Req() req) {
+    const userInformation = req.user;
+    return ApiResponse.responseWithData(
+      '엑세스 토큰을 재발급했습니다.',
+      this.userService.createToken(userInformation, 'access'),
+    );
+  }
+
+  @ApiLogoutUser()
+  @Post('/logout')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtGuard)
+  async logoutUser(@Res({ passthrough: true }) res) {
+    res.clearCookie('refresh_token');
+    return ApiResponse.responseWithNoContent('로그아웃을 성공했습니다.');
   }
 }

@@ -3,11 +3,11 @@ import { AdminRepository } from '../../admin/repository/admin.repository';
 import { UserRepository } from '../repository/user.repository';
 import { UserService } from '../service/user.service';
 import { UserController } from '../controller/user.controller';
-import { JwtService } from '@nestjs/jwt';
+import { JwtAuthModule } from '../../common/auth/jwt.module';
 
 @Module({
-  imports: [],
+  imports: [JwtAuthModule],
   controllers: [UserController],
-  providers: [UserService, AdminRepository, UserRepository, JwtService],
+  providers: [UserService, AdminRepository, UserRepository],
 })
 export class UserModule {}

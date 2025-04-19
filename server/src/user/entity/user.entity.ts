@@ -46,12 +46,6 @@ export class User extends BaseEntity {
   })
   introduction: string;
 
-  @Column({
-    name: 'refresh_token',
-    nullable: true,
-  })
-  refreshToken: string;
-
   @OneToMany(() => Activity, (activity) => activity.user)
   activities: Activity[];
 }
