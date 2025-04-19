@@ -114,18 +114,6 @@ export class UserService {
     });
   }
 
-  async logoutUser(userInformation: Payload) {
-    const user = await this.userRepository.findOne({
-      where: {
-        id: parseInt(userInformation.id),
-        email: userInformation.email,
-        userName: userInformation.userName,
-      },
-    });
-    user.refreshToken = null;
-    await user.save();
-  }
-
   private async createHashedPassword(password: string) {
     const saltRounds = 10;
     return await bcrypt.hash(password, saltRounds);
