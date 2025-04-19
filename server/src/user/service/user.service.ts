@@ -3,6 +3,7 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { RegisterDto } from '../dto/request/register.dto';
 import { v4 as uuidv4 } from 'uuid';
@@ -76,7 +77,7 @@ export class UserService {
     });
 
     if (!user || !(await bcrypt.compare(loginDto.password, user.password))) {
-      throw new NotFoundException('아이디 혹은 비밀번호가 잘못되었습니다.');
+      throw new UnauthorizedException('아이디 혹은 비밀번호가 잘못되었습니다.');
     }
 
     const payload = {
