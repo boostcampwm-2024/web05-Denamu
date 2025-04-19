@@ -40,7 +40,7 @@ describe('POST /api/user/login E2E Test', () => {
     const response = await agent.post('/api/user/login').send(loginDto);
 
     // then
-    expect(response.status).toBe(404);
+    expect(response.status).toBe(401);
   });
 
   it('비밀번호를 틀렸을 경우 로그인 실패가 발생한다.', async () => {
@@ -53,6 +53,6 @@ describe('POST /api/user/login E2E Test', () => {
     const response = await agent.post('/api/user/login').send(loginDto);
 
     // then
-    expect(response.status).toBe(404);
+    expect(response.status).toBe(401);
   });
 });
