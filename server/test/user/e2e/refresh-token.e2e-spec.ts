@@ -3,11 +3,13 @@ import { UserService } from '../../../src/user/service/user.service';
 import * as request from 'supertest';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../fixture/user.fixture';
+import { User } from '../../../src/user/entity/user.entity';
 
 describe('POST /api/user/refresh-token E2E Test', () => {
   let app: INestApplication;
   let userService: UserService;
   let refreshToken: string;
+  let userInformation: User;
 
   beforeAll(async () => {
     app = global.testApp;
@@ -15,22 +17,9 @@ describe('POST /api/user/refresh-token E2E Test', () => {
 
     const userRepository = app.get(UserRepository);
 
-    const userInformation = await userRepository.save(
+    userInformation = await userRepository.save(
       await UserFixture.createUserCryptFixture(),
     );
-
-    refreshToken = userService.createToken(
-      {
-        id: String(userInformation.id),
-        email: userInformation.email,
-        userName: userInformation.userName,
-        role: 'user',
-      },
-      'refresh',
-    );
-    userInformation.refreshToken = refreshToken;
-
-    await userRepository.save(userInformation);
   });
 
   it('Refresh Token이 없을 때, Access Token을 발급하지 않는다.', async () => {
@@ -47,6 +36,15 @@ describe('POST /api/user/refresh-token E2E Test', () => {
   it('Refresh Token이 있을 때, Access Token을 성공적으로 발급한다.', async () => {
     // given
     const agent = request.agent(app.getHttpServer());
+    userService.createToken(
+      {
+        id: String(userInformation.id),
+        email: userInformation.email,
+        userName: userInformation.userName,
+        role: 'user',
+      },
+      'refresh',
+    );
 
     // when
     const response = await agent
