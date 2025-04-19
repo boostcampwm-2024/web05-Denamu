@@ -89,7 +89,7 @@ export class UserController {
     const userInformation = req.user;
     return ApiResponse.responseWithData(
       '엑세스 토큰을 재발급했습니다.',
-      this.userService.createAccessToken(userInformation),
+      this.userService.createToken(userInformation, 'access'),
     );
   }
 
