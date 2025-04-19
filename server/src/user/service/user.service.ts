@@ -65,7 +65,7 @@ export class UserService {
     if (!user) {
       throw new NotFoundException('인증에 실패했습니다.');
     }
-
+    this.redisService.del(`${USER_CONSTANTS.USER_AUTH_KEY}_${uuid}`);
     await this.userRepository.save(JSON.parse(user));
   }
 
