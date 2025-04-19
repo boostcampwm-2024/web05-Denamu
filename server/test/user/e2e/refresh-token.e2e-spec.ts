@@ -8,7 +8,6 @@ import { User } from '../../../src/user/entity/user.entity';
 describe('POST /api/user/refresh-token E2E Test', () => {
   let app: INestApplication;
   let userService: UserService;
-  let refreshToken: string;
   let userInformation: User;
 
   beforeAll(async () => {
@@ -36,7 +35,7 @@ describe('POST /api/user/refresh-token E2E Test', () => {
   it('Refresh Token이 있을 때, Access Token을 성공적으로 발급한다.', async () => {
     // given
     const agent = request.agent(app.getHttpServer());
-    userService.createToken(
+    const refreshToken = userService.createToken(
       {
         id: String(userInformation.id),
         email: userInformation.email,
