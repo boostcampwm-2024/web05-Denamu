@@ -88,9 +88,7 @@ export class UserService {
     };
 
     const accessToken = this.createToken(payload, 'access');
-
     const refreshToken = this.createToken(payload, 'refresh');
-    await user.save();
 
     response.cookie('refresh_token', refreshToken, {
       ...cookieConfig[process.env.NODE_ENV],
@@ -108,17 +106,12 @@ export class UserService {
       role: 'user',
     };
 
-    if (mode === 'access') {
-      return this.jwtService.sign(payload, {
-        expiresIn: this.configService.get('ACCESS_TOKEN_EXPIRE'),
-        secret: this.configService.get('JWT_ACCESS_SECRET'),
-      });
-    } else if (mode === 'refresh') {
-      return this.jwtService.sign(payload, {
-        expiresIn: this.configService.get('REFRESH_TOKEN_EXPIRE'),
-        secret: this.configService.get('JWT_ACCESS_SECRET'),
-      });
-    }
+    return this.jwtService.sign(payload, {
+      expiresIn: this.configService.get(
+        `${mode === 'access' ? 'ACCESS_TOKEN_EXPIRE' : 'REFRESH_TOKEN_EXPIRE'}`,
+      ),
+      secret: this.configService.get('JWT_ACCESS_SECRET'),
+    });
   }
 
   async logoutUser(userInformation: Payload) {
