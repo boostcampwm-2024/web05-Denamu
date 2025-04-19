@@ -97,9 +97,7 @@ export class UserController {
   @Post('/logout')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtGuard)
-  async logoutUser(@Res({ passthrough: true }) res, @Req() req) {
-    const userInformation = req.user;
-    await this.userService.logoutUser(userInformation);
+  async logoutUser(@Res({ passthrough: true }) res) {
     res.clearCookie('refresh_token');
     return ApiResponse.responseWithNoContent('로그아웃을 성공했습니다.');
   }
