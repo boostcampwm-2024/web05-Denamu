@@ -1,11 +1,14 @@
 import {
   BaseEntity,
   Column,
+  CreateDateColumn,
   Entity,
   OneToMany,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { Activity } from '../../activity/entity/activity.entity';
+import { Provider } from './provider.entity';
 
 @Entity({
   name: 'user',
@@ -23,7 +26,7 @@ export class User extends BaseEntity {
 
   @Column({
     length: 60,
-    nullable: false,
+    nullable: true,
   })
   password: string;
 
@@ -52,6 +55,19 @@ export class User extends BaseEntity {
   })
   refreshToken: string;
 
+  @CreateDateColumn({
+    name: 'created_at',
+  })
+  createdAt: Date;
+
+  @UpdateDateColumn({
+    name: 'updated_at',
+  })
+  updatedAt: Date;
+
   @OneToMany(() => Activity, (activity) => activity.user)
   activities: Activity[];
+
+  @OneToMany(() => Provider, (provider) => provider.user)
+  providers: Provider[];
 }
