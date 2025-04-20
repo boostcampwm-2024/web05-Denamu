@@ -65,7 +65,25 @@ export default function BarChartItem({ data, title, description, color }: BarTyp
               axisLine={false}
               tickFormatter={(value) => truncateText(value)}
             />
-            <ChartTooltip cursor={true} content={<ChartTooltipContent />} />
+            <ChartTooltip
+              cursor={true}
+              content={
+                <ChartTooltipContent
+                  formatter={(value) => (
+                    <p className="flex w-full justify-between">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="shrink-0 rounded-[2px] border-[--color-border] bg-[--color-bg] h-2.5 w-2.5"
+                          style={{ backgroundColor: "var(--color-desktop)" }}
+                        ></div>
+                        <span className="text-gray-400">조회수</span>
+                      </div>
+                      <span>{value.toLocaleString()}</span>
+                    </p>
+                  )}
+                />
+              }
+            />
             <Bar dataKey="viewCount" fill="var(--color-desktop)" radius={8} />
           </BarChart>
         </ChartContainer>

@@ -25,7 +25,7 @@ export class FeedResult {
       feed.thumbnail,
       feed.viewCount,
       feed.isNew,
-      feed.tag?.split(',') ?? [],
+      feed.tag ? feed.tag : [],
     );
   }
 
@@ -75,7 +75,7 @@ export class FeedTrendResponseDto {
       feed.createdAt,
       feed.thumbnail,
       feed.viewCount,
-      feed.tag?.split(',') ?? [],
+      feed.tag ? feed.tag : [],
     );
   }
 
