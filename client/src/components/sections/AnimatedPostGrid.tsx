@@ -11,7 +11,7 @@ interface AnimatedPostGridProps {
   posts: Post[];
 }
 
-const AnimatedPostGrid = ({ posts }: AnimatedPostGridProps) => {
+const AnimatedPostGrid = ({ posts = [] }: AnimatedPostGridProps) => {
   const { hasPosition } = usePositionTracking(posts);
   if (posts.length === 0) {
     return <EmptyPost />;
