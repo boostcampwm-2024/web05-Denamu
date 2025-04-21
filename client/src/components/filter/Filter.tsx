@@ -1,51 +1,79 @@
 import { useState } from "react";
 
-import { Badge } from "@/components/ui/badge";
-
-import { FILTER } from "@/constants/filter";
+import { CATEGORIES, CATEGORIES_KEY, CATEGORIES_MAP } from "@/constants/filter";
 
 import { useFilterStore } from "@/store/useFilterStore";
 
 export default function Filter() {
+  const [lastActiveCategory, setLastActiveCategory] = useState<string>("FrontEnd");
   const [filterOpen, setFilterOpen] = useState<boolean>(false);
+  const handleFilterOpen = () => {
+    setFilterOpen(!filterOpen);
+  };
+
+  const handleCategoryChange = (category: string) => {
+    setLastActiveCategory(category);
+  };
+
   return (
-    <div className={`mt-4 ${filterOpen ? "md:p-6" : "md: px-6"} md:pt-0 rounded-lg flex flex-col gap-3`}>
+    <div className={`mt-4 md:pt-0 rounded-lg flex flex-col gap-1`}>
       <div className="flex gap-6">
-        <span className="font-bold">태그로 필터링 하기</span>
-        <button
-          onClick={() => {
-            setFilterOpen(!filterOpen);
-          }}
-          className="text-sm text-red-400"
-        >
+        <span className="font-bold">카테고리</span>
+        <button className="text-sm text-red-400" onClick={handleFilterOpen}>
           {filterOpen ? "닫기" : "열기"}
         </button>
       </div>
-      {filterOpen && <Filters />}
+      {filterOpen && (
+        <Filters
+          filters={CATEGORIES[CATEGORIES_MAP[lastActiveCategory as keyof typeof CATEGORIES_MAP]]}
+          keys={CATEGORIES_KEY}
+          activeCategory={lastActiveCategory}
+          onCategoryChange={handleCategoryChange}
+        />
+      )}
     </div>
   );
 }
 
-function Filters() {
-  const { filters: pickedFilter, addFilter, removeFilter, addALL, removeAll } = useFilterStore();
-  const commonClass = ` w-fit sm:text-sm md:text-md select-none cursor-pointer`;
+function Filters({
+  filters,
+  keys,
+  activeCategory,
+  onCategoryChange,
+}: {
+  filters: string[];
+  keys: string[];
+  activeCategory: string;
+  onCategoryChange: (category: string) => void;
+}) {
+  const { filters: pickedFilter, addFilter, removeFilter } = useFilterStore();
+  const commonClass = `w-fit sm:text-sm md:text-md select-none cursor-pointer`;
   return (
-    <ul className="flex flex-wrap gap-x-2 gap-y-2 place-items-start w-fit gap-1 ">
-      <Badge
-        className={`${pickedFilter.length === FILTER.length ? "bg-primary" : "bg-gray-400 hover:bg-gray-500"} ${commonClass}`}
-        onClick={() => (pickedFilter.length === FILTER.length ? removeAll() : addALL())}
-      >
-        전체
-      </Badge>
-      {FILTER.map((filter, index) => (
-        <Badge
-          key={index}
-          className={`${pickedFilter.includes(filter) ? "bg-primary" : "bg-gray-400 hover:bg-gray-500"} ${commonClass}`}
-          onClick={() => (pickedFilter.includes(filter) ? removeFilter(filter) : addFilter(filter))}
-        >
-          {filter}
-        </Badge>
-      ))}
-    </ul>
+    <div className="flex flex-col">
+      <ul className="py-2 flex gap-2">
+        {keys.map((category, index) => (
+          <li
+            key={index}
+            onClick={() => onCategoryChange(category)}
+            className={`px-3 py-1 rounded cursor-pointer transition ${
+              category === activeCategory ? "bg-secondary text-white" : "bg-white fext-secondary hover:bg-gray-100"
+            }`}
+          >
+            {category}
+          </li>
+        ))}
+      </ul>
+      <ul className="flex flex-wrap gap-x-2 gap-y-2 place-items-start w-fit gap-1 py-2">
+        {filters.map((filter, index) => (
+          <li
+            key={index}
+            className={`${pickedFilter.includes(filter) ? "bg-primary text-white" : "bg-gray-200 hover:bg-gray-300 text-gray-800"} ${commonClass} px-3 py-1 rounded-full`}
+            onClick={() => (pickedFilter.includes(filter) ? removeFilter(filter) : addFilter(filter))}
+          >
+            {filter}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
