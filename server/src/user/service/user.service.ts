@@ -114,7 +114,7 @@ export class UserService {
     });
   }
 
-  private async createHashedPassword(password) {
+  private async createHashedPassword(password: string) {
     const saltRounds = 10;
     return await bcrypt.hash(password, saltRounds);
   }
