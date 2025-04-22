@@ -1,26 +1,19 @@
 import { ConfigService } from '@nestjs/config';
 
 export function loadDBSetting(configService: ConfigService) {
-  const type = configService.get<'mysql' | 'sqlite'>('DB_TYPE');
-  const database = configService.get<string>('DB_DATABASE');
-  const host = configService.get<string>('DB_HOST');
-  const port = configService.get<number>('DB_PORT');
-  const username = configService.get<string>('DB_USERNAME');
-  const password = configService.get<string>('DB_PASSWORD');
-  const entities = [`${__dirname}/../../**/*.entity.{js,ts}`];
-  const synchronize = true;
-  const logging =
-    process.env.NODE_ENV === 'LOCAL' || process.env.NODE_ENV === 'DEV';
-
+  const isDev = ['LOCAL', 'DEV'].includes(process.env.NODE_ENV);
   return {
-    type,
-    database,
-    host,
-    port,
-    username,
-    password,
-    entities,
-    synchronize,
-    logging,
+    type: configService.get<'mysql' | 'sqlite'>('DB_TYPE'),
+    database: configService.get<string>('DB_DATABASE'),
+    host: configService.get<string>('DB_HOST'),
+    port: configService.get<number>('DB_PORT'),
+    username: configService.get<string>('DB_USERNAME'),
+    password: configService.get<string>('DB_PASSWORD'),
+    entities: [`${__dirname}/../../**/*.entity.{js,ts}`],
+
+    synchronize: isDev,
+    migrations: [`${__dirname}/../../migration/*.{js,ts}`],
+    migrationsRun: true,
+    logging: isDev,
   };
 }
