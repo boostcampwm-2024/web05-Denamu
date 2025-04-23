@@ -59,7 +59,7 @@ export default function LatestSection() {
           secondDescription="사용자 맞춤 추천 포스트"
         />
         {pickedFilter.length !== 0 && postType === "latest" && (
-          <div className="flex gap-2 items-center">
+          <div className=" gap-2 items-center hidden md:flex">
             <ul className="flex flex-wrap gap-x-2 gap-y-2">
               {pickedFilter.map((filter, index) => (
                 <Badge key={index} className="hover:bg-primary">

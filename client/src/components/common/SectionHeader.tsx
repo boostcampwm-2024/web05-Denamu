@@ -30,7 +30,7 @@ export const SectionHeader = ({
 
       <h2
         className={clsx(
-          "text-xl font-semibold",
+          "text-lg md:text-xl font-semibold",
           secondText && postType !== "latest" && "text-gray-400 cursor-pointer hover:text-black"
         )}
         onClick={() => secondText && setPostType("latest")}
@@ -41,7 +41,7 @@ export const SectionHeader = ({
       {secondText && (
         <h2
           className={clsx(
-            "text-xl font-semibold",
+            "text-lg md:text-xl font-semibold",
             postType !== "recommend" && "text-gray-400 cursor-pointer hover:text-black"
           )}
           onClick={() => setPostType("recommend")}
@@ -50,7 +50,7 @@ export const SectionHeader = ({
         </h2>
       )}
 
-      <p className="text-sm text-gray-400 mt-1">{hasSecond ? description : secondDescription}</p>
+      <p className="text-xs md:text-sm text-gray-400 mt-1">{hasSecond ? description : secondDescription}</p>
     </div>
   );
 };

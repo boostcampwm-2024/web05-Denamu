@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import clsx from "clsx";
+
 import { CATEGORIES, CATEGORIES_KEY, CATEGORIES_MAP } from "@/constants/filter";
 
 import { useFilterStore } from "@/store/useFilterStore";
@@ -16,7 +18,7 @@ export default function Filter() {
   };
 
   return (
-    <div className={`mt-4 md:pt-0 rounded-lg flex flex-col gap-1`}>
+    <div className={`px-4 md:px-0 mt-0 md:pt-3 rounded-lg flex flex-col gap-1`}>
       <div className="flex gap-6">
         <span className="font-bold">카테고리</span>
         <button className="text-sm text-red-400" onClick={handleFilterOpen}>
@@ -47,7 +49,7 @@ function Filters({
   onCategoryChange: (category: string) => void;
 }) {
   const { filters: pickedFilter, addFilter, removeFilter } = useFilterStore();
-  const commonClass = `w-fit sm:text-sm md:text-md select-none cursor-pointer`;
+  const commonClass = `w-fit select-none cursor-pointer`;
   return (
     <div className="flex flex-col">
       <ul className="py-2 flex gap-2">
@@ -55,9 +57,10 @@ function Filters({
           <li
             key={index}
             onClick={() => onCategoryChange(category)}
-            className={`px-3 py-1 rounded cursor-pointer transition ${
+            className={clsx(
+              "px-1 md:px-3 py-1 rounded cursor-pointer transition text-xs md:text-base",
               category === activeCategory ? "bg-secondary text-white" : "bg-white fext-secondary hover:bg-gray-100"
-            }`}
+            )}
           >
             {category}
           </li>
@@ -67,7 +70,11 @@ function Filters({
         {filters.map((filter, index) => (
           <li
             key={index}
-            className={`${pickedFilter.includes(filter) ? "bg-primary text-white" : "bg-gray-200 hover:bg-gray-300 text-gray-800"} ${commonClass} px-3 py-1 rounded-full`}
+            className={clsx(
+              pickedFilter.includes(filter) ? "bg-primary text-white" : "bg-gray-200 hover:bg-gray-300 text-gray-800",
+              commonClass,
+              "px-2 md:px-3 text-xs md:text-sm  py-1 rounded-full "
+            )}
             onClick={() => (pickedFilter.includes(filter) ? removeFilter(filter) : addFilter(filter))}
           >
             {filter}
