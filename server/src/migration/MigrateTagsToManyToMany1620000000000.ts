@@ -47,5 +47,33 @@ export class MigrateTagsToManyToMany1620000000000
   `);
   }
 
-  public async down(queryRunner: QueryRunner): Promise<void> {}
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    // 1. 현재 tag_map (feed_tags) 테이블 임시 이름으로 변경
+    await queryRunner.query(`
+      RENAME TABLE tag_map TO feed_tags_temp;
+    `);
+
+    // 2. 원래 구조의 tag_map 테이블 복원
+    await queryRunner.query(`
+      CREATE TABLE tag_map (
+        feed_id INT NOT NULL,
+        tag VARCHAR(50) NOT NULL,
+        INDEX IDX_tag_map_feed (feed_id),
+        INDEX IDX_tag_map_tag (tag),
+        CONSTRAINT FK_tag_map_feed FOREIGN KEY (feed_id) REFERENCES feed(id) ON DELETE CASCADE
+      ) ENGINE=InnoDB;
+    `);
+
+    // 3. 데이터 재이관: 문자열 태그 복원
+    await queryRunner.query(`
+      INSERT INTO tag_map (feed_id, tag)
+      SELECT ft.feed_id, t.name
+      FROM feed_tags_temp ft
+      JOIN tag t ON t.id = ft.tag_id;
+    `);
+
+    // 4. 임시 테이블과 tag 테이블 삭제
+    await queryRunner.query(`DROP TABLE feed_tags_temp;`);
+    await queryRunner.query(`DROP TABLE tag;`);
+  }
 }
