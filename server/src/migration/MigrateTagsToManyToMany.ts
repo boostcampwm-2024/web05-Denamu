@@ -38,31 +38,14 @@ export class MigrateTagsToManyToMany1620000000000
       JOIN tag t ON t.name = tm.tag;
     `);
 
-    // 4. feed_tags 테이블 이름을 feed_map 으로 변경
-    await queryRunner.query(`
-    RENAME TABLE feed_tags TO feed_map;
-  `);
-
-    // 5. 옛날 tag_map 테이블 삭제
+    // 4. 옛날 tag_map 테이블 삭제
     await queryRunner.query(`DROP TABLE tag_map;`);
+
+    // 5. feed_tags 테이블 이름을 feed_map 으로 변경
+    await queryRunner.query(`
+    RENAME TABLE feed_tags TO tag_map;
+  `);
   }
 
-  public async down(queryRunner: QueryRunner): Promise<void> {
-    // 롤백이 필요하면, 반대로 작업
-    await queryRunner.query(`
-      CREATE TABLE tag_map (
-        feed_id INT NOT NULL,
-        tag VARCHAR(50) NOT NULL,
-        PRIMARY KEY (feed_id, tag)
-      ) ENGINE=InnoDB;
-    `);
-    await queryRunner.query(`
-      INSERT INTO tag_map (feed_id, tag)
-      SELECT ft.feed_id, t.name
-      FROM feed_tags ft
-      JOIN tag t ON t.id = ft.tag_id;
-    `);
-    await queryRunner.query(`DROP TABLE feed_tags;`);
-    await queryRunner.query(`DROP TABLE tag;`);
-  }
+  public async down(queryRunner: QueryRunner): Promise<void> {}
 }
