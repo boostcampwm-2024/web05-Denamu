@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import { Send } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -6,10 +8,10 @@ import { SheetFooter } from "@/components/ui/sheet";
 
 import { useKeyboardShortcut } from "@/hooks/common/useKeyboardShortcut";
 
-import { useChatValueStore, useChatStore } from "@/store/useChatStore";
+import { useChatStore } from "@/store/useChatStore";
 
 export default function ChatFooter() {
-  const { message, setMessage } = useChatValueStore();
+  const [message, setMessage] = useState<string>("");
   const { sendMessage } = useChatStore();
 
   const handleSendMessage = () => {

@@ -5,46 +5,43 @@ import { CHAT_SERVER_URL } from "@/constants/endpoints";
 
 import { ChatType } from "@/types/chat";
 
-interface ChatStore {
+type State = {
   chatHistory: ChatType[];
   userCount: number;
   isLoading: boolean;
+};
+type Action = {
   connect: () => void;
   disconnect: () => void;
   getHistory: () => void;
   sendMessage: (message: string) => void;
-}
+};
 
-export const useChatStore = create<ChatStore>((set) => {
+export const useChatStore = create<State & Action>((set) => {
   let socket: Socket | null = null;
-  // 소켓 초기화 함수
   const initializeSocket = () => {
-    if (socket) return socket; // 이미 존재하면 그대로 반환
+    if (socket) return socket;
 
     socket = io(CHAT_SERVER_URL, {
       path: "/chat",
       transports: ["websocket"],
-      reconnection: true, // 자동 재연결 활성화
-      reconnectionAttempts: 5, // 최대 5번 재시도
-      reconnectionDelay: 1000, // 1초 간격으로 재시도
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
     });
 
-    // 서버 연결 성공 시
     socket.on("connect", () => {});
 
-    // 서버로부터 메시지 받기
     socket.on("message", (data) => {
       set((state) => ({
         chatHistory: [...state.chatHistory, data],
       }));
     });
 
-    // 사용자 수 업데이트 받기
     socket.on("updateUserCount", (data) => {
       set({ userCount: data.userCount });
     });
 
-    // 서버 연결 해제 시
     socket.on("disconnect", () => {});
 
     return socket;
@@ -54,19 +51,16 @@ export const useChatStore = create<ChatStore>((set) => {
     chatHistory: [],
     userCount: 0,
     isLoading: true,
-    // Socket 연결 함수
     connect: () => {
-      if (socket) return; // 이미 연결된 경우 중복 방지
+      if (socket) return;
       initializeSocket();
     },
 
-    // Socket 연결 해제 함수
     disconnect: () => {
       socket?.disconnect();
       socket = null;
     },
 
-    // 이전 채팅 기록 받아오기
     getHistory: () => {
       if (socket) {
         socket.emit("getHistory");
@@ -82,12 +76,10 @@ export const useChatStore = create<ChatStore>((set) => {
       }
     },
 
-    // 메시지 전송 함수
     sendMessage: (message: string) => {
       if (socket) {
         socket.emit("message", { message });
       } else {
-        // 소켓이 없으면 연결 후 메시지 전송
         const newSocket = initializeSocket();
         newSocket.on("connect", () => {
           newSocket.emit("message", { message });
@@ -96,13 +88,3 @@ export const useChatStore = create<ChatStore>((set) => {
     },
   };
 });
-
-interface ChatValue {
-  message: string;
-  setMessage: (newMessage: string) => void;
-}
-
-export const useChatValueStore = create<ChatValue>((set) => ({
-  message: "",
-  setMessage: (newMessage: string) => set({ message: newMessage }),
-}));
