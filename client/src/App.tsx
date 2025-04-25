@@ -30,6 +30,7 @@ export default function App() {
   const isMobile = useMediaQuery("(max-width: 767px)");
   const { hasVisited, setVisited } = useVisitStore();
   const location = useLocation();
+  const userID = localStorage.getItem("userID");
   const state =
     location.state && location.state.backgroundLocation
       ? { backgroundLocation: location.state.backgroundLocation }
@@ -37,8 +38,8 @@ export default function App() {
 
   useEffect(() => {
     console.log(denamuAscii);
+    if (!userID) localStorage.setItem("userID", crypto.randomUUID());
   }, []);
-
   useEffect(() => {
     if (location.state?.backgroundLocation) {
       window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
