@@ -20,6 +20,8 @@ export class ChatScheduler {
 
   private async saveDateMessage() {
     const broadcastPayload: BroadcastPayload = {
+      userId: CHAT_MIDNIGHT_CLIENT_NAME,
+      messageId: CHAT_MIDNIGHT_CLIENT_NAME,
       username: CHAT_MIDNIGHT_CLIENT_NAME,
       message: '',
       timestamp: new Date(),
