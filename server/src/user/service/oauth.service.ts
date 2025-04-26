@@ -1,20 +1,17 @@
-import { BadGatewayException, Injectable } from '@nestjs/common';
+import { BadGatewayException, Inject, Injectable } from '@nestjs/common';
 import { UserRepository } from '../repository/user.repository';
-import * as querystring from 'node:querystring';
-import axios from 'axios';
 import { ProviderRepository } from '../repository/provider.repository';
 import { WinstonLoggerService } from '../../common/logger/logger.service';
 import { Request } from 'express';
 import { User } from '../entity/user.entity';
 import { Provider } from '../entity/provider.entity';
 import {
-  OAUTH_CONSTANT,
   OAUTH_URL_PATH,
-  OAuthTokenResponse,
   ProviderData,
   StateData,
   UserInfo,
 } from '../constant/oauth.constant';
+import { OAuthProvider } from '../provider/oauth-provider.interface';
 
 @Injectable()
 export class OAuthService {
@@ -22,28 +19,14 @@ export class OAuthService {
     private readonly userRepository: UserRepository,
     private readonly providerRepository: ProviderRepository,
     private readonly logger: WinstonLoggerService,
+    @Inject('OAUTH_PROVIDERS')
+    private readonly providers: Record<string, OAuthProvider>,
   ) {}
 
-  getGoogleAuthUrl() {
-    const googleOAuthUrl = OAUTH_URL_PATH.GOOGLE.AUTH_URL;
-
-    const stateData = {
-      provider: OAUTH_CONSTANT.PROVIDER_TYPE.GOOGLE,
-    };
-
-    const state = Buffer.from(JSON.stringify(stateData)).toString('base64');
-
-    const options = {
-      redirect_uri: `${OAUTH_URL_PATH.BASE_URL}/${OAUTH_URL_PATH.REDIRECT_PATH.CALLBACK}`,
-      client_id: process.env.GOOGLE_CLIENT_ID,
-      access_type: 'offline',
-      response_type: 'code',
-      prompt: 'consent',
-      scope: ['email', 'profile'].join(' '),
-      state: state,
-    };
-
-    return `${googleOAuthUrl}?${querystring.stringify(options)}`;
+  getAuthUrl(providerType: string) {
+    const oauth = this.providers[providerType];
+    if (!oauth) throw new BadGatewayException('알 수 없는 Provider');
+    return oauth.getAuthUrl();
   }
 
   async callback(req: Request) {
@@ -51,16 +34,26 @@ export class OAuthService {
     const stateData = this.parseStateData(state.toString());
     const { provider: providerType } = stateData;
 
-    const tokenData = await this.getTokens({
-      code,
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      redirectUri: `${OAUTH_URL_PATH.BASE_URL}/${OAUTH_URL_PATH.REDIRECT_PATH.CALLBACK}`,
-    });
+    const tokenData = await this.providers[providerType].getTokens(
+      code as string,
+    );
+    const {
+      id_token: idToken,
+      access_token: accessToken,
+      refresh_token: refreshToken,
+      expires_in: expiresIn,
+    } = tokenData;
+    const userInfo = await this.providers[providerType].getUserInfo(
+      idToken,
+      accessToken,
+    );
 
-    if (providerType === OAUTH_CONSTANT.PROVIDER_TYPE.GOOGLE) {
-      await this.handleGoogleOAuth(tokenData);
-    }
+    await this.saveOAuthUser(userInfo, {
+      providerType,
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+      expiresIn: expiresIn,
+    });
 
     return `${OAUTH_URL_PATH.BASE_URL}`;
   }
@@ -75,79 +68,11 @@ export class OAuthService {
     }
   }
 
-  private async getTokens({ code, clientId, clientSecret, redirectUri }) {
-    const tokenUrl = OAUTH_URL_PATH.GOOGLE.TOKEN_URL;
-    const values = {
-      code,
-      client_id: clientId,
-      client_secret: clientSecret,
-      redirect_uri: redirectUri,
-      grant_type: 'authorization_code',
-    };
-
-    try {
-      const response = await axios.post(
-        tokenUrl,
-        querystring.stringify(values),
-        {
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-        },
-      );
-
-      return response.data;
-    } catch (error) {
-      throw new BadGatewayException(
-        '현재 외부 서비스와의 연결에 실패했습니다.',
-      );
-    }
-  }
-
-  private async handleGoogleOAuth(tokenData: OAuthTokenResponse) {
-    const {
-      id_token: idToken,
-      access_token: accessToken,
-      refresh_token: refreshToken,
-      expires_in: expiresIn,
-    } = tokenData;
-
-    const googleUserInfo = await this.getGoogleUserInfo(idToken, accessToken);
-
-    await this.saveGoogleUser(googleUserInfo, {
-      providerType: OAUTH_CONSTANT.PROVIDER_TYPE.GOOGLE,
-      accessToken,
-      refreshToken,
-      expiresIn,
-    });
-  }
-
-  private async getGoogleUserInfo(idToken: string, accessToken: string) {
-    try {
-      const response = await axios.get(
-        `${OAUTH_URL_PATH.GOOGLE.USER_INFO_URL}?alt=json&access_token=${accessToken}`,
-        {
-          headers: {
-            Authorization: `Bearer ${idToken}`,
-          },
-        },
-      );
-      return response.data;
-    } catch (error) {
-      throw new BadGatewayException(
-        '현재 외부 서비스와의 연결에 실패했습니다.',
-      );
-    }
-  }
-
-  private async saveGoogleUser(
-    googleUserInfo: UserInfo,
-    providerData: ProviderData,
-  ) {
+  private async saveOAuthUser(userInfo: UserInfo, providerData: ProviderData) {
     const { providerType, accessToken, refreshToken, expiresIn } = providerData;
     const existingProvider = await this.findExistingProvider(
       providerType,
-      googleUserInfo.id,
+      userInfo.id,
     );
 
     if (existingProvider) {
@@ -159,10 +84,10 @@ export class OAuthService {
       );
       return;
     }
-    const user = await this.findOrCreateUser(googleUserInfo, providerType);
+    const user = await this.findOrCreateUser(userInfo, providerType);
     await this.createProvider(
       providerType,
-      googleUserInfo.id,
+      userInfo.id,
       accessToken,
       refreshToken,
       expiresIn,
