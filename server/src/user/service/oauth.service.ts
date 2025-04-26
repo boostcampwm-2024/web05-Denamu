@@ -7,49 +7,14 @@ import { WinstonLoggerService } from '../../common/logger/logger.service';
 import { Request } from 'express';
 import { User } from '../entity/user.entity';
 import { Provider } from '../entity/provider.entity';
-
-const OAUTH_URL_PATH = {
-  GOOGLE: {
-    AUTH_URL: `https://accounts.google.com/o/oauth2/v2/auth`,
-    TOKEN_URL: `https://oauth2.googleapis.com/token`,
-    USER_INFO_URL: `https://www.googleapis.com/oauth2/v1/userinfo`,
-  },
-  REDIRECT_PATH: {
-    CALLBACK: `api/oauth/callback`,
-  },
-  BASE_URL: `https://denamu.site`,
-};
-
-const OAUTH_CONSTANT = {
-  PROVIDER_TYPE: {
-    GOOGLE: `google`,
-  },
-};
-
-type OAuthTokenResponse = {
-  id_token: string;
-  access_token: string;
-  refresh_token?: string;
-  expires_in?: number;
-};
-
-type UserInfo = {
-  id: string;
-  email: string;
-  name: string;
-  picture?: string;
-};
-
-type ProviderData = {
-  providerType: string;
-  accessToken: string;
-  refreshToken?: string;
-  expiresIn?: number;
-};
-
-type StateData = {
-  provider: string;
-};
+import {
+  OAUTH_CONSTANT,
+  OAUTH_URL_PATH,
+  OAuthTokenResponse,
+  ProviderData,
+  StateData,
+  UserInfo,
+} from '../constant/oauth.constant';
 
 @Injectable()
 export class OAuthService {
