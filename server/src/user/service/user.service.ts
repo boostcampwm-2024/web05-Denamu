@@ -3,8 +3,9 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
-import { SignupDto } from '../dto/request/signup.dto';
+import { RegisterDto } from '../dto/request/register.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { RedisService } from '../../common/redis/redis.service';
 import { USER_CONSTANTS } from '../user.constants';
@@ -15,6 +16,7 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { cookieConfig } from '../../common/cookie/cookie.config';
+import { Payload } from '../../common/guard/jwt.guard';
 
 @Injectable()
 export class UserService {
@@ -34,21 +36,21 @@ export class UserService {
     return !!user;
   }
 
-  async signupUser(signupDto: SignupDto): Promise<void> {
+  async registerUser(registerDto: RegisterDto): Promise<void> {
     const user = await this.userRepository.findOne({
-      where: { email: signupDto.email },
+      where: { email: registerDto.email },
     });
 
     if (user) {
       throw new ConflictException('이미 존재하는 이메일입니다.');
     }
 
-    const newUser = signupDto.toEntity();
-    newUser.password = await this.createHashedPassword(signupDto.password);
+    const newUser = registerDto.toEntity();
+    newUser.password = await this.createHashedPassword(registerDto.password);
 
     const uuid = uuidv4();
     await this.redisService.set(
-      `${USER_CONSTANTS.USER_AUTH_KEY}_${newUser.email}_${uuid}`,
+      `${USER_CONSTANTS.USER_AUTH_KEY}_${uuid}`,
       JSON.stringify(newUser),
       'EX',
       600,
@@ -65,7 +67,7 @@ export class UserService {
     if (!user) {
       throw new NotFoundException('인증에 실패했습니다.');
     }
-
+    this.redisService.del(`${USER_CONSTANTS.USER_AUTH_KEY}_${uuid}`);
     await this.userRepository.save(JSON.parse(user));
   }
 
@@ -75,28 +77,18 @@ export class UserService {
     });
 
     if (!user || !(await bcrypt.compare(loginDto.password, user.password))) {
-      throw new NotFoundException('아이디 혹은 비밀번호가 잘못되었습니다.');
+      throw new UnauthorizedException('아이디 혹은 비밀번호가 잘못되었습니다.');
     }
 
     const payload = {
-      id: user.id,
+      id: String(user.id),
       email: user.email,
       userName: user.userName,
       role: 'user',
     };
 
-    const accessToken = this.jwtService.sign(payload, {
-      secret: this.configService.get('JWT_SECRET'),
-      expiresIn: this.configService.get('ACCESS_TOKEN_EXPIRE'),
-    });
-
-    const refreshToken = this.jwtService.sign(payload, {
-      secret: this.configService.get('JWT_SECRET'),
-      expiresIn: this.configService.get('REFRESH_TOKEN_EXPIRE'),
-    });
-
-    user.refreshToken = refreshToken;
-    await user.save();
+    const accessToken = this.createToken(payload, 'access');
+    const refreshToken = this.createToken(payload, 'refresh');
 
     response.cookie('refresh_token', refreshToken, {
       ...cookieConfig[process.env.NODE_ENV],
@@ -106,7 +98,23 @@ export class UserService {
     return accessToken;
   }
 
-  private async createHashedPassword(password) {
+  createToken(userInformation: Payload, mode: string) {
+    const payload = {
+      id: userInformation.id,
+      email: userInformation.email,
+      userName: userInformation.userName,
+      role: 'user',
+    };
+
+    return this.jwtService.sign(payload, {
+      expiresIn: this.configService.get(
+        `${mode === 'access' ? 'ACCESS_TOKEN_EXPIRE' : 'REFRESH_TOKEN_EXPIRE'}`,
+      ),
+      secret: this.configService.get('JWT_ACCESS_SECRET'),
+    });
+  }
+
+  private async createHashedPassword(password: string) {
     const saltRounds = 10;
     return await bcrypt.hash(password, saltRounds);
   }

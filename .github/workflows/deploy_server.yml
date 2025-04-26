@@ -39,7 +39,8 @@ jobs:
             echo "REDIS_PASSWORD=${{secrets.REDIS_PASSWORD}}" >> env/.env.prod
             echo "EMAIL_USER=${{secrets.EMAIL_USER}}" >> env/.env.prod
             echo "EMAIL_PASSWORD=${{secrets.EMAIL_PASSWORD}}" >> env/.env.prod
-            echo "JWT_SECRET=${{secrets.JWT_SECRET}}" >> env/.env.prod
+            echo "JWT_ACCESS_SECRET=${{secrets.JWT_ACCESS_SECRET}}" >> env/.env.prod
+            echo "JWT_REFRESH_SECRET=${{secrets.JWT_REFRESH_SECRET}}" >> env/.env.prod
             echo "REFRESH_TOKEN_EXPIRE=${{secrets.REFRESH_TOKEN_EXPIRE}}" >> env/.env.prod
             echo "ACCESS_TOKEN_EXPIRE=${{secrets.ACCESS_TOKEN_EXPIRE}}" >> env/.env.prod
             echo "GOOGLE_CLIENT_ID=${{secrets.GOOGLE_CLIENT_ID}}" >> env/.env.prod

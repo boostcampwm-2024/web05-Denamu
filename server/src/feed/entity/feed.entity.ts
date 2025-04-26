@@ -73,21 +73,29 @@ export class Feed extends BaseEntity {
       .createQueryBuilder()
       .select()
       .addSelect('ROW_NUMBER() OVER (ORDER BY feed.created_at) AS order_id')
-      .addSelect('feed.id', 'feed_id')
-      .addSelect('title', 'feed_title')
-      .addSelect('feed.path', 'feed_path')
-      .addSelect('feed.created_at', 'feed_created_at')
-      .addSelect('feed.thumbnail', 'feed_thumbnail')
-      .addSelect('feed.view_count', 'feed_view_count')
-      .addSelect('feed.summary', 'feed_summary')
+      .addSelect('feed.id', 'id')
+      .addSelect('title', 'title')
+      .addSelect('feed.path', 'path')
+      .addSelect('feed.created_at', 'created_at')
+      .addSelect('feed.thumbnail', 'thumbnail')
+      .addSelect('feed.view_count', 'view_count')
+      .addSelect('feed.summary', 'summary')
       .addSelect('rss_accept.name', 'blog_name')
       .addSelect('rss_accept.blog_platform', 'blog_platform')
-      .addSelect('GROUP_CONCAT(DISTINCT tag_map.tag)', 'feed_tag')
+      .addSelect(
+        `(
+          SELECT JSON_ARRAYAGG(t.tag)
+          FROM (
+            SELECT DISTINCT tag_map.tag AS tag
+            FROM tag_map
+            WHERE tag_map.feed_id = feed.id
+          ) t
+        )`,
+        'tag',
+      )
       .from(Feed, 'feed')
       .innerJoin(RssAccept, 'rss_accept', 'rss_accept.id = feed.blog_id')
-      .leftJoin(TagMap, 'tag_map', 'tag_map.feed_id = feed.id')
-      .groupBy('feed.id')
-      .orderBy('feed_created_at'),
+      .groupBy('feed.id'),
   name: 'feed_view',
 })
 export class FeedView {
@@ -97,32 +105,32 @@ export class FeedView {
   orderId: number;
 
   @ViewColumn({
-    name: 'feed_id',
+    name: 'id',
   })
   feedId: number;
 
   @ViewColumn({
-    name: 'feed_title',
+    name: 'title',
   })
   title: string;
 
   @ViewColumn({
-    name: 'feed_path',
+    name: 'path',
   })
   path: string;
 
   @ViewColumn({
-    name: 'feed_created_at',
+    name: 'created_at',
   })
   createdAt: Date;
 
   @ViewColumn({
-    name: 'feed_thumbnail',
+    name: 'thumbnail',
   })
   thumbnail: string;
 
   @ViewColumn({
-    name: 'feed_view_count',
+    name: 'view_count',
   })
   viewCount: number;
 
@@ -137,12 +145,12 @@ export class FeedView {
   blogPlatform: string;
 
   @ViewColumn({
-    name: 'feed_summary',
+    name: 'summary',
   })
   summary: string;
 
   @ViewColumn({
-    name: 'feed_tag',
+    name: 'tag',
   })
-  tag: string;
+  tag: string[];
 }

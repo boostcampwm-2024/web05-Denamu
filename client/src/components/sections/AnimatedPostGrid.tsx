@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 
 import { PostCard } from "@/components/common/Card/PostCard";
+import EmptyPost from "@/components/common/EmptyPost";
 
 import { usePositionTracking } from "@/hooks/common/usePositionTracking.ts";
 
@@ -10,9 +11,11 @@ interface AnimatedPostGridProps {
   posts: Post[];
 }
 
-const AnimatedPostGrid = ({ posts }: AnimatedPostGridProps) => {
+const AnimatedPostGrid = ({ posts = [] }: AnimatedPostGridProps) => {
   const { hasPosition } = usePositionTracking(posts);
-
+  if (posts.length === 0) {
+    return <EmptyPost />;
+  }
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:gap-6 relative">
       <AnimatePresence initial={false}>

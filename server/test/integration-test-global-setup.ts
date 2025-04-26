@@ -6,6 +6,7 @@ export default async () => {
   console.log('Starting global setup...');
   await createMysqlContainer();
   await createRedisContainer();
+  jwtEnvSetup();
   console.log('Global setup completed.');
 };
 
@@ -37,4 +38,12 @@ const createRedisContainer = async () => {
   process.env.REDIS_PORT = redisContainer.getPort().toString();
   process.env.REDIS_USERNAME = '';
   process.env.REDIS_PASSWORD = '';
+};
+
+const jwtEnvSetup = () => {
+  console.log('Starting Jwt Environment...');
+  process.env.JWT_ACCESS_SECRET = 'temp';
+  process.env.JWT_REFRESH_SECRET = 'temp';
+  process.env.ACCESS_TOKEN_EXPIRE = '1d';
+  process.env.REFRESH_TOKEN_EXPIRE = '1d';
 };

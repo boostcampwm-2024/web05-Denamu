@@ -12,6 +12,7 @@ export default function TrendingSection() {
   const { posts, isLoading } = useTrendingPosts();
   const isMobile = useMediaStore((state) => state.isMobile);
   const sectionStyle = isMobile ? undefined : { boxShadow: "0 0 15px rgba(0, 0, 0, 0.1)" };
+
   return (
     <section className="flex flex-col md:p-4 min-h-[300px]">
       <SectionHeader
@@ -21,8 +22,8 @@ export default function TrendingSection() {
         iconColor="text-red-500"
       />
 
-      <div className="flex-1 md:mt-4 md:p-6 bg-white rounded-2xl transition-all duration-300" style={sectionStyle}>
-        {isLoading || !posts.length ? <PostGridSkeleton count={4} /> : <AnimatedPostGrid posts={posts} />}
+      <div className="flex flex-1 md:mt-4 md:p-6 bg-white rounded-2xl transition-all duration-300" style={sectionStyle}>
+        {isLoading ? <PostGridSkeleton count={4} /> : <AnimatedPostGrid posts={posts} />}
       </div>
     </section>
   );

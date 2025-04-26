@@ -55,10 +55,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('message')
-  async handleMessage(client: Socket, payload: { message: string }) {
+  async handleMessage(
+    client: Socket,
+    payload: { messageId: string; userId: string; message: string },
+  ) {
     const clientName = await this.chatService.getClientNameByIp(client);
 
     const broadcastPayload: BroadcastPayload = {
+      userId: payload.userId,
+      messageId: payload.messageId,
       username: clientName,
       message: payload.message,
       timestamp: new Date(),
