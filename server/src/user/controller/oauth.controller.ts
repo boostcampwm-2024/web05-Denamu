@@ -4,6 +4,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { Response, Request } from 'express';
 import { ApiGoogleOAuth } from '../api-docs/googleOAuth.api-docs';
 import { ApiOAuthCallback } from '../api-docs/oauthCallback.api-docs';
+import { OAUTH_CONSTANT } from '../constant/oauth.constant';
 
 @ApiTags('OAuth')
 @Controller('oauth')
@@ -13,7 +14,9 @@ export class OAuthController {
   @Get('google')
   @ApiGoogleOAuth()
   async signupGoogle(@Res() res: Response) {
-    return res.redirect(this.oauthService.getGoogleAuthUrl());
+    return res.redirect(
+      this.oauthService.getAuthUrl(OAUTH_CONSTANT.PROVIDER_TYPE.GOOGLE),
+    );
   }
 
   @Get('callback')
