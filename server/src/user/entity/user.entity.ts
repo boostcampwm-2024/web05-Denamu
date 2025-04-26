@@ -49,12 +49,6 @@ export class User extends BaseEntity {
   })
   introduction: string;
 
-  @Column({
-    name: 'refresh_token',
-    nullable: true,
-  })
-  refreshToken: string;
-
   @CreateDateColumn({
     name: 'created_at',
   })
