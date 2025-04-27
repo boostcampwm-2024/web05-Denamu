@@ -21,5 +21,11 @@ export function ApiOAuthCallback() {
         message: '현재 외부 서비스와의 연결에 실패했습니다.',
       },
     }),
+    ApiBadRequestResponse({
+      description: 'Bad Request',
+      example: {
+        message: '잘못된 state 형식입니다.',
+      },
+    }),
   );
 }
