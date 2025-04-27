@@ -1,9 +1,4 @@
-import {
-  BadGatewayException,
-  BadRequestException,
-  Inject,
-  Injectable,
-} from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { UserRepository } from '../repository/user.repository';
 import { ProviderRepository } from '../repository/provider.repository';
 import { WinstonLoggerService } from '../../common/logger/logger.service';
@@ -47,7 +42,6 @@ export class OAuthService {
       id_token: idToken,
       access_token: accessToken,
       refresh_token: refreshToken,
-      expires_in: expiresIn,
     } = tokenData;
     const userInfo = await this.providers[providerType].getUserInfo(
       idToken,
@@ -56,9 +50,7 @@ export class OAuthService {
 
     await this.saveOAuthUser(userInfo, {
       providerType,
-      accessToken: accessToken,
       refreshToken: refreshToken,
-      expiresIn: expiresIn,
     });
 
     return `${OAUTH_URL_PATH.BASE_URL}`;
@@ -73,30 +65,18 @@ export class OAuthService {
   }
 
   private async saveOAuthUser(userInfo: UserInfo, providerData: ProviderData) {
-    const { providerType, accessToken, refreshToken, expiresIn } = providerData;
+    const { providerType, refreshToken } = providerData;
     const existingProvider = await this.findExistingProvider(
       providerType,
       userInfo.id,
     );
 
     if (existingProvider) {
-      await this.updateProviderTokens(
-        existingProvider,
-        accessToken,
-        refreshToken,
-        expiresIn,
-      );
+      await this.updateProviderTokens(existingProvider, refreshToken);
       return;
     }
     const user = await this.findOrCreateUser(userInfo, providerType);
-    await this.createProvider(
-      providerType,
-      userInfo.id,
-      accessToken,
-      refreshToken,
-      expiresIn,
-      user,
-    );
+    await this.createProvider(providerType, userInfo.id, refreshToken, user);
   }
 
   private async findExistingProvider(
@@ -109,25 +89,11 @@ export class OAuthService {
     );
   }
 
-  private async updateProviderTokens(
-    provider: Provider,
-    accessToken: string,
-    refreshToken: string,
-    expiresIn: number,
-  ) {
-    provider.accessToken = accessToken;
-
+  private async updateProviderTokens(provider: Provider, refreshToken: string) {
     if (refreshToken) {
       provider.refreshToken = refreshToken;
     }
 
-    if (expiresIn) {
-      const accessTokenExpiresAt = new Date();
-      accessTokenExpiresAt.setSeconds(
-        accessTokenExpiresAt.getSeconds() + expiresIn,
-      );
-      provider.accessTokenExpiresAt = accessTokenExpiresAt;
-    }
     await this.providerRepository.save(provider);
     this.logger.log(
       `기존 사용자 인증 정보 업데이트 완료: ${provider.user.email}`,
@@ -157,24 +123,13 @@ export class OAuthService {
   private async createProvider(
     providerType: string,
     providerUserId: string,
-    accessToken: string,
     refreshToken: string,
-    expiresIn: number,
     user: User,
   ) {
-    const accessTokenExpiresAt = new Date();
-    if (expiresIn) {
-      accessTokenExpiresAt.setSeconds(
-        accessTokenExpiresAt.getSeconds() + expiresIn,
-      );
-    }
-
     await this.providerRepository.save({
       providerType,
       providerUserId,
-      accessToken,
       refreshToken,
-      accessTokenExpiresAt,
       user,
     });
 

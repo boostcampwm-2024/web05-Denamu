@@ -7,7 +7,7 @@ export const OAUTH_URL_PATH = {
   REDIRECT_PATH: {
     CALLBACK: `api/oauth/callback`,
   },
-  BASE_URL: `https://denamu.site`,
+  BASE_URL: `http://localhost:8080`,
 };
 
 export const OAUTH_CONSTANT = {
@@ -32,9 +32,7 @@ export type UserInfo = {
 
 export type ProviderData = {
   providerType: string;
-  accessToken: string;
   refreshToken?: string;
-  expiresIn?: number;
 };
 
 export type StateData = {

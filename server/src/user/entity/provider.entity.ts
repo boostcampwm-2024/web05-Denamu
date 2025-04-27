@@ -32,16 +32,6 @@ export class Provider extends BaseEntity {
   })
   refreshToken: string;
 
-  @Column({
-    name: 'access_token',
-  })
-  accessToken: string;
-
-  @Column({
-    name: 'access_token_expires_at',
-  })
-  accessTokenExpiresAt: Date;
-
   @CreateDateColumn({
     name: 'created_at',
   })
