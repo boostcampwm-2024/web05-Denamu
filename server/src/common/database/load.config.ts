@@ -1,7 +1,10 @@
 import { ConfigService } from '@nestjs/config';
 
 export function loadDBSetting(configService: ConfigService) {
-  const isDev = ['LOCAL', 'DEV'].includes(process.env.NODE_ENV);
+  const env = process.env.NODE_ENV;
+  const isDev = env === 'LOCAL' || env === 'DEV';
+  const isTest = env === 'test';
+
   return {
     type: configService.get<'mysql' | 'sqlite'>('DB_TYPE'),
     database: configService.get<string>('DB_DATABASE'),
@@ -11,9 +14,9 @@ export function loadDBSetting(configService: ConfigService) {
     password: configService.get<string>('DB_PASSWORD'),
     entities: [`${__dirname}/../../**/*.entity.{js,ts}`],
 
-    synchronize: isDev,
+    synchronize: isDev || isTest,
     migrations: [`${__dirname}/../../migration/*.{js,ts}`],
-    migrationsRun: true,
+    migrationsRun: false,
     logging: isDev,
   };
 }
