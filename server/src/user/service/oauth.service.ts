@@ -1,4 +1,9 @@
-import { BadGatewayException, Inject, Injectable } from '@nestjs/common';
+import {
+  BadGatewayException,
+  BadRequestException,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import { UserRepository } from '../repository/user.repository';
 import { ProviderRepository } from '../repository/provider.repository';
 import { WinstonLoggerService } from '../../common/logger/logger.service';
@@ -25,7 +30,8 @@ export class OAuthService {
 
   getAuthUrl(providerType: string) {
     const oauth = this.providers[providerType];
-    if (!oauth) throw new BadGatewayException('알 수 없는 Provider');
+    if (!oauth)
+      throw new BadRequestException('지원하지 않는 인증 제공자입니다.');
     return oauth.getAuthUrl();
   }
 
@@ -62,9 +68,7 @@ export class OAuthService {
     try {
       return JSON.parse(Buffer.from(stateString, 'base64').toString());
     } catch (error) {
-      throw new BadGatewayException(
-        '현재 외부 서비스와의 연결에 실패했습니다.',
-      );
+      throw new BadRequestException('잘못된 state 형식입니다.');
     }
   }
 
