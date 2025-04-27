@@ -7,7 +7,7 @@ export const OAUTH_URL_PATH = {
   REDIRECT_PATH: {
     CALLBACK: `api/oauth/callback`,
   },
-  BASE_URL: `http://localhost:8080`,
+  BASE_URL: `https://denamu.site`,
 };
 
 export const OAUTH_CONSTANT = {
