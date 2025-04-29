@@ -31,16 +31,29 @@ const EmptyChatHistory = () => (
   </div>
 );
 
+const NotConnected = () => (
+  <div className="flex flex-col justify-center items-center h-[70vh] gap-3">
+    <CircleAlert color="red" size={200} />
+    <div className="flex flex-col items-center gap-1">
+      <p className="font-bold">채팅이 연결되지 않았습니다.</p>
+      <p>잠시 기다리면 연결이 됩니다.</p>
+    </div>
+  </div>
+);
+
 const RenderHistory = ({
   chatHistory,
   isFull,
   isLoading,
+  isConnected,
 }: {
   chatHistory: ChatType[];
   isFull: boolean;
   isLoading: boolean;
+  isConnected: boolean;
 }) => {
   if (isLoading) return <ChatSkeleton number={14} />;
+  if (!isConnected) return <NotConnected />;
   if (isFull) return <FullChatWarning />;
   if (chatHistory.length === 0) return <EmptyChatHistory />;
   return (
@@ -55,7 +68,7 @@ const RenderHistory = ({
 
 export default function ChatSection({ isFull }: { isFull: boolean }) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const { chatHistory, isLoading } = useChatStore();
+  const { chatHistory, isLoading, isConnected } = useChatStore();
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -71,7 +84,7 @@ export default function ChatSection({ isFull }: { isFull: boolean }) {
 
   return (
     <ScrollArea ref={scrollRef} className="h-full">
-      <RenderHistory chatHistory={chatHistory} isFull={isFull} isLoading={isLoading} />
+      <RenderHistory chatHistory={chatHistory} isFull={isFull} isLoading={isLoading} isConnected={isConnected} />
     </ScrollArea>
   );
 }
