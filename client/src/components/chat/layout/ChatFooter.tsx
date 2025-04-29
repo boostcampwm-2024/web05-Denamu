@@ -16,7 +16,11 @@ export default function ChatFooter() {
 
   const handleSendMessage = () => {
     if (message.trim() !== "") {
-      sendMessage(message);
+      sendMessage({
+        message: message,
+        messageId: crypto.randomUUID(),
+        userId: localStorage.getItem("userID") as string,
+      });
       setMessage("");
     }
   };
