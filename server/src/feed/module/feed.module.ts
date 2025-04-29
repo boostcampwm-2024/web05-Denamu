@@ -20,5 +20,6 @@ import { TagMapRepository } from '../repository/tag-map.repository';
     TagMapRepository,
     FeedScheduler,
   ],
+  exports: [FeedRepository],
 })
 export class FeedModule {}
