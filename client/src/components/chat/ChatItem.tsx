@@ -38,23 +38,36 @@ export default function ChatItem({ chatItem, isSameUser }: ChatItemProps) {
       )}
       {!isUser && (
         <div className="w-full ml-[2rem]">
-          {!isSameUser ? <FirstChat message={chatItem.message} /> : <OtherChat message={chatItem.message} />}
+          {!isSameUser ? (
+            <FirstChat message={chatItem.message} isUser={isUser} />
+          ) : (
+            <OtherChat message={chatItem.message} />
+          )}
         </div>
       )}
       {isUser && (
         <div className="w-full  flex justify-end">
-          {!isSameUser ? <FirstChat message={chatItem.message} /> : <OtherChat message={chatItem.message} />}
+          {!isSameUser ? (
+            <FirstChat message={chatItem.message} isUser={isUser} />
+          ) : (
+            <OtherChat message={chatItem.message} />
+          )}
         </div>
       )}
     </div>
   );
 }
 
-function FirstChat({ message }: { message: string }) {
+function FirstChat({ message, isUser }: { message: string; isUser: boolean }) {
   return (
     <span className={`${chatStyle} relative `}>
       {message}
-      <div className="absolute top-[-5px] left-[0px] w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[8px]"></div>
+      <div
+        className={clsx(
+          "absolute top-[-5px] w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[8px]",
+          isUser ? "right-[0px]" : "left-[0px]"
+        )}
+      ></div>
     </span>
   );
 }
