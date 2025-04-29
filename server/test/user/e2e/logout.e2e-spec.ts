@@ -24,7 +24,7 @@ describe('POST /api/user/logout E2E Test', () => {
     // given
     const accessToken = userService.createToken(
       {
-        id: String(userInformation.id),
+        id: userInformation.id,
         email: userInformation.email,
         userName: userInformation.userName,
         role: 'user',

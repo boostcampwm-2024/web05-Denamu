@@ -23,7 +23,7 @@ export class CommentService {
     const commentAuthor = await this.commentRepository.findOneBy({
       id: commentId,
     });
-    if (parseInt(userInformation.id) !== commentAuthor.user.id) {
+    if (userInformation.id !== commentAuthor.user.id) {
       throw new UnauthorizedException('본인이 작성한 댓글이 아닙니다.');
     }
   }
@@ -35,7 +35,7 @@ export class CommentService {
     }
 
     const user = await this.userRepository.findOneBy({
-      id: parseInt(userInformation.id),
+      id: userInformation.id,
     });
     if (!user) {
       throw new NotFoundException('존재하지 않는 유저입니다.');

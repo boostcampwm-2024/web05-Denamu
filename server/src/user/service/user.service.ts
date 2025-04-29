@@ -81,7 +81,7 @@ export class UserService {
     }
 
     const payload = {
-      id: String(user.id),
+      id: user.id,
       email: user.email,
       userName: user.userName,
       role: 'user',
