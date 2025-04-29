@@ -3,22 +3,24 @@ import { create } from "zustand";
 
 import { CHAT_SERVER_URL } from "@/constants/endpoints";
 
-import { ChatType } from "@/types/chat";
+import { ChatType, SendChatType } from "@/types/chat";
+
+let socket: Socket | null = null;
 
 type State = {
   chatHistory: ChatType[];
   userCount: number;
   isLoading: boolean;
+  isConnected: boolean;
 };
 type Action = {
   connect: () => void;
   disconnect: () => void;
   getHistory: () => void;
-  sendMessage: (message: string) => void;
+  sendMessage: (message: SendChatType) => void;
 };
 
 export const useChatStore = create<State & Action>((set) => {
-  let socket: Socket | null = null;
   const initializeSocket = () => {
     if (socket) return socket;
 
@@ -28,9 +30,8 @@ export const useChatStore = create<State & Action>((set) => {
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
+      autoConnect: false,
     });
-
-    socket.on("connect", () => {});
 
     socket.on("message", (data) => {
       set((state) => ({
@@ -41,8 +42,13 @@ export const useChatStore = create<State & Action>((set) => {
     socket.on("updateUserCount", (data) => {
       set({ userCount: data.userCount });
     });
+    socket.on("connect", () => {
+      useChatStore.setState({ isConnected: true });
+    });
 
-    socket.on("disconnect", () => {});
+    socket.on("disconnect", () => {
+      useChatStore.setState({ isConnected: false });
+    });
 
     return socket;
   };
@@ -51,39 +57,47 @@ export const useChatStore = create<State & Action>((set) => {
     chatHistory: [],
     userCount: 0,
     isLoading: true,
+    isConnected: false,
     connect: () => {
-      if (socket) return;
-      initializeSocket();
+      const s = initializeSocket();
+      if (!s.connected) {
+        s.connect();
+      }
     },
 
     disconnect: () => {
       socket?.disconnect();
-      socket = null;
     },
 
     getHistory: () => {
-      if (socket) {
-        socket.emit("getHistory");
-        socket.on("chatHistory", (data) => {
-          set(() => ({
-            chatHistory: data,
-            isLoading: false,
-          }));
-        });
+      const s = initializeSocket();
+      if (s.connected) {
+        s.emit("getHistory");
       } else {
-        const newSocket = initializeSocket();
-        newSocket.emit("getHistory");
+        s.once("connect", () => {
+          s.emit("getHistory");
+        });
+        s.connect();
       }
+
+      s.on("chatHistory", (data) => {
+        console.log(data);
+        useChatStore.setState({
+          chatHistory: data,
+          isLoading: false,
+        });
+      });
     },
 
-    sendMessage: (message: string) => {
-      if (socket) {
-        socket.emit("message", { message });
+    sendMessage: (message: SendChatType) => {
+      const s = initializeSocket();
+      if (s.connected) {
+        s.emit("message", message);
       } else {
-        const newSocket = initializeSocket();
-        newSocket.on("connect", () => {
-          newSocket.emit("message", { message });
+        s.once("connect", () => {
+          s.emit("message", message);
         });
+        s.connect();
       }
     },
   };
