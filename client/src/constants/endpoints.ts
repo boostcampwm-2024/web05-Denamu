@@ -34,4 +34,5 @@ export const SEARCH = {
 
 export const USER = {
   REGISTER: "/api/user/register",
+  LOGIN: "/api/user/login",
 };
