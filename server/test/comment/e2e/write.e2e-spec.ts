@@ -1,0 +1,135 @@
+import { INestApplication } from '@nestjs/common';
+import * as request from 'supertest';
+import { UserService } from '../../../src/user/service/user.service';
+import { UserRepository } from '../../../src/user/repository/user.repository';
+import { UserFixture } from '../../fixture/user.fixture';
+import { User } from '../../../src/user/entity/user.entity';
+import { WriteCommentRequestDto } from '../../../src/comment/dto/request/write-comment.dto';
+import { FeedRepository } from '../../../src/feed/repository/feed.repository';
+import { Feed } from '../../../src/feed/entity/feed.entity';
+import { FeedFixture } from '../../fixture/feed.fixture';
+import { RssAcceptFixture } from '../../fixture/rssAccept.fixture';
+import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
+import { RssAccept } from '../../../src/rss/entity/rss.entity';
+
+describe('POST /api/comment E2E Test', () => {
+  let app: INestApplication;
+  let userService: UserService;
+  let rssAcceptInformation: RssAccept;
+  let userInformation: User;
+  let feed: Feed;
+
+  beforeAll(async () => {
+    app = global.testApp;
+    userService = app.get(UserService);
+    const userRepository = app.get(UserRepository);
+    const rssAcceptRepository = app.get(RssAcceptRepository);
+    const feedRepository = app.get(FeedRepository);
+
+    userInformation = await userRepository.save(
+      await UserFixture.createUserCryptFixture(),
+    );
+    rssAcceptInformation = await rssAcceptRepository.save(
+      RssAcceptFixture.createRssAcceptFixture(),
+    );
+    feed = await feedRepository.save(
+      FeedFixture.createFeedFixture(rssAcceptInformation),
+    );
+  });
+
+  it('로그인이 되어 있지 않다면 댓글을 등록할 수 없다.', async () => {
+    // given
+    const comment = new WriteCommentRequestDto({
+      comment: 'test',
+      feedId: feed.id,
+    });
+    const agent = request.agent(app.getHttpServer());
+
+    // when
+    const response = await agent.post('/api/comment').send(comment);
+
+    // then
+    expect(response.status).toBe(401);
+  });
+
+  it('계정 정보가 존재하지 않으면 댓글을 등록할 수 없다.', async () => {
+    // given
+    const comment = new WriteCommentRequestDto({
+      comment: 'test',
+      feedId: feed.id,
+    });
+    const accessToken = userService.createToken(
+      {
+        id: 400,
+        email: userInformation.email,
+        userName: userInformation.userName,
+        role: 'user',
+      },
+      'access',
+    );
+    const agent = request.agent(app.getHttpServer());
+
+    // when
+    const response = await agent
+      .post('/api/comment')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send(comment);
+
+    // then
+    expect(response.status).toBe(404);
+  });
+
+  it('게시글이 존재하지 않으면 댓글을 등록할 수 없다.', async () => {
+    // given
+    const comment = new WriteCommentRequestDto({
+      comment: 'test',
+      feedId: 400,
+    });
+    const accessToken = userService.createToken(
+      {
+        id: userInformation.id,
+        email: userInformation.email,
+        userName: userInformation.userName,
+        role: 'user',
+      },
+      'access',
+    );
+    const agent = request.agent(app.getHttpServer());
+
+    // when
+    const response = await agent
+      .post('/api/comment')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send(comment);
+
+    // then
+    expect(response.status).toBe(404);
+  });
+
+  it('로그인이 되어 있다면 댓글을 등록할 수 있다.', async () => {
+    // given
+    const accessToken = userService.createToken(
+      {
+        id: userInformation.id,
+        email: userInformation.email,
+        userName: userInformation.userName,
+        role: 'user',
+      },
+      'access',
+    );
+    const comment = new WriteCommentRequestDto({
+      comment: 'test',
+      feedId: feed.id,
+    });
+    const agent = request.agent(app.getHttpServer());
+
+    // when
+    const response = await agent
+      .post('/api/comment')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send(comment);
+
+    // then
+    expect(response.status).toBe(201);
+  });
+});
