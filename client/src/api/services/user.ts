@@ -1,20 +1,11 @@
 import { USER } from "@/constants/endpoints";
 
 import { axiosInstance } from "@/api/instance";
+import { UserSignUpRequest, UserSignUpResponse } from "@/types/auth";
 
-interface RegisterRequest {
-  email: string;
-  password: string;
-  userName: string;
-}
-
-interface RegisterResponse {
-  message: string;
-}
-
-export const register = async (data: RegisterRequest): Promise<RegisterResponse> => {
+export const register = async (data: UserSignUpRequest): Promise<UserSignUpResponse> => {
   try {
-    const response = await axiosInstance.post<RegisterResponse>(USER.REGISTER, data);
+    const response = await axiosInstance.post<UserSignUpResponse>(USER.REGISTER, data);
     return response.data;
   } catch (error: any) {
     if (error.response) {
