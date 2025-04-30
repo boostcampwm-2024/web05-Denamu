@@ -14,7 +14,7 @@
     "stress-be": "artillery run -o loadtest/BE_Report loadtest/BE_loadtest.json",
     "stress-fe-html": "artillery report loadtest/FE_Report",
     "stress-be-html": "artillery report loadtest/BE_Report",
-    "start:dev": "docker-compose -f docker-compose/docker-compose.dev.yml up",
+    "start:dev": "docker-compose -f docker-compose/docker-compose.dev.yml up --build",
     "start:local": "docker-compose -f docker-compose/docker-compose.local.yml up"
   },
   "config": {
