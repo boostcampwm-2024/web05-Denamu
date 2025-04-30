@@ -17,7 +17,7 @@ export const ADMIN = {
 };
 export const BLOG = {
   POST: "/api/feed",
-  Trend:"/api/feed/trend/sse",
+  Trend: "/api/feed/trend/sse",
   RSS: {
     REGISTRER_RSS: "/api/rss",
   },
@@ -30,4 +30,8 @@ export const CHART = {
 
 export const SEARCH = {
   GET_RESULT: "/api/feed/search",
+};
+
+export const USER = {
+  REGISTER: "/api/user/register",
 };
