@@ -20,10 +20,18 @@ export class CommentService {
   ) {}
 
   async commentCheck(userInformation: Payload, commentId: number) {
-    const commentAuthor = await this.commentRepository.findOneBy({
-      id: commentId,
+    const commentObj = await this.commentRepository.findOne({
+      where: {
+        id: commentId,
+      },
+      relations: ['user'],
     });
-    if (userInformation.id !== commentAuthor.user.id) {
+
+    if (!commentObj) {
+      throw new NotFoundException('존재하지 않는 댓글입니다.');
+    }
+
+    if (userInformation.id !== commentObj.user.id) {
       throw new UnauthorizedException('본인이 작성한 댓글이 아닙니다.');
     }
   }
@@ -43,7 +51,7 @@ export class CommentService {
 
     await this.commentRepository.save({
       comment: commentDto.comment,
-      date: Date.now(),
+      date: new Date(Date.now()),
       feed: { id: commentDto.feedId },
       user: { id: user.id },
     });
@@ -59,10 +67,6 @@ export class CommentService {
     const commentObj = await this.commentRepository.findOneBy({
       id: commentDto.commentId,
     });
-
-    if (!commentObj) {
-      throw new NotFoundException('존재하지 않는 댓글입니다.');
-    }
 
     commentObj.comment = commentDto.newComment;
     await this.commentRepository.save(commentObj);
