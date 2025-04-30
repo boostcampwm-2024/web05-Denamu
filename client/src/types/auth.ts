@@ -24,6 +24,9 @@ export interface UserSignInRequest {
 
 export interface UserSignInResponse {
   message: string;
+  data?: {
+    accessToken: string;
+  };
 }
 
 export interface SignUpForm {
@@ -35,5 +38,17 @@ export interface SignUpForm {
 export interface SignUpResult {
   success: boolean;
   message: string;
+  status?: number;
+}
+
+export interface SignInForm {
+  email: string;
+  password: string;
+}
+
+export interface SignInResult {
+  success: boolean;
+  message: string;
+  accessToken?: string;
   status?: number;
 }
