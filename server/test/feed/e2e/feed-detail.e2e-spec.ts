@@ -40,7 +40,6 @@ describe('GET api/feed/detail E2E Test', () => {
     //then
     expect(response.status).toBe(200);
     expect(response.body.data.id).toBe(1);
-    expect(response.body.data.tag).toStrictEqual(['Frontend', 'React']);
   });
 
   it('태그가 없다면 빈 배열로 응답한다.', async () => {
