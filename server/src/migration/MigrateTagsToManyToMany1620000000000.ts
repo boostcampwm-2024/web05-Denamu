@@ -7,10 +7,13 @@ export class MigrateTagsToManyToMany1620000000000
     // 1. 새 테이블 생성
     await queryRunner.query(`
       CREATE TABLE tag (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(50) NOT NULL UNIQUE
-      ) ENGINE=InnoDB;
+       id INT AUTO_INCREMENT PRIMARY KEY,
+       name VARCHAR(50) NOT NULL UNIQUE
+      ) ENGINE=InnoDB
+    DEFAULT CHARSET = utf8mb4
+    COLLATE = utf8mb4_0900_ai_ci;
     `);
+
     await queryRunner.query(`
       CREATE TABLE feed_tags (
         feed_id INT NOT NULL,
@@ -49,19 +52,19 @@ export class MigrateTagsToManyToMany1620000000000
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     // 1. 현재 tag_map (feed_tags) 테이블 임시 이름으로 변경
-    await queryRunner.query(`
-      RENAME TABLE tag_map TO feed_tags_temp;
-    `);
+    await queryRunner.query(`RENAME TABLE tag_map TO feed_tags_temp;`);
 
     // 2. 원래 구조의 tag_map 테이블 복원
     await queryRunner.query(`
       CREATE TABLE tag_map (
-        feed_id INT NOT NULL,
-        tag VARCHAR(50) NOT NULL,
-        INDEX IDX_tag_map_feed (feed_id),
-        INDEX IDX_tag_map_tag (tag),
-        CONSTRAINT FK_tag_map_feed FOREIGN KEY (feed_id) REFERENCES feed(id) ON DELETE CASCADE
-      ) ENGINE=InnoDB;
+       feed_id INT NOT NULL,
+       tag VARCHAR(50) NOT NULL,
+       INDEX IDX_tag_map_feed (feed_id),
+       INDEX IDX_tag_map_tag (tag),
+       CONSTRAINT FK_tag_map_feed FOREIGN KEY (feed_id) REFERENCES feed(id) ON DELETE CASCADE
+      ) ENGINE=InnoDB
+      DEFAULT CHARSET = utf8mb4
+      COLLATE = utf8mb4_0900_ai_ci;
     `);
 
     // 3. 데이터 재이관: 문자열 태그 복원
@@ -69,7 +72,7 @@ export class MigrateTagsToManyToMany1620000000000
       INSERT INTO tag_map (feed_id, tag)
       SELECT ft.feed_id, t.name
       FROM feed_tags_temp ft
-      JOIN tag t ON t.id = ft.tag_id;
+             JOIN tag t ON t.id = ft.tag_id;
     `);
 
     // 4. 임시 테이블과 tag 테이블 삭제
