@@ -1,6 +1,7 @@
 import {
   BaseEntity,
   Column,
+  CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
@@ -21,8 +22,8 @@ export class Comment extends BaseEntity {
   })
   comment: string;
 
-  @Column({
-    name: '',
+  @CreateDateColumn({
+    name: 'date',
     nullable: false,
   })
   date: Date;
