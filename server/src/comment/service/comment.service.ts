@@ -19,7 +19,7 @@ export class CommentService {
     private readonly userRepository: UserRepository,
   ) {}
 
-  async commentCheck(userInformation: Payload, commentId: number) {
+  private async commentCheck(userInformation: Payload, commentId: number) {
     const commentObj = await this.commentRepository.findOne({
       where: {
         id: commentId,
@@ -57,13 +57,15 @@ export class CommentService {
     });
   }
 
-  async delete(commentDto: DeleteCommentRequestDto) {
+  async delete(userInformation: Payload, commentDto: DeleteCommentRequestDto) {
+    await this.commentCheck(userInformation, commentDto.commentId);
     await this.feedRepository.delete({
       id: commentDto.commentId,
     });
   }
 
-  async update(commentDto: UpdateCommentRequestDto) {
+  async update(userInformation: Payload, commentDto: UpdateCommentRequestDto) {
+    await this.commentCheck(userInformation, commentDto.commentId);
     const commentObj = await this.commentRepository.findOneBy({
       id: commentDto.commentId,
     });
