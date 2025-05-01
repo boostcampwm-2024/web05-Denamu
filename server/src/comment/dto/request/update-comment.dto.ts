@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsInt, IsNotEmpty, IsString } from 'class-validator';
 
-export class EditCommentRequestDto {
+export class UpdateCommentRequestDto {
   @ApiProperty({
     example: '댓글 번호',
     description: '댓글 번호를 입력해주세요.',
@@ -22,7 +22,7 @@ export class EditCommentRequestDto {
   @IsNotEmpty({ message: '댓글 내용을 입력하세요.' })
   newComment: string;
 
-  constructor(partial: Partial<EditCommentRequestDto>) {
+  constructor(partial: Partial<UpdateCommentRequestDto>) {
     Object.assign(this, partial);
   }
 }

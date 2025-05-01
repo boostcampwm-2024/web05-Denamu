@@ -11,7 +11,7 @@ import { CommentRepository } from '../../../src/comment/repository/comment.repos
 import { RssAcceptFixture } from '../../fixture/rssAccept.fixture';
 import { FeedFixture } from '../../fixture/feed.fixture';
 import { CommentFixture } from '../../fixture/comment.fixture';
-import { EditCommentRequestDto } from '../../../src/comment/dto/request/edit-comment.dto';
+import { UpdateCommentRequestDto } from '../../../src/comment/dto/request/update-comment.dto';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
 import { RssAccept } from '../../../src/rss/entity/rss.entity';
 
@@ -50,7 +50,7 @@ describe('POST /api/comment E2E Test', () => {
 
   it('로그인이 되어 있지 않다면 댓글을 수정할 수 없다.', async () => {
     // given
-    const comment = new EditCommentRequestDto({
+    const comment = new UpdateCommentRequestDto({
       commentId: commentInformation.id,
       newComment: 'newComment',
     });
@@ -65,7 +65,7 @@ describe('POST /api/comment E2E Test', () => {
 
   it('본인이 작성한 댓글이 아니라면 댓글을 수정할 수 없다.', async () => {
     // given
-    const comment = new EditCommentRequestDto({
+    const comment = new UpdateCommentRequestDto({
       commentId: commentInformation.id,
       newComment: 'newComment',
     });
@@ -92,7 +92,7 @@ describe('POST /api/comment E2E Test', () => {
 
   it('존재하지 않는 댓글은 수정할 수 없다.', async () => {
     // given
-    const comment = new EditCommentRequestDto({
+    const comment = new UpdateCommentRequestDto({
       commentId: 400,
       newComment: 'newComment',
     });
@@ -119,7 +119,7 @@ describe('POST /api/comment E2E Test', () => {
 
   it('로그인이 되어 있다면 댓글을 수정할 수 있다.', async () => {
     // given
-    const comment = new EditCommentRequestDto({
+    const comment = new UpdateCommentRequestDto({
       commentId: commentInformation.id,
       newComment: 'newComment',
     });

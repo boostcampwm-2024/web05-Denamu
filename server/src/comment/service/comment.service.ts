@@ -4,12 +4,12 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { CommentRepository } from '../repository/comment.repository';
-import { WriteCommentRequestDto } from '../dto/request/write-comment.dto';
+import { CreateCommentRequestDto } from '../dto/request/create-comment.dto';
 import { FeedRepository } from '../../feed/repository/feed.repository';
 import { UserRepository } from '../../user/repository/user.repository';
 import { Payload } from '../../common/guard/jwt.guard';
-import { RemoveCommentRequestDto } from '../dto/request/remove-comment.dto';
-import { EditCommentRequestDto } from '../dto/request/edit-comment.dto';
+import { DeleteCommentRequestDto } from '../dto/request/delete-comment.dto';
+import { UpdateCommentRequestDto } from '../dto/request/update-comment.dto';
 
 @Injectable()
 export class CommentService {
@@ -36,7 +36,7 @@ export class CommentService {
     }
   }
 
-  async create(userInformation: Payload, commentDto: WriteCommentRequestDto) {
+  async create(userInformation: Payload, commentDto: CreateCommentRequestDto) {
     const feed = await this.feedRepository.findOneBy({ id: commentDto.feedId });
     if (!feed) {
       throw new NotFoundException('존재하지 않는 게시글입니다.');
@@ -57,13 +57,13 @@ export class CommentService {
     });
   }
 
-  async remove(commentDto: RemoveCommentRequestDto) {
+  async delete(commentDto: DeleteCommentRequestDto) {
     await this.feedRepository.delete({
       id: commentDto.commentId,
     });
   }
 
-  async edit(commentDto: EditCommentRequestDto) {
+  async update(commentDto: UpdateCommentRequestDto) {
     const commentObj = await this.commentRepository.findOneBy({
       id: commentDto.commentId,
     });

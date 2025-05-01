@@ -1,18 +1,18 @@
 import { applyDecorators } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
-  ApiCreatedResponse,
+  ApiOkResponse,
   ApiOperation,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 
-export function ApiWriteComment() {
+export function ApiUpdateComment() {
   return applyDecorators(
     ApiOperation({
-      summary: '댓글 등록 API',
+      summary: '댓글 수정 API',
     }),
-    ApiCreatedResponse({
-      description: 'Created',
+    ApiOkResponse({
+      description: 'Ok',
       schema: {
         properties: {
           message: {
@@ -21,7 +21,7 @@ export function ApiWriteComment() {
         },
       },
       example: {
-        message: '댓글 등록을 성공했습니다.',
+        message: '댓글을 수정을 성공했습니다.',
       },
     }),
     ApiBadRequestResponse({

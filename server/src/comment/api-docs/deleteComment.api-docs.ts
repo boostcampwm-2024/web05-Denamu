@@ -6,10 +6,10 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 
-export function ApiEditComment() {
+export function ApiDeleteComment() {
   return applyDecorators(
     ApiOperation({
-      summary: '댓글 수정 API',
+      summary: '댓글 삭제 API',
     }),
     ApiOkResponse({
       description: 'Ok',
@@ -21,7 +21,7 @@ export function ApiEditComment() {
         },
       },
       example: {
-        message: '댓글을 수정을 성공했습니다.',
+        message: '댓글 삭제를 성공했습니다.',
       },
     }),
     ApiBadRequestResponse({

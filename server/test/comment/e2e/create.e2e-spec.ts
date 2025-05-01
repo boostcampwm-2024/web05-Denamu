@@ -4,7 +4,7 @@ import { UserService } from '../../../src/user/service/user.service';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../fixture/user.fixture';
 import { User } from '../../../src/user/entity/user.entity';
-import { WriteCommentRequestDto } from '../../../src/comment/dto/request/write-comment.dto';
+import { CreateCommentRequestDto } from '../../../src/comment/dto/request/create-comment.dto';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
 import { Feed } from '../../../src/feed/entity/feed.entity';
 import { FeedFixture } from '../../fixture/feed.fixture';
@@ -39,7 +39,7 @@ describe('POST /api/comment E2E Test', () => {
 
   it('로그인이 되어 있지 않다면 댓글을 등록할 수 없다.', async () => {
     // given
-    const comment = new WriteCommentRequestDto({
+    const comment = new CreateCommentRequestDto({
       comment: 'test',
       feedId: feed.id,
     });
@@ -54,7 +54,7 @@ describe('POST /api/comment E2E Test', () => {
 
   it('계정 정보가 존재하지 않으면 댓글을 등록할 수 없다.', async () => {
     // given
-    const comment = new WriteCommentRequestDto({
+    const comment = new CreateCommentRequestDto({
       comment: 'test',
       feedId: feed.id,
     });
@@ -81,7 +81,7 @@ describe('POST /api/comment E2E Test', () => {
 
   it('게시글이 존재하지 않으면 댓글을 등록할 수 없다.', async () => {
     // given
-    const comment = new WriteCommentRequestDto({
+    const comment = new CreateCommentRequestDto({
       comment: 'test',
       feedId: 400,
     });
@@ -117,7 +117,7 @@ describe('POST /api/comment E2E Test', () => {
       },
       'access',
     );
-    const comment = new WriteCommentRequestDto({
+    const comment = new CreateCommentRequestDto({
       comment: 'test',
       feedId: feed.id,
     });

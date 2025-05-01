@@ -4,7 +4,7 @@ import { UserService } from '../../../src/user/service/user.service';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../fixture/user.fixture';
 import { User } from '../../../src/user/entity/user.entity';
-import { RemoveCommentRequestDto } from '../../../src/comment/dto/request/remove-comment.dto';
+import { DeleteCommentRequestDto } from '../../../src/comment/dto/request/delete-comment.dto';
 import { Comment } from '../../../src/comment/entity/comment.entity';
 import { CommentRepository } from '../../../src/comment/repository/comment.repository';
 import { CommentFixture } from '../../fixture/comment.fixture';
@@ -50,7 +50,7 @@ describe('POST /api/comment E2E Test', () => {
 
   it('로그인이 되어 있지 않다면 댓글을 삭제할 수 없다.', async () => {
     // given
-    const comment = new RemoveCommentRequestDto({
+    const comment = new DeleteCommentRequestDto({
       commentId: commentInformation.id,
     });
     const agent = request.agent(app.getHttpServer());
@@ -73,7 +73,7 @@ describe('POST /api/comment E2E Test', () => {
       },
       'access',
     );
-    const comment = new RemoveCommentRequestDto({
+    const comment = new DeleteCommentRequestDto({
       commentId: commentInformation.id,
     });
     const agent = request.agent(app.getHttpServer());
@@ -99,7 +99,7 @@ describe('POST /api/comment E2E Test', () => {
       },
       'access',
     );
-    const comment = new RemoveCommentRequestDto({
+    const comment = new DeleteCommentRequestDto({
       commentId: 400,
     });
     const agent = request.agent(app.getHttpServer());
@@ -125,7 +125,7 @@ describe('POST /api/comment E2E Test', () => {
       },
       'access',
     );
-    const comment = new RemoveCommentRequestDto({
+    const comment = new DeleteCommentRequestDto({
       commentId: commentInformation.id,
     });
     const agent = request.agent(app.getHttpServer());

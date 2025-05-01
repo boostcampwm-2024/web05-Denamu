@@ -1,10 +1,10 @@
 import { validate } from 'class-validator';
-import { EditCommentRequestDto } from '../../../src/comment/dto/request/edit-comment.dto';
+import { UpdateCommentRequestDto } from '../../../src/comment/dto/request/update-comment.dto';
 
 describe('EditCommentRequestDto Test', () => {
   it('댓글 내용이 비어있다면 유효성 검사에 실패한다.', async () => {
     // given
-    const writeCommentDto = new EditCommentRequestDto({
+    const writeCommentDto = new UpdateCommentRequestDto({
       commentId: 1,
       newComment: null,
     });
@@ -18,7 +18,7 @@ describe('EditCommentRequestDto Test', () => {
   });
   it('댓글 내용이 문자열이 아닐 경우 유효성 검사에 실패한다.', async () => {
     // given
-    const writeCommentDto = new EditCommentRequestDto({
+    const writeCommentDto = new UpdateCommentRequestDto({
       commentId: 1,
       newComment: 1 as any,
     });
@@ -32,7 +32,7 @@ describe('EditCommentRequestDto Test', () => {
   });
   it('댓글 아이디가 없을 경우 유효성 검사에 실패한다.', async () => {
     // given
-    const writeCommentDto = new EditCommentRequestDto({
+    const writeCommentDto = new UpdateCommentRequestDto({
       commentId: null,
       newComment: 'test',
     });
@@ -46,7 +46,7 @@ describe('EditCommentRequestDto Test', () => {
   });
   it('댓글 아이디가 정수가 아닐 경우 유효성 검사에 실패한다.', async () => {
     // given
-    const writeCommentDto = new EditCommentRequestDto({
+    const writeCommentDto = new UpdateCommentRequestDto({
       commentId: 'test' as any,
       newComment: 'test',
     });
