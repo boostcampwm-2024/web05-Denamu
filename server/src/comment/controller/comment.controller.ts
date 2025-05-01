@@ -30,8 +30,7 @@ export class CommentController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async writeComment(@Req() req, @Body() commentDto: WriteCommentRequestDto) {
-    const userInformation = req.user;
-    await this.commentService.create(userInformation, commentDto);
+    await this.commentService.create(req.user, commentDto);
     return ApiResponse.responseWithNoContent('댓글 등록을 성공했습니다.');
   }
 
