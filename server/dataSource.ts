@@ -9,7 +9,6 @@ dotenv.config({
     {
       PROD: `${process.cwd()}/env/.env.prod`,
       LOCAL: `${process.cwd()}/env/.env.local`,
-      DEV: `${process.cwd()}/env/.env.local`,
     }[process.env.NODE_ENV] || '',
 });
 
@@ -18,4 +17,6 @@ const dbOptions = loadDBSetting(configService);
 
 export const AppDataSource = new DataSource({
   ...dbOptions,
+  entities: [`${__dirname}/src/**/*.entity.{js,ts}`],
+  migrations: [`${__dirname}/src/migration/*.{js,ts}`],
 });
