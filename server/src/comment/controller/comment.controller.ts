@@ -38,11 +38,7 @@ export class CommentController {
   @Delete()
   @HttpCode(HttpStatus.OK)
   async removeComment(@Req() req, @Body() commentDto: RemoveCommentRequestDto) {
-    const userInformation = req.user;
-    await this.commentService.commentCheck(
-      userInformation,
-      commentDto.commentId,
-    );
+    await this.commentService.commentCheck(req.user, commentDto.commentId);
     await this.commentService.remove(commentDto);
     return ApiResponse.responseWithNoContent('댓글 삭제를 성공했습니다.');
   }
@@ -51,11 +47,7 @@ export class CommentController {
   @Patch()
   @HttpCode(HttpStatus.OK)
   async editComment(@Req() req, @Body() commentDto: EditCommentRequestDto) {
-    const userInformation = req.user;
-    await this.commentService.commentCheck(
-      userInformation,
-      commentDto.commentId,
-    );
+    await this.commentService.commentCheck(req.user, commentDto.commentId);
     await this.commentService.edit(commentDto);
     return ApiResponse.responseWithNoContent('댓글 수정을 성공했습니다.');
   }
