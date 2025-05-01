@@ -15,7 +15,6 @@ import { GoogleOAuthProvider } from '../provider/google.provider';
   providers: [
     UserService,
     OAuthService,
-    AdminRepository,
     UserRepository,
     ProviderRepository,
     GoogleOAuthProvider,
