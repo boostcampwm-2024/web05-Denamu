@@ -5,14 +5,15 @@ import {
   Entity,
   Index,
   JoinColumn,
+  JoinTable,
+  ManyToMany,
   ManyToOne,
-  OneToMany,
   PrimaryGeneratedColumn,
   ViewColumn,
   ViewEntity,
 } from 'typeorm';
 import { RssAccept } from '../../rss/entity/rss.entity';
-import { TagMap } from './tag-map.entity';
+import { Tag } from '../../tag/entity/tag.entity';
 
 @Entity({ name: 'feed' })
 export class Feed extends BaseEntity {
@@ -63,8 +64,13 @@ export class Feed extends BaseEntity {
   })
   blog: RssAccept;
 
-  @OneToMany(() => TagMap, (tag) => tag.feed)
-  tag: TagMap[];
+  @ManyToMany(() => Tag, (tag) => tag.feeds, { cascade: true })
+  @JoinTable({
+    name: 'tag_map',
+    joinColumn: { name: 'feed_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'tag_id', referencedColumnName: 'id' },
+  })
+  tags: Tag[];
 }
 
 @ViewEntity({
@@ -72,30 +78,28 @@ export class Feed extends BaseEntity {
     dataSource
       .createQueryBuilder()
       .select()
-      .addSelect('ROW_NUMBER() OVER (ORDER BY feed.created_at) AS order_id')
-      .addSelect('feed.id', 'id')
+      .addSelect('ROW_NUMBER() OVER (ORDER BY f.created_at)', 'order_id')
+      .addSelect('f.id', 'id')
       .addSelect('title', 'title')
-      .addSelect('feed.path', 'path')
-      .addSelect('feed.created_at', 'created_at')
-      .addSelect('feed.thumbnail', 'thumbnail')
-      .addSelect('feed.view_count', 'view_count')
-      .addSelect('feed.summary', 'summary')
-      .addSelect('rss_accept.name', 'blog_name')
-      .addSelect('rss_accept.blog_platform', 'blog_platform')
+      .addSelect('f.path', 'path')
+      .addSelect('f.created_at', 'created_at')
+      .addSelect('f.thumbnail', 'thumbnail')
+      .addSelect('f.view_count', 'view_count')
+      .addSelect('f.summary', 'summary')
+      .addSelect('r.name', 'blog_name')
+      .addSelect('r.blog_platform', 'blog_platform')
       .addSelect(
         `(
-          SELECT JSON_ARRAYAGG(t.tag)
-          FROM (
-            SELECT DISTINCT tag_map.tag AS tag
-            FROM tag_map
-            WHERE tag_map.feed_id = feed.id
-          ) t
+          SELECT JSON_ARRAYAGG(t.name)
+          FROM tag_map tm
+          INNER JOIN tag t ON t.id = tm.tag_id
+          WHERE tm.feed_id = f.id
         )`,
         'tag',
       )
-      .from(Feed, 'feed')
-      .innerJoin(RssAccept, 'rss_accept', 'rss_accept.id = feed.blog_id')
-      .groupBy('feed.id'),
+      .from(Feed, 'f')
+      .innerJoin(RssAccept, 'r', 'r.id = f.blog_id')
+      .groupBy('f.id'),
   name: 'feed_view',
 })
 export class FeedView {

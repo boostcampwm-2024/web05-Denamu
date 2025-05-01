@@ -43,6 +43,8 @@ jobs:
             echo "JWT_REFRESH_SECRET=${{secrets.JWT_REFRESH_SECRET}}" >> env/.env.prod
             echo "REFRESH_TOKEN_EXPIRE=${{secrets.REFRESH_TOKEN_EXPIRE}}" >> env/.env.prod
             echo "ACCESS_TOKEN_EXPIRE=${{secrets.ACCESS_TOKEN_EXPIRE}}" >> env/.env.prod
+            echo "GOOGLE_CLIENT_ID=${{secrets.GOOGLE_CLIENT_ID}}" >> env/.env.prod
+            echo "GOOGLE_CLIENT_SECRET=${{secrets.GOOGLE_CLIENT_SECRET}}" >> env/.env.prod
 
             cd /var/web05-Denamu
             docker-compose -f docker-compose/docker-compose.prod.yml up --build --no-deps -d app

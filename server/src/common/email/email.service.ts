@@ -71,7 +71,7 @@ export class EmailService {
     user: User,
     uuid: string,
   ): nodemailer.SendMailOptions {
-    const redirectUrl = `${PRODUCT_DOMAIN}/api/user/cert?token=${uuid}`;
+    const redirectUrl = `${PRODUCT_DOMAIN}/user/certificate?token=${uuid}`;
 
     return {
       from: `Denamu<${this.emailUser}>`,

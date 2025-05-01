@@ -8,7 +8,6 @@ import {
 import { ScheduleModule } from '@nestjs/schedule';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { FeedScheduler } from '../scheduler/feed.scheduler';
-import { TagMapRepository } from '../repository/tag-map.repository';
 
 @Module({
   imports: [ScheduleModule.forRoot(), EventEmitterModule.forRoot()],
@@ -17,7 +16,6 @@ import { TagMapRepository } from '../repository/tag-map.repository';
     FeedService,
     FeedRepository,
     FeedViewRepository,
-    TagMapRepository,
     FeedScheduler,
   ],
   exports: [FeedRepository],
