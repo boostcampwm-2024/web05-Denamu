@@ -80,7 +80,7 @@ export class UserService {
       throw new UnauthorizedException('아이디 혹은 비밀번호가 잘못되었습니다.');
     }
 
-    const payload = {
+    const payload: Payload = {
       id: user.id,
       email: user.email,
       userName: user.userName,
