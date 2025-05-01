@@ -52,8 +52,8 @@ export class CommentService {
     await this.commentRepository.save({
       comment: commentDto.comment,
       date: new Date(Date.now()),
-      feed: { id: commentDto.feedId },
-      user: { id: user.id },
+      feed,
+      user,
     });
   }
 
