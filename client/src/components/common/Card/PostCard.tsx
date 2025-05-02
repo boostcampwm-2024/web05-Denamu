@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Card, MCard } from "@/components/ui/card";
 
 import { usePostCardActions } from "@/hooks/common/usePostCardActions";
+import { useUpdateRecentTags } from "@/hooks/common/useUpdateRecentTag";
 
 import { PostCardContent } from "./PostCardContent";
 import { PostCardImage } from "./PostCardImage";
@@ -26,6 +27,7 @@ const DesktopCard = ({ post, className }: PostCardProps) => {
   const { incrementView } = usePostCardActions(post);
   const openPostDetail = (modalUrl: string) => {
     incrementView({ post, isWindowOpened: true });
+    useUpdateRecentTags(post.tag);
     navigate(modalUrl, { state: { backgroundLocation: location } });
   };
   return (
