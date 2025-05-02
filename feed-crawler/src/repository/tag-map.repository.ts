@@ -29,7 +29,7 @@ export class TagMapRepository {
     }
 
     const insertPromises = tag_ids.map((tagId) => {
-      const query = 'INSERT INTO tag_map (feed_id, tag) VALUES (?, ?)';
+      const query = 'INSERT INTO tag_map (feed_id, tag_id) VALUES (?, ?)';
       return this.dbConnection.executeQuery(query, [feedId, tagId]);
     });
 
