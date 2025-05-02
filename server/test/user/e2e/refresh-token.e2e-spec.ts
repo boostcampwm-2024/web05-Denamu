@@ -37,7 +37,7 @@ describe('POST /api/user/refresh-token E2E Test', () => {
     const agent = request.agent(app.getHttpServer());
     const refreshToken = userService.createToken(
       {
-        id: String(userInformation.id),
+        id: userInformation.id,
         email: userInformation.email,
         userName: userInformation.userName,
         role: 'user',

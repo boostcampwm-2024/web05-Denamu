@@ -13,6 +13,7 @@ import { TestModule } from './common/test/test.module';
 import { UserModule } from './user/module/user.module';
 import { ActivityModule } from './activity/module/activity.module';
 import { EmailModule } from './common/email/email.module';
+import { CommentModule } from './comment/module/comment.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { EmailModule } from './common/email/email.module';
     TestModule,
     StatisticModule,
     EmailModule,
+    CommentModule,
   ],
   controllers: [],
   providers: [],

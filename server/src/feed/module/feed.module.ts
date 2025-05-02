@@ -12,6 +12,12 @@ import { FeedScheduler } from '../scheduler/feed.scheduler';
 @Module({
   imports: [ScheduleModule.forRoot(), EventEmitterModule.forRoot()],
   controllers: [FeedController],
-  providers: [FeedService, FeedRepository, FeedViewRepository, FeedScheduler],
+  providers: [
+    FeedService,
+    FeedRepository,
+    FeedViewRepository,
+    FeedScheduler,
+  ],
+  exports: [FeedRepository],
 })
 export class FeedModule {}
