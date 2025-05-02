@@ -53,19 +53,89 @@ CREATE TABLE `feed` (
   `path` varchar(512) NOT NULL,
   `thumbnail` varchar(255) DEFAULT NULL,
   `blog_id` int NOT NULL,
+  `summary` text,
   PRIMARY KEY (`id`),
-  UNIQUE KEY (`path`),
-  KEY (`blog_id`),
-  KEY (`created_at`),
-  CONSTRAINT `FK_feed_blog_id` FOREIGN KEY (`blog_id`) REFERENCES `rss_accept` (`id`) ON UPDATE CASCADE,
-  FULLTEXT KEY (`title`) /*!50100 WITH PARSER `ngram` */
+  UNIQUE KEY `IDX_cbdceca2d71f784a8bb160268e` (`path`),
+  KEY `IDX_fda780ffdcc013b739cdc6f31d` (`created_at`),
+  KEY `FK_7474d489d05b8051874b227f868` (`blog_id`),
+  FULLTEXT KEY `IDX_7d93e66e624232af470d2f7bb3` (`title`) /*!50100 WITH PARSER `ngram` */ ,
+  CONSTRAINT `FK_7474d489d05b8051874b227f868` FOREIGN KEY (`blog_id`) REFERENCES `rss_accept` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-INSERT INTO denamu.rss_accept (name,user_name,email,rss_url,blog_platform) VALUES
+-- denamu.`user` definition
+
+CREATE TABLE `user` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `email` varchar(255) NOT NULL,
+  `password` varchar(60) NOT NULL,
+  `user_name` varchar(60) NOT NULL,
+  `profile_image` varchar(255) DEFAULT NULL,
+  `introduction` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+);
+
+-- denamu.activity definition
+CREATE TABLE `activity` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `activity_date` date NOT NULL,
+  `view_count` int NOT NULL,
+  `user_id` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `FK_10bf0c2dd4736190070e8475119` (`user_id`),
+  CONSTRAINT `FK_10bf0c2dd4736190070e8475119` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
+);
+
+-- denamu.tag definition
+
+CREATE TABLE `tag` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL UNIQUE,
+  PRIMARY KEY (`id`)
+);
+
+-- denamu.tag_map definition
+
+CREATE TABLE `tag_map` (
+  `tag_id` int NOT NULL,
+  `feed_id` int NOT NULL,
+  CONSTRAINT `FK_170d19639c49b5735ae8261ff0b` FOREIGN KEY (`tag_id`) REFERENCES `tag` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_9a3ed1e034e7f378f89f5902941` FOREIGN KEY (`feed_id`) REFERENCES `feed` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- denamu.comment definition
+
+CREATE TABLE `comment` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `comment` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `date` datetime NOT NULL,
+  `feed_id` int NOT NULL,
+  `user_id` int NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `FK_df1fd1eaf7cc0224ab5e829bf64` (`feed_id`),
+  KEY `FK_bbfe153fa60aa06483ed35ff4a7` (`user_id`),
+  CONSTRAINT `FK_bbfe153fa60aa06483ed35ff4a7` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_df1fd1eaf7cc0224ab5e829bf64` FOREIGN KEY (`feed_id`) REFERENCES `feed` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- denamu.admin insert data
+
+INSERT INTO admin (login_id, password) VALUES
+	('test1234','$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.');
+
+-- denamu.rss_accept insert data
+
+INSERT INTO rss_accept (name,user_name,email,rss_url,blog_platform) VALUES
 	 ('seok3765.log','조민석','seok3765@naver.com','https://v2.velog.io/rss/@seok3765','velog'),
 	 ('나무보다 숲을','채준혁','cjh4302@gmail.com','https://laurent.tistory.com/rss','tistory'),
 	 ('월성참치','정명기','jmk101711@naver.com','https://tunaspace.tistory.com/rss','tistory'),
 	 ('해야지 뭐','안성윤','asn6878@gmail.com','https://asn6878.tistory.com/rss','tistory');
+
+-- denamu.rss_reject insert data
+
+INSERT INTO rss_reject (name,user_name, email,rss_url, description) VALUES
+	('거절해주세요!','조민석','seok3765@naver.com','https://v2.velog.io/rss/@seok3766','거절 요청에 따라 거절해드립니다~');
+
+-- denamu.feed insert data
 
 INSERT INTO feed (created_at,title,view_count,`path`,thumbnail,blog_id) VALUES
 	 ('2024-12-15 15:20:23','[네이버 커넥트재단 부스트캠프 웹・모바일 9기] 날 것 그대로 작성하는 멤버십 수료 후기 - Web',0,'https://velog.io/@seok3765/네이버-커넥트재단-부스트캠프-웹・모바일-9기-날-것-그대로-작성하는-멤버십-수료-후기-Web','https://velog.velcdn.com/images/seok3765/post/a655dff9-58bc-436b-bdef-9e1195e5cbf6/image.png',1),
@@ -78,17 +148,17 @@ INSERT INTO feed (created_at,title,view_count,`path`,thumbnail,blog_id) VALUES
 	 ('2025-01-12 13:45:56','[TIL] 리눅스 입문 with 우분투 5일차 정리 (파일과 디렉터리, 링크)',3,'https://velog.io/@seok3765/TIL-리눅스-입문-with-우분투-5일차-정리','https://velog.velcdn.com/images/seok3765/post/70f0c8b6-95a0-4ed1-b057-5ece06202705/image.png',1),
 	 ('2025-01-13 19:56:10','[TIL] 리눅스 입문 with 우분투 6일차 정리 (사용자, 그룹)',1,'https://velog.io/@seok3765/TIL-리눅스-입문-with-우분투-6일차-정리','https://velog.velcdn.com/images/seok3765/post/09ffddcc-f15e-437c-9b21-46f72e9d0795/image.png',1),
 	 ('2025-01-14 13:58:59','[TIL] 리눅스 입문 with 우분투 7일차 정리 (소유권, 권한)',1,'https://velog.io/@seok3765/TIL-리눅스-입문-with-우분투-7일차-정리','https://velog.velcdn.com/images/seok3765/post/cbdfb185-2e8d-474c-a7f3-84a6400e3532/image.png',1);
-INSERT INTO feed (created_at,title,view_count,`path`,thumbnail,blog_id) VALUES
-	 ('2025-01-15 18:03:54','[Docker] 가상머신, 하이퍼바이저, 도커 전체 개념',5,'https://velog.io/@seok3765/Docker-도커-개념','https://velog.velcdn.com/images/seok3765/post/ef1c0705-92fe-4d09-b649-c111eb19e98c/image.png',1),
-	 ('2025-01-18 16:12:01','[TIL] 리눅스 입문 with 우분투 8일차 정리 (컴퓨터 작동 원리, 프로세스 생명 주기)',3,'https://velog.io/@seok3765/TIL-리눅스-입문-with-우분투-8일차-정리','https://velog.velcdn.com/images/seok3765/post/d2314c99-5a5d-4a07-b5d7-c65a99e78b1b/image.png',1),
-	 ('2025-01-18 20:58:34','[TIL] 리눅스 입문 with 우분투 9일차 정리 (파일 디스크립터, 포어그라운드, 백그라운드, IPC)',1,'https://velog.io/@seok3765/TIL-리눅스-입문-with-우분투-9일차-정리','https://velog.velcdn.com/images/seok3765/post/a75a45b0-f609-42bf-bec1-18d4b2a00756/image.png',1),
-	 ('2025-01-19 14:28:55','[TIL] 리눅스 입문 with 우분투 10일차 정리 (시그널)',0,'https://velog.io/@seok3765/TIL-리눅스-입문-with-우분투-10일차-정리','https://velog.velcdn.com/images/seok3765/post/ae79f20a-b64c-4b6d-b246-6e501f9c868a/image.png',1),
-	 ('2025-01-20 08:51:03','[TIL] 리눅스 입문 with 우분투 11일차 정리 (변수, 분기)',3,'https://velog.io/@seok3765/TIL-리눅스-입문-with-우분투-11일차-정리','https://velog.velcdn.com/images/seok3765/post/a9322793-f06a-46e2-b93f-0b7aa8d434fd/image.png',1),
-	 ('2025-01-01 09:57:59','[컴퓨터학개론] AI시대의 컴퓨터 개론 - 내용 점검 문제 8장',2,'https://laurent.tistory.com/entry/컴퓨터학개론-AI시대의-컴퓨터-개론-내용-점검-문제-8장','https://img1.daumcdn.net/thumb/R800x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FEAc7h%2FbtsLCp0GjT6%2FxmRrt2mHV26Q5EZtnlIuYK%2Fimg.jpg',2),
-	 ('2025-01-01 09:57:41','[컴퓨터학개론] AI시대의 컴퓨터 개론 - 내용 점검 문제 7장',1,'https://laurent.tistory.com/entry/컴퓨터학개론-AI시대의-컴퓨터-개론-내용-점검-문제-7장','https://img1.daumcdn.net/thumb/R800x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2Fbra31r%2FbtsLBVyPlia%2FKUrcmpjWoQz72dl4hyhy40%2Fimg.jpg',2),
-	 ('2025-01-01 09:57:27','[컴퓨터학개론] AI시대의 컴퓨터 개론 - 내용 점검 문제 6장',1,'https://laurent.tistory.com/entry/컴퓨터학개론-AI시대의-컴퓨터-개론-내용-점검-문제-6장','https://img1.daumcdn.net/thumb/R800x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FbgHcoJ%2FbtsLCJq32Gz%2FqnoiJfT4R8kPVJZX0HkrE1%2Fimg.jpg',2),
-	 ('2025-01-01 09:57:02','[컴퓨터학개론] AI시대의 컴퓨터 개론 - 내용 점검 문제 5장',1,'https://laurent.tistory.com/entry/컴퓨터학개론-AI시대의-컴퓨터-개론-내용-점검-문제-5장','https://img1.daumcdn.net/thumb/R800x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FbmMIdF%2FbtsLCmiLLlz%2FJh3fcj0EE110gip0VbsKa0%2Fimg.jpg',2),
-	 ('2025-01-01 09:56:42','[컴퓨터학개론] AI시대의 컴퓨터 개론 - 내용 점검 문제 4장',2,'https://laurent.tistory.com/entry/컴퓨터학개론-AI시대의-컴퓨터-개론-내용-점검-문제-4장','https://img1.daumcdn.net/thumb/R800x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FVk4f3%2FbtsLC6TTxJY%2Fgp2A3Zio9oNgaFwVOJhk50%2Fimg.jpg',2);
+INSERT INTO feed (created_at,title,view_count,`path`,thumbnail,blog_id,summary) VALUES
+	 ('2025-01-15 18:03:54','[Docker] 가상머신, 하이퍼바이저, 도커 전체 개념',5,'https://velog.io/@seok3765/Docker-도커-개념','https://velog.velcdn.com/images/seok3765/post/ef1c0705-92fe-4d09-b649-c111eb19e98c/image.png',1,NULL),
+	 ('2025-01-18 16:12:01','[TIL] 리눅스 입문 with 우분투 8일차 정리 (컴퓨터 작동 원리, 프로세스 생명 주기)',3,'https://velog.io/@seok3765/TIL-리눅스-입문-with-우분투-8일차-정리','https://velog.velcdn.com/images/seok3765/post/d2314c99-5a5d-4a07-b5d7-c65a99e78b1b/image.png',1,NULL),
+	 ('2025-01-18 20:58:34','[TIL] 리눅스 입문 with 우분투 9일차 정리 (파일 디스크립터, 포어그라운드, 백그라운드, IPC)',1,'https://velog.io/@seok3765/TIL-리눅스-입문-with-우분투-9일차-정리','https://velog.velcdn.com/images/seok3765/post/a75a45b0-f609-42bf-bec1-18d4b2a00756/image.png',1,NULL),
+	 ('2025-01-19 14:28:55','[TIL] 리눅스 입문 with 우분투 10일차 정리 (시그널)',0,'https://velog.io/@seok3765/TIL-리눅스-입문-with-우분투-10일차-정리','https://velog.velcdn.com/images/seok3765/post/ae79f20a-b64c-4b6d-b246-6e501f9c868a/image.png',1,NULL),
+	 ('2025-01-20 08:51:03','[TIL] 리눅스 입문 with 우분투 11일차 정리 (변수, 분기)',3,'https://velog.io/@seok3765/TIL-리눅스-입문-with-우분투-11일차-정리','https://velog.velcdn.com/images/seok3765/post/a9322793-f06a-46e2-b93f-0b7aa8d434fd/image.png',1,'**리눅스 입문 with 우분투: Bash 스크립트 기초 학습기 🐧**\n\n리눅스의 Bash 스크립트 학습 내용을 정리한 포스팅입니다! Bash 스크립트가 일반 프로그래밍 언어와 유사하면서도 독특한 특징들을 가지고 있음을 배웠습니다. 특히 변수 할당 시 띄어쓰기가 없어야 하고, 모든 데이터를 문자열로 처리한다는 점이 흥미롭습니다. 🖥️\n\n학습 내용:\n- 변수 정의와 할당 방법 (변수_이름=값)\n- 산술 연산을 위한 let과 expr 명령어 사용법\n- 조건문과 if-then-else 구문 작성 방법\n- 싱글 브래킷([])과 더블 브래킷([[]])의 차이점\n- 이중 괄호 표현식 (())의 활용\n\n프로그래밍 경험이 있는 분들도 쿼팅이나 띄어쓰기 규칙에 당황할 수 있지만, 계속 사용하면 익숙해질 내용입니다! '),
+	 ('2025-01-01 09:57:59','[컴퓨터학개론] AI시대의 컴퓨터 개론 - 내용 점검 문제 8장',2,'https://laurent.tistory.com/entry/컴퓨터학개론-AI시대의-컴퓨터-개론-내용-점검-문제-8장','https://img1.daumcdn.net/thumb/R800x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FEAc7h%2FbtsLCp0GjT6%2FxmRrt2mHV26Q5EZtnlIuYK%2Fimg.jpg',2,NULL),
+	 ('2025-01-01 09:57:41','[컴퓨터학개론] AI시대의 컴퓨터 개론 - 내용 점검 문제 7장',1,'https://laurent.tistory.com/entry/컴퓨터학개론-AI시대의-컴퓨터-개론-내용-점검-문제-7장','https://img1.daumcdn.net/thumb/R800x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2Fbra31r%2FbtsLBVyPlia%2FKUrcmpjWoQz72dl4hyhy40%2Fimg.jpg',2,NULL),
+	 ('2025-01-01 09:57:27','[컴퓨터학개론] AI시대의 컴퓨터 개론 - 내용 점검 문제 6장',1,'https://laurent.tistory.com/entry/컴퓨터학개론-AI시대의-컴퓨터-개론-내용-점검-문제-6장','https://img1.daumcdn.net/thumb/R800x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FbgHcoJ%2FbtsLCJq32Gz%2FqnoiJfT4R8kPVJZX0HkrE1%2Fimg.jpg',2,NULL),
+	 ('2025-01-01 09:57:02','[컴퓨터학개론] AI시대의 컴퓨터 개론 - 내용 점검 문제 5장',1,'https://laurent.tistory.com/entry/컴퓨터학개론-AI시대의-컴퓨터-개론-내용-점검-문제-5장','https://img1.daumcdn.net/thumb/R800x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FbmMIdF%2FbtsLCmiLLlz%2FJh3fcj0EE110gip0VbsKa0%2Fimg.jpg',2,NULL),
+	 ('2025-01-01 09:56:42','[컴퓨터학개론] AI시대의 컴퓨터 개론 - 내용 점검 문제 4장',2,'https://laurent.tistory.com/entry/컴퓨터학개론-AI시대의-컴퓨터-개론-내용-점검-문제-4장','https://img1.daumcdn.net/thumb/R800x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FVk4f3%2FbtsLC6TTxJY%2Fgp2A3Zio9oNgaFwVOJhk50%2Fimg.jpg',2,NULL);
 INSERT INTO feed (created_at,title,view_count,`path`,thumbnail,blog_id) VALUES
 	 ('2025-01-01 09:56:17','[컴퓨터학개론] AI시대의 컴퓨터 개론 - 내용 점검 문제 3장',2,'https://laurent.tistory.com/entry/컴퓨터학개론-AI시대의-컴퓨터-개론-내용-점검-문제-3장','https://img1.daumcdn.net/thumb/R800x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FdHifmQ%2FbtsLCqSOiNu%2F9jz5XgKtqBGI4GVRmcqo81%2Fimg.jpg',2),
 	 ('2025-01-01 09:55:52','[컴퓨터학개론] AI시대의 컴퓨터 개론 - 내용 점검 문제 2장',1,'https://laurent.tistory.com/entry/컴퓨터학개론-AI시대의-컴퓨터-개론-내용-점검-문제-2장','https://img1.daumcdn.net/thumb/R800x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2Fbk5adg%2FbtsLCGBmBJQ%2F8wLoOtsuafBu4oyC7X24sk%2Fimg.jpg',2),
@@ -166,9 +236,102 @@ INSERT INTO feed (created_at,title,view_count,`path`,thumbnail,blog_id) VALUES
 	 ('2024-08-04 08:32:17','페어(짝) 프로그래밍에 대해서',0,'https://asn6878.tistory.com/7','https://img1.daumcdn.net/thumb/R800x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2Fo0I0n%2FbtsITiXYkG9%2FhpD50L7TcKlhU08D2jok4k%2Fimg.jpg',4),
 	 ('2024-07-06 19:20:07','2024 네이버 부스트캠프 웹 · 모바일 2차 코딩테스트 후기',0,'https://asn6878.tistory.com/6','https://img1.daumcdn.net/thumb/R800x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FzvZIm%2FbtsIpvcWnzY%2FnkR2JuxsNhKIyeeKHnMo1k%2Fimg.png',4),
 	 ('2024-05-22 16:19:34','코딩테스트 준비를 위한 Java 입출력 정리',0,'https://asn6878.tistory.com/5','https://img1.daumcdn.net/thumb/R800x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FYY34s%2FbtsHykim0k7%2FT7YBZJfvIEKvPmtLbXJkIk%2Fimg.png',4);
-INSERT INTO feed (created_at,title,view_count,`path`,thumbnail,blog_id) VALUES
-	 ('2024-05-03 16:30:23','[Docker] 간단한 도커 명령어 모음집',2,'https://asn6878.tistory.com/4','https://img1.daumcdn.net/thumb/R800x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FcI3y45%2FbtsHcIbDPUe%2FpWNfGE2V3YX35MauB1Hb60%2Fimg.gif',4),
-	 ('2024-03-10 08:49:55','Java record 에 대하여',0,'https://asn6878.tistory.com/3','https://img1.daumcdn.net/thumb/R800x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FddtCkc%2FbtsFGEvHLSY%2FIPqWLZZfYlojZyLCB4dPg1%2Fimg.gif',4),
-	 ('2024-01-04 11:37:46','인증(Authentication)과 인가(Authorization)의 개념에 대해',0,'https://asn6878.tistory.com/2','https://img1.daumcdn.net/thumb/R800x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2Fb4Psk9%2FbtsC00h6SuP%2FZp2x8yPLdLLheMrGqJeHG0%2Fimg.png',4),
-	 ('2025-01-16 19:29:50','NestJS + TypeORM + Testcontainers 를 사용한 통합 테스트 DB환경 구축하기',3,'https://asn6878.tistory.com/14','https://img1.daumcdn.net/thumb/R800x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2F2GhHh%2FbtsLPtpiK1d%2FtKiZjT4WEVz1sy4LIgFDn1%2Fimg.png',4),
-	 ('2025-01-18 07:12:05','자바 vs 노드 당신의 선택은?!',4,'https://asn6878.tistory.com/15','https://img1.daumcdn.net/thumb/R800x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FdofQSP%2FbtsLKJyhso1%2FREdhKR9vDlzDYREytkK0v1%2Fimg.png',4);
+INSERT INTO feed (created_at,title,view_count,`path`,thumbnail,blog_id,summary) VALUES
+	 ('2024-05-03 16:30:23','[Docker] 간단한 도커 명령어 모음집',2,'https://asn6878.tistory.com/4','https://img1.daumcdn.net/thumb/R800x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FcI3y45%2FbtsHcIbDPUe%2FpWNfGE2V3YX35MauB1Hb60%2Fimg.gif',4,NULL),
+	 ('2024-03-10 08:49:55','Java record 에 대하여',0,'https://asn6878.tistory.com/3','https://img1.daumcdn.net/thumb/R800x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FddtCkc%2FbtsFGEvHLSY%2FIPqWLZZfYlojZyLCB4dPg1%2Fimg.gif',4,NULL),
+	 ('2024-01-04 11:37:46','인증(Authentication)과 인가(Authorization)의 개념에 대해',0,'https://asn6878.tistory.com/2','https://img1.daumcdn.net/thumb/R800x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2Fb4Psk9%2FbtsC00h6SuP%2FZp2x8yPLdLLheMrGqJeHG0%2Fimg.png',4,NULL),
+	 ('2025-01-16 19:29:50','NestJS + TypeORM + Testcontainers 를 사용한 통합 테스트 DB환경 구축하기',3,'https://asn6878.tistory.com/14','https://img1.daumcdn.net/thumb/R800x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2F2GhHh%2FbtsLPtpiK1d%2FtKiZjT4WEVz1sy4LIgFDn1%2Fimg.png',4,'**NestJS + TypeORM에서 Testcontainers로 MySQL 테스트 환경 구축하기 🐳**
+테스트는 프로덕션과 동일한 환경에서 진행되어야 신뢰할 수 있습니다! sqlite나 H2 같은 경량 DB 대신 실제 MySQL과 동일한 환경을 Docker로 구축해봅시다.
+구현 단계 📝
+
+필요한 의존성 설치: testcontainers와 @testcontainers/mysql
+Jest 설정 추가: globalSetup과 globalTeardown 구성
+MySQL 컨테이너 생성 및 환경변수 설정
+DB 초기화 로직 작성 (테스트 격리를 위한 TestService)
+TypeORM 모듈에 환경변수 전달
+
+주요 코드 💻
+
+컨테이너 생성 및 환경변수 설정
+테스트 간 DB 초기화를 위한 cleanDatabase() 메소드
+Jest 설정 파일 커스터마이징
+
+🤔 흥미로운 점: GitHub Actions에서 실행 시간이 sqlite + 병렬 실행보다 약 2배 느려졌지만, 실제 프로덕션 환경과 동일한 테스트가 가능해졌습니다!
+테스트 안정성과 신뢰도를 높이고 싶은 NestJS 개발자라면 꼭 도입해볼 만한 구성입니다! 🚀'),
+	 ('2025-01-18 07:12:05','자바 vs 노드 당신의 선택은?!',4,'https://asn6878.tistory.com/15','https://img1.daumcdn.net/thumb/R800x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FdofQSP%2FbtsLKJyhso1%2FREdhKR9vDlzDYREytkK0v1%2Fimg.png',4,'**Node.js와 Spring 프레임워크 비교 분석: 개발자의 선택은? 🤔**
+현재 TypeScript와 NestJS로 프로젝트를 진행 중인 개발자가 Java/Spring과 Node.js 생태계의 차이점을 깊이 있게 분석했습니다.
+채용 시장 현황 📊
+
+잡코리아: Node.js(340건) vs Spring(1,023건)
+원티드: Node.js(141건) vs Spring(215건)
+
+Java/Spring의 장점 ☕
+
+압도적인 국내 커뮤니티와 레퍼런스
+대규모 엔터프라이즈 개발에 강점
+안정적인 서비스와 확립된 코드 작성 규칙
+멀티스레드 환경에서 고성능 (비용은 많이 들지만 대규모 환경에서 높은 속도)
+
+Node.js의 장점 🚀
+
+FE와 BE 개발 환경 공유 가능
+싱글스레드+비동기+논블로킹으로 적은 리소스에서 효율적
+비교적 저비용으로 적절한 성능 구현
+TypeScript 등으로 단점 극복 노력
+
+결국 상황에 맞는 도구를 선택하는 문제 해결력이 중요하다는 개발자의 통찰력 있는 회고입니다! 💡');
+
+-- denamu.user insert data
+
+INSERT INTO user (email, password, user_name, profile_image, introduction) VALUES
+	('test@test.com', '$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정', NULL, '안녕하세요 테스트입니다.');
+
+-- denamu.tag insert data
+
+INSERT INTO tag (name) VALUES
+	('Backend'),
+	('Spring'),
+	('Frontend'),
+	('회고'),
+	('Java'),
+	('MySQL'),
+	('Network'),
+	('DB'),
+	('OS'),
+	('JavaScript'),
+	('Docker'),
+	('Infra'),
+	('React'),
+	('Algorithm'),
+	('TypeScript'),
+	('Nest.JS'),
+	('Next.JS'),
+	('PostgreSQL'),
+	('Express.JS'),
+	('Browser');
+
+-- denamu.tag_map insert data
+
+INSERT INTO tag_map (feed_id, tag_id) VALUES
+	(15, 1),
+	(15, 9),
+	(94, 1),
+	(94, 6),
+	(94, 8),
+	(94, 15),
+	(94, 16),
+	(95, 1),
+	(95, 5),
+	(95, 10),
+	(95, 15);
+
+-- denamu.comment insert data
+
+INSERT INTO comment(comment, date, feed_id, user_id) VALUES
+	('유익한 글 감사합니다~','2025-05-01 02:24:02',94,1),
+	('글이 정말 유익해요~','2025-05-01 02:26:05',95,1);
+
+-- denamu.activity insert data
+
+-- INSERT INTO activity (activity_date, view_count, user_id) VALUES
+-- 	();
