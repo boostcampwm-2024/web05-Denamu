@@ -3,7 +3,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { Observable } from 'rxjs';
 
 export type Payload = {
-  id: string;
+  id: number;
   email: string;
   userName: string;
   role: string;
