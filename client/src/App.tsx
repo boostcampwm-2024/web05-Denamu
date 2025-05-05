@@ -9,6 +9,7 @@ import PostDetailPage from "@/pages/PostDetailPage";
 import Profile from "@/pages/Profile";
 import SignIn from "@/pages/SignIn";
 import SignUp from "@/pages/SignUp";
+import UserCertificate from "@/pages/UserCertificate";
 
 import { useMediaQuery } from "@/hooks/common/useMediaQuery";
 
@@ -92,6 +93,14 @@ export default function App() {
           element={
             <Suspense fallback={<Loading />}>
               <SignUp />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/user/certificate"
+          element={
+            <Suspense fallback={<Loading />}>
+              <UserCertificate />
             </Suspense>
           }
         />
