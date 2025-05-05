@@ -20,7 +20,7 @@ export const AuthSignUpForm = () => {
       if (result.success) {
         toast({
           title: "회원가입 성공",
-          description: result.message,
+          description: result.message + " 만약 메일이 보이지 않는다면, 스팸 메일함을 확인해주세요.",
         });
         navigate("/signin", { state: { from: location.pathname } });
       } else {
