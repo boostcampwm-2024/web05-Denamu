@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import axios from "axios";
+
 import { register } from "@/api/services/user";
 import { SignUpForm, SignUpResult } from "@/types/auth";
 
@@ -40,16 +42,20 @@ export function useSignUp() {
         success: true,
         message: response.message,
       });
-    } catch (error: any) {
-      const status = error.response?.status;
-      setResult({
-        success: false,
-        message:
-          status === 409
-            ? "이미 존재하는 이메일입니다."
-            : error.response?.data?.message || "회원가입 중 오류가 발생했습니다.",
-        status,
-      });
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        const status = error.response?.status;
+        setResult({
+          success: false,
+          message: status === 409 ? "이미 존재하는 이메일입니다." : error.response?.data?.message,
+          status,
+        });
+      } else {
+        setResult({
+          success: false,
+          message: "회원가입 중 오류가 발생했습니다.",
+        });
+      }
     } finally {
       setIsLoading(false);
     }

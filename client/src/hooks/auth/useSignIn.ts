@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import axios from "axios";
+
 import { login } from "@/api/services/user";
 import { SignInForm, SignInResult } from "@/types/auth";
 
@@ -48,16 +50,20 @@ export function useSignIn() {
       if (response.data?.accessToken) {
         saveTokens(response.data.accessToken);
       }
-    } catch (error: any) {
-      const status = error.response?.status;
-      setResult({
-        success: false,
-        message:
-          status === 401
-            ? "아이디 혹은 비밀번호가 잘못되었습니다."
-            : error.response?.data?.message || "로그인 중 오류가 발생했습니다.",
-        status,
-      });
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        const status = error.response?.status;
+        setResult({
+          success: false,
+          message: status === 401 ? "아이디 혹은 비밀번호가 잘못되었습니다." : error.response?.data?.message,
+          status,
+        });
+      } else {
+        setResult({
+          success: false,
+          message: "로그인 중 오류가 발생했습니다.",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
