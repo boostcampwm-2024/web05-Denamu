@@ -13,7 +13,6 @@ export const AuthSignInForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useCustomToast();
-
   const { form, updateField, isLoading, result, submitForm } = useSignIn();
 
   useEffect(() => {
