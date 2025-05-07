@@ -3,6 +3,7 @@ import { useState } from "react";
 import axios from "axios";
 
 import { login } from "@/api/services/user";
+import { useAuthStore } from "@/store/useAuthStore";
 import { SignInForm, SignInResult } from "@/types/auth";
 
 export function useSignIn() {
@@ -12,6 +13,7 @@ export function useSignIn() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<SignInResult | null>(null);
+  const setUserFromToken = useAuthStore((state) => state.setUserFromToken);
 
   const updateField = (field: keyof SignInForm, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -19,7 +21,6 @@ export function useSignIn() {
 
   const validateForm = (): boolean => {
     const { email, password } = form;
-
     if (!email || !password) {
       setResult({
         success: false,
@@ -27,17 +28,16 @@ export function useSignIn() {
       });
       return false;
     }
-
     return true;
   };
 
   const saveTokens = (accessToken: string) => {
     localStorage.setItem("accessToken", accessToken);
+    setUserFromToken(accessToken);
   };
 
   const submitForm = async () => {
     if (!validateForm()) return;
-
     try {
       setIsLoading(true);
       const response = await login(form);
@@ -46,7 +46,6 @@ export function useSignIn() {
         message: response.message,
         accessToken: response.data?.accessToken,
       });
-
       if (response.data?.accessToken) {
         saveTokens(response.data.accessToken);
       }
@@ -55,7 +54,10 @@ export function useSignIn() {
         const status = error.response?.status;
         setResult({
           success: false,
-          message: status === 401 ? "아이디 혹은 비밀번호가 잘못되었습니다." : error.response?.data?.message,
+          message:
+            status === 401
+              ? "아이디 혹은 비밀번호가 잘못되었습니다."
+              : error.response?.data?.message || "로그인 중 오류가 발생했습니다.",
           status,
         });
       } else {
