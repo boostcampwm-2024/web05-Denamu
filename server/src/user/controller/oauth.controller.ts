@@ -1,22 +1,24 @@
-import { Controller, Get, Req, Res } from '@nestjs/common';
+import { Controller, Get, Query, Req, Res } from '@nestjs/common';
 import { OAuthService } from '../service/oauth.service';
 import { ApiTags } from '@nestjs/swagger';
 import { Response, Request } from 'express';
-import { ApiGoogleOAuth } from '../api-docs/googleOAuth.api-docs';
+import { ApiOAuth } from '../api-docs/oAuth.api-docs';
 import { ApiOAuthCallback } from '../api-docs/oauthCallback.api-docs';
 import { OAUTH_CONSTANT } from '../constant/oauth.constant';
+import { OAuthTypeDto } from '../dto/request/oauth-type.dto';
 
 @ApiTags('OAuth')
 @Controller('oauth')
 export class OAuthController {
   constructor(private readonly oauthService: OAuthService) {}
 
-  @Get('google')
-  @ApiGoogleOAuth()
-  async signupGoogle(@Res() res: Response) {
-    return res.redirect(
-      this.oauthService.getAuthUrl(OAUTH_CONSTANT.PROVIDER_TYPE.GOOGLE),
-    );
+  @Get()
+  @ApiOAuth()
+  async signupGoogle(
+    @Query('provider') provider: OAuthTypeDto,
+    @Res() res: Response,
+  ) {
+    return res.redirect(this.oauthService.getAuthUrl(provider.type));
   }
 
   @Get('callback')

@@ -7,6 +7,7 @@ import { User } from '../entity/user.entity';
 import { Provider } from '../entity/provider.entity';
 import {
   OAUTH_URL_PATH,
+  OAuthType,
   ProviderData,
   StateData,
   UserInfo,
@@ -23,7 +24,7 @@ export class OAuthService {
     private readonly providers: Record<string, OAuthProvider>,
   ) {}
 
-  getAuthUrl(providerType: string) {
+  getAuthUrl(providerType: OAuthType) {
     const oauth = this.providers[providerType];
     if (!oauth)
       throw new BadRequestException('지원하지 않는 인증 제공자입니다.');

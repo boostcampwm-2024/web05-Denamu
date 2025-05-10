@@ -4,6 +4,11 @@ export const OAUTH_URL_PATH = {
     TOKEN_URL: `https://oauth2.googleapis.com/token`,
     USER_INFO_URL: `https://www.googleapis.com/oauth2/v1/userinfo`,
   },
+  GITHUB: {
+    AUTH_URL: '',
+    TOKEN_URL: '',
+    USER_INFO_URL: '',
+  },
   REDIRECT_PATH: {
     CALLBACK: `api/oauth/callback`,
   },
@@ -13,6 +18,7 @@ export const OAUTH_URL_PATH = {
 export const OAUTH_CONSTANT = {
   PROVIDER_TYPE: {
     GOOGLE: `google`,
+    GITHUB: 'github',
   },
 };
 
@@ -38,3 +44,8 @@ export type ProviderData = {
 export type StateData = {
   provider: string;
 };
+
+export enum OAuthType {
+  Google = 'google',
+  Github = 'github',
+}
