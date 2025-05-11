@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectMetric } from '@willsoto/nestjs-prometheus';
 import { Counter, Histogram } from 'prom-client';
-import { catchError, finalize, Observable, tap } from 'rxjs';
+import { finalize, Observable } from 'rxjs';
 
 @Injectable()
 export class MetricsInterceptor implements NestInterceptor {
