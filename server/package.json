@@ -39,6 +39,7 @@
     "@nestjs/swagger": "^8.0.1",
     "@nestjs/typeorm": "^10.0.2",
     "@nestjs/websockets": "^10.4.8",
+    "@willsoto/nestjs-prometheus": "^6.0.2",
     "@woowa-babble/random-nickname": "^1.0.2",
     "axios": "^1.8.4",
     "bcrypt": "^5.1.1",
