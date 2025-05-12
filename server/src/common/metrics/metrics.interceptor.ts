@@ -30,6 +30,10 @@ export class MetricsInterceptor implements NestInterceptor {
     const route = req.route?.path || req.url;
     const start = Date.now();
 
+    if (route.includes('metrics')) {
+      return next.handle();
+    }
+
     return next.handle().pipe(
       finalize(() => {
         const duration = (Date.now() - start) / 1000;
