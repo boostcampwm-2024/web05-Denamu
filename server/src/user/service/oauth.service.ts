@@ -39,19 +39,12 @@ export class OAuthService {
     const tokenData = await this.providers[providerType].getTokens(
       code as string,
     );
-    const {
-      id_token: idToken,
-      access_token: accessToken,
-      refresh_token: refreshToken,
-    } = tokenData;
-    const userInfo = await this.providers[providerType].getUserInfo(
-      idToken,
-      accessToken,
-    );
+
+    const userInfo = await this.providers[providerType].getUserInfo(tokenData);
 
     await this.saveOAuthUser(userInfo, {
       providerType,
-      refreshToken: refreshToken,
+      refreshToken: tokenData.refresh_token,
     });
 
     return `${OAUTH_URL_PATH.BASE_URL}`;

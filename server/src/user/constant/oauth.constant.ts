@@ -5,9 +5,9 @@ export const OAUTH_URL_PATH = {
     USER_INFO_URL: `https://www.googleapis.com/oauth2/v1/userinfo`,
   },
   GITHUB: {
-    AUTH_URL: '',
-    TOKEN_URL: '',
-    USER_INFO_URL: '',
+    AUTH_URL: 'https://github.com/login/oauth/authorize',
+    TOKEN_URL: 'https://github.com/login/oauth/access_token',
+    USER_INFO_URL: 'https://api.github.com/user',
   },
   REDIRECT_PATH: {
     CALLBACK: `api/oauth/callback`,
@@ -23,10 +23,11 @@ export const OAUTH_CONSTANT = {
 };
 
 export type OAuthTokenResponse = {
-  id_token: string;
   access_token: string;
   refresh_token?: string;
   expires_in?: number;
+  scope?: string;
+  id_token?: string;
 };
 
 export type UserInfo = {

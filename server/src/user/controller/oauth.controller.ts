@@ -4,7 +4,6 @@ import { ApiTags } from '@nestjs/swagger';
 import { Response, Request } from 'express';
 import { ApiOAuth } from '../api-docs/oAuth.api-docs';
 import { ApiOAuthCallback } from '../api-docs/oauthCallback.api-docs';
-import { OAUTH_CONSTANT } from '../constant/oauth.constant';
 import { OAuthTypeDto } from '../dto/request/oauth-type.dto';
 
 @ApiTags('OAuth')
