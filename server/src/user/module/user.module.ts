@@ -8,6 +8,7 @@ import { ProviderRepository } from '../repository/provider.repository';
 import { JwtAuthModule } from '../../common/auth/jwt.module';
 import { AdminModule } from '../../admin/module/admin.module';
 import { GoogleOAuthProvider } from '../provider/google.provider';
+import { GithubOAuthProvider } from '../provider/github.provider';
 
 @Module({
   imports: [JwtAuthModule, AdminModule],
@@ -18,10 +19,15 @@ import { GoogleOAuthProvider } from '../provider/google.provider';
     UserRepository,
     ProviderRepository,
     GoogleOAuthProvider,
+    GithubOAuthProvider,
     {
       provide: 'OAUTH_PROVIDERS',
-      useFactory: (google: GoogleOAuthProvider) => ({
+      useFactory: (
+        google: GoogleOAuthProvider,
+        github: GithubOAuthProvider,
+      ) => ({
         google,
+        github,
       }),
       inject: [GoogleOAuthProvider],
     },
