@@ -5,12 +5,14 @@ import {
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
+  Unique,
 } from 'typeorm';
 import { User } from '../../user/entity/user.entity';
 
 @Entity({
   name: 'activity',
 })
+@Unique(['user', 'activityDate'])
 export class Activity extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
@@ -20,7 +22,7 @@ export class Activity extends BaseEntity {
     type: 'date',
     nullable: false,
   })
-  activityDate: string;
+  activityDate: Date;
 
   @Column({
     name: 'view_count',
