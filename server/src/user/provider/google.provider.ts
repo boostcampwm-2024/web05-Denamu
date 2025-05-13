@@ -5,6 +5,7 @@ import {
   OAUTH_CONSTANT,
   OAUTH_URL_PATH,
   OAuthTokenResponse,
+  UserInfo,
 } from '../constant/oauth.constant';
 import axios from 'axios';
 
@@ -84,7 +85,14 @@ export class GoogleOAuthProvider implements OAuthProvider {
           },
         },
       );
-      return response.data;
+
+      const { id, email, name, picture } = response.data;
+      return {
+        id,
+        email,
+        name,
+        picture,
+      } as UserInfo;
     } catch (error) {
       throw new BadGatewayException(
         '현재 외부 서비스와의 연결에 실패했습니다.',

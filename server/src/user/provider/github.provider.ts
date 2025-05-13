@@ -38,7 +38,7 @@ export class GithubOAuthProvider implements OAuthProvider {
     const queries = {
       code,
       client_id: process.env.GITHUB_CLIENT_ID,
-      client_secret: process.env.GITHUB_CLIENT_SECRET
+      client_secret: process.env.GITHUB_CLIENT_SECRET,
     };
 
     try {
@@ -73,20 +73,30 @@ export class GithubOAuthProvider implements OAuthProvider {
     }
   }
 
-  getUserInfo(tokenResponse: OAuthTokenResponse): Promise<UserInfo> {
+  async getUserInfo(tokenResponse: OAuthTokenResponse): Promise<UserInfo> {
     const { access_token: accessToken } = tokenResponse;
 
     try {
       const response = await axios.get(
-          `${OAUTH_URL_PATH.GITHUB.USER_INFO_URL}`,
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`
-            },
+        `${OAUTH_URL_PATH.GITHUB.USER_INFO_URL}`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
           },
+        },
       );
 
-      return response.data;
+      const { id, email, name, avatar_url } = response.data as any;
+      return {
+        id,
+        email,
+        name,
+        picture: avatar_url,
+      } as UserInfo;
+    } catch (error) {
+      throw new BadGatewayException(
+        '현재 외부 서비스와의 연결에 실패했습니다.',
+      );
     }
   }
 }
