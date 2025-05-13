@@ -20,20 +20,17 @@ export function useSignUp() {
 
   const validateForm = (): boolean => {
     const { email, password, userName } = form;
+    return !!email && !!password && !!userName;
+  };
 
-    if (!email || !password || !userName) {
+  const submitForm = async () => {
+    if (!validateForm()) {
       setResult({
         success: false,
         message: "모든 필드를 입력해주세요.",
       });
-      return false;
+      return;
     }
-
-    return true;
-  };
-
-  const submitForm = async () => {
-    if (!validateForm()) return;
 
     try {
       setIsLoading(true);
