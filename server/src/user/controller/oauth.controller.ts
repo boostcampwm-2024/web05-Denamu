@@ -13,10 +13,7 @@ export class OAuthController {
 
   @Get()
   @ApiOAuth()
-  async signupGoogle(
-    @Query('provider') provider: OAuthTypeDto,
-    @Res() res: Response,
-  ) {
+  async getProvider(@Query() provider: OAuthTypeDto, @Res() res: Response) {
     return res.redirect(this.oauthService.getAuthUrl(provider.type));
   }
 
