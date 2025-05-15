@@ -12,4 +12,5 @@ afterAll(async () => {
   await testContext.dbConnection.executeQuery('TRUNCATE TABLE feed', []);
   await testContext.dbConnection.executeQuery('TRUNCATE TABLE rss_accept', []);
   await testContext.dbConnection.executeQuery('SET FOREIGN_KEY_CHECKS = 1', []);
+  await testContext.redisConnection.flushall();
 });
