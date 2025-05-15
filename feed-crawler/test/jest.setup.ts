@@ -4,7 +4,7 @@ beforeEach(() => {
   jest.restoreAllMocks();
 });
 
-afterEach(async () => {
+afterAll(async () => {
   const testContext = setupTestContainer();
   await testContext.dbConnection.executeQuery('SET FOREIGN_KEY_CHECKS = 0', []);
   await testContext.dbConnection.executeQuery('TRUNCATE TABLE tag_map', []);
