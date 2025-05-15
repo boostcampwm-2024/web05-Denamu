@@ -44,7 +44,7 @@ describe('feed crawling e2e-test', () => {
       {
         title: 'Mock Title',
         link: 'https://example.com/mock',
-        pubDate: Date.now(),
+        pubDate: new Date(),
         description: 'Mock Content',
       },
     ]);
@@ -86,6 +86,7 @@ describe('feed crawling e2e-test', () => {
       },
     );
     const aiQueueData = JSON.parse(aiQueue[0][1] as string);
+    console.log(aiQueue);
 
     expect(feedsFromDB.length).not.toBe(0);
     expect(recentFeedsKeys.length).not.toBe(0);
