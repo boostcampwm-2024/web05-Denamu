@@ -85,8 +85,8 @@ describe('feed crawling e2e-test', () => {
         pipeline.lrange(redisConstant.FEED_AI_QUEUE, 0, -1);
       },
     );
-    const aiQueueData = JSON.parse(aiQueue[0][1] as string);
     console.log(aiQueue);
+    const aiQueueData = JSON.parse(aiQueue[0][1] as string);
 
     expect(feedsFromDB.length).not.toBe(0);
     expect(recentFeedsKeys.length).not.toBe(0);
