@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import { injectable } from 'tsyringe';
 import Anthropic from '@anthropic-ai/sdk';
 import { ClaudeResponse, FeedAIQueueItem } from './common/types';

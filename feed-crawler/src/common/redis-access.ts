@@ -102,4 +102,8 @@ export class RedisConnection {
   async hset(key: string, ...fieldValues: (string | Buffer | number)[]) {
     await this.redis.hset(key, fieldValues);
   }
+
+  async flushall() {
+    await this.redis.flushall();
+  }
 }
