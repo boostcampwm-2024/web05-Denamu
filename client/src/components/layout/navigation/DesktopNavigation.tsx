@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 
+import { UserProfileMenu } from "@/components/common/UserProfileMenu";
 import SideButton from "@/components/layout/SideButton";
 import SearchButton from "@/components/search/SearchButton";
 import { Button } from "@/components/ui/button";
@@ -51,12 +52,7 @@ export default function DesktopNavigation({ toggleModal }: { toggleModal: (modal
               </NavigationMenuLink>
             </NavigationMenuItem>
             <NavigationMenuItem>
-              <NavigationMenuLink
-                className={`${navigationMenuTriggerStyle()} hover:text-primary hover:bg-primary/10`}
-                href="/signin"
-              >
-                로그인
-              </NavigationMenuLink>
+              <UserProfileMenu />
             </NavigationMenuItem>
             <NavigationMenuItem>
               <Button variant="default" onClick={() => toggleModal("rss")} className="bg-primary hover:bg-primary/90">

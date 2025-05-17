@@ -1,15 +1,15 @@
 import { ADMIN } from "@/constants/endpoints";
 
 import { axiosInstance } from "@/api/instance";
-import { AuthApiRequest, AuthApiResponse } from "@/types/auth";
+import { AdminAuthRequest, AdminAuthResponse } from "@/types/auth";
 
 export const auth = {
-  login: async (data: AuthApiRequest): Promise<AuthApiResponse> => {
-    const response = await axiosInstance.post<AuthApiResponse>(ADMIN.LOGIN, data);
+  login: async (data: AdminAuthRequest): Promise<AdminAuthResponse> => {
+    const response = await axiosInstance.post<AdminAuthResponse>(ADMIN.LOGIN, data);
     return response.data;
   },
   check: async (): Promise<number> => {
-    const response = await axiosInstance.get<AuthApiResponse>(ADMIN.CHECK);
+    const response = await axiosInstance.get<AdminAuthResponse>(ADMIN.CHECK);
     return response.status;
   },
   logout: async (): Promise<{ message: string }> => {
