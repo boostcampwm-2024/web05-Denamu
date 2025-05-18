@@ -1,5 +1,6 @@
 import { ChatType } from "@/types/chat";
 import { PostDetailType } from "@/types/post";
+import { PostCommentType } from "@/types/post";
 
 // export const TRENDING_POSTS: Post[] = [
 //   {
@@ -151,3 +152,23 @@ export const POST_MODAL_DATA: PostDetailType = {
     tag: ["JavaScript", "React", "Frontend"],
   },
 };
+export const POST_COMMENT_DATA: PostCommentType[] = [
+  {
+    id: 1,
+    author: "나무보다 숲을",
+    content: "정말 유익한 포스트에요!!",
+    authorImage: "https://github.com/shadcn.png",
+    createdAt: "2025-03-23T01:00:00.000Z",
+    likes: 5,
+    isLiked: true,
+  },
+  {
+    id: 2,
+    author: "월성참치",
+    content: "엌ㅋㅋㅋ 개추요",
+    authorImage: "https://github.com/shadcn.png",
+    createdAt: "2025-03-24T01:00:00.000Z",
+    likes: 10,
+    isLiked: false,
+  },
+];
