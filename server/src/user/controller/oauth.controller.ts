@@ -4,7 +4,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { Response, Request } from 'express';
 import { ApiGoogleOAuth } from '../api-docs/googleOAuth.api-docs';
 import { ApiOAuthCallback } from '../api-docs/oauthCallback.api-docs';
-import { OAUTH_CONSTANT } from '../constant/oauth.constant';
+import { OAUTH_CONSTANT, OAUTH_URL_PATH } from '../constant/oauth.constant';
 
 @ApiTags('OAuth')
 @Controller('oauth')
@@ -22,6 +22,10 @@ export class OAuthController {
   @Get('callback')
   @ApiOAuthCallback()
   async callback(@Req() req: Request, @Res() res: Response) {
-    return res.redirect(await this.oauthService.callback(req));
+    const accessToken = await this.oauthService.callback(req, res);
+
+    return res.redirect(
+      `${OAUTH_URL_PATH.BASE_URL}/oauth-success?token=${accessToken}`,
+    );
   }
 }

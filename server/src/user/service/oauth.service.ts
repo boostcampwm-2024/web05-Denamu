@@ -2,16 +2,15 @@ import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { UserRepository } from '../repository/user.repository';
 import { ProviderRepository } from '../repository/provider.repository';
 import { WinstonLoggerService } from '../../common/logger/logger.service';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { User } from '../entity/user.entity';
 import { Provider } from '../entity/provider.entity';
-import {
-  OAUTH_URL_PATH,
-  ProviderData,
-  StateData,
-  UserInfo,
-} from '../constant/oauth.constant';
+import { ProviderData, StateData, UserInfo } from '../constant/oauth.constant';
 import { OAuthProvider } from '../provider/oauth-provider.interface';
+import { JwtService } from '@nestjs/jwt';
+import { UserService } from './user.service';
+import { cookieConfig } from '../../common/cookie/cookie.config';
+import { Payload } from '../../common/guard/jwt.guard';
 
 @Injectable()
 export class OAuthService {
@@ -19,6 +18,8 @@ export class OAuthService {
     private readonly userRepository: UserRepository,
     private readonly providerRepository: ProviderRepository,
     private readonly logger: WinstonLoggerService,
+    private readonly jwtService: JwtService,
+    private readonly userService: UserService,
     @Inject('OAUTH_PROVIDERS')
     private readonly providers: Record<string, OAuthProvider>,
   ) {}
@@ -30,7 +31,7 @@ export class OAuthService {
     return oauth.getAuthUrl();
   }
 
-  async callback(req: Request) {
+  async callback(req: Request, res: Response) {
     const { code, state } = req.query;
     const stateData = this.parseStateData(state.toString());
     const { provider: providerType } = stateData;
@@ -53,7 +54,28 @@ export class OAuthService {
       refreshToken: refreshToken,
     });
 
-    return `${OAUTH_URL_PATH.BASE_URL}`;
+    const jwtPayload: Payload = {
+      id: Number(userInfo.id),
+      email: userInfo.email,
+      userName: userInfo.name,
+      role: 'user',
+    };
+
+    const serviceAcessToken = this.userService.createToken(
+      jwtPayload,
+      'access',
+    );
+    const serviceRefreshToken = this.userService.createToken(
+      jwtPayload,
+      'refresh',
+    );
+
+    res.cookie('refresh_token', serviceRefreshToken, {
+      ...cookieConfig[process.env.NODE_ENV],
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+    });
+
+    return serviceAcessToken;
   }
 
   private parseStateData(stateString: string): StateData {
