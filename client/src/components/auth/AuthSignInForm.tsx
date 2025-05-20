@@ -24,7 +24,7 @@ export const AuthSignInForm = () => {
         });
 
         const from = location.state?.from || "/";
-        navigate(from);
+        navigate(from === "/signup" ? "/" : from);
       } else {
         toast({
           title: "로그인 실패",
