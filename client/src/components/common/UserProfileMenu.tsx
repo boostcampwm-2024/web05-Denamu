@@ -15,6 +15,8 @@ import {
 
 import { useCustomToast } from "@/hooks/common/useCustomToast";
 
+import { TOAST_MESSAGES } from "@/constants/messages";
+
 import { useAuthStore } from "@/store/useAuthStore";
 
 export const UserProfileMenu = () => {
@@ -28,6 +30,10 @@ export const UserProfileMenu = () => {
       title: "로그아웃 성공",
       description: "성공적으로 로그아웃되었습니다.",
     });
+  };
+
+  const handleProfileClick = () => {
+    toast(TOAST_MESSAGES.SERVICE_NOT_PREPARED);
   };
 
   if (!isAuthenticated) {
@@ -57,7 +63,7 @@ export const UserProfileMenu = () => {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => navigate("/profile")}>
+        <DropdownMenuItem onClick={handleProfileClick}>
           <User className="mr-2 h-4 w-4" />
           <span>프로필</span>
         </DropdownMenuItem>

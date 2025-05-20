@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 
 import { useCustomToast } from "@/hooks/common/useCustomToast";
 
+import { TOAST_MESSAGES } from "@/constants/messages";
+
 import { useAuthStore } from "@/store/useAuthStore";
 
 interface AuthSectionProps {
@@ -23,7 +25,7 @@ export const AuthSection = ({ onAction }: AuthSectionProps) => {
   };
 
   const handleProfile = () => {
-    navigate("/profile");
+    toast(TOAST_MESSAGES.SERVICE_NOT_PREPARED);
     onAction();
   };
 
