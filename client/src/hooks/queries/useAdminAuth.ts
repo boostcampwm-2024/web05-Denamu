@@ -4,15 +4,15 @@ import { auth } from "@/api/services/admin/auth";
 import { register } from "@/api/services/admin/register";
 import { useAuthStore } from "@/store/useAuthStore";
 import { RegisterRequest, RegisterResponse } from "@/types/admin";
-import { AuthApiRequest, AuthApiResponse } from "@/types/auth";
+import { AdminAuthRequest, AdminAuthResponse } from "@/types/auth";
 import { useMutation, UseMutationResult, useQuery } from "@tanstack/react-query";
 
 export const useAdminAuth = (
-  onSuccess: (data: AuthApiResponse) => void,
+  onSuccess: (data: AdminAuthResponse) => void,
   onError: (error: AxiosError<unknown, any>) => void
-): UseMutationResult<AuthApiResponse, AxiosError<unknown, any>, AuthApiRequest, unknown> => {
+): UseMutationResult<AdminAuthResponse, AxiosError<unknown, any>, AdminAuthRequest, unknown> => {
   const setRole = useAuthStore((state) => state.setRole);
-  return useMutation<AuthApiResponse, AxiosError<unknown, any>, AuthApiRequest>({
+  return useMutation<AdminAuthResponse, AxiosError<unknown, any>, AdminAuthRequest>({
     mutationFn: async (data) => {
       const response = await auth.login(data);
       setRole("admin");
