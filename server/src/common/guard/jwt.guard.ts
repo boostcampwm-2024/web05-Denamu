@@ -26,3 +26,10 @@ export class RefreshJwtGuard extends AuthGuard('jwt-refresh') {
     return super.canActivate(context);
   }
 }
+
+@Injectable()
+export class JwtOptionalGuard extends AuthGuard('jwt') {
+  handleRequest(err: any, user: any, info: any) {
+    return user;
+  }
+}
