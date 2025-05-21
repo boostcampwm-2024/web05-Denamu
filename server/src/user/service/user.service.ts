@@ -118,4 +118,8 @@ export class UserService {
     const saltRounds = 10;
     return await bcrypt.hash(password, saltRounds);
   }
+
+  async updateUserActivity(userId: number) {
+    // TODO: 사용자 컬럼 내 활동 정보들 업데이트 로직 추가
+  }
 }

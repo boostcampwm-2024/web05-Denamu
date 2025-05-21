@@ -31,6 +31,8 @@ import {
 import { FeedViewUpdateRequestDto } from '../dto/request/feed-update.dto';
 import { FeedDetailRequestDto } from '../dto/request/feed-detail.dto';
 import { FeedDetailResponseDto } from '../dto/response/feed-detail.dto';
+import { Payload } from '../../common/guard/jwt.guard';
+import { UserService } from '../../user/service/user.service';
 
 @Injectable()
 export class FeedService {
@@ -38,6 +40,7 @@ export class FeedService {
     private readonly feedRepository: FeedRepository,
     private readonly feedViewRepository: FeedViewRepository,
     private readonly redisService: RedisService,
+    private readonly userService: UserService,
   ) {}
 
   async readFeedPagination(feedPaginationQueryDto: FeedPaginationRequestDto) {
@@ -159,7 +162,7 @@ export class FeedService {
       }
 
       if (hasCookie || hasIpFlag) {
-        return null;
+        return;
       }
 
       await Promise.all([
@@ -239,14 +242,29 @@ export class FeedService {
     return request.socket.remoteAddress;
   }
 
-  async readFeedDetail(feedDetailRequestDto: FeedDetailRequestDto) {
-    const feed = await this.feedViewRepository.findFeedById(
-      feedDetailRequestDto.feedId,
-    );
+  async readFeedDetail(
+    req: Request,
+    feedDetailRequestDto: FeedDetailRequestDto,
+  ) {
+    const feedId = feedDetailRequestDto.feedId;
+
+    const feed = await this.feedViewRepository.findFeedById(feedId);
     if (!feed) {
-      throw new BadRequestException(
-        `${feedDetailRequestDto.feedId}번 피드는 존재하지 않습니다.`,
+      throw new BadRequestException(`${feedId}번 피드는 존재하지 않습니다.`);
+    }
+
+    if (req.user) {
+      const user = req.user as Payload;
+      const hasUserFlag = await this.redisService.sismember(
+        `feed:${feedId}:userId`,
+        user.id,
       );
+
+      if (!hasUserFlag) {
+        // TODO: 함수 분리 가능성...?
+        await this.redisService.sadd(`feed:${feedId}:userId`, user.id);
+        this.userService.updateUserActivity(user.id);
+      }
     }
     return FeedDetailResponseDto.toResponseDto(feed);
   }
