@@ -46,3 +46,7 @@ afterAll(async () => {
   }
   console.log('NestJS application closed.');
 });
+
+beforeEach(() => {
+  jest.resetAllMocks();
+});

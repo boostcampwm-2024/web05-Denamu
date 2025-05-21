@@ -19,7 +19,6 @@ export default function MobileNavigation({ toggleModal }: { toggleModal: (modalT
 
   return (
     <div className="h-20 items-center flex justify-between relative px-[10px]">
-      {/* 로고 */}
       <button
         className="flex-shrink-0 relative z-50"
         onClick={() => {

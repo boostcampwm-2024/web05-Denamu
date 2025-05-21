@@ -42,3 +42,4 @@ jobs:
             cd /var/web05-Denamu
             docker-compose -f docker-compose/docker-compose.prod.yml up --build --no-deps -d feed-crawler
             docker image prune -f
+            docker builder prune -f

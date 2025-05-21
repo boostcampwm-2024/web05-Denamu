@@ -4,11 +4,12 @@ import { axiosInstance } from "@/api/instance";
 import { InfiniteScrollResponse, LatestPostsApiResponse, Post, PostDetailType } from "@/types/post";
 
 export const posts = {
-  latest: async (params: { limit: number; lastId: number }): Promise<InfiniteScrollResponse<Post>> => {
+  latest: async (params: { limit: number; lastId: number; tags: string[] }): Promise<InfiniteScrollResponse<Post>> => {
     const response = await axiosInstance.get<LatestPostsApiResponse>(BLOG.POST, {
       params: {
         limit: params.limit,
         lastId: params.lastId || 0,
+        tags: params.tags || [],
       },
     });
     return {

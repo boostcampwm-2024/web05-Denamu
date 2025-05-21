@@ -16,11 +16,12 @@ export class LoggingInterceptor implements NestInterceptor {
     const request = context.switchToHttp().getRequest();
     const url = request.url;
 
-    if (
-      !url.includes('register') &&
-      !url.includes('login') &&
-      !url.includes('signup')
-    ) {
+    const excludedKeywords = ['register', 'login', 'signup', 'metrics'];
+    const shouldLog = !excludedKeywords.some((keyword) =>
+      url.includes(keyword),
+    );
+
+    if (shouldLog) {
       this.logger.log(
         JSON.stringify({
           host: this.getIp(request),
