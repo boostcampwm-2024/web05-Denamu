@@ -120,6 +120,36 @@ export class UserService {
   }
 
   async updateUserActivity(userId: number) {
-    // TODO: 사용자 컬럼 내 활동 정보들 업데이트 로직 추가
+    const user = await this.userRepository.findOneBy({ id: userId });
+    if (!user) {
+      throw new NotFoundException(`존재하지 않는 사용자 입니다.`);
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    user.totalViews += 1;
+
+    if (user.lastActiveDate) {
+      const lastActive = new Date(user.lastActiveDate);
+      lastActive.setHours(0, 0, 0, 0);
+
+      const timeDiff = today.getTime() - lastActive.getTime();
+      const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+
+      if (daysDiff === 1) {
+        user.currentStreak += 1;
+      } else if (daysDiff > 1) {
+        user.currentStreak = 1;
+      }
+    } else {
+      user.currentStreak = 1;
+    }
+
+    if (user.currentStreak > user.maxStreak) {
+      user.maxStreak = user.currentStreak;
+    }
+    user.lastActiveDate = today;
+
+    await this.userRepository.save(user);
   }
 }
