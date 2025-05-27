@@ -33,6 +33,7 @@ import { FeedDetailRequestDto } from '../dto/request/feed-detail.dto';
 import { FeedDetailResponseDto } from '../dto/response/feed-detail.dto';
 import { Payload } from '../../common/guard/jwt.guard';
 import { UserService } from '../../user/service/user.service';
+import { ActivityService } from '../../activity/service/activity.service';
 
 @Injectable()
 export class FeedService {
@@ -41,6 +42,7 @@ export class FeedService {
     private readonly feedViewRepository: FeedViewRepository,
     private readonly redisService: RedisService,
     private readonly userService: UserService,
+    private readonly activityService: ActivityService,
   ) {}
 
   async readFeedPagination(feedPaginationQueryDto: FeedPaginationRequestDto) {
@@ -264,6 +266,7 @@ export class FeedService {
         // TODO: 함수 분리 가능성...?
         await this.redisService.sadd(`feed:${feedId}:userId`, user.id);
         this.userService.updateUserActivity(user.id);
+        await this.activityService.upsertActivity(user.id);
       }
     }
     return FeedDetailResponseDto.toResponseDto(feed);

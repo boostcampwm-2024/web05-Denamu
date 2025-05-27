@@ -17,7 +17,7 @@ export class ActivityService {
     return 'foo';
   }
 
-  async upsertActivity(user: User) {
-    await this.activityRepository.upsertByUser(user);
+  async upsertActivity(userId: number) {
+    await this.activityRepository.upsertByUserId(userId);
   }
 }

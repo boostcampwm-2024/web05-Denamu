@@ -9,12 +9,12 @@ export class ActivityRepository extends Repository<Activity> {
     super(Activity, dataSource.createEntityManager());
   }
 
-  async upsertByUser(user: User): Promise<void> {
+  async upsertByUserId(userId: number): Promise<void> {
     await this.createQueryBuilder()
       .insert()
       .into(Activity)
       .values({
-        user: { id: user.id },
+        user: { id: userId },
         activityDate: () => 'CURDATE()',
         viewCount: 1,
       })
