@@ -9,9 +9,15 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { FeedScheduler } from '../scheduler/feed.scheduler';
 import { UserModule } from '../../user/module/user.module';
+import { ActivityModule } from '../../activity/module/activity.module';
 
 @Module({
-  imports: [ScheduleModule.forRoot(), EventEmitterModule.forRoot(), UserModule],
+  imports: [
+    ScheduleModule.forRoot(),
+    EventEmitterModule.forRoot(),
+    UserModule,
+    ActivityModule,
+  ],
   controllers: [FeedController],
   providers: [FeedService, FeedRepository, FeedViewRepository, FeedScheduler],
   exports: [FeedRepository],
