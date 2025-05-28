@@ -6,6 +6,8 @@ export type ChatType = {
   isMidNight?: boolean;
   userId?: string;
   messageId?: string;
+  isSend?: boolean;
+  isFailed?: boolean;
 };
 
 export type SendChatType = {

@@ -10,7 +10,7 @@ import { useVisible } from "@/hooks/common/useVisible";
 import { useChatStore } from "@/store/useChatStore";
 
 export function Chat() {
-  const { userCount, connect, disconnect, getHistory } = useChatStore();
+  const { userCount, isConnected, connect, disconnect, getHistory } = useChatStore();
   const [isFull, setIsFull] = useState<boolean>(false);
   const visible = useVisible();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -52,7 +52,7 @@ export function Chat() {
     <Sidebar side="right" variant="floating">
       <SidebarContent>
         <ChatHeader />
-        <ChatSection isFull={isFull} />
+        <ChatSection isFull={isFull} isConnected={isConnected} />
         <ChatFooter />
       </SidebarContent>
     </Sidebar>

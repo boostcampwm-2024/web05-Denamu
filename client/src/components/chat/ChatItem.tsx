@@ -6,6 +6,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { formatDate } from "@/utils/date";
 import { formatTime } from "@/utils/time";
 
+import { useChatStore } from "@/store/useChatStore";
 import { ChatType } from "@/types/chat";
 
 type ChatItemProps = {
@@ -16,8 +17,11 @@ type ChatItemProps = {
 const chatStyle = "p-3 bg-gray-200 text-black break-words whitespace-pre-wrap rounded-md inline-block max-w-[90%]";
 export default function ChatItem({ chatItem, isSameUser }: ChatItemProps) {
   const isUser = localStorage.getItem("userID") === chatItem.userId;
+  const resendMessage = useChatStore((state) => state.resendMessage);
+  const deleteMessage = useChatStore((state) => state.deleteMessage);
   if (chatItem.username === "system")
     return <div className="flex justify-center">{formatDate(chatItem.timestamp)}</div>;
+
   return (
     <div className="flex flex-col ">
       {!isSameUser ? (
@@ -30,7 +34,7 @@ export default function ChatItem({ chatItem, isSameUser }: ChatItemProps) {
 
           <span className="flex gap-2 items-center">
             <span className="text-sm">{isUser ? "나" : chatItem.username}</span>
-            <span className="text-xs">{formatTime(chatItem.timestamp)}</span>
+            <span className="text-xs">{chatItem.isFailed ? "전송실패" : formatTime(chatItem.timestamp)}</span>
           </span>
         </span>
       ) : (
@@ -46,7 +50,17 @@ export default function ChatItem({ chatItem, isSameUser }: ChatItemProps) {
         </div>
       )}
       {isUser && (
-        <div className="w-full  flex justify-end">
+        <div className="w-full flex justify-end gap-2">
+          {chatItem.isFailed && (
+            <div className="flex gap-2">
+              <button className="hover:text-black" onClick={() => resendMessage(chatItem)}>
+                재전송
+              </button>
+              <button className="hover:text-black" onClick={() => deleteMessage(chatItem.messageId as string)}>
+                삭제
+              </button>
+            </div>
+          )}
           {!isSameUser ? (
             <FirstChat message={chatItem.message} isUser={isUser} />
           ) : (
