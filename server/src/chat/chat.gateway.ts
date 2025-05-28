@@ -10,6 +10,8 @@ import { Injectable } from '@nestjs/common';
 import { ChatService } from './service/chat.service';
 import { ChatScheduler } from './scheduler/chat.scheduler';
 import type { BroadcastPayload } from './chat.type';
+import { InjectMetric } from '@willsoto/nestjs-prometheus';
+import { Counter, Gauge } from 'prom-client';
 
 @Injectable()
 @WebSocketGateway({
@@ -25,6 +27,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     private readonly chatService: ChatService,
     private readonly chatScheduler: ChatScheduler,
+    @InjectMetric('anonymous_chat_user_count')
+    private readonly chatUserMetricCount: Gauge,
+    @InjectMetric('anonymous_chat_message_count')
+    private readonly chatMetricCount: Counter,
   ) {}
 
   async handleConnection(client: Socket) {
@@ -42,6 +48,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     client.emit('chatHistory', chatHistory);
 
+    this.chatUserMetricCount.inc({
+      room: 'anonymous',
+    });
     this.server.emit('updateUserCount', {
       userCount: userCount,
       name: clientName,
@@ -49,16 +58,23 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   handleDisconnect() {
+    this.chatUserMetricCount.dec({
+      room: 'anonymous',
+    });
     this.server.emit('updateUserCount', {
       userCount: this.server.engine.clientsCount,
     });
   }
 
   @SubscribeMessage('message')
-  async handleMessage(client: Socket, payload: { message: string }) {
+  async handleMessage(
+    client: Socket,
+    payload: { messageId: string; userId: string; message: string },
+  ) {
     const clientName = await this.chatService.getClientNameByIp(client);
-
     const broadcastPayload: BroadcastPayload = {
+      userId: payload.userId,
+      messageId: payload.messageId,
       username: clientName,
       message: payload.message,
       timestamp: new Date(),
@@ -69,6 +85,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (midnightMessage) {
       this.server.emit('message', midnightMessage);
     }
+
+    this.chatMetricCount.inc({
+      room: 'anonymous',
+    });
 
     await this.chatService.saveMessageToRedis(broadcastPayload);
     this.server.emit('message', broadcastPayload);

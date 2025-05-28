@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import { injectable } from 'tsyringe';
 import Anthropic from '@anthropic-ai/sdk';
 import { ClaudeResponse, FeedAIQueueItem } from './common/types';
@@ -24,12 +25,15 @@ export class ClaudeService {
   }
 
   async startRequestAI() {
-    const feedList: FeedAIQueueItem[] = await this.loadFeeds();
-    const feedListWithAI = await this.requestAI(feedList);
-    await Promise.all([
-      this.insertTag(feedListWithAI),
-      this.updateSummary(feedListWithAI),
-    ]);
+    try {
+      const feeds = await this.loadFeeds();
+      await Promise.all(feeds.map((feed) => this.processFeed(feed)));
+    } catch (error) {
+      logger.error(
+        `${this.nameTag} startRequestAI 실패: ${error.message}`,
+        error.stack,
+      );
+    }
   }
 
   private async loadFeeds() {
@@ -41,10 +45,9 @@ export class ClaudeService {
           }
         },
       );
-      const feedObjectList: FeedAIQueueItem[] = redisSearchResult
+      return redisSearchResult
         .map((result) => JSON.parse(result[1] as string))
         .filter((value) => value !== null);
-      return feedObjectList;
     } catch (error) {
       logger.error(`${this.nameTag} Redis 로드한 데이터 JSON Parse 중 오류 발생:
         메시지: ${error.message}
@@ -53,75 +56,62 @@ export class ClaudeService {
     }
   }
 
-  private async requestAI(feeds: FeedAIQueueItem[]) {
-    const feedsWithAIData = await Promise.all(
-      feeds.map(async (feed) => {
-        try {
-          logger.info(`${this.nameTag} AI 요청: ${JSON.stringify(feed)}`);
-          const params: Anthropic.MessageCreateParams = {
-            max_tokens: 8192,
-            system: PROMPT_CONTENT,
-            messages: [{ role: 'user', content: feed.content }],
-            model: 'claude-3-5-haiku-latest',
-          };
-          const message = await this.client.messages.create(params);
-          let responseText: string = message.content[0]['text'];
-          responseText = responseText.replace(/[\n\r\t\s]+/g, ' ');
-          logger.info(
-            `${this.nameTag} ${feed.id} AI 요청 응답: ${responseText}`,
-          );
-          const responseObject: ClaudeResponse = JSON.parse(responseText);
-          feed.summary = responseObject.summary;
-          feed.tagList = Object.keys(responseObject.tags);
-          return feed;
-        } catch (error) {
-          logger.error(
-            `${this.nameTag} ${feed.id}의 태그 생성, 컨텐츠 요약 에러 발생: 
-          메시지: ${error.message}
-          스택 트레이스: ${error.stack}`,
-          );
-
-          if (feed.deathCount < 3) {
-            feed.deathCount++;
-            this.redisConnection.rpush(redisConstant.FEED_AI_QUEUE, [
-              JSON.stringify(feed),
-            ]);
-          } else {
-            logger.error(
-              `${this.nameTag} ${feed.id}의 Death Count 3회 이상 발생 AI 요청 금지: 
-            메시지: ${error.message}
-            스택 트레이스: ${error.stack}`,
-            );
-            this.feedRepository.updateNullSummary(feed.id);
-          }
-        }
-      }),
-    );
-    return feedsWithAIData.filter((value) => value !== undefined);
+  private async processFeed(feed: FeedAIQueueItem) {
+    try {
+      const aiData = await this.requestAI(feed);
+      await this.saveAIResult(aiData);
+    } catch (error) {
+      logger.error(
+        `${this.nameTag} ${feed.id} 처리 중 에러 발생: ${error.message}`,
+        error.stack,
+      );
+      await this.handleFailure(feed, error);
+    }
   }
 
-  private insertTag(feedWithAIList: FeedAIQueueItem[]) {
-    return feedWithAIList.map(async (feed) => {
-      try {
-        await this.tagMapRepository.insertTags(feed.id, feed.tagList);
-        await this.redisConnection.hset(
-          `feed:recent:${feed.id}`,
-          'tag',
-          feed.tagList.join(','),
-        );
-      } catch (error) {
-        logger.error(
-          `${this.nameTag} ${feed.id}의 태그 저장 중 에러 발생: 
-        메시지: ${error.message}
-        스택 트레이스: ${error.stack}`,
-        );
-      }
-    });
+  private async requestAI(feed: FeedAIQueueItem) {
+    logger.info(`${this.nameTag} AI 요청: ${JSON.stringify(feed)}`);
+    const params: Anthropic.MessageCreateParams = {
+      max_tokens: 8192,
+      system: PROMPT_CONTENT,
+      messages: [{ role: 'user', content: feed.content }],
+      model: 'claude-3-5-haiku-latest',
+    };
+    const message = await this.client.messages.create(params);
+    let responseText: string = message.content[0]['text'].replace(
+      /[\n\r\t\s]+/g,
+      ' ',
+    );
+    logger.info(`${this.nameTag} ${feed.id} AI 요청 응답: ${responseText}`);
+    const responseObject: ClaudeResponse = JSON.parse(responseText);
+    feed.summary = responseObject.summary;
+    feed.tagList = Object.keys(responseObject.tags);
+
+    return feed;
   }
 
-  private updateSummary(feedWithAIList: FeedAIQueueItem[]) {
-    return feedWithAIList.map((feed) =>
-      this.feedRepository.updateSummary(feed.id, feed.summary),
+  private async saveAIResult(feed: FeedAIQueueItem) {
+    await this.tagMapRepository.insertTags(feed.id, feed.tagList);
+    await this.redisConnection.hset(
+      `feed:recent:${feed.id}`,
+      'tag',
+      feed.tagList.join(','),
     );
+    await this.feedRepository.updateSummary(feed.id, feed.summary);
+  }
+
+  private async handleFailure(feed: FeedAIQueueItem, e: Error) {
+    if (feed.deathCount < 3) {
+      feed.deathCount++;
+      await this.redisConnection.rpush(redisConstant.FEED_AI_QUEUE, [
+        JSON.stringify(feed),
+      ]);
+      logger.warn(`${this.nameTag} ${feed.id} 재시도 (${feed.deathCount})`);
+    } else {
+      logger.error(
+        `${this.nameTag} ${feed.id} 의 Death Count 3회 이상 발생 AI 요청 금지`,
+      );
+      await this.feedRepository.updateNullSummary(feed.id);
+    }
   }
 }
