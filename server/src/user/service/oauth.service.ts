@@ -5,7 +5,12 @@ import { WinstonLoggerService } from '../../common/logger/logger.service';
 import { Request, Response } from 'express';
 import { User } from '../entity/user.entity';
 import { Provider } from '../entity/provider.entity';
-import { ProviderData, StateData, UserInfo } from '../constant/oauth.constant';
+import {
+  OAuthType,
+  ProviderData,
+  StateData,
+  UserInfo,
+} from '../constant/oauth.constant';
 import { OAuthProvider } from '../provider/oauth-provider.interface';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from './user.service';
@@ -24,7 +29,7 @@ export class OAuthService {
     private readonly providers: Record<string, OAuthProvider>,
   ) {}
 
-  getAuthUrl(providerType: string) {
+  getAuthUrl(providerType: OAuthType) {
     const oauth = this.providers[providerType];
     if (!oauth)
       throw new BadRequestException('지원하지 않는 인증 제공자입니다.');
@@ -39,19 +44,12 @@ export class OAuthService {
     const tokenData = await this.providers[providerType].getTokens(
       code as string,
     );
-    const {
-      id_token: idToken,
-      access_token: accessToken,
-      refresh_token: refreshToken,
-    } = tokenData;
-    const userInfo = await this.providers[providerType].getUserInfo(
-      idToken,
-      accessToken,
-    );
+
+    const userInfo = await this.providers[providerType].getUserInfo(tokenData);
 
     await this.saveOAuthUser(userInfo, {
       providerType,
-      refreshToken: refreshToken,
+      refreshToken: tokenData.refresh_token,
     });
 
     const jwtPayload: Payload = {

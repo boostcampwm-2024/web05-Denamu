@@ -14,6 +14,9 @@ import { UserModule } from './user/module/user.module';
 import { ActivityModule } from './activity/module/activity.module';
 import { EmailModule } from './common/email/email.module';
 import { CommentModule } from './comment/module/comment.module';
+import { MetricsModule } from './common/metrics/metrics.module';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { MetricsInterceptor } from './common/metrics/metrics.interceptor';
 
 @Module({
   imports: [
@@ -44,8 +47,14 @@ import { CommentModule } from './comment/module/comment.module';
     StatisticModule,
     EmailModule,
     CommentModule,
+    MetricsModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: MetricsInterceptor,
+    },
+  ],
 })
 export class AppModule {}
