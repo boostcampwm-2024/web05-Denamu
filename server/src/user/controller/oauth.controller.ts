@@ -5,6 +5,7 @@ import { Response, Request } from 'express';
 import { ApiOAuth } from '../api-docs/oAuth.api-docs';
 import { ApiOAuthCallback } from '../api-docs/oauthCallback.api-docs';
 import { OAuthTypeDto } from '../dto/request/oauth-type.dto';
+import { OAUTH_URL_PATH } from '../constant/oauth.constant';
 
 @ApiTags('OAuth')
 @Controller('oauth')
