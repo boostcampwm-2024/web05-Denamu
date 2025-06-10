@@ -159,7 +159,7 @@ export class FeedService {
       }
 
       if (hasCookie || hasIpFlag) {
-        return null;
+        return;
       }
 
       await Promise.all([
@@ -240,14 +240,13 @@ export class FeedService {
   }
 
   async readFeedDetail(feedDetailRequestDto: FeedDetailRequestDto) {
-    const feed = await this.feedViewRepository.findFeedById(
-      feedDetailRequestDto.feedId,
-    );
+    const feedId = feedDetailRequestDto.feedId;
+
+    const feed = await this.feedViewRepository.findFeedById(feedId);
     if (!feed) {
-      throw new BadRequestException(
-        `${feedDetailRequestDto.feedId}번 피드는 존재하지 않습니다.`,
-      );
+      throw new BadRequestException(`${feedId}번 피드는 존재하지 않습니다.`);
     }
+
     return FeedDetailResponseDto.toResponseDto(feed);
   }
 }

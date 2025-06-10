@@ -32,6 +32,6 @@ import { GithubOAuthProvider } from '../provider/github.provider';
       inject: [GoogleOAuthProvider],
     },
   ],
-  exports: [UserRepository],
+  exports: [UserRepository, UserService],
 })
 export class UserModule {}
