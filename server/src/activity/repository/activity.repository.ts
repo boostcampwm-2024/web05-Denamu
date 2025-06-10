@@ -10,15 +10,13 @@ export class ActivityRepository extends Repository<Activity> {
   }
 
   async upsertByUserId(userId: number): Promise<void> {
-    await this.createQueryBuilder()
-      .insert()
-      .into(Activity)
-      .values({
-        user: { id: userId },
-        activityDate: () => 'CURDATE()',
-        viewCount: 1,
-      })
-      .orUpdate(['view_count = view_count + 1'], ['user_id', 'activity_date'])
-      .execute();
+    await this.query(
+      `
+      INSERT INTO activity (user_id, activity_date, view_count) 
+      VALUES (?, CURDATE(), 1) 
+      ON DUPLICATE KEY UPDATE view_count = view_count + 1
+    `,
+      [userId],
+    );
   }
 }
