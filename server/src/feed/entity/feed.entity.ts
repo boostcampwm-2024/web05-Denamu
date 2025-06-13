@@ -54,6 +54,13 @@ export class Feed extends BaseEntity {
   })
   summary: string;
 
+  @Column({
+    name: 'like_count',
+    nullable: false,
+    default: 0,
+  })
+  likeCount: number;
+
   @ManyToOne(() => RssAccept, (rssAccept) => rssAccept.feeds, {
     nullable: false,
     onUpdate: 'CASCADE',
@@ -86,6 +93,7 @@ export class Feed extends BaseEntity {
       .addSelect('f.thumbnail', 'thumbnail')
       .addSelect('f.view_count', 'view_count')
       .addSelect('f.summary', 'summary')
+      .addSelect('f.like_count', 'like_count')
       .addSelect('r.name', 'blog_name')
       .addSelect('r.blog_platform', 'blog_platform')
       .addSelect(
@@ -152,6 +160,11 @@ export class FeedView {
     name: 'summary',
   })
   summary: string;
+
+  @ViewColumn({
+    name: 'like_count',
+  })
+  likeCount: number;
 
   @ViewColumn({
     name: 'tag',
