@@ -43,4 +43,5 @@ export type FeedRecentRedis = {
   title: string;
   isNew?: boolean;
   tagList: string[] | string;
+  likes: number;
 };
