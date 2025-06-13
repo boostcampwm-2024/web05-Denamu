@@ -1,6 +1,7 @@
 import { applyDecorators } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
+  ApiConflictResponse,
   ApiCreatedResponse,
   ApiNotFoundResponse,
   ApiOperation,
@@ -41,6 +42,12 @@ export function ApiCreateLike() {
       description: '해당 ID의 게시글이 존재하지 않는 경우',
       example: {
         message: '존재하지 않는 게시글입니다.',
+      },
+    }),
+    ApiConflictResponse({
+      description: '이미 좋아요를 누른 경우',
+      example: {
+        message: '이미 좋아요를 눌렀습니다.',
       },
     }),
   );
