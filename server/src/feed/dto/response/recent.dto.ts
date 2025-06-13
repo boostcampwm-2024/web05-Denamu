@@ -9,6 +9,7 @@ export class FeedRecentResponseDto {
     private thumbnail: string,
     private viewCount: number,
     private isNew: boolean,
+    private likes: number,
     private tag: string[] | string,
   ) {}
 
@@ -23,6 +24,7 @@ export class FeedRecentResponseDto {
       feed.thumbnail,
       feed.viewCount,
       feed.isNew,
+      feed.likes,
       feed.tagList,
     );
   }

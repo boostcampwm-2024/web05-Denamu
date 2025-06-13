@@ -11,6 +11,7 @@ export class FeedDetailResponseDto {
     private thumbnail: string,
     private viewCount: number,
     private summary: string,
+    private likes: number,
     private tag: string[],
   ) {}
 
@@ -25,6 +26,7 @@ export class FeedDetailResponseDto {
       feed.thumbnail,
       feed.viewCount,
       feed.summary,
+      feed.likeCount,
       feed.tag ? feed.tag : [],
     );
   }
