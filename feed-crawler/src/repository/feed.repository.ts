@@ -93,6 +93,7 @@ export class FeedRepository {
             path: feed.link,
             title: feed.title,
             tag: Array.isArray(feed.tag) ? feed.tag : [],
+            likes: 0,
           });
         }
       });
