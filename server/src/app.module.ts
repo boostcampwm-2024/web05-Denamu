@@ -17,6 +17,7 @@ import { CommentModule } from './comment/module/comment.module';
 import { MetricsModule } from './common/metrics/metrics.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { MetricsInterceptor } from './common/metrics/metrics.interceptor';
+import { LikeModule } from './like/module/like.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { MetricsInterceptor } from './common/metrics/metrics.interceptor';
     EmailModule,
     CommentModule,
     MetricsModule,
+    LikeModule,
   ],
   controllers: [],
   providers: [
