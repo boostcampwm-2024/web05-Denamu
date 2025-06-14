@@ -1,20 +1,44 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { ActivityRepository } from '../repository/activity.repository';
-import { User } from '../../user/entity/user.entity';
+import { UserRepository } from '../../user/repository/user.repository';
+import {
+  ActivityReadResponseDto,
+  DailyActivityDto,
+} from '../dto/response/activity-read.dto';
 
 @Injectable()
 export class ActivityService {
-  constructor(private readonly activityRepository: ActivityRepository) {}
+  constructor(
+    private readonly activityRepository: ActivityRepository,
+    private readonly userRepository: UserRepository,
+  ) {}
 
-  async readActivities(userId: number, year: number) {
-    // TODO: 연도별 활동 데이터 전체 조회
-    // 1. 연도별 활동 데이터 전체 반환 (일, 활동수 쌍)
+  async readActivities(
+    userId: number,
+    year: number,
+  ): Promise<ActivityReadResponseDto> {
+    const user = await this.userRepository.findOneBy({ id: userId });
+    if (!user) {
+      throw new NotFoundException('존재하지 않는 사용자입니다.');
+    }
 
-    // + metric 수집 및 반환 (User Entity에 존재함.)
-    // 1. 최장 읽기 스트릭
-    // 2. 현재 읽기 스트릭
-    // 3. 총 읽은 횟수
-    return 'foo';
+    const activities =
+      await this.activityRepository.findActivitiesByUserIdAndYear(userId, year);
+
+    const dailyActivities = activities.map(
+      (activity) =>
+        new DailyActivityDto({
+          date: activity.activityDate.toISOString().split('T')[0],
+          viewCount: activity.viewCount,
+        }),
+    );
+
+    return new ActivityReadResponseDto({
+      dailyActivities,
+      maxStreak: user.maxStreak,
+      currentStreak: user.currentStreak,
+      totalViews: user.totalViews,
+    });
   }
 
   async upsertActivity(userId: number) {

@@ -66,7 +66,6 @@ export class ReadFeedInterceptor implements NestInterceptor {
     );
 
     if (!hasUserFlag) {
-      console.log(user.id + 'user id 발견요');
       await this.redisService.sadd(`feed:${feedId}:userId`, user.id);
       this.userService.updateUserActivity(user.id);
       await this.activityService.upsertActivity(user.id);

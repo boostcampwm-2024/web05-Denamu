@@ -21,6 +21,15 @@ export class Activity extends BaseEntity {
     name: 'activity_date',
     type: 'date',
     nullable: false,
+    transformer: {
+      to: (value: Date) => value,
+      from: (value: string | Date) => {
+        if (typeof value === 'string') {
+          return new Date(value);
+        }
+        return value;
+      },
+    },
   })
   activityDate: Date;
 

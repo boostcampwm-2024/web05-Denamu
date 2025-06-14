@@ -6,6 +6,9 @@ export class UserFixture {
     email: 'test1234@test.com',
     password: 'test1234!',
     userName: 'test1234',
+    maxStreak: 15,
+    currentStreak: 7,
+    totalViewss: 120,
   };
 
   static async createUserCryptFixture(overwrites: Partial<User> = {}) {
