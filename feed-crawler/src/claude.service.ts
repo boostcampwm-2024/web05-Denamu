@@ -25,15 +25,8 @@ export class ClaudeService {
   }
 
   async startRequestAI() {
-    try {
-      const feeds = await this.loadFeeds();
-      await Promise.all(feeds.map((feed) => this.processFeed(feed)));
-    } catch (error) {
-      logger.error(
-        `${this.nameTag} startRequestAI 실패: ${error.message}`,
-        error.stack,
-      );
-    }
+    const feeds = await this.loadFeeds();
+    await Promise.all(feeds.map((feed) => this.processFeed(feed)));
   }
 
   private async loadFeeds() {
