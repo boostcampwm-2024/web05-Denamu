@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ScheduleModule } from '@nestjs/schedule';
 import { UserRepository } from '../repository/user.repository';
 import { UserService } from '../service/user.service';
 import { UserController } from '../controller/user.controller';
@@ -9,9 +10,10 @@ import { JwtAuthModule } from '../../common/auth/jwt.module';
 import { AdminModule } from '../../admin/module/admin.module';
 import { GoogleOAuthProvider } from '../provider/google.provider';
 import { GithubOAuthProvider } from '../provider/github.provider';
+import { UserScheduler } from '../scheduler/user.scheduler';
 
 @Module({
-  imports: [JwtAuthModule, AdminModule],
+  imports: [JwtAuthModule, AdminModule, ScheduleModule.forRoot()],
   controllers: [UserController, OAuthController],
   providers: [
     UserService,
@@ -20,6 +22,7 @@ import { GithubOAuthProvider } from '../provider/github.provider';
     ProviderRepository,
     GoogleOAuthProvider,
     GithubOAuthProvider,
+    UserScheduler,
     {
       provide: 'OAUTH_PROVIDERS',
       useFactory: (
