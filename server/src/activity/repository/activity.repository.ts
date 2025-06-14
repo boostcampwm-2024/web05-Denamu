@@ -1,7 +1,6 @@
 import { DataSource, Repository } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { Activity } from '../entity/activity.entity';
-import { User } from '../../user/entity/user.entity';
 
 @Injectable()
 export class ActivityRepository extends Repository<Activity> {
@@ -18,5 +17,21 @@ export class ActivityRepository extends Repository<Activity> {
     `,
       [userId],
     );
+  }
+
+  async findActivitiesByUserIdAndYear(
+    userId: number,
+    year: number,
+  ): Promise<Activity[]> {
+    const startDate = `${year}-01-01`;
+    const endDate = `${year}-12-31`;
+
+    return this.createQueryBuilder('activity')
+      .leftJoinAndSelect('activity.user', 'user')
+      .where('user.id = :userId', { userId })
+      .andWhere('activity.activityDate >= :startDate', { startDate })
+      .andWhere('activity.activityDate <= :endDate', { endDate })
+      .orderBy('activity.activityDate', 'ASC')
+      .getMany();
   }
 }
