@@ -189,8 +189,7 @@ export class FeedService {
   }
 
   private getExpirationTime() {
-    const now = new Date();
-    const tomorrow = new Date(now);
+    const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     tomorrow.setHours(0, 0, 0, 0);
     return tomorrow;

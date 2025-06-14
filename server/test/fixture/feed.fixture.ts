@@ -18,6 +18,7 @@ export class FeedFixture {
         path: `https://test.com/test${index}`,
         thumbnail: `https://test.com/test${index}.png`,
         summary: `test summary ${index}`,
+        likes: 0,
       },
       blog: rssAccept,
     });

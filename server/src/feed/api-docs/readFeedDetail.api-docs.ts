@@ -11,13 +11,6 @@ export function ApiReadFeedDetail() {
     ApiOperation({
       summary: `게시글 상세 모달 데이터 조회 API`,
     }),
-    ApiQuery({
-      name: 'feedId',
-      required: true,
-      type: Number,
-      description: '클릭한 피드의 ID',
-      example: 10,
-    }),
     ApiOkResponse({
       description: 'Ok',
       schema: {
@@ -43,6 +36,7 @@ export function ApiReadFeedDetail() {
                   type: 'string',
                 },
               },
+              likes: { type: 'number' },
             },
           },
         },
@@ -60,6 +54,7 @@ export function ApiReadFeedDetail() {
           viewCount: 1,
           summary: '#example/n ### exexample',
           tag: ['tag1', 'tag2'],
+          likes: 0,
         },
       },
     }),
