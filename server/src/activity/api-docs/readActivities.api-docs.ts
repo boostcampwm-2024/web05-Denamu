@@ -14,18 +14,6 @@ export function ApiReadActivities() {
       description:
         '특정 연도의 사용자 일별 활동 데이터와 스트릭 정보를 조회합니다.',
     }),
-    ApiParam({
-      name: 'userId',
-      description: '조회할 사용자 ID',
-      example: 1,
-      type: 'number',
-    }),
-    ApiQuery({
-      name: 'year',
-      description: '조회할 연도',
-      example: 2024,
-      type: 'number',
-    }),
     ApiOkResponse({
       description: '활동 데이터 조회 성공',
       schema: {
