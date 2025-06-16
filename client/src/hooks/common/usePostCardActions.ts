@@ -23,9 +23,7 @@ export const usePostCardActions = (post: Post) => {
   const incrementView = ({ post, isWindowOpened }: PostWithState): PostWithState => {
     if (isWindowOpened) {
       mutate(undefined, {
-        onSuccess: () => {
-          console.log("조회수 증가 성공");
-        },
+        onSuccess: () => {},
         onError: (error) => {
           console.error("조회수 증가 실패", error);
         },
@@ -41,3 +39,17 @@ export const usePostCardActions = (post: Post) => {
 
   return { openPost, incrementView };
 };
+export function useIncrementViewByPostId(id: number) {
+  const { mutate } = usePostViewIncrement(id);
+
+  const increment = () => {
+    mutate(undefined, {
+      onSuccess: () => {},
+      onError: (error) => {
+        console.error("조회수 증가 실패", error);
+      },
+    });
+  };
+
+  return increment;
+}
