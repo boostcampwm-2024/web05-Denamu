@@ -47,7 +47,6 @@ export class LikeService {
       await queryRunner.manager.save(Like, {
         user: { id: userInformation.id },
         feed: { id: feedLikeCreateDto.feedId },
-        likeDate: new Date(),
       });
 
       await queryRunner.commitTransaction();

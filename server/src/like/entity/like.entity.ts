@@ -1,6 +1,6 @@
 import {
   BaseEntity,
-  Column,
+  CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
@@ -34,7 +34,7 @@ export class Like extends BaseEntity {
   })
   user: User;
 
-  @Column({
+  @CreateDateColumn({
     name: 'like_date',
     type: 'datetime',
     nullable: false,
