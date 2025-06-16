@@ -18,6 +18,7 @@ services:
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      TZ: "Asia/Seoul"
     healthcheck:
       test:
         [
@@ -54,6 +55,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+    environment:
+      TZ: "Asia/Seoul"
 
   # Prometheus
   prometheus:
@@ -67,6 +70,8 @@ services:
       - denamu-prometheus:/prometheus
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
+    environment:
+      TZ: "Asia/Seoul"
 
   # Grafana:
   grafana:
@@ -79,6 +84,8 @@ services:
       - denamu-grafana:/var/lib/grafana
     depends_on:
       - prometheus
+    environment:
+      TZ: "Asia/Seoul"
 
   # Node Exporter
   node_exporter:
@@ -96,6 +103,8 @@ services:
       - "--path.rootfs=/rootfs"
       - "--path.sysfs=/host/sys"
       - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
+    environment:
+      TZ: "Asia/Seoul"
 
 volumes:
   denamu-mysql:
