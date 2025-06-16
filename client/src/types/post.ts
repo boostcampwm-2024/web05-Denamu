@@ -37,3 +37,12 @@ export interface PostDetailType {
   message: string;
   data: Post;
 }
+export interface PostCommentType {
+  id: number;
+  author: string;
+  content: string;
+  authorImage: string;
+  createdAt: string;
+  likes: number;
+  isLiked: boolean;
+}
