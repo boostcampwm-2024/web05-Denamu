@@ -338,6 +338,6 @@ INSERT INTO comment(comment, date, feed_id, user_id) VALUES
 
 -- denamu.like insert data
 
-INSERT INTO `like`(feed_id, user_id, like_date) VALUES
+INSERT INTO likes(feed_id, user_id, like_date) VALUES
 	(94,1,'2025-06-13 17:47:05'),
 	(95,1,'2025-06-13 17:47:07');
