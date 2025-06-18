@@ -266,10 +266,6 @@ export class FeedService {
       isLike = !!like;
     }
 
-    const comments = await this.commentRepository.getCommentInformation(
-      feedDetailRequestDto.feedId,
-    );
-
-    return FeedDetailResponseDto.toResponseDto(feed, isLike, comments);
+    return FeedDetailResponseDto.toResponseDto(feed, isLike);
   }
 }
