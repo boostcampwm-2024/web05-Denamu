@@ -1,3 +1,4 @@
+import { InjectUserInterceptor } from './../../common/auth/jwt.interceptor';
 import { ApiTags } from '@nestjs/swagger';
 import { ApiResponse } from '../../common/response/common.response';
 import {
@@ -29,6 +30,7 @@ import { FeedViewUpdateRequestDto } from '../dto/request/feed-update.dto';
 import { FeedDetailRequestDto } from '../dto/request/feed-detail.dto';
 import { ApiReadFeedDetail } from '../api-docs/readFeedDetail.api-docs';
 import { ReadFeedInterceptor } from '../interceptor/read-feed.interceptor';
+import { Payload } from '../../common/guard/jwt.guard';
 
 @ApiTags('Feed')
 @Controller('feed')
@@ -119,11 +121,17 @@ export class FeedController {
   @ApiReadFeedDetail()
   @Get('/detail/:feedId')
   @HttpCode(HttpStatus.OK)
-  @UseInterceptors(ReadFeedInterceptor)
-  async readFeedDetail(@Param() feedDetailRequestDto: FeedDetailRequestDto) {
+  @UseInterceptors(InjectUserInterceptor, ReadFeedInterceptor)
+  async readFeedDetail(
+    @Req() request: Request,
+    @Param() feedDetailRequestDto: FeedDetailRequestDto,
+  ) {
     return ApiResponse.responseWithData(
       '요청이 성공적으로 처리되었습니다.',
-      await this.feedService.readFeedDetail(feedDetailRequestDto),
+      await this.feedService.readFeedDetail(
+        feedDetailRequestDto,
+        (request.user as Payload) ?? null,
+      ),
     );
   }
 }
