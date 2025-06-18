@@ -106,12 +106,6 @@ describe('POST /api/like E2E Test', () => {
 
   it('이미 좋아요를 했다면 좋아요를 등록할 수 없다.', async () => {
     // given
-    const likeRepository = app.get(LikeRepository);
-    await likeRepository.save({
-      feed: { id: 1 },
-      user: { id: 1 },
-      likeDate: new Date(),
-    });
     const feedLikeRequest = new FeedLikeRequestDto({
       feedId: 1,
     });
