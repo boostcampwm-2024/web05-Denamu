@@ -1,4 +1,8 @@
-import { ExecutionContext, Injectable } from '@nestjs/common';
+import {
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Observable } from 'rxjs';
 
@@ -16,6 +20,13 @@ export class JwtGuard extends AuthGuard('jwt') {
   ): boolean | Promise<boolean> | Observable<boolean> {
     return super.canActivate(context);
   }
+
+  handleRequest(err: any, user: any, info: any) {
+    if (err || !user) {
+      throw new UnauthorizedException('인증되지 않은 요청입니다.');
+    }
+    return user;
+  }
 }
 
 @Injectable()
@@ -25,11 +36,11 @@ export class RefreshJwtGuard extends AuthGuard('jwt-refresh') {
   ): boolean | Promise<boolean> | Observable<boolean> {
     return super.canActivate(context);
   }
-}
 
-@Injectable()
-export class JwtOptionalGuard extends AuthGuard('jwt') {
   handleRequest(err: any, user: any, info: any) {
+    if (err || !user) {
+      throw new UnauthorizedException('인증되지 않은 요청입니다.');
+    }
     return user;
   }
 }

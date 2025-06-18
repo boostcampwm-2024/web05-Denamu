@@ -1,10 +1,6 @@
 import { Module } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import {
-  JwtGuard,
-  JwtOptionalGuard,
-  RefreshJwtGuard,
-} from '../guard/jwt.guard';
+import { JwtGuard, RefreshJwtGuard } from '../guard/jwt.guard';
 import { JwtRefreshStrategy, JwtStrategy } from './jwt.strategy';
 
 @Module({
@@ -12,7 +8,6 @@ import { JwtRefreshStrategy, JwtStrategy } from './jwt.strategy';
     JwtService,
     JwtGuard,
     RefreshJwtGuard,
-    JwtOptionalGuard,
     JwtStrategy,
     JwtRefreshStrategy,
   ],

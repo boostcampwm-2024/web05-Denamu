@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { FeedController } from '../controller/feed.controller';
 import { FeedService } from '../service/feed.service';
 import {
@@ -12,6 +12,9 @@ import { UserModule } from '../../user/module/user.module';
 import { ActivityModule } from '../../activity/module/activity.module';
 import { ReadFeedInterceptor } from '../interceptor/read-feed.interceptor';
 import { JwtAuthModule } from '../../common/auth/jwt.module';
+import { LikeModule } from '../../like/module/like.module';
+import { InjectUserInterceptor } from '../../common/auth/jwt.interceptor';
+import { CommentModule } from '../../comment/module/comment.module';
 
 @Module({
   imports: [
@@ -20,6 +23,8 @@ import { JwtAuthModule } from '../../common/auth/jwt.module';
     UserModule,
     ActivityModule,
     JwtAuthModule,
+    forwardRef(() => CommentModule),
+    forwardRef(() => LikeModule),
   ],
   controllers: [FeedController],
   providers: [
@@ -28,6 +33,7 @@ import { JwtAuthModule } from '../../common/auth/jwt.module';
     FeedViewRepository,
     FeedScheduler,
     ReadFeedInterceptor,
+    InjectUserInterceptor,
   ],
   exports: [FeedRepository],
 })

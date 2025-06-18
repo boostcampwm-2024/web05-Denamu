@@ -19,6 +19,7 @@ services:
       MYSQL_DATABASE: "denamu"
       MYSQL_USER: "denamu-db-user"
       MYSQL_PASSWORD: "denamu-db-pw"
+      TZ: "Asia/Seoul"
     healthcheck:
       test:
         [
@@ -55,6 +56,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+    environment:
+      TZ: "Asia/Seoul"
 
 volumes:
   denamu-mysql:
