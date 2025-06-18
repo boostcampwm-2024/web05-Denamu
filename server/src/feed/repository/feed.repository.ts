@@ -105,11 +105,4 @@ export class FeedViewRepository extends Repository<FeedView> {
 
     return await query.getMany();
   }
-
-  async findFeedById(feedId: number) {
-    const feed = await this.createQueryBuilder()
-      .where('id = :feedId', { feedId })
-      .getOne();
-    return feed;
-  }
 }

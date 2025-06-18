@@ -89,7 +89,7 @@ export class FeedService {
     );
     const trendFeeds = await Promise.all(
       trendFeedIdList.map(async (feedId) =>
-        this.feedViewRepository.findFeedById(parseInt(feedId)),
+        this.feedViewRepository.findOneBy({ feedId: parseInt(feedId) }),
       ),
     );
     return FeedTrendResponseDto.toResponseDtoArray(
@@ -239,9 +239,9 @@ export class FeedService {
   }
 
   async readFeedDetail(feedDetailRequestDto: FeedDetailRequestDto) {
-    const feed = await this.feedViewRepository.findFeedById(
-      feedDetailRequestDto.feedId,
-    );
+    const feed = await this.feedViewRepository.findOneBy({
+      feedId: feedDetailRequestDto.feedId,
+    });
     if (!feed) {
       throw new BadRequestException(
         `${feedDetailRequestDto.feedId}번 피드는 존재하지 않습니다.`,
