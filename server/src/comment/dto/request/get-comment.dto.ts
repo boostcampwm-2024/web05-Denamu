@@ -12,4 +12,8 @@ export class GetCommentRequestDto {
   })
   @Type(() => Number)
   feedId: number;
+
+  constructor(partial: Partial<GetCommentRequestDto>) {
+    Object.assign(this, partial);
+  }
 }
