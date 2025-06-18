@@ -78,9 +78,6 @@ export function ApiSearchFeedList() {
                     likes: {
                       type: 'number',
                     },
-                    isLike: {
-                      type: 'boolean',
-                    },
                   },
                 },
               },
@@ -106,7 +103,6 @@ export function ApiSearchFeedList() {
               path: 'https://test.com/1',
               createdAt: '2024-10-27T02:08:55.000Z',
               likes: 0,
-              isLike: true,
             },
           ],
           totalPages: 3,
