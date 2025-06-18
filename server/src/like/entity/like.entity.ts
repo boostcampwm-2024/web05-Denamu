@@ -5,11 +5,13 @@ import {
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
+  Unique,
 } from 'typeorm';
 import { Feed } from '../../feed/entity/feed.entity';
 import { User } from '../../user/entity/user.entity';
 
 @Entity({ name: 'likes' })
+@Unique(['user', 'feed'])
 export class Like extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
