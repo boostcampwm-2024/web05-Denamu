@@ -59,6 +59,18 @@ export class User extends BaseEntity {
   })
   updatedAt: Date;
 
+  @Column({ type: 'int', default: 0 })
+  totalViews: number;
+
+  @Column({ type: 'int', default: 0 })
+  currentStreak: number;
+
+  @Column({ type: 'date', nullable: true })
+  lastActiveDate: Date | null;
+
+  @Column({ type: 'int', default: 0 })
+  maxStreak: number;
+
   @OneToMany(() => Activity, (activity) => activity.user)
   activities: Activity[];
 

@@ -159,7 +159,7 @@ export class FeedService {
       }
 
       if (hasCookie || hasIpFlag) {
-        return null;
+        return;
       }
 
       await Promise.all([
@@ -247,6 +247,7 @@ export class FeedService {
         `${feedDetailRequestDto.feedId}번 피드는 존재하지 않습니다.`,
       );
     }
+
     return FeedDetailResponseDto.toResponseDto(feed);
   }
 }

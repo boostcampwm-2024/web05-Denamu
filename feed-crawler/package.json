@@ -11,7 +11,8 @@
     "node-schedule": "^2.1.1",
     "reflect-metadata": "^0.2.2",
     "tsyringe": "^4.8.0",
-    "winston": "^3.16.0"
+    "winston": "^3.16.0",
+    "winston-daily-rotate-file": "^5.0.0"
   },
   "devDependencies": {
     "@testcontainers/mysql": "^10.25.0",

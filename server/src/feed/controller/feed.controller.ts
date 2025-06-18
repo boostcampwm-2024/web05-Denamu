@@ -11,6 +11,7 @@ import {
   Req,
   Res,
   Sse,
+  UseInterceptors,
 } from '@nestjs/common';
 import { FeedService } from '../service/feed.service';
 import { FeedPaginationRequestDto } from '../dto/request/feed-pagination.dto';
@@ -27,6 +28,7 @@ import { FeedTrendResponseDto } from '../dto/response/feed-pagination.dto';
 import { FeedViewUpdateRequestDto } from '../dto/request/feed-update.dto';
 import { FeedDetailRequestDto } from '../dto/request/feed-detail.dto';
 import { ApiReadFeedDetail } from '../api-docs/readFeedDetail.api-docs';
+import { ReadFeedInterceptor } from '../interceptor/read-feed.interceptor';
 
 @ApiTags('Feed')
 @Controller('feed')
@@ -117,6 +119,7 @@ export class FeedController {
   @ApiReadFeedDetail()
   @Get('/detail/:feedId')
   @HttpCode(HttpStatus.OK)
+  @UseInterceptors(ReadFeedInterceptor)
   async readFeedDetail(@Param() feedDetailRequestDto: FeedDetailRequestDto) {
     return ApiResponse.responseWithData(
       '요청이 성공적으로 처리되었습니다.',
