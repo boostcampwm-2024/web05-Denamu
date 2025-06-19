@@ -9,21 +9,11 @@ export class CommentRepository extends Repository<Comment> {
   }
 
   async getCommentInformation(feedId: number) {
-    const results = await this.createQueryBuilder('comment')
-      .innerJoin('comment.user', 'user') // ✅ 관계명은 'user'로
+    return await this.createQueryBuilder('comment')
+      .innerJoin('comment.user', 'user')
       .where('comment.feed_id = :feedId', { feedId })
       .select(['comment', 'comment.date', 'user'])
       .orderBy('comment.date', 'ASC')
       .getMany();
-    return results.map((row) => ({
-      id: row.id,
-      comment: row.comment,
-      date: row.date,
-      user: {
-        id: row.user.id,
-        userName: row.user.userName,
-        profileImage: row.user.profileImage,
-      },
-    }));
   }
 }

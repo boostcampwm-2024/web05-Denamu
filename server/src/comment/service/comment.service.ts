@@ -10,6 +10,7 @@ import { UserRepository } from '../../user/repository/user.repository';
 import { Payload } from '../../common/guard/jwt.guard';
 import { DeleteCommentRequestDto } from '../dto/request/delete-comment.dto';
 import { UpdateCommentRequestDto } from '../dto/request/update-comment.dto';
+import { GetCommentRequestDto } from '../dto/request/get-comment.dto';
 
 @Injectable()
 export class CommentService {
@@ -34,6 +35,30 @@ export class CommentService {
     if (userInformation.id !== commentObj.user.id) {
       throw new UnauthorizedException('본인이 작성한 댓글이 아닙니다.');
     }
+  }
+
+  async get(commentDto: GetCommentRequestDto) {
+    const feed = await this.feedRepository.findOneBy({
+      id: commentDto.feedId,
+    });
+
+    if (!feed) {
+      throw new NotFoundException('게시글을 찾을 수 없습니다.');
+    }
+
+    const comments = await this.commentRepository.getCommentInformation(
+      commentDto.feedId,
+    );
+    return comments.map((row) => ({
+      id: row.id,
+      comment: row.comment,
+      date: row.date,
+      user: {
+        id: row.user.id,
+        userName: row.user.userName,
+        profileImage: row.user.profileImage,
+      },
+    }));
   }
 
   async create(userInformation: Payload, commentDto: CreateCommentRequestDto) {
