@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 
 import { PostContent } from "@/components/common/Card/detail/PostContent";
@@ -8,16 +8,25 @@ import Header from "@/components/layout/Header";
 import Loading from "@/pages/Loading";
 import NotFound from "@/pages/NotFound";
 
+import { useIncrementViewByPostId } from "@/hooks/common/usePostCardActions";
 import { usePostDetail } from "@/hooks/queries/usePostDetail";
 
 export default function PostDetailPage() {
   const { id } = useParams();
-  if (id && !/^\d+$/.test(id)) {
+
+  const numericId = Number(id);
+  const increment = useIncrementViewByPostId(numericId);
+  const { data, isLoading, error } = usePostDetail(numericId);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    increment();
+  }, [id]);
+
+  if (!id || !/^\d+$/.test(id)) {
     return <NotFound />;
   }
 
-  const { data, isLoading, error } = usePostDetail(Number(id));
-  const modalRef = useRef<HTMLDivElement>(null);
   if (isLoading) {
     return <Loading />;
   }
