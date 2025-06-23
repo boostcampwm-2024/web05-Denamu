@@ -12,7 +12,7 @@ import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../fixture/user.fixture';
 import { GetCommentRequestDto } from '../../../src/comment/dto/request/get-comment.dto';
 
-describe('GET /api/comment/feed/:feedId E2E Test', () => {
+describe('GET /api/comment/:feedId E2E Test', () => {
   let app: INestApplication;
   let userService: UserService;
   let rssAcceptInformation: RssAccept;
@@ -46,7 +46,7 @@ describe('GET /api/comment/feed/:feedId E2E Test', () => {
 
     // when
     const response = await agent
-      .get(`/api/comment/feed/${comment.feedId}`)
+      .get(`/api/comment/${comment.feedId}`)
       .send(comment);
 
     // then
@@ -62,7 +62,7 @@ describe('GET /api/comment/feed/:feedId E2E Test', () => {
 
     // when
     const response = await agent
-      .get(`/api/comment/feed/${comment.feedId}`)
+      .get(`/api/comment/${comment.feedId}`)
       .send(comment);
 
     // then
