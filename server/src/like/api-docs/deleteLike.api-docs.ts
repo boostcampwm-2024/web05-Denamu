@@ -4,7 +4,6 @@ import {
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
-  ApiParam,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 
@@ -41,7 +40,7 @@ export function ApiDeleteLike() {
     ApiNotFoundResponse({
       description: '해당 ID의 게시글이 존재하지 않는 경우',
       example: {
-        message: '존재하지 않는 게시글입니다.',
+        message: '해당 피드를 찾을 수 없습니다.',
       },
     }),
   );
