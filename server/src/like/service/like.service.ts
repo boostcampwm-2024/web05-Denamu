@@ -18,6 +18,30 @@ export class LikeService {
     private readonly dataSource: DataSource,
   ) {}
 
+  async get(userInformation: Payload, feedLikeGetDto: FeedLikeRequestDto) {
+    const feed = await this.feedRepository.findOneBy({
+      id: feedLikeGetDto.feedId,
+    });
+
+    if (!feed) {
+      throw new NotFoundException('해당 피드를 찾을 수 없습니다.');
+    }
+
+    let isLike = false;
+
+    if (userInformation) {
+      const like = await this.likeRepository.findOneBy({
+        user: { id: userInformation.id },
+        feed: { id: feedLikeGetDto.feedId },
+      });
+      isLike = !!like;
+    }
+
+    return {
+      isLike,
+    };
+  }
+
   async create(
     userInformation: Payload,
     feedLikeCreateDto: FeedLikeRequestDto,
