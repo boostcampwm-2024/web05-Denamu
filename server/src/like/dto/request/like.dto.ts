@@ -5,7 +5,7 @@ import { IsInt, Min } from 'class-validator';
 export class FeedLikeRequestDto {
   @ApiProperty({
     example: 1,
-    description: '좋아요 등록 및 취소할 피드 ID 입력',
+    description: '좋아요 등록 및 취소, 조회할 피드 ID 입력',
   })
   @IsInt({
     message: '정수를 입력해주세요.',

@@ -4,13 +4,12 @@ import {
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
-  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 
-export function ApiDeleteLike() {
+export function ApiGetLike() {
   return applyDecorators(
     ApiOperation({
-      summary: '게시글 좋아요 취소 API',
+      summary: '게시글 좋아요 조회 API',
     }),
     ApiOkResponse({
       description: 'Ok',
@@ -19,22 +18,27 @@ export function ApiDeleteLike() {
           message: {
             type: 'string',
           },
+          data: {
+            type: 'object',
+            properties: {
+              isLike: {
+                type: 'boolean',
+              },
+            },
+          },
         },
       },
       example: {
-        message: '좋아요 삭제를 성공했습니다.',
+        message: '좋아요 조회를 성공했습니다.',
+        data: {
+          isLike: false,
+        },
       },
     }),
     ApiBadRequestResponse({
       description: 'Bad Request',
       example: {
         message: '오류 메세지',
-      },
-    }),
-    ApiUnauthorizedResponse({
-      description: 'Unauthorized',
-      example: {
-        message: '인증되지 않은 요청입니다.',
       },
     }),
     ApiNotFoundResponse({

@@ -13,7 +13,6 @@ import { ActivityModule } from '../../activity/module/activity.module';
 import { ReadFeedInterceptor } from '../interceptor/read-feed.interceptor';
 import { JwtAuthModule } from '../../common/auth/jwt.module';
 import { LikeModule } from '../../like/module/like.module';
-import { InjectUserInterceptor } from '../../common/auth/jwt.interceptor';
 import { CommentModule } from '../../comment/module/comment.module';
 
 @Module({
@@ -33,7 +32,6 @@ import { CommentModule } from '../../comment/module/comment.module';
     FeedViewRepository,
     FeedScheduler,
     ReadFeedInterceptor,
-    InjectUserInterceptor,
   ],
   exports: [FeedRepository],
 })
