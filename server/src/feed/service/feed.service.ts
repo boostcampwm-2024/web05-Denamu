@@ -31,9 +31,6 @@ import {
 import { FeedViewUpdateRequestDto } from '../dto/request/feed-update.dto';
 import { FeedDetailRequestDto } from '../dto/request/feed-detail.dto';
 import { FeedDetailResponseDto } from '../dto/response/feed-detail.dto';
-import { LikeRepository } from '../../like/repository/like.repository';
-import { Payload } from '../../common/guard/jwt.guard';
-import { CommentRepository } from '../../comment/repository/comment.repository';
 
 @Injectable()
 export class FeedService {
@@ -41,8 +38,6 @@ export class FeedService {
     private readonly feedRepository: FeedRepository,
     private readonly feedViewRepository: FeedViewRepository,
     private readonly redisService: RedisService,
-    private readonly likeRepository: LikeRepository,
-    private readonly commentRepository: CommentRepository,
   ) {}
 
   async readFeedPagination(feedPaginationQueryDto: FeedPaginationRequestDto) {
@@ -243,10 +238,7 @@ export class FeedService {
     return request.socket.remoteAddress;
   }
 
-  async readFeedDetail(
-    feedDetailRequestDto: FeedDetailRequestDto,
-    user: Payload | null,
-  ) {
+  async readFeedDetail(feedDetailRequestDto: FeedDetailRequestDto) {
     const feed = await this.feedViewRepository.findOneBy({
       feedId: feedDetailRequestDto.feedId,
     });
@@ -256,16 +248,6 @@ export class FeedService {
       );
     }
 
-    let isLike = false;
-
-    if (user) {
-      const like = await this.likeRepository.findOneBy({
-        user: { id: user.id },
-        feed: { id: feedDetailRequestDto.feedId },
-      });
-      isLike = !!like;
-    }
-
-    return FeedDetailResponseDto.toResponseDto(feed, isLike);
+    return FeedDetailResponseDto.toResponseDto(feed);
   }
 }

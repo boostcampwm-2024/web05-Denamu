@@ -12,11 +12,10 @@ export class FeedDetailResponseDto {
     private viewCount: number,
     private summary: string,
     private likes: number,
-    private isLike: boolean,
     private tag: string[],
   ) {}
 
-  static toResponseDto(feed: FeedView, isLike: boolean) {
+  static toResponseDto(feed: FeedView) {
     return new FeedDetailResponseDto(
       feed.feedId,
       feed.blogName,
@@ -28,7 +27,6 @@ export class FeedDetailResponseDto {
       feed.viewCount,
       feed.summary,
       feed.likeCount,
-      isLike,
       feed.tag ? feed.tag : [],
     );
   }
