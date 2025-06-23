@@ -251,7 +251,7 @@ export class FeedService {
       feedId: feedDetailRequestDto.feedId,
     });
     if (!feed) {
-      throw new BadRequestException(
+      throw new NotFoundException(
         `${feedDetailRequestDto.feedId}번 피드는 존재하지 않습니다.`,
       );
     }
