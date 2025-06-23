@@ -30,7 +30,7 @@ export class CommentController {
   constructor(private readonly commentService: CommentService) {}
 
   @ApiGetComment()
-  @Get('/feed/:feedId')
+  @Get('/:feedId')
   @HttpCode(HttpStatus.OK)
   async getComment(@Param() getCommentRequestDto: GetCommentRequestDto) {
     return ApiResponse.responseWithData(
