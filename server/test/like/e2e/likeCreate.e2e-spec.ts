@@ -11,7 +11,6 @@ import { User } from '../../../src/user/entity/user.entity';
 import { Feed } from '../../../src/feed/entity/feed.entity';
 import { FeedLikeRequestDto } from '../../../src/like/dto/request/like.dto';
 import * as request from 'supertest';
-import { LikeRepository } from '../../../src/like/repository/like.repository';
 
 describe('POST /api/like E2E Test', () => {
   let app: INestApplication;
