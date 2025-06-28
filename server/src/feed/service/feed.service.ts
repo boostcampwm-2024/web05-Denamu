@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  HttpStatus,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -31,6 +32,7 @@ import {
 import { FeedViewUpdateRequestDto } from '../dto/request/feed-update.dto';
 import { FeedDetailRequestDto } from '../dto/request/feed-detail.dto';
 import { FeedDetailResponseDto } from '../dto/response/feed-detail.dto';
+import { FeedDeleteCheckDto } from '../dto/request/feed-check.dto';
 
 @Injectable()
 export class FeedService {
@@ -249,5 +251,23 @@ export class FeedService {
     }
 
     return FeedDetailResponseDto.toResponseDto(feed);
+  }
+
+  async deleteCheckFeed(feedDeleteCheckDto: FeedDeleteCheckDto) {
+    const feed = await this.feedRepository.findOneBy({
+      id: feedDeleteCheckDto.feedId,
+    });
+    if (!feed) {
+      throw new NotFoundException(
+        `${feedDeleteCheckDto.feedId}번 피드는 존재하지 않습니다.`,
+      );
+    }
+
+    const response = await fetch(feed.path);
+
+    if (response.status === HttpStatus.NOT_FOUND) {
+      await this.feedRepository.delete({ id: feedDeleteCheckDto.feedId });
+      throw new NotFoundException('원본 게시글이 삭제되었습니다.');
+    }
   }
 }
