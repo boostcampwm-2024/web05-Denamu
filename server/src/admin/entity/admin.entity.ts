@@ -1,6 +1,9 @@
 import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-class UserInformation extends BaseEntity {
+@Entity({
+  name: 'admin',
+})
+export class Admin extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -17,8 +20,3 @@ class UserInformation extends BaseEntity {
   })
   password: string;
 }
-
-@Entity({
-  name: 'admin',
-})
-export class Admin extends UserInformation {}
