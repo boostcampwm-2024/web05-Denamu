@@ -18,6 +18,5 @@ scrape_configs:
       - targets: ["mysql_metrics:9104"]
 
   - job_name: "redis_exporter"
-    metrics_path: /scrape
     static_configs:
       - targets: ["redis_metrics:9121"]
