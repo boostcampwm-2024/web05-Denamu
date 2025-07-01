@@ -42,8 +42,10 @@ services:
       - "9104:9104"
     networks:
       - Denamu
+    command:
+      - "--mysqld.username=$MYSQL_USER:$MYSQL_PASSWORD"
+      - "--mysqld.address=mysql-db:3306"
     environment:
-      DATA_SOURCE_NAME: "${MYSQL_USER}:${MYSQL_PASSWORD}@tcp(mysql-db:3306)/"
       TZ: "Asia/Seoul"
     depends_on:
       - mysql-db
