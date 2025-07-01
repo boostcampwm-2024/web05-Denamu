@@ -11,3 +11,13 @@ scrape_configs:
     metrics_path: "/api/metrics"
     static_configs:
       - targets: ["app:8080"]
+
+  - job_name: "mysql_exporter"
+    metrics_path: /probe
+    static_configs:
+      - targets: ["mysql_metrics:9104"]
+
+  - job_name: "redis_exporter"
+    metrics_path: /scrape
+    static_configs:
+      - targets: ["redis_metrics:9121"]
