@@ -92,6 +92,7 @@ export class RssController {
   @ApiReadDeleteRequestList()
   @UseGuards(CookieAuthGuard)
   @Get('remove')
+  @HttpCode(HttpStatus.OK)
   async readDeleteRequestList() {
     return ApiResponse.responseWithData(
       'RSS 삭제 요청을 조회하였습니다.',
