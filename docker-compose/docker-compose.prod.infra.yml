@@ -35,6 +35,21 @@ services:
       timeout: 5s
       retries: 3
 
+  # MySQL Metrics
+  mysql_metrics:
+    image: prom/mysqld-exporter
+    ports:
+      - "9104:9104"
+    networks:
+      - Denamu
+    command:
+      - "--mysqld.username=$MYSQL_USER:$MYSQL_PASSWORD"
+      - "--mysqld.address=mysql-db:3306"
+    environment:
+      TZ: "Asia/Seoul"
+    depends_on:
+      - mysql-db
+
   # Redis 서비스
   redis:
     image: "redis:6.0.16-alpine"
@@ -57,6 +72,21 @@ services:
       retries: 3
     environment:
       TZ: "Asia/Seoul"
+
+  # Redis Metrics
+  redis_metrics:
+    image: oliver006/redis_exporter
+    ports:
+      - "9121:9121"
+    networks:
+      - Denamu
+    environment:
+      REDIS_ADDR: "redis://redis:6379"
+      REDIS_USER: "${REDIS_USER}"
+      REDIS_PASSWORD: "${REDIS_PASSWORD}"
+      TZ: "Asia/Seoul"
+    depends_on:
+      - redis
 
   # Prometheus
   prometheus:
