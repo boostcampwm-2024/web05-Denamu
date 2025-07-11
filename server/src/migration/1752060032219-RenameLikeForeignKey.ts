@@ -1,6 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class Migration1752060032219 implements MigrationInterface {
+export class RenameLikeForeignKey1752060032219 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query('ALTER TABLE likes DROP FOREIGN KEY FK_like_feed;');
     await queryRunner.query('ALTER TABLE likes DROP FOREIGN KEY FK_like_user;');

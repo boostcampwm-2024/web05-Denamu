@@ -1,6 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class Migration1752238606597 implements MigrationInterface {
+export class DeleteRssRemove1752238606597 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query('DROP TABLE rss_remove;');
   }
