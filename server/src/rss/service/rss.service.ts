@@ -19,7 +19,6 @@ import { RssAcceptHistoryResponseDto } from '../dto/response/rss-accept-history.
 import { RssRejectHistoryResponseDto } from '../dto/response/rss-reject-history.dto';
 import { RssManagementRequestDto } from '../dto/request/rss-management.dto';
 import { RejectRssRequestDto } from '../dto/request/rss-reject.dto';
-import { RssRemoveRepository } from '../repository/rss-remove.repository';
 
 @Injectable()
 export class RssService {
@@ -30,7 +29,6 @@ export class RssService {
     private readonly emailService: EmailService,
     private readonly dataSource: DataSource,
     private readonly feedCrawlerService: FeedCrawlerService,
-    private readonly rssRemoveRepository: RssRemoveRepository,
   ) {}
 
   async createRss(rssRegisterBodyDto: RssRegisterRequestDto) {
@@ -174,12 +172,5 @@ export class RssService {
     );
     this.feedCrawlerService.saveAiQueue(feedsWithId);
     this.emailService.sendRssMail(rssAccept, true);
-  }
-
-  async readRemoveList() {
-    const rssRemoveRequestList = await this.rssRemoveRepository.find({
-      relations: ['blog'],
-    });
-    return rssRemoveRequestList;
   }
 }
