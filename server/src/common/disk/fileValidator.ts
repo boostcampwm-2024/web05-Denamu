@@ -29,10 +29,7 @@ export const validateFile = (file: any, uploadType: string) => {
   validateFileSize(file, uploadType);
 };
 
-const validateFileType = (
-  file: Express.Multer.File,
-  allowedTypes?: string[],
-) => {
+const validateFileType = (file: any, allowedTypes?: string[]) => {
   const types = allowedTypes || [];
 
   if (!types.includes(file.mimetype)) {

@@ -25,7 +25,7 @@ export const createDynamicStorage = () => {
         cb(null, getFileName(file));
       },
     }),
-    fileFilter: (req: any, file: Express.Multer.File, cb: any) => {
+    fileFilter: (req: any, file: any, cb: any) => {
       try {
         const uploadType: FileUploadType =
           req.body?.uploadType ||
@@ -33,6 +33,7 @@ export const createDynamicStorage = () => {
           req.uploadType ||
           'PROFILE_IMAGE';
 
+        // uploadType에 따른 허용 타입 결정
         let allowedTypes: string[] = [];
         if (uploadType === 'PROFILE_IMAGE') {
           allowedTypes = ALLOWED_MIME_TYPES.IMAGE;
