@@ -1,24 +1,22 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { File } from '../entity/file.entity';
 import { unlinkSync, existsSync } from 'fs';
-import { UserRepository } from '../../user/repository/user.repository';
 import { FileRepository } from '../repository/file.repository';
+import { User } from '../../user/entity/user.entity';
 
 @Injectable()
 export class FileService {
   constructor(private readonly fileRepository: FileRepository) {}
 
-  async create(file: any, userId: string) {
-    const { originalname, filename, mimetype, size, path } = file;
+  async create(file: any, userId: number) {
+    const { originalname, mimetype, size, path } = file;
+
     const entity = this.fileRepository.create({
-      originalName: originalname,
-      filename,
-      mimeType: mimetype,
+      originalname,
+      mimetype,
       size,
       path,
-      uploadedBy: userId,
+      user: { id: userId } as User,
     });
     return this.fileRepository.save(entity);
   }
@@ -31,12 +29,8 @@ export class FileService {
     return file;
   }
 
-  async deleteFile(id: string, userId: string): Promise<void> {
+  async deleteFile(id: string): Promise<void> {
     const file = await this.findById(id);
-
-    if (file.user.id !== Number.parseInt(userId)) {
-      throw new NotFoundException('파일을 삭제할 권한이 없습니다.');
-    }
 
     if (existsSync(file.path)) {
       unlinkSync(file.path);
@@ -45,7 +39,7 @@ export class FileService {
     await this.fileRepository.delete(id);
   }
 
-  async getFileInfo(id: string): Promise<FileEntity> {
+  async getFileInfo(id: string): Promise<File> {
     return this.findById(id);
   }
 }

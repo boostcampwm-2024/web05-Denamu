@@ -15,10 +15,10 @@ export class File {
   id: string;
 
   @Column()
-  originalName: string;
+  originalname: string;
 
   @Column()
-  mimeType: string;
+  mimetype: string;
 
   @Column()
   path: string;
