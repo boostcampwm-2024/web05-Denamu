@@ -1,5 +1,6 @@
 import { applyDecorators } from '@nestjs/common';
 import {
+  ApiBadRequestResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
@@ -25,6 +26,12 @@ export function ApiRequestDeleteRss() {
       description: 'RSS를 찾을 수 없을 경우',
       example: {
         message: 'RSS 데이터를 찾을 수 없습니다.',
+      },
+    }),
+    ApiBadRequestResponse({
+      description: 'Bad Request',
+      example: {
+        message: '오류 메세지',
       },
     }),
   );
