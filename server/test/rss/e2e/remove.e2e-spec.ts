@@ -10,7 +10,6 @@ import { FeedRepository } from '../../../src/feed/repository/feed.repository';
 import { FeedFixture } from '../../fixture/feed.fixture';
 import { CommentRepository } from '../../../src/comment/repository/comment.repository';
 import { CommentFixture } from '../../fixture/comment.fixture';
-import { Feed } from '../../../src/feed/entity/feed.entity';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../fixture/user.fixture';
 
