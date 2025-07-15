@@ -107,7 +107,7 @@ export function createRssRemoveCertificateContent(
                 <div style="color: #ff0015; font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center;">RSS 삭제 신청을 인증해주세요</div>
                   <div style="background-color: #f8f9fa; padding: 15px; border-radius: 4px; margin: 15px 0;">
                     <p>안녕하세요, <b>${userName}</b>님!</p>
-                    <p>Denamu 서비스에서 <b><u>${rssUrl}</u></b>블로그 정보를 정말 지우실 건가요? 😢</p>
+                    <p>Denamu 서비스에서 <b><u>${rssUrl}</u></b> 블로그 정보를 정말 지우실 건가요? 😢</p>
                     <p>아래 인증 코드를 데나무 사이트에 입력해주세요.</p>
                   </div>
                   <center>
