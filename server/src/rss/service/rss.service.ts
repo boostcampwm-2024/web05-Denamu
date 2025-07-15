@@ -19,6 +19,8 @@ import { RssAcceptHistoryResponseDto } from '../dto/response/rss-accept-history.
 import { RssRejectHistoryResponseDto } from '../dto/response/rss-reject-history.dto';
 import { RssManagementRequestDto } from '../dto/request/rss-management.dto';
 import { RejectRssRequestDto } from '../dto/request/rss-reject.dto';
+import { RequestDeleteRssDto } from '../dto/request/rss-remove.dto';
+import { RedisService } from '../../common/redis/redis.service';
 
 @Injectable()
 export class RssService {
@@ -29,6 +31,7 @@ export class RssService {
     private readonly emailService: EmailService,
     private readonly dataSource: DataSource,
     private readonly feedCrawlerService: FeedCrawlerService,
+    private readonly redisService: RedisService,
   ) {}
 
   async createRss(rssRegisterBodyDto: RssRegisterRequestDto) {
@@ -172,5 +175,57 @@ export class RssService {
     );
     this.feedCrawlerService.saveAiQueue(feedsWithId);
     this.emailService.sendRssMail(rssAccept, true);
+  }
+
+  async requestRemove(requestDeleteRssDto: RequestDeleteRssDto) {
+    const [rssAccept, rssWait] = await Promise.all([
+      this.rssAcceptRepository.findOne({
+        where: {
+          rssUrl: requestDeleteRssDto.blogUrl,
+          email: requestDeleteRssDto.email,
+          userName: requestDeleteRssDto.userName,
+        },
+      }),
+      this.rssRepository.findOne({
+        where: {
+          rssUrl: requestDeleteRssDto.blogUrl,
+          email: requestDeleteRssDto.email,
+          userName: requestDeleteRssDto.userName,
+        },
+      }),
+    ]);
+
+    if (!rssAccept && !rssWait) {
+      throw new NotFoundException('RSS 데이터를 찾을 수 없습니다.');
+    }
+
+    const certificateCode = this.generateRandomAlphaNumeric();
+
+    await this.redisService.set(
+      `rss:remove:${certificateCode}`,
+      requestDeleteRssDto.blogUrl,
+      'EX',
+      300,
+    );
+
+    this.emailService.sendRssRemoveCertificationMail(
+      requestDeleteRssDto.userName,
+      requestDeleteRssDto.email,
+      requestDeleteRssDto.blogUrl,
+      certificateCode,
+    );
+  }
+
+  private generateRandomAlphaNumeric(length = 6): string {
+    const charset =
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+
+    for (let i = 0; i < length; i++) {
+      const index = Math.floor(Math.random() * charset.length);
+      result += charset[index];
+    }
+
+    return result;
   }
 }
