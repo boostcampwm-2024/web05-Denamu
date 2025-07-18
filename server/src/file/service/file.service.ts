@@ -18,7 +18,21 @@ export class FileService {
       path,
       user: { id: userId } as User,
     });
-    return this.fileRepository.save(entity);
+
+    const savedFile = await this.fileRepository.save(entity);
+    const accessUrl = this.generateAccessUrl(path);
+
+    return {
+      ...savedFile,
+      url: accessUrl,
+    };
+  }
+
+  private generateAccessUrl(filePath: string): string {
+    const baseUploadPath =
+      process.env.UPLOAD_BASE_PATH || '/var/web05-Denamu/objects';
+    const relativePath = filePath.replace(baseUploadPath, '');
+    return `/objects${relativePath}`;
   }
 
   async findById(id: string): Promise<File> {
