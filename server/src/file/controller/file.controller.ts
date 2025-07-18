@@ -16,8 +16,6 @@ import { ApiTags } from '@nestjs/swagger';
 import { JwtGuard } from '../../common/guard/jwt.guard';
 import { createDynamicStorage } from '../../common/disk/diskStorage';
 import { ApiResponse } from '../../common/response/common.response';
-import { ApiUploadProfileFile } from '../api-docs/uploadProfileFile.api-docs';
-import { ApiDeleteFile } from '../api-docs/deleteFile.api-docs';
 
 @ApiTags('File')
 @Controller('file')
@@ -26,7 +24,6 @@ export class FileController {
   constructor(private readonly fileService: FileService) {}
 
   @Post('upload/profile')
-  @ApiUploadProfileFile()
   @UseInterceptors(FileInterceptor('file', createDynamicStorage()))
   async upload(@UploadedFile() file: any, @Req() req) {
     if (!file) {
@@ -45,7 +42,6 @@ export class FileController {
 
   // TODO: 권한검사 추가
   @Delete(':id')
-  @ApiDeleteFile()
   async deleteFile(@Param('id') id: string, @Req() req) {
     await this.fileService.deleteFile(id);
     return { message: '파일이 성공적으로 삭제되었습니다.' };
