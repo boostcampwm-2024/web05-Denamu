@@ -10,10 +10,10 @@ export class CreateLike1749798966642 implements MigrationInterface {
         \`feed_id\` int NOT NULL,
         \`user_id\` int NOT NULL,
         PRIMARY KEY (\`id\`),
-        UNIQUE KEY \`IDX_0be1d6ca115f56ed76c65e6bda\` (\`user_id\`,\`feed_id\`),
-        KEY \`FK_85b0dbd1e7836d0f8cdc38fe830\` (\`feed_id\`),
-        CONSTRAINT \`FK_3f519ed95f775c781a254089171\` FOREIGN KEY (\`user_id\`) REFERENCES \`user\` (\`id\`) ON DELETE CASCADE ON UPDATE CASCADE,
-        CONSTRAINT \`FK_85b0dbd1e7836d0f8cdc38fe830\` FOREIGN KEY (\`feed_id\`) REFERENCES \`feed\` (\`id\`) ON DELETE CASCADE ON UPDATE CASCADE
+        UNIQUE KEY \`UQ_likes_user_feed\` (\`user_id\`,\`feed_id\`),
+        KEY \`FK_like_feed\` (\`feed_id\`),
+        CONSTRAINT \`FK_like_user\` FOREIGN KEY (\`user_id\`) REFERENCES \`user\` (\`id\`) ON DELETE CASCADE ON UPDATE CASCADE,
+        CONSTRAINT \`FK_like_feed\` FOREIGN KEY (\`feed_id\`) REFERENCES \`feed\` (\`id\`) ON DELETE CASCADE ON UPDATE CASCADE
       );`,
     );
   }

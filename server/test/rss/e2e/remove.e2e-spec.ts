@@ -1,39 +1,69 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
+import {
+  RssAcceptRepository,
+  RssRepository,
+} from '../../../src/rss/repository/rss.repository';
+import { RssFixture } from '../../fixture/rss.fixture';
 import * as request from 'supertest';
-import { RedisService } from '../../../src/common/redis/redis.service';
 
-describe('Rss Remove E2E Test', () => {
+describe('/api/rss/remove E2E Test', () => {
   let app: INestApplication;
-  let redisService: RedisService;
+  let rssRepository: RssRepository;
+  let rssAcceptRepository: RssAcceptRepository;
 
-  beforeAll(async () => {
+  beforeAll(() => {
     app = global.testApp;
-    redisService = app.get(RedisService);
+    rssRepository = app.get(RssRepository);
+    rssAcceptRepository = app.get(RssAcceptRepository);
   });
 
-  beforeEach(async () => {
-    await redisService.set('auth:sid', 'test_admin');
-  });
-
-  describe('GET /rss/remove E2E TEST', () => {
-    it('[401] 관리자 권한이 없을 경우', async () => {
+  describe('POST /api/rss/remove E2E Test', () => {
+    it('[404] RSS가 없을 경우 신청할 수 없다.', async () => {
+      // given
       // when
       const response = await request(app.getHttpServer())
-        .get('/api/rss/remove')
-        .send();
-
+        .post('/api/rss/remove')
+        .send({
+          blogUrl: 'https://test.com',
+          userName: 'test',
+          email: 'test@test.com',
+        });
       // then
-      expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+      expect(response.status).toBe(404);
     });
-    it('[200] 관리자 권한이 있을 경우', async () => {
+
+    it('[200] 대기 RSS가 있을 경우 신청할 수 있다.', async () => {
+      // given
+      const rss = await rssRepository.save(RssFixture.createRssFixture());
+
       // when
       const response = await request(app.getHttpServer())
-        .get('/api/rss/remove')
-        .set('Cookie', 'sessionId=sid')
-        .send();
+        .post('/api/rss/remove')
+        .send({
+          blogUrl: rss.rssUrl,
+          userName: rss.userName,
+          email: rss.email,
+        });
 
       // then
-      expect(response.status).toBe(HttpStatus.OK);
+      expect(response.status).toBe(200);
+    });
+
+    it('[200] 승인된 RSS가 있을 경우 신청할 수 있다.', async () => {
+      // given
+      const rss = await rssAcceptRepository.save(RssFixture.createRssFixture());
+
+      // when
+      const response = await request(app.getHttpServer())
+        .post('/api/rss/remove')
+        .send({
+          blogUrl: rss.rssUrl,
+          userName: rss.userName,
+          email: rss.email,
+        });
+
+      // then
+      expect(response.status).toBe(200);
     });
   });
 });

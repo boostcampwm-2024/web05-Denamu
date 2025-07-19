@@ -21,7 +21,8 @@ import { ApiReadAcceptHistory } from '../api-docs/readAcceptHistoryRss.api-docs'
 import { ApiReadRejectHistory } from '../api-docs/readRejectHistoryRss.api-docs';
 import { ApiReadAllRss } from '../api-docs/readAllRss.api-docs';
 import { ApiRejectRss } from '../api-docs/rejectRss.api-docs';
-import { ApiReadDeleteRequestList } from '../api-docs/readDeleteRequest.api-docs';
+import { ApiRequestDeleteRss } from '../api-docs/requestDeleteRss.api-docs';
+import { RequestDeleteRssDto } from '../dto/request/rss-remove.dto';
 
 @ApiTags('RSS')
 @Controller('rss')
@@ -89,14 +90,11 @@ export class RssController {
     );
   }
 
-  @ApiReadDeleteRequestList()
-  @UseGuards(CookieAuthGuard)
-  @Get('remove')
+  @ApiRequestDeleteRss()
+  @Post('remove')
   @HttpCode(HttpStatus.OK)
-  async readDeleteRequestList() {
-    return ApiResponse.responseWithData(
-      'RSS 삭제 요청을 조회하였습니다.',
-      await this.rssService.readRemoveList(),
-    );
+  async requestRemoveRss(@Body() requestDeleteRssDto: RequestDeleteRssDto) {
+    await this.rssService.requestRemove(requestDeleteRssDto);
+    return ApiResponse.responseWithNoContent('RSS 삭제 요청을 성공했습니다.');
   }
 }
