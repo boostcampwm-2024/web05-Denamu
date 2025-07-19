@@ -238,7 +238,9 @@ export class RssService {
     );
 
     if (!rssUrl) {
-      throw new NotFoundException('RSS 삭제 요청을 찾을 수 없습니다.');
+      throw new NotFoundException(
+        'RSS 삭제 요청 인증 코드가 만료되었거나 찾을 수 없습니다.',
+      );
     }
 
     const rss = await this.rssAcceptRepository.findOne({
