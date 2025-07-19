@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -22,7 +23,9 @@ import { ApiReadRejectHistory } from '../api-docs/readRejectHistoryRss.api-docs'
 import { ApiReadAllRss } from '../api-docs/readAllRss.api-docs';
 import { ApiRejectRss } from '../api-docs/rejectRss.api-docs';
 import { ApiRequestDeleteRss } from '../api-docs/requestDeleteRss.api-docs';
-import { RequestDeleteRssDto } from '../dto/request/rss-remove.dto';
+import { RequestDeleteRssDto } from '../dto/request/rss-request-delete.dto';
+import { ApiDeleteRss } from '../api-docs/deleteRss.api-docs';
+import { DeleteRssDto } from '../dto/request/rss-delete.dto';
 
 @ApiTags('RSS')
 @Controller('rss')
@@ -96,5 +99,13 @@ export class RssController {
   async requestRemoveRss(@Body() requestDeleteRssDto: RequestDeleteRssDto) {
     await this.rssService.requestRemove(requestDeleteRssDto);
     return ApiResponse.responseWithNoContent('RSS 삭제 요청을 성공했습니다.');
+  }
+
+  @ApiDeleteRss()
+  @Delete('remove/:code')
+  @HttpCode(HttpStatus.OK)
+  async deleteRss(@Param() deleteRssDto: DeleteRssDto) {
+    await this.rssService.deleteRss(deleteRssDto);
+    return ApiResponse.responseWithNoContent('RSS 삭제를 성공했습니다.');
   }
 }

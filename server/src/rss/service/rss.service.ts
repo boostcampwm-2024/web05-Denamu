@@ -19,8 +19,10 @@ import { RssAcceptHistoryResponseDto } from '../dto/response/rss-accept-history.
 import { RssRejectHistoryResponseDto } from '../dto/response/rss-reject-history.dto';
 import { RssManagementRequestDto } from '../dto/request/rss-management.dto';
 import { RejectRssRequestDto } from '../dto/request/rss-reject.dto';
-import { RequestDeleteRssDto } from '../dto/request/rss-remove.dto';
+import { RequestDeleteRssDto } from '../dto/request/rss-request-delete.dto';
 import { RedisService } from '../../common/redis/redis.service';
+import { DeleteRssDto } from '../dto/request/rss-delete.dto';
+import { FeedRepository } from '../../feed/repository/feed.repository';
 
 @Injectable()
 export class RssService {
@@ -32,6 +34,7 @@ export class RssService {
     private readonly dataSource: DataSource,
     private readonly feedCrawlerService: FeedCrawlerService,
     private readonly redisService: RedisService,
+    private readonly feedRepository: FeedRepository,
   ) {}
 
   async createRss(rssRegisterBodyDto: RssRegisterRequestDto) {
@@ -225,5 +228,34 @@ export class RssService {
     }
 
     return result;
+  }
+
+  async deleteRss(deleteRssDto: DeleteRssDto) {
+    const rssUrl = await this.redisService.get(
+      `rss:remove:${deleteRssDto.code}`,
+    );
+
+    if (!rssUrl) {
+      throw new NotFoundException(
+        'RSS 삭제 요청 인증 코드가 만료되었거나 찾을 수 없습니다.',
+      );
+    }
+
+    const rss = await this.rssAcceptRepository.findOne({
+      where: {
+        rssUrl: rssUrl,
+      },
+    });
+
+    if (!rss) {
+      await this.redisService.del(`rss:remove;${deleteRssDto.code}`);
+      throw new NotFoundException('이미 지워진 RSS 정보입니다.');
+    }
+
+    await this.feedRepository.delete({
+      blog: {
+        id: rss.id,
+      },
+    });
   }
 }
