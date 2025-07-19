@@ -10,14 +10,6 @@ export class RequestDeleteRssDto {
   blogUrl: string;
 
   @ApiProperty({
-    example: 'example user name',
-    description: '사용자 이름을 입력해주세요.',
-  })
-  @IsNotEmpty({ message: '유저 이름은 반드시 입력해야 합니다.' })
-  @IsString({ message: '문자열로 입력해주세요.' })
-  userName: string;
-
-  @ApiProperty({
     example: 'example@example.com',
     description: '이메일 주소를 입력해주세요.',
   })
