@@ -186,14 +186,12 @@ export class RssService {
         where: {
           rssUrl: requestDeleteRssDto.blogUrl,
           email: requestDeleteRssDto.email,
-          userName: requestDeleteRssDto.userName,
         },
       }),
       this.rssRepository.findOne({
         where: {
           rssUrl: requestDeleteRssDto.blogUrl,
           email: requestDeleteRssDto.email,
-          userName: requestDeleteRssDto.userName,
         },
       }),
     ]);
@@ -212,7 +210,7 @@ export class RssService {
     );
 
     this.emailService.sendRssRemoveCertificationMail(
-      requestDeleteRssDto.userName,
+      rssAccept?.userName ?? rssWait.userName,
       requestDeleteRssDto.email,
       requestDeleteRssDto.blogUrl,
       certificateCode,
