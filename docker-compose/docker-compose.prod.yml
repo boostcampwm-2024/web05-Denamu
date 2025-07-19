@@ -20,6 +20,7 @@ services:
         condition: service_healthy
     volumes:
       - ../server/logs:/var/web05-Denamu/server/logs
+      - /var/web05-Denamu/objects:/var/web05-Denamu/objects
     environment:
       NODE_ENV: "PROD"
       TZ: "Asia/Seoul"
