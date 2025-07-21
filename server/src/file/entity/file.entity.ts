@@ -23,7 +23,7 @@ export class File {
   @Column()
   path: string;
 
-  @Column('int')
+  @Column()
   size: number;
 
   @ManyToOne(() => User)
