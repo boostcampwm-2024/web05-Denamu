@@ -55,14 +55,14 @@ export class FeedCrawler {
   ): Promise<FeedDetail[]> {
     try {
       const feeds = await this.rssParser.fetchRss(rssObj.rssUrl);
-      const filteredFeeds = feeds.filter((item) => {
+      const timeMatchedFeeds = feeds.filter((item) => {
         const pubDate = new Date(item.pubDate).setSeconds(0, 0);
         const timeDiff = (now - pubDate) / (ONE_MINUTE * TIME_INTERVAL);
         return timeDiff >= 0 && timeDiff < 1;
       });
 
       const detailedFeeds = await Promise.all(
-        filteredFeeds.map(async (feed) => {
+        timeMatchedFeeds.map(async (feed) => {
           const imageUrl = await this.rssParser.getThumbnailUrl(feed.link);
           const date = new Date(feed.pubDate);
           const formattedDate = date
