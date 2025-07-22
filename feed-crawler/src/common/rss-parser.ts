@@ -1,12 +1,42 @@
-import logger from "./logger";
-import { parse } from "node-html-parser";
-import { unescape } from "html-escaper";
+import logger from './logger';
+import { parse } from 'node-html-parser';
+import { unescape } from 'html-escaper';
+import { XMLParser } from 'fast-xml-parser';
+import { RawFeed } from './types';
 
 export class RssParser {
+  async fetchRss(rssUrl: string): Promise<RawFeed[]> {
+    const xmlParser = new XMLParser();
+    const response = await fetch(rssUrl, {
+      headers: {
+        Accept: 'application/rss+xml, application/xml, text/xml',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`${rssUrl}에서 xml 추출 실패`);
+    }
+    const xmlData = await response.text();
+    const objFromXml = xmlParser.parse(xmlData);
+
+    if (!Array.isArray(objFromXml.rss.channel.item)) {
+      objFromXml.rss.channel.item = [objFromXml.rss.channel.item];
+    }
+
+    return objFromXml.rss.channel.item.map((feed: RawFeed) => ({
+      title: this.customUnescape(feed.title),
+      link: feed.link,
+      pubDate: feed.pubDate,
+      description: feed.description
+        ? feed.description
+        : feed['content:encoded'],
+    }));
+  }
+
   async getThumbnailUrl(feedUrl: string) {
     const response = await fetch(feedUrl, {
       headers: {
-        Accept: "text/html",
+        Accept: 'text/html',
       },
     });
     if (!response.ok) {
@@ -16,9 +46,9 @@ export class RssParser {
     const htmlData = await response.text();
     const htmlRootElement = parse(htmlData);
     const metaImage = htmlRootElement.querySelector(
-      'meta[property="og:image"]'
+      'meta[property="og:image"]',
     );
-    let thumbnailUrl = metaImage?.getAttribute("content") ?? "";
+    let thumbnailUrl = metaImage?.getAttribute('content') ?? '';
 
     if (!thumbnailUrl.length) {
       logger.warn(`${feedUrl}에서 썸네일 추출 실패`);
@@ -42,12 +72,12 @@ export class RssParser {
 
   customUnescape(feedTitle: string): string {
     const escapeEntity = {
-      "&middot;": "·",
-      "&nbsp;": " ",
+      '&middot;': '·',
+      '&nbsp;': ' ',
     };
     Object.keys(escapeEntity).forEach((escapeKey) => {
       const value = escapeEntity[escapeKey];
-      const regex = new RegExp(escapeKey, "g");
+      const regex = new RegExp(escapeKey, 'g');
       feedTitle = feedTitle.replace(regex, value);
     });
 

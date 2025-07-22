@@ -2,7 +2,6 @@ import { FeedRepository } from './repository/feed.repository';
 import { RssRepository } from './repository/rss.repository';
 import logger from './common/logger';
 import { RssObj, FeedDetail, RawFeed } from './common/types';
-import { XMLParser } from 'fast-xml-parser';
 import {
   ONE_MINUTE,
   TIME_INTERVAL,
@@ -55,7 +54,7 @@ export class FeedCrawler {
     now: number,
   ): Promise<FeedDetail[]> {
     try {
-      const feeds = await this.fetchRss(rssObj.rssUrl);
+      const feeds = await this.rssParser.fetchRss(rssObj.rssUrl);
       const filteredFeeds = feeds.filter((item) => {
         const pubDate = new Date(item.pubDate).setSeconds(0, 0);
         const timeDiff = (now - pubDate) / (ONE_MINUTE * TIME_INTERVAL);
@@ -111,33 +110,5 @@ export class FeedCrawler {
         return await this.findNewFeeds(rssObj, currentTime.setSeconds(0, 0));
       }),
     );
-  }
-
-  private async fetchRss(rssUrl: string): Promise<RawFeed[]> {
-    const xmlParser = new XMLParser();
-    const response = await fetch(rssUrl, {
-      headers: {
-        Accept: 'application/rss+xml, application/xml, text/xml',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`${rssUrl}에서 xml 추출 실패`);
-    }
-    const xmlData = await response.text();
-    const objFromXml = xmlParser.parse(xmlData);
-
-    if (!Array.isArray(objFromXml.rss.channel.item)) {
-      objFromXml.rss.channel.item = [objFromXml.rss.channel.item];
-    }
-
-    return objFromXml.rss.channel.item.map((feed: RawFeed) => ({
-      title: this.rssParser.customUnescape(feed.title),
-      link: feed.link,
-      pubDate: feed.pubDate,
-      description: feed.description
-        ? feed.description
-        : feed['content:encoded'],
-    }));
   }
 }
