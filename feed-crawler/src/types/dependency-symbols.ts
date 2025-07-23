@@ -1,3 +1,5 @@
+import { ParserUtil } from '../common/parser/utils/parser-util';
+
 export const DEPENDENCY_SYMBOLS = {
   DatabaseConnection: Symbol.for('DatabaseConnection'),
   RssRepository: Symbol.for('RssRepository'),
@@ -5,5 +7,5 @@ export const DEPENDENCY_SYMBOLS = {
   RedisConnection: Symbol.for('RedisConnection'),
   TagMapRepository: Symbol.for('TagMapRepository'),
   ClaudeService: Symbol.for('ClaudeService'),
-  RssParser: Symbol.for('RssParser'),
+  ParserUtil: Symbol.for('ParserUtil'),
 };

@@ -7,7 +7,7 @@ import { RssRepository } from '../../src/repository/rss.repository';
 import { FeedRepository } from '../../src/repository/feed.repository';
 import { container } from 'tsyringe';
 import { DependencyContainer } from 'tsyringe';
-import { RssParser } from '../../src/common/rss-parser';
+import { RssParser } from '../../src/common/parser/utils/parser-util';
 import { ClaudeService } from '../../src/claude.service';
 import { TagMapRepository } from '../../src/repository/tag-map.repository';
 

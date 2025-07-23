@@ -1,38 +1,8 @@
-import logger from './logger';
+import logger from '../../logger';
 import { parse } from 'node-html-parser';
 import { unescape } from 'html-escaper';
-import { XMLParser } from 'fast-xml-parser';
-import { RawFeed } from './types';
 
-export class RssParser {
-  async fetchRss(rssUrl: string): Promise<RawFeed[]> {
-    const xmlParser = new XMLParser();
-    const response = await fetch(rssUrl, {
-      headers: {
-        Accept: 'application/rss+xml, application/xml, text/xml',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`${rssUrl}에서 xml 추출 실패`);
-    }
-    const xmlData = await response.text();
-    const objFromXml = xmlParser.parse(xmlData);
-
-    if (!Array.isArray(objFromXml.rss.channel.item)) {
-      objFromXml.rss.channel.item = [objFromXml.rss.channel.item];
-    }
-
-    return objFromXml.rss.channel.item.map((feed: RawFeed) => ({
-      title: this.customUnescape(feed.title),
-      link: feed.link,
-      pubDate: feed.pubDate,
-      description: feed.description
-        ? feed.description
-        : feed['content:encoded'],
-    }));
-  }
-
+export class ParserUtil {
   async getThumbnailUrl(feedUrl: string) {
     const response = await fetch(feedUrl, {
       headers: {
