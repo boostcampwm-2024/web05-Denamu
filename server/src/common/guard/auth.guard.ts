@@ -8,7 +8,7 @@ import { RedisService } from '../redis/redis.service';
 import { Request } from 'express';
 
 @Injectable()
-export class CookieAuthGuard implements CanActivate {
+export class AdminAuthGuard implements CanActivate {
   constructor(private readonly redisService: RedisService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
