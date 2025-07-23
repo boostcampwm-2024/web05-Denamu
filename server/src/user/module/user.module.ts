@@ -32,7 +32,7 @@ import { UserScheduler } from '../scheduler/user.scheduler';
         google,
         github,
       }),
-      inject: [GoogleOAuthProvider],
+      inject: [GoogleOAuthProvider, GithubOAuthProvider],
     },
   ],
   exports: [UserRepository, UserService],
