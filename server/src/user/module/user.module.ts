@@ -25,14 +25,10 @@ import { UserScheduler } from '../scheduler/user.scheduler';
     UserScheduler,
     {
       provide: 'OAUTH_PROVIDERS',
-      useFactory: (
-        google: GoogleOAuthProvider,
-        github: GithubOAuthProvider,
-      ) => ({
+      useFactory: (google: GoogleOAuthProvider) => ({
         google,
-        github,
       }),
-      inject: [GoogleOAuthProvider],
+      inject: [GoogleOAuthProvider, GithubOAuthProvider],
     },
   ],
   exports: [UserRepository, UserService],
