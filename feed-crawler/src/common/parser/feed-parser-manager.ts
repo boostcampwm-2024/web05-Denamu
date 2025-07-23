@@ -1,14 +1,14 @@
 import { inject, injectable } from 'tsyringe';
-import { FeedParser } from './feed-parser.interface';
 import { FeedDetail, RssObj } from '../types';
 import { Rss20Parser } from './formats/rss20-parser';
 import { Atom10Parser } from './formats/atom10-parser';
+import { BaseFeedParser } from './base-feed-parser';
 import { DEPENDENCY_SYMBOLS } from '../../types/dependency-symbols';
 import logger from '../logger';
 
 @injectable()
 export class FeedParserManager {
-  private readonly parsers: FeedParser[];
+  private readonly parsers: BaseFeedParser[];
 
   constructor(
     @inject(DEPENDENCY_SYMBOLS.Rss20Parser) rss20Parser: Rss20Parser,
@@ -45,7 +45,7 @@ export class FeedParserManager {
     }
   }
 
-  private findSuitableParser(xmlData: string): FeedParser | null {
+  private findSuitableParser(xmlData: string): BaseFeedParser | null {
     for (const parser of this.parsers) {
       if (parser.canParse(xmlData)) {
         return parser;
