@@ -13,6 +13,7 @@ const Profile = lazy(() => import("@/pages/Profile"));
 const SignIn = lazy(() => import("@/pages/SignIn"));
 const SignUp = lazy(() => import("@/pages/SignUp"));
 const UserCertificate = lazy(() => import("@/pages/UserCertificate"));
+const OAuthSuccessPage = lazy(() => import("@/pages/OAuthSuccessPage"));
 
 interface RouterProps {
   location: Location;
@@ -60,6 +61,14 @@ export const AppRouter = ({ location, state }: RouterProps) => {
           element={
             <Suspense fallback={<Loading />}>
               <SignUp />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/oauth-success"
+          element={
+            <Suspense fallback={<Loading />}>
+              <OAuthSuccessPage />
             </Suspense>
           }
         />

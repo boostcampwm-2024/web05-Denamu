@@ -7,10 +7,16 @@ import { Button } from "@/components/ui/button.tsx";
 import { useCustomToast } from "@/hooks/common/useCustomToast.ts";
 
 import { TOAST_MESSAGES } from "@/constants/messages.ts";
+import { BASE_URL, OAUTH } from "@/constants/endpoints.ts";
 
 export const AuthSocialLoginButtons = () => {
   const { toast } = useCustomToast();
-  const handleSocialLogin = () => {
+
+  const handleSocialLogin = (provider: "google" | "github") => {
+    window.location.href = `${BASE_URL}${OAUTH.LOGIN}?type=${provider}`;
+  };
+
+  const handleNotPrepared = () => {
     toast(TOAST_MESSAGES.SERVICE_NOT_PREPARED);
   };
 
@@ -26,19 +32,19 @@ export const AuthSocialLoginButtons = () => {
       </div>
 
       <div className="grid gap-2">
-        <Button variant="outline" className="w-full" onClick={handleSocialLogin}>
+        <Button variant="outline" className="w-full" onClick={() => handleSocialLogin("github")}>
           <GitHub />
           <span className="text-muted-foreground">Github로 계속하기</span>
         </Button>
-        <Button variant="outline" className="w-full" onClick={handleSocialLogin}>
+        <Button variant="outline" className="w-full" onClick={() => handleSocialLogin("google")}>
           <Google />
           <span className="text-muted-foreground">Google로 계속하기</span>
         </Button>
-        <Button variant="outline" className="w-full" onClick={handleSocialLogin}>
+        <Button variant="outline" className="w-full" onClick={handleNotPrepared}>
           <Naver className="text-[#03C75A]" />
           <span className="text-muted-foreground">네이버로 계속하기</span>
         </Button>
-        <Button variant="outline" className="w-full" onClick={handleSocialLogin}>
+        <Button variant="outline" className="w-full" onClick={handleNotPrepared}>
           <Kakao className="text-[#FEE500]" />
           <span className="text-muted-foreground">카카오로 계속하기</span>
         </Button>
