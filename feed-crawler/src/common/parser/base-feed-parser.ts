@@ -17,7 +17,11 @@ export interface RawFeed {
 
 export abstract class BaseFeedParser implements FeedParser {
   protected readonly xmlParser = new XMLParser();
-  protected readonly parserUtil = new ParserUtil();
+  protected readonly parserUtil: ParserUtil;
+
+  constructor(parserUtil: ParserUtil) {
+    this.parserUtil = parserUtil;
+  }
 
   /**
    * Template Method: 전체 파싱 프로세스 정의

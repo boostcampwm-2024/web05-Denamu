@@ -1,14 +1,21 @@
+import { inject, injectable } from 'tsyringe';
 import { FeedParser } from './feed-parser.interface';
 import { FeedDetail, RssObj } from '../types';
 import { Rss20Parser } from './formats/rss20-parser';
 import { Atom10Parser } from './formats/atom10-parser';
+import { DEPENDENCY_SYMBOLS } from '../../types/dependency-symbols';
 import logger from '../logger';
 
+@injectable()
 export class FeedParserManager {
-  private readonly parsers: FeedParser[] = [
-    new Rss20Parser(),
-    new Atom10Parser(),
-  ];
+  private readonly parsers: FeedParser[];
+
+  constructor(
+    @inject(DEPENDENCY_SYMBOLS.Rss20Parser) rss20Parser: Rss20Parser,
+    @inject(DEPENDENCY_SYMBOLS.Atom10Parser) atom10Parser: Atom10Parser,
+  ) {
+    this.parsers = [rss20Parser, atom10Parser];
+  }
 
   async fetchAndParse(rssObj: RssObj): Promise<FeedDetail[]> {
     try {

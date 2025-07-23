@@ -6,8 +6,12 @@ import { RssRepository } from './repository/rss.repository';
 import { FeedRepository } from './repository/feed.repository';
 import { RedisConnection } from './common/redis-access';
 import { TagMapRepository } from './repository/tag-map.repository';
-import { RssParser } from './common/rss-parser';
+import { ParserUtil } from './common/parser/utils/parser-util';
 import { ClaudeService } from './claude.service';
+import { FeedParserManager } from './common/parser/feed-parser-manager';
+import { Rss20Parser } from './common/parser/formats/rss20-parser';
+import { Atom10Parser } from './common/parser/formats/atom10-parser';
+import { FeedCrawler } from './feed-crawler';
 
 container.registerSingleton<DatabaseConnection>(
   DEPENDENCY_SYMBOLS.DatabaseConnection,
@@ -39,6 +43,29 @@ container.registerSingleton<ClaudeService>(
   ClaudeService,
 );
 
-container.registerSingleton<RssParser>(DEPENDENCY_SYMBOLS.RssParser, RssParser);
+container.registerSingleton<ParserUtil>(
+  DEPENDENCY_SYMBOLS.ParserUtil,
+  ParserUtil,
+);
+
+container.registerSingleton<Rss20Parser>(
+  DEPENDENCY_SYMBOLS.Rss20Parser,
+  Rss20Parser,
+);
+
+container.registerSingleton<Atom10Parser>(
+  DEPENDENCY_SYMBOLS.Atom10Parser,
+  Atom10Parser,
+);
+
+container.registerSingleton<FeedParserManager>(
+  DEPENDENCY_SYMBOLS.FeedParserManager,
+  FeedParserManager,
+);
+
+container.registerSingleton<FeedCrawler>(
+  DEPENDENCY_SYMBOLS.FeedCrawler,
+  FeedCrawler,
+);
 
 export { container };

@@ -1,6 +1,13 @@
+import { inject, injectable } from 'tsyringe';
 import { BaseFeedParser, RawFeed } from '../base-feed-parser';
+import { ParserUtil } from '../utils/parser-util';
+import { DEPENDENCY_SYMBOLS } from '../../../types/dependency-symbols';
 
+@injectable()
 export class Atom10Parser extends BaseFeedParser {
+  constructor(@inject(DEPENDENCY_SYMBOLS.ParserUtil) parserUtil: ParserUtil) {
+    super(parserUtil);
+  }
   canParse(xmlData: string): boolean {
     try {
       const parsed = this.xmlParser.parse(xmlData);

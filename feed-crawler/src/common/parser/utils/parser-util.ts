@@ -1,7 +1,9 @@
+import { injectable } from 'tsyringe';
 import logger from '../../logger';
 import { parse } from 'node-html-parser';
 import { unescape } from 'html-escaper';
 
+@injectable()
 export class ParserUtil {
   async getThumbnailUrl(feedUrl: string) {
     const response = await fetch(feedUrl, {

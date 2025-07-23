@@ -1,14 +1,20 @@
+import { inject, injectable } from 'tsyringe';
 import { FeedRepository } from './repository/feed.repository';
 import { RssRepository } from './repository/rss.repository';
 import logger from './common/logger';
 import { RssObj, FeedDetail } from './common/types';
 import { FeedParserManager } from './common/parser/feed-parser-manager';
+import { DEPENDENCY_SYMBOLS } from './types/dependency-symbols';
 
+@injectable()
 export class FeedCrawler {
   constructor(
+    @inject(DEPENDENCY_SYMBOLS.RssRepository)
     private readonly rssRepository: RssRepository,
+    @inject(DEPENDENCY_SYMBOLS.FeedRepository)
     private readonly feedRepository: FeedRepository,
-    private readonly feedParserManager: FeedParserManager = new FeedParserManager(),
+    @inject(DEPENDENCY_SYMBOLS.FeedParserManager)
+    private readonly feedParserManager: FeedParserManager,
   ) {}
 
   async start() {
