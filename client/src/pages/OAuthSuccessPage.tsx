@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 import { useAuthStore } from "@/store/useAuthStore.ts";
 
-export const OAuthSuccessPage = () => {
+export default function OAuthSuccessPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { setUserFromToken } = useAuthStore();
@@ -25,4 +25,4 @@ export const OAuthSuccessPage = () => {
       <p className="text-lg">로그인 처리 중입니다...</p>
     </div>
   );
-};
+}
