@@ -54,6 +54,7 @@ CREATE TABLE `feed` (
   `thumbnail` varchar(255) DEFAULT NULL,
   `blog_id` int NOT NULL,
   `summary` text,
+  `like_count` int NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
   UNIQUE KEY `IDX_cbdceca2d71f784a8bb160268e` (`path`),
   KEY `IDX_fda780ffdcc013b739cdc6f31d` (`created_at`),
@@ -67,20 +68,28 @@ CREATE TABLE `feed` (
 CREATE TABLE `user` (
   `id` int NOT NULL AUTO_INCREMENT,
   `email` varchar(255) NOT NULL,
-  `password` varchar(60) NOT NULL,
+  `password` varchar(60) DEFAULT NULL,
   `user_name` varchar(60) NOT NULL,
   `profile_image` varchar(255) DEFAULT NULL,
   `introduction` varchar(255) DEFAULT NULL,
+  `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `updated_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  `totalViews` int NOT NULL DEFAULT '0',
+  `currentStreak` int NOT NULL DEFAULT '0',
+  `lastActiveDate` date DEFAULT NULL,
+  `maxStreak` int NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`)
 );
 
 -- denamu.activity definition
+
 CREATE TABLE `activity` (
   `id` int NOT NULL AUTO_INCREMENT,
   `activity_date` date NOT NULL,
   `view_count` int NOT NULL,
   `user_id` int DEFAULT NULL,
   PRIMARY KEY (`id`),
+  UNIQUE KEY `IDX_78f3786d644ca9747fc82db9fb` (`user_id`,`activity_date`),
   KEY `FK_10bf0c2dd4736190070e8475119` (`user_id`),
   CONSTRAINT `FK_10bf0c2dd4736190070e8475119` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
 );
@@ -106,7 +115,7 @@ CREATE TABLE `tag_map` (
 
 CREATE TABLE `comment` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `comment` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `comment` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `date` datetime NOT NULL,
   `feed_id` int NOT NULL,
   `user_id` int NOT NULL,
@@ -115,6 +124,47 @@ CREATE TABLE `comment` (
   KEY `FK_bbfe153fa60aa06483ed35ff4a7` (`user_id`),
   CONSTRAINT `FK_bbfe153fa60aa06483ed35ff4a7` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `FK_df1fd1eaf7cc0224ab5e829bf64` FOREIGN KEY (`feed_id`) REFERENCES `feed` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- denamu.likes definition
+
+CREATE TABLE `likes` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `like_date` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `feed_id` int NOT NULL,
+  `user_id` int NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `IDX_0be1d6ca115f56ed76c65e6bda` (`user_id`,`feed_id`),
+  KEY `FK_85b0dbd1e7836d0f8cdc38fe830` (`feed_id`),
+  CONSTRAINT `FK_3f519ed95f775c781a254089171` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_85b0dbd1e7836d0f8cdc38fe830` FOREIGN KEY (`feed_id`) REFERENCES `feed` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- denamu.provider definition
+
+CREATE TABLE `provider` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `provider_type` varchar(255) NOT NULL,
+  `provider_user_id` varchar(255) NOT NULL,
+  `refresh_token` varchar(255) NOT NULL,
+  `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `updated_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  `user_id` int NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `FK_d3d18186b602240b93c9f1621ea` (`user_id`),
+  CONSTRAINT `FK_d3d18186b602240b93c9f1621ea` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- denamu.rss_remove definition
+
+CREATE TABLE `rss_remove` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `request_date` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `reason` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `blog_id` int NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `REL_69e45fd3ff04dac43a89e1951e` (`blog_id`),
+  CONSTRAINT `FK_69e45fd3ff04dac43a89e1951e4` FOREIGN KEY (`blog_id`) REFERENCES `rss_accept` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- denamu.admin insert data
@@ -236,10 +286,10 @@ INSERT INTO feed (created_at,title,view_count,`path`,thumbnail,blog_id) VALUES
 	 ('2024-08-04 08:32:17','페어(짝) 프로그래밍에 대해서',0,'https://asn6878.tistory.com/7','https://img1.daumcdn.net/thumb/R800x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2Fo0I0n%2FbtsITiXYkG9%2FhpD50L7TcKlhU08D2jok4k%2Fimg.jpg',4),
 	 ('2024-07-06 19:20:07','2024 네이버 부스트캠프 웹 · 모바일 2차 코딩테스트 후기',0,'https://asn6878.tistory.com/6','https://img1.daumcdn.net/thumb/R800x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FzvZIm%2FbtsIpvcWnzY%2FnkR2JuxsNhKIyeeKHnMo1k%2Fimg.png',4),
 	 ('2024-05-22 16:19:34','코딩테스트 준비를 위한 Java 입출력 정리',0,'https://asn6878.tistory.com/5','https://img1.daumcdn.net/thumb/R800x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FYY34s%2FbtsHykim0k7%2FT7YBZJfvIEKvPmtLbXJkIk%2Fimg.png',4);
-INSERT INTO feed (created_at,title,view_count,`path`,thumbnail,blog_id,summary) VALUES
-	 ('2024-05-03 16:30:23','[Docker] 간단한 도커 명령어 모음집',2,'https://asn6878.tistory.com/4','https://img1.daumcdn.net/thumb/R800x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FcI3y45%2FbtsHcIbDPUe%2FpWNfGE2V3YX35MauB1Hb60%2Fimg.gif',4,NULL),
-	 ('2024-03-10 08:49:55','Java record 에 대하여',0,'https://asn6878.tistory.com/3','https://img1.daumcdn.net/thumb/R800x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FddtCkc%2FbtsFGEvHLSY%2FIPqWLZZfYlojZyLCB4dPg1%2Fimg.gif',4,NULL),
-	 ('2024-01-04 11:37:46','인증(Authentication)과 인가(Authorization)의 개념에 대해',0,'https://asn6878.tistory.com/2','https://img1.daumcdn.net/thumb/R800x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2Fb4Psk9%2FbtsC00h6SuP%2FZp2x8yPLdLLheMrGqJeHG0%2Fimg.png',4,NULL),
+INSERT INTO feed (created_at,title,view_count,`path`,thumbnail,blog_id,summary,like_count) VALUES
+	 ('2024-05-03 16:30:23','[Docker] 간단한 도커 명령어 모음집',2,'https://asn6878.tistory.com/4','https://img1.daumcdn.net/thumb/R800x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FcI3y45%2FbtsHcIbDPUe%2FpWNfGE2V3YX35MauB1Hb60%2Fimg.gif',4,NULL,0),
+	 ('2024-03-10 08:49:55','Java record 에 대하여',0,'https://asn6878.tistory.com/3','https://img1.daumcdn.net/thumb/R800x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FddtCkc%2FbtsFGEvHLSY%2FIPqWLZZfYlojZyLCB4dPg1%2Fimg.gif',4,NULL,0),
+	 ('2024-01-04 11:37:46','인증(Authentication)과 인가(Authorization)의 개념에 대해',0,'https://asn6878.tistory.com/2','https://img1.daumcdn.net/thumb/R800x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2Fb4Psk9%2FbtsC00h6SuP%2FZp2x8yPLdLLheMrGqJeHG0%2Fimg.png',4,NULL,0),
 	 ('2025-01-16 19:29:50','NestJS + TypeORM + Testcontainers 를 사용한 통합 테스트 DB환경 구축하기',3,'https://asn6878.tistory.com/14','https://img1.daumcdn.net/thumb/R800x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2F2GhHh%2FbtsLPtpiK1d%2FtKiZjT4WEVz1sy4LIgFDn1%2Fimg.png',4,'**NestJS + TypeORM에서 Testcontainers로 MySQL 테스트 환경 구축하기 🐳**
 테스트는 프로덕션과 동일한 환경에서 진행되어야 신뢰할 수 있습니다! sqlite나 H2 같은 경량 DB 대신 실제 MySQL과 동일한 환경을 Docker로 구축해봅시다.
 구현 단계 📝
@@ -257,7 +307,7 @@ TypeORM 모듈에 환경변수 전달
 Jest 설정 파일 커스터마이징
 
 🤔 흥미로운 점: GitHub Actions에서 실행 시간이 sqlite + 병렬 실행보다 약 2배 느려졌지만, 실제 프로덕션 환경과 동일한 테스트가 가능해졌습니다!
-테스트 안정성과 신뢰도를 높이고 싶은 NestJS 개발자라면 꼭 도입해볼 만한 구성입니다! 🚀'),
+테스트 안정성과 신뢰도를 높이고 싶은 NestJS 개발자라면 꼭 도입해볼 만한 구성입니다! 🚀',1),
 	 ('2025-01-18 07:12:05','자바 vs 노드 당신의 선택은?!',4,'https://asn6878.tistory.com/15','https://img1.daumcdn.net/thumb/R800x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FdofQSP%2FbtsLKJyhso1%2FREdhKR9vDlzDYREytkK0v1%2Fimg.png',4,'**Node.js와 Spring 프레임워크 비교 분석: 개발자의 선택은? 🤔**
 현재 TypeScript와 NestJS로 프로젝트를 진행 중인 개발자가 Java/Spring과 Node.js 생태계의 차이점을 깊이 있게 분석했습니다.
 채용 시장 현황 📊
@@ -279,7 +329,7 @@ FE와 BE 개발 환경 공유 가능
 비교적 저비용으로 적절한 성능 구현
 TypeScript 등으로 단점 극복 노력
 
-결국 상황에 맞는 도구를 선택하는 문제 해결력이 중요하다는 개발자의 통찰력 있는 회고입니다! 💡');
+결국 상황에 맞는 도구를 선택하는 문제 해결력이 중요하다는 개발자의 통찰력 있는 회고입니다! 💡',1);
 
 -- denamu.user insert data
 
@@ -333,5 +383,16 @@ INSERT INTO comment(comment, date, feed_id, user_id) VALUES
 
 -- denamu.activity insert data
 
--- INSERT INTO activity (activity_date, view_count, user_id) VALUES
--- 	();
+INSERT INTO activity (activity_date, view_count, user_id) VALUES
+	('2025-07-01 11:48:00', 1, 1);
+
+-- denamu.like insert data
+
+INSERT INTO likes(feed_id, user_id, like_date) VALUES
+	(94,1,'2025-06-13 17:47:05'),
+	(95,1,'2025-06-13 17:47:07');
+
+-- denamu.rss_remove insert data
+
+INSERT INTO rss_remove(request_date, reason, blog_id) VALUES
+	('2025-07-01 11:48:00', 'example reason', 1);

@@ -7,19 +7,22 @@ interface Identifiable {
 
 interface UseInfiniteScrollQueryOptions<T extends Identifiable> {
   queryKey: string;
-  fetchFn: (params: { limit: number; lastId: number }) => Promise<InfiniteScrollResponse<T>>;
+  fetchFn: (params: { limit: number; lastId: number; tags: string[] }) => Promise<InfiniteScrollResponse<T>>;
+  tags: string[];
 }
 
 export function useInfiniteScrollQuery<T extends Identifiable>({
   queryKey,
   fetchFn,
+  tags,
 }: UseInfiniteScrollQueryOptions<T>) {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isError, error } = useInfiniteQuery({
-    queryKey: [queryKey],
+    queryKey: [queryKey, tags],
     queryFn: ({ pageParam = 0 }) =>
       fetchFn({
         limit: 12,
         lastId: pageParam,
+        tags: tags || [],
       }),
     getNextPageParam: (lastPage) => {
       if (!lastPage.hasMore) return undefined;

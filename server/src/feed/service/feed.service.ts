@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  HttpStatus,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -31,6 +32,7 @@ import {
 import { FeedViewUpdateRequestDto } from '../dto/request/feed-update.dto';
 import { FeedDetailRequestDto } from '../dto/request/feed-detail.dto';
 import { FeedDetailResponseDto } from '../dto/response/feed-detail.dto';
+import { FeedDeleteCheckDto } from '../dto/request/feed-check.dto';
 
 @Injectable()
 export class FeedService {
@@ -89,7 +91,7 @@ export class FeedService {
     );
     const trendFeeds = await Promise.all(
       trendFeedIdList.map(async (feedId) =>
-        this.feedViewRepository.findFeedById(parseInt(feedId)),
+        this.feedViewRepository.findOneBy({ feedId: parseInt(feedId) }),
       ),
     );
     return FeedTrendResponseDto.toResponseDtoArray(
@@ -159,7 +161,7 @@ export class FeedService {
       }
 
       if (hasCookie || hasIpFlag) {
-        return null;
+        return;
       }
 
       await Promise.all([
@@ -189,8 +191,7 @@ export class FeedService {
   }
 
   private getExpirationTime() {
-    const now = new Date();
-    const tomorrow = new Date(now);
+    const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     tomorrow.setHours(0, 0, 0, 0);
     return tomorrow;
@@ -240,14 +241,33 @@ export class FeedService {
   }
 
   async readFeedDetail(feedDetailRequestDto: FeedDetailRequestDto) {
-    const feed = await this.feedViewRepository.findFeedById(
-      feedDetailRequestDto.feedId,
-    );
+    const feed = await this.feedViewRepository.findOneBy({
+      feedId: feedDetailRequestDto.feedId,
+    });
     if (!feed) {
-      throw new BadRequestException(
+      throw new NotFoundException(
         `${feedDetailRequestDto.feedId}번 피드는 존재하지 않습니다.`,
       );
     }
+
     return FeedDetailResponseDto.toResponseDto(feed);
+  }
+
+  async deleteCheckFeed(feedDeleteCheckDto: FeedDeleteCheckDto) {
+    const feed = await this.feedRepository.findOneBy({
+      id: feedDeleteCheckDto.feedId,
+    });
+    if (!feed) {
+      throw new NotFoundException(
+        `${feedDeleteCheckDto.feedId}번 피드는 존재하지 않습니다.`,
+      );
+    }
+
+    const response = await fetch(feed.path);
+
+    if (response.status === HttpStatus.NOT_FOUND) {
+      await this.feedRepository.delete({ id: feedDeleteCheckDto.feedId });
+      throw new NotFoundException('원본 게시글이 삭제되었습니다.');
+    }
   }
 }

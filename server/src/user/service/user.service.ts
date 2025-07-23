@@ -17,6 +17,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { cookieConfig } from '../../common/cookie/cookie.config';
 import { Payload } from '../../common/guard/jwt.guard';
+import { UpdateUserDto } from '../dto/request/update-user.dto';
 
 @Injectable()
 export class UserService {
@@ -117,5 +118,61 @@ export class UserService {
   private async createHashedPassword(password: string) {
     const saltRounds = 10;
     return await bcrypt.hash(password, saltRounds);
+  }
+
+  async updateUserActivity(userId: number) {
+    const user = await this.userRepository.findOneBy({ id: userId });
+    if (!user) {
+      throw new NotFoundException(`존재하지 않는 사용자 입니다.`);
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    user.totalViews += 1;
+
+    if (user.lastActiveDate) {
+      const lastActive = new Date(user.lastActiveDate);
+      lastActive.setHours(0, 0, 0, 0);
+
+      const timeDiff = today.getTime() - lastActive.getTime();
+      const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+
+      if (daysDiff === 1) {
+        user.currentStreak += 1;
+      } else if (daysDiff > 1) {
+        user.currentStreak = 1;
+      }
+    } else {
+      user.currentStreak = 1;
+    }
+
+    if (user.currentStreak > user.maxStreak) {
+      user.maxStreak = user.currentStreak;
+    }
+    user.lastActiveDate = today;
+
+    await this.userRepository.save(user);
+  }
+
+  async updateUser(
+    userId: number,
+    updateData: Partial<UpdateUserDto>,
+  ): Promise<void> {
+    const user = await this.userRepository.findOneBy({ id: userId });
+    if (!user) {
+      throw new NotFoundException('존재하지 않는 사용자입니다.');
+    }
+
+    if (updateData.userName !== undefined) {
+      user.userName = updateData.userName;
+    }
+    if (updateData.profileImage !== undefined) {
+      user.profileImage = updateData.profileImage;
+    }
+    if (updateData.introduction !== undefined) {
+      user.introduction = updateData.introduction;
+    }
+
+    await this.userRepository.save(user);
   }
 }

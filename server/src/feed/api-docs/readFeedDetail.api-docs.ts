@@ -1,6 +1,7 @@
 import { applyDecorators } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiQuery,
@@ -10,13 +11,6 @@ export function ApiReadFeedDetail() {
   return applyDecorators(
     ApiOperation({
       summary: `게시글 상세 모달 데이터 조회 API`,
-    }),
-    ApiQuery({
-      name: 'feedId',
-      required: true,
-      type: Number,
-      description: '클릭한 피드의 ID',
-      example: 10,
     }),
     ApiOkResponse({
       description: 'Ok',
@@ -43,6 +37,7 @@ export function ApiReadFeedDetail() {
                   type: 'string',
                 },
               },
+              likes: { type: 'number' },
             },
           },
         },
@@ -60,6 +55,7 @@ export function ApiReadFeedDetail() {
           viewCount: 1,
           summary: '#example/n ### exexample',
           tag: ['tag1', 'tag2'],
+          likes: 0,
         },
       },
     }),
@@ -67,6 +63,12 @@ export function ApiReadFeedDetail() {
       description: 'Bad Request',
       example: {
         message: '오류 메세지',
+      },
+    }),
+    ApiNotFoundResponse({
+      description: 'Not Found',
+      example: {
+        message: '0번 피드는 존재하지 않습니다.',
       },
     }),
   );

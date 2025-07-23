@@ -12,7 +12,7 @@ export class FeedRepository {
     @inject(DEPENDENCY_SYMBOLS.DatabaseConnection)
     private readonly dbConnection: DatabaseConnection,
     @inject(DEPENDENCY_SYMBOLS.RedisConnection)
-    private readonly redisConnection: RedisConnection
+    private readonly redisConnection: RedisConnection,
   ) {}
 
   public async insertFeeds(resultData: FeedDetail[]) {
@@ -47,7 +47,7 @@ export class FeedRepository {
       .filter((feed) => feed);
 
     logger.info(
-      `[MySQL] ${insertedFeeds.length}개의 피드 데이터가 성공적으로 데이터베이스에 삽입되었습니다.`
+      `[MySQL] ${insertedFeeds.length}개의 피드 데이터가 성공적으로 데이터베이스에 삽입되었습니다.`,
     );
     return insertedFeeds;
   }
@@ -60,7 +60,7 @@ export class FeedRepository {
         const [newCursor, keys] = await this.redisConnection.scan(
           cursor,
           redisConstant.FEED_RECENT_ALL_KEY,
-          100
+          100,
         );
         keysToDelete.push(...keys);
         cursor = newCursor;
@@ -74,7 +74,7 @@ export class FeedRepository {
       logger.error(
         `[Redis] 최근 게시글 캐시를 삭제하는 도중 에러가 발생했습니다.
         에러 메시지: ${error.message}
-        스택 트레이스: ${error.stack}`
+        스택 트레이스: ${error.stack}`,
       );
     }
   }
@@ -93,6 +93,7 @@ export class FeedRepository {
             path: feed.link,
             title: feed.title,
             tag: Array.isArray(feed.tag) ? feed.tag : [],
+            likes: 0,
           });
         }
       });
@@ -101,27 +102,27 @@ export class FeedRepository {
       logger.error(
         `[Redis] 최근 게시글 캐시를 저장하는 도중 에러가 발생했습니다.
         에러 메시지: ${error.message}
-        스택 트레이스: ${error.stack}`
+        스택 트레이스: ${error.stack}`,
       );
     }
   }
 
-  public updateSummary(feedId: number, summary: string) {
+  public async updateSummary(feedId: number, summary: string) {
     const query = `
               UPDATE feed 
               SET summary=?
               WHERE id=?
           `;
 
-    this.dbConnection.executeQuery(query, [summary, feedId]);
+    await this.dbConnection.executeQuery(query, [summary, feedId]);
   }
 
-  public updateNullSummary(feedId: number) {
+  public async updateNullSummary(feedId: number) {
     const query = `
           UPDATE feed
           SET summary=NULL
           WHERE id=?`;
-    this.dbConnection.executeQuery(query, [feedId]);
+    await this.dbConnection.executeQuery(query, [feedId]);
   }
 
   async saveAiQueue(feedLists: FeedDetail[]) {

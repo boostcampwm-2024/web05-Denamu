@@ -2,16 +2,20 @@ import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { UserRepository } from '../repository/user.repository';
 import { ProviderRepository } from '../repository/provider.repository';
 import { WinstonLoggerService } from '../../common/logger/logger.service';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { User } from '../entity/user.entity';
 import { Provider } from '../entity/provider.entity';
 import {
-  OAUTH_URL_PATH,
+  OAuthType,
   ProviderData,
   StateData,
   UserInfo,
 } from '../constant/oauth.constant';
 import { OAuthProvider } from '../provider/oauth-provider.interface';
+import { JwtService } from '@nestjs/jwt';
+import { UserService } from './user.service';
+import { cookieConfig } from '../../common/cookie/cookie.config';
+import { Payload } from '../../common/guard/jwt.guard';
 
 @Injectable()
 export class OAuthService {
@@ -19,18 +23,20 @@ export class OAuthService {
     private readonly userRepository: UserRepository,
     private readonly providerRepository: ProviderRepository,
     private readonly logger: WinstonLoggerService,
+    private readonly jwtService: JwtService,
+    private readonly userService: UserService,
     @Inject('OAUTH_PROVIDERS')
     private readonly providers: Record<string, OAuthProvider>,
   ) {}
 
-  getAuthUrl(providerType: string) {
+  getAuthUrl(providerType: OAuthType) {
     const oauth = this.providers[providerType];
     if (!oauth)
       throw new BadRequestException('지원하지 않는 인증 제공자입니다.');
     return oauth.getAuthUrl();
   }
 
-  async callback(req: Request) {
+  async callback(req: Request, res: Response) {
     const { code, state } = req.query;
     const stateData = this.parseStateData(state.toString());
     const { provider: providerType } = stateData;
@@ -38,22 +44,36 @@ export class OAuthService {
     const tokenData = await this.providers[providerType].getTokens(
       code as string,
     );
-    const {
-      id_token: idToken,
-      access_token: accessToken,
-      refresh_token: refreshToken,
-    } = tokenData;
-    const userInfo = await this.providers[providerType].getUserInfo(
-      idToken,
-      accessToken,
-    );
+
+    const userInfo = await this.providers[providerType].getUserInfo(tokenData);
 
     await this.saveOAuthUser(userInfo, {
       providerType,
-      refreshToken: refreshToken,
+      refreshToken: tokenData.refresh_token,
     });
 
-    return `${OAUTH_URL_PATH.BASE_URL}`;
+    const jwtPayload: Payload = {
+      id: Number(userInfo.id),
+      email: userInfo.email,
+      userName: userInfo.name,
+      role: 'user',
+    };
+
+    const serviceAcessToken = this.userService.createToken(
+      jwtPayload,
+      'access',
+    );
+    const serviceRefreshToken = this.userService.createToken(
+      jwtPayload,
+      'refresh',
+    );
+
+    res.cookie('refresh_token', serviceRefreshToken, {
+      ...cookieConfig[process.env.NODE_ENV],
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+    });
+
+    return serviceAcessToken;
   }
 
   private parseStateData(stateString: string): StateData {

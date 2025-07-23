@@ -90,3 +90,39 @@ export function createVerificationMailContent(
   </div>
 `;
 }
+
+export function createRssRemoveCertificateContent(
+  userName: string,
+  certificateCode: string,
+  serviceAddress: string,
+  rssUrl: string,
+) {
+  return `
+        <div style="font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', '맑은 고딕', sans-serif; margin: 0; padding: 1px; background-color: #f4f4f4;">
+            <div style="max-width: 600px; margin: 20px auto; background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+              <div style="text-align: center; padding: 20px 0; border-bottom: 2px solid #f0f0f0;">
+                <img src="https://denamu.site/files/Denamu_Logo_KOR.png" alt="Denamu Logo" width="244" height="120">
+              </div>
+              <div style="padding: 20px 0;">
+                <div style="color: #ff0015; font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center;">RSS 삭제 신청을 인증해주세요</div>
+                  <div style="background-color: #f8f9fa; padding: 15px; border-radius: 4px; margin: 15px 0;">
+                    <p>안녕하세요, <b>${userName}</b>님!</p>
+                    <p>Denamu 서비스에서 <b><u>${rssUrl}</u></b> 블로그 정보를 정말 지우실 건가요? 😢</p>
+                    <p>아래 인증 코드를 데나무 사이트에 입력해주세요.</p>
+                  </div>
+                  <center>
+                    <p style="background-color: #ffde4d; padding: 15px; border-radius: 4px; margin: 15px 200px;""><b>${certificateCode}</b></p>
+                  </center>
+                  <div style="font-size: 14px; color: #6c757d; margin-top: 20px; text-align: center;">
+                    <p>이 코드는 5분 동안 유효합니다.</p>
+                  </div>
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; border-top: 2px solid #f0f0f0; color: #6c757d; font-size: 14px; height: 100px;">
+                <p>본 메일은 발신전용입니다.</p>
+                <p>문의사항이 있으시다면 ${serviceAddress}로 연락주세요.</p>
+              </div>
+            </div>
+          </div>
+`;
+}

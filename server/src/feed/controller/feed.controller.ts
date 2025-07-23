@@ -2,6 +2,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { ApiResponse } from '../../common/response/common.response';
 import {
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -11,6 +12,7 @@ import {
   Req,
   Res,
   Sse,
+  UseInterceptors,
 } from '@nestjs/common';
 import { FeedService } from '../service/feed.service';
 import { FeedPaginationRequestDto } from '../dto/request/feed-pagination.dto';
@@ -27,6 +29,9 @@ import { FeedTrendResponseDto } from '../dto/response/feed-pagination.dto';
 import { FeedViewUpdateRequestDto } from '../dto/request/feed-update.dto';
 import { FeedDetailRequestDto } from '../dto/request/feed-detail.dto';
 import { ApiReadFeedDetail } from '../api-docs/readFeedDetail.api-docs';
+import { ReadFeedInterceptor } from '../interceptor/read-feed.interceptor';
+import { FeedDeleteCheckDto } from '../dto/request/feed-check.dto';
+import { ApiDeleteCheckFeed } from '../api-docs/deleteCheckFeed.api-docs';
 
 @ApiTags('Feed')
 @Controller('feed')
@@ -117,10 +122,21 @@ export class FeedController {
   @ApiReadFeedDetail()
   @Get('/detail/:feedId')
   @HttpCode(HttpStatus.OK)
+  @UseInterceptors(ReadFeedInterceptor)
   async readFeedDetail(@Param() feedDetailRequestDto: FeedDetailRequestDto) {
     return ApiResponse.responseWithData(
       '요청이 성공적으로 처리되었습니다.',
       await this.feedService.readFeedDetail(feedDetailRequestDto),
+    );
+  }
+
+  @ApiDeleteCheckFeed()
+  @Delete('/:feedId')
+  @HttpCode(HttpStatus.OK)
+  async deleteCheckFeed(@Param() feedDeleteCheckDto: FeedDeleteCheckDto) {
+    await this.feedService.deleteCheckFeed(feedDeleteCheckDto);
+    return ApiResponse.responseWithNoContent(
+      '게시글 삭제 확인 요청을 성공했습니다.',
     );
   }
 }

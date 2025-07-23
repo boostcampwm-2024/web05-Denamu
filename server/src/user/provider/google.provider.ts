@@ -1,7 +1,12 @@
 import { OAuthProvider } from './oauth-provider.interface';
 import * as querystring from 'node:querystring';
 import { BadGatewayException, Injectable } from '@nestjs/common';
-import { OAUTH_CONSTANT, OAUTH_URL_PATH } from '../constant/oauth.constant';
+import {
+  OAUTH_CONSTANT,
+  OAUTH_URL_PATH,
+  OAuthTokenResponse,
+  UserInfo,
+} from '../constant/oauth.constant';
 import axios from 'axios';
 
 @Injectable()
@@ -49,14 +54,28 @@ export class GoogleOAuthProvider implements OAuthProvider {
         },
       );
 
-      return response.data;
+      const {
+        id_token: id_token,
+        access_token: access_token,
+        refresh_token: refresh_token,
+        expires_in: expires_in,
+      } = response.data as OAuthTokenResponse;
+
+      return {
+        id_token,
+        access_token,
+        refresh_token,
+        expires_in,
+      };
     } catch (error) {
       throw new BadGatewayException(
         '현재 외부 서비스와의 연결에 실패했습니다.',
       );
     }
   }
-  async getUserInfo(idToken: string, accessToken: string) {
+  async getUserInfo(tokenResponse: OAuthTokenResponse) {
+    const { id_token: idToken, access_token: accessToken } = tokenResponse;
+
     try {
       const response = await axios.get(
         `${OAUTH_URL_PATH.GOOGLE.USER_INFO_URL}?alt=json&access_token=${accessToken}`,
@@ -66,7 +85,14 @@ export class GoogleOAuthProvider implements OAuthProvider {
           },
         },
       );
-      return response.data;
+
+      const { id, email, name, picture } = response.data;
+      return {
+        id,
+        email,
+        name,
+        picture,
+      } as UserInfo;
     } catch (error) {
       throw new BadGatewayException(
         '현재 외부 서비스와의 연결에 실패했습니다.',

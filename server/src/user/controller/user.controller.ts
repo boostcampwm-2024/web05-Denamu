@@ -5,6 +5,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Patch,
   Post,
   Query,
   Req,
@@ -25,6 +26,8 @@ import { ApiLoginUser } from '../api-docs/loginUser.api-docs';
 import { JwtGuard, RefreshJwtGuard } from '../../common/guard/jwt.guard';
 import { ApiRefreshToken } from '../api-docs/refreshUser.api-docs';
 import { ApiLogoutUser } from '../api-docs/logoutUser.api-docs';
+import { UpdateUserDto } from '../dto/request/update-user.dto';
+import { ApiUpdateUser } from '../api-docs/updateUser.api-docs';
 
 @ApiTags('User')
 @Controller('user')
@@ -100,5 +103,16 @@ export class UserController {
   async logoutUser(@Res({ passthrough: true }) res) {
     res.clearCookie('refresh_token');
     return ApiResponse.responseWithNoContent('로그아웃을 성공했습니다.');
+  }
+
+  @ApiUpdateUser()
+  @Patch('/profile')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtGuard)
+  async updateUser(@Body() updateUserDto: UpdateUserDto, @Req() req) {
+    await this.userService.updateUser(req.user.id, updateUserDto);
+    return ApiResponse.responseWithNoContent(
+      '사용자 프로필 정보가 성공적으로 수정되었습니다.',
+    );
   }
 }

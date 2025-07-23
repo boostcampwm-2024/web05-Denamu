@@ -59,7 +59,7 @@ describe('GET api/feed/detail E2E Test', () => {
     expect(response.body.data.tag).toStrictEqual([]);
   });
 
-  it('없는 피드를 조회한다면 400번 에러를 반환한다.', async () => {
+  it('없는 피드를 조회한다면 404번 에러를 반환한다.', async () => {
     //given
     const feedDetailRequestDto = new FeedDetailRequestDto({
       feedId: 100,
@@ -71,6 +71,6 @@ describe('GET api/feed/detail E2E Test', () => {
     );
 
     //then
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(404);
   });
 });

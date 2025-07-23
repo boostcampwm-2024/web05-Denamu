@@ -8,7 +8,7 @@ import {
 } from 'typeorm';
 import { Feed } from '../../feed/entity/feed.entity';
 
-export abstract class RssInformation extends BaseEntity {
+export class RssInformation extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 

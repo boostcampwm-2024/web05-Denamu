@@ -4,15 +4,15 @@ import { Routes, Route, Location } from "react-router-dom";
 import PostDetail from "@/components/common/Card/PostDetail";
 
 import Loading from "@/pages/Loading";
-import PostDetailPage from "@/pages/PostDetailPage";
-import Profile from "@/pages/Profile";
-import SignIn from "@/pages/SignIn";
-import SignUp from "@/pages/SignUp";
-import UserCertificate from "@/pages/UserCertificate";
 
 const Home = lazy(() => import("@/pages/Home"));
 const Admin = lazy(() => import("@/pages/Admin"));
 const AboutService = lazy(() => import("@/pages/AboutService"));
+const PostDetailPage = lazy(() => import("@/pages/PostDetailPage"));
+const Profile = lazy(() => import("@/pages/Profile"));
+const SignIn = lazy(() => import("@/pages/SignIn"));
+const SignUp = lazy(() => import("@/pages/SignUp"));
+const UserCertificate = lazy(() => import("@/pages/UserCertificate"));
 
 interface RouterProps {
   location: Location;

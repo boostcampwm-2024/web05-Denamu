@@ -18,6 +18,7 @@ services:
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      TZ: "Asia/Seoul"
     healthcheck:
       test:
         [
@@ -33,6 +34,21 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+
+  # MySQL Metrics
+  mysql_metrics:
+    image: prom/mysqld-exporter
+    ports:
+      - "9104:9104"
+    networks:
+      - Denamu
+    command:
+      - "--mysqld.username=$MYSQL_USER:$MYSQL_PASSWORD"
+      - "--mysqld.address=mysql-db:3306"
+    environment:
+      TZ: "Asia/Seoul"
+    depends_on:
+      - mysql-db
 
   # Redis 서비스
   redis:
@@ -54,10 +70,77 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+    environment:
+      TZ: "Asia/Seoul"
+
+  # Redis Metrics
+  redis_metrics:
+    image: oliver006/redis_exporter
+    ports:
+      - "9121:9121"
+    networks:
+      - Denamu
+    environment:
+      REDIS_ADDR: "redis://redis:6379"
+      REDIS_USER: "${REDIS_USER}"
+      REDIS_PASSWORD: "${REDIS_PASSWORD}"
+      TZ: "Asia/Seoul"
+    depends_on:
+      - redis
+
+  # Prometheus
+  prometheus:
+    image: "prom/prometheus"
+    ports:
+      - "9090:9090"
+    networks:
+      - Denamu
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - denamu-prometheus:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    environment:
+      TZ: "Asia/Seoul"
+
+  # Grafana:
+  grafana:
+    image: "grafana/grafana"
+    ports:
+      - "3000:3000"
+    networks:
+      - Denamu
+    volumes:
+      - denamu-grafana:/var/lib/grafana
+    depends_on:
+      - prometheus
+    environment:
+      TZ: "Asia/Seoul"
+
+  # Node Exporter
+  node_exporter:
+    image: prom/node-exporter
+    ports:
+      - "9100:9100"
+    networks:
+      - Denamu
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.rootfs=/rootfs"
+      - "--path.sysfs=/host/sys"
+      - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
+    environment:
+      TZ: "Asia/Seoul"
 
 volumes:
   denamu-mysql:
   denamu-redis:
+  denamu-prometheus:
+  denamu-grafana:
 
 networks:
   Denamu:
