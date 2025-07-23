@@ -12,7 +12,6 @@ import {
   UserInfo,
 } from '../constant/oauth.constant';
 import { OAuthProvider } from '../provider/oauth-provider.interface';
-import { JwtService } from '@nestjs/jwt';
 import { UserService } from './user.service';
 import { cookieConfig } from '../../common/cookie/cookie.config';
 import { Payload } from '../../common/guard/jwt.guard';
@@ -23,7 +22,6 @@ export class OAuthService {
     private readonly userRepository: UserRepository,
     private readonly providerRepository: ProviderRepository,
     private readonly logger: WinstonLoggerService,
-    private readonly jwtService: JwtService,
     private readonly userService: UserService,
     @Inject('OAUTH_PROVIDERS')
     private readonly providers: Record<string, OAuthProvider>,
