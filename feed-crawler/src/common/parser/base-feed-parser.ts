@@ -1,5 +1,4 @@
 import { XMLParser } from 'fast-xml-parser';
-import { FeedParser } from './feed-parser.interface';
 import { FeedDetail, RssObj } from '../types';
 import {
   FEED_AI_SUMMARY_IN_PROGRESS_MESSAGE,
@@ -15,7 +14,7 @@ export interface RawFeed {
   description: string;
 }
 
-export abstract class BaseFeedParser implements FeedParser {
+export abstract class BaseFeedParser {
   protected readonly xmlParser = new XMLParser();
   protected readonly parserUtil: ParserUtil;
 
@@ -23,17 +22,10 @@ export abstract class BaseFeedParser implements FeedParser {
     this.parserUtil = parserUtil;
   }
 
-  /**
-   * Template Method: 전체 파싱 프로세스 정의
-   */
   async parseFeed(rssObj: RssObj, xmlData: string): Promise<FeedDetail[]> {
-    // 1. XML 데이터에서 rawFeeds 추출 (각 파서마다 다름)
+    // 각 포맷(atom1.0, rss2.0 등...)
     const rawFeeds = this.extractRawFeeds(xmlData);
-
-    // 2. 시간 필터링 (공통 로직)
     const timeMatchedFeeds = this.filterByTime(rawFeeds);
-
-    // 3. FeedDetail로 변환 (공통 로직)
     const detailedFeeds = await this.convertToFeedDetails(
       rssObj,
       timeMatchedFeeds,
@@ -42,21 +34,9 @@ export abstract class BaseFeedParser implements FeedParser {
     return detailedFeeds;
   }
 
-  /**
-   * 각 파서에서 구현해야 하는 추상 메서드
-   * 해당 파서가 주어진 XML 형식에 대해 파싱이 가능한지 여부를 반환
-   */
   abstract canParse(xmlData: string): boolean;
-
-  /**
-   * 각 파서에서 구현해야 하는 추상 메서드
-   * XML 데이터에서 RawFeed 배열을 추출
-   */
   protected abstract extractRawFeeds(xmlData: string): RawFeed[];
 
-  /**
-   * 시간 기반 필터링 (공통 로직)
-   */
   private filterByTime(rawFeeds: RawFeed[]): RawFeed[] {
     const now = new Date().setSeconds(0, 0);
     return rawFeeds.filter((item) => {
@@ -66,9 +46,6 @@ export abstract class BaseFeedParser implements FeedParser {
     });
   }
 
-  /**
-   * RawFeed를 FeedDetail로 변환 (공통 로직)
-   */
   private async convertToFeedDetails(
     rssObj: RssObj,
     rawFeeds: RawFeed[],
