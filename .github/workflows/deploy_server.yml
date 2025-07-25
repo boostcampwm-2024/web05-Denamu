@@ -45,6 +45,8 @@ jobs:
             echo "ACCESS_TOKEN_EXPIRE=${{secrets.ACCESS_TOKEN_EXPIRE}}" >> env/.env.prod
             echo "GOOGLE_CLIENT_ID=${{secrets.GOOGLE_CLIENT_ID}}" >> env/.env.prod
             echo "GOOGLE_CLIENT_SECRET=${{secrets.GOOGLE_CLIENT_SECRET}}" >> env/.env.prod
+            echo "GITHUB_CLIENT_ID=${{secrets.GITHUB_CLIENT_ID}}" >> env/.env.prod
+            echo "GITHUB_CLIENT_SECRET=${{secrets.GITHUB_CLIENT_SECRET}}" >> env/.env.prod
 
             cd /var/web05-Denamu
             docker-compose -f docker-compose/docker-compose.prod.yml up --build --no-deps -d app
