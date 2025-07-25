@@ -24,4 +24,4 @@ jobs:
             cd /var/web05-Denamu
             git pull origin main
             docker-compose -f docker-compose/docker-compose.prod.yml down
-            docker-compose -f docker-compose/docker-compose.prod.yml up
+            docker-compose -f docker-compose/docker-compose.prod.yml up -d
