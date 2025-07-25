@@ -130,14 +130,14 @@ CREATE TABLE `comment` (
 
 CREATE TABLE `likes` (
   `id` int NOT NULL AUTO_INCREMENT,
+  `like_date` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   `feed_id` int NOT NULL,
   `user_id` int NOT NULL,
-  `like_date` datetime NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UQ_likes_user_feed` (`user_id`,`feed_id`),
-  KEY `FK_like_feed` (`feed_id`),
-  CONSTRAINT `FK_like_feed` FOREIGN KEY (`feed_id`) REFERENCES `feed` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `FK_like_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+  UNIQUE KEY `IDX_0be1d6ca115f56ed76c65e6bda` (`user_id`,`feed_id`),
+  KEY `FK_85b0dbd1e7836d0f8cdc38fe830` (`feed_id`),
+  CONSTRAINT `FK_3f519ed95f775c781a254089171` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_85b0dbd1e7836d0f8cdc38fe830` FOREIGN KEY (`feed_id`) REFERENCES `feed` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- denamu.provider definition
@@ -153,6 +153,18 @@ CREATE TABLE `provider` (
   PRIMARY KEY (`id`),
   KEY `FK_d3d18186b602240b93c9f1621ea` (`user_id`),
   CONSTRAINT `FK_d3d18186b602240b93c9f1621ea` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- denamu.rss_remove definition
+
+CREATE TABLE `rss_remove` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `request_date` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `reason` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `blog_id` int NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `REL_69e45fd3ff04dac43a89e1951e` (`blog_id`),
+  CONSTRAINT `FK_69e45fd3ff04dac43a89e1951e4` FOREIGN KEY (`blog_id`) REFERENCES `rss_accept` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- denamu.admin insert data
@@ -371,11 +383,16 @@ INSERT INTO comment(comment, date, feed_id, user_id) VALUES
 
 -- denamu.activity insert data
 
--- INSERT INTO activity (activity_date, view_count, user_id) VALUES
--- 	();
+INSERT INTO activity (activity_date, view_count, user_id) VALUES
+	('2025-07-01 11:48:00', 1, 1);
 
 -- denamu.like insert data
 
 INSERT INTO likes(feed_id, user_id, like_date) VALUES
 	(94,1,'2025-06-13 17:47:05'),
 	(95,1,'2025-06-13 17:47:07');
+
+-- denamu.rss_remove insert data
+
+INSERT INTO rss_remove(request_date, reason, blog_id) VALUES
+	('2025-07-01 11:48:00', 'example reason', 1);

@@ -16,6 +16,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { JwtGuard } from '../../common/guard/jwt.guard';
 import { createDynamicStorage } from '../../common/disk/diskStorage';
 import { ApiResponse } from '../../common/response/common.response';
+
 @ApiTags('File')
 @Controller('file')
 @UseGuards(JwtGuard)

@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 import { Rss, RssAccept, RssReject } from '../entity/rss.entity';
-import { RssRegisterRequestDto } from '../dto/request/rss-register.dto';
 
 @Injectable()
 export class RssRepository extends Repository<Rss> {
