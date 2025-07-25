@@ -14,7 +14,7 @@ export function ApiDeleteRss() {
     ApiNotFoundResponse({
       description: 'Not Found',
       example: {
-        message: 'RSS 삭제 요청을 찾을 수 없습니다.',
+        message: 'RSS 삭제 요청 인증 코드가 만료되었거나 찾을 수 없습니다.',
       },
     }),
     ApiBadRequestResponse({

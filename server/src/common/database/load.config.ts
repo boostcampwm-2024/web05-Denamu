@@ -15,7 +15,7 @@ export function loadDBSetting(configService: ConfigService) {
     entities: [`${__dirname}/../../**/*.entity.{js,ts}`],
 
     synchronize: isDev || isTest,
-    migrations: [`${__dirname}/../../migration/*.{js,ts}`],
+    migrations: [`${__dirname}/migration/*.{js,ts}`],
     migrationsRun: !(isDev || isTest),
     logging: isDev,
   };

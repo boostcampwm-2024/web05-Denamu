@@ -9,7 +9,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { CookieAuthGuard } from '../../common/guard/auth.guard';
+import { AdminAuthGuard } from '../../common/guard/auth.guard';
 import { ApiTags } from '@nestjs/swagger';
 import { RssService } from '../service/rss.service';
 import { RssRegisterRequestDto } from '../dto/request/rss-register.dto';
@@ -51,7 +51,7 @@ export class RssController {
   }
 
   @ApiAcceptRss()
-  @UseGuards(CookieAuthGuard)
+  @UseGuards(AdminAuthGuard)
   @Post('accept/:id')
   @HttpCode(HttpStatus.CREATED)
   async acceptRss(@Param() rssAcceptParamDto: RssManagementRequestDto) {
@@ -60,7 +60,7 @@ export class RssController {
   }
 
   @ApiRejectRss()
-  @UseGuards(CookieAuthGuard)
+  @UseGuards(AdminAuthGuard)
   @Post('reject/:id')
   @HttpCode(HttpStatus.CREATED)
   async rejectRss(
@@ -72,7 +72,7 @@ export class RssController {
   }
 
   @ApiReadAcceptHistory()
-  @UseGuards(CookieAuthGuard)
+  @UseGuards(AdminAuthGuard)
   @Get('history/accept')
   @HttpCode(HttpStatus.OK)
   async readAcceptHistory() {
@@ -83,7 +83,7 @@ export class RssController {
   }
 
   @ApiReadRejectHistory()
-  @UseGuards(CookieAuthGuard)
+  @UseGuards(AdminAuthGuard)
   @Get('history/reject')
   @HttpCode(HttpStatus.OK)
   async readRejectHistory() {

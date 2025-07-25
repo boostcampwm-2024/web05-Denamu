@@ -14,6 +14,8 @@ import { ReadFeedInterceptor } from '../interceptor/read-feed.interceptor';
 import { JwtAuthModule } from '../../common/auth/jwt.module';
 import { LikeModule } from '../../like/module/like.module';
 import { CommentModule } from '../../comment/module/comment.module';
+import { FeedCrawlerService } from '../service/feed-crawler.service';
+import { RssModule } from '../../rss/module/rss.module';
 
 @Module({
   imports: [
@@ -22,6 +24,7 @@ import { CommentModule } from '../../comment/module/comment.module';
     UserModule,
     ActivityModule,
     JwtAuthModule,
+    forwardRef(() => RssModule),
     forwardRef(() => CommentModule),
     forwardRef(() => LikeModule),
   ],
@@ -32,7 +35,8 @@ import { CommentModule } from '../../comment/module/comment.module';
     FeedViewRepository,
     FeedScheduler,
     ReadFeedInterceptor,
+    FeedCrawlerService,
   ],
-  exports: [FeedRepository],
+  exports: [FeedRepository, FeedCrawlerService],
 })
 export class FeedModule {}

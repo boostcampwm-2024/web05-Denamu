@@ -5,8 +5,8 @@ import { ActivityService } from '../service/activity.service';
 import { UserModule } from '../../user/module/user.module';
 
 @Module({
-  controllers: [ActivityController],
   imports: [UserModule],
+  controllers: [ActivityController],
   providers: [ActivityRepository, ActivityService],
   exports: [ActivityService],
 })

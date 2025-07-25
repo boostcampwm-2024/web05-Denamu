@@ -9,7 +9,7 @@ import { JwtAuthModule } from '../../common/auth/jwt.module';
 @Module({
   imports: [forwardRef(() => FeedModule), JwtAuthModule],
   controllers: [LikeController],
-  providers: [LikeService, LikeRepository, InjectUserInterceptor],
+  providers: [LikeService, LikeRepository],
   exports: [LikeRepository],
 })
 export class LikeModule {}

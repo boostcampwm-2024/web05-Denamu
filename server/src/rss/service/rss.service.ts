@@ -13,7 +13,7 @@ import { RssRegisterRequestDto } from '../dto/request/rss-register.dto';
 import { EmailService } from '../../common/email/email.service';
 import { DataSource } from 'typeorm';
 import { Rss, RssReject, RssAccept } from '../entity/rss.entity';
-import { FeedCrawlerService } from './feed-crawler.service';
+import { FeedCrawlerService } from '../../feed/service/feed-crawler.service';
 import { RssReadResponseDto } from '../dto/response/rss-all.dto';
 import { RssAcceptHistoryResponseDto } from '../dto/response/rss-accept-history.dto';
 import { RssRejectHistoryResponseDto } from '../dto/response/rss-reject-history.dto';
