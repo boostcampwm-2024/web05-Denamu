@@ -53,6 +53,7 @@ services:
     build:
       context: ../server
       dockerfile: docker/Dockerfile.dev
+    image: denamu-dev-app:latest
     ports:
       - "8080:8080"
     networks:
@@ -78,6 +79,7 @@ services:
     build:
       context: ../feed-crawler
       dockerfile: docker/Dockerfile.dev
+    image: denamu-dev-feed-crawler:latest
     networks:
       - Denamu
     depends_on:
