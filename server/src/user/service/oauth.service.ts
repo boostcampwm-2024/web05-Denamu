@@ -47,7 +47,7 @@ export class OAuthService {
 
     await this.saveOAuthUser(userInfo, {
       providerType,
-      refreshToken: tokenData.refresh_token,
+      refreshToken: tokenData.refresh_token || null,
     });
 
     const jwtPayload: Payload = {
