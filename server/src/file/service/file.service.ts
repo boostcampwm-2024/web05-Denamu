@@ -11,15 +11,13 @@ export class FileService {
   async create(file: any, userId: number) {
     const { originalname, mimetype, size, path } = file;
 
-    const entity = this.fileRepository.create({
+    const savedFile = await this.fileRepository.save({
       originalname,
       mimetype,
       size,
       path,
       user: { id: userId } as User,
-    });
-
-    const savedFile = await this.fileRepository.save(entity);
+    } as File);
     const accessUrl = this.generateAccessUrl(path);
 
     return {
