@@ -10,7 +10,7 @@ describe('feed crawling e2e-test', () => {
     feedCrawler = new FeedCrawler(
       testContext.rssRepository,
       testContext.feedRepository,
-      testContext.rssParser,
+      testContext.feedParserManager,
     );
   });
 
@@ -40,20 +40,25 @@ describe('feed crawling e2e-test', () => {
   });
 
   it('RSS 피드가 정상적으로 DB, Redis에 저장된다.', async () => {
-    jest.spyOn(feedCrawler as any, 'fetchRss').mockResolvedValue([
-      {
-        title: 'Mock Title',
-        link: 'https://example.com/mock',
-        pubDate: new Date(),
-        description: 'Mock Content',
-      },
-    ]);
-
-    jest
-      .spyOn((feedCrawler as any).rssParser, 'getThumbnailUrl')
-      .mockResolvedValue('https://example.com/mock/thumbnail');
-
     // given
+    jest
+      .spyOn(feedCrawler['feedParserManager'], 'fetchAndParse')
+      .mockResolvedValue([
+        {
+          id: null,
+          blogId: 1,
+          blogName: 'test blog',
+          blogPlatform: 'etc',
+          title: 'Mock Title',
+          link: 'https://example.com/mock',
+          pubDate: new Date().toISOString().slice(0, 19).replace('T', ' '),
+          imageUrl: 'https://example.com/mock/thumbnail',
+          content: 'Mock Content',
+          summary: '요약 생성 중...',
+          deathCount: 0,
+        },
+      ]);
+
     await testContext.dbConnection.executeQuery(
       `INSERT INTO rss_accept (name, user_name, email, rss_url, blog_platform) 
        VALUES (?, ?, ?, ?, ?)`,
