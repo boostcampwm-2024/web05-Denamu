@@ -65,13 +65,20 @@ export const AuthSignInForm = () => {
           </Button>
         </form>
         <AuthSocialLoginButtons />
-        <div className="mt-4">
+        <div className="mt-4 flex justify-between">
           <Button
             variant="link"
             className="text-muted-foreground underline underline-offset-4 h-auto p-0"
             onClick={() => navigate("/signup", { state: { from: location.pathname } })}
           >
             계정이 없으신가요?
+          </Button>
+          <Button
+            variant="link"
+            className="text-muted-foreground underline underline-offset-4 h-auto p-0"
+            onClick={() => navigate("/")}
+          >
+            메인 페이지로 돌아가기
           </Button>
         </div>
       </AuthCard>

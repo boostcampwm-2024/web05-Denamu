@@ -10,7 +10,8 @@ export class CreateRssReject1619999999996 implements MigrationInterface {
     \`email\` varchar(255) NOT NULL,
     \`rss_url\` varchar(255) NOT NULL,
     \`description\` varchar(512) NOT NULL,
-    PRIMARY KEY (\`id\`);`,
+    PRIMARY KEY (\`id\`)
+    );`,
     );
   }
 

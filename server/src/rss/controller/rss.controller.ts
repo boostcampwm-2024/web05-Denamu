@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -8,7 +9,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { CookieAuthGuard } from '../../common/guard/auth.guard';
+import { AdminAuthGuard } from '../../common/guard/auth.guard';
 import { ApiTags } from '@nestjs/swagger';
 import { RssService } from '../service/rss.service';
 import { RssRegisterRequestDto } from '../dto/request/rss-register.dto';
@@ -21,7 +22,10 @@ import { ApiReadAcceptHistory } from '../api-docs/readAcceptHistoryRss.api-docs'
 import { ApiReadRejectHistory } from '../api-docs/readRejectHistoryRss.api-docs';
 import { ApiReadAllRss } from '../api-docs/readAllRss.api-docs';
 import { ApiRejectRss } from '../api-docs/rejectRss.api-docs';
-import { ApiReadDeleteRequestList } from '../api-docs/readDeleteRequest.api-docs';
+import { ApiRequestDeleteRss } from '../api-docs/requestDeleteRss.api-docs';
+import { RequestDeleteRssDto } from '../dto/request/rss-request-delete.dto';
+import { ApiDeleteRss } from '../api-docs/deleteRss.api-docs';
+import { DeleteRssDto } from '../dto/request/rss-delete.dto';
 
 @ApiTags('RSS')
 @Controller('rss')
@@ -47,7 +51,7 @@ export class RssController {
   }
 
   @ApiAcceptRss()
-  @UseGuards(CookieAuthGuard)
+  @UseGuards(AdminAuthGuard)
   @Post('accept/:id')
   @HttpCode(HttpStatus.CREATED)
   async acceptRss(@Param() rssAcceptParamDto: RssManagementRequestDto) {
@@ -56,7 +60,7 @@ export class RssController {
   }
 
   @ApiRejectRss()
-  @UseGuards(CookieAuthGuard)
+  @UseGuards(AdminAuthGuard)
   @Post('reject/:id')
   @HttpCode(HttpStatus.CREATED)
   async rejectRss(
@@ -68,7 +72,7 @@ export class RssController {
   }
 
   @ApiReadAcceptHistory()
-  @UseGuards(CookieAuthGuard)
+  @UseGuards(AdminAuthGuard)
   @Get('history/accept')
   @HttpCode(HttpStatus.OK)
   async readAcceptHistory() {
@@ -79,7 +83,7 @@ export class RssController {
   }
 
   @ApiReadRejectHistory()
-  @UseGuards(CookieAuthGuard)
+  @UseGuards(AdminAuthGuard)
   @Get('history/reject')
   @HttpCode(HttpStatus.OK)
   async readRejectHistory() {
@@ -89,14 +93,19 @@ export class RssController {
     );
   }
 
-  @ApiReadDeleteRequestList()
-  @UseGuards(CookieAuthGuard)
-  @Get('remove')
+  @ApiRequestDeleteRss()
+  @Post('remove')
   @HttpCode(HttpStatus.OK)
-  async readDeleteRequestList() {
-    return ApiResponse.responseWithData(
-      'RSS 삭제 요청을 조회하였습니다.',
-      await this.rssService.readRemoveList(),
-    );
+  async requestRemoveRss(@Body() requestDeleteRssDto: RequestDeleteRssDto) {
+    await this.rssService.requestRemove(requestDeleteRssDto);
+    return ApiResponse.responseWithNoContent('RSS 삭제 요청을 성공했습니다.');
+  }
+
+  @ApiDeleteRss()
+  @Delete('remove/:code')
+  @HttpCode(HttpStatus.OK)
+  async deleteRss(@Param() deleteRssDto: DeleteRssDto) {
+    await this.rssService.deleteRss(deleteRssDto);
+    return ApiResponse.responseWithNoContent('RSS 삭제를 성공했습니다.');
   }
 }

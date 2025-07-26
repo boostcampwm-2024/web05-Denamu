@@ -6,24 +6,20 @@ import {
   RssRepository,
   RssAcceptRepository,
 } from '../repository/rss.repository';
-import { FeedCrawlerService } from '../service/feed-crawler.service';
-import { FeedRepository } from '../../feed/repository/feed.repository';
 import { RssParserService } from '../service/rss-parser.service';
 import { EmailModule } from '../../common/email/email.module';
-import { RssRemoveRepository } from '../repository/rss-remove.repository';
+import { FeedModule } from '../../feed/module/feed.module';
 
 @Module({
-  imports: [EmailModule],
+  imports: [EmailModule, FeedModule],
   controllers: [RssController],
   providers: [
     RssService,
-    FeedCrawlerService,
     RssParserService,
     RssRepository,
     RssAcceptRepository,
     RssRejectRepository,
-    FeedRepository,
-    RssRemoveRepository,
   ],
+  exports: [RssAcceptRepository, RssParserService],
 })
 export class RssModule {}
