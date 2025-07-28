@@ -18,5 +18,5 @@ const dbOptions = loadDBSetting(configService);
 export const AppDataSource = new DataSource({
   ...dbOptions,
   entities: [`${__dirname}/src/**/*.entity.{js,ts}`],
-  migrations: [`${__dirname}/src/migration/*.{js,ts}`],
+  migrations: [`${__dirname}/src/common/database/migration/*.{js,ts}`],
 });
