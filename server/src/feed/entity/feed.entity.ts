@@ -61,6 +61,13 @@ export class Feed extends BaseEntity {
   })
   likeCount: number;
 
+  @Column({
+    name: 'comment_count',
+    nullable: false,
+    default: 0,
+  })
+  commentCount: number;
+
   @ManyToOne(() => RssAccept, (rssAccept) => rssAccept.feeds, {
     nullable: false,
     onUpdate: 'CASCADE',
