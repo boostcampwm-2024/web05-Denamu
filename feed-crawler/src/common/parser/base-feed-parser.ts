@@ -15,7 +15,12 @@ export interface RawFeed {
 }
 
 export abstract class BaseFeedParser {
-  protected readonly xmlParser = new XMLParser();
+  protected readonly xmlParser = new XMLParser({
+    ignoreAttributes: false,
+    attributeNamePrefix: '@_',
+    parseAttributeValue: true,
+    trimValues: true,
+  });
   protected readonly parserUtil: ParserUtil;
 
   constructor(parserUtil: ParserUtil) {

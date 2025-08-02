@@ -19,6 +19,7 @@ export class Atom10Parser extends BaseFeedParser {
 
   protected extractRawFeeds(xmlData: string): RawFeed[] {
     const parsed = this.xmlParser.parse(xmlData);
+    console.log(parsed);
 
     let entries = parsed.feed.entry;
     if (!Array.isArray(entries)) {
@@ -34,17 +35,18 @@ export class Atom10Parser extends BaseFeedParser {
   }
 
   private extractLink(linkData: any): string {
-    // Atom의 link는 다양한 형태가 될 수 있음
+    // link 태그가 속성없이 문자 형태 그대로일 경우
     if (typeof linkData === 'string') {
       return linkData;
     }
 
+    // link 태그가 여러개인 경우
     if (Array.isArray(linkData)) {
-      // rel="alternate"인 링크를 찾거나 첫 번째 링크 사용
+      console.log('a');
       const alternateLink = linkData.find((l) => l['@_rel'] === 'alternate');
-      return alternateLink?.['@_href'] || linkData[0]?.['@_href'] || '';
+      return alternateLink['@_href'] || '';
     }
 
-    return linkData?.['@_href'] || linkData?.href || '';
+    return linkData['@_href'] || linkData?.href || '';
   }
 }
