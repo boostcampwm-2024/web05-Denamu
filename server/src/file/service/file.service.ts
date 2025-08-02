@@ -33,7 +33,7 @@ export class FileService {
     return `/objects${relativePath}`;
   }
 
-  async findById(id: string): Promise<File> {
+  async findById(id: number): Promise<File> {
     const file = await this.fileRepository.findOne({ where: { id } });
     if (!file) {
       throw new NotFoundException('파일을 찾을 수 없습니다.');
@@ -41,7 +41,7 @@ export class FileService {
     return file;
   }
 
-  async deleteFile(id: string): Promise<void> {
+  async deleteFile(id: number): Promise<void> {
     const file = await this.findById(id);
 
     if (existsSync(file.path)) {
@@ -51,7 +51,7 @@ export class FileService {
     await this.fileRepository.delete(id);
   }
 
-  async getFileInfo(id: string): Promise<File> {
+  async getFileInfo(id: number): Promise<File> {
     return this.findById(id);
   }
 }

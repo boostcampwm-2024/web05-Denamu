@@ -43,7 +43,12 @@ export class FileController {
   // TODO: 권한검사 추가
   @Delete(':id')
   async deleteFile(@Param('id') id: string, @Req() req) {
-    await this.fileService.deleteFile(id);
+    const fileId = parseInt(id, 10);
+    if (isNaN(fileId)) {
+      throw new BadRequestException('유효하지 않은 파일 ID입니다.');
+    }
+
+    await this.fileService.deleteFile(fileId);
     return { message: '파일이 성공적으로 삭제되었습니다.' };
   }
 }
