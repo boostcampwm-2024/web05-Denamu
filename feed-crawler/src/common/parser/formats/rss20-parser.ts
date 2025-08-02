@@ -28,7 +28,7 @@ export class Rss20Parser extends BaseFeedParser {
       title: this.parserUtil.customUnescape(feed.title),
       link: feed.link,
       pubDate: feed.pubDate,
-      description: feed.description || feed['content:encoded'],
+      description: feed.description,
     }));
   }
 }
