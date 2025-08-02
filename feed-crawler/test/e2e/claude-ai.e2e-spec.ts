@@ -1,6 +1,6 @@
 import { ResultSetHeader } from 'mysql2';
-import { ClaudeService } from '../src/claude.service';
-import { setupTestContainer } from './setup/testContext.setup';
+import { ClaudeService } from '../../src/claude.service';
+import { setupTestContainer } from '../setup/testContext.setup';
 
 describe('Claude AI e2e-test', () => {
   const testContext = setupTestContainer();
