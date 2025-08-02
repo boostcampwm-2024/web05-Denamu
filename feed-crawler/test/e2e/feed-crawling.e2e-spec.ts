@@ -1,6 +1,6 @@
-import { setupTestContainer } from './setup/testContext.setup';
-import { FeedCrawler } from '../src/feed-crawler';
-import { redisConstant } from '../src/common/constant';
+import { setupTestContainer } from '../setup/testContext.setup';
+import { FeedCrawler } from '../../src/feed-crawler';
+import { redisConstant } from '../../src/common/constant';
 
 describe('feed crawling e2e-test', () => {
   const testContext = setupTestContainer();
