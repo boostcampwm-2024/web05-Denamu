@@ -28,47 +28,30 @@ const RSS_20_SAMPLE = `<?xml version="1.0" encoding="UTF-8"?>
 </rss>`;
 
 // Atom 1.0 예제 데이터
-const ATOM_10_SAMPLE = `<feed xmlns="http://www.w3.org/2005/Atom">
-<id>https://rdyjun.github.io/</id>
-<title>Junby Log</title>
-<subtitle>A minimal, responsive and feature-rich Jekyll theme for technical writing.</subtitle>
-<updated>2025-07-30T17:34:08+09:00</updated>
-<author>
-<name>SungJun Joo</name>
-<uri>https://rdyjun.github.io/</uri>
-</author>
-<link rel="self" type="application/atom+xml" href="https://rdyjun.github.io/feed.xml"/>
-<link rel="alternate" type="text/html" hreflang="en" href="https://rdyjun.github.io/"/>
-<generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator>
-<rights> © 2025 SungJun Joo </rights>
-<icon>/assets/img/favicons/favicon.ico</icon>
-<logo>/assets/img/favicons/favicon-96x96.png</logo>
-<entry>
-<title>개인 도메인으로 무료 메일 보내기</title>
-<link href="https://rdyjun.github.io/posts/email-smtp-by-domain/" rel="alternate" type="text/html" title="개인 도메인으로 무료 메일 보내기"/>
-<published>2025-07-30T17:30:00+09:00</published>
-<updated>2025-07-30T17:30:00+09:00</updated>
-<id>https://rdyjun.github.io/posts/email-smtp-by-domain/</id>
-<content src="https://rdyjun.github.io/posts/email-smtp-by-domain/"/>
-<author>
-<name>rdyjun</name>
-</author>
-<category term="smtp"/>
-<summary> 회원 가입 과정에서 이메일 인증이 필요하며 이를 백엔드 서버에서 요청을 받아 인증 메일을 보내도록 할 것이다. 인증 메일은 서비스 운영 중 실제 사용자에게 보내질 메일이기 때문에 개인 메일로 보내지 않고, 사용중인 도메인으로 메일을 보낼 계획이다. 본 글은 도메인의 네임서버가 Cloudflare인 환경에서의 과정이다. 무료로 도메인으로 이메일을 보낼 수 있는 서비스는 다음의 스마트워크가 있었다. 스마트워크는 다음 계정이 있는 경우 이 계정에 도메인을 연결해서 쓸 수 있는 구조다. 스마트워크 등록 다음(Daum) 메일에 들어가서 좌측 하단에 스마트워크를 클릭해준다. 그러면 서비스 신청 화면이 나오는데, 여기서 본인의 보유 도메인을 넣어주면 된다. 다음 단계로 넘어가서 기업/단체명을 작... </summary>
-</entry>
-<entry>
-<title>QueryDSL 충돌</title>
-<link href="https://rdyjun.github.io/posts/querydsl-crash/" rel="alternate" type="text/html" title="QueryDSL 충돌"/>
-<published>2025-07-15T17:55:00+09:00</published>
-<updated>2025-07-15T17:55:00+09:00</updated>
-<id>https://rdyjun.github.io/posts/querydsl-crash/</id>
-<content src="https://rdyjun.github.io/posts/querydsl-crash/"/>
-<author>
-<name>rdyjun</name>
-</author>
-<category term="database"/>
-<summary> 참고 사이트 https://castle-of-gyu.tistory.com/87 https://github.com/querydsl/querydsl/issues/3428 문제 정의 QueryDSL을 사용해서 각 행으로 분리된 권한 데이터를 List로 합치는 과정에서 아래와 같은 문제에 직면했다. 예를 들어, 아래와 같이 테이블이 있을 경우 권한 부분을 합쳐서 가져온다. 게시글ID 권한 1 USER 1 CUSTOMER { ID: 1, Role: [USER, CUSTOMER] } ... </summary>
-</entry>`;
+const ATOM_10_SAMPLE = `<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>테스트 Atom 피드</title>
+  <link href="https://atomfeed.com"/>
+  <id>https://atomfeed.com</id>
+  <updated>${new Date().toISOString()}</updated>
+  <entry>
+    <title>Atom 첫 번째 글</title>
+    <link rel="alternate" href="https://atomfeed.com/entry1"/>
+    <id>https://atomfeed.com/entry1</id>
+    <published>${new Date().toISOString()}</published>
+    <updated>${new Date().toISOString()}</updated>
+    <summary>Atom 첫 번째 글 요약</summary>
+    <content>Atom 첫 번째 글 내용</content>
+  </entry>
+  <entry>
+    <title>&middot; Atom 특수문자 제목 &nbsp;</title>
+    <link rel="alternate" href="https://atomfeed.com/entry2"/>
+    <id>https://atomfeed.com/entry2</id>
+    <published>${new Date().toISOString()}</published>
+    <updated>${new Date().toISOString()}</updated>
+    <summary>Atom 두 번째 글 요약</summary>
+  </entry>
+</feed>`;
 
 // 잘못된 형식의 XML 데이터
 const INVALID_XML = `<?xml version="1.0"?>
