@@ -7,9 +7,13 @@ import { RssRepository } from '../../src/repository/rss.repository';
 import { FeedRepository } from '../../src/repository/feed.repository';
 import { container } from 'tsyringe';
 import { DependencyContainer } from 'tsyringe';
-import { RssParser } from '../../src/common/rss-parser';
+import { ParserUtil } from '../../src/common/parser/utils/parser-util';
 import { ClaudeService } from '../../src/claude.service';
 import { TagMapRepository } from '../../src/repository/tag-map.repository';
+import { FeedParserManager } from '../../src/common/parser/feed-parser-manager';
+import { Rss20Parser } from '../../src/common/parser/formats/rss20-parser';
+import { Atom10Parser } from '../../src/common/parser/formats/atom10-parser';
+import { FeedCrawler } from '../../src/feed-crawler';
 
 export interface TestContext {
   container: DependencyContainer;
@@ -19,7 +23,11 @@ export interface TestContext {
   redisConnection: RedisConnection;
   claudeService: ClaudeService;
   tagMapRepository: TagMapRepository;
-  rssParser: RssParser;
+  parserUtil: ParserUtil;
+  feedParserManager: FeedParserManager;
+  rss20Parser: Rss20Parser;
+  atom10Parser: Atom10Parser;
+  feedCrawler: FeedCrawler;
 }
 
 declare global {
@@ -60,9 +68,29 @@ export function setupTestContainer(): TestContext {
       TagMapRepository,
     );
 
-    testContainer.registerSingleton<RssParser>(
-      DEPENDENCY_SYMBOLS.RssParser,
-      RssParser,
+    testContainer.registerSingleton<ParserUtil>(
+      DEPENDENCY_SYMBOLS.ParserUtil,
+      ParserUtil,
+    );
+
+    testContainer.registerSingleton<Rss20Parser>(
+      DEPENDENCY_SYMBOLS.Rss20Parser,
+      Rss20Parser,
+    );
+
+    testContainer.registerSingleton<Atom10Parser>(
+      DEPENDENCY_SYMBOLS.Atom10Parser,
+      Atom10Parser,
+    );
+
+    testContainer.registerSingleton<FeedParserManager>(
+      DEPENDENCY_SYMBOLS.FeedParserManager,
+      FeedParserManager,
+    );
+
+    testContainer.registerSingleton<FeedCrawler>(
+      DEPENDENCY_SYMBOLS.FeedCrawler,
+      FeedCrawler,
     );
 
     global.testContext = {
@@ -85,7 +113,21 @@ export function setupTestContainer(): TestContext {
       redisConnection: testContainer.resolve<RedisConnection>(
         DEPENDENCY_SYMBOLS.RedisConnection,
       ),
-      rssParser: testContainer.resolve<RssParser>(DEPENDENCY_SYMBOLS.RssParser),
+      parserUtil: testContainer.resolve<ParserUtil>(
+        DEPENDENCY_SYMBOLS.ParserUtil,
+      ),
+      feedParserManager: testContainer.resolve<FeedParserManager>(
+        DEPENDENCY_SYMBOLS.FeedParserManager,
+      ),
+      rss20Parser: testContainer.resolve<Rss20Parser>(
+        DEPENDENCY_SYMBOLS.Rss20Parser,
+      ),
+      atom10Parser: testContainer.resolve<Atom10Parser>(
+        DEPENDENCY_SYMBOLS.Atom10Parser,
+      ),
+      feedCrawler: testContainer.resolve<FeedCrawler>(
+        DEPENDENCY_SYMBOLS.FeedCrawler,
+      ),
     };
   }
 
