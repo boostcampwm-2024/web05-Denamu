@@ -33,6 +33,9 @@ certificate.crt
 !.vscode/extensions.json
 !.vscode/*.code-snippets
 
+### static files
+**/objects
+
 # Local History for Visual Studio Code
 .history/
 
