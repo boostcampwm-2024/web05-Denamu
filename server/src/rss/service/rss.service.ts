@@ -13,12 +13,16 @@ import { RssRegisterRequestDto } from '../dto/request/rss-register.dto';
 import { EmailService } from '../../common/email/email.service';
 import { DataSource } from 'typeorm';
 import { Rss, RssReject, RssAccept } from '../entity/rss.entity';
-import { FeedCrawlerService } from './feed-crawler.service';
+import { FeedCrawlerService } from '../../feed/service/feed-crawler.service';
 import { RssReadResponseDto } from '../dto/response/rss-all.dto';
 import { RssAcceptHistoryResponseDto } from '../dto/response/rss-accept-history.dto';
 import { RssRejectHistoryResponseDto } from '../dto/response/rss-reject-history.dto';
 import { RssManagementRequestDto } from '../dto/request/rss-management.dto';
 import { RejectRssRequestDto } from '../dto/request/rss-reject.dto';
+import { RequestDeleteRssDto } from '../dto/request/rss-request-delete.dto';
+import { RedisService } from '../../common/redis/redis.service';
+import { DeleteRssDto } from '../dto/request/rss-delete.dto';
+import { FeedRepository } from '../../feed/repository/feed.repository';
 
 @Injectable()
 export class RssService {
@@ -29,6 +33,8 @@ export class RssService {
     private readonly emailService: EmailService,
     private readonly dataSource: DataSource,
     private readonly feedCrawlerService: FeedCrawlerService,
+    private readonly redisService: RedisService,
+    private readonly feedRepository: FeedRepository,
   ) {}
 
   async createRss(rssRegisterBodyDto: RssRegisterRequestDto) {
@@ -172,5 +178,84 @@ export class RssService {
     );
     this.feedCrawlerService.saveAiQueue(feedsWithId);
     this.emailService.sendRssMail(rssAccept, true);
+  }
+
+  async requestRemove(requestDeleteRssDto: RequestDeleteRssDto) {
+    const [rssAccept, rssWait] = await Promise.all([
+      this.rssAcceptRepository.findOne({
+        where: {
+          rssUrl: requestDeleteRssDto.blogUrl,
+          email: requestDeleteRssDto.email,
+        },
+      }),
+      this.rssRepository.findOne({
+        where: {
+          rssUrl: requestDeleteRssDto.blogUrl,
+          email: requestDeleteRssDto.email,
+        },
+      }),
+    ]);
+
+    if (!rssAccept && !rssWait) {
+      throw new NotFoundException('RSS 데이터를 찾을 수 없습니다.');
+    }
+
+    const certificateCode = this.generateRandomAlphaNumeric();
+
+    await this.redisService.set(
+      `rss:remove:${certificateCode}`,
+      requestDeleteRssDto.blogUrl,
+      'EX',
+      300,
+    );
+
+    this.emailService.sendRssRemoveCertificationMail(
+      rssAccept?.userName ?? rssWait.userName,
+      requestDeleteRssDto.email,
+      requestDeleteRssDto.blogUrl,
+      certificateCode,
+    );
+  }
+
+  private generateRandomAlphaNumeric(length = 6): string {
+    const charset =
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+
+    for (let i = 0; i < length; i++) {
+      const index = Math.floor(Math.random() * charset.length);
+      result += charset[index];
+    }
+
+    return result;
+  }
+
+  async deleteRss(deleteRssDto: DeleteRssDto) {
+    const rssUrl = await this.redisService.get(
+      `rss:remove:${deleteRssDto.code}`,
+    );
+
+    if (!rssUrl) {
+      throw new NotFoundException(
+        'RSS 삭제 요청 인증 코드가 만료되었거나 찾을 수 없습니다.',
+      );
+    }
+
+    const rss = await this.rssAcceptRepository.findOne({
+      where: {
+        rssUrl: rssUrl,
+      },
+    });
+
+    if (!rss) {
+      await this.redisService.del(`rss:remove;${deleteRssDto.code}`);
+      throw new NotFoundException('이미 지워진 RSS 정보입니다.');
+    }
+
+    await this.feedRepository.delete({
+      blog: {
+        id: rss.id,
+      },
+    });
   }
 }

@@ -18,6 +18,7 @@ import { createDynamicStorage } from '../../common/disk/diskStorage';
 import { ApiResponse } from '../../common/response/common.response';
 import { ApiUploadProfileFile } from '../api-docs/uploadProfileFile.api-docs';
 import { ApiDeleteFile } from '../api-docs/deleteFile.api-docs';
+
 @ApiTags('File')
 @Controller('file')
 @UseGuards(JwtGuard)
@@ -46,7 +47,12 @@ export class FileController {
   @Delete(':id')
   @ApiDeleteFile()
   async deleteFile(@Param('id') id: string, @Req() req) {
-    await this.fileService.deleteFile(id);
+    const fileId = parseInt(id, 10);
+    if (isNaN(fileId)) {
+      throw new BadRequestException('유효하지 않은 파일 ID입니다.');
+    }
+
+    await this.fileService.deleteFile(fileId);
     return { message: '파일이 성공적으로 삭제되었습니다.' };
   }
 }

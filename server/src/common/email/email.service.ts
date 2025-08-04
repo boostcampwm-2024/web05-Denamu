@@ -5,6 +5,7 @@ import { WinstonLoggerService } from '../logger/logger.service';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
 import {
   createRssRegistrationContent,
+  createRssRemoveCertificateContent,
   createVerificationMailContent,
   PRODUCT_DOMAIN,
 } from './mail_content';
@@ -100,6 +101,40 @@ export class EmailService {
         approveFlag,
         this.emailUser,
         description,
+      ),
+    };
+  }
+
+  async sendRssRemoveCertificationMail(
+    userName: string,
+    email: string,
+    rssUrl: string,
+    certificateCode: string,
+  ) {
+    const mailOption = this.createRssRemoveCertificationMail(
+      userName,
+      email,
+      rssUrl,
+      certificateCode,
+    );
+    await this.sendMail(mailOption);
+  }
+
+  private createRssRemoveCertificationMail(
+    userName: string,
+    email: string,
+    rssUrl: string,
+    certificateCode: string,
+  ) {
+    return {
+      from: `Denamu<${this.emailUser}>`,
+      to: `${userName}<${email}>`,
+      subject: `[🎋 Denamu] RSS 삭제 신청 인증 메일입니다.`,
+      html: createRssRemoveCertificateContent(
+        userName,
+        certificateCode,
+        this.emailUser,
+        rssUrl,
       ),
     };
   }

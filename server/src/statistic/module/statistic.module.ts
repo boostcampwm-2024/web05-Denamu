@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
 import { StatisticService } from '../service/statistic.service';
 import { StatisticController } from '../controller/statistic.controller';
-import { FeedRepository } from '../../feed/repository/feed.repository';
-import { RssAcceptRepository } from '../../rss/repository/rss.repository';
+import { FeedModule } from '../../feed/module/feed.module';
+import { RssModule } from '../../rss/module/rss.module';
 
 @Module({
+  imports: [FeedModule, RssModule],
   controllers: [StatisticController],
-  providers: [StatisticService, FeedRepository, RssAcceptRepository],
+  providers: [StatisticService],
 })
 export class StatisticModule {}

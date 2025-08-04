@@ -11,8 +11,8 @@ import { User } from '../../user/entity/user.entity';
 
 @Entity({ name: 'file' })
 export class File {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
   @Column()
   originalname: string;
@@ -23,7 +23,7 @@ export class File {
   @Column()
   path: string;
 
-  @Column('int')
+  @Column()
   size: number;
 
   @ManyToOne(() => User)

@@ -11,17 +11,29 @@ export class FileService {
   async create(file: any, userId: number) {
     const { originalname, mimetype, size, path } = file;
 
-    const entity = this.fileRepository.create({
+    const savedFile = await this.fileRepository.save({
       originalname,
       mimetype,
       size,
       path,
       user: { id: userId } as User,
-    });
-    return this.fileRepository.save(entity);
+    } as File);
+    const accessUrl = this.generateAccessUrl(path);
+
+    return {
+      ...savedFile,
+      url: accessUrl,
+    };
   }
 
-  async findById(id: string): Promise<File> {
+  private generateAccessUrl(filePath: string): string {
+    const baseUploadPath =
+      process.env.UPLOAD_BASE_PATH || '/var/web05-Denamu/objects';
+    const relativePath = filePath.replace(baseUploadPath, '');
+    return `/objects${relativePath}`;
+  }
+
+  async findById(id: number): Promise<File> {
     const file = await this.fileRepository.findOne({ where: { id } });
     if (!file) {
       throw new NotFoundException('파일을 찾을 수 없습니다.');
@@ -29,7 +41,7 @@ export class FileService {
     return file;
   }
 
-  async deleteFile(id: string): Promise<void> {
+  async deleteFile(id: number): Promise<void> {
     const file = await this.findById(id);
 
     if (existsSync(file.path)) {
@@ -39,7 +51,7 @@ export class FileService {
     await this.fileRepository.delete(id);
   }
 
-  async getFileInfo(id: string): Promise<File> {
+  async getFileInfo(id: number): Promise<File> {
     return this.findById(id);
   }
 }

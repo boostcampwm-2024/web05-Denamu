@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { JwtGuard, RefreshJwtGuard } from '../guard/jwt.guard';
 import { JwtRefreshStrategy, JwtStrategy } from './jwt.strategy';
+import { InjectUserInterceptor } from './jwt.interceptor';
 
 @Module({
   providers: [
@@ -10,6 +11,7 @@ import { JwtRefreshStrategy, JwtStrategy } from './jwt.strategy';
     RefreshJwtGuard,
     JwtStrategy,
     JwtRefreshStrategy,
+    InjectUserInterceptor,
   ],
   exports: [JwtService],
 })
