@@ -5,7 +5,7 @@ export class CreateFile1754122785239 implements MigrationInterface {
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `CREATE TABLE \`file\` (\`id\` int NOT NULL AUTO_INCREMENT, \`originalname\` varchar(255) NOT NULL, \`mimetype\` varchar(255) NOT NULL, \`path\` varchar(255) NOT NULL, \`size\` int NOT NULL, \`createdAt\` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6), \`user_id\` int NULL, PRIMARY KEY (\`id\`)) ENGINE=InnoDB`,
+      `CREATE TABLE \`file\` (\`id\` int NOT NULL AUTO_INCREMENT, \`original_name\` varchar(255) NOT NULL, \`mimetype\` varchar(255) NOT NULL, \`path\` varchar(255) NOT NULL, \`size\` int NOT NULL, \`created_at\` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6), \`user_id\` int NULL, PRIMARY KEY (\`id\`)) ENGINE=InnoDB`,
     );
     await queryRunner.query(
       `ALTER TABLE \`file\` ADD CONSTRAINT \`FK_516f1cf15166fd07b732b4b6ab0\` FOREIGN KEY (\`user_id\`) REFERENCES \`user\`(\`id\`) ON DELETE NO ACTION ON UPDATE NO ACTION`,
