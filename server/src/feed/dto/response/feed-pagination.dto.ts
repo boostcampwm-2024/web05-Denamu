@@ -13,6 +13,7 @@ export class FeedResult {
     private isNew: boolean,
     private tag: string[],
     private likes: number,
+    private comments: number,
   ) {}
 
   private static toResultDto(feed: FeedPaginationResult) {
@@ -28,6 +29,7 @@ export class FeedResult {
       feed.isNew,
       feed.tag ? feed.tag : [],
       feed.likeCount,
+      feed.commentCount,
     );
   }
 
@@ -65,6 +67,7 @@ export class FeedTrendResponseDto {
     private thumbnail: string,
     private viewCount: number,
     private likes: number,
+    private comments: number,
     private tag: string[],
   ) {}
 
@@ -79,6 +82,7 @@ export class FeedTrendResponseDto {
       feed.thumbnail,
       feed.viewCount,
       feed.likeCount,
+      feed.commentCount,
       feed.tag ? feed.tag : [],
     );
   }
