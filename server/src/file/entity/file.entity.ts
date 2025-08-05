@@ -14,8 +14,10 @@ export class File {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
-  originalname: string;
+  @Column({
+    name: 'original_name',
+  })
+  originalName: string;
 
   @Column()
   mimetype: string;
@@ -30,6 +32,8 @@ export class File {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @CreateDateColumn()
+  @CreateDateColumn({
+    name: 'created_at',
+  })
   createdAt: Date;
 }

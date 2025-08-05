@@ -9,10 +9,10 @@ export class FileService {
   constructor(private readonly fileRepository: FileRepository) {}
 
   async create(file: any, userId: number) {
-    const { originalname, mimetype, size, path } = file;
+    const { originalName, mimetype, size, path } = file;
 
     const savedFile = await this.fileRepository.save({
-      originalname,
+      originalName,
       mimetype,
       size,
       path,
