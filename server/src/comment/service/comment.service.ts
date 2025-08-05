@@ -28,7 +28,7 @@ export class CommentService {
       where: {
         id: commentId,
       },
-      relations: ['user'],
+      relations: ['user', 'feed'],
     });
 
     if (!commentObj) {
