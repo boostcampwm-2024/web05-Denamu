@@ -2,8 +2,10 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   HttpCode,
   HttpStatus,
+  Param,
   Patch,
   Post,
   Req,
@@ -19,15 +21,27 @@ import { ApiResponse } from '../../common/response/common.response';
 import { CreateCommentRequestDto } from '../dto/request/create-comment.dto';
 import { DeleteCommentRequestDto } from '../dto/request/delete-comment.dto';
 import { UpdateCommentRequestDto } from '../dto/request/update-comment.dto';
+import { GetCommentRequestDto } from '../dto/request/get-comment.dto';
+import { ApiGetComment } from '../api-docs/getComment.api-docs';
 
 @ApiTags('Comment')
 @Controller('comment')
-@UseGuards(JwtGuard)
 export class CommentController {
   constructor(private readonly commentService: CommentService) {}
 
+  @ApiGetComment()
+  @Get('/:feedId')
+  @HttpCode(HttpStatus.OK)
+  async getComment(@Param() getCommentRequestDto: GetCommentRequestDto) {
+    return ApiResponse.responseWithData(
+      '댓글 조회를 성공했습니다.',
+      await this.commentService.get(getCommentRequestDto),
+    );
+  }
+
   @ApiCreateComment()
   @Post()
+  @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.CREATED)
   async createComment(@Req() req, @Body() commentDto: CreateCommentRequestDto) {
     await this.commentService.create(req.user, commentDto);
@@ -36,6 +50,7 @@ export class CommentController {
 
   @ApiDeleteComment()
   @Delete()
+  @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.OK)
   async deleteComment(@Req() req, @Body() commentDto: DeleteCommentRequestDto) {
     await this.commentService.delete(req.user, commentDto);
@@ -44,6 +59,7 @@ export class CommentController {
 
   @ApiUpdateComment()
   @Patch()
+  @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.OK)
   async updateComment(@Req() req, @Body() commentDto: UpdateCommentRequestDto) {
     await this.commentService.update(req.user, commentDto);

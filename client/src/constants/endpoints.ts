@@ -40,3 +40,7 @@ export const USER = {
   LOGIN: "/api/user/login",
   CERTIFICATE: "/api/user/certificate",
 };
+
+export const OAUTH = {
+  LOGIN: "/api/oauth",
+};

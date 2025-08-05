@@ -3,7 +3,7 @@ import { IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class FileUploadResponseDto {
   @ApiProperty({ description: '파일 ID' })
-  id: string;
+  id: number;
 
   @ApiProperty({ description: '저장된 파일명' })
   filename: string;

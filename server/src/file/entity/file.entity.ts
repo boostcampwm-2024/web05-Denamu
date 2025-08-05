@@ -11,11 +11,13 @@ import { User } from '../../user/entity/user.entity';
 
 @Entity({ name: 'file' })
 export class File {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-  @Column()
-  originalname: string;
+  @Column({
+    name: 'original_name',
+  })
+  originalName: string;
 
   @Column()
   mimetype: string;
@@ -23,13 +25,15 @@ export class File {
   @Column()
   path: string;
 
-  @Column('int')
+  @Column()
   size: number;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @CreateDateColumn()
+  @CreateDateColumn({
+    name: 'created_at',
+  })
   createdAt: Date;
 }

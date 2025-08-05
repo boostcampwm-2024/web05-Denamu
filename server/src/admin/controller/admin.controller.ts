@@ -15,7 +15,7 @@ import { RegisterAdminRequestDto } from '../dto/request/register-admin.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { ApiResponse } from '../../common/response/common.response';
 import { LoginAdminRequestDto } from '../dto/request/login-admin.dto';
-import { CookieAuthGuard } from '../../common/guard/auth.guard';
+import { AdminAuthGuard } from '../../common/guard/auth.guard';
 import { ApiLoginAdmin } from '../api-docs/loginAdmin.api-docs';
 import { ApiReadSessionIdAdmin } from '../api-docs/readSessionIdAdmin.api-docs';
 import { ApiLogoutAdmin } from '../api-docs/logoutAdmin.api-docs';
@@ -41,7 +41,7 @@ export class AdminController {
   }
 
   @ApiLogoutAdmin()
-  @UseGuards(CookieAuthGuard)
+  @UseGuards(AdminAuthGuard)
   @HttpCode(HttpStatus.OK)
   @Post('/logout')
   async logoutAdmin(
@@ -55,7 +55,7 @@ export class AdminController {
   }
 
   @ApiCreateAdmin()
-  @UseGuards(CookieAuthGuard)
+  @UseGuards(AdminAuthGuard)
   @Post('/register')
   async createAdmin(@Body() registerAdminBodyDto: RegisterAdminRequestDto) {
     await this.adminService.createAdmin(registerAdminBodyDto);
@@ -67,7 +67,7 @@ export class AdminController {
   @ApiReadSessionIdAdmin()
   @Get('/sessionId')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(CookieAuthGuard)
+  @UseGuards(AdminAuthGuard)
   async readSessionIdAdmin() {
     return ApiResponse.responseWithNoContent('정상적인 sessionId 입니다.');
   }

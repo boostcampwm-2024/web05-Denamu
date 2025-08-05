@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { XMLParser } from 'fast-xml-parser';
-import { FeedRepository } from '../../feed/repository/feed.repository';
-import { RssParserService } from '../service/rss-parser.service';
-import { Feed } from '../../feed/entity/feed.entity';
-import { RssAccept } from '../entity/rss.entity';
+import { FeedRepository } from '../repository/feed.repository';
+import { RssParserService } from '../../rss/service/rss-parser.service';
+import { Feed } from '../entity/feed.entity';
+import { RssAccept } from '../../rss/entity/rss.entity';
 import { RedisService } from '../../common/redis/redis.service';
 import { redisKeys } from '../../common/redis/redis.constant';
 import * as sanitize from 'sanitize-html';

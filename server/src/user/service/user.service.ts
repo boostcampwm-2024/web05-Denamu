@@ -17,6 +17,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { cookieConfig } from '../../common/cookie/cookie.config';
 import { Payload } from '../../common/guard/jwt.guard';
+import { UpdateUserDto } from '../dto/request/update-user.dto';
 
 @Injectable()
 export class UserService {
@@ -149,6 +150,28 @@ export class UserService {
       user.maxStreak = user.currentStreak;
     }
     user.lastActiveDate = today;
+
+    await this.userRepository.save(user);
+  }
+
+  async updateUser(
+    userId: number,
+    updateData: Partial<UpdateUserDto>,
+  ): Promise<void> {
+    const user = await this.userRepository.findOneBy({ id: userId });
+    if (!user) {
+      throw new NotFoundException('존재하지 않는 사용자입니다.');
+    }
+
+    if (updateData.userName !== undefined) {
+      user.userName = updateData.userName;
+    }
+    if (updateData.profileImage !== undefined) {
+      user.profileImage = updateData.profileImage;
+    }
+    if (updateData.introduction !== undefined) {
+      user.introduction = updateData.introduction;
+    }
 
     await this.userRepository.save(user);
   }
