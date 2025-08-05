@@ -101,6 +101,7 @@ export class Feed extends BaseEntity {
       .addSelect('f.view_count', 'view_count')
       .addSelect('f.summary', 'summary')
       .addSelect('f.like_count', 'like_count')
+      .addSelect('f.comment_count', 'comment_count')
       .addSelect('r.name', 'blog_name')
       .addSelect('r.blog_platform', 'blog_platform')
       .addSelect(
@@ -172,6 +173,11 @@ export class FeedView {
     name: 'like_count',
   })
   likeCount: number;
+
+  @ViewColumn({
+    name: 'comment_count',
+  })
+  commentCount: number;
 
   @ViewColumn({
     name: 'tag',
