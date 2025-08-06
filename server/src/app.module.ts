@@ -18,6 +18,7 @@ import { MetricsModule } from './common/metrics/metrics.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { MetricsInterceptor } from './common/metrics/metrics.interceptor';
 import { LikeModule } from './like/module/like.module';
+import { FileModule } from './file/module/file.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { LikeModule } from './like/module/like.module';
     StatisticModule,
     CommentModule,
     LikeModule,
+    FileModule,
   ],
   controllers: [],
   providers: [

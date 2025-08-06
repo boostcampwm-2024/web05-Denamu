@@ -16,6 +16,7 @@ export function setupSwagger(app: INestApplication) {
     .addTag('Statistic', '통계 정보 조회 API')
     .addTag('User', '사용자 관리와 인증 관련 API')
     .addTag('OAuth', 'OAuth 관련 API')
+    .addTag('File', '파일 업로드 및 관리 API')
     .setLicense('MIT License', 'https://opensource.org/licenses/MIT')
     .build();
 
