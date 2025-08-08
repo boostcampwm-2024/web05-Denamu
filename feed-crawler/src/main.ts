@@ -7,7 +7,6 @@ import { RssRepository } from './repository/rss.repository';
 import { FeedRepository } from './repository/feed.repository';
 import { DEPENDENCY_SYMBOLS } from './types/dependency-symbols';
 import { DatabaseConnection } from './types/database-connection';
-import { RssParser } from './common/rss-parser';
 import { ClaudeService } from './claude.service';
 import * as schedule from 'node-schedule';
 import { RedisConnection } from './common/redis-access';
@@ -15,22 +14,16 @@ import { TagMapRepository } from './repository/tag-map.repository';
 
 function initializeDependencies() {
   return {
-    rssRepository: container.resolve<RssRepository>(
-      DEPENDENCY_SYMBOLS.RssRepository,
-    ),
-    feedRepository: container.resolve<FeedRepository>(
-      DEPENDENCY_SYMBOLS.FeedRepository,
-    ),
-    tagMapRepository: container.resolve<TagMapRepository>(
-      DEPENDENCY_SYMBOLS.TagMapRepository,
-    ),
     dbConnection: container.resolve<DatabaseConnection>(
       DEPENDENCY_SYMBOLS.DatabaseConnection,
     ),
     redisConnection: container.resolve<RedisConnection>(
       DEPENDENCY_SYMBOLS.RedisConnection,
     ),
-    rssParser: container.resolve<RssParser>(DEPENDENCY_SYMBOLS.RssParser),
+    feedCrawler: container.resolve<FeedCrawler>(DEPENDENCY_SYMBOLS.FeedCrawler),
+    claudeService: container.resolve<ClaudeService>(
+      DEPENDENCY_SYMBOLS.ClaudeService,
+    ),
   };
 }
 
@@ -39,12 +32,7 @@ function registerSchedulers(
 ) {
   schedule.scheduleJob('FEED CRAWLING', '0,30 * * * *', async () => {
     logger.info(`Feed Crawling Start: ${new Date().toISOString()}`);
-    const feedCrawler = new FeedCrawler(
-      dependencies.rssRepository,
-      dependencies.feedRepository,
-      dependencies.rssParser,
-    );
-    feedCrawler.start();
+    dependencies.feedCrawler.start();
   });
 
   schedule.scheduleJob(
@@ -52,12 +40,7 @@ function registerSchedulers(
     '*/1 * * * *',
     () => {
       logger.info(`AI Request Start: ${new Date().toISOString()}`);
-      const aiRequest = new ClaudeService(
-        dependencies.tagMapRepository,
-        dependencies.feedRepository,
-        dependencies.redisConnection,
-      );
-      aiRequest.startRequestAI();
+      dependencies.claudeService.startRequestAI();
     },
   );
 }

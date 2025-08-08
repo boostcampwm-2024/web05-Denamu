@@ -40,6 +40,6 @@ jobs:
             echo "AI_RATE_LIMIT_COUNT=${{ vars.AI_RATE_LIMIT_COUNT }}" >> env/.env.prod
 
             cd /var/web05-Denamu
-            docker-compose -f docker-compose/docker-compose.prod.yml up --build --no-deps -d feed-crawler
+            docker-compose -f docker-compose/docker-compose.prod.yml up --build --no-deps --force-recreate -d feed-crawler
             docker image prune -f
             docker builder prune -f
