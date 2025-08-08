@@ -130,10 +130,10 @@ export class CommentService {
   }
 
   async update(userInformation: Payload, commentDto: UpdateCommentRequestDto) {
-    await this.commentCheck(userInformation, commentDto.commentId);
-    const commentObj = await this.commentRepository.findOneBy({
-      id: commentDto.commentId,
-    });
+    const commentObj = await this.commentCheck(
+      userInformation,
+      commentDto.commentId,
+    );
 
     commentObj.comment = commentDto.newComment;
     await this.commentRepository.save(commentObj);
