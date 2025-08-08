@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, HttpCode, HttpStatus, Query } from '@nestjs/common';
 import { StatisticService } from '../service/statistic.service';
 import { ApiResponse } from '../../common/response/common.response';
 import { ApiTags } from '@nestjs/swagger';
@@ -13,6 +13,7 @@ export class StatisticController {
 
   @ApiStatistic('today')
   @Get('today')
+  @HttpCode(HttpStatus.OK)
   async readTodayStatistic(@Query() statisticQueryDto: StatisticRequestDto) {
     return ApiResponse.responseWithData(
       '금일 조회수 통계 조회 완료',
@@ -22,6 +23,7 @@ export class StatisticController {
 
   @ApiStatistic('all')
   @Get('all')
+  @HttpCode(HttpStatus.OK)
   async readAllStatistic(@Query() statisticQueryDto: StatisticRequestDto) {
     return ApiResponse.responseWithData(
       '전체 조회수 통계 조회 완료',
@@ -31,6 +33,7 @@ export class StatisticController {
 
   @ApiReadPlatformStatistic()
   @Get('platform')
+  @HttpCode(HttpStatus.OK)
   async readPlatformStatistic() {
     return ApiResponse.responseWithData(
       '블로그 플랫폼 통계 조회 완료',
