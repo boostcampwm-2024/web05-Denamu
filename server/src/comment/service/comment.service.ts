@@ -23,7 +23,10 @@ export class CommentService {
     private readonly dataSource: DataSource,
   ) {}
 
-  private async commentCheck(userInformation: Payload, commentId: number) {
+  private async getValidatedComment(
+    userInformation: Payload,
+    commentId: number,
+  ) {
     const commentObj = await this.commentRepository.findOne({
       where: {
         id: commentId,
@@ -105,7 +108,7 @@ export class CommentService {
   }
 
   async delete(userInformation: Payload, commentDto: DeleteCommentRequestDto) {
-    const comment = await this.commentCheck(
+    const comment = await this.getValidatedComment(
       userInformation,
       commentDto.commentId,
     );
@@ -130,7 +133,7 @@ export class CommentService {
   }
 
   async update(userInformation: Payload, commentDto: UpdateCommentRequestDto) {
-    const commentObj = await this.commentCheck(
+    const commentObj = await this.getValidatedComment(
       userInformation,
       commentDto.commentId,
     );
