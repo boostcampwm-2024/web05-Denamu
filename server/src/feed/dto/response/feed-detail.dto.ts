@@ -12,6 +12,7 @@ export class FeedDetailResponseDto {
     private viewCount: number,
     private summary: string,
     private likes: number,
+    private comments: number,
     private tag: string[],
   ) {}
 
@@ -27,6 +28,7 @@ export class FeedDetailResponseDto {
       feed.viewCount,
       feed.summary,
       feed.likeCount,
+      feed.commentCount,
       feed.tag ? feed.tag : [],
     );
   }

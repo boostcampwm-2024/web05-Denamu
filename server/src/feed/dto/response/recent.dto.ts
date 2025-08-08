@@ -10,6 +10,7 @@ export class FeedRecentResponseDto {
     private viewCount: number,
     private isNew: boolean,
     private likes: number,
+    private comments: number,
     private tag: string[] | string,
   ) {}
 
@@ -25,6 +26,7 @@ export class FeedRecentResponseDto {
       feed.viewCount,
       feed.isNew,
       feed.likes,
+      feed.comments,
       feed.tagList,
     );
   }
@@ -46,4 +48,5 @@ export type FeedRecentRedis = {
   isNew?: boolean;
   tagList: string[] | string;
   likes: number;
+  comments: number;
 };
