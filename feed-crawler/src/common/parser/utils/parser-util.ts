@@ -1,12 +1,14 @@
-import logger from "./logger";
-import { parse } from "node-html-parser";
-import { unescape } from "html-escaper";
+import { injectable } from 'tsyringe';
+import logger from '../../logger';
+import { parse } from 'node-html-parser';
+import { unescape } from 'html-escaper';
 
-export class RssParser {
+@injectable()
+export class ParserUtil {
   async getThumbnailUrl(feedUrl: string) {
     const response = await fetch(feedUrl, {
       headers: {
-        Accept: "text/html",
+        Accept: 'text/html',
       },
     });
     if (!response.ok) {
@@ -16,9 +18,9 @@ export class RssParser {
     const htmlData = await response.text();
     const htmlRootElement = parse(htmlData);
     const metaImage = htmlRootElement.querySelector(
-      'meta[property="og:image"]'
+      'meta[property="og:image"]',
     );
-    let thumbnailUrl = metaImage?.getAttribute("content") ?? "";
+    let thumbnailUrl = metaImage?.getAttribute('content') ?? '';
 
     if (!thumbnailUrl.length) {
       logger.warn(`${feedUrl}에서 썸네일 추출 실패`);
@@ -42,12 +44,12 @@ export class RssParser {
 
   customUnescape(feedTitle: string): string {
     const escapeEntity = {
-      "&middot;": "·",
-      "&nbsp;": " ",
+      '&middot;': '·',
+      '&nbsp;': ' ',
     };
     Object.keys(escapeEntity).forEach((escapeKey) => {
       const value = escapeEntity[escapeKey];
-      const regex = new RegExp(escapeKey, "g");
+      const regex = new RegExp(escapeKey, 'g');
       feedTitle = feedTitle.replace(regex, value);
     });
 
