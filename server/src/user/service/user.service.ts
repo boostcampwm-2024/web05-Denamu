@@ -18,6 +18,7 @@ import { ConfigService } from '@nestjs/config';
 import { cookieConfig } from '../../common/cookie/cookie.config';
 import { Payload } from '../../common/guard/jwt.guard';
 import { UpdateUserDto } from '../dto/request/update-user.dto';
+import { CheckEmailDuplicationResponseDto } from '../dto/response/checkEmailDuplication.dto';
 
 @Injectable()
 export class UserService {
@@ -29,12 +30,22 @@ export class UserService {
     private readonly configService: ConfigService,
   ) {}
 
-  async checkEmailDuplication(email: string): Promise<boolean> {
+  async getUser(userId: number) {
+    const user = await this.userRepository.findOneBy({
+      id: userId,
+    });
+    if (!user) {
+      throw new NotFoundException('존재하지 않는 유저입니다.');
+    }
+    return user;
+  }
+
+  async checkEmailDuplication(email: string) {
     const user = await this.userRepository.findOne({
       where: { email },
     });
 
-    return !!user;
+    return CheckEmailDuplicationResponseDto.toResponseDto(!!user);
   }
 
   async registerUser(registerDto: RegisterDto): Promise<void> {
@@ -121,10 +132,7 @@ export class UserService {
   }
 
   async updateUserActivity(userId: number) {
-    const user = await this.userRepository.findOneBy({ id: userId });
-    if (!user) {
-      throw new NotFoundException(`존재하지 않는 사용자 입니다.`);
-    }
+    const user = await this.getUser(userId);
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -158,20 +166,15 @@ export class UserService {
     userId: number,
     updateData: Partial<UpdateUserDto>,
   ): Promise<void> {
-    const user = await this.userRepository.findOneBy({ id: userId });
-    if (!user) {
-      throw new NotFoundException('존재하지 않는 사용자입니다.');
-    }
+    const user = await this.getUser(userId);
 
-    if (updateData.userName !== undefined) {
-      user.userName = updateData.userName;
-    }
-    if (updateData.profileImage !== undefined) {
-      user.profileImage = updateData.profileImage;
-    }
-    if (updateData.introduction !== undefined) {
-      user.introduction = updateData.introduction;
-    }
+    user.userName = updateData.userName ? updateData.userName : user.userName;
+    user.profileImage = updateData.profileImage
+      ? updateData.profileImage
+      : user.profileImage;
+    user.introduction = updateData.introduction
+      ? updateData.introduction
+      : user.introduction;
 
     await this.userRepository.save(user);
   }
