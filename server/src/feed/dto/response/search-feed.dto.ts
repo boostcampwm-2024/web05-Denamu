@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { Feed } from '../../entity/feed.entity';
 
 export class SearchFeedResult {
@@ -27,12 +28,42 @@ export class SearchFeedResult {
 }
 
 export class SearchFeedResponseDto {
-  private constructor(
-    private totalCount: number,
-    private result: SearchFeedResult[],
-    private totalPages: number,
-    private limit: number,
-  ) {}
+  @ApiProperty({
+    example: 1,
+    description: '전체 게시글 개수',
+  })
+  totalCount: number;
+
+  @ApiProperty({
+    example: [
+      {
+        id: 32,
+        blogName: 'example blog name',
+        title: 'example title',
+        likes: 0,
+        path: 'https://example/feed',
+        createdAt: '2025-01-01T00:00:00.000Z',
+      },
+    ],
+    description: '검색 결과 게시글',
+  })
+  result: SearchFeedResult[];
+
+  @ApiProperty({
+    example: 10,
+    description: '총 페이지 수',
+  })
+  totalPages: number;
+
+  @ApiProperty({
+    example: 1,
+    description: '한 페이지 최대 게시글 개수',
+  })
+  limit: number;
+
+  private constructor(partial: Partial<SearchFeedResponseDto>) {
+    Object.assign(this, partial);
+  }
 
   static toResponseDto(
     totalCount: number,
@@ -40,6 +71,11 @@ export class SearchFeedResponseDto {
     totalPages: number,
     limit: number,
   ) {
-    return new SearchFeedResponseDto(totalCount, feeds, totalPages, limit);
+    return new SearchFeedResponseDto({
+      totalCount,
+      result: feeds,
+      totalPages,
+      limit,
+    });
   }
 }

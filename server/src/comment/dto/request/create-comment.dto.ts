@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import { IsInt, IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateCommentRequestDto {
@@ -19,7 +20,7 @@ export class CreateCommentRequestDto {
   @IsInt({
     message: '숫자로 입력해주세요.',
   })
-  @IsNotEmpty({ message: '피드 아이디를 입력하세요.' })
+  @Type(() => Number)
   feedId: number;
 
   constructor(partial: Partial<CreateCommentRequestDto>) {
