@@ -18,6 +18,7 @@ import { createDynamicStorage } from '../../common/disk/diskStorage';
 import { ApiResponse } from '../../common/response/common.response';
 import { ApiUploadProfileFile } from '../api-docs/uploadProfileFile.api-docs';
 import { ApiDeleteFile } from '../api-docs/deleteFile.api-docs';
+import { FileUploadResponseDto } from '../dto/createFile.dto';
 
 @ApiTags('File')
 @Controller('file')
@@ -33,14 +34,15 @@ export class FileController {
       throw new BadRequestException('파일이 선택되지 않았습니다.');
     }
 
-    const resultFile = await this.fileService.create(
+    const responseDto = await this.fileService.create(
       file,
       Number.parseInt(req.user.id),
     );
 
-    return ApiResponse.responseWithData('파일 업로드에 성공했습니다.', {
-      resultFile,
-    });
+    return ApiResponse.responseWithData(
+      '파일 업로드에 성공했습니다.',
+      responseDto,
+    );
   }
 
   // TODO: 권한검사 추가

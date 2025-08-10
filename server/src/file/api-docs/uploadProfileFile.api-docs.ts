@@ -40,34 +40,41 @@ export function ApiUploadProfileFile() {
           data: {
             type: 'object',
             properties: {
-              resultFile: {
-                type: 'object',
-                properties: {
-                  id: {
-                    type: 'string',
-                    example: 'uuid-string',
-                  },
-                  filename: {
-                    type: 'string',
-                    example: 'profile-image.jpg',
-                  },
-                  originalName: {
-                    type: 'string',
-                    example: 'my-photo.jpg',
-                  },
-                  mimeType: {
-                    type: 'string',
-                    example: 'image/jpeg',
-                  },
-                  size: {
-                    type: 'number',
-                    example: 1024000,
-                  },
-                  path: {
-                    type: 'string',
-                    example: '/uploads/profile/uuid-string.jpg',
-                  },
-                },
+              id: {
+                type: 'number',
+                example: 1,
+                description: '파일 ID',
+              },
+              originalName: {
+                type: 'string',
+                example: 'my-photo.jpg',
+                description: '원본 파일명',
+              },
+              mimetype: {
+                type: 'string',
+                example: 'image/jpeg',
+                description: '파일 MIME Type',
+              },
+              size: {
+                type: 'number',
+                example: 1024000,
+                description: '파일 크기 (bytes)',
+              },
+              url: {
+                type: 'string',
+                example: '/objects/profile/2024/01/profile-image.jpg',
+                description: '파일 접근 URL',
+              },
+              userId: {
+                type: 'number',
+                example: 123,
+                description: '업로드한 사용자 ID',
+              },
+              createdAt: {
+                type: 'string',
+                format: 'date-time',
+                example: '2024-01-01T12:00:00.000Z',
+                description: '업로드 날짜',
               },
             },
           },
