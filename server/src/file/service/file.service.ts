@@ -4,10 +4,14 @@ import { unlink, access } from 'fs/promises';
 import { FileRepository } from '../repository/file.repository';
 import { User } from '../../user/entity/user.entity';
 import { FileUploadResponseDto } from '../dto/createFile.dto';
+import { WinstonLoggerService } from '../../common/logger/logger.service';
 
 @Injectable()
 export class FileService {
-  constructor(private readonly fileRepository: FileRepository) {}
+  constructor(
+    private readonly fileRepository: FileRepository,
+    private readonly logger: WinstonLoggerService,
+  ) {}
 
   async create(file: any, userId: number): Promise<FileUploadResponseDto> {
     const { originalName, mimetype, size, path } = file;
@@ -54,7 +58,7 @@ export class FileService {
       await access(file.path);
       await unlink(file.path);
     } catch (error) {
-      console.warn(`파일 삭제 실패: ${file.path}`, error);
+      this.logger.warn(`파일 삭제 실패: ${file.path}`, 'FileService');
     }
 
     await this.fileRepository.delete(id);
@@ -71,7 +75,7 @@ export class FileService {
         await access(file.path);
         await unlink(file.path);
       } catch (error) {
-        console.warn(`파일 삭제 실패: ${file.path}`, error);
+        this.logger.warn(`파일 삭제 실패: ${file.path}`, 'FileService');
       }
 
       await this.fileRepository.delete(file.id);
