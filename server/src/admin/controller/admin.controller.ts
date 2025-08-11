@@ -57,6 +57,7 @@ export class AdminController {
   @ApiCreateAdmin()
   @UseGuards(AdminAuthGuard)
   @Post('/register')
+  @HttpCode(HttpStatus.CREATED)
   async createAdmin(@Body() registerAdminBodyDto: RegisterAdminRequestDto) {
     await this.adminService.createAdmin(registerAdminBodyDto);
     return ApiResponse.responseWithNoContent(

@@ -42,7 +42,7 @@ describe('CreateCommentRequestDto Test', () => {
 
     // then
     expect(errors).not.toHaveLength(0);
-    expect(errors[0].constraints).toHaveProperty('isNotEmpty');
+    expect(errors[0].constraints).toHaveProperty('isInt');
   });
   it('피드 아이디가 정수가 아닐 경우 유효성 검사에 실패한다.', async () => {
     // given

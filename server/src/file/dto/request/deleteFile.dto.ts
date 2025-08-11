@@ -2,18 +2,18 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsInt } from 'class-validator';
 
-export class GetCommentRequestDto {
+export class FileDeleteRequestDto {
   @ApiProperty({
     example: 1,
-    description: '게시글 ID를 입력해주세요',
+    description: '파일 ID',
   })
   @IsInt({
     message: '숫자로 입력해주세요.',
   })
   @Type(() => Number)
-  feedId: number;
+  id: number;
 
-  constructor(partial: Partial<GetCommentRequestDto>) {
+  constructor(partial: Partial<FileDeleteRequestDto>) {
     Object.assign(this, partial);
   }
 }

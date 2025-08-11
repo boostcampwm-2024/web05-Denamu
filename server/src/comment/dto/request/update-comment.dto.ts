@@ -1,15 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import { IsInt, IsNotEmpty, IsString } from 'class-validator';
 
 export class UpdateCommentRequestDto {
   @ApiProperty({
-    example: '댓글 번호',
+    example: 1,
     description: '댓글 번호를 입력해주세요.',
   })
   @IsInt({
     message: '정수로 입력하세요.',
   })
-  @IsNotEmpty({ message: '댓글 아이디를 입력하세요.' })
+  @Type(() => Number)
   commentId: number;
 
   @ApiProperty({

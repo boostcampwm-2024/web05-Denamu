@@ -5,7 +5,7 @@ import { IsInt, Min } from 'class-validator';
 export class FeedDetailRequestDto {
   @ApiProperty({
     example: 1,
-    description: '조회할 ID 입력',
+    description: '조회할 게시글 ID 입력',
   })
   @IsInt({
     message: '정수를 입력해주세요.',

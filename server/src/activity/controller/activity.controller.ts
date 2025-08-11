@@ -1,6 +1,12 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Query,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-
 import { ActivityService } from '../service/activity.service';
 import { ApiResponse } from '../../common/response/common.response';
 import { ActivityParamRequestDto } from '../dto/request/activity-param.dto';
@@ -14,6 +20,7 @@ export class ActivityController {
 
   @ApiReadActivities()
   @Get(':userId')
+  @HttpCode(HttpStatus.OK)
   async readActivities(
     @Param() paramDto: ActivityParamRequestDto,
     @Query() queryDto: ActivityQueryRequestDto,

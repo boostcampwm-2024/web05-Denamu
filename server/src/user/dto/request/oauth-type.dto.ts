@@ -4,6 +4,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class OAuthTypeDto {
   @ApiProperty({
+    example: OAuthType.Google,
     description: '제공자 타입',
   })
   @IsEnum(OAuthType, {
