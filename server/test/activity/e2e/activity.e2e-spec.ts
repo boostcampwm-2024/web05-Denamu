@@ -100,6 +100,6 @@ describe('GET /api/activity/:userId E2E Test', () => {
 
     // then
     expect(response.status).toBe(404);
-    expect(response.body.message).toBe('존재하지 않는 사용자입니다.');
+    expect(response.body.message).toBe('존재하지 않는 유저입니다.');
   });
 });
