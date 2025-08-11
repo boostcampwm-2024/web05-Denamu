@@ -8,6 +8,8 @@ import {
   Param,
   UseGuards,
   BadRequestException,
+  HttpStatus,
+  HttpCode,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FileService } from '../service/file.service';
@@ -27,6 +29,7 @@ export class FileController {
 
   @Post('profile')
   @ApiUploadProfileFile()
+  @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(FileInterceptor('file', createDynamicStorage()))
   async upload(@UploadedFile() file: any, @Req() req) {
     if (!file) {
@@ -42,6 +45,7 @@ export class FileController {
   // TODO: 권한검사 추가
   @Delete(':id')
   @ApiDeleteFile()
+  @HttpCode(HttpStatus.OK)
   async deleteFile(@Param() fileDeleteRequestDto: FileDeleteRequestDto) {
     await this.fileService.deleteFile(fileDeleteRequestDto.id);
     return ApiResponse.responseWithNoContent(
