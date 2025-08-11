@@ -3,7 +3,7 @@ import { File } from '../entity/file.entity';
 import { unlinkSync, existsSync } from 'fs';
 import { FileRepository } from '../repository/file.repository';
 import { User } from '../../user/entity/user.entity';
-import { FileUploadResponseDto } from '../dto/createFile.dto';
+import { FileUploadResponseDto } from '../dto/response/createFile.dto';
 
 @Injectable()
 export class FileService {
@@ -21,15 +21,7 @@ export class FileService {
     } as File);
     const accessUrl = this.generateAccessUrl(path);
 
-    return {
-      id: savedFile.id,
-      originalName: savedFile.originalName,
-      mimetype: savedFile.mimetype,
-      size: savedFile.size,
-      url: accessUrl,
-      userId: userId,
-      createdAt: savedFile.createdAt,
-    };
+    return FileUploadResponseDto.toResponseDto(savedFile, accessUrl);
   }
 
   private generateAccessUrl(filePath: string): string {
