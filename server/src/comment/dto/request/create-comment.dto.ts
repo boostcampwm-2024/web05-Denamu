@@ -14,7 +14,7 @@ export class CreateCommentRequestDto {
   comment: string;
 
   @ApiProperty({
-    example: '1',
+    example: 1,
     description: '게시글 번호를 입력해주세요.',
   })
   @IsInt({

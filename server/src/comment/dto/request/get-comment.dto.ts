@@ -4,7 +4,7 @@ import { IsInt } from 'class-validator';
 
 export class GetCommentRequestDto {
   @ApiProperty({
-    example: '게시글 ID',
+    example: 1,
     description: '게시글 ID를 입력해주세요',
   })
   @IsInt({

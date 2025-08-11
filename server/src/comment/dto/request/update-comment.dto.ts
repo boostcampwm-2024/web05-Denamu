@@ -4,7 +4,7 @@ import { IsInt, IsNotEmpty, IsString } from 'class-validator';
 
 export class UpdateCommentRequestDto {
   @ApiProperty({
-    example: '댓글 번호',
+    example: 1,
     description: '댓글 번호를 입력해주세요.',
   })
   @IsInt({

@@ -4,6 +4,7 @@ import { IsInt, IsOptional, Min } from 'class-validator';
 
 export class StatisticRequestDto {
   @ApiProperty({
+    example: 1,
     description: '최대로 가져올 데이터 개수를 입력하세요.',
     required: false,
   })
