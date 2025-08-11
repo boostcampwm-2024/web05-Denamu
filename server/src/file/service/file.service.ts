@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { File } from '../entity/file.entity';
-import { unlinkSync, existsSync } from 'fs';
+import { unlink, access } from 'fs/promises';
 import { FileRepository } from '../repository/file.repository';
 import { User } from '../../user/entity/user.entity';
 import { FileUploadResponseDto } from '../dto/createFile.dto';
@@ -50,8 +50,11 @@ export class FileService {
   async deleteFile(id: number): Promise<void> {
     const file = await this.findById(id);
 
-    if (existsSync(file.path)) {
-      unlinkSync(file.path);
+    try {
+      await access(file.path);
+      await unlink(file.path);
+    } catch (error) {
+      console.warn(`파일 삭제 실패: ${file.path}`, error);
     }
 
     await this.fileRepository.delete(id);
@@ -59,5 +62,21 @@ export class FileService {
 
   async getFileInfo(id: number): Promise<File> {
     return this.findById(id);
+  }
+
+  async deleteByPath(path: string): Promise<void> {
+    const file = await this.fileRepository.findOne({ where: { path } });
+    if (file) {
+      try {
+        await access(file.path);
+        await unlink(file.path);
+      } catch (error) {
+        console.warn(`파일 삭제 실패: ${file.path}`, error);
+      }
+
+      await this.fileRepository.delete(file.id);
+    } else {
+      throw new NotFoundException('파일을 찾을 수 없습니다.');
+    }
   }
 }
