@@ -38,6 +38,8 @@ export class CommentService {
     if (userInformation.id !== commentObj.user.id) {
       throw new UnauthorizedException('본인이 작성한 댓글이 아닙니다.');
     }
+
+    return commentObj;
   }
 
   async get(commentDto: GetCommentRequestDto) {
@@ -68,11 +70,10 @@ export class CommentService {
   }
 
   async update(userInformation: Payload, commentDto: UpdateCommentRequestDto) {
-    await this.commentCheck(userInformation, commentDto.commentId);
-    const commentObj = await this.commentRepository.findOneBy({
-      id: commentDto.commentId,
-    });
-
+    const commentObj = await this.commentCheck(
+      userInformation,
+      commentDto.commentId,
+    );
     commentObj.comment = commentDto.newComment;
     await this.commentRepository.save(commentObj);
   }
