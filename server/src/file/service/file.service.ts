@@ -14,10 +14,10 @@ export class FileService {
   ) {}
 
   async create(file: any, userId: number): Promise<FileUploadResponseDto> {
-    const { originalName, mimetype, size, path } = file;
+    const { originalname, mimetype, size, path } = file;
 
     const savedFile = await this.fileRepository.save({
-      originalName,
+      originalName: originalname,
       mimetype,
       size,
       path,
@@ -37,8 +37,7 @@ export class FileService {
   }
 
   private generateAccessUrl(filePath: string): string {
-    const baseUploadPath =
-      process.env.UPLOAD_BASE_PATH || '/var/web05-Denamu/objects';
+    const baseUploadPath = '/var/web05-Denamu/objects';
     const relativePath = filePath.replace(baseUploadPath, '');
     return `/objects${relativePath}`;
   }
