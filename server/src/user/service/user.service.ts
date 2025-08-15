@@ -18,6 +18,7 @@ import { ConfigService } from '@nestjs/config';
 import { cookieConfig } from '../../common/cookie/cookie.config';
 import { Payload } from '../../common/guard/jwt.guard';
 import { UpdateUserDto } from '../dto/request/update-user.dto';
+import { FileService } from '../../file/service/file.service';
 
 @Injectable()
 export class UserService {
@@ -27,6 +28,7 @@ export class UserService {
     private readonly emailService: EmailService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly fileService: FileService,
   ) {}
 
   async checkEmailDuplication(email: string): Promise<boolean> {
@@ -166,9 +168,15 @@ export class UserService {
     if (updateData.userName !== undefined) {
       user.userName = updateData.userName;
     }
-    if (updateData.profileImage !== undefined) {
+
+    if (
+      updateData.profileImage !== undefined &&
+      user.profileImage !== updateData.profileImage
+    ) {
+      await this.fileService.deleteByPath(user.profileImage);
       user.profileImage = updateData.profileImage;
     }
+
     if (updateData.introduction !== undefined) {
       user.introduction = updateData.introduction;
     }

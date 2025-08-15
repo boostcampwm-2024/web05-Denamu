@@ -15,7 +15,8 @@ describe('PATCH /api/user/profile E2E Test', () => {
   const testUpdateData = {
     complete: {
       userName: '변경된이름',
-      profileImage: 'new-profile-uuid',
+      profileImage:
+        'https://denamu.site/objects/PROFILE_IMAGE/20000902/uuid.png',
       introduction: '변경된 소개글입니다.',
     },
     partial: {
@@ -86,6 +87,10 @@ describe('PATCH /api/user/profile E2E Test', () => {
       .patch('/api/user/profile')
       .set('Authorization', `Bearer ${accessToken}`)
       .send(testUpdateData.partial);
+
+    console.log('Response status:', response.status);
+    console.log('Response body:', response.body);
+    console.log('Response text:', response.text);
 
     // then
     expect(response.status).toBe(200);

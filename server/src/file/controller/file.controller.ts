@@ -8,6 +8,7 @@ import {
   Param,
   UseGuards,
   BadRequestException,
+  Query,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FileService } from '../service/file.service';
@@ -18,7 +19,7 @@ import { createDynamicStorage } from '../../common/disk/diskStorage';
 import { ApiResponse } from '../../common/response/common.response';
 import { ApiUploadProfileFile } from '../api-docs/uploadProfileFile.api-docs';
 import { ApiDeleteFile } from '../api-docs/deleteFile.api-docs';
-import { FileUploadResponseDto } from '../dto/createFile.dto';
+import { FileUploadQueryDto } from '../dto/fileUpload.dto';
 
 @ApiTags('File')
 @Controller('file')
@@ -26,10 +27,14 @@ import { FileUploadResponseDto } from '../dto/createFile.dto';
 export class FileController {
   constructor(private readonly fileService: FileService) {}
 
-  @Post('upload/profile')
+  @Post('')
   @ApiUploadProfileFile()
   @UseInterceptors(FileInterceptor('file', createDynamicStorage()))
-  async upload(@UploadedFile() file: any, @Req() req) {
+  async upload(
+    @UploadedFile() file: any,
+    @Query() query: FileUploadQueryDto,
+    @Req() req,
+  ) {
     if (!file) {
       throw new BadRequestException('파일이 선택되지 않았습니다.');
     }

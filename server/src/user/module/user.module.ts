@@ -11,9 +11,10 @@ import { AdminModule } from '../../admin/module/admin.module';
 import { GoogleOAuthProvider } from '../provider/google.provider';
 import { GithubOAuthProvider } from '../provider/github.provider';
 import { UserScheduler } from '../scheduler/user.scheduler';
+import { FileModule } from '../../file/module/file.module';
 
 @Module({
-  imports: [JwtAuthModule, AdminModule, ScheduleModule.forRoot()],
+  imports: [JwtAuthModule, AdminModule, FileModule, ScheduleModule.forRoot()],
   controllers: [UserController, OAuthController],
   providers: [
     UserService,
