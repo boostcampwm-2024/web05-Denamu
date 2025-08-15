@@ -24,16 +24,16 @@ export const validateFile = (file: any, uploadType: FileUploadType) => {
     allowedTypes = ALLOWED_MIME_TYPES.IMAGE;
   } // else if 구문 이나 switch 써서 타입 추가되면 유효성 ALLOWED TYPES 매핑해주기!
 
-  validateFileType(file, uploadType, allowedTypes);
+  validateFileType(file, allowedTypes);
   validateFileSize(file, uploadType);
 };
 
-const validateFileType = (file: any, t, allowedTypes?: string[]) => {
+const validateFileType = (file: any, allowedTypes?: string[]) => {
   const types = allowedTypes || [];
 
   if (!types.includes(file.mimetype)) {
     throw new BadRequestException(
-      `받은 파일 타입 ${t}}지원하지 않는 파일 형식입니다. 지원 형식: ${types.join(', ')}`,
+      `지원하지 않는 파일 형식입니다. 지원 형식: ${types.join(', ')}`,
     );
   }
 };
