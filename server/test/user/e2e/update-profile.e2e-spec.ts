@@ -88,6 +88,10 @@ describe('PATCH /api/user/profile E2E Test', () => {
       .set('Authorization', `Bearer ${accessToken}`)
       .send(testUpdateData.partial);
 
+    console.log('Response status:', response.status);
+    console.log('Response body:', response.body);
+    console.log('Response text:', response.text);
+
     // then
     expect(response.status).toBe(200);
 
