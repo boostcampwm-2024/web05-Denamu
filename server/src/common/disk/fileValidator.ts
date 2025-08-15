@@ -5,11 +5,10 @@ export const ALLOWED_MIME_TYPES = {
   ALL: [] as string[],
 };
 
-export const FILE_UPLOAD_TYPE = {
-  PROFILE_IMAGE: 'profileImg',
-} as const;
-
-export type FileUploadType = keyof typeof FILE_UPLOAD_TYPE;
+export enum FileUploadType {
+  PROFILE_IMAGE = 'PROFILE_IMAGE',
+  // 추후 추가될 타입들 명시
+}
 
 ALLOWED_MIME_TYPES.ALL = [...ALLOWED_MIME_TYPES.IMAGE];
 
@@ -19,30 +18,30 @@ export const FILE_SIZE_LIMITS = {
   DEFAULT: 10 * 1024 * 1024,
 };
 
-export const validateFile = (file: any, uploadType: string) => {
+export const validateFile = (file: any, uploadType: FileUploadType) => {
   let allowedTypes: string[] = [];
-  if (uploadType === 'PROFILE_IMAGE') {
+  if (uploadType === FileUploadType.PROFILE_IMAGE) {
     allowedTypes = ALLOWED_MIME_TYPES.IMAGE;
-  }
+  } // else if 구문 이나 switch 써서 타입 추가되면 유효성 ALLOWED TYPES 매핑해주기!
 
-  validateFileType(file, allowedTypes);
+  validateFileType(file, uploadType, allowedTypes);
   validateFileSize(file, uploadType);
 };
 
-const validateFileType = (file: any, allowedTypes?: string[]) => {
+const validateFileType = (file: any, t, allowedTypes?: string[]) => {
   const types = allowedTypes || [];
 
   if (!types.includes(file.mimetype)) {
     throw new BadRequestException(
-      `지원하지 않는 파일 형식입니다. 지원 형식: ${types.join(', ')}`,
+      `받은 파일 타입 ${t}}지원하지 않는 파일 형식입니다. 지원 형식: ${types.join(', ')}`,
     );
   }
 };
 
-const validateFileSize = (file: any, uploadType: string) => {
+const validateFileSize = (file: any, uploadType: FileUploadType) => {
   let sizeLimit: number;
 
-  if (uploadType === 'PROFILE_IMAGE') {
+  if (uploadType === FileUploadType.PROFILE_IMAGE) {
     sizeLimit = FILE_SIZE_LIMITS.IMAGE;
   } else {
     sizeLimit = FILE_SIZE_LIMITS.DEFAULT;
