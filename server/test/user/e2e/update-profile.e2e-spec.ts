@@ -15,7 +15,8 @@ describe('PATCH /api/user/profile E2E Test', () => {
   const testUpdateData = {
     complete: {
       userName: '변경된이름',
-      profileImage: 'new-profile-uuid',
+      profileImage:
+        'https://denamu.site/objects/PROFILE_IMAGE/20000902/uuid.png',
       introduction: '변경된 소개글입니다.',
     },
     partial: {
