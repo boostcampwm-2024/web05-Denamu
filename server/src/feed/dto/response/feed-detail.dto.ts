@@ -63,6 +63,12 @@ export class FeedDetailResponseDto {
   likes: number;
 
   @ApiProperty({
+    example: 1,
+    description: '댓글 수',
+  })
+  comments: number;
+
+  @ApiProperty({
     example: ['example1', 'example2', 'example3'],
     description: '태그 배열',
   })
@@ -84,6 +90,7 @@ export class FeedDetailResponseDto {
       viewCount: feed.viewCount,
       summary: feed.summary,
       likes: feed.likeCount,
+      comments: feed.commentCount,
       tag: feed.tag ? feed.tag : [],
     });
   }

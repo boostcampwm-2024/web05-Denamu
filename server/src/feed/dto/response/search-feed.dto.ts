@@ -9,6 +9,7 @@ export class SearchFeedResult {
     private path: string,
     private createdAt: Date,
     private likes: number,
+    private comments: number,
   ) {}
 
   static toResultDto(feed: Feed) {
@@ -19,6 +20,7 @@ export class SearchFeedResult {
       feed.path,
       feed.createdAt,
       feed.likeCount,
+      feed.commentCount,
     );
   }
 

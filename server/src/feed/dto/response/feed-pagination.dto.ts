@@ -14,6 +14,7 @@ export class FeedResult {
     private isNew: boolean,
     private tag: string[],
     private likes: number,
+    private comments: number,
   ) {}
 
   static toResultDto(feed: FeedPaginationResult) {
@@ -29,6 +30,7 @@ export class FeedResult {
       feed.isNew,
       feed.tag ? feed.tag : [],
       feed.likeCount,
+      feed.commentCount,
     );
   }
 
@@ -145,6 +147,12 @@ export class FeedTrendResponseDto {
   likes: number;
 
   @ApiProperty({
+    example: 1,
+    description: '댓글 개수',
+  })
+  comments: number;
+
+  @ApiProperty({
     example: ['example1', 'example2', 'example3'],
     description: '게시글 태그',
   })
@@ -165,6 +173,7 @@ export class FeedTrendResponseDto {
       thumbnail: feed.thumbnail,
       viewCount: feed.viewCount,
       likes: feed.likeCount,
+      comments: feed.commentCount,
       tag: feed.tag ? feed.tag : [],
     });
   }

@@ -62,6 +62,12 @@ export class FeedRecentResponseDto {
   likes: number;
 
   @ApiProperty({
+    example: 1,
+    description: '댓글 수',
+  })
+  comments: number;
+
+  @ApiProperty({
     example: ['example1', 'example2', 'example3'],
     description: '태그 목록',
   })
@@ -83,6 +89,7 @@ export class FeedRecentResponseDto {
       viewCount: feed.viewCount,
       isNew: feed.isNew,
       likes: feed.likes,
+      comments: feed.comments,
       tag: feed.tagList,
     });
   }
@@ -104,4 +111,5 @@ export type FeedRecentRedis = {
   isNew?: boolean;
   tagList: string[] | string;
   likes: number;
+  comments: number;
 };

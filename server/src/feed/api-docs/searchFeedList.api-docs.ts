@@ -103,6 +103,7 @@ export function ApiSearchFeedList() {
               path: 'https://test.com/1',
               createdAt: '2024-10-27T02:08:55.000Z',
               likes: 0,
+              comments: 0,
             },
           ],
           totalPages: 3,
