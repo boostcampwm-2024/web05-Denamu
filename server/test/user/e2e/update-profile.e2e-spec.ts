@@ -4,12 +4,13 @@ import { UserService } from '../../../src/user/service/user.service';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../fixture/user.fixture';
 import { User } from '../../../src/user/entity/user.entity';
-import { UpdateUserDto } from '../../../src/user/dto/request/update-user.dto';
+import { FileService } from '../../../src/file/service/file.service';
 
 describe('PATCH /api/user/profile E2E Test', () => {
   let app: INestApplication;
   let userService: UserService;
   let userRepository: UserRepository;
+  let fileService: FileService;
   let testUser: User;
 
   const testUpdateData = {
@@ -28,14 +29,22 @@ describe('PATCH /api/user/profile E2E Test', () => {
     app = global.testApp;
     userService = app.get(UserService);
     userRepository = app.get(UserRepository);
+    fileService = app.get(FileService);
+
+    jest.spyOn(fileService, 'deleteByPath').mockResolvedValue(undefined);
 
     testUser = await userRepository.save(
       await UserFixture.createUserCryptFixture({
         userName: '기존이름',
-        profileImage: 'old-profile-uuid',
+        profileImage:
+          'https://denamu.site/objects/PROFILE_IMAGE/20000902/uuid_old.png',
         introduction: '기존 소개글입니다.',
       }),
     );
+  });
+
+  afterAll(async () => {
+    jest.restoreAllMocks();
   });
 
   it('로그인한 사용자가 프로필 정보를 성공적으로 수정한다.', async () => {
@@ -87,10 +96,6 @@ describe('PATCH /api/user/profile E2E Test', () => {
       .patch('/api/user/profile')
       .set('Authorization', `Bearer ${accessToken}`)
       .send(testUpdateData.partial);
-
-    console.log('Response status:', response.status);
-    console.log('Response body:', response.body);
-    console.log('Response text:', response.text);
 
     // then
     expect(response.status).toBe(200);
