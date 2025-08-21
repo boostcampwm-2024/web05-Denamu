@@ -1,7 +1,7 @@
 import { IsEnum, IsOptional } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
-import { FileUploadType } from '../../common/disk/fileValidator';
+import { FileUploadType } from '../../common/disk/file-validator';
 
 export class FileUploadQueryDto {
   @ApiProperty({

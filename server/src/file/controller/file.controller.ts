@@ -15,7 +15,7 @@ import { FileService } from '../service/file.service';
 
 import { ApiTags } from '@nestjs/swagger';
 import { JwtGuard } from '../../common/guard/jwt.guard';
-import { createDynamicStorage } from '../../common/disk/diskStorage';
+import { createDynamicStorage } from '../../common/disk/disk-storage';
 import { ApiResponse } from '../../common/response/common.response';
 import { ApiUploadProfileFile } from '../api-docs/uploadProfileFile.api-docs';
 import { ApiDeleteFile } from '../api-docs/deleteFile.api-docs';

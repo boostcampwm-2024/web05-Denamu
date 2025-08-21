@@ -3,8 +3,8 @@ import {
   createDirectoryIfNotExists,
   getFileName,
   validateAndGetUploadType,
-} from './fileUtils';
-import { validateFile, FILE_SIZE_LIMITS } from './fileValidator';
+} from './file-utils';
+import { validateFile, FILE_SIZE_LIMITS } from './file-validator';
 
 export const createDynamicStorage = () => {
   return {
