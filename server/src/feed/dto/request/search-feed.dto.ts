@@ -41,7 +41,7 @@ export class SearchFeedRequestDto {
   @IsInt({
     message: '페이지 번호는 정수입니다.',
   })
-  @Min(1, { message: '페이지 번호는 1보다 커야합니다.' })
+  @Min(1, { message: '페이지 번호는 1 이상이어야 합니다.' })
   @Type(() => Number)
   page?: number = 1;
 
@@ -52,7 +52,7 @@ export class SearchFeedRequestDto {
   @IsInt({
     message: '한 페이지에 보여줄 개수는 정수입니다.',
   })
-  @Min(1, { message: '개수 제한은 1보다 커야합니다.' })
+  @Min(1, { message: '개수 제한은 1 이상이어야 합니다.' })
   @Type(() => Number)
   limit?: number = 4;
 
