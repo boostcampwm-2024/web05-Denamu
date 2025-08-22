@@ -57,7 +57,7 @@ export class OAuthService {
       role: 'user',
     };
 
-    const serviceAcessToken = this.userService.createToken(
+    const serviceAccessToken = this.userService.createToken(
       jwtPayload,
       'access',
     );
@@ -71,7 +71,7 @@ export class OAuthService {
       maxAge: 1000 * 60 * 60 * 24 * 7,
     });
 
-    return serviceAcessToken;
+    return serviceAccessToken;
   }
 
   private parseStateData(stateString: string): StateData {

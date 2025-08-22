@@ -42,6 +42,24 @@ export class FeedService {
     private readonly redisService: RedisService,
   ) {}
 
+  async getFeed(feedId: number) {
+    const feed = await this.feedRepository.findOneBy({ id: feedId });
+    if (!feed) {
+      throw new NotFoundException('존재하지 않는 게시글입니다.');
+    }
+
+    return feed;
+  }
+
+  async getFeedByView(feedId: number) {
+    const feed = await this.feedViewRepository.findOneBy({ feedId });
+    if (!feed) {
+      throw new NotFoundException('존재하지 않는 게시글입니다.');
+    }
+
+    return feed;
+  }
+
   async readFeedPagination(feedPaginationQueryDto: FeedPaginationRequestDto) {
     const feedList = await this.feedViewRepository.findFeedPagination(
       feedPaginationQueryDto,
@@ -103,10 +121,6 @@ export class FeedService {
     const { find, page, limit, type } = searchFeedQueryDto;
     const offset = (page - 1) * limit;
 
-    if (!this.validateSearchType(type)) {
-      throw new BadRequestException('검색 타입이 잘못되었습니다.');
-    }
-
     const [searchResult, totalCount] = await this.feedRepository.searchFeedList(
       find,
       limit,
@@ -125,16 +139,6 @@ export class FeedService {
     );
   }
 
-  private validateSearchType(type: string) {
-    const searchType = {
-      title: 'title',
-      blogName: 'blogName',
-      all: 'all',
-    };
-
-    return searchType.hasOwnProperty(type);
-  }
-
   async updateFeedViewCount(
     viewUpdateParamDto: FeedViewUpdateRequestDto,
     request: Request,
@@ -144,17 +148,11 @@ export class FeedService {
     const ip = this.getIp(request);
     const feedId = viewUpdateParamDto.feedId;
     if (ip && this.isString(ip)) {
-      const [feed, hasCookie, hasIpFlag] = await Promise.all([
-        this.feedRepository.findOne({
-          where: { id: feedId },
-        }),
+      const [_, hasCookie, hasIpFlag] = await Promise.all([
+        this.getFeed(feedId),
         Boolean(cookie?.includes(`View_count_${feedId}=${feedId}`)),
         this.redisService.sismember(`feed:${feedId}:ip`, ip),
       ]);
-
-      if (!feed) {
-        throw new NotFoundException(`${feedId}번 피드를 찾을 수 없습니다.`);
-      }
 
       if (!hasCookie) {
         this.createCookie(response, feedId);
@@ -241,28 +239,12 @@ export class FeedService {
   }
 
   async readFeedDetail(feedDetailRequestDto: FeedDetailRequestDto) {
-    const feed = await this.feedViewRepository.findOneBy({
-      feedId: feedDetailRequestDto.feedId,
-    });
-    if (!feed) {
-      throw new NotFoundException(
-        `${feedDetailRequestDto.feedId}번 피드는 존재하지 않습니다.`,
-      );
-    }
-
+    const feed = await this.getFeedByView(feedDetailRequestDto.feedId);
     return FeedDetailResponseDto.toResponseDto(feed);
   }
 
   async deleteCheckFeed(feedDeleteCheckDto: FeedDeleteCheckDto) {
-    const feed = await this.feedRepository.findOneBy({
-      id: feedDeleteCheckDto.feedId,
-    });
-    if (!feed) {
-      throw new NotFoundException(
-        `${feedDeleteCheckDto.feedId}번 피드는 존재하지 않습니다.`,
-      );
-    }
-
+    const feed = await this.getFeed(feedDeleteCheckDto.feedId);
     const response = await fetch(feed.path);
 
     if (response.status === HttpStatus.NOT_FOUND) {

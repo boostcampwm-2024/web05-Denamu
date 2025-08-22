@@ -1,26 +1,23 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ActivityRepository } from '../repository/activity.repository';
-import { UserRepository } from '../../user/repository/user.repository';
 import {
   ActivityReadResponseDto,
   DailyActivityDto,
 } from '../dto/response/activity-read.dto';
+import { UserService } from '../../user/service/user.service';
 
 @Injectable()
 export class ActivityService {
   constructor(
     private readonly activityRepository: ActivityRepository,
-    private readonly userRepository: UserRepository,
+    private readonly userService: UserService,
   ) {}
 
   async readActivities(
     userId: number,
     year: number,
   ): Promise<ActivityReadResponseDto> {
-    const user = await this.userRepository.findOneBy({ id: userId });
-    if (!user) {
-      throw new NotFoundException('존재하지 않는 사용자입니다.');
-    }
+    const user = await this.userService.getUser(userId);
 
     const activities =
       await this.activityRepository.findActivitiesByUserIdAndYear(userId, year);
@@ -33,12 +30,7 @@ export class ActivityService {
         }),
     );
 
-    return new ActivityReadResponseDto({
-      dailyActivities,
-      maxStreak: user.maxStreak,
-      currentStreak: user.currentStreak,
-      totalViews: user.totalViews,
-    });
+    return ActivityReadResponseDto.toResponseDto(dailyActivities, user);
   }
 
   async upsertActivity(userId: number) {
