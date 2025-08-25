@@ -7,26 +7,20 @@ import {
 } from '@nestjs/common';
 import { LikeRepository } from '../repository/like.repository';
 import { Payload } from '../../common/guard/jwt.guard';
-import { FeedRepository } from '../../feed/repository/feed.repository';
 import { FeedLikeRequestDto } from '../dto/request/like.dto';
+import { GetLikeResponseDto } from '../dto/response/like.dto';
+import { FeedService } from '../../feed/service/feed.service';
 
 @Injectable()
 export class LikeService {
   constructor(
     private readonly likeRepository: LikeRepository,
-    private readonly feedRepository: FeedRepository,
+    private readonly feedService: FeedService,
     private readonly dataSource: DataSource,
   ) {}
 
   async get(userInformation: Payload, feedLikeGetDto: FeedLikeRequestDto) {
-    const feed = await this.feedRepository.findOneBy({
-      id: feedLikeGetDto.feedId,
-    });
-
-    if (!feed) {
-      throw new NotFoundException('해당 피드를 찾을 수 없습니다.');
-    }
-
+    await this.feedService.getFeed(feedLikeGetDto.feedId);
     let isLike = false;
 
     if (userInformation) {
@@ -37,9 +31,7 @@ export class LikeService {
       isLike = !!like;
     }
 
-    return {
-      isLike,
-    };
+    return GetLikeResponseDto.toResponseDto(isLike);
   }
 
   async create(
@@ -51,13 +43,7 @@ export class LikeService {
     await queryRunner.startTransaction();
 
     try {
-      const feed = await this.feedRepository.findOneBy({
-        id: feedLikeCreateDto.feedId,
-      });
-      if (!feed) {
-        throw new NotFoundException('해당 피드를 찾을 수 없습니다.');
-      }
-
+      const feed = await this.feedService.getFeed(feedLikeCreateDto.feedId);
       const existing = await this.likeRepository.findOneBy({
         user: { id: userInformation.id },
         feed: { id: feedLikeCreateDto.feedId },
@@ -91,13 +77,7 @@ export class LikeService {
     await queryRunner.startTransaction();
 
     try {
-      const feed = await this.feedRepository.findOneBy({
-        id: feedLikeDeleteDto.feedId,
-      });
-      if (!feed) {
-        throw new NotFoundException('해당 피드를 찾을 수 없습니다.');
-      }
-
+      const feed = await this.feedService.getFeed(feedLikeDeleteDto.feedId);
       const existing = await this.likeRepository.findOneBy({
         user: { id: userInformation.id },
         feed: { id: feedLikeDeleteDto.feedId },

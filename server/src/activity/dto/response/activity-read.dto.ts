@@ -1,16 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { User } from '../../../user/entity/user.entity';
 
 export class DailyActivityDto {
-  @ApiProperty({
-    example: '2024-01-15',
-    description: '활동 날짜 (YYYY-MM-DD)',
-  })
   date: string;
-
-  @ApiProperty({
-    example: 5,
-    description: '해당 날짜의 조회수',
-  })
   viewCount: number;
 
   constructor(partial: Partial<DailyActivityDto>) {
@@ -43,7 +35,16 @@ export class ActivityReadResponseDto {
   })
   totalViews: number;
 
-  constructor(partial: Partial<ActivityReadResponseDto>) {
+  private constructor(partial: Partial<ActivityReadResponseDto>) {
     Object.assign(this, partial);
+  }
+
+  static toResponseDto(dailyActivities: DailyActivityDto[], user: User) {
+    return new ActivityReadResponseDto({
+      dailyActivities: dailyActivities,
+      maxStreak: user.maxStreak,
+      currentStreak: user.currentStreak,
+      totalViews: user.totalViews,
+    });
   }
 }

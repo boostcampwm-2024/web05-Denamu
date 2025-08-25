@@ -3,7 +3,7 @@ import { File } from '../entity/file.entity';
 import { unlink, access } from 'fs/promises';
 import { FileRepository } from '../repository/file.repository';
 import { User } from '../../user/entity/user.entity';
-import { FileUploadResponseDto } from '../dto/createFile.dto';
+import { FileUploadResponseDto } from '../dto/response/createFile.dto';
 import { WinstonLoggerService } from '../../common/logger/logger.service';
 
 @Injectable()
@@ -25,15 +25,7 @@ export class FileService {
     } as File);
     const accessUrl = this.generateAccessUrl(path);
 
-    return {
-      id: savedFile.id,
-      originalName: savedFile.originalName,
-      mimetype: savedFile.mimetype,
-      size: savedFile.size,
-      url: accessUrl,
-      userId: userId,
-      createdAt: savedFile.createdAt,
-    };
+    return FileUploadResponseDto.toResponseDto(savedFile, accessUrl);
   }
 
   private generateAccessUrl(filePath: string): string {

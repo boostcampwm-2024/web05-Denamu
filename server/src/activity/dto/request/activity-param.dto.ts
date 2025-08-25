@@ -10,7 +10,7 @@ export class ActivityParamRequestDto {
   @IsInt({
     message: '정수를 입력해주세요.',
   })
-  @Min(1, { message: '사용자 ID는 1보다 커야합니다.' })
+  @Min(1, { message: '사용자 ID는 1 이상이어야 합니다.' })
   @Type(() => Number)
   userId: number;
 

@@ -1,4 +1,12 @@
-import { Controller, Get, Query, Req, Res } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Query,
+  Req,
+  Res,
+} from '@nestjs/common';
 import { OAuthService } from '../service/oauth.service';
 import { ApiTags } from '@nestjs/swagger';
 import { Response, Request } from 'express';
@@ -14,12 +22,14 @@ export class OAuthController {
 
   @Get()
   @ApiOAuth()
+  @HttpCode(HttpStatus.FOUND)
   async getProvider(@Query() provider: OAuthTypeDto, @Res() res: Response) {
     return res.redirect(this.oauthService.getAuthUrl(provider.type));
   }
 
   @Get('callback')
   @ApiOAuthCallback()
+  @HttpCode(HttpStatus.FOUND)
   async callback(@Req() req: Request, @Res() res: Response) {
     const accessToken = await this.oauthService.callback(req, res);
 
