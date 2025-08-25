@@ -10,4 +10,6 @@ export const DEPENDENCY_SYMBOLS = {
   Rss20Parser: Symbol.for('Rss20Parser'),
   Atom10Parser: Symbol.for('Atom10Parser'),
   FeedCrawler: Symbol.for('FeedCrawler'),
+  QueueCrawlerService: Symbol.for('QueueCrawlerService'),
+  QueueScheduler: Symbol.for('QueueScheduler'),
 };

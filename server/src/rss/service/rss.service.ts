@@ -23,6 +23,7 @@ import { RequestDeleteRssDto } from '../dto/request/rss-request-delete.dto';
 import { RedisService } from '../../common/redis/redis.service';
 import { DeleteRssDto } from '../dto/request/rss-delete.dto';
 import { FeedRepository } from '../../feed/repository/feed.repository';
+import { redisKeys } from '../../common/redis/redis.constant';
 
 @Injectable()
 export class RssService {
@@ -160,24 +161,32 @@ export class RssService {
   private async acceptRssBackProcess(rss: Rss, rssXmlResponse: Response) {
     const blogPlatform = this.identifyPlatformFromRssUrl(rss.rssUrl);
 
-    const [rssAccept, feeds] = await this.dataSource.transaction(
-      async (manager) => {
-        const [rssAccept] = await Promise.all([
-          manager.save(RssAccept.fromRss(rss, blogPlatform)),
-          manager.delete(Rss, rss.id),
-        ]);
-        const feeds =
-          await this.feedCrawlerService.parseRssFeeds(rssXmlResponse);
-        return [rssAccept, feeds];
-      },
-    );
+    const rssAccept = await this.dataSource.transaction(async (manager) => {
+      const [rssAccept] = await Promise.all([
+        manager.save(RssAccept.fromRss(rss, blogPlatform)),
+        manager.delete(Rss, rss.id),
+      ]);
+      return rssAccept;
+    });
 
-    const feedsWithId = await this.feedCrawlerService.saveRssFeeds(
-      feeds,
-      rssAccept,
-    );
-    this.feedCrawlerService.saveAiQueue(feedsWithId);
+    await this.enqueueFeedCrawlMessage(rssAccept);
     this.emailService.sendRssMail(rssAccept, true);
+  }
+
+  private async enqueueFeedCrawlMessage(rssAccept: RssAccept) {
+    const crawlMessage = {
+      rssId: rssAccept.id,
+      rssUrl: rssAccept.rssUrl,
+      blogName: rssAccept.name,
+      blogPlatform: rssAccept.blogPlatform,
+      isNewRss: true,
+      timestamp: Date.now(),
+    };
+
+    await this.redisService.lpush(
+      redisKeys.FEED_CRAWL_QUEUE,
+      JSON.stringify(crawlMessage),
+    );
   }
 
   async requestRemove(requestDeleteRssDto: RequestDeleteRssDto) {

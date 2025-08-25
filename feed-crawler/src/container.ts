@@ -12,6 +12,8 @@ import { FeedParserManager } from './common/parser/feed-parser-manager';
 import { Rss20Parser } from './common/parser/formats/rss20-parser';
 import { Atom10Parser } from './common/parser/formats/atom10-parser';
 import { FeedCrawler } from './feed-crawler';
+import { QueueCrawlerService } from './queue-crawler.service';
+import { QueueScheduler } from './queue-scheduler';
 
 container.registerSingleton<DatabaseConnection>(
   DEPENDENCY_SYMBOLS.DatabaseConnection,
@@ -66,6 +68,16 @@ container.registerSingleton<FeedParserManager>(
 container.registerSingleton<FeedCrawler>(
   DEPENDENCY_SYMBOLS.FeedCrawler,
   FeedCrawler,
+);
+
+container.registerSingleton<QueueCrawlerService>(
+  DEPENDENCY_SYMBOLS.QueueCrawlerService,
+  QueueCrawlerService,
+);
+
+container.registerSingleton<QueueScheduler>(
+  DEPENDENCY_SYMBOLS.QueueScheduler,
+  QueueScheduler,
 );
 
 export { container };

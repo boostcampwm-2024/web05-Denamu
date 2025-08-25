@@ -3,14 +3,12 @@ import './common/env-load';
 import logger from './common/logger';
 import { FeedCrawler } from './feed-crawler';
 import { container } from './container';
-import { RssRepository } from './repository/rss.repository';
-import { FeedRepository } from './repository/feed.repository';
 import { DEPENDENCY_SYMBOLS } from './types/dependency-symbols';
 import { DatabaseConnection } from './types/database-connection';
 import { ClaudeService } from './claude.service';
 import * as schedule from 'node-schedule';
 import { RedisConnection } from './common/redis-access';
-import { TagMapRepository } from './repository/tag-map.repository';
+import { QueueScheduler } from './queue-scheduler';
 
 function initializeDependencies() {
   return {
@@ -23,6 +21,9 @@ function initializeDependencies() {
     feedCrawler: container.resolve<FeedCrawler>(DEPENDENCY_SYMBOLS.FeedCrawler),
     claudeService: container.resolve<ClaudeService>(
       DEPENDENCY_SYMBOLS.ClaudeService,
+    ),
+    queueScheduler: container.resolve<QueueScheduler>(
+      DEPENDENCY_SYMBOLS.QueueScheduler,
     ),
   };
 }
@@ -50,6 +51,7 @@ async function handleShutdown(
   signal: string,
 ) {
   logger.info(`${signal} 신호 수신, feed-crawler 종료 중...`);
+  dependencies.queueScheduler.stop();
   await dependencies.dbConnection.end();
   await dependencies.redisConnection.quit();
   logger.info('DB 및 Redis 연결 종료');
@@ -61,6 +63,8 @@ function startScheduler() {
 
   const dependencies = initializeDependencies();
   registerSchedulers(dependencies);
+
+  dependencies.queueScheduler.start();
 
   process.on('SIGINT', () => handleShutdown(dependencies, 'SIGINT'));
   process.on('SIGTERM', () => handleShutdown(dependencies, 'SIGTERM'));
