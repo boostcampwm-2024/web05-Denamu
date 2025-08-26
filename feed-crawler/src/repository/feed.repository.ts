@@ -21,34 +21,47 @@ export class FeedRepository {
             VALUES (?, ?, ?, ?, ?, ?)
         `;
 
-    const insertPromises = resultData.map(async (feed) => {
-      return this.dbConnection.executeQuery(query, [
-        feed.blogId,
-        feed.pubDate,
-        feed.title,
-        feed.link,
-        feed.imageUrl,
-        feed.summary,
-      ]);
+    const insertPromises = resultData.map(async (feed, index) => {
+      try {
+        const result = await this.dbConnection.executeQuery(query, [
+          feed.blogId,
+          feed.pubDate,
+          feed.title,
+          feed.link,
+          feed.imageUrl,
+          feed.summary,
+        ]);
+        return { result, index, success: true };
+      } catch (error) {
+        if (error.code === 'ER_DUP_ENTRY') {
+          logger.info(`중복 피드 스킵: ${feed.title} (${feed.link})`);
+          return { result: null, index, success: false, duplicate: true };
+        }
+        throw error;
+      }
     });
 
     const promiseResults = await Promise.all(insertPromises);
 
     const insertedFeeds = promiseResults
-      .map((feed: any, index) => {
-        if (feed) {
-          const insertId = feed.insertId;
-          return {
-            ...resultData[index],
-            id: insertId,
-          };
-        }
-      })
-      .filter((feed) => feed);
+      .filter((result) => result.success && result.result)
+      .map((result) => ({
+        ...resultData[result.index],
+        id: result.result.insertId,
+      }));
+
+    const duplicateCount = promiseResults.filter(
+      (result) => result.duplicate,
+    ).length;
 
     logger.info(
-      `[MySQL] ${insertedFeeds.length}개의 피드 데이터가 성공적으로 데이터베이스에 삽입되었습니다.`,
+      `[MySQL] ${
+        insertedFeeds.length
+      }개의 피드 데이터가 성공적으로 데이터베이스에 삽입되었습니다.${
+        !!duplicateCount ? ' ' + duplicateCount + '개의 중복 피드 발생' : ''
+      }`,
     );
+
     return insertedFeeds;
   }
 
