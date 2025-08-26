@@ -3,14 +3,11 @@ import './common/env-load';
 import logger from './common/logger';
 import { FeedCrawler } from './feed-crawler';
 import { container } from './container';
-import { RssRepository } from './repository/rss.repository';
-import { FeedRepository } from './repository/feed.repository';
 import { DEPENDENCY_SYMBOLS } from './types/dependency-symbols';
 import { DatabaseConnection } from './types/database-connection';
 import { ClaudeService } from './claude.service';
 import * as schedule from 'node-schedule';
 import { RedisConnection } from './common/redis-access';
-import { TagMapRepository } from './repository/tag-map.repository';
 
 function initializeDependencies() {
   return {
@@ -31,8 +28,9 @@ function registerSchedulers(
   dependencies: ReturnType<typeof initializeDependencies>,
 ) {
   schedule.scheduleJob('FEED CRAWLING', '0,30 * * * *', async () => {
-    logger.info(`Feed Crawling Start: ${new Date().toISOString()}`);
-    dependencies.feedCrawler.start();
+    const now = new Date();
+    logger.info(`Feed Crawling Start: ${now.toISOString()}`);
+    dependencies.feedCrawler.start(now);
   });
 
   schedule.scheduleJob(

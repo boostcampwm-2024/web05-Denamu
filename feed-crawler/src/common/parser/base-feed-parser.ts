@@ -27,10 +27,14 @@ export abstract class BaseFeedParser {
     this.parserUtil = parserUtil;
   }
 
-  async parseFeed(rssObj: RssObj, xmlData: string): Promise<FeedDetail[]> {
+  async parseFeed(
+    rssObj: RssObj,
+    xmlData: string,
+    startTime: Date,
+  ): Promise<FeedDetail[]> {
     // 각 포맷(atom1.0, rss2.0 등...)
     const rawFeeds = this.extractRawFeeds(xmlData);
-    const timeMatchedFeeds = this.filterByTime(rawFeeds);
+    const timeMatchedFeeds = this.filterByTime(rawFeeds, startTime);
     const detailedFeeds = await this.convertToFeedDetails(
       rssObj,
       timeMatchedFeeds,
@@ -42,8 +46,8 @@ export abstract class BaseFeedParser {
   abstract canParse(xmlData: string): boolean;
   protected abstract extractRawFeeds(xmlData: string): RawFeed[];
 
-  private filterByTime(rawFeeds: RawFeed[]): RawFeed[] {
-    const now = new Date().setSeconds(0, 0);
+  private filterByTime(rawFeeds: RawFeed[], startTime: Date): RawFeed[] {
+    const now = new Date(startTime).setSeconds(0, 0);
     return rawFeeds.filter((item) => {
       const pubDate = new Date(item.pubDate).setSeconds(0, 0);
       const timeDiff = (now - pubDate) / (ONE_MINUTE * TIME_INTERVAL);
