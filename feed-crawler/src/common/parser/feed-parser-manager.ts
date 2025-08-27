@@ -36,7 +36,6 @@ export class FeedParserManager {
       if (!parser) {
         throw new Error(`지원하지 않는 피드 형식: ${rssObj.rssUrl} / `);
       }
-      logger.info(`${rssObj.blogName}: ${parser.constructor.name} 사용`);
 
       return await parser.parseFeed(rssObj, xmlData, startTime);
     } catch (error) {

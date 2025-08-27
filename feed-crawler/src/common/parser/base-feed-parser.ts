@@ -51,7 +51,7 @@ export abstract class BaseFeedParser {
     return rawFeeds.filter((item) => {
       const pubDate = new Date(item.pubDate).setSeconds(0, 0);
       const timeDiff = (now - pubDate) / (ONE_MINUTE * TIME_INTERVAL);
-      return timeDiff >= 0 && timeDiff < 1;
+      return timeDiff >= 0 && timeDiff <= 1;
     });
   }
 
