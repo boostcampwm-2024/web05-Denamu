@@ -129,7 +129,11 @@ describe('Parser 모듈 테스트', () => {
         });
 
         it('정상적인 feedDetail을 반환해야 한다.', async () => {
-          const result = await feedParserManager.fetchAndParse(MOCK_RSS_OBJ);
+          const startTime = new Date();
+          const result = await feedParserManager.fetchAndParse(
+            MOCK_RSS_OBJ,
+            startTime,
+          );
 
           expect(result[0]).toMatchObject({
             blogId: MOCK_RSS_OBJ.id,
@@ -162,7 +166,11 @@ describe('Parser 모듈 테스트', () => {
         });
 
         it('정상적인 feedDetail을 반환해야 한다.', async () => {
-          const result = await feedParserManager.fetchAndParse(MOCK_RSS_OBJ);
+          const startTime = new Date();
+          const result = await feedParserManager.fetchAndParse(
+            MOCK_RSS_OBJ,
+            startTime,
+          );
 
           expect(result[0]).toMatchObject({
             blogId: MOCK_RSS_OBJ.id,
