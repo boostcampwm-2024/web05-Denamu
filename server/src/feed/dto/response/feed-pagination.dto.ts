@@ -51,7 +51,7 @@ export class FeedPaginationResponseDto {
         createdAt: '2025-01-01T01:00:00.000Z',
         thumbnail: 'https://example.com/thumbnail',
         viewCount: 0,
-        isNew: true,
+        isNew: false,
         tag: ['example1', 'example2'],
         likes: 0,
       },

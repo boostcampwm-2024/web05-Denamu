@@ -3,8 +3,6 @@ import {
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
-  ApiParam,
-  ApiQuery,
 } from '@nestjs/swagger';
 
 export function ApiReadActivities() {
