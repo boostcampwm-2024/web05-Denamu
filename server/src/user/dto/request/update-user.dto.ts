@@ -17,8 +17,8 @@ export class UpdateUserDto {
   userName?: string;
 
   @ApiProperty({
-    example: 'uuid',
-    description: '변경할 프로필 이미지 key',
+    example: 'https://denamu.site/objects/PROFILE_IMAGE/20250816/uuid.png',
+    description: '변경할 프로필 이미지 path',
     required: false,
   })
   @IsOptional()
