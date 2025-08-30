@@ -1,10 +1,10 @@
 import { validate } from 'class-validator';
-import { GetActivityQueryRequestDto } from '../../../src/activity/dto/request/getActivityQuery.dto';
+import { ReadActivityQueryRequestDto } from '../../../src/activity/dto/request/readActivity.dto';
 
 describe('ActivityQueryRequestDto Test', () => {
   it('정상적인 year로 유효성 검사를 통과한다.', async () => {
     // given
-    const dto = new GetActivityQueryRequestDto({
+    const dto = new ReadActivityQueryRequestDto({
       year: 2024,
     });
 
@@ -17,7 +17,7 @@ describe('ActivityQueryRequestDto Test', () => {
 
   it('year가 정수가 아닌 문자열이면 유효성 검사에 실패한다.', async () => {
     // given
-    const dto = new GetActivityQueryRequestDto({
+    const dto = new ReadActivityQueryRequestDto({
       year: 'invalid' as any,
     });
 
@@ -31,7 +31,7 @@ describe('ActivityQueryRequestDto Test', () => {
 
   it('year가 정수가 아닌 실수이면 유효성 검사에 실패한다.', async () => {
     // given
-    const dto = new GetActivityQueryRequestDto({
+    const dto = new ReadActivityQueryRequestDto({
       year: 2024.5 as any,
     });
 
@@ -45,7 +45,7 @@ describe('ActivityQueryRequestDto Test', () => {
 
   it('year가 2000년 미만이면 유효성 검사에 실패한다.', async () => {
     // given
-    const dto = new GetActivityQueryRequestDto({
+    const dto = new ReadActivityQueryRequestDto({
       year: 1999,
     });
 
@@ -59,7 +59,7 @@ describe('ActivityQueryRequestDto Test', () => {
 
   it('year가 3000년 초과이면 유효성 검사에 실패한다.', async () => {
     // given
-    const dto = new GetActivityQueryRequestDto({
+    const dto = new ReadActivityQueryRequestDto({
       year: 3001,
     });
 
@@ -73,7 +73,7 @@ describe('ActivityQueryRequestDto Test', () => {
 
   it('year가 2000년이면 유효성 검사를 통과한다.', async () => {
     // given
-    const dto = new GetActivityQueryRequestDto({
+    const dto = new ReadActivityQueryRequestDto({
       year: 2000,
     });
 
@@ -86,7 +86,7 @@ describe('ActivityQueryRequestDto Test', () => {
 
   it('year가 3000년이면 유효성 검사를 통과한다.', async () => {
     // given
-    const dto = new GetActivityQueryRequestDto({
+    const dto = new ReadActivityQueryRequestDto({
       year: 3000,
     });
 

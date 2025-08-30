@@ -24,7 +24,7 @@ import { LoginUserRequestDto } from '../dto/request/loginUser.dto';
 import { Response } from 'express';
 import { ApiLoginUser } from '../api-docs/loginUser.api-docs';
 import { JwtGuard, RefreshJwtGuard } from '../../common/guard/jwt.guard';
-import { ApiRefreshToken } from '../api-docs/refreshUser.api-docs';
+import { ApiRefreshToken } from '../api-docs/refreshToken.api-docs';
 import { ApiLogoutUser } from '../api-docs/logoutUser.api-docs';
 import { UpdateUserRequestDto } from '../dto/request/updateUser.dto';
 import { ApiUpdateUser } from '../api-docs/updateUser.api-docs';

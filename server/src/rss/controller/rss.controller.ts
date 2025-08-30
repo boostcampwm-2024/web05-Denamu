@@ -22,9 +22,9 @@ import { ApiReadRssAcceptHistory } from '../api-docs/readRssAcceptHistory.api-do
 import { ApiReadRssRejectHistory } from '../api-docs/readRssRejectHistory.api-docs';
 import { ApiReadAllRss } from '../api-docs/readAllRss.api-docs';
 import { ApiRejectRss } from '../api-docs/rejectRss.api-docs';
-import { ApiRequestDeleteRss } from '../api-docs/requestDeleteRss.api-docs';
-import { DeleteRssRequestDto } from '../dto/request/deleteRss.dto';
 import { ApiDeleteRss } from '../api-docs/deleteRss.api-docs';
+import { DeleteRssRequestDto } from '../dto/request/deleteRss.dto';
+import { ApiDeleteCertificateRss } from '../api-docs/deleteCertificateRss.api-docs';
 import { DeleteCertificateRssRequestDto } from '../dto/request/deleteCertificateRss.dto';
 
 @ApiTags('RSS')
@@ -93,7 +93,7 @@ export class RssController {
     );
   }
 
-  @ApiRequestDeleteRss()
+  @ApiDeleteRss()
   @Post('remove')
   @HttpCode(HttpStatus.OK)
   async requestRemoveRss(@Body() requestDeleteRssDto: DeleteRssRequestDto) {
@@ -101,7 +101,7 @@ export class RssController {
     return ApiResponse.responseWithNoContent('RSS 삭제 요청을 성공했습니다.');
   }
 
-  @ApiDeleteRss()
+  @ApiDeleteCertificateRss()
   @Delete('remove/:code')
   @HttpCode(HttpStatus.OK)
   async deleteRss(@Param() deleteRssDto: DeleteCertificateRssRequestDto) {
