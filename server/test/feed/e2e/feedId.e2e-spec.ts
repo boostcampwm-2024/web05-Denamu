@@ -1,5 +1,5 @@
 import * as request from 'supertest';
-import { redisKeys } from '../../../src/common/redis/redis.constant';
+import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 import { INestApplication } from '@nestjs/common';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
@@ -45,7 +45,7 @@ describe('POST /api/feed/:feedId E2E Test', () => {
         .set('X-Forwarded-For', testNewIp);
       const feedDailyViewCount = parseInt(
         await redisService.zscore(
-          redisKeys.FEED_TREND_KEY,
+          REDIS_KEYS.FEED_TREND_KEY,
           testFeedId.toString(),
         ),
       );
@@ -59,7 +59,7 @@ describe('POST /api/feed/:feedId E2E Test', () => {
     } finally {
       //cleanup
       await Promise.all([
-        redisService.zrem(redisKeys.FEED_TREND_KEY, testFeedId.toString()),
+        redisService.zrem(REDIS_KEYS.FEED_TREND_KEY, testFeedId.toString()),
         redisService.srem(`feed:${testFeedId}:ip`, testNewIp),
       ]);
     }
@@ -85,7 +85,7 @@ describe('POST /api/feed/:feedId E2E Test', () => {
       .set('Cookie', `View_count_${testFeedId}=${testFeedId}`)
       .set('X-Forwarded-For', testIp);
     const feedDailyViewCount = await redisService.zscore(
-      redisKeys.FEED_TREND_KEY,
+      REDIS_KEYS.FEED_TREND_KEY,
       testFeedId.toString(),
     );
 
@@ -100,7 +100,7 @@ describe('POST /api/feed/:feedId E2E Test', () => {
       .post(`/api/feed/${testFeedId}`)
       .set('X-Forwarded-For', testIp);
     const feedDailyViewCount = await redisService.zscore(
-      redisKeys.FEED_TREND_KEY,
+      REDIS_KEYS.FEED_TREND_KEY,
       testFeedId.toString(),
     );
 

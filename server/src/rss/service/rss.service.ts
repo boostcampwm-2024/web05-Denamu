@@ -23,6 +23,7 @@ import { DeleteRssRequestDto } from '../dto/request/deleteRss.dto';
 import { RedisService } from '../../common/redis/redis.service';
 import { DeleteCertificateRssRequestDto } from '../dto/request/deleteCertificateRss.dto';
 import { FeedRepository } from '../../feed/repository/feed.repository';
+import { REDIS_KEYS } from '../../common/redis/redis.constant';
 
 @Injectable()
 export class RssService {
@@ -203,7 +204,7 @@ export class RssService {
     const certificateCode = this.generateRandomAlphaNumeric();
 
     await this.redisService.set(
-      `rss:remove:${certificateCode}`,
+      `${REDIS_KEYS.RSS_REMOVE_KEY}:${certificateCode}`,
       requestDeleteRssDto.blogUrl,
       'EX',
       300,
@@ -232,7 +233,7 @@ export class RssService {
 
   async deleteRss(deleteRssDto: DeleteCertificateRssRequestDto) {
     const rssUrl = await this.redisService.get(
-      `rss:remove:${deleteRssDto.code}`,
+      `${REDIS_KEYS.RSS_REMOVE_KEY}:${deleteRssDto.code}`,
     );
 
     if (!rssUrl) {
@@ -248,7 +249,9 @@ export class RssService {
     });
 
     if (!rss) {
-      await this.redisService.del(`rss:remove;${deleteRssDto.code}`);
+      await this.redisService.del(
+        `${REDIS_KEYS.RSS_REMOVE_KEY}:${deleteRssDto.code}`,
+      );
       throw new NotFoundException('이미 지워진 RSS 정보입니다.');
     }
 

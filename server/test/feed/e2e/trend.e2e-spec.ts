@@ -1,6 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import { RedisService } from '../../../src/common/redis/redis.service';
-import { redisKeys } from '../../../src/common/redis/redis.constant';
+import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 import { RssAcceptFixture } from '../../fixture/rssAccept.fixture';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
@@ -19,7 +19,7 @@ describe('SSE /api/trend/sse E2E Test', () => {
     const redisService = app.get(RedisService);
     const [blog] = await Promise.all([
       rssAcceptRepository.save(RssAcceptFixture.createRssAcceptFixture()),
-      redisService.rpush(redisKeys.FEED_ORIGIN_TREND_KEY, 1, 2),
+      redisService.rpush(REDIS_KEYS.FEED_ORIGIN_TREND_KEY, 1, 2),
     ]);
     const feeds: Feed[] = [];
     for (let i = 1; i <= 2; i++) {

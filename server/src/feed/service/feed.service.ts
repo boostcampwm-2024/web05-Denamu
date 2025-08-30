@@ -15,7 +15,7 @@ import { RedisService } from '../../common/redis/redis.service';
 import { SearchFeedRequestDto } from '../dto/request/searchFeed.dto';
 import { Response, Request } from 'express';
 import { cookieConfig } from '../../common/cookie/cookie.config';
-import { redisKeys } from '../../common/redis/redis.constant';
+import { REDIS_KEYS } from '../../common/redis/redis.constant';
 import {
   SearchFeedResponseDto,
   SearchFeedResult,
@@ -84,7 +84,7 @@ export class FeedService {
 
   private async checkNewFeeds(feedList: FeedView[]) {
     const newFeedIds = (
-      await this.redisService.keys(redisKeys.FEED_RECENT_ALL_KEY)
+      await this.redisService.keys(REDIS_KEYS.FEED_RECENT_ALL_KEY)
     ).map((key) => {
       const feedId = key.match(/feed:recent:(\d+)/);
       return parseInt(feedId[1]);
@@ -100,7 +100,7 @@ export class FeedService {
 
   async readTrendFeedList() {
     const trendFeedIdList = await this.redisService.lrange(
-      redisKeys.FEED_ORIGIN_TREND_KEY,
+      REDIS_KEYS.FEED_ORIGIN_TREND_KEY,
       0,
       -1,
     );
@@ -165,7 +165,7 @@ export class FeedService {
           viewCount: () => 'view_count + 1',
         }),
         this.redisService.zincrby(
-          redisKeys.FEED_TREND_KEY,
+          REDIS_KEYS.FEED_TREND_KEY,
           1,
           feedId.toString(),
         ),
@@ -194,7 +194,7 @@ export class FeedService {
 
   async readRecentFeedList() {
     const recentKeys = await this.redisService.keys(
-      redisKeys.FEED_RECENT_ALL_KEY,
+      REDIS_KEYS.FEED_RECENT_ALL_KEY,
     );
 
     if (!recentKeys.length) {

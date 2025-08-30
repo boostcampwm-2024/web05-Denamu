@@ -3,7 +3,7 @@ import { RssAcceptRepository } from '../../rss/repository/rss.repository';
 import { Injectable } from '@nestjs/common';
 import { RedisService } from '../../common/redis/redis.service';
 import { FeedRepository } from '../../feed/repository/feed.repository';
-import { redisKeys } from '../../common/redis/redis.constant';
+import { REDIS_KEYS } from '../../common/redis/redis.constant';
 import { ReadStatisticPlatformResponseDto } from '../dto/response/readStatisticPlatform.dto';
 import { ReadStatisticTodayResponseDto } from '../dto/response/readStatisticToday.dto';
 import { Feed } from '../../feed/entity/feed.entity';
@@ -19,7 +19,7 @@ export class StatisticService {
 
   async readTodayStatistic(statisticQueryDto: ReadStatisticRequestDto) {
     const ranking = await this.redisService.zrevrange(
-      redisKeys.FEED_TREND_KEY,
+      REDIS_KEYS.FEED_TREND_KEY,
       0,
       statisticQueryDto.limit - 1,
       'WITHSCORES',

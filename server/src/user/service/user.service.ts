@@ -8,7 +8,7 @@ import {
 import { RegisterUserRequestDto } from '../dto/request/registerUser.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { RedisService } from '../../common/redis/redis.service';
-import { USER_CONSTANTS } from '../constant/user.constants';
+import { REFRESH_TOKEN_TTL, SALT_ROUNDS } from '../constant/user.constants';
 import { EmailService } from '../../common/email/email.service';
 import { LoginUserRequestDto } from '../dto/request/loginUser.dto';
 import { Response } from 'express';
@@ -19,6 +19,7 @@ import { cookieConfig } from '../../common/cookie/cookie.config';
 import { Payload } from '../../common/guard/jwt.guard';
 import { UpdateUserRequestDto } from '../dto/request/updateUser.dto';
 import { CheckEmailDuplicationResponseDto } from '../dto/response/checkEmailDuplication.dto';
+import { REDIS_KEYS } from '../../common/redis/redis.constant';
 
 @Injectable()
 export class UserService {
@@ -62,7 +63,7 @@ export class UserService {
 
     const uuid = uuidv4();
     await this.redisService.set(
-      `${USER_CONSTANTS.USER_AUTH_KEY}_${uuid}`,
+      `${REDIS_KEYS.USER_AUTH_KEY}:${uuid}`,
       JSON.stringify(newUser),
       'EX',
       600,
@@ -73,13 +74,13 @@ export class UserService {
 
   async certificateUser(uuid: string): Promise<void> {
     const user = await this.redisService.get(
-      `${USER_CONSTANTS.USER_AUTH_KEY}_${uuid}`,
+      `${REDIS_KEYS.USER_AUTH_KEY}:${uuid}`,
     );
 
     if (!user) {
       throw new NotFoundException('인증에 실패했습니다.');
     }
-    this.redisService.del(`${USER_CONSTANTS.USER_AUTH_KEY}_${uuid}`);
+    this.redisService.del(`${REDIS_KEYS.USER_AUTH_KEY}:${uuid}`);
     await this.userRepository.save(JSON.parse(user));
   }
 
@@ -104,7 +105,7 @@ export class UserService {
 
     response.cookie('refresh_token', refreshToken, {
       ...cookieConfig[process.env.NODE_ENV],
-      maxAge: 1000 * 60 * 60 * 24 * 7,
+      maxAge: REFRESH_TOKEN_TTL,
     });
 
     return accessToken;
@@ -127,8 +128,7 @@ export class UserService {
   }
 
   private async createHashedPassword(password: string) {
-    const saltRounds = 10;
-    return await bcrypt.hash(password, saltRounds);
+    return await bcrypt.hash(password, SALT_ROUNDS);
   }
 
   async updateUserActivity(userId: number) {

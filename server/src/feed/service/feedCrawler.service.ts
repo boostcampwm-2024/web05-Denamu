@@ -5,7 +5,7 @@ import { RssParserService } from '../../rss/service/rssParser.service';
 import { Feed } from '../entity/feed.entity';
 import { RssAccept } from '../../rss/entity/rss.entity';
 import { RedisService } from '../../common/redis/redis.service';
-import { redisKeys } from '../../common/redis/redis.constant';
+import { REDIS_KEYS } from '../../common/redis/redis.constant';
 import * as sanitize from 'sanitize-html';
 
 @Injectable()
@@ -68,7 +68,7 @@ export class FeedCrawlerService {
     await this.redisService.executePipeline((pipeline) => {
       feeds.forEach((feed) => {
         pipeline.lpush(
-          redisKeys.FEED_AI_QUEUE,
+          REDIS_KEYS.FEED_AI_QUEUE,
           JSON.stringify({ id: feed.id, content: feed.content, deathCount: 0 }),
         );
       });
