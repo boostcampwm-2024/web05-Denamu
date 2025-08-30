@@ -37,7 +37,7 @@ afterAll(async () => {
 
   const redisService: RedisService = globalAny.testApp.get(RedisService);
   await redisService.flushall();
-  await redisService.disconnect();
+  redisService.disconnect();
 
   console.log('Closing NestJS application...');
   if (globalAny.testApp) {
