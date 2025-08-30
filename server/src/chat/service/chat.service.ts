@@ -3,8 +3,8 @@ import { Injectable } from '@nestjs/common';
 import { Socket } from 'socket.io';
 import { RedisService } from '../../common/redis/redis.service';
 import { getRandomNickname } from '@woowa-babble/random-nickname';
-import type { BroadcastPayload } from '../chat.type';
 import {
+  BroadcastPayload,
   CHAT_HISTORY_LIMIT,
   CLIENT_KEY_PREFIX,
   MAX_CLIENTS,
