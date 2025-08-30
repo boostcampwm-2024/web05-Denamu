@@ -6,7 +6,7 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 
-export function ApiStatistic(category: 'today' | 'all') {
+export function ApiReadStatistic(category: 'today' | 'all') {
   const type = category === 'all' ? '전체' : '금일';
   return applyDecorators(
     ApiOperation({

@@ -28,7 +28,7 @@ import { ApiReadRecentFeedList } from '../api-docs/readRecentFeedList.api-docs';
 import { FeedTrendResponseDto } from '../dto/response/readFeedPagination.dto';
 import { UpdateFeedViewRequestDto } from '../dto/request/feedViewUpdate.dto';
 import { ReadFeedDetailRequestDto } from '../dto/request/readFeedDetail.dto';
-import { ApiReadFeedDetail } from '../api-docs/readFeedDetail.api-docs';
+import { ApiGetFeedDetail } from '../api-docs/getFeedDetail.api-docs';
 import { ReadFeedInterceptor } from '../interceptor/read-feed.interceptor';
 import { ReadFeedDeleteCheckRequestDto } from '../dto/request/readFeedDeleteCheck.dto';
 import { ApiDeleteCheckFeed } from '../api-docs/deleteCheckFeed.api-docs';
@@ -119,13 +119,11 @@ export class FeedController {
     );
   }
 
-  @ApiReadFeedDetail()
+  @ApiGetFeedDetail()
   @Get('/detail/:feedId')
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(ReadFeedInterceptor)
-  async readFeedDetail(
-    @Param() feedDetailRequestDto: ReadFeedDetailRequestDto,
-  ) {
+  async getFeedDetail(@Param() feedDetailRequestDto: ReadFeedDetailRequestDto) {
     return ApiResponse.responseWithData(
       '요청이 성공적으로 처리되었습니다.',
       await this.feedService.readFeedDetail(feedDetailRequestDto),

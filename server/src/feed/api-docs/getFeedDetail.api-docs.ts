@@ -4,10 +4,9 @@ import {
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
-  ApiQuery,
 } from '@nestjs/swagger';
 
-export function ApiReadFeedDetail() {
+export function ApiGetFeedDetail() {
   return applyDecorators(
     ApiOperation({
       summary: `게시글 상세 모달 데이터 조회 API`,

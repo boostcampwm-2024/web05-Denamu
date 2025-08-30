@@ -5,7 +5,7 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 
-export function ApiReadSessionIdAdmin() {
+export function ApiGetSessionIdAdmin() {
   return applyDecorators(
     ApiOperation({
       summary: `관리자 페이지 출력을 위한 sessionId 확인 API`,
