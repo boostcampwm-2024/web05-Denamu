@@ -24,10 +24,10 @@ import {
   FeedRecentRedis,
   ReadFeedRecentResponseDto,
 } from '../dto/response/readFeedRecent.dto';
-import { UpdateFeedViewRequestDto } from '../dto/request/feedViewUpdate.dto';
-import { ReadFeedDetailRequestDto } from '../dto/request/readFeedDetail.dto';
-import { ReadFeedDetailResponseDto } from '../dto/response/readFeedDetail';
-import { ReadFeedDeleteCheckRequestDto } from '../dto/request/readFeedDeleteCheck.dto';
+import { UpdateFeedViewCountRequestDto } from '../dto/request/updateFeedViewCount.dto';
+import { GetFeedDetailRequestDto } from '../dto/request/getFeedDetail.dto';
+import { GetFeedDetailResponseDto } from '../dto/response/getFeedDetail';
+import { DeleteCheckFeedRequestDto } from '../dto/request/readFeedDeleteCheck.dto';
 
 @Injectable()
 export class FeedService {
@@ -137,7 +137,7 @@ export class FeedService {
   }
 
   async updateFeedViewCount(
-    viewUpdateParamDto: UpdateFeedViewRequestDto,
+    viewUpdateParamDto: UpdateFeedViewCountRequestDto,
     request: Request,
     response: Response,
   ) {
@@ -235,12 +235,12 @@ export class FeedService {
     return request.socket.remoteAddress;
   }
 
-  async readFeedDetail(feedDetailRequestDto: ReadFeedDetailRequestDto) {
+  async getFeedDetail(feedDetailRequestDto: GetFeedDetailRequestDto) {
     const feed = await this.getFeedByView(feedDetailRequestDto.feedId);
-    return ReadFeedDetailResponseDto.toResponseDto(feed);
+    return GetFeedDetailResponseDto.toResponseDto(feed);
   }
 
-  async deleteCheckFeed(feedDeleteCheckDto: ReadFeedDeleteCheckRequestDto) {
+  async deleteCheckFeed(feedDeleteCheckDto: DeleteCheckFeedRequestDto) {
     const feed = await this.getFeed(feedDeleteCheckDto.feedId);
     const response = await fetch(feed.path);
 

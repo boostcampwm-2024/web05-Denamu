@@ -26,11 +26,11 @@ import { ApiSearchFeedList } from '../api-docs/searchFeedList.api-docs';
 import { ApiUpdateFeedViewCount } from '../api-docs/updateFeedViewCount.api-docs';
 import { ApiReadRecentFeedList } from '../api-docs/readRecentFeedList.api-docs';
 import { FeedTrendResponseDto } from '../dto/response/readFeedPagination.dto';
-import { UpdateFeedViewRequestDto } from '../dto/request/feedViewUpdate.dto';
-import { ReadFeedDetailRequestDto } from '../dto/request/readFeedDetail.dto';
+import { UpdateFeedViewCountRequestDto } from '../dto/request/updateFeedViewCount.dto';
+import { GetFeedDetailRequestDto } from '../dto/request/getFeedDetail.dto';
 import { ApiGetFeedDetail } from '../api-docs/getFeedDetail.api-docs';
 import { ReadFeedInterceptor } from '../interceptor/read-feed.interceptor';
-import { ReadFeedDeleteCheckRequestDto } from '../dto/request/readFeedDeleteCheck.dto';
+import { DeleteCheckFeedRequestDto } from '../dto/request/readFeedDeleteCheck.dto';
 import { ApiDeleteCheckFeed } from '../api-docs/deleteCheckFeed.api-docs';
 
 @ApiTags('Feed')
@@ -95,7 +95,7 @@ export class FeedController {
   @Post('/:feedId')
   @HttpCode(HttpStatus.OK)
   async updateFeedViewCount(
-    @Param() viewUpdateParamDto: UpdateFeedViewRequestDto,
+    @Param() viewUpdateParamDto: UpdateFeedViewCountRequestDto,
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ) {
@@ -123,10 +123,10 @@ export class FeedController {
   @Get('/detail/:feedId')
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(ReadFeedInterceptor)
-  async getFeedDetail(@Param() feedDetailRequestDto: ReadFeedDetailRequestDto) {
+  async getFeedDetail(@Param() feedDetailRequestDto: GetFeedDetailRequestDto) {
     return ApiResponse.responseWithData(
       '요청이 성공적으로 처리되었습니다.',
-      await this.feedService.readFeedDetail(feedDetailRequestDto),
+      await this.feedService.getFeedDetail(feedDetailRequestDto),
     );
   }
 
@@ -134,7 +134,7 @@ export class FeedController {
   @Delete('/:feedId')
   @HttpCode(HttpStatus.OK)
   async deleteCheckFeed(
-    @Param() feedDeleteCheckDto: ReadFeedDeleteCheckRequestDto,
+    @Param() feedDeleteCheckDto: DeleteCheckFeedRequestDto,
   ) {
     await this.feedService.deleteCheckFeed(feedDeleteCheckDto);
     return ApiResponse.responseWithNoContent(

@@ -1,13 +1,13 @@
-import { GetStatisticAllResponseDto } from '../dto/response/getStatisticAll.dto';
+import { ReadStatisticAllResponseDto } from '../dto/response/readStatisticAll.dto';
 import { RssAcceptRepository } from '../../rss/repository/rss.repository';
 import { Injectable } from '@nestjs/common';
 import { RedisService } from '../../common/redis/redis.service';
 import { FeedRepository } from '../../feed/repository/feed.repository';
 import { redisKeys } from '../../common/redis/redis.constant';
-import { GetStatisticPlatformResponseDto } from '../dto/response/getStatisticPlatform.dto';
-import { GetStatisticTodayResponseDto } from '../dto/response/getStatisticToday.dto';
+import { ReadStatisticPlatformResponseDto } from '../dto/response/readStatisticPlatform.dto';
+import { ReadStatisticTodayResponseDto } from '../dto/response/readStatisticToday.dto';
 import { Feed } from '../../feed/entity/feed.entity';
-import { GetStatisticRequestDto } from '../dto/request/getStatistic.dto';
+import { ReadStatisticRequestDto } from '../dto/request/readStatistic.dto';
 
 @Injectable()
 export class StatisticService {
@@ -17,7 +17,7 @@ export class StatisticService {
     private readonly rssAcceptRepository: RssAcceptRepository,
   ) {}
 
-  async readTodayStatistic(statisticQueryDto: GetStatisticRequestDto) {
+  async readTodayStatistic(statisticQueryDto: ReadStatisticRequestDto) {
     const ranking = await this.redisService.zrevrange(
       redisKeys.FEED_TREND_KEY,
       0,
@@ -42,20 +42,20 @@ export class StatisticService {
       });
     }
 
-    return GetStatisticTodayResponseDto.toResponseDtoArray(todayFeedViews);
+    return ReadStatisticTodayResponseDto.toResponseDtoArray(todayFeedViews);
   }
 
-  async readAllStatistic(statisticQueryDto: GetStatisticRequestDto) {
+  async readAllStatistic(statisticQueryDto: ReadStatisticRequestDto) {
     const ranking = await this.feedRepository.findAllStatisticsOrderByViewCount(
       statisticQueryDto.limit,
     );
-    return GetStatisticAllResponseDto.toResponseDtoArray(ranking);
+    return ReadStatisticAllResponseDto.toResponseDtoArray(ranking);
   }
 
   async readPlatformStatistic() {
     const platformStatistics =
       await this.rssAcceptRepository.countByBlogPlatform();
-    return GetStatisticPlatformResponseDto.toResponseDtoArray(
+    return ReadStatisticPlatformResponseDto.toResponseDtoArray(
       platformStatistics,
     );
   }
