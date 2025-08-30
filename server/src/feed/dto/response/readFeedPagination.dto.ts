@@ -39,7 +39,7 @@ export class FeedResult {
   }
 }
 
-export class FeedPaginationResponseDto {
+export class ReadFeedPaginationResponseDto {
   @ApiProperty({
     example: [
       {
@@ -72,7 +72,7 @@ export class FeedPaginationResponseDto {
   })
   hasMore: boolean;
 
-  constructor(partial: Partial<FeedPaginationResponseDto>) {
+  constructor(partial: Partial<ReadFeedPaginationResponseDto>) {
     Object.assign(this, partial);
   }
 
@@ -81,7 +81,7 @@ export class FeedPaginationResponseDto {
     lastId: number,
     hasMore: boolean,
   ) {
-    return new FeedPaginationResponseDto({
+    return new ReadFeedPaginationResponseDto({
       result: feedPagination,
       lastId,
       hasMore,

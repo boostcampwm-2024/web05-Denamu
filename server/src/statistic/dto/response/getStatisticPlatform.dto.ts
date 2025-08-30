@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { RssAccept } from '../../../rss/entity/rss.entity';
 
-export class StatisticPlatformResponseDto {
+export class GetStatisticPlatformResponseDto {
   @ApiProperty({
     example: 'example blog platform',
     description: '블로그 플랫폼',
@@ -14,12 +14,12 @@ export class StatisticPlatformResponseDto {
   })
   count: number;
 
-  private constructor(partial: Partial<StatisticPlatformResponseDto>) {
+  private constructor(partial: Partial<GetStatisticPlatformResponseDto>) {
     Object.assign(this, partial);
   }
 
   static toResponseDto(platformStatistic: RssAccept) {
-    return new StatisticPlatformResponseDto({
+    return new GetStatisticPlatformResponseDto({
       platform: platformStatistic['platform'],
       count: platformStatistic['count'],
     });

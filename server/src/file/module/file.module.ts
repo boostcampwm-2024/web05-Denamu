@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { FileController } from '../controller/file.controller';
 import { FileService } from '../service/file.service';
 import { FileRepository } from '../repository/file.repository';

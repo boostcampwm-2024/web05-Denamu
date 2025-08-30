@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { ActivityRepository } from '../repository/activity.repository';
 import {
-  ActivityReadResponseDto,
+  ReadActivityResponseDto,
   DailyActivityDto,
-} from '../dto/response/activity-read.dto';
+} from '../dto/response/readActivity.dto';
 import { UserService } from '../../user/service/user.service';
 
 @Injectable()
@@ -16,7 +16,7 @@ export class ActivityService {
   async readActivities(
     userId: number,
     year: number,
-  ): Promise<ActivityReadResponseDto> {
+  ): Promise<ReadActivityResponseDto> {
     const user = await this.userService.getUser(userId);
 
     const activities =
@@ -30,7 +30,7 @@ export class ActivityService {
         }),
     );
 
-    return ActivityReadResponseDto.toResponseDto(dailyActivities, user);
+    return ReadActivityResponseDto.toResponseDto(dailyActivities, user);
   }
 
   async upsertActivity(userId: number) {

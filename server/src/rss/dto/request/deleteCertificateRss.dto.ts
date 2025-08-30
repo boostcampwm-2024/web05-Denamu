@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsString } from 'class-validator';
 
-export class DeleteRssDto {
+export class DeleteCertificateRssRequestDto {
   @ApiProperty({
     description: '이메일 인증 코드를 입력해주세요.',
     example: 'test code',
@@ -14,7 +14,7 @@ export class DeleteRssDto {
   })
   code: string;
 
-  constructor(partial: Partial<DeleteRssDto>) {
+  constructor(partial: Partial<DeleteCertificateRssRequestDto>) {
     Object.assign(this, partial);
   }
 }

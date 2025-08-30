@@ -1,7 +1,7 @@
-import { IsOptional, IsString, IsUrl, MaxLength } from 'class-validator';
+import { IsOptional, IsString, MaxLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class UpdateUserDto {
+export class UpdateUserRequestDto {
   @ApiProperty({
     example: '김개발',
     description: '변경할 사용자 이름',
@@ -41,7 +41,7 @@ export class UpdateUserDto {
   })
   introduction?: string;
 
-  constructor(partial: Partial<UpdateUserDto>) {
+  constructor(partial: Partial<UpdateUserRequestDto>) {
     Object.assign(this, partial);
   }
 }

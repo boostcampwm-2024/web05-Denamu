@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Rss } from '../../entity/rss.entity';
 
-export class RssReadResponseDto {
+export class ReadRssResponseDto {
   @ApiProperty({
     example: 1,
     description: 'RSS 대기 ID',
@@ -32,12 +32,12 @@ export class RssReadResponseDto {
   })
   rssUrl: string;
 
-  private constructor(partial: Partial<RssReadResponseDto>) {
+  private constructor(partial: Partial<ReadRssResponseDto>) {
     Object.assign(this, partial);
   }
 
   static toResponseDto(rss: Rss) {
-    return new RssReadResponseDto({
+    return new ReadRssResponseDto({
       id: rss.id,
       name: rss.name,
       userName: rss.userName,

@@ -1,5 +1,5 @@
 import { validate } from 'class-validator';
-import { UpdateCommentRequestDto } from '../../../src/comment/dto/request/update-comment.dto';
+import { UpdateCommentRequestDto } from '../../../src/comment/dto/request/updateComment.dto';
 
 describe('EditCommentRequestDto Test', () => {
   it('댓글 내용이 비어있다면 유효성 검사에 실패한다.', async () => {

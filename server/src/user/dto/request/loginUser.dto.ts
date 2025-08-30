@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsNotEmpty } from 'class-validator';
 
-export class LoginDto {
+export class LoginUserRequestDto {
   @ApiProperty({
     example: 'test@test.com',
     description: '이메일을 입력해주세요.',
@@ -17,7 +17,7 @@ export class LoginDto {
   @IsNotEmpty({ message: '비밀번호를 입력하세요.' })
   password: string;
 
-  constructor(partial: Partial<LoginDto>) {
+  constructor(partial: Partial<LoginUserRequestDto>) {
     Object.assign(this, partial);
   }
 }

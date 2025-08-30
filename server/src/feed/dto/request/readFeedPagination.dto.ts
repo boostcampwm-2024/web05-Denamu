@@ -1,9 +1,9 @@
 import { IsIn, IsInt, IsOptional, Min } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ALLOWED_TAGS, AllowedTag } from '../../tagType.constants';
+import { ALLOWED_TAGS, AllowedTag } from '../../constant/tagType.constants';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class FeedPaginationRequestDto {
+export class ReadFeedPaginationRequestDto {
   @ApiProperty({
     example: 1,
     description: '마지막 피드 ID',
@@ -43,7 +43,7 @@ export class FeedPaginationRequestDto {
   @Type(() => Array)
   tags?: AllowedTag[];
 
-  constructor(partial: Partial<FeedPaginationRequestDto>) {
+  constructor(partial: Partial<ReadFeedPaginationRequestDto>) {
     Object.assign(this, partial);
   }
 }

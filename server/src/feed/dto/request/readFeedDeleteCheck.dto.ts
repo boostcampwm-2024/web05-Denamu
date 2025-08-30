@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsInt, Min } from 'class-validator';
 
-export class FeedDeleteCheckDto {
+export class ReadFeedDeleteCheckRequestDto {
   @ApiProperty({
     example: 1,
     description: '조회할 게시글 ID 입력',
@@ -14,7 +14,7 @@ export class FeedDeleteCheckDto {
   @Type(() => Number)
   feedId: number;
 
-  constructor(partial: Partial<FeedDeleteCheckDto>) {
+  constructor(partial: Partial<ReadFeedDeleteCheckRequestDto>) {
     Object.assign(this, partial);
   }
 }

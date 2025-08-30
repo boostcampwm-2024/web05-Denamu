@@ -1,5 +1,5 @@
 import { INestApplication } from '@nestjs/common';
-import { RegisterDto } from '../../../src/user/dto/request/register.dto';
+import { RegisterUserRequestDto } from '../../../src/user/dto/request/registerUser.dto';
 import * as request from 'supertest';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../fixture/user.fixture';
@@ -7,7 +7,7 @@ import { UserFixture } from '../../fixture/user.fixture';
 describe('POST api/user/register E2E Test', () => {
   let app: INestApplication;
 
-  const newRegisterDto = new RegisterDto({
+  const newRegisterDto = new RegisterUserRequestDto({
     email: 'test1234@test.com',
     password: 'test1234!',
     userName: 'test1234',

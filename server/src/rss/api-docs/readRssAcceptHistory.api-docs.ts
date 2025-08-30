@@ -5,7 +5,7 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 
-export function ApiReadAcceptHistory() {
+export function ApiReadRssAcceptHistory() {
   return applyDecorators(
     ApiOperation({
       summary: 'RSS 승인 기록 API',

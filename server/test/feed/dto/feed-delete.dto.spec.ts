@@ -1,10 +1,10 @@
 import { validate } from 'class-validator';
-import { FeedDeleteCheckDto } from '../../../src/feed/dto/request/feed-check.dto';
+import { ReadFeedDeleteCheckRequestDto } from '../../../src/feed/dto/request/readFeedDeleteCheck.dto';
 
 describe('FeedDeleteCheckDto Test', () => {
   it('feedId에 1보다 작은 값을 입력하면 유효성 검사에 실패한다.', async () => {
     //given
-    const feedPaginationQueryDto = new FeedDeleteCheckDto({
+    const feedPaginationQueryDto = new ReadFeedDeleteCheckRequestDto({
       feedId: -1,
     });
 
@@ -18,7 +18,7 @@ describe('FeedDeleteCheckDto Test', () => {
 
   it('feedId에 자연수가 아닌 실수를 입력하면 유효성 검사에 실패한다.', async () => {
     //given
-    const feedPaginationQueryDto = new FeedDeleteCheckDto({
+    const feedPaginationQueryDto = new ReadFeedDeleteCheckRequestDto({
       feedId: 1.254,
     });
 
@@ -32,7 +32,7 @@ describe('FeedDeleteCheckDto Test', () => {
 
   it('feedId에 문자열을 입력하면 유효성 검사에 실패한다.', async () => {
     //given
-    const feedPaginationQueryDto = new FeedDeleteCheckDto({
+    const feedPaginationQueryDto = new ReadFeedDeleteCheckRequestDto({
       feedId: 'abcdefg' as any,
     });
 

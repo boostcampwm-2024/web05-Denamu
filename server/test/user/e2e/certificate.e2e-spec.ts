@@ -2,7 +2,7 @@ import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { RedisService } from '../../../src/common/redis/redis.service';
-import { USER_CONSTANTS } from '../../../src/user/user.constants';
+import { USER_CONSTANTS } from '../../../src/user/constant/user.constants';
 import { UserFixture } from '../../fixture/user.fixture';
 
 describe('POST api/user/certificate E2E Test', () => {

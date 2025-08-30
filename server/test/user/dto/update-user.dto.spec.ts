@@ -1,10 +1,10 @@
 import { validate } from 'class-validator';
-import { UpdateUserDto } from '../../../src/user/dto/request/update-user.dto';
+import { UpdateUserRequestDto } from '../../../src/user/dto/request/updateUser.dto';
 
 describe('UpdateUserDto Test', () => {
   it('정상적인 데이터로 유효성 검사를 통과한다.', async () => {
     // given
-    const dto = new UpdateUserDto({
+    const dto = new UpdateUserRequestDto({
       userName: '정상이름',
       profileImage: 'profile-uuid-123',
       introduction: '안녕하세요! 정상적인 소개글입니다.',
@@ -19,7 +19,7 @@ describe('UpdateUserDto Test', () => {
 
   it('일부 필드만 있어도 유효성 검사를 통과한다.', async () => {
     // given
-    const dto = new UpdateUserDto({
+    const dto = new UpdateUserRequestDto({
       userName: '부분수정',
     });
 
@@ -32,7 +32,7 @@ describe('UpdateUserDto Test', () => {
 
   it('빈 객체도 유효성 검사를 통과한다.', async () => {
     // given
-    const dto = new UpdateUserDto({});
+    const dto = new UpdateUserRequestDto({});
 
     // when
     const errors = await validate(dto);
@@ -44,7 +44,7 @@ describe('UpdateUserDto Test', () => {
   describe('userName 유효성 검사', () => {
     it('userName이 문자열이 아니면 유효성 검사에 실패한다.', async () => {
       // given
-      const dto = new UpdateUserDto({
+      const dto = new UpdateUserRequestDto({
         userName: 123 as any,
       });
 
@@ -59,7 +59,7 @@ describe('UpdateUserDto Test', () => {
     it('userName이 60자를 초과하면 유효성 검사에 실패한다.', async () => {
       // given
       const longUserName = 'a'.repeat(61);
-      const dto = new UpdateUserDto({
+      const dto = new UpdateUserRequestDto({
         userName: longUserName,
       });
 
@@ -75,7 +75,7 @@ describe('UpdateUserDto Test', () => {
   describe('profileImage 유효성 검사', () => {
     it('profileImage가 문자열이 아니면 유효성 검사에 실패한다.', async () => {
       // given
-      const dto = new UpdateUserDto({
+      const dto = new UpdateUserRequestDto({
         profileImage: 123 as any,
       });
 
@@ -89,7 +89,7 @@ describe('UpdateUserDto Test', () => {
 
     it('profileImage가 정상적인 문자열이면 유효성 검사를 통과한다.', async () => {
       // given
-      const dto = new UpdateUserDto({
+      const dto = new UpdateUserRequestDto({
         profileImage: 'valid-uuid-string',
       });
 
@@ -104,7 +104,7 @@ describe('UpdateUserDto Test', () => {
   describe('introduction 유효성 검사', () => {
     it('introduction이 문자열이 아니면 유효성 검사에 실패한다.', async () => {
       // given
-      const dto = new UpdateUserDto({
+      const dto = new UpdateUserRequestDto({
         introduction: 123 as any,
       });
 
@@ -119,7 +119,7 @@ describe('UpdateUserDto Test', () => {
     it('introduction이 500자를 초과하면 유효성 검사에 실패한다.', async () => {
       // given
       const longIntroduction = 'a'.repeat(501);
-      const dto = new UpdateUserDto({
+      const dto = new UpdateUserRequestDto({
         introduction: longIntroduction,
       });
 
@@ -135,7 +135,7 @@ describe('UpdateUserDto Test', () => {
   describe('복합 필드 유효성 검사', () => {
     it('여러 필드에 유효성 오류가 있으면 모든 오류를 반환한다.', async () => {
       // given
-      const dto = new UpdateUserDto({
+      const dto = new UpdateUserRequestDto({
         userName: 123 as any,
         profileImage: 456 as any,
         introduction: 789 as any,

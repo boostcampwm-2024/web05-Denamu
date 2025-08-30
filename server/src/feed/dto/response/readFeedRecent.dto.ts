@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class FeedRecentResponseDto {
+export class ReadFeedRecentResponseDto {
   @ApiProperty({
     example: 1,
     description: '게시글 ID',
@@ -73,12 +73,12 @@ export class FeedRecentResponseDto {
   })
   tag: string[] | string;
 
-  constructor(partial: Partial<FeedRecentResponseDto>) {
+  constructor(partial: Partial<ReadFeedRecentResponseDto>) {
     Object.assign(this, partial);
   }
 
   static toResponseDto(feed: FeedRecentRedis) {
-    return new FeedRecentResponseDto({
+    return new ReadFeedRecentResponseDto({
       id: feed.id,
       author: feed.blogName,
       blogPlatform: feed.blogPlatform,

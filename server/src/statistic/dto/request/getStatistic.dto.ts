@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsInt, IsOptional, Min } from 'class-validator';
 
-export class StatisticRequestDto {
+export class GetStatisticRequestDto {
   @ApiProperty({
     example: 1,
     description: '최대로 가져올 데이터 개수를 입력하세요.',
@@ -14,7 +14,7 @@ export class StatisticRequestDto {
   @Type(() => Number)
   limit?: number = 10;
 
-  constructor(partial: Partial<StatisticRequestDto>) {
+  constructor(partial: Partial<GetStatisticRequestDto>) {
     Object.assign(this, partial);
   }
 }

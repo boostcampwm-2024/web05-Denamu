@@ -1,11 +1,11 @@
 import { validate } from 'class-validator';
-import { RequestDeleteRssDto } from '../../../src/rss/dto/request/rss-request-delete.dto';
+import { DeleteRssRequestDto } from '../../../src/rss/dto/request/deleteRss.dto';
 
 describe('RequestDeleteRssDto Test', () => {
-  let dto: RequestDeleteRssDto;
+  let dto: DeleteRssRequestDto;
 
   beforeEach(() => {
-    dto = new RequestDeleteRssDto({
+    dto = new DeleteRssRequestDto({
       blogUrl: 'https://test.com/rss',
       email: 'test@test.com',
     });

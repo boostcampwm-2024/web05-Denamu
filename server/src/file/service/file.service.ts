@@ -3,13 +3,13 @@ import { File } from '../entity/file.entity';
 import { unlinkSync, existsSync } from 'fs';
 import { FileRepository } from '../repository/file.repository';
 import { User } from '../../user/entity/user.entity';
-import { FileUploadResponseDto } from '../dto/response/createFile.dto';
+import { UploadFileResponseDto } from '../dto/response/uploadFile.dto';
 
 @Injectable()
 export class FileService {
   constructor(private readonly fileRepository: FileRepository) {}
 
-  async create(file: any, userId: number): Promise<FileUploadResponseDto> {
+  async create(file: any, userId: number): Promise<UploadFileResponseDto> {
     const { originalName, mimetype, size, path } = file;
 
     const savedFile = await this.fileRepository.save({
@@ -21,7 +21,7 @@ export class FileService {
     } as File);
     const accessUrl = this.generateAccessUrl(path);
 
-    return FileUploadResponseDto.toResponseDto(savedFile, accessUrl);
+    return UploadFileResponseDto.toResponseDto(savedFile, accessUrl);
   }
 
   private generateAccessUrl(filePath: string): string {

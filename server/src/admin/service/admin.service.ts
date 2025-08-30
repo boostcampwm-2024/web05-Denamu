@@ -4,13 +4,13 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Response, Request } from 'express';
-import { RegisterAdminRequestDto } from '../dto/request/register-admin.dto';
+import { RegisterAdminRequestDto } from '../dto/request/registerAdmin.dto';
 import { AdminRepository } from '../repository/admin.repository';
 import * as bcrypt from 'bcrypt';
 import { cookieConfig } from '../../common/cookie/cookie.config';
 import * as uuid from 'uuid';
 import { RedisService } from '../../common/redis/redis.service';
-import { LoginAdminRequestDto } from '../dto/request/login-admin.dto';
+import { LoginAdminRequestDto } from '../dto/request/loginAdmin.dto';
 
 @Injectable()
 export class AdminService {

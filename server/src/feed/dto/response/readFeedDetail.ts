@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { FeedView } from '../../entity/feed.entity';
 
-export class FeedDetailResponseDto {
+export class ReadFeedDetailResponseDto {
   @ApiProperty({
     example: 1,
     description: '피드 ID',
@@ -74,12 +74,12 @@ export class FeedDetailResponseDto {
   })
   tag: string[];
 
-  private constructor(partial: Partial<FeedDetailResponseDto>) {
+  private constructor(partial: Partial<ReadFeedDetailResponseDto>) {
     Object.assign(this, partial);
   }
 
   static toResponseDto(feed: FeedView) {
-    return new FeedDetailResponseDto({
+    return new ReadFeedDetailResponseDto({
       id: feed.feedId,
       author: feed.blogName,
       blogPlatform: feed.blogPlatform,

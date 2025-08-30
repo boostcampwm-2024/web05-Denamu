@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsInt, Min } from 'class-validator';
 
-export class FeedLikeRequestDto {
+export class ManageLikeRequestDto {
   @ApiProperty({
     example: 1,
     description: '좋아요 등록 및 취소, 조회할 피드 ID 입력',
@@ -14,7 +14,7 @@ export class FeedLikeRequestDto {
   @Type(() => Number)
   feedId: number;
 
-  constructor(partial: Partial<FeedLikeRequestDto>) {
+  constructor(partial: Partial<ManageLikeRequestDto>) {
     Object.assign(this, partial);
   }
 }

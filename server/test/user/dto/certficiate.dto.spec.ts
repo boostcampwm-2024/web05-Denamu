@@ -1,10 +1,10 @@
 import { validate } from 'class-validator';
-import { CertificateDto } from '../../../src/user/dto/request/certificate.dto';
+import { CertificateUserRequestDto } from '../../../src/user/dto/request/certificateUser.dto';
 
 describe('CertificateDto Test', () => {
   it('uuid가 비어있으면 유효성 검사에 실패한다.', async () => {
     // given
-    const certificateDto = new CertificateDto();
+    const certificateDto = new CertificateUserRequestDto();
     certificateDto.uuid = '';
 
     // when

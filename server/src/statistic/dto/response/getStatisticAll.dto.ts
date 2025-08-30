@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Feed } from '../../../feed/entity/feed.entity';
 
-export class StatisticAllResponseDto {
+export class GetStatisticAllResponseDto {
   @ApiProperty({
     example: 1,
     description: '게시글 ID',
@@ -20,12 +20,12 @@ export class StatisticAllResponseDto {
   })
   viewCount: number;
 
-  private constructor(partial: Partial<StatisticAllResponseDto>) {
+  private constructor(partial: Partial<GetStatisticAllResponseDto>) {
     Object.assign(this, partial);
   }
 
   static toResponseDto(feed: Feed) {
-    return new StatisticAllResponseDto({
+    return new GetStatisticAllResponseDto({
       id: feed.id,
       title: feed.title,
       viewCount: feed.viewCount,

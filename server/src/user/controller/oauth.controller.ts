@@ -11,8 +11,8 @@ import { OAuthService } from '../service/oauth.service';
 import { ApiTags } from '@nestjs/swagger';
 import { Response, Request } from 'express';
 import { ApiOAuth } from '../api-docs/oAuth.api-docs';
-import { ApiOAuthCallback } from '../api-docs/oauthCallback.api-docs';
-import { OAuthTypeDto } from '../dto/request/oauth-type.dto';
+import { ApiOAuthCallback } from '../api-docs/oAuthCallback.api-docs';
+import { OAuthTypeRequestDto } from '../dto/request/oauthType.dto';
 import { OAUTH_URL_PATH } from '../constant/oauth.constant';
 
 @ApiTags('OAuth')
@@ -23,7 +23,10 @@ export class OAuthController {
   @Get()
   @ApiOAuth()
   @HttpCode(HttpStatus.FOUND)
-  async getProvider(@Query() provider: OAuthTypeDto, @Res() res: Response) {
+  async getProvider(
+    @Query() provider: OAuthTypeRequestDto,
+    @Res() res: Response,
+  ) {
     return res.redirect(this.oauthService.getAuthUrl(provider.type));
   }
 

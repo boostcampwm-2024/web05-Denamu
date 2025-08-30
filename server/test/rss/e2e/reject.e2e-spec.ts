@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { Rss, RssReject } from '../../../src/rss/entity/rss.entity';
 import { RssFixture } from '../../fixture/rss.fixture';
 import { RedisService } from '../../../src/common/redis/redis.service';
-import { RejectRssRequestDto } from '../../../src/rss/dto/request/rss-reject.dto';
+import { RejectRssRequestDto } from '../../../src/rss/dto/request/rejectRss';
 import {
   RssRejectRepository,
   RssRepository,

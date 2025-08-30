@@ -9,19 +9,19 @@ import {
   RssRepository,
   RssAcceptRepository,
 } from '../repository/rss.repository';
-import { RssRegisterRequestDto } from '../dto/request/rss-register.dto';
+import { RegisterRssRequestDto } from '../dto/request/registerRss.dto';
 import { EmailService } from '../../common/email/email.service';
 import { DataSource } from 'typeorm';
 import { Rss, RssReject, RssAccept } from '../entity/rss.entity';
-import { FeedCrawlerService } from '../../feed/service/feed-crawler.service';
-import { RssReadResponseDto } from '../dto/response/rss-all.dto';
-import { RssAcceptHistoryResponseDto } from '../dto/response/rss-accept-history.dto';
-import { RssRejectHistoryResponseDto } from '../dto/response/rss-reject-history.dto';
-import { RssManagementRequestDto } from '../dto/request/rss-management.dto';
-import { RejectRssRequestDto } from '../dto/request/rss-reject.dto';
-import { RequestDeleteRssDto } from '../dto/request/rss-request-delete.dto';
+import { FeedCrawlerService } from '../../feed/service/feedCrawler.service';
+import { ReadRssResponseDto } from '../dto/response/readRss.dto';
+import { ReadRssAcceptHistoryResponseDto } from '../dto/response/readRssAcceptHistory.dto';
+import { ReadRssRejectHistoryResponseDto } from '../dto/response/readRssRejectHistory.dto';
+import { ManageRssRequestDto } from '../dto/request/manageRss.dto';
+import { RejectRssRequestDto } from '../dto/request/rejectRss';
+import { DeleteRssRequestDto } from '../dto/request/deleteRss.dto';
 import { RedisService } from '../../common/redis/redis.service';
-import { DeleteRssDto } from '../dto/request/rss-delete.dto';
+import { DeleteCertificateRssRequestDto } from '../dto/request/deleteCertificateRss.dto';
 import { FeedRepository } from '../../feed/repository/feed.repository';
 
 @Injectable()
@@ -37,7 +37,7 @@ export class RssService {
     private readonly feedRepository: FeedRepository,
   ) {}
 
-  async createRss(rssRegisterBodyDto: RssRegisterRequestDto) {
+  async createRss(rssRegisterBodyDto: RegisterRssRequestDto) {
     const [alreadyURLRss, alreadyURLBlog] = await Promise.all([
       this.rssRepository.findOne({
         where: {
@@ -64,10 +64,10 @@ export class RssService {
 
   async readAllRss() {
     const rssList = await this.rssRepository.find();
-    return RssReadResponseDto.toResponseDtoArray(rssList);
+    return ReadRssResponseDto.toResponseDtoArray(rssList);
   }
 
-  async acceptRss(rssAcceptParamDto: RssManagementRequestDto) {
+  async acceptRss(rssAcceptParamDto: ManageRssRequestDto) {
     const rssId = rssAcceptParamDto.id;
     const rss = await this.rssRepository.findOne({
       where: { id: rssId },
@@ -91,7 +91,7 @@ export class RssService {
   }
 
   async rejectRss(
-    rssRejectParamDto: RssManagementRequestDto,
+    rssRejectParamDto: ManageRssRequestDto,
     rssRejectBodyDto: RejectRssRequestDto,
   ) {
     const rssId = rssRejectParamDto.id;
@@ -126,7 +126,7 @@ export class RssService {
         id: 'DESC',
       },
     });
-    return RssAcceptHistoryResponseDto.toResponseDtoArray(acceptRssList);
+    return ReadRssAcceptHistoryResponseDto.toResponseDtoArray(acceptRssList);
   }
 
   async readRejectHistory() {
@@ -135,7 +135,7 @@ export class RssService {
         id: 'DESC',
       },
     });
-    return RssRejectHistoryResponseDto.toResponseDtoArray(rejectRssList);
+    return ReadRssRejectHistoryResponseDto.toResponseDtoArray(rejectRssList);
   }
 
   private identifyPlatformFromRssUrl(rssUrl: string) {
@@ -180,7 +180,7 @@ export class RssService {
     this.emailService.sendRssMail(rssAccept, true);
   }
 
-  async requestRemove(requestDeleteRssDto: RequestDeleteRssDto) {
+  async requestRemove(requestDeleteRssDto: DeleteRssRequestDto) {
     const [rssAccept, rssWait] = await Promise.all([
       this.rssAcceptRepository.findOne({
         where: {
@@ -230,7 +230,7 @@ export class RssService {
     return result;
   }
 
-  async deleteRss(deleteRssDto: DeleteRssDto) {
+  async deleteRss(deleteRssDto: DeleteCertificateRssRequestDto) {
     const rssUrl = await this.redisService.get(
       `rss:remove:${deleteRssDto.code}`,
     );

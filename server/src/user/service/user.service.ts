@@ -5,19 +5,19 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { RegisterDto } from '../dto/request/register.dto';
+import { RegisterUserRequestDto } from '../dto/request/registerUser.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { RedisService } from '../../common/redis/redis.service';
-import { USER_CONSTANTS } from '../user.constants';
+import { USER_CONSTANTS } from '../constant/user.constants';
 import { EmailService } from '../../common/email/email.service';
-import { LoginDto } from '../dto/request/login.dto';
+import { LoginUserRequestDto } from '../dto/request/loginUser.dto';
 import { Response } from 'express';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { cookieConfig } from '../../common/cookie/cookie.config';
 import { Payload } from '../../common/guard/jwt.guard';
-import { UpdateUserDto } from '../dto/request/update-user.dto';
+import { UpdateUserRequestDto } from '../dto/request/updateUser.dto';
 import { CheckEmailDuplicationResponseDto } from '../dto/response/checkEmailDuplication.dto';
 
 @Injectable()
@@ -48,7 +48,7 @@ export class UserService {
     return CheckEmailDuplicationResponseDto.toResponseDto(!!user);
   }
 
-  async registerUser(registerDto: RegisterDto): Promise<void> {
+  async registerUser(registerDto: RegisterUserRequestDto): Promise<void> {
     const user = await this.userRepository.findOne({
       where: { email: registerDto.email },
     });
@@ -83,7 +83,7 @@ export class UserService {
     await this.userRepository.save(JSON.parse(user));
   }
 
-  async loginUser(loginDto: LoginDto, response: Response) {
+  async loginUser(loginDto: LoginUserRequestDto, response: Response) {
     const user = await this.userRepository.findOne({
       where: { email: loginDto.email },
     });
@@ -164,7 +164,7 @@ export class UserService {
 
   async updateUser(
     userId: number,
-    updateData: Partial<UpdateUserDto>,
+    updateData: Partial<UpdateUserRequestDto>,
   ): Promise<void> {
     const user = await this.getUser(userId);
 

@@ -4,14 +4,14 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { CommentRepository } from '../repository/comment.repository';
-import { CreateCommentRequestDto } from '../dto/request/create-comment.dto';
+import { CreateCommentRequestDto } from '../dto/request/createComment.dto';
 import { Payload } from '../../common/guard/jwt.guard';
-import { DeleteCommentRequestDto } from '../dto/request/delete-comment.dto';
-import { UpdateCommentRequestDto } from '../dto/request/update-comment.dto';
-import { GetCommentRequestDto } from '../dto/request/get-comment.dto';
+import { DeleteCommentRequestDto } from '../dto/request/deleteComment.dto';
+import { UpdateCommentRequestDto } from '../dto/request/updateComment.dto';
+import { GetCommentRequestDto } from '../dto/request/getComment.dto';
 import { DataSource } from 'typeorm';
 import { Comment } from '../entity/comment.entity';
-import { GetCommentResponseDto } from '../dto/response/get-comment.dto';
+import { GetCommentResponseDto } from '../dto/response/getComment.dto';
 import { FeedService } from '../../feed/service/feed.service';
 import { UserService } from '../../user/service/user.service';
 

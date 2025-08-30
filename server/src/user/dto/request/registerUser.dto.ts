@@ -2,7 +2,7 @@ import { IsEmail, IsNotEmpty, Matches } from 'class-validator';
 import { User } from '../../entity/user.entity';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class RegisterDto {
+export class RegisterUserRequestDto {
   @ApiProperty({
     example: 'example@example.com',
     description: '이메일을 입력해주세요.',
@@ -52,7 +52,7 @@ export class RegisterDto {
     return user;
   }
 
-  constructor(partial: Partial<RegisterDto>) {
+  constructor(partial: Partial<RegisterUserRequestDto>) {
     Object.assign(this, partial);
   }
 }

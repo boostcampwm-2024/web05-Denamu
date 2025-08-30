@@ -4,7 +4,7 @@ import { UserService } from '../../../src/user/service/user.service';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../fixture/user.fixture';
 import { User } from '../../../src/user/entity/user.entity';
-import { UpdateUserDto } from '../../../src/user/dto/request/update-user.dto';
+import { UpdateUserRequestDto } from '../../../src/user/dto/request/updateUser.dto';
 
 describe('PATCH /api/user/profile E2E Test', () => {
   let app: INestApplication;

@@ -15,8 +15,8 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FeedService } from '../service/feed.service';
-import { FeedPaginationRequestDto } from '../dto/request/feed-pagination.dto';
-import { SearchFeedRequestDto } from '../dto/request/search-feed.dto';
+import { ReadFeedPaginationRequestDto } from '../dto/request/readFeedPagination.dto';
+import { SearchFeedRequestDto } from '../dto/request/searchFeed.dto';
 import { Response, Request } from 'express';
 import { Observable } from 'rxjs';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -25,12 +25,12 @@ import { ApiReadTrendFeedList } from '../api-docs/readTrendFeedList.api-docs';
 import { ApiSearchFeedList } from '../api-docs/searchFeedList.api-docs';
 import { ApiUpdateFeedViewCount } from '../api-docs/updateFeedViewCount.api-docs';
 import { ApiReadRecentFeedList } from '../api-docs/readRecentFeedList.api-docs';
-import { FeedTrendResponseDto } from '../dto/response/feed-pagination.dto';
-import { FeedViewUpdateRequestDto } from '../dto/request/feed-update.dto';
-import { FeedDetailRequestDto } from '../dto/request/feed-detail.dto';
+import { FeedTrendResponseDto } from '../dto/response/readFeedPagination.dto';
+import { UpdateFeedViewRequestDto } from '../dto/request/feedViewUpdate.dto';
+import { ReadFeedDetailRequestDto } from '../dto/request/readFeedDetail.dto';
 import { ApiReadFeedDetail } from '../api-docs/readFeedDetail.api-docs';
 import { ReadFeedInterceptor } from '../interceptor/read-feed.interceptor';
-import { FeedDeleteCheckDto } from '../dto/request/feed-check.dto';
+import { ReadFeedDeleteCheckRequestDto } from '../dto/request/readFeedDeleteCheck.dto';
 import { ApiDeleteCheckFeed } from '../api-docs/deleteCheckFeed.api-docs';
 
 @ApiTags('Feed')
@@ -45,7 +45,7 @@ export class FeedController {
   @Get()
   @HttpCode(HttpStatus.OK)
   async readFeedPagination(
-    @Query() feedPaginationQueryDto: FeedPaginationRequestDto,
+    @Query() feedPaginationQueryDto: ReadFeedPaginationRequestDto,
   ) {
     return ApiResponse.responseWithData(
       '피드 조회 완료',
@@ -95,7 +95,7 @@ export class FeedController {
   @Post('/:feedId')
   @HttpCode(HttpStatus.OK)
   async updateFeedViewCount(
-    @Param() viewUpdateParamDto: FeedViewUpdateRequestDto,
+    @Param() viewUpdateParamDto: UpdateFeedViewRequestDto,
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ) {
@@ -123,7 +123,9 @@ export class FeedController {
   @Get('/detail/:feedId')
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(ReadFeedInterceptor)
-  async readFeedDetail(@Param() feedDetailRequestDto: FeedDetailRequestDto) {
+  async readFeedDetail(
+    @Param() feedDetailRequestDto: ReadFeedDetailRequestDto,
+  ) {
     return ApiResponse.responseWithData(
       '요청이 성공적으로 처리되었습니다.',
       await this.feedService.readFeedDetail(feedDetailRequestDto),
@@ -133,7 +135,9 @@ export class FeedController {
   @ApiDeleteCheckFeed()
   @Delete('/:feedId')
   @HttpCode(HttpStatus.OK)
-  async deleteCheckFeed(@Param() feedDeleteCheckDto: FeedDeleteCheckDto) {
+  async deleteCheckFeed(
+    @Param() feedDeleteCheckDto: ReadFeedDeleteCheckRequestDto,
+  ) {
     await this.feedService.deleteCheckFeed(feedDeleteCheckDto);
     return ApiResponse.responseWithNoContent(
       '게시글 삭제 확인 요청을 성공했습니다.',

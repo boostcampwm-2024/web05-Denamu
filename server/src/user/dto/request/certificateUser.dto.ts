@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty } from 'class-validator';
 
-export class CertificateDto {
+export class CertificateUserRequestDto {
   @ApiProperty({
     example: 'd2ba0d98-95ce-4905-87fc-384965ffe7c9',
     description: '인증 코드를 입력해주세요.',

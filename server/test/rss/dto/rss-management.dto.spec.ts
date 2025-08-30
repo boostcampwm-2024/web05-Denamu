@@ -1,11 +1,11 @@
 import 'reflect-metadata';
 import { validate } from 'class-validator';
-import { RssManagementRequestDto } from '../../../src/rss/dto/request/rss-management.dto';
+import { ManageRssRequestDto } from '../../../src/rss/dto/request/manageRss.dto';
 
 describe('RssManagementDto Test', () => {
   it('Rss관리 API의 PathVariable이 정수가 아닐 경우', async () => {
     // given
-    const dto = new RssManagementRequestDto({ id: 'abc' as any });
+    const dto = new ManageRssRequestDto({ id: 'abc' as any });
 
     // when
     const errors = await validate(dto);

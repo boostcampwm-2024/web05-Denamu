@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { File } from '../../entity/file.entity';
 
-export class FileUploadResponseDto {
+export class UploadFileResponseDto {
   @ApiProperty({
     example: 1,
     description: '파일 ID',
@@ -44,12 +44,12 @@ export class FileUploadResponseDto {
   })
   createdAt: Date;
 
-  private constructor(partial: Partial<FileUploadResponseDto>) {
+  private constructor(partial: Partial<UploadFileResponseDto>) {
     Object.assign(this, partial);
   }
 
   static toResponseDto(savedFile: File, accessUrl: string) {
-    return new FileUploadResponseDto({
+    return new UploadFileResponseDto({
       id: savedFile.id,
       originalName: savedFile.originalName,
       mimetype: savedFile.mimetype,

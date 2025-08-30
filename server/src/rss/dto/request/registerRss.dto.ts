@@ -1,8 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsNotEmpty, IsString, IsUrl, Length } from 'class-validator';
-import { Rss, RssInformation } from '../../entity/rss.entity';
+import { Rss } from '../../entity/rss.entity';
 
-export class RssRegisterRequestDto {
+export class RegisterRssRequestDto {
   @ApiProperty({
     example: 'seok3765.log',
     description: '블로그 이름을 입력해주세요.',
@@ -61,7 +61,7 @@ export class RssRegisterRequestDto {
   })
   rssUrl: string;
 
-  constructor(partial: Partial<RssRegisterRequestDto>) {
+  constructor(partial: Partial<RegisterRssRequestDto>) {
     Object.assign(this, partial);
   }
 

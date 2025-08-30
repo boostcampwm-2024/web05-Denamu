@@ -1,10 +1,10 @@
 import { validate } from 'class-validator';
-import { LoginDto } from '../../../src/user/dto/request/login.dto';
+import { LoginUserRequestDto } from '../../../src/user/dto/request/loginUser.dto';
 
 describe('LoginDto Test', () => {
   it('잘못된 이메일 형식이면 유효성 검사에 실패한다.', async () => {
     // given
-    const dto = new LoginDto({
+    const dto = new LoginUserRequestDto({
       email: 'invalid-email',
       password: 'test1234!',
     });
@@ -19,7 +19,7 @@ describe('LoginDto Test', () => {
 
   it('이메일이 빈 문자열이면 유효성 검사에 실패한다.', async () => {
     // given
-    const dto = new LoginDto({
+    const dto = new LoginUserRequestDto({
       email: '',
       password: 'test1234!',
     });
@@ -34,7 +34,7 @@ describe('LoginDto Test', () => {
 
   it('비밀번호가 빈 문자열이면 유효성 검사에 실패한다.', async () => {
     // given
-    const dto = new LoginDto({
+    const dto = new LoginUserRequestDto({
       email: 'test123@test.com',
       password: '',
     });

@@ -1,13 +1,13 @@
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
-import { LoginDto } from '../../../src/user/dto/request/login.dto';
+import { LoginUserRequestDto } from '../../../src/user/dto/request/loginUser.dto';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../fixture/user.fixture';
 
 describe('POST /api/user/login E2E Test', () => {
   let app: INestApplication;
 
-  const loginDto = new LoginDto({
+  const loginDto = new LoginUserRequestDto({
     email: 'test1234@test.com',
     password: 'test1234!',
   });

@@ -11,10 +11,10 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { AdminService } from '../service/admin.service';
-import { RegisterAdminRequestDto } from '../dto/request/register-admin.dto';
+import { RegisterAdminRequestDto } from '../dto/request/registerAdmin.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { ApiResponse } from '../../common/response/common.response';
-import { LoginAdminRequestDto } from '../dto/request/login-admin.dto';
+import { LoginAdminRequestDto } from '../dto/request/loginAdmin.dto';
 import { AdminAuthGuard } from '../../common/guard/auth.guard';
 import { ApiLoginAdmin } from '../api-docs/loginAdmin.api-docs';
 import { ApiReadSessionIdAdmin } from '../api-docs/readSessionIdAdmin.api-docs';

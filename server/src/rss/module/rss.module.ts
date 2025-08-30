@@ -6,7 +6,7 @@ import {
   RssRepository,
   RssAcceptRepository,
 } from '../repository/rss.repository';
-import { RssParserService } from '../service/rss-parser.service';
+import { RssParserService } from '../service/rssParser.service';
 import { EmailModule } from '../../common/email/email.module';
 import { FeedModule } from '../../feed/module/feed.module';
 

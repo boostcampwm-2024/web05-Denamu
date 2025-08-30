@@ -1,6 +1,6 @@
 import { INestApplication } from '@nestjs/common';
-import { LoginAdminRequestDto } from '../../../src/admin/dto/request/login-admin.dto';
-import { RegisterAdminRequestDto } from '../../../src/admin/dto/request/register-admin.dto';
+import { LoginAdminRequestDto } from '../../../src/admin/dto/request/loginAdmin.dto';
+import { RegisterAdminRequestDto } from '../../../src/admin/dto/request/registerAdmin.dto';
 import * as request from 'supertest';
 import { AdminFixture } from '../../fixture/admin.fixture';
 import { AdminRepository } from '../../../src/admin/repository/admin.repository';

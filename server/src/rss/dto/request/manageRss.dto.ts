@@ -2,7 +2,7 @@ import { IsInt, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class RssManagementRequestDto {
+export class ManageRssRequestDto {
   @ApiProperty({
     example: 1,
     description: 'RSS ID',
@@ -14,7 +14,7 @@ export class RssManagementRequestDto {
   @Type(() => Number)
   id: number;
 
-  constructor(partial: Partial<RssManagementRequestDto>) {
+  constructor(partial: Partial<ManageRssRequestDto>) {
     Object.assign(this, partial);
   }
 }

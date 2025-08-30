@@ -10,7 +10,7 @@ export class DailyActivityDto {
   }
 }
 
-export class ActivityReadResponseDto {
+export class ReadActivityResponseDto {
   @ApiProperty({
     type: [DailyActivityDto],
     description: '연도별 일별 활동 데이터 배열',
@@ -35,12 +35,12 @@ export class ActivityReadResponseDto {
   })
   totalViews: number;
 
-  private constructor(partial: Partial<ActivityReadResponseDto>) {
+  private constructor(partial: Partial<ReadActivityResponseDto>) {
     Object.assign(this, partial);
   }
 
   static toResponseDto(dailyActivities: DailyActivityDto[], user: User) {
-    return new ActivityReadResponseDto({
+    return new ReadActivityResponseDto({
       dailyActivities: dailyActivities,
       maxStreak: user.maxStreak,
       currentStreak: user.currentStreak,

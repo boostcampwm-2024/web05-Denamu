@@ -2,7 +2,7 @@ import { OAuthType } from '../../constant/oauth.constant';
 import { IsEnum } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class OAuthTypeDto {
+export class OAuthTypeRequestDto {
   @ApiProperty({
     example: OAuthType.Google,
     description: '제공자 타입',
