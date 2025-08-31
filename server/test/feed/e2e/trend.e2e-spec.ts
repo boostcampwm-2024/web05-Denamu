@@ -6,7 +6,7 @@ import { FeedRepository } from '../../../src/feed/repository/feed.repository';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
 import { Feed } from '../../../src/feed/entity/feed.entity';
 import { FeedFixture } from '../../fixture/feed.fixture';
-import EventSource from 'eventsource';
+import * as EventSource from 'eventsource';
 
 describe('SSE /api/trend/sse E2E Test', () => {
   let app: INestApplication;
