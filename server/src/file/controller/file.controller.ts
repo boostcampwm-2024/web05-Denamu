@@ -21,7 +21,7 @@ import { ApiResponse } from '../../common/response/common.response';
 import { ApiUploadProfileFile } from '../api-docs/uploadProfileFile.api-docs';
 import { ApiDeleteFile } from '../api-docs/deleteFile.api-docs';
 import { FileDeleteRequestDto } from '../dto/request/deleteFile.dto';
-import { FileUploadQueryDto } from '../dto/fileUpload.dto';
+import { FileUploadQueryDto } from '../dto/request/fileUpload.dto';
 
 @ApiTags('File')
 @Controller('file')
