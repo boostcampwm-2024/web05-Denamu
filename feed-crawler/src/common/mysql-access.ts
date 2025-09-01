@@ -23,7 +23,10 @@ export class MySQLConnection implements DatabaseConnection {
     });
   }
 
-  async executeQuery<T>(query: string, params: any[] = []) {
+  async executeQuery<T>(
+    query: string,
+    params: any[] = [],
+  ): Promise<T[] | null> {
     let connection: PoolConnection;
     try {
       connection = await this.pool.getConnection();
@@ -33,7 +36,7 @@ export class MySQLConnection implements DatabaseConnection {
       logger.error(
         `${this.nameTag} 쿼리 ${query} 실행 중 오류 발생
           오류 메시지: ${error.message}
-          스택 트레이스: ${error.stack}`
+          스택 트레이스: ${error.stack}`,
       );
     } finally {
       if (connection) {
@@ -43,8 +46,37 @@ export class MySQLConnection implements DatabaseConnection {
           logger.error(
             `${this.nameTag} connection release 중 오류 발생
             오류 메시지: ${error.message}
-            스택 트레이스: ${error.stack}`
+            스택 트레이스: ${error.stack}`,
           );
+        }
+      }
+    }
+  }
+
+  async executeQueryStrict<T>(query: string, params: any[] = []): Promise<T[]> {
+    let connection: PoolConnection;
+    try {
+      connection = await this.pool.getConnection();
+      const [rows] = await connection.query(query, params);
+      return rows as T[];
+    } catch (error) {
+      logger.error(
+        `${this.nameTag} 쿼리 ${query} 실행 중 오류 발생
+          오류 메시지: ${error.message}
+          스택 트레이스: ${error.stack}`,
+      );
+      throw error;
+    } finally {
+      if (connection) {
+        try {
+          if (connection) connection.release();
+        } catch (error) {
+          logger.error(
+            `${this.nameTag} connection release 중 오류 발생
+            오류 메시지: ${error.message}
+            스택 트레이스: ${error.stack}`,
+          );
+          throw error;
         }
       }
     }

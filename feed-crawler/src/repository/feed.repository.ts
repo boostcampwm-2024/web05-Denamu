@@ -23,7 +23,7 @@ export class FeedRepository {
 
     const insertPromises = resultData.map(async (feed, index) => {
       try {
-        const result = await this.dbConnection.executeQuery(query, [
+        const result = await this.dbConnection.executeQueryStrict(query, [
           feed.blogId,
           feed.pubDate,
           feed.title,
