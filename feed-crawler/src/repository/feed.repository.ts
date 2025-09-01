@@ -44,7 +44,7 @@ export class FeedRepository {
     const promiseResults = await Promise.all(insertPromises);
 
     const insertedFeeds = promiseResults
-      .filter((result) => result.success && result.result)
+      .filter((result) => result.success)
       .map((result) => ({
         ...resultData[result.index],
         id: result.result.insertId,
