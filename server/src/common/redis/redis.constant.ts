@@ -4,5 +4,5 @@ export const redisKeys = {
   FEED_ORIGIN_TREND_KEY: 'feed:origin_trend',
   FEED_RECENT_ALL_KEY: 'feed:recent:*',
   FEED_AI_QUEUE: `feed:ai:queue`,
-  FEED_CRAWL_QUEUE: `feed:crawl:queue`,
+  FULL_FEED_CRAWL_QUEUE: `feed:full-crawl:queue`,
 };

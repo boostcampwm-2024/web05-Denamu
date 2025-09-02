@@ -4,7 +4,6 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { FeedService } from '../service/feed.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { redisKeys } from '../../common/redis/redis.constant';
-import { RssAcceptRepository } from '../../rss/repository/rss.repository';
 import * as _ from 'lodash';
 
 @Injectable()
@@ -13,7 +12,6 @@ export class FeedScheduler {
     private readonly redisService: RedisService,
     private readonly eventService: EventEmitter2,
     private readonly feedService: FeedService,
-    private readonly rssAcceptRepository: RssAcceptRepository,
   ) {}
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
@@ -45,49 +43,5 @@ export class FeedScheduler {
     if (keys.length > 0) {
       await this.redisService.del(...keys);
     }
-  }
-
-  @Cron('0 */30 * * * *')
-  async enqueueRegularFeedCrawl() {
-    const rssAcceptList = await this.rssAcceptRepository.find();
-    const now = Date.now();
-    const thirtyMinutesAgo = now - 30 * 60 * 1000;
-
-    const filteredRssList = [];
-    for (const rss of rssAcceptList) {
-      const lastCrawlKey = `feed:last_crawl:${rss.id}`;
-      if (await this.isEligibleForCrawling(lastCrawlKey, thirtyMinutesAgo)) {
-        filteredRssList.push(rss);
-      }
-    }
-
-    for (const rss of filteredRssList) {
-      const crawlMessage = {
-        rssId: rss.id,
-        rssUrl: rss.rssUrl,
-        blogName: rss.name,
-        blogPlatform: rss.blogPlatform,
-        isNewRss: false,
-        timestamp: now,
-      };
-
-      await this.redisService.lpush(
-        redisKeys.FEED_CRAWL_QUEUE,
-        JSON.stringify(crawlMessage),
-      );
-
-      await this.redisService.set(`feed:last_crawl:${rss.id}`, now.toString());
-    }
-  }
-
-  private async isEligibleForCrawling(
-    lastCrawlKey: string,
-    thirtyMinutesAgo: number,
-  ): Promise<boolean> {
-    const lastCrawl = await this.redisService.get(lastCrawlKey);
-    if (!lastCrawl) return true;
-
-    const lastCrawlTime = parseInt(lastCrawl);
-    return lastCrawlTime < thirtyMinutesAgo;
   }
 }

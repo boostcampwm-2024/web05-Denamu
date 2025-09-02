@@ -13,7 +13,6 @@ import { RssRegisterRequestDto } from '../dto/request/rss-register.dto';
 import { EmailService } from '../../common/email/email.service';
 import { DataSource } from 'typeorm';
 import { Rss, RssReject, RssAccept } from '../entity/rss.entity';
-import { FeedCrawlerService } from '../../feed/service/feed-crawler.service';
 import { RssReadResponseDto } from '../dto/response/rss-all.dto';
 import { RssAcceptHistoryResponseDto } from '../dto/response/rss-accept-history.dto';
 import { RssRejectHistoryResponseDto } from '../dto/response/rss-reject-history.dto';
@@ -33,7 +32,6 @@ export class RssService {
     private readonly rssRejectRepository: RssRejectRepository,
     private readonly emailService: EmailService,
     private readonly dataSource: DataSource,
-    private readonly feedCrawlerService: FeedCrawlerService,
     private readonly redisService: RedisService,
     private readonly feedRepository: FeedRepository,
   ) {}
@@ -78,17 +76,17 @@ export class RssService {
       throw new NotFoundException('신청 목록에서 사라진 등록 요청입니다.');
     }
 
-    const rssXmlResponse = await fetch(rss.rssUrl, {
+    const preFetchResponse = await fetch(rss.rssUrl, {
       headers: {
         Accept: 'application/rss+xml, application/xml, text/xml',
       },
     });
 
-    if (!rssXmlResponse.ok) {
+    if (!preFetchResponse.ok) {
       throw new BadRequestException(`${rss.rssUrl}이 올바른 RSS가 아닙니다.`);
     }
 
-    this.acceptRssBackProcess(rss, rssXmlResponse);
+    this.acceptRssBackProcess(rss);
   }
 
   async rejectRss(
@@ -158,7 +156,7 @@ export class RssService {
     return 'etc';
   }
 
-  private async acceptRssBackProcess(rss: Rss, rssXmlResponse: Response) {
+  private async acceptRssBackProcess(rss: Rss) {
     const blogPlatform = this.identifyPlatformFromRssUrl(rss.rssUrl);
 
     const rssAccept = await this.dataSource.transaction(async (manager) => {
@@ -169,22 +167,18 @@ export class RssService {
       return rssAccept;
     });
 
-    await this.enqueueFeedCrawlMessage(rssAccept);
+    this.enqueueFullFeedCrawlMessage(rssAccept.id);
     this.emailService.sendRssMail(rssAccept, true);
   }
 
-  private async enqueueFeedCrawlMessage(rssAccept: RssAccept) {
+  private async enqueueFullFeedCrawlMessage(rssId: number) {
     const crawlMessage = {
-      rssId: rssAccept.id,
-      rssUrl: rssAccept.rssUrl,
-      blogName: rssAccept.name,
-      blogPlatform: rssAccept.blogPlatform,
-      isNewRss: true,
+      rssId,
       timestamp: Date.now(),
     };
 
-    await this.redisService.lpush(
-      redisKeys.FEED_CRAWL_QUEUE,
+    await this.redisService.rpush(
+      redisKeys.FULL_FEED_CRAWL_QUEUE,
       JSON.stringify(crawlMessage),
     );
   }
