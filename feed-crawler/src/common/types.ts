@@ -40,3 +40,8 @@ export type FeedAIQueueItem = {
   tagList?: string[];
   summary?: string;
 };
+
+export interface FullFeedCrawlMessage {
+  rssId: number;
+  timestamp: number;
+}

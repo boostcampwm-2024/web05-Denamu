@@ -5,10 +5,10 @@ import { FeedCrawler } from './feed-crawler';
 import { container } from './container';
 import { DEPENDENCY_SYMBOLS } from './types/dependency-symbols';
 import { DatabaseConnection } from './types/database-connection';
-import { ClaudeService } from './claude.service';
+import { ClaudeEventWorker } from './event_worker/workers/claude-event-worker';
 import * as schedule from 'node-schedule';
 import { RedisConnection } from './common/redis-access';
-import { QueueScheduler } from './queue-scheduler';
+import { FullFeedCrawlEventWorker } from './event_worker/workers/full-feed-crawl-event-worker';
 
 function initializeDependencies() {
   return {
@@ -19,11 +19,11 @@ function initializeDependencies() {
       DEPENDENCY_SYMBOLS.RedisConnection,
     ),
     feedCrawler: container.resolve<FeedCrawler>(DEPENDENCY_SYMBOLS.FeedCrawler),
-    claudeService: container.resolve<ClaudeService>(
-      DEPENDENCY_SYMBOLS.ClaudeService,
+    claudeEventWorker: container.resolve<ClaudeEventWorker>(
+      DEPENDENCY_SYMBOLS.ClaudeEventWorker,
     ),
-    queueScheduler: container.resolve<QueueScheduler>(
-      DEPENDENCY_SYMBOLS.QueueScheduler,
+    fullFeedCrawlEventWorker: container.resolve<FullFeedCrawlEventWorker>(
+      DEPENDENCY_SYMBOLS.FullFeedCrawlEventWorker,
     ),
   };
 }
@@ -38,12 +38,17 @@ function registerSchedulers(
 
   schedule.scheduleJob(
     'AI API PER MINUTE REQUEST RATE LIMIT',
-    '*/1 * * * *',
+    `*/1 * * * *`,
     () => {
       logger.info(`AI Request Start: ${new Date().toISOString()}`);
-      dependencies.claudeService.startRequestAI();
+      dependencies.claudeEventWorker.start();
     },
   );
+
+  schedule.scheduleJob('FULL FEED CRAWLING', '*/5 * * * *', async () => {
+    logger.info(`Full Feed Crawling Start: ${new Date().toISOString()}`);
+    dependencies.fullFeedCrawlEventWorker.start();
+  });
 }
 
 async function handleShutdown(
@@ -51,7 +56,6 @@ async function handleShutdown(
   signal: string,
 ) {
   logger.info(`${signal} 신호 수신, feed-crawler 종료 중...`);
-  dependencies.queueScheduler.stop();
   await dependencies.dbConnection.end();
   await dependencies.redisConnection.quit();
   logger.info('DB 및 Redis 연결 종료');
@@ -63,8 +67,6 @@ function startScheduler() {
 
   const dependencies = initializeDependencies();
   registerSchedulers(dependencies);
-
-  dependencies.queueScheduler.start();
 
   process.on('SIGINT', () => handleShutdown(dependencies, 'SIGINT'));
   process.on('SIGTERM', () => handleShutdown(dependencies, 'SIGTERM'));

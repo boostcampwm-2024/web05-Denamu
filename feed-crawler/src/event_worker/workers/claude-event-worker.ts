@@ -1,32 +1,53 @@
 import 'reflect-metadata';
 import { injectable } from 'tsyringe';
 import Anthropic from '@anthropic-ai/sdk';
-import { ClaudeResponse, FeedAIQueueItem } from './common/types';
-import { TagMapRepository } from './repository/tag-map.repository';
-import { FeedRepository } from './repository/feed.repository';
-import logger from './common/logger';
-import { PROMPT_CONTENT, redisConstant } from './common/constant';
-import { RedisConnection } from './common/redis-access';
+import { ClaudeResponse, FeedAIQueueItem } from '../../common/types';
+import { TagMapRepository } from '../../repository/tag-map.repository';
+import { FeedRepository } from '../../repository/feed.repository';
+import logger from '../../common/logger';
+import { PROMPT_CONTENT, redisConstant } from '../../common/constant';
+import { RedisConnection } from '../../common/redis-access';
+import { AbstractQueueWorker } from '../abstract-queue-worker';
 
 @injectable()
-export class ClaudeService {
+export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
   private readonly client: Anthropic;
-  private readonly nameTag: string;
 
   constructor(
     private readonly tagMapRepository: TagMapRepository,
     private readonly feedRepository: FeedRepository,
-    private readonly redisConnection: RedisConnection,
+    redisConnection: RedisConnection,
   ) {
+    super('[AI Service]', redisConnection);
     this.client = new Anthropic({
       apiKey: process.env.AI_API_KEY,
     });
-    this.nameTag = '[AI Service]';
   }
 
-  async startRequestAI() {
+  protected async processQueue(): Promise<void> {
     const feeds = await this.loadFeeds();
-    await Promise.all(feeds.map((feed) => this.processFeed(feed)));
+    await Promise.all(feeds.map((feed) => this.processItem(feed)));
+  }
+
+  protected getQueueKey(): string {
+    return redisConstant.FEED_AI_QUEUE;
+  }
+
+  protected parseQueueMessage(message: string): FeedAIQueueItem {
+    return JSON.parse(message);
+  }
+
+  protected async processItem(feed: FeedAIQueueItem): Promise<void> {
+    try {
+      const aiData = await this.requestAI(feed);
+      await this.saveAIResult(aiData);
+    } catch (error) {
+      logger.error(
+        `${this.nameTag} ${feed.id} 처리 중 에러 발생: ${error.message}`,
+        error.stack,
+      );
+      await this.handleFailure(feed, error);
+    }
   }
 
   private async loadFeeds() {
@@ -93,7 +114,7 @@ export class ClaudeService {
     await this.feedRepository.updateSummary(feed.id, feed.summary);
   }
 
-  private async handleFailure(feed: FeedAIQueueItem, e: Error) {
+  async handleFailure(feed: FeedAIQueueItem, e: Error): Promise<void> {
     if (feed.deathCount < 3) {
       feed.deathCount++;
       await this.redisConnection.rpush(redisConstant.FEED_AI_QUEUE, [
