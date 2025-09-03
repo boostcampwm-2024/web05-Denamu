@@ -6,7 +6,6 @@ import {
   RssRepository,
   RssAcceptRepository,
 } from '../repository/rss.repository';
-import { RssParserService } from '../service/rss-parser.service';
 import { EmailModule } from '../../common/email/email.module';
 import { FeedModule } from '../../feed/module/feed.module';
 
@@ -15,11 +14,10 @@ import { FeedModule } from '../../feed/module/feed.module';
   controllers: [RssController],
   providers: [
     RssService,
-    RssParserService,
     RssRepository,
     RssAcceptRepository,
     RssRejectRepository,
   ],
-  exports: [RssAcceptRepository, RssParserService],
+  exports: [RssAcceptRepository],
 })
 export class RssModule {}

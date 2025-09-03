@@ -24,6 +24,12 @@ import { DeleteRssDto } from '../dto/request/rss-delete.dto';
 import { FeedRepository } from '../../feed/repository/feed.repository';
 import { redisKeys } from '../../common/redis/redis.constant';
 
+type FullFeedCrawlMessage = {
+  rssId: number;
+  timestamp: number;
+  deathCount: number;
+};
+
 @Injectable()
 export class RssService {
   constructor(
@@ -172,14 +178,15 @@ export class RssService {
   }
 
   private async enqueueFullFeedCrawlMessage(rssId: number) {
-    const crawlMessage = {
+    const fullFeedCrawlMessage: FullFeedCrawlMessage = {
       rssId,
       timestamp: Date.now(),
+      deathCount: 0,
     };
 
     await this.redisService.rpush(
       redisKeys.FULL_FEED_CRAWL_QUEUE,
-      JSON.stringify(crawlMessage),
+      JSON.stringify(fullFeedCrawlMessage),
     );
   }
 

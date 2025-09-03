@@ -44,4 +44,5 @@ export type FeedAIQueueItem = {
 export interface FullFeedCrawlMessage {
   rssId: number;
   timestamp: number;
+  deathCount: number;
 }
