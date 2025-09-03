@@ -50,6 +50,27 @@ export class FeedCrawler {
     logger.info('==========작업 완료==========');
   }
 
+  async startFullCrawl(rssObj: RssObj): Promise<FeedDetail[]> {
+    logger.info(`전체 피드 크롤링 시작: ${rssObj.blogName}(${rssObj.rssUrl})`);
+
+    const newFeeds = await this.feedParserManager.fetchAndParseAll(rssObj);
+
+    if (!newFeeds.length) {
+      logger.info(`${rssObj.blogName}에서 가져올 피드가 없습니다.`);
+      return [];
+    }
+
+    logger.info(
+      `${rssObj.blogName}에서 ${newFeeds.length}개의 피드를 가져왔습니다.`,
+    );
+    const insertedData: FeedDetail[] = await this.feedRepository.insertFeeds(
+      newFeeds,
+    );
+    await this.feedRepository.saveAiQueue(insertedData);
+
+    return insertedData;
+  }
+
   private feedGroupByRss(rssObjects: RssObj[]): Promise<FeedDetail[][]> {
     return Promise.all(
       rssObjects.map(async (rssObj: RssObj) => {
