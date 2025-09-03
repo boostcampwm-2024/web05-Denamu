@@ -43,11 +43,9 @@ export class UserController {
   ) {
     return ApiResponse.responseWithData(
       '이메일 중복 조회 요청이 성공적으로 처리되었습니다.',
-      {
-        exists: await this.userService.checkEmailDuplication(
-          checkEmailDuplicationRequestDto.email,
-        ),
-      },
+      await this.userService.checkEmailDuplication(
+        checkEmailDuplicationRequestDto.email,
+      ),
     );
   }
 

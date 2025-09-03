@@ -5,12 +5,12 @@ import { IsInt, Min } from 'class-validator';
 export class FeedViewUpdateRequestDto {
   @ApiProperty({
     example: 1,
-    description: '조회할 ID 입력',
+    description: '조회할 게시글 ID 입력',
   })
   @IsInt({
     message: '정수를 입력해주세요.',
   })
-  @Min(1, { message: '조회하고자 하는 피드 ID는 1보다 커야합니다.' })
+  @Min(1, { message: '게시글 ID는 1 이상이어야 합니다.' })
   @Type(() => Number)
   feedId: number;
 

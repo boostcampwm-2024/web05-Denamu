@@ -3,7 +3,7 @@ import { IsEmail, IsNotEmpty } from 'class-validator';
 
 export class LoginDto {
   @ApiProperty({
-    example: 'test123@test.com',
+    example: 'test@test.com',
     description: '이메일을 입력해주세요.',
   })
   @IsEmail({}, { message: '이메일 주소 형식에 맞춰서 작성해주세요.' })

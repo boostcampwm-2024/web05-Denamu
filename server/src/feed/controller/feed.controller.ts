@@ -42,7 +42,7 @@ export class FeedController {
   ) {}
 
   @ApiReadFeedPagination()
-  @Get('')
+  @Get()
   @HttpCode(HttpStatus.OK)
   async readFeedPagination(
     @Query() feedPaginationQueryDto: FeedPaginationRequestDto,

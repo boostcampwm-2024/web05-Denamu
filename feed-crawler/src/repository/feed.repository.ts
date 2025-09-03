@@ -94,6 +94,7 @@ export class FeedRepository {
             title: feed.title,
             tag: Array.isArray(feed.tag) ? feed.tag : [],
             likes: 0,
+            comments: 0,
           });
         }
       });

@@ -4,7 +4,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class RegisterDto {
   @ApiProperty({
-    example: 'test123@test.com',
+    example: 'example@example.com',
     description: '이메일을 입력해주세요.',
   })
   @IsEmail(
@@ -19,7 +19,7 @@ export class RegisterDto {
   email: string;
 
   @ApiProperty({
-    example: 'test1234!',
+    example: 'example1234!',
     description: '비밀번호를 입력해주세요.',
   })
   @IsNotEmpty({

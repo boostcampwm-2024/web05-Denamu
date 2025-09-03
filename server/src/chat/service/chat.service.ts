@@ -11,8 +11,6 @@ const CHAT_HISTORY_LIMIT = 20;
 
 @Injectable()
 export class ChatService {
-  private dayInit: boolean = false;
-
   constructor(private readonly redisService: RedisService) {}
 
   isMaxClientExceeded(userCount: number) {
