@@ -16,12 +16,12 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { FileService } from '../service/file.service';
 import { ApiTags } from '@nestjs/swagger';
 import { JwtGuard } from '../../common/guard/jwt.guard';
-import { createDynamicStorage } from '../../common/disk/disk-storage';
+import { createDynamicStorage } from '../../common/disk/diskStorage';
 import { ApiResponse } from '../../common/response/common.response';
 import { ApiUploadProfileFile } from '../api-docs/uploadProfileFile.api-docs';
 import { ApiDeleteFile } from '../api-docs/deleteFile.api-docs';
 import { DeleteFileRequestDto } from '../dto/request/deleteFile.dto';
-import { FileUploadQueryDto } from '../dto/request/fileUpload.dto';
+import { UploadFileQueryDto } from '../dto/request/uploadFile.dto';
 
 @ApiTags('File')
 @Controller('file')
@@ -35,7 +35,7 @@ export class FileController {
   @UseInterceptors(FileInterceptor('file', createDynamicStorage()))
   async upload(
     @UploadedFile() file: any,
-    @Query() query: FileUploadQueryDto,
+    @Query() query: UploadFileQueryDto,
     @Req() req,
   ) {
     if (!file) {

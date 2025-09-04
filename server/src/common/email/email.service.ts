@@ -8,7 +8,7 @@ import {
   createRssRemoveCertificateContent,
   createVerificationMailContent,
   PRODUCT_DOMAIN,
-} from './mail_content';
+} from './mailContent';
 import { Rss } from '../../rss/entity/rss.entity';
 import { User } from '../../user/entity/user.entity';
 

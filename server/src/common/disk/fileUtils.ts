@@ -4,7 +4,7 @@ import { promises as fs } from 'fs';
 import { existsSync } from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import { BadRequestException } from '@nestjs/common';
-import { FileUploadType } from './file-validator';
+import { FileUploadType } from './fileValidator';
 
 const BASE_UPLOAD_PATH = '/var/web05-Denamu/objects';
 
