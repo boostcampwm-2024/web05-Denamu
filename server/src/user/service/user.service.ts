@@ -18,6 +18,7 @@ import { ConfigService } from '@nestjs/config';
 import { cookieConfig } from '../../common/cookie/cookie.config';
 import { Payload } from '../../common/guard/jwt.guard';
 import { UpdateUserRequestDto } from '../dto/request/updateUser.dto';
+import { FileService } from '../../file/service/file.service';
 import { CheckEmailDuplicationResponseDto } from '../dto/response/checkEmailDuplication.dto';
 import { REDIS_KEYS } from '../../common/redis/redis.constant';
 
@@ -29,6 +30,7 @@ export class UserService {
     private readonly emailService: EmailService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly fileService: FileService,
   ) {}
 
   async getUser(userId: number) {
@@ -168,13 +170,19 @@ export class UserService {
   ): Promise<void> {
     const user = await this.getUser(userId);
 
-    user.userName = updateData.userName ? updateData.userName : user.userName;
-    user.profileImage = updateData.profileImage
-      ? updateData.profileImage
-      : user.profileImage;
-    user.introduction = updateData.introduction
-      ? updateData.introduction
-      : user.introduction;
+    if (updateData.userName !== undefined) {
+      user.userName = updateData.userName;
+    }
+    if (
+      updateData.profileImage !== undefined &&
+      user.profileImage !== updateData.profileImage
+    ) {
+      await this.fileService.deleteByPath(user.profileImage);
+      user.profileImage = updateData.profileImage;
+    }
+    if (updateData.introduction !== undefined) {
+      user.introduction = updateData.introduction;
+    }
 
     await this.userRepository.save(user);
   }

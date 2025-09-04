@@ -1,19 +1,22 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { File } from '../entity/file.entity';
-import { unlinkSync, existsSync } from 'fs';
+import { unlink, access } from 'fs/promises';
 import { FileRepository } from '../repository/file.repository';
 import { User } from '../../user/entity/user.entity';
 import { UploadFileResponseDto } from '../dto/response/uploadFile.dto';
+import { WinstonLoggerService } from '../../common/logger/logger.service';
 
 @Injectable()
 export class FileService {
-  constructor(private readonly fileRepository: FileRepository) {}
+  constructor(
+    private readonly fileRepository: FileRepository,
+    private readonly logger: WinstonLoggerService,
+  ) {}
 
   async create(file: any, userId: number): Promise<UploadFileResponseDto> {
-    const { originalName, mimetype, size, path } = file;
-
+    const { originalname, mimetype, size, path } = file;
     const savedFile = await this.fileRepository.save({
-      originalName,
+      originalName: originalname,
       mimetype,
       size,
       path,
@@ -25,8 +28,7 @@ export class FileService {
   }
 
   private generateAccessUrl(filePath: string): string {
-    const baseUploadPath =
-      process.env.UPLOAD_BASE_PATH || '/var/web05-Denamu/objects';
+    const baseUploadPath = '/var/web05-Denamu/objects';
     const relativePath = filePath.replace(baseUploadPath, '');
     return `/objects${relativePath}`;
   }
@@ -42,8 +44,11 @@ export class FileService {
   async deleteFile(id: number): Promise<void> {
     const file = await this.findById(id);
 
-    if (existsSync(file.path)) {
-      unlinkSync(file.path);
+    try {
+      await access(file.path);
+      await unlink(file.path);
+    } catch (error) {
+      this.logger.warn(`파일 삭제 실패: ${file.path}`, 'FileService');
     }
 
     await this.fileRepository.delete(id);
@@ -51,5 +56,21 @@ export class FileService {
 
   async getFileInfo(id: number): Promise<File> {
     return this.findById(id);
+  }
+
+  async deleteByPath(path: string): Promise<void> {
+    const file = await this.fileRepository.findOne({ where: { path } });
+    if (file) {
+      try {
+        await access(file.path);
+        await unlink(file.path);
+      } catch (error) {
+        this.logger.warn(`파일 삭제 실패: ${file.path}`, 'FileService');
+      }
+
+      await this.fileRepository.delete(file.id);
+    } else {
+      throw new NotFoundException('파일을 찾을 수 없습니다.');
+    }
   }
 }

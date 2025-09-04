@@ -8,6 +8,7 @@ import {
   Param,
   UseGuards,
   BadRequestException,
+  Query,
   HttpStatus,
   HttpCode,
 } from '@nestjs/common';
@@ -15,11 +16,12 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { FileService } from '../service/file.service';
 import { ApiTags } from '@nestjs/swagger';
 import { JwtGuard } from '../../common/guard/jwt.guard';
-import { createDynamicStorage } from '../../common/disk/diskStorage';
+import { createDynamicStorage } from '../../common/disk/disk-storage';
 import { ApiResponse } from '../../common/response/common.response';
 import { ApiUploadProfileFile } from '../api-docs/uploadProfileFile.api-docs';
 import { ApiDeleteFile } from '../api-docs/deleteFile.api-docs';
 import { DeleteFileRequestDto } from '../dto/request/deleteFile.dto';
+import { FileUploadQueryDto } from '../dto/request/fileUpload.dto';
 
 @ApiTags('File')
 @Controller('file')
@@ -27,11 +29,15 @@ import { DeleteFileRequestDto } from '../dto/request/deleteFile.dto';
 export class FileController {
   constructor(private readonly fileService: FileService) {}
 
-  @Post('profile')
+  @Post('')
   @ApiUploadProfileFile()
   @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(FileInterceptor('file', createDynamicStorage()))
-  async upload(@UploadedFile() file: any, @Req() req) {
+  async upload(
+    @UploadedFile() file: any,
+    @Query() query: FileUploadQueryDto,
+    @Req() req,
+  ) {
     if (!file) {
       throw new BadRequestException('파일이 선택되지 않았습니다.');
     }
