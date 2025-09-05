@@ -24,10 +24,8 @@ import {
   FeedRecentRedis,
   ReadFeedRecentResponseDto,
 } from '../dto/response/readFeedRecent.dto';
-import { UpdateFeedViewCountRequestDto } from '../dto/request/updateFeedViewCount.dto';
-import { GetFeedDetailRequestDto } from '../dto/request/getFeedDetail.dto';
 import { GetFeedDetailResponseDto } from '../dto/response/getFeedDetail';
-import { DeleteCheckFeedRequestDto } from '../dto/request/deleteCheckFeed.dto';
+import { ManageFeedRequestDto } from '../dto/request/manageFeed.dto';
 
 @Injectable()
 export class FeedService {
@@ -137,7 +135,7 @@ export class FeedService {
   }
 
   async updateFeedViewCount(
-    viewUpdateParamDto: UpdateFeedViewCountRequestDto,
+    viewUpdateParamDto: ManageFeedRequestDto,
     request: Request,
     response: Response,
   ) {
@@ -235,12 +233,12 @@ export class FeedService {
     return request.socket.remoteAddress;
   }
 
-  async getFeedDetail(feedDetailRequestDto: GetFeedDetailRequestDto) {
+  async getFeedDetail(feedDetailRequestDto: ManageFeedRequestDto) {
     const feed = await this.getFeedByView(feedDetailRequestDto.feedId);
     return GetFeedDetailResponseDto.toResponseDto(feed);
   }
 
-  async deleteCheckFeed(feedDeleteCheckDto: DeleteCheckFeedRequestDto) {
+  async deleteCheckFeed(feedDeleteCheckDto: ManageFeedRequestDto) {
     const feed = await this.getFeed(feedDeleteCheckDto.feedId);
     const response = await fetch(feed.path);
 
