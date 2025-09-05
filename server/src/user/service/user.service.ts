@@ -21,6 +21,7 @@ import { UpdateUserRequestDto } from '../dto/request/updateUser.dto';
 import { FileService } from '../../file/service/file.service';
 import { CheckEmailDuplicationResponseDto } from '../dto/response/checkEmailDuplication.dto';
 import { REDIS_KEYS } from '../../common/redis/redis.constant';
+import { CreateAccessTokenResponseDto } from '../dto/response/createAccessToken.dto';
 
 @Injectable()
 export class UserService {
@@ -110,7 +111,12 @@ export class UserService {
       maxAge: REFRESH_TOKEN_TTL,
     });
 
-    return accessToken;
+    return CreateAccessTokenResponseDto.toResponseDto(accessToken);
+  }
+
+  refreshAccessToken(userInformation: Payload) {
+    const accessToken = this.createToken(userInformation, 'access');
+    return CreateAccessTokenResponseDto.toResponseDto(accessToken);
   }
 
   createToken(userInformation: Payload, mode: string) {

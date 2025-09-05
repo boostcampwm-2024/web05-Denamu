@@ -76,10 +76,10 @@ export class UserController {
     @Body() loginDto: LoginUserRequestDto,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const accessToken = await this.userService.loginUser(loginDto, response);
-    return ApiResponse.responseWithData('로그인을 성공했습니다.', {
-      accessToken,
-    });
+    return ApiResponse.responseWithData(
+      '로그인을 성공했습니다.',
+      await this.userService.loginUser(loginDto, response),
+    );
   }
 
   @ApiRefreshToken()
@@ -90,7 +90,7 @@ export class UserController {
     const userInformation = req.user;
     return ApiResponse.responseWithData(
       '엑세스 토큰을 재발급했습니다.',
-      this.userService.createToken(userInformation, 'access'),
+      this.userService.refreshAccessToken(userInformation),
     );
   }
 
