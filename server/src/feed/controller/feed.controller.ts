@@ -30,7 +30,7 @@ import { UpdateFeedViewCountRequestDto } from '../dto/request/updateFeedViewCoun
 import { GetFeedDetailRequestDto } from '../dto/request/getFeedDetail.dto';
 import { ApiGetFeedDetail } from '../api-docs/getFeedDetail.api-docs';
 import { ReadFeedInterceptor } from '../interceptor/read-feed.interceptor';
-import { DeleteCheckFeedRequestDto } from '../dto/request/readFeedDeleteCheck.dto';
+import { DeleteCheckFeedRequestDto } from '../dto/request/deleteCheckFeed.dto';
 import { ApiDeleteCheckFeed } from '../api-docs/deleteCheckFeed.api-docs';
 
 @ApiTags('Feed')

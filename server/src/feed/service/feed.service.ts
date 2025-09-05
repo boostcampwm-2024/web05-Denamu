@@ -27,7 +27,7 @@ import {
 import { UpdateFeedViewCountRequestDto } from '../dto/request/updateFeedViewCount.dto';
 import { GetFeedDetailRequestDto } from '../dto/request/getFeedDetail.dto';
 import { GetFeedDetailResponseDto } from '../dto/response/getFeedDetail';
-import { DeleteCheckFeedRequestDto } from '../dto/request/readFeedDeleteCheck.dto';
+import { DeleteCheckFeedRequestDto } from '../dto/request/deleteCheckFeed.dto';
 
 @Injectable()
 export class FeedService {

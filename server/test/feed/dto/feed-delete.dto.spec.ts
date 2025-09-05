@@ -1,5 +1,5 @@
 import { validate } from 'class-validator';
-import { DeleteCheckFeedRequestDto } from '../../../src/feed/dto/request/readFeedDeleteCheck.dto';
+import { DeleteCheckFeedRequestDto } from '../../../src/feed/dto/request/deleteCheckFeed.dto';
 
 describe('FeedDeleteCheckDto Test', () => {
   it('feedId에 1보다 작은 값을 입력하면 유효성 검사에 실패한다.', async () => {
