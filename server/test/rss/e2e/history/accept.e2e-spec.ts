@@ -4,6 +4,7 @@ import { RssAcceptRepository } from '../../../../src/rss/repository/rss.reposito
 import { RssAccept } from '../../../../src/rss/entity/rss.entity';
 import { RssAcceptFixture } from '../../../fixture/rssAccept.fixture';
 import { RedisService } from '../../../../src/common/redis/redis.service';
+import { REDIS_KEYS } from '../../../../src/common/redis/redis.constant';
 
 describe('GET /api/rss/history/accept E2E Test', () => {
   let app: INestApplication;
@@ -17,7 +18,7 @@ describe('GET /api/rss/history/accept E2E Test', () => {
     }
     await Promise.all([
       rssAcceptRepository.insert(rssAccepts),
-      redisService.set('auth:sid', 'test1234'),
+      redisService.set(`${REDIS_KEYS.ADMIN_AUTH_KEY}:sid`, 'test1234'),
     ]);
   });
 

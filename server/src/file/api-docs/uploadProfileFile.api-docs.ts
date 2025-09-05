@@ -8,7 +8,7 @@ import {
   ApiQuery,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { FileUploadType } from '../../common/disk/file-validator';
+import { FileUploadType } from '../../common/disk/fileValidator';
 
 export function ApiUploadProfileFile() {
   return applyDecorators(

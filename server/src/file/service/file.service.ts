@@ -3,7 +3,7 @@ import { File } from '../entity/file.entity';
 import { unlink, access } from 'fs/promises';
 import { FileRepository } from '../repository/file.repository';
 import { User } from '../../user/entity/user.entity';
-import { FileUploadResponseDto } from '../dto/response/createFile.dto';
+import { UploadFileResponseDto } from '../dto/response/uploadFile.dto';
 import { WinstonLoggerService } from '../../common/logger/logger.service';
 
 @Injectable()
@@ -13,9 +13,8 @@ export class FileService {
     private readonly logger: WinstonLoggerService,
   ) {}
 
-  async create(file: any, userId: number): Promise<FileUploadResponseDto> {
+  async create(file: any, userId: number): Promise<UploadFileResponseDto> {
     const { originalname, mimetype, size, path } = file;
-
     const savedFile = await this.fileRepository.save({
       originalName: originalname,
       mimetype,
@@ -25,7 +24,7 @@ export class FileService {
     } as File);
     const accessUrl = this.generateAccessUrl(path);
 
-    return FileUploadResponseDto.toResponseDto(savedFile, accessUrl);
+    return UploadFileResponseDto.toResponseDto(savedFile, accessUrl);
   }
 
   private generateAccessUrl(filePath: string): string {

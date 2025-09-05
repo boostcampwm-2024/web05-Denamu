@@ -1,10 +1,10 @@
 import { validate } from 'class-validator';
-import { DeleteRssDto } from '../../../src/rss/dto/request/rss-delete.dto';
+import { DeleteCertificateRssRequestDto } from '../../../src/rss/dto/request/deleteCertificateRss.dto';
 
 describe('DeleteRssDto Test', () => {
-  let dto: DeleteRssDto;
+  let dto: DeleteCertificateRssRequestDto;
   beforeEach(() => {
-    dto = new DeleteRssDto({
+    dto = new DeleteCertificateRssRequestDto({
       code: 'test',
     });
   });

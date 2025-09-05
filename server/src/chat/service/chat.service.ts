@@ -1,13 +1,14 @@
+import { REDIS_KEYS } from './../../common/redis/redis.constant';
 import { Injectable } from '@nestjs/common';
 import { Socket } from 'socket.io';
 import { RedisService } from '../../common/redis/redis.service';
 import { getRandomNickname } from '@woowa-babble/random-nickname';
-import type { BroadcastPayload } from '../chat.type';
-
-const MAX_CLIENTS = 500;
-const CLIENT_KEY_PREFIX = 'socket_client:';
-const CHAT_HISTORY_KEY = 'chat:history';
-const CHAT_HISTORY_LIMIT = 20;
+import {
+  BroadcastPayload,
+  CHAT_HISTORY_LIMIT,
+  CLIENT_KEY_PREFIX,
+  MAX_CLIENTS,
+} from '../constant/chat.constant';
 
 @Injectable()
 export class ChatService {
@@ -49,7 +50,6 @@ export class ChatService {
 
   private generateRandomUsername(): string {
     const type = 'animals';
-
     return getRandomNickname(type);
   }
 
@@ -61,15 +61,21 @@ export class ChatService {
 
   private async getRecentChatMessages() {
     return await this.redisService.lrange(
-      CHAT_HISTORY_KEY,
+      REDIS_KEYS.CHAT_HISTORY_KEY,
       0,
       CHAT_HISTORY_LIMIT - 1,
     );
   }
 
   async saveMessageToRedis(payload: BroadcastPayload) {
-    await this.redisService.lpush(CHAT_HISTORY_KEY, JSON.stringify(payload));
-
-    await this.redisService.ltrim(CHAT_HISTORY_KEY, 0, CHAT_HISTORY_LIMIT - 1);
+    await this.redisService.lpush(
+      REDIS_KEYS.CHAT_HISTORY_KEY,
+      JSON.stringify(payload),
+    );
+    await this.redisService.ltrim(
+      REDIS_KEYS.CHAT_HISTORY_KEY,
+      0,
+      CHAT_HISTORY_LIMIT - 1,
+    );
   }
 }

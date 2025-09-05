@@ -4,7 +4,7 @@ import { UserService } from '../../../src/user/service/user.service';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../fixture/user.fixture';
 import { User } from '../../../src/user/entity/user.entity';
-import { DeleteCommentRequestDto } from '../../../src/comment/dto/request/delete-comment.dto';
+import { DeleteCommentRequestDto } from '../../../src/comment/dto/request/deleteComment.dto';
 import { Comment } from '../../../src/comment/entity/comment.entity';
 import { CommentRepository } from '../../../src/comment/repository/comment.repository';
 import { CommentFixture } from '../../fixture/comment.fixture';

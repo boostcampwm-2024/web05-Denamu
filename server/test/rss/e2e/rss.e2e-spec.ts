@@ -1,5 +1,5 @@
 import { INestApplication } from '@nestjs/common';
-import { RssRegisterRequestDto } from '../../../src/rss/dto/request/rss-register.dto';
+import { RegisterRssRequestDto } from '../../../src/rss/dto/request/registerRss.dto';
 import * as request from 'supertest';
 import { Repository } from 'typeorm';
 import { Rss, RssAccept } from '../../../src/rss/entity/rss.entity';
@@ -28,7 +28,7 @@ describe('/api/rss E2E Test', () => {
   describe('POST /api/rss E2E Test', () => {
     it('정상적인 요청이 들어왔다면 올바른 응답을 한다.', async () => {
       // given
-      const requestDto = new RssRegisterRequestDto({
+      const requestDto = new RegisterRssRequestDto({
         blog: 'blog1',
         name: 'name1',
         email: 'test1@test.com',
@@ -46,7 +46,7 @@ describe('/api/rss E2E Test', () => {
 
     it('이미 신청한 RSS를 또 신청한다면 거부를 한다.', async () => {
       // given
-      const requestDto = new RssRegisterRequestDto({
+      const requestDto = new RegisterRssRequestDto({
         blog: 'blog1',
         name: 'name1',
         email: 'test1@test.com',
@@ -68,7 +68,7 @@ describe('/api/rss E2E Test', () => {
       const acceptedRss = await rssAcceptRepository.save(
         RssAcceptFixture.createRssAcceptFixture(),
       );
-      const rssRegisterDto = new RssRegisterRequestDto({
+      const rssRegisterDto = new RegisterRssRequestDto({
         blog: acceptedRss.name,
         name: acceptedRss.userName,
         email: acceptedRss.email,

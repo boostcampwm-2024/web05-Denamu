@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsInt, Min } from 'class-validator';
 
-export class FileDeleteRequestDto {
+export class DeleteFileRequestDto {
   @ApiProperty({
     example: 1,
     description: '파일 ID',
@@ -14,7 +14,7 @@ export class FileDeleteRequestDto {
   @Type(() => Number)
   id: number;
 
-  constructor(partial: Partial<FileDeleteRequestDto>) {
+  constructor(partial: Partial<DeleteFileRequestDto>) {
     Object.assign(this, partial);
   }
 }

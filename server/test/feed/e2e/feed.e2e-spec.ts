@@ -4,7 +4,7 @@ import { FeedFixture } from '../../fixture/feed.fixture';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
 import { RssAcceptFixture } from '../../fixture/rssAccept.fixture';
-import { FeedPaginationRequestDto } from '../../../src/feed/dto/request/feed-pagination.dto';
+import { ReadFeedPaginationRequestDto } from '../../../src/feed/dto/request/readFeedPagination.dto';
 
 describe('GET api/feed E2E Test', () => {
   let app: INestApplication;
@@ -28,7 +28,7 @@ describe('GET api/feed E2E Test', () => {
 
   it('lastId가 없으면 최신 피드부터 전송한다.', async () => {
     //given
-    const feedPaginationQueryDto = new FeedPaginationRequestDto({
+    const feedPaginationQueryDto = new ReadFeedPaginationRequestDto({
       limit: 5,
     });
 
@@ -52,7 +52,7 @@ describe('GET api/feed E2E Test', () => {
 
   it('lastId가 있으면 해당 피드 다음 순서부터 전송한다.', async () => {
     //given
-    const feedPaginationQueryDto = new FeedPaginationRequestDto({
+    const feedPaginationQueryDto = new ReadFeedPaginationRequestDto({
       limit: 5,
       lastId: 11,
     });
@@ -77,7 +77,7 @@ describe('GET api/feed E2E Test', () => {
 
   it('limit의 크기보다 남은 Feed의 개수가 적은 경우면 정상적으로 동작한다.', async () => {
     //given
-    const feedPaginationQueryDto = new FeedPaginationRequestDto({
+    const feedPaginationQueryDto = new ReadFeedPaginationRequestDto({
       limit: 15,
       lastId: 10,
     });
@@ -106,7 +106,7 @@ describe('GET api/feed E2E Test', () => {
 
   it('남은 피드 개수가 0이면 lastId 0, 빈 배열로 응답한다.', async () => {
     //given
-    const feedPaginationQueryDto = new FeedPaginationRequestDto({
+    const feedPaginationQueryDto = new ReadFeedPaginationRequestDto({
       limit: 15,
       lastId: 1,
     });

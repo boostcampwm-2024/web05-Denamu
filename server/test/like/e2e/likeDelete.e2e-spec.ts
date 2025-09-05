@@ -9,7 +9,7 @@ import { FeedFixture } from '../../fixture/feed.fixture';
 import { RssAccept } from '../../../src/rss/entity/rss.entity';
 import { User } from '../../../src/user/entity/user.entity';
 import { Feed } from '../../../src/feed/entity/feed.entity';
-import { FeedLikeRequestDto } from '../../../src/like/dto/request/like.dto';
+import { ManageLikeRequestDto } from '../../../src/like/dto/request/manageLike.dto';
 import * as request from 'supertest';
 import { LikeRepository } from '../../../src/like/repository/like.repository';
 
@@ -40,7 +40,7 @@ describe('DELETE /api/like/{feedId} E2E Test', () => {
 
   it('로그인이 되어 있지 않다면 좋아요 삭제를 할 수 없다.', async () => {
     // given
-    const feedLikeRequest = new FeedLikeRequestDto({
+    const feedLikeRequest = new ManageLikeRequestDto({
       feedId: 1,
     });
     const agent = request.agent(app.getHttpServer());
@@ -56,7 +56,7 @@ describe('DELETE /api/like/{feedId} E2E Test', () => {
 
   it('게시글이 존재하지 않다면 좋아요를 삭제할 수 없다.', async () => {
     // given
-    const feedLikeRequest = new FeedLikeRequestDto({
+    const feedLikeRequest = new ManageLikeRequestDto({
       feedId: 100,
     });
     const accessToken = userService.createToken(
@@ -88,7 +88,7 @@ describe('DELETE /api/like/{feedId} E2E Test', () => {
       user: { id: 1 },
       likeDate: new Date(),
     });
-    const feedLikeRequest = new FeedLikeRequestDto({
+    const feedLikeRequest = new ManageLikeRequestDto({
       feedId: 1,
     });
     const accessToken = userService.createToken(
@@ -114,7 +114,7 @@ describe('DELETE /api/like/{feedId} E2E Test', () => {
 
   it('이미 좋아요를 삭제했다면 좋아요를 삭제할 수 없다.', async () => {
     // given
-    const feedLikeRequest = new FeedLikeRequestDto({
+    const feedLikeRequest = new ManageLikeRequestDto({
       feedId: 1,
     });
     const accessToken = userService.createToken(

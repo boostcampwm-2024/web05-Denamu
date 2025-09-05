@@ -9,7 +9,7 @@ import { FeedFixture } from '../../fixture/feed.fixture';
 import { RssAccept } from '../../../src/rss/entity/rss.entity';
 import { User } from '../../../src/user/entity/user.entity';
 import { Feed } from '../../../src/feed/entity/feed.entity';
-import { FeedLikeRequestDto } from '../../../src/like/dto/request/like.dto';
+import { ManageLikeRequestDto } from '../../../src/like/dto/request/manageLike.dto';
 import * as request from 'supertest';
 
 describe('POST /api/like E2E Test', () => {
@@ -39,7 +39,7 @@ describe('POST /api/like E2E Test', () => {
 
   it('로그인이 되어 있지 않다면 좋아요 등록을 할 수 없다.', async () => {
     // given
-    const feedLikeRequest = new FeedLikeRequestDto({
+    const feedLikeRequest = new ManageLikeRequestDto({
       feedId: 1,
     });
     const agent = request.agent(app.getHttpServer());
@@ -53,7 +53,7 @@ describe('POST /api/like E2E Test', () => {
 
   it('게시글이 존재하지 않다면 좋아요를 등록할 수 없다.', async () => {
     // given
-    const feedLikeRequest = new FeedLikeRequestDto({
+    const feedLikeRequest = new ManageLikeRequestDto({
       feedId: 100,
     });
     const accessToken = userService.createToken(
@@ -79,7 +79,7 @@ describe('POST /api/like E2E Test', () => {
 
   it('로그인이 되어있고 좋아요를 하지 않았다면 좋아요를 등록할 수 있다.', async () => {
     // given
-    const feedLikeRequest = new FeedLikeRequestDto({
+    const feedLikeRequest = new ManageLikeRequestDto({
       feedId: 1,
     });
     const accessToken = userService.createToken(
@@ -105,7 +105,7 @@ describe('POST /api/like E2E Test', () => {
 
   it('이미 좋아요를 했다면 좋아요를 등록할 수 없다.', async () => {
     // given
-    const feedLikeRequest = new FeedLikeRequestDto({
+    const feedLikeRequest = new ManageLikeRequestDto({
       feedId: 1,
     });
     const accessToken = userService.createToken(

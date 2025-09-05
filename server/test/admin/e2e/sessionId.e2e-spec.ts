@@ -1,7 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { v4 as uuidv4 } from 'uuid';
-import { LoginAdminRequestDto } from '../../../src/admin/dto/request/login-admin.dto';
+import { LoginAdminRequestDto } from '../../../src/admin/dto/request/loginAdmin.dto';
 import { AdminRepository } from '../../../src/admin/repository/admin.repository';
 import { AdminFixture } from '../../fixture/admin.fixture';
 

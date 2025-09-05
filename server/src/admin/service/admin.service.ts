@@ -4,19 +4,18 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Response, Request } from 'express';
-import { RegisterAdminRequestDto } from '../dto/request/register-admin.dto';
+import { RegisterAdminRequestDto } from '../dto/request/registerAdmin.dto';
 import { AdminRepository } from '../repository/admin.repository';
 import * as bcrypt from 'bcrypt';
 import { cookieConfig } from '../../common/cookie/cookie.config';
 import * as uuid from 'uuid';
 import { RedisService } from '../../common/redis/redis.service';
-import { LoginAdminRequestDto } from '../dto/request/login-admin.dto';
+import { LoginAdminRequestDto } from '../dto/request/loginAdmin.dto';
+import { SESSION_TTL } from '../constant/admin.constant';
+import { REDIS_KEYS } from '../../common/redis/redis.constant';
 
 @Injectable()
 export class AdminService {
-  // 12시간 후 자동 만료
-  private readonly SESSION_TTL = 60 * 60 * 12;
-
   constructor(
     private readonly adminRepository: AdminRepository,
     private readonly redisService: RedisService,
@@ -41,7 +40,7 @@ export class AdminService {
     const sessionId = uuid.v4();
 
     if (cookie) {
-      await this.redisService.del(`auth:${cookie}`);
+      await this.redisService.del(`${REDIS_KEYS.ADMIN_AUTH_KEY}:${cookie}`);
     }
 
     let cursor = '0';
@@ -49,7 +48,7 @@ export class AdminService {
     do {
       const [newCursor, keys] = await this.redisService.scan(
         cursor,
-        'auth:*',
+        REDIS_KEYS.ADMIN_AUTH_ALL_KEY,
         100,
       );
 
@@ -75,10 +74,10 @@ export class AdminService {
     } while (cursor !== '0');
 
     await this.redisService.set(
-      `auth:${sessionId}`,
+      `${REDIS_KEYS.ADMIN_AUTH_KEY}:${sessionId}`,
       admin.loginId,
       `EX`,
-      this.SESSION_TTL,
+      SESSION_TTL,
     );
 
     response.cookie('sessionId', sessionId, cookieConfig[process.env.NODE_ENV]);
@@ -86,7 +85,7 @@ export class AdminService {
 
   async logoutAdmin(request: Request, response: Response) {
     const sid = request.cookies['sessionId'];
-    await this.redisService.del(`auth:${sid}`);
+    await this.redisService.del(`${REDIS_KEYS.ADMIN_AUTH_KEY}:${sid}`);
     response.clearCookie('sessionId');
   }
 

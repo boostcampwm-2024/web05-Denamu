@@ -1,5 +1,5 @@
 import { validate } from 'class-validator';
-import { GetCommentRequestDto } from '../../../src/comment/dto/request/get-comment.dto';
+import { GetCommentRequestDto } from '../../../src/comment/dto/request/getComment.dto';
 
 describe('GetCommentRequestDto Test', () => {
   it('게시글 아이디가 비어있다면 유효성 검사에 실패한다.', async () => {

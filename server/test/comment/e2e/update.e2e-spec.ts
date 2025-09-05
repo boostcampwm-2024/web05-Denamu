@@ -11,7 +11,7 @@ import { CommentRepository } from '../../../src/comment/repository/comment.repos
 import { RssAcceptFixture } from '../../fixture/rssAccept.fixture';
 import { FeedFixture } from '../../fixture/feed.fixture';
 import { CommentFixture } from '../../fixture/comment.fixture';
-import { UpdateCommentRequestDto } from '../../../src/comment/dto/request/update-comment.dto';
+import { UpdateCommentRequestDto } from '../../../src/comment/dto/request/updateComment.dto';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
 import { RssAccept } from '../../../src/rss/entity/rss.entity';
 

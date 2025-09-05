@@ -9,8 +9,10 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import { ActivityService } from '../service/activity.service';
 import { ApiResponse } from '../../common/response/common.response';
-import { ActivityParamRequestDto } from '../dto/request/activity-param.dto';
-import { ActivityQueryRequestDto } from '../dto/request/activity-query.dto';
+import {
+  ReadActivityParamRequestDto,
+  ReadActivityQueryRequestDto,
+} from '../dto/request/readActivity.dto';
 import { ApiReadActivities } from '../api-docs/readActivities.api-docs';
 
 @ApiTags('Activity')
@@ -22,8 +24,8 @@ export class ActivityController {
   @Get(':userId')
   @HttpCode(HttpStatus.OK)
   async readActivities(
-    @Param() paramDto: ActivityParamRequestDto,
-    @Query() queryDto: ActivityQueryRequestDto,
+    @Param() paramDto: ReadActivityParamRequestDto,
+    @Query() queryDto: ReadActivityQueryRequestDto,
   ) {
     return ApiResponse.responseWithData(
       '요청이 성공적으로 처리되었습니다.',

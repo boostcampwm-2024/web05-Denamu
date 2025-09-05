@@ -1,10 +1,10 @@
 import { validate } from 'class-validator';
-import { ActivityParamRequestDto } from '../../../src/activity/dto/request/activity-param.dto';
+import { ReadActivityParamRequestDto } from '../../../src/activity/dto/request/readActivity.dto';
 
 describe('ActivityParamRequestDto Test', () => {
   it('정상적인 userId로 유효성 검사를 통과한다.', async () => {
     // given
-    const dto = new ActivityParamRequestDto({
+    const dto = new ReadActivityParamRequestDto({
       userId: 1,
     });
 
@@ -17,7 +17,7 @@ describe('ActivityParamRequestDto Test', () => {
 
   it('userId가 정수가 아닌 문자열이면 유효성 검사에 실패한다.', async () => {
     // given
-    const dto = new ActivityParamRequestDto({
+    const dto = new ReadActivityParamRequestDto({
       userId: 'invalid' as any,
     });
 
@@ -31,7 +31,7 @@ describe('ActivityParamRequestDto Test', () => {
 
   it('userId가 정수가 아닌 실수이면 유효성 검사에 실패한다.', async () => {
     // given
-    const dto = new ActivityParamRequestDto({
+    const dto = new ReadActivityParamRequestDto({
       userId: 1.5 as any,
     });
 
@@ -45,7 +45,7 @@ describe('ActivityParamRequestDto Test', () => {
 
   it('userId가 1보다 작으면 유효성 검사에 실패한다.', async () => {
     // given
-    const dto = new ActivityParamRequestDto({
+    const dto = new ReadActivityParamRequestDto({
       userId: 0,
     });
 
@@ -59,7 +59,7 @@ describe('ActivityParamRequestDto Test', () => {
 
   it('userId가 음수이면 유효성 검사에 실패한다.', async () => {
     // given
-    const dto = new ActivityParamRequestDto({
+    const dto = new ReadActivityParamRequestDto({
       userId: -1,
     });
 

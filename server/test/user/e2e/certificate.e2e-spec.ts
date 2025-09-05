@@ -2,8 +2,8 @@ import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { RedisService } from '../../../src/common/redis/redis.service';
-import { USER_CONSTANTS } from '../../../src/user/user.constants';
 import { UserFixture } from '../../fixture/user.fixture';
+import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 
 describe('POST api/user/certificate E2E Test', () => {
   let app: INestApplication;
@@ -20,7 +20,7 @@ describe('POST api/user/certificate E2E Test', () => {
     // given
     const uuid = 'test-certificate-uuid';
     const userEntity = UserFixture.createUserFixture();
-    const redisKey = `${USER_CONSTANTS.USER_AUTH_KEY}_${uuid}`;
+    const redisKey = `${REDIS_KEYS.USER_AUTH_KEY}:${uuid}`;
     await redisService.set(redisKey, JSON.stringify(userEntity));
 
     // when

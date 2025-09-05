@@ -5,21 +5,23 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { RegisterDto } from '../dto/request/register.dto';
+import { RegisterUserRequestDto } from '../dto/request/registerUser.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { RedisService } from '../../common/redis/redis.service';
-import { USER_CONSTANTS } from '../user.constants';
+import { REFRESH_TOKEN_TTL, SALT_ROUNDS } from '../constant/user.constants';
 import { EmailService } from '../../common/email/email.service';
-import { LoginDto } from '../dto/request/login.dto';
+import { LoginUserRequestDto } from '../dto/request/loginUser.dto';
 import { Response } from 'express';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { cookieConfig } from '../../common/cookie/cookie.config';
 import { Payload } from '../../common/guard/jwt.guard';
-import { UpdateUserDto } from '../dto/request/update-user.dto';
+import { UpdateUserRequestDto } from '../dto/request/updateUser.dto';
 import { FileService } from '../../file/service/file.service';
 import { CheckEmailDuplicationResponseDto } from '../dto/response/checkEmailDuplication.dto';
+import { REDIS_KEYS } from '../../common/redis/redis.constant';
+import { CreateAccessTokenResponseDto } from '../dto/response/createAccessToken.dto';
 
 @Injectable()
 export class UserService {
@@ -50,7 +52,7 @@ export class UserService {
     return CheckEmailDuplicationResponseDto.toResponseDto(!!user);
   }
 
-  async registerUser(registerDto: RegisterDto): Promise<void> {
+  async registerUser(registerDto: RegisterUserRequestDto): Promise<void> {
     const user = await this.userRepository.findOne({
       where: { email: registerDto.email },
     });
@@ -64,7 +66,7 @@ export class UserService {
 
     const uuid = uuidv4();
     await this.redisService.set(
-      `${USER_CONSTANTS.USER_AUTH_KEY}_${uuid}`,
+      `${REDIS_KEYS.USER_AUTH_KEY}:${uuid}`,
       JSON.stringify(newUser),
       'EX',
       600,
@@ -75,17 +77,17 @@ export class UserService {
 
   async certificateUser(uuid: string): Promise<void> {
     const user = await this.redisService.get(
-      `${USER_CONSTANTS.USER_AUTH_KEY}_${uuid}`,
+      `${REDIS_KEYS.USER_AUTH_KEY}:${uuid}`,
     );
 
     if (!user) {
       throw new NotFoundException('인증에 실패했습니다.');
     }
-    this.redisService.del(`${USER_CONSTANTS.USER_AUTH_KEY}_${uuid}`);
+    this.redisService.del(`${REDIS_KEYS.USER_AUTH_KEY}:${uuid}`);
     await this.userRepository.save(JSON.parse(user));
   }
 
-  async loginUser(loginDto: LoginDto, response: Response) {
+  async loginUser(loginDto: LoginUserRequestDto, response: Response) {
     const user = await this.userRepository.findOne({
       where: { email: loginDto.email },
     });
@@ -106,10 +108,15 @@ export class UserService {
 
     response.cookie('refresh_token', refreshToken, {
       ...cookieConfig[process.env.NODE_ENV],
-      maxAge: 1000 * 60 * 60 * 24 * 7,
+      maxAge: REFRESH_TOKEN_TTL,
     });
 
-    return accessToken;
+    return CreateAccessTokenResponseDto.toResponseDto(accessToken);
+  }
+
+  refreshAccessToken(userInformation: Payload) {
+    const accessToken = this.createToken(userInformation, 'access');
+    return CreateAccessTokenResponseDto.toResponseDto(accessToken);
   }
 
   createToken(userInformation: Payload, mode: string) {
@@ -129,8 +136,7 @@ export class UserService {
   }
 
   private async createHashedPassword(password: string) {
-    const saltRounds = 10;
-    return await bcrypt.hash(password, saltRounds);
+    return await bcrypt.hash(password, SALT_ROUNDS);
   }
 
   async updateUserActivity(userId: number) {
@@ -166,7 +172,7 @@ export class UserService {
 
   async updateUser(
     userId: number,
-    updateData: Partial<UpdateUserDto>,
+    updateData: Partial<UpdateUserRequestDto>,
   ): Promise<void> {
     const user = await this.getUser(userId);
 

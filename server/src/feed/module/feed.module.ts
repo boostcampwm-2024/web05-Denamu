@@ -14,7 +14,7 @@ import { ReadFeedInterceptor } from '../interceptor/read-feed.interceptor';
 import { JwtAuthModule } from '../../common/auth/jwt.module';
 import { LikeModule } from '../../like/module/like.module';
 import { CommentModule } from '../../comment/module/comment.module';
-import { FeedCrawlerService } from '../service/feed-crawler.service';
+import { FeedCrawlerService } from '../service/feedCrawler.service';
 import { RssModule } from '../../rss/module/rss.module';
 
 @Module({

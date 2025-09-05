@@ -1,10 +1,10 @@
 import { validate } from 'class-validator';
-import { FeedPaginationRequestDto } from '../../../src/feed/dto/request/feed-pagination.dto';
+import { ReadFeedPaginationRequestDto } from '../../../src/feed/dto/request/readFeedPagination.dto';
 
 describe('FeedPaginationRequestDto Test', () => {
   it('limit에 1보다 작은 값을 입력하면 유효성 검사에 실패한다.', async () => {
     //given
-    const feedPaginationQueryDto = new FeedPaginationRequestDto({
+    const feedPaginationQueryDto = new ReadFeedPaginationRequestDto({
       limit: -1,
     });
 
@@ -18,7 +18,7 @@ describe('FeedPaginationRequestDto Test', () => {
 
   it('limit에 자연수가 아닌 실수를 입력하면 유효성 검사에 실패한다.', async () => {
     //given
-    const feedPaginationQueryDto = new FeedPaginationRequestDto({
+    const feedPaginationQueryDto = new ReadFeedPaginationRequestDto({
       limit: 1.254,
     });
 
@@ -32,7 +32,7 @@ describe('FeedPaginationRequestDto Test', () => {
 
   it('limit에 문자열을 입력하면 유효성 검사에 실패한다.', async () => {
     //given
-    const feedPaginationQueryDto = new FeedPaginationRequestDto({
+    const feedPaginationQueryDto = new ReadFeedPaginationRequestDto({
       limit: 'abcdefg' as any,
     });
 
@@ -46,7 +46,7 @@ describe('FeedPaginationRequestDto Test', () => {
 
   it('lastId에 음수를 입력하면 유효성 검사에 실패한다.', async () => {
     //given
-    const feedPaginationQueryDto = new FeedPaginationRequestDto({
+    const feedPaginationQueryDto = new ReadFeedPaginationRequestDto({
       lastId: -1,
     });
 
@@ -60,7 +60,7 @@ describe('FeedPaginationRequestDto Test', () => {
 
   it('lastId에 자연수가 아닌 실수를 입력하면 유효성 검사에 실패한다.', async () => {
     //given
-    const feedPaginationQueryDto = new FeedPaginationRequestDto({
+    const feedPaginationQueryDto = new ReadFeedPaginationRequestDto({
       lastId: 1.254,
     });
 
@@ -74,7 +74,7 @@ describe('FeedPaginationRequestDto Test', () => {
 
   it('lastId에 문자열을 입력하면 유효성 검사에 실패한다.', async () => {
     //given
-    const feedPaginationQueryDto = new FeedPaginationRequestDto({
+    const feedPaginationQueryDto = new ReadFeedPaginationRequestDto({
       lastId: 'abcdefg' as any,
     });
 

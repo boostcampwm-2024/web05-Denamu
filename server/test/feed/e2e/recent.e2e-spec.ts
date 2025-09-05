@@ -6,6 +6,7 @@ import { RssAcceptFixture } from '../../fixture/rssAccept.fixture';
 import { FeedFixture } from '../../fixture/feed.fixture';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
 import { RedisService } from '../../../src/common/redis/redis.service';
+import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 
 describe('GET /api/feed/recent E2E Test', () => {
   let app: INestApplication;
@@ -34,8 +35,8 @@ describe('GET /api/feed/recent E2E Test', () => {
     const redisService = app.get(RedisService);
     const feeds = await feedRepository.save(feedList);
     await redisService.executePipeline((pipeline) => {
-      pipeline.hset(`feed:recent:${feeds[0].id}`, feeds[0]);
-      pipeline.hset(`feed:recent:${feeds[1].id}`, feeds[1]);
+      pipeline.hset(`${REDIS_KEYS.FEED_RECENT_KEY}:${feeds[0].id}`, feeds[0]);
+      pipeline.hset(`${REDIS_KEYS.FEED_RECENT_KEY}:${feeds[1].id}`, feeds[1]);
     });
 
     //when

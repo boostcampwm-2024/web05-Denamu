@@ -1,38 +1,31 @@
-import {
-  BadRequestException,
-  HttpStatus,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import {
   FeedRepository,
   FeedViewRepository,
 } from '../repository/feed.repository';
-import { FeedPaginationRequestDto } from '../dto/request/feed-pagination.dto';
+import { ReadFeedPaginationRequestDto } from '../dto/request/readFeedPagination.dto';
 import { FeedView } from '../entity/feed.entity';
 import {
-  FeedPaginationResponseDto,
+  ReadFeedPaginationResponseDto,
   FeedPaginationResult,
   FeedResult,
   FeedTrendResponseDto,
-} from '../dto/response/feed-pagination.dto';
+} from '../dto/response/readFeedPagination.dto';
 import { RedisService } from '../../common/redis/redis.service';
-import { SearchFeedRequestDto } from '../dto/request/search-feed.dto';
+import { SearchFeedRequestDto } from '../dto/request/searchFeed.dto';
 import { Response, Request } from 'express';
 import { cookieConfig } from '../../common/cookie/cookie.config';
-import { redisKeys } from '../../common/redis/redis.constant';
+import { REDIS_KEYS } from '../../common/redis/redis.constant';
 import {
   SearchFeedResponseDto,
   SearchFeedResult,
-} from '../dto/response/search-feed.dto';
+} from '../dto/response/searchFeed.dto';
 import {
   FeedRecentRedis,
-  FeedRecentResponseDto,
-} from '../dto/response/recent.dto';
-import { FeedViewUpdateRequestDto } from '../dto/request/feed-update.dto';
-import { FeedDetailRequestDto } from '../dto/request/feed-detail.dto';
-import { FeedDetailResponseDto } from '../dto/response/feed-detail.dto';
-import { FeedDeleteCheckDto } from '../dto/request/feed-check.dto';
+  ReadFeedRecentResponseDto,
+} from '../dto/response/readFeedRecent.dto';
+import { GetFeedDetailResponseDto } from '../dto/response/getFeedDetail';
+import { ManageFeedRequestDto } from '../dto/request/manageFeed.dto';
 
 @Injectable()
 export class FeedService {
@@ -60,7 +53,9 @@ export class FeedService {
     return feed;
   }
 
-  async readFeedPagination(feedPaginationQueryDto: FeedPaginationRequestDto) {
+  async readFeedPagination(
+    feedPaginationQueryDto: ReadFeedPaginationRequestDto,
+  ) {
     const feedList = await this.feedViewRepository.findFeedPagination(
       feedPaginationQueryDto,
     );
@@ -70,7 +65,7 @@ export class FeedService {
     const lastId = this.getLastIdFromFeedList(feedList);
     const newCheckFeedList = await this.checkNewFeeds(feedList);
     const feedPagination = FeedResult.toResultDtoArray(newCheckFeedList);
-    return FeedPaginationResponseDto.toResponseDto(
+    return ReadFeedPaginationResponseDto.toResponseDto(
       feedPagination,
       lastId,
       hasMore,
@@ -87,7 +82,7 @@ export class FeedService {
 
   private async checkNewFeeds(feedList: FeedView[]) {
     const newFeedIds = (
-      await this.redisService.keys(redisKeys.FEED_RECENT_ALL_KEY)
+      await this.redisService.keys(REDIS_KEYS.FEED_RECENT_ALL_KEY)
     ).map((key) => {
       const feedId = key.match(/feed:recent:(\d+)/);
       return parseInt(feedId[1]);
@@ -103,7 +98,7 @@ export class FeedService {
 
   async readTrendFeedList() {
     const trendFeedIdList = await this.redisService.lrange(
-      redisKeys.FEED_ORIGIN_TREND_KEY,
+      REDIS_KEYS.FEED_ORIGIN_TREND_KEY,
       0,
       -1,
     );
@@ -140,7 +135,7 @@ export class FeedService {
   }
 
   async updateFeedViewCount(
-    viewUpdateParamDto: FeedViewUpdateRequestDto,
+    viewUpdateParamDto: ManageFeedRequestDto,
     request: Request,
     response: Response,
   ) {
@@ -168,7 +163,7 @@ export class FeedService {
           viewCount: () => 'view_count + 1',
         }),
         this.redisService.zincrby(
-          redisKeys.FEED_TREND_KEY,
+          REDIS_KEYS.FEED_TREND_KEY,
           1,
           feedId.toString(),
         ),
@@ -197,7 +192,7 @@ export class FeedService {
 
   async readRecentFeedList() {
     const recentKeys = await this.redisService.keys(
-      redisKeys.FEED_RECENT_ALL_KEY,
+      REDIS_KEYS.FEED_RECENT_ALL_KEY,
     );
 
     if (!recentKeys.length) {
@@ -224,7 +219,7 @@ export class FeedService {
       return dateNext.getTime() - dateCurrent.getTime();
     });
 
-    return FeedRecentResponseDto.toResponseDtoArray(recentFeedList);
+    return ReadFeedRecentResponseDto.toResponseDtoArray(recentFeedList);
   }
 
   private getIp(request: Request) {
@@ -238,12 +233,12 @@ export class FeedService {
     return request.socket.remoteAddress;
   }
 
-  async readFeedDetail(feedDetailRequestDto: FeedDetailRequestDto) {
+  async getFeedDetail(feedDetailRequestDto: ManageFeedRequestDto) {
     const feed = await this.getFeedByView(feedDetailRequestDto.feedId);
-    return FeedDetailResponseDto.toResponseDto(feed);
+    return GetFeedDetailResponseDto.toResponseDto(feed);
   }
 
-  async deleteCheckFeed(feedDeleteCheckDto: FeedDeleteCheckDto) {
+  async deleteCheckFeed(feedDeleteCheckDto: ManageFeedRequestDto) {
     const feed = await this.getFeed(feedDeleteCheckDto.feedId);
     const response = await fetch(feed.path);
 

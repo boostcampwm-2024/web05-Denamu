@@ -1,5 +1,5 @@
 import { validate } from 'class-validator';
-import { DeleteCommentRequestDto } from '../../../src/comment/dto/request/delete-comment.dto';
+import { DeleteCommentRequestDto } from '../../../src/comment/dto/request/deleteComment.dto';
 
 describe('RemoveCommentRequestDto Test', () => {
   it('댓글 아이디가 비어있다면 유효성 검사에 실패한다.', async () => {

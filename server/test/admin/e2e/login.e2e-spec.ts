@@ -1,6 +1,6 @@
 import { AdminFixture } from './../../fixture/admin.fixture';
 import { INestApplication } from '@nestjs/common';
-import { LoginAdminRequestDto } from '../../../src/admin/dto/request/login-admin.dto';
+import { LoginAdminRequestDto } from '../../../src/admin/dto/request/loginAdmin.dto';
 import * as request from 'supertest';
 import { AdminRepository } from '../../../src/admin/repository/admin.repository';
 describe('POST api/admin/login E2E Test', () => {

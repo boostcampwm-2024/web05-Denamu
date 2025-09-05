@@ -4,7 +4,7 @@ import { UserService } from '../../../src/user/service/user.service';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../fixture/user.fixture';
 import { User } from '../../../src/user/entity/user.entity';
-import { CreateCommentRequestDto } from '../../../src/comment/dto/request/create-comment.dto';
+import { CreateCommentRequestDto } from '../../../src/comment/dto/request/createComment.dto';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
 import { Feed } from '../../../src/feed/entity/feed.entity';
 import { FeedFixture } from '../../fixture/feed.fixture';

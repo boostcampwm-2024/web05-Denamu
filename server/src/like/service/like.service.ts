@@ -7,8 +7,8 @@ import {
 } from '@nestjs/common';
 import { LikeRepository } from '../repository/like.repository';
 import { Payload } from '../../common/guard/jwt.guard';
-import { FeedLikeRequestDto } from '../dto/request/like.dto';
-import { GetLikeResponseDto } from '../dto/response/like.dto';
+import { ManageLikeRequestDto } from '../dto/request/manageLike.dto';
+import { GetLikeResponseDto } from '../dto/response/getLike.dto';
 import { FeedService } from '../../feed/service/feed.service';
 
 @Injectable()
@@ -19,7 +19,7 @@ export class LikeService {
     private readonly dataSource: DataSource,
   ) {}
 
-  async get(userInformation: Payload, feedLikeGetDto: FeedLikeRequestDto) {
+  async get(userInformation: Payload, feedLikeGetDto: ManageLikeRequestDto) {
     await this.feedService.getFeed(feedLikeGetDto.feedId);
     let isLike = false;
 
@@ -36,7 +36,7 @@ export class LikeService {
 
   async create(
     userInformation: Payload,
-    feedLikeCreateDto: FeedLikeRequestDto,
+    feedLikeCreateDto: ManageLikeRequestDto,
   ) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -70,7 +70,7 @@ export class LikeService {
 
   async delete(
     userInformation: Payload,
-    feedLikeDeleteDto: FeedLikeRequestDto,
+    feedLikeDeleteDto: ManageLikeRequestDto,
   ) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();

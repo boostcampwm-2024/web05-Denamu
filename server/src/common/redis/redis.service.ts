@@ -7,7 +7,7 @@ export class RedisService {
   constructor(@Inject('REDIS_CLIENT') public readonly redisClient: Redis) {}
 
   async disconnect(): Promise<void> {
-    await this.redisClient.disconnect();
+    this.redisClient.disconnect();
   }
 
   async get(key: RedisKey): Promise<string | null> {
