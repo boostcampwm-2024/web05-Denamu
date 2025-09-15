@@ -73,8 +73,18 @@ export class FullFeedCrawlEventWorker extends AbstractQueueWorker<FullFeedCrawlM
     crawlMessage: FullFeedCrawlMessage,
     error: Error,
   ): Promise<void> {
-    logger.error(
-      `${this.nameTag} RSS ID ${crawlMessage.rssId} 전체 피드 크롤링 실패: ${error.message}`,
-    );
+    if (crawlMessage.deathCount < 3) {
+      crawlMessage.deathCount++;
+      await this.redisConnection.rpush(redisConstant.FULL_FEED_CRAWL_QUEUE, [
+        JSON.stringify(crawlMessage),
+      ]);
+      logger.error(
+        `${this.nameTag} ${crawlMessage.rssId} 의 Death Count 3회 이상 발생 AI 요청 금지`,
+      );
+    } else {
+      logger.error(
+        `${this.nameTag} RSS ID ${crawlMessage.rssId} 전체 피드 크롤링 실패: ${error.message}`,
+      );
+    }
   }
 }
