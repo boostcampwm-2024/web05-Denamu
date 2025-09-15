@@ -8,6 +8,7 @@ import {
   RssAcceptRepository,
   RssRepository,
 } from '../../../src/rss/repository/rss.repository';
+import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 
 describe('Rss Accept E2E Test', () => {
   let app: INestApplication;
@@ -25,7 +26,7 @@ describe('Rss Accept E2E Test', () => {
   beforeEach(async () => {
     await Promise.all([
       rssRepository.delete({}),
-      redisService.set('auth:sid', 'test_admin'),
+      redisService.set(`${REDIS_KEYS.ADMIN_AUTH_KEY}:sid`, 'test_admin'),
     ]);
   });
 

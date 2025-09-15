@@ -1,4 +1,4 @@
-import { LoginAdminRequestDto } from '../../../src/admin/dto/request/login-admin.dto';
+import { LoginAdminRequestDto } from '../../../src/admin/dto/request/loginAdmin.dto';
 import { validate } from 'class-validator';
 import { AdminFixture } from '../../fixture/admin.fixture';
 

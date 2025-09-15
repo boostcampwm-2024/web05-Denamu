@@ -8,25 +8,30 @@ import {
 
 export function ApiDeleteRss() {
   return applyDecorators(
-    ApiOperation({
-      summary: 'RSS 삭제 인증 API',
+    ApiOperation({ summary: 'RSS 취소 신청 API' }),
+    ApiOkResponse({
+      description: '취소 신청을 성공했을 경우',
+      schema: {
+        properties: {
+          message: {
+            type: 'string',
+          },
+        },
+      },
+      example: {
+        message: 'RSS 삭제 요청을 성공했습니다.',
+      },
     }),
     ApiNotFoundResponse({
-      description: 'Not Found',
+      description: 'RSS를 찾을 수 없을 경우',
       example: {
-        message: 'RSS 삭제 요청 인증 코드가 만료되었거나 찾을 수 없습니다.',
+        message: 'RSS 데이터를 찾을 수 없습니다.',
       },
     }),
     ApiBadRequestResponse({
       description: 'Bad Request',
       example: {
         message: '오류 메세지',
-      },
-    }),
-    ApiOkResponse({
-      description: 'Ok',
-      example: {
-        message: 'RSS 삭제를 성공했습니다.',
       },
     }),
   );

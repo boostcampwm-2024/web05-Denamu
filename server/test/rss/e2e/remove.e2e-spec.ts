@@ -1,3 +1,4 @@
+import { REDIS_KEYS } from './../../../src/common/redis/redis.constant';
 import { INestApplication } from '@nestjs/common';
 import {
   RssAcceptRepository,
@@ -95,7 +96,10 @@ describe('/api/rss/remove E2E Test', () => {
 
     it('[404] 이미 지워진 RSS라면 지울 수 없다.', async () => {
       // given
-      await redisService.set('rss:remove:rssNotFound', 'test');
+      await redisService.set(
+        `${REDIS_KEYS.RSS_REMOVE_KEY}:rssNotFound`,
+        'test',
+      );
 
       // when
       const response = await request(app.getHttpServer())
@@ -119,7 +123,10 @@ describe('/api/rss/remove E2E Test', () => {
       await commentRepository.save(
         CommentFixture.createCommentFixture(feed, user),
       );
-      await redisService.set(`rss:remove:${certificateCode}`, rss.rssUrl);
+      await redisService.set(
+        `${REDIS_KEYS.RSS_REMOVE_KEY}:${certificateCode}`,
+        rss.rssUrl,
+      );
 
       // when
       const response = await request(app.getHttpServer())

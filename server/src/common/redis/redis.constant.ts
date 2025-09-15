@@ -1,8 +1,14 @@
-export const redisKeys = {
+export const REDIS_KEYS = {
   FEED_ALL_IP_KEY: `feed:*:ip`,
   FEED_TREND_KEY: `feed:trend`,
   FEED_ORIGIN_TREND_KEY: 'feed:origin_trend',
   FEED_RECENT_ALL_KEY: 'feed:recent:*',
+  FEED_RECENT_KEY: 'feed:recent',
   FEED_AI_QUEUE: `feed:ai:queue`,
+  USER_AUTH_KEY: 'signup',
+  ADMIN_AUTH_KEY: 'auth',
+  ADMIN_AUTH_ALL_KEY: 'auth:*',
+  RSS_REMOVE_KEY: 'rss:remove',
+  CHAT_HISTORY_KEY: 'chat:history',
   FULL_FEED_CRAWL_QUEUE: `feed:full-crawl:queue`,
 };

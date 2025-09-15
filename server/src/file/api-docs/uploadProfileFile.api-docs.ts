@@ -5,16 +5,25 @@ import {
   ApiConsumes,
   ApiOkResponse,
   ApiOperation,
+  ApiQuery,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { FileUploadType } from '../../common/disk/fileValidator';
 
 export function ApiUploadProfileFile() {
   return applyDecorators(
     ApiOperation({
-      summary: '프로필 이미지 업로드 API',
-      description: '사용자의 프로필 이미지를 업로드합니다.',
+      summary: '파일 업로드 API',
+      description: '사용자의 파일을 업로드합니다.',
     }),
     ApiConsumes('multipart/form-data'),
+    ApiQuery({
+      name: 'uploadType',
+      description: '파일 업로드 타입',
+      enum: FileUploadType,
+      example: FileUploadType.PROFILE_IMAGE,
+      required: true,
+    }),
     ApiBody({
       description: '업로드할 파일',
       schema: {
@@ -23,7 +32,7 @@ export function ApiUploadProfileFile() {
           file: {
             type: 'string',
             format: 'binary',
-            description: '업로드할 이미지 파일 (JPG, PNG, GIF 등)',
+            description: '업로드할 파일 (uploadType별 허용 형식 다름!)',
           },
         },
         required: ['file'],
@@ -62,7 +71,8 @@ export function ApiUploadProfileFile() {
               },
               url: {
                 type: 'string',
-                example: '/objects/profile/2024/01/profile-image.jpg',
+                example:
+                  '/objects/PROFILE_IMAGE/20241215/a1b2c3d4-e5f6-7890-abcd-ef1234567890.jpg',
                 description: '파일 접근 URL',
               },
               userId: {
@@ -84,10 +94,32 @@ export function ApiUploadProfileFile() {
     ApiBadRequestResponse({
       description: '잘못된 요청',
       schema: {
-        properties: {
-          message: {
-            type: 'string',
-            example: '파일이 선택되지 않았습니다.',
+        examples: {
+          fileNotSelected: {
+            summary: '파일 미선택',
+            value: {
+              message: '파일이 선택되지 않았습니다.',
+            },
+          },
+          invalidUploadType: {
+            summary: '잘못된 업로드 타입',
+            value: {
+              message:
+                '유효하지 않은 파일 업로드 타입입니다. 허용된 타입: PROFILE_IMAGE',
+            },
+          },
+          invalidFileType: {
+            summary: '지원하지 않는 파일 형식',
+            value: {
+              message:
+                '지원하지 않는 파일 형식입니다. 지원 형식: image/jpeg, image/png, image/gif, image/webp',
+            },
+          },
+          fileSizeExceeded: {
+            summary: '파일 크기 초과',
+            value: {
+              message: '파일 크기가 너무 큽니다. 최대 5MB까지 허용됩니다.',
+            },
           },
         },
       },

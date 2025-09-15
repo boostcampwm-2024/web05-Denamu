@@ -3,7 +3,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { UserRepository } from '../repository/user.repository';
 import { UserService } from '../service/user.service';
 import { UserController } from '../controller/user.controller';
-import { OAuthController } from '../controller/oauth.controller';
+import { OAuthController } from '../controller/oAuth.controller';
 import { OAuthService } from '../service/oauth.service';
 import { ProviderRepository } from '../repository/provider.repository';
 import { JwtAuthModule } from '../../common/auth/jwt.module';
@@ -11,9 +11,10 @@ import { AdminModule } from '../../admin/module/admin.module';
 import { GoogleOAuthProvider } from '../provider/google.provider';
 import { GithubOAuthProvider } from '../provider/github.provider';
 import { UserScheduler } from '../scheduler/user.scheduler';
+import { FileModule } from '../../file/module/file.module';
 
 @Module({
-  imports: [JwtAuthModule, AdminModule, ScheduleModule.forRoot()],
+  imports: [JwtAuthModule, AdminModule, FileModule, ScheduleModule.forRoot()],
   controllers: [UserController, OAuthController],
   providers: [
     UserService,

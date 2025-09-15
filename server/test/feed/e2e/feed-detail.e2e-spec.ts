@@ -4,7 +4,7 @@ import { FeedFixture } from '../../fixture/feed.fixture';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
 import { RssAcceptFixture } from '../../fixture/rssAccept.fixture';
-import { FeedDetailRequestDto } from '../../../src/feed/dto/request/feed-detail.dto';
+import { ManageFeedRequestDto } from '../../../src/feed/dto/request/manageFeed.dto';
 
 describe('GET api/feed/detail E2E Test', () => {
   let app: INestApplication;
@@ -28,7 +28,7 @@ describe('GET api/feed/detail E2E Test', () => {
 
   it('feedId를 요청 받으면 해당 Feed의 정보로 응답한다.', async () => {
     //given
-    const feedDetailRequestDto = new FeedDetailRequestDto({
+    const feedDetailRequestDto = new ManageFeedRequestDto({
       feedId: 1,
     });
 
@@ -44,7 +44,7 @@ describe('GET api/feed/detail E2E Test', () => {
 
   it('태그가 없다면 빈 배열로 응답한다.', async () => {
     //given
-    const feedDetailRequestDto = new FeedDetailRequestDto({
+    const feedDetailRequestDto = new ManageFeedRequestDto({
       feedId: 11,
     });
 
@@ -61,7 +61,7 @@ describe('GET api/feed/detail E2E Test', () => {
 
   it('없는 피드를 조회한다면 404번 에러를 반환한다.', async () => {
     //given
-    const feedDetailRequestDto = new FeedDetailRequestDto({
+    const feedDetailRequestDto = new ManageFeedRequestDto({
       feedId: 100,
     });
 

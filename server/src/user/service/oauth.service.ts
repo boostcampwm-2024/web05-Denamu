@@ -15,6 +15,7 @@ import { OAuthProvider } from '../provider/oauth-provider.interface';
 import { UserService } from './user.service';
 import { cookieConfig } from '../../common/cookie/cookie.config';
 import { Payload } from '../../common/guard/jwt.guard';
+import { REFRESH_TOKEN_TTL } from '../constant/user.constants';
 
 @Injectable()
 export class OAuthService {
@@ -57,7 +58,7 @@ export class OAuthService {
       role: 'user',
     };
 
-    const serviceAcessToken = this.userService.createToken(
+    const serviceAccessToken = this.userService.createToken(
       jwtPayload,
       'access',
     );
@@ -68,10 +69,10 @@ export class OAuthService {
 
     res.cookie('refresh_token', serviceRefreshToken, {
       ...cookieConfig[process.env.NODE_ENV],
-      maxAge: 1000 * 60 * 60 * 24 * 7,
+      maxAge: REFRESH_TOKEN_TTL,
     });
 
-    return serviceAcessToken;
+    return serviceAccessToken;
   }
 
   private parseStateData(stateString: string): StateData {

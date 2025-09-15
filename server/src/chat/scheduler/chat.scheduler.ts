@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ChatService } from '../service/chat.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import type { BroadcastPayload } from '../chat.type';
+import type { BroadcastPayload } from '../constant/chat.constant';
 
 const CHAT_MIDNIGHT_CLIENT_NAME = 'system';
 

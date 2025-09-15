@@ -1,5 +1,5 @@
 import { validate } from 'class-validator';
-import { UpdateCommentRequestDto } from '../../../src/comment/dto/request/update-comment.dto';
+import { UpdateCommentRequestDto } from '../../../src/comment/dto/request/updateComment.dto';
 
 describe('EditCommentRequestDto Test', () => {
   it('댓글 내용이 비어있다면 유효성 검사에 실패한다.', async () => {
@@ -42,7 +42,7 @@ describe('EditCommentRequestDto Test', () => {
 
     // then
     expect(errors).not.toHaveLength(0);
-    expect(errors[0].constraints).toHaveProperty('isNotEmpty');
+    expect(errors[0].constraints).toHaveProperty('isInt');
   });
   it('댓글 아이디가 정수가 아닐 경우 유효성 검사에 실패한다.', async () => {
     // given

@@ -35,6 +35,6 @@ import { RssModule } from '../../rss/module/rss.module';
     FeedScheduler,
     ReadFeedInterceptor,
   ],
-  exports: [FeedRepository],
+  exports: [FeedRepository, FeedService],
 })
 export class FeedModule {}

@@ -10,7 +10,7 @@ import { UserService } from '../../../src/user/service/user.service';
 import { User } from '../../../src/user/entity/user.entity';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../fixture/user.fixture';
-import { GetCommentRequestDto } from '../../../src/comment/dto/request/get-comment.dto';
+import { GetCommentRequestDto } from '../../../src/comment/dto/request/getComment.dto';
 
 describe('GET /api/comment/:feedId E2E Test', () => {
   let app: INestApplication;

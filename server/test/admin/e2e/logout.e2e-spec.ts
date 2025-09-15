@@ -1,6 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { RedisService } from '../../../src/common/redis/redis.service';
+import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 
 describe('POST /api/admin/logout E2E Test', () => {
   let app: INestApplication;
@@ -8,7 +9,7 @@ describe('POST /api/admin/logout E2E Test', () => {
   beforeAll(async () => {
     app = global.testApp;
     const redisService = app.get(RedisService);
-    await redisService.set('auth:sid', 'test1234');
+    await redisService.set(`${REDIS_KEYS.ADMIN_AUTH_KEY}:sid`, 'test1234');
   });
 
   it('관리자 로그인이 되어 있으면 로그아웃을 정상적으로 할 수 있다.', async () => {

@@ -11,13 +11,13 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { AdminService } from '../service/admin.service';
-import { RegisterAdminRequestDto } from '../dto/request/register-admin.dto';
+import { RegisterAdminRequestDto } from '../dto/request/registerAdmin.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { ApiResponse } from '../../common/response/common.response';
-import { LoginAdminRequestDto } from '../dto/request/login-admin.dto';
+import { LoginAdminRequestDto } from '../dto/request/loginAdmin.dto';
 import { AdminAuthGuard } from '../../common/guard/auth.guard';
 import { ApiLoginAdmin } from '../api-docs/loginAdmin.api-docs';
-import { ApiReadSessionIdAdmin } from '../api-docs/readSessionIdAdmin.api-docs';
+import { ApiGetSessionIdAdmin } from '../api-docs/getSessionIdAdmin.api-docs';
 import { ApiLogoutAdmin } from '../api-docs/logoutAdmin.api-docs';
 import { ApiCreateAdmin } from '../api-docs/createAdmin.api-docs';
 
@@ -57,6 +57,7 @@ export class AdminController {
   @ApiCreateAdmin()
   @UseGuards(AdminAuthGuard)
   @Post('/register')
+  @HttpCode(HttpStatus.CREATED)
   async createAdmin(@Body() registerAdminBodyDto: RegisterAdminRequestDto) {
     await this.adminService.createAdmin(registerAdminBodyDto);
     return ApiResponse.responseWithNoContent(
@@ -64,11 +65,11 @@ export class AdminController {
     );
   }
 
-  @ApiReadSessionIdAdmin()
+  @ApiGetSessionIdAdmin()
   @Get('/sessionId')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AdminAuthGuard)
-  async readSessionIdAdmin() {
+  async getSessionIdAdmin() {
     return ApiResponse.responseWithNoContent('정상적인 sessionId 입니다.');
   }
 }

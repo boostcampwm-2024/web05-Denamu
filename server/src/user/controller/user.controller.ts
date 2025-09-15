@@ -14,19 +14,19 @@ import {
 } from '@nestjs/common';
 import { ApiResponse } from '../../common/response/common.response';
 import { UserService } from '../service/user.service';
-import { RegisterDto } from '../dto/request/register.dto';
-import { ApiCheckEmailDuplication } from '../api-docs/check-email-duplication.api-docs';
+import { RegisterUserRequestDto } from '../dto/request/registerUser.dto';
+import { ApiCheckEmailDuplication } from '../api-docs/checkEmailDuplication.api-docs';
 import { ApiRegisterUser } from '../api-docs/registerUser.api-docs';
 import { ApiCertificateUser } from '../api-docs/certificateUser.api-docs';
-import { CertificateDto } from '../dto/request/certificate.dto';
-import { CheckEmailDuplicationRequestDto } from '../dto/request/check-email-duplication.dto';
-import { LoginDto } from '../dto/request/login.dto';
+import { CertificateUserRequestDto } from '../dto/request/certificateUser.dto';
+import { CheckEmailDuplicationRequestDto } from '../dto/request/checkEmailDuplication.dto';
+import { LoginUserRequestDto } from '../dto/request/loginUser.dto';
 import { Response } from 'express';
 import { ApiLoginUser } from '../api-docs/loginUser.api-docs';
 import { JwtGuard, RefreshJwtGuard } from '../../common/guard/jwt.guard';
-import { ApiRefreshToken } from '../api-docs/refreshUser.api-docs';
+import { ApiRefreshToken } from '../api-docs/refreshToken.api-docs';
 import { ApiLogoutUser } from '../api-docs/logoutUser.api-docs';
-import { UpdateUserDto } from '../dto/request/update-user.dto';
+import { UpdateUserRequestDto } from '../dto/request/updateUser.dto';
 import { ApiUpdateUser } from '../api-docs/updateUser.api-docs';
 
 @ApiTags('User')
@@ -43,18 +43,16 @@ export class UserController {
   ) {
     return ApiResponse.responseWithData(
       '이메일 중복 조회 요청이 성공적으로 처리되었습니다.',
-      {
-        exists: await this.userService.checkEmailDuplication(
-          checkEmailDuplicationRequestDto.email,
-        ),
-      },
+      await this.userService.checkEmailDuplication(
+        checkEmailDuplicationRequestDto.email,
+      ),
     );
   }
 
   @ApiRegisterUser()
   @Post('/register')
   @HttpCode(HttpStatus.CREATED)
-  async registerUser(@Body() registerDto: RegisterDto) {
+  async registerUser(@Body() registerDto: RegisterUserRequestDto) {
     await this.userService.registerUser(registerDto);
     return ApiResponse.responseWithNoContent(
       '회원가입이 요청이 성공적으로 처리되었습니다.',
@@ -64,7 +62,7 @@ export class UserController {
   @ApiCertificateUser()
   @Post('/certificate')
   @HttpCode(HttpStatus.OK)
-  async certificateUser(@Body() certificateDto: CertificateDto) {
+  async certificateUser(@Body() certificateDto: CertificateUserRequestDto) {
     await this.userService.certificateUser(certificateDto.uuid);
     return ApiResponse.responseWithNoContent(
       '이메일 인증이 성공적으로 처리되었습니다.',
@@ -75,13 +73,13 @@ export class UserController {
   @Post('/login')
   @HttpCode(HttpStatus.OK)
   async loginUser(
-    @Body() loginDto: LoginDto,
+    @Body() loginDto: LoginUserRequestDto,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const accessToken = await this.userService.loginUser(loginDto, response);
-    return ApiResponse.responseWithData('로그인을 성공했습니다.', {
-      accessToken,
-    });
+    return ApiResponse.responseWithData(
+      '로그인을 성공했습니다.',
+      await this.userService.loginUser(loginDto, response),
+    );
   }
 
   @ApiRefreshToken()
@@ -92,7 +90,7 @@ export class UserController {
     const userInformation = req.user;
     return ApiResponse.responseWithData(
       '엑세스 토큰을 재발급했습니다.',
-      this.userService.createToken(userInformation, 'access'),
+      this.userService.refreshAccessToken(userInformation),
     );
   }
 
@@ -109,7 +107,7 @@ export class UserController {
   @Patch('/profile')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtGuard)
-  async updateUser(@Body() updateUserDto: UpdateUserDto, @Req() req) {
+  async updateUser(@Body() updateUserDto: UpdateUserRequestDto, @Req() req) {
     await this.userService.updateUser(req.user.id, updateUserDto);
     return ApiResponse.responseWithNoContent(
       '사용자 프로필 정보가 성공적으로 수정되었습니다.',

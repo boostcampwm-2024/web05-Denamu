@@ -9,9 +9,9 @@ import { Server, Socket } from 'socket.io';
 import { Injectable } from '@nestjs/common';
 import { ChatService } from './service/chat.service';
 import { ChatScheduler } from './scheduler/chat.scheduler';
-import type { BroadcastPayload } from './chat.type';
 import { InjectMetric } from '@willsoto/nestjs-prometheus';
 import { Counter, Gauge } from 'prom-client';
+import type { BroadcastPayload } from './constant/chat.constant';
 
 @Injectable()
 @WebSocketGateway({
