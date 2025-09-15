@@ -13,7 +13,6 @@ import { RegisterRssRequestDto } from '../dto/request/registerRss.dto';
 import { EmailService } from '../../common/email/email.service';
 import { DataSource } from 'typeorm';
 import { Rss, RssReject, RssAccept } from '../entity/rss.entity';
-import { FeedCrawlerService } from '../../feed/service/feedCrawler.service';
 import { ReadRssResponseDto } from '../dto/response/readRss.dto';
 import { ReadRssAcceptHistoryResponseDto } from '../dto/response/readRssAcceptHistory.dto';
 import { ReadRssRejectHistoryResponseDto } from '../dto/response/readRssRejectHistory.dto';
@@ -25,6 +24,12 @@ import { DeleteCertificateRssRequestDto } from '../dto/request/deleteCertificate
 import { FeedRepository } from '../../feed/repository/feed.repository';
 import { REDIS_KEYS } from '../../common/redis/redis.constant';
 
+type FullFeedCrawlMessage = {
+  rssId: number;
+  timestamp: number;
+  deathCount: number;
+};
+
 @Injectable()
 export class RssService {
   constructor(
@@ -33,7 +38,6 @@ export class RssService {
     private readonly rssRejectRepository: RssRejectRepository,
     private readonly emailService: EmailService,
     private readonly dataSource: DataSource,
-    private readonly feedCrawlerService: FeedCrawlerService,
     private readonly redisService: RedisService,
     private readonly feedRepository: FeedRepository,
   ) {}
@@ -78,17 +82,17 @@ export class RssService {
       throw new NotFoundException('신청 목록에서 사라진 등록 요청입니다.');
     }
 
-    const rssXmlResponse = await fetch(rss.rssUrl, {
+    const preFetchResponse = await fetch(rss.rssUrl, {
       headers: {
         Accept: 'application/rss+xml, application/xml, text/xml',
       },
     });
 
-    if (!rssXmlResponse.ok) {
+    if (!preFetchResponse.ok) {
       throw new BadRequestException(`${rss.rssUrl}이 올바른 RSS가 아닙니다.`);
     }
 
-    this.acceptRssBackProcess(rss, rssXmlResponse);
+    this.acceptRssBackProcess(rss);
   }
 
   async rejectRss(
@@ -158,27 +162,32 @@ export class RssService {
     return 'etc';
   }
 
-  private async acceptRssBackProcess(rss: Rss, rssXmlResponse: Response) {
+  private async acceptRssBackProcess(rss: Rss) {
     const blogPlatform = this.identifyPlatformFromRssUrl(rss.rssUrl);
 
-    const [rssAccept, feeds] = await this.dataSource.transaction(
-      async (manager) => {
-        const [rssAccept] = await Promise.all([
-          manager.save(RssAccept.fromRss(rss, blogPlatform)),
-          manager.delete(Rss, rss.id),
-        ]);
-        const feeds =
-          await this.feedCrawlerService.parseRssFeeds(rssXmlResponse);
-        return [rssAccept, feeds];
-      },
-    );
+    const rssAccept = await this.dataSource.transaction(async (manager) => {
+      const [rssAccept] = await Promise.all([
+        manager.save(RssAccept.fromRss(rss, blogPlatform)),
+        manager.delete(Rss, rss.id),
+      ]);
+      return rssAccept;
+    });
 
-    const feedsWithId = await this.feedCrawlerService.saveRssFeeds(
-      feeds,
-      rssAccept,
-    );
-    this.feedCrawlerService.saveAiQueue(feedsWithId);
+    this.enqueueFullFeedCrawlMessage(rssAccept.id);
     this.emailService.sendRssMail(rssAccept, true);
+  }
+
+  private async enqueueFullFeedCrawlMessage(rssId: number) {
+    const fullFeedCrawlMessage: FullFeedCrawlMessage = {
+      rssId,
+      timestamp: Date.now(),
+      deathCount: 0,
+    };
+
+    await this.redisService.rpush(
+      REDIS_KEYS.FULL_FEED_CRAWL_QUEUE,
+      JSON.stringify(fullFeedCrawlMessage),
+    );
   }
 
   async requestRemove(requestDeleteRssDto: DeleteRssRequestDto) {

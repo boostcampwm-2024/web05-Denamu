@@ -39,6 +39,13 @@ export abstract class BaseFeedParser {
     return detailedFeeds;
   }
 
+  async parseAllFeeds(rssObj: RssObj, xmlData: string): Promise<FeedDetail[]> {
+    const rawFeeds = this.extractRawFeeds(xmlData);
+    const detailedFeeds = await this.convertToFeedDetails(rssObj, rawFeeds);
+
+    return detailedFeeds;
+  }
+
   abstract canParse(xmlData: string): boolean;
   protected abstract extractRawFeeds(xmlData: string): RawFeed[];
 
