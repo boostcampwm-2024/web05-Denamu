@@ -16,4 +16,8 @@ export class ForgotPasswordRequestDto {
     message: '이메일이 없습니다.',
   })
   email: string;
+
+  constructor(email: string) {
+    this.email = email;
+  }
 }
