@@ -28,6 +28,8 @@ import { ApiRefreshToken } from '../api-docs/refreshToken.api-docs';
 import { ApiLogoutUser } from '../api-docs/logoutUser.api-docs';
 import { UpdateUserRequestDto } from '../dto/request/updateUser.dto';
 import { ApiUpdateUser } from '../api-docs/updateUser.api-docs';
+import { PasswordResetRequestDto } from '../dto/request/passwordReset.dto';
+import { ForgotPasswordRequestDto } from '../dto/request/forgotPassword.dto';
 
 @ApiTags('User')
 @Controller('user')
@@ -111,6 +113,30 @@ export class UserController {
     await this.userService.updateUser(req.user.id, updateUserDto);
     return ApiResponse.responseWithNoContent(
       '사용자 프로필 정보가 성공적으로 수정되었습니다.',
+    );
+  }
+
+  @Post('/password-reset')
+  @HttpCode(HttpStatus.OK)
+  async requestPasswordReset(
+    @Body() forgotPasswordDto: ForgotPasswordRequestDto,
+  ) {
+    await this.userService.requestPasswordReset(forgotPasswordDto.email);
+    return ApiResponse.responseWithNoContent(
+      '비밀번호 재설정 링크를 이메일로 발송했습니다.',
+    );
+  }
+
+  // @ApiResetPassword()
+  @Patch('/password')
+  @HttpCode(HttpStatus.OK)
+  async resetPassword(@Body() passwordResetDto: PasswordResetRequestDto) {
+    await this.userService.resetPassword(
+      passwordResetDto.uuid,
+      passwordResetDto.password,
+    );
+    return ApiResponse.responseWithNoContent(
+      '비밀번호가 성공적으로 수정되었습니다.',
     );
   }
 }
