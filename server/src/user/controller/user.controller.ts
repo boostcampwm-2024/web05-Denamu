@@ -30,6 +30,7 @@ import { UpdateUserRequestDto } from '../dto/request/updateUser.dto';
 import { ApiUpdateUser } from '../api-docs/updateUser.api-docs';
 import { PasswordResetRequestDto } from '../dto/request/passwordReset.dto';
 import { ForgotPasswordRequestDto } from '../dto/request/forgotPassword.dto';
+import { ApiRequestPasswordReset } from '../api-docs/requestPasswordReset.api-docs';
 
 @ApiTags('User')
 @Controller('user')
@@ -116,6 +117,7 @@ export class UserController {
     );
   }
 
+  @ApiRequestPasswordReset()
   @Post('/password-reset')
   @HttpCode(HttpStatus.OK)
   async requestPasswordReset(
