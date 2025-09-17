@@ -26,4 +26,9 @@ export class PasswordResetRequestDto {
     },
   )
   password: string;
+
+  constructor(uuid: string, password: string) {
+    this.uuid = uuid;
+    this.password = password;
+  }
 }
