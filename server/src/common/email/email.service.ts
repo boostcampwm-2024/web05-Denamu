@@ -151,7 +151,6 @@ export class EmailService {
     uuid: string,
   ): nodemailer.SendMailOptions {
     const redirectUrl = `${PRODUCT_DOMAIN}/user/password?token=${uuid}`;
-    console.log(JSON.stringify(user));
     return {
       from: `Denamu<${this.emailUser}>`,
       to: user.email,
