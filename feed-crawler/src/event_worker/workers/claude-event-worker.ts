@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { injectable } from 'tsyringe';
+import { inject, injectable } from 'tsyringe';
 import Anthropic from '@anthropic-ai/sdk';
 import { ClaudeResponse, FeedAIQueueItem } from '../../common/types';
 import { TagMapRepository } from '../../repository/tag-map.repository';
@@ -8,14 +8,18 @@ import logger from '../../common/logger';
 import { PROMPT_CONTENT, redisConstant } from '../../common/constant';
 import { RedisConnection } from '../../common/redis-access';
 import { AbstractQueueWorker } from '../abstract-queue-worker';
+import { DEPENDENCY_SYMBOLS } from '../../types/dependency-symbols';
 
 @injectable()
 export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
   private readonly client: Anthropic;
 
   constructor(
+    @inject(DEPENDENCY_SYMBOLS.TagMapRepository)
     private readonly tagMapRepository: TagMapRepository,
+    @inject(DEPENDENCY_SYMBOLS.FeedRepository)
     private readonly feedRepository: FeedRepository,
+    @inject(DEPENDENCY_SYMBOLS.RedisConnection)
     redisConnection: RedisConnection,
   ) {
     super('[AI Service]', redisConnection);
@@ -70,19 +74,6 @@ export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
     }
   }
 
-  private async processFeed(feed: FeedAIQueueItem) {
-    try {
-      const aiData = await this.requestAI(feed);
-      await this.saveAIResult(aiData);
-    } catch (error) {
-      logger.error(
-        `${this.nameTag} ${feed.id} 처리 중 에러 발생: ${error.message}`,
-        error.stack,
-      );
-      await this.handleFailure(feed, error);
-    }
-  }
-
   private async requestAI(feed: FeedAIQueueItem) {
     logger.info(`${this.nameTag} AI 요청: ${JSON.stringify(feed)}`);
     const params: Anthropic.MessageCreateParams = {
@@ -123,7 +114,7 @@ export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
       logger.warn(`${this.nameTag} ${feed.id} 재시도 (${feed.deathCount})`);
     } else {
       logger.error(
-        `${this.nameTag} ${feed.id} 의 Death Count 3회 이상 발생 AI 요청 금지`,
+        `${this.nameTag} ${feed.id} 의 Death Count 3회 이상 발생. AI 요청 스킵`,
       );
       await this.feedRepository.updateNullSummary(feed.id);
     }

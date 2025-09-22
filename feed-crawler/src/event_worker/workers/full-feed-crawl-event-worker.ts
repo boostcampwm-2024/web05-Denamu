@@ -79,7 +79,7 @@ export class FullFeedCrawlEventWorker extends AbstractQueueWorker<FullFeedCrawlM
         JSON.stringify(crawlMessage),
       ]);
       logger.error(
-        `${this.nameTag} ${crawlMessage.rssId} 의 Death Count 3회 이상 발생 AI 요청 금지`,
+        `${this.nameTag} ${crawlMessage.rssId} 의 Death Count 3회 이상 발생. 크롤링 스킵 처리`,
       );
     } else {
       logger.error(

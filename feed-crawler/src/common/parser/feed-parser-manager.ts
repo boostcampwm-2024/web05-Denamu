@@ -34,7 +34,7 @@ export class FeedParserManager {
 
       const parser = this.findSuitableParser(xmlData);
       if (!parser) {
-        throw new Error(`지원하지 않는 피드 형식: ${rssObj.rssUrl} / `);
+        throw new Error(`지원하지 않는 피드 형식: ${rssObj.rssUrl}`);
       }
       logger.info(`${rssObj.blogName}: ${parser.constructor.name} 사용`);
 
@@ -62,7 +62,7 @@ export class FeedParserManager {
 
       const parser = this.findSuitableParser(xmlData);
       if (!parser) {
-        throw new Error(`지원하지 않는 피드 형식: ${rssObj.rssUrl} / `);
+        throw new Error(`지원하지 않는 피드 형식: ${rssObj.rssUrl}`);
       }
       logger.info(
         `${rssObj.blogName}: ${parser.constructor.name} 사용 (전체 피드)`,
