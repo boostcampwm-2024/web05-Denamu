@@ -1,10 +1,13 @@
-FROM nginx:1.18.0
+FROM nginx:stable-alpine
 
+# Alpine에서 필요한 패키지 설치 (openssl)
+RUN apk add --no-cache openssl dos2unix
+
+# 스크립트 파일을 컨테이너에 복사
 COPY ./scripts /etc/nginx/scripts
-
-RUN apt-get update && apt-get install dos2unix
 RUN dos2unix /etc/nginx/scripts/generate_cert.sh
-RUN bash "/etc/nginx/scripts/generate_cert.sh"
 
+# generate_cert.sh 실행 (sh로 실행)
+RUN sh /etc/nginx/scripts/generate_cert.sh
 
-CMD ["nginx","-g","daemon off;"]
+CMD ["nginx", "-g", "daemon off;"]
