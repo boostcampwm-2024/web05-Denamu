@@ -73,6 +73,8 @@ services:
       watch:
         - path: ../server/package.json
           action: rebuild
+    profiles:
+      - was-dev
 
   # Feed Crawler 서비스
   feed-crawler:
