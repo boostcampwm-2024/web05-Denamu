@@ -16,7 +16,8 @@
     "stress-fe-html": "artillery report loadtest/FE_Report",
     "stress-be-html": "artillery report loadtest/BE_Report",
     "start:dev": "docker-compose -f docker-compose/docker-compose.dev.yml up --build",
-    "start:local": "docker-compose -f docker-compose/docker-compose.local.yml up"
+    "start:local": "docker-compose -f docker-compose/docker-compose.local.yml up",
+    "start:was-dev": "docker-compose -f docker-compose/docker-compose.dev.yml -f docker-compose/docker-compose.was.dev.yml --profile was-dev up"
   },
   "config": {
     "commitizen": {
