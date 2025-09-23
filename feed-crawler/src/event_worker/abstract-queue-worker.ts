@@ -31,5 +31,5 @@ export abstract class AbstractQueueWorker<T> {
   protected abstract parseQueueMessage(message: string): T;
   protected abstract processItem(item: T): Promise<void>;
 
-  abstract handleFailure(item: T, error: Error): Promise<void>;
+  protected abstract handleFailure(item: T, error: Error): Promise<void>;
 }

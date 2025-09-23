@@ -69,7 +69,7 @@ export class FullFeedCrawlEventWorker extends AbstractQueueWorker<FullFeedCrawlM
     }
   }
 
-  async handleFailure(
+  protected async handleFailure(
     crawlMessage: FullFeedCrawlMessage,
     error: Error,
   ): Promise<void> {

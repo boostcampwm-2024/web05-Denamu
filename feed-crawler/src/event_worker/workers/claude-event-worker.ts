@@ -105,7 +105,10 @@ export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
     await this.feedRepository.updateSummary(feed.id, feed.summary);
   }
 
-  async handleFailure(feed: FeedAIQueueItem, e: Error): Promise<void> {
+  protected async handleFailure(
+    feed: FeedAIQueueItem,
+    e: Error,
+  ): Promise<void> {
     if (feed.deathCount < 3) {
       feed.deathCount++;
       await this.redisConnection.rpush(redisConstant.FEED_AI_QUEUE, [
