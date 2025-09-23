@@ -32,8 +32,9 @@ function registerSchedulers(
   dependencies: ReturnType<typeof initializeDependencies>,
 ) {
   schedule.scheduleJob('FEED CRAWLING', '0,30 * * * *', async () => {
-    logger.info(`Feed Crawling Start: ${new Date().toISOString()}`);
-    dependencies.feedCrawler.start();
+    const now = new Date();
+    logger.info(`Feed Crawling Start: ${now.toISOString()}`);
+    dependencies.feedCrawler.start(now);
   });
 
   schedule.scheduleJob(

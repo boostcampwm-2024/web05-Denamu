@@ -17,9 +17,8 @@ export class FeedCrawler {
     private readonly feedParserManager: FeedParserManager,
   ) {}
 
-  async start() {
+  async start(startTime: Date) {
     logger.info('==========작업 시작==========');
-    const startTime = Date.now();
 
     await this.feedRepository.deleteRecentFeed();
 
@@ -29,7 +28,7 @@ export class FeedCrawler {
       return;
     }
 
-    const newFeedsByRss = await this.feedGroupByRss(rssObjects);
+    const newFeedsByRss = await this.feedGroupByRss(rssObjects, startTime);
     const newFeeds = newFeedsByRss.flat();
 
     if (!newFeeds.length) {
@@ -44,7 +43,7 @@ export class FeedCrawler {
     await this.feedRepository.setRecentFeedList(insertedData);
 
     const endTime = Date.now();
-    const executionTime = endTime - startTime;
+    const executionTime = endTime - startTime.getTime();
 
     logger.info(`실행 시간: ${executionTime / 1000}seconds`);
     logger.info('==========작업 완료==========');
@@ -71,13 +70,16 @@ export class FeedCrawler {
     return insertedData;
   }
 
-  private feedGroupByRss(rssObjects: RssObj[]): Promise<FeedDetail[][]> {
+  private feedGroupByRss(
+    rssObjects: RssObj[],
+    startTime: Date,
+  ): Promise<FeedDetail[][]> {
     return Promise.all(
       rssObjects.map(async (rssObj: RssObj) => {
         logger.info(
           `${rssObj.blogName}(${rssObj.rssUrl}) 에서 데이터 조회하는 중...`,
         );
-        return await this.feedParserManager.fetchAndParse(rssObj);
+        return await this.feedParserManager.fetchAndParse(rssObj, startTime);
       }),
     );
   }
