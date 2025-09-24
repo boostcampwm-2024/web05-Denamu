@@ -10,6 +10,14 @@ describe('DeleteCommentRequestDto Test', () => {
     });
   });
 
+  it('댓글 아이디가 1보다 큰 정수일 경우 유효성 검사에 성공한다.', async () => {
+    // when
+    const errors = await validate(dto);
+
+    // then
+    expect(errors).toHaveLength(0);
+  });
+
   describe('commentId', () => {
     it('댓글 아이디가 비어있다면 유효성 검사에 실패한다.', async () => {
       // given

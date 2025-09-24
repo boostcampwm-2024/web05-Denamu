@@ -10,6 +10,14 @@ describe('CheckEmailDuplicationRequestDto Test', () => {
     });
   });
 
+  it('email 경로가 올바를 경우 유효성 검사에 성공한다.', async () => {
+    // when
+    const errors = await validate(dto);
+
+    // then
+    expect(errors).toHaveLength(0);
+  });
+
   describe('email', () => {
     it('잘못된 이메일 형식이면 유효성 검사에 실패한다.', async () => {
       // given

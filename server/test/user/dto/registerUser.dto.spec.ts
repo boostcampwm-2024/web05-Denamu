@@ -12,6 +12,14 @@ describe('RegisterUserRequestDto Test', () => {
     });
   });
 
+  it('회원가입 유저 정보가 올바를 경우 유효성 검사를 통과한다.', async () => {
+    // when
+    const errors = await validate(dto);
+
+    // then
+    expect(errors).toHaveLength(0);
+  });
+
   describe('email', () => {
     it('잘못된 이메일 형식이면 유효성 검사에 실패한다.', async () => {
       // given

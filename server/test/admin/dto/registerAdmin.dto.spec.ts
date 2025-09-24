@@ -9,6 +9,14 @@ describe('RegisterAdminRequestDto Test', () => {
     dto = new RegisterAdminRequestDto(AdminFixture.createAdminFixture());
   });
 
+  it('ID와 패스워드가 올바르게 있을 경우 유효성 검사에 성공한다.', async () => {
+    // when
+    const errors = await validate(dto);
+
+    // then
+    expect(errors).toHaveLength(0);
+  });
+
   describe('loginId', () => {
     it('ID의 길이가 6 이상, 255 이하가 아니라면 유효성 검사에 실패한다.', async () => {
       //given

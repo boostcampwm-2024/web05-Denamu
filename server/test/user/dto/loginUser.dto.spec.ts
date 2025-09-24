@@ -11,6 +11,14 @@ describe('LoginUserRequestDto Test', () => {
     });
   });
 
+  it('email 경로가 올바르고 비밀번호가 정책에 적합할 경우 유효성 검사에 성공한다.', async () => {
+    // when
+    const errors = await validate(dto);
+
+    // then
+    expect(errors).toHaveLength(0);
+  });
+
   describe('email', () => {
     it('잘못된 이메일 형식이면 유효성 검사에 실패한다.', async () => {
       // given

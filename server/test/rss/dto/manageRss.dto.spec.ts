@@ -10,6 +10,14 @@ describe('ManageRssRequestDto Test', () => {
     });
   });
 
+  it('RSS ID가 1 이상이며 정수일 경우 유효성 검사를 통과한다.', async () => {
+    // when
+    const errors = await validate(dto);
+
+    // then
+    expect(errors).toHaveLength(0);
+  });
+
   describe('id', () => {
     it('Rss관리 API의 PathVariable이 정수가 아닐 경우', async () => {
       // given

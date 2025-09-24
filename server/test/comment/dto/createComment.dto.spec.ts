@@ -11,6 +11,14 @@ describe('CreateCommentRequestDto Test', () => {
     });
   });
 
+  it('댓글 내용과 게시글 ID가 있을 경우 유효성 검사에 성공한다.', async () => {
+    // when
+    const errors = await validate(dto);
+
+    // then
+    expect(errors).toHaveLength(0);
+  });
+
   describe('comment', () => {
     it('댓글 내용이 비어있다면 유효성 검사에 실패한다.', async () => {
       // given

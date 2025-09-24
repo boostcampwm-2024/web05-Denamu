@@ -11,6 +11,14 @@ describe('DeleteRssRequestDto Test', () => {
     });
   });
 
+  it('blog 경로와 이메일 경로가 올바를 경우 유효성 검사를 성공한다.', async () => {
+    // when
+    const errors = await validate(dto);
+
+    // then
+    expect(errors).toHaveLength(0);
+  });
+
   describe('blogUrl', () => {
     it('블로그 주소가 없다.', async () => {
       // given

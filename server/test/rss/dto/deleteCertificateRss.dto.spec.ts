@@ -10,6 +10,14 @@ describe('DeleteCertificateRssRequestDto Test', () => {
     });
   });
 
+  it('삭제 인증 이메일의 코드가 문자열일 경우 유효성 검사를 통과한다.', async () => {
+    // when
+    const errors = await validate(dto);
+
+    // then
+    expect(errors).toHaveLength(0);
+  });
+
   describe('code', () => {
     it('인증 코드가 문자열이 아니다.', async () => {
       // given

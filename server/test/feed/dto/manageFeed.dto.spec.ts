@@ -10,6 +10,14 @@ describe('ManageFeedRequestDto Test', () => {
     });
   });
 
+  it('게시글 아이디가 1보다 큰 정수일 경우 유효성 검사에 성공한다.', async () => {
+    // when
+    const errors = await validate(dto);
+
+    // then
+    expect(errors).toHaveLength(0);
+  });
+
   describe('feedId', () => {
     it('feedId에 1보다 작은 값을 입력하면 유효성 검사에 실패한다.', async () => {
       //given

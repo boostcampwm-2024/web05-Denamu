@@ -13,6 +13,14 @@ describe('RegisterRssRequestDto Test', () => {
     });
   });
 
+  it('RSS 신청 정보가 올바를 경우 유효성 검사를 통과한다.', async () => {
+    // when
+    const errors = await validate(dto);
+
+    // then
+    expect(errors).toHaveLength(0);
+  });
+
   describe('blog', () => {
     it('블로그 이름이 없다.', async () => {
       // given

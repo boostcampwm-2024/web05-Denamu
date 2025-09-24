@@ -16,6 +16,14 @@ describe('SearchFeedRequestDto Test', () => {
     });
   });
 
+  it('검색 내용과 타입이 있을 경우 유효성 검사에 성공한다.', async () => {
+    // when
+    const errors = await validate(dto);
+
+    // then
+    expect(errors).toHaveLength(0);
+  });
+
   describe('find', () => {
     it('검색어를 입력하지 않는다.', async () => {
       //given

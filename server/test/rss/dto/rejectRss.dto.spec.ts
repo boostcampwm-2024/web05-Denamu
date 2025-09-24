@@ -10,6 +10,14 @@ describe('RejectRssRequestDto Test', () => {
     });
   });
 
+  it('거절 사유가 문자열로 작성되어 있을 경우 유효성 검사를 통과한다.', async () => {
+    // when
+    const errors = await validate(dto);
+
+    // then
+    expect(errors).toHaveLength(0);
+  });
+
   describe('description', () => {
     it('거절 사유가 비어있다.', async () => {
       // given
