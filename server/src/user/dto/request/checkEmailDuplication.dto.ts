@@ -12,7 +12,7 @@ export class CheckEmailDuplicationRequestDto {
   @Type(() => String)
   email: string;
 
-  constructor(email: string) {
-    this.email = email;
+  constructor(partial: Partial<CheckEmailDuplicationRequestDto>) {
+    Object.assign(this, partial);
   }
 }

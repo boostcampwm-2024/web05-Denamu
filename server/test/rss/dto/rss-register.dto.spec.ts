@@ -16,7 +16,7 @@ describe('RssRegisterDto Test', () => {
   describe('blog', () => {
     it('블로그 이름이 없다.', async () => {
       // given
-      delete dto.blog;
+      dto.blog = null;
 
       // when
       const errors = await validate(dto);
@@ -44,7 +44,7 @@ describe('RssRegisterDto Test', () => {
 
     it('블로그 이름이 문자열이 아니다.', async () => {
       // given
-      dto.blog = 1 as unknown as string;
+      dto.blog = 1 as any;
 
       // when
       const errors = await validate(dto);
@@ -60,7 +60,7 @@ describe('RssRegisterDto Test', () => {
   describe('name', () => {
     it('실명이 없다.', async () => {
       // given
-      delete dto.name;
+      dto.name = null;
 
       // when
       const errors = await validate(dto);
@@ -88,7 +88,7 @@ describe('RssRegisterDto Test', () => {
 
     it('실명이 문자열이 아니다.', async () => {
       // given
-      dto.name = 1 as unknown as string;
+      dto.name = 1 as any;
 
       // when
       const errors = await validate(dto);
@@ -132,7 +132,7 @@ describe('RssRegisterDto Test', () => {
   describe('email', () => {
     it('이메일이 없다.', async () => {
       // given
-      delete dto.email;
+      dto.email = null;
 
       // when
       const errors = await validate(dto);
@@ -176,7 +176,7 @@ describe('RssRegisterDto Test', () => {
   describe('rssUrl', () => {
     it('RSS URL이 없다.', async () => {
       // given
-      delete dto.rssUrl;
+      dto.rssUrl = null;
 
       // when
       const errors = await validate(dto);

@@ -3,10 +3,18 @@ import { validate } from 'class-validator';
 import { ManageRssRequestDto } from '../../../src/rss/dto/request/manageRss.dto';
 
 describe('RssManagementDto Test', () => {
+  let dto: ManageRssRequestDto;
+
+  beforeEach(() => {
+    dto = new ManageRssRequestDto({
+      id: 1,
+    });
+  });
+
   describe('id', () => {
     it('Rss관리 API의 PathVariable이 정수가 아닐 경우', async () => {
       // given
-      const dto = new ManageRssRequestDto({ id: 'abc' as any });
+      dto.id = 'abc' as any;
 
       // when
       const errors = await validate(dto);

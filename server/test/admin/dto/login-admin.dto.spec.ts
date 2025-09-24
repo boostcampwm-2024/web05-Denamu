@@ -3,14 +3,15 @@ import { validate } from 'class-validator';
 import { AdminFixture } from '../../fixture/admin.fixture';
 
 describe('LoginAdminDto Test', () => {
-  it('ID와 패스워드가 있을 경우 유효성 검사에 성공한다.', async () => {
-    //given
-    const loginAdminDto = new LoginAdminRequestDto(
-      AdminFixture.createAdminFixture(),
-    );
+  let dto: LoginAdminRequestDto;
 
+  beforeEach(() => {
+    dto = new LoginAdminRequestDto(AdminFixture.createAdminFixture());
+  });
+
+  it('ID와 패스워드가 있을 경우 유효성 검사에 성공한다.', async () => {
     //when
-    const errors = await validate(loginAdminDto);
+    const errors = await validate(dto);
 
     //then
     expect(errors).toHaveLength(0);
@@ -19,15 +20,10 @@ describe('LoginAdminDto Test', () => {
   describe('loginId', () => {
     it('ID에 null이 입력되면 유효성 검사에 실패한다.', async () => {
       //given
-      const loginAdminDto = new LoginAdminRequestDto(
-        AdminFixture.createAdminFixture({
-          loginId: null,
-          password: 'testAdminPassword',
-        }),
-      );
+      dto.loginId = null;
 
       //when
-      const errors = await validate(loginAdminDto);
+      const errors = await validate(dto);
 
       //then
       expect(errors).toHaveLength(1);
@@ -39,15 +35,10 @@ describe('LoginAdminDto Test', () => {
   describe('password', () => {
     it('패스워드에 null이 입력되면 유효성 검사에 실패한다.', async () => {
       //given
-      const loginAdminDto = new LoginAdminRequestDto(
-        AdminFixture.createAdminFixture({
-          loginId: 'testAdminId',
-          password: null,
-        }),
-      );
+      dto.password = null;
 
       //when
-      const errors = await validate(loginAdminDto);
+      const errors = await validate(dto);
 
       //then
       expect(errors).toHaveLength(1);

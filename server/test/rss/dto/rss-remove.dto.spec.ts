@@ -14,7 +14,7 @@ describe('RequestDeleteRssDto Test', () => {
   describe('blogUrl', () => {
     it('블로그 주소가 없다.', async () => {
       // given
-      delete dto.blogUrl;
+      dto.blogUrl = null;
 
       // when
       const errors = await validate(dto);
@@ -44,7 +44,7 @@ describe('RequestDeleteRssDto Test', () => {
   describe('email', () => {
     it('이메일 주소가 없다.', async () => {
       // given
-      delete dto.email;
+      dto.email = null;
 
       // when
       const errors = await validate(dto);

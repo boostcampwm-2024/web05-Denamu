@@ -2,15 +2,21 @@ import { validate } from 'class-validator';
 import { ManageFeedRequestDto } from '../../../src/feed/dto/request/manageFeed.dto';
 
 describe('ManageFeedRequestDto Test', () => {
+  let dto: ManageFeedRequestDto;
+
+  beforeEach(() => {
+    dto = new ManageFeedRequestDto({
+      feedId: 1,
+    });
+  });
+
   describe('feedId', () => {
     it('feedId에 1보다 작은 값을 입력하면 유효성 검사에 실패한다.', async () => {
       //given
-      const feedPaginationQueryDto = new ManageFeedRequestDto({
-        feedId: -1,
-      });
+      dto.feedId = -1;
 
       //when
-      const errors = await validate(feedPaginationQueryDto);
+      const errors = await validate(dto);
 
       //then
       expect(errors).toHaveLength(1);
@@ -19,12 +25,10 @@ describe('ManageFeedRequestDto Test', () => {
 
     it('feedId에 자연수가 아닌 실수를 입력하면 유효성 검사에 실패한다.', async () => {
       //given
-      const feedPaginationQueryDto = new ManageFeedRequestDto({
-        feedId: 1.254,
-      });
+      dto.feedId = 1.254;
 
       //when
-      const errors = await validate(feedPaginationQueryDto);
+      const errors = await validate(dto);
 
       //then
       expect(errors).toHaveLength(1);
@@ -33,12 +37,10 @@ describe('ManageFeedRequestDto Test', () => {
 
     it('feedId에 문자열을 입력하면 유효성 검사에 실패한다.', async () => {
       //given
-      const feedPaginationQueryDto = new ManageFeedRequestDto({
-        feedId: 'abcdefg' as any,
-      });
+      dto.feedId = 'abcdefg' as any;
 
       //when
-      const errors = await validate(feedPaginationQueryDto);
+      const errors = await validate(dto);
 
       //then
       expect(errors).toHaveLength(1);

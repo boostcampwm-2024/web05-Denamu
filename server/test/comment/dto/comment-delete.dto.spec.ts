@@ -2,15 +2,21 @@ import { validate } from 'class-validator';
 import { DeleteCommentRequestDto } from '../../../src/comment/dto/request/deleteComment.dto';
 
 describe('DeleteCommentRequestDto Test', () => {
+  let dto: DeleteCommentRequestDto;
+
+  beforeEach(() => {
+    dto = new DeleteCommentRequestDto({
+      commentId: 1,
+    });
+  });
+
   describe('commentId', () => {
     it('댓글 아이디가 비어있다면 유효성 검사에 실패한다.', async () => {
       // given
-      const deleteCommentDto = new DeleteCommentRequestDto({
-        commentId: null,
-      });
+      dto.commentId = null;
 
       // when
-      const errors = await validate(deleteCommentDto);
+      const errors = await validate(dto);
 
       // then
       expect(errors).not.toHaveLength(0);
@@ -19,12 +25,10 @@ describe('DeleteCommentRequestDto Test', () => {
 
     it('댓글 아이디가 정수가 아닐 경우 유효성 검사에 실패한다.', async () => {
       // given
-      const deleteCommentDto = new DeleteCommentRequestDto({
-        commentId: 'test' as any,
-      });
+      dto.commentId = 'test' as any;
 
       // when
-      const errors = await validate(deleteCommentDto);
+      const errors = await validate(dto);
 
       // then
       expect(errors).not.toHaveLength(0);
@@ -33,12 +37,10 @@ describe('DeleteCommentRequestDto Test', () => {
 
     it('댓글 아이디가 실수일 경우 유효성 검사에 실패한다.', async () => {
       // given
-      const deleteCommentDto = new DeleteCommentRequestDto({
-        commentId: 1.1,
-      });
+      dto.commentId = 1.1;
 
       // when
-      const errors = await validate(deleteCommentDto);
+      const errors = await validate(dto);
 
       // then
       expect(errors).not.toHaveLength(0);

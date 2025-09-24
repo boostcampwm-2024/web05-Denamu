@@ -1,16 +1,22 @@
+import { GetCommentRequestDto } from './../../../src/comment/dto/request/getComment.dto';
 import { validate } from 'class-validator';
-import { GetCommentRequestDto } from '../../../src/comment/dto/request/getComment.dto';
 
 describe('GetCommentRequestDto Test', () => {
+  let dto: GetCommentRequestDto;
+
+  beforeEach(() => {
+    dto = new GetCommentRequestDto({
+      feedId: 1,
+    });
+  });
+
   describe('feedId', () => {
     it('게시글 아이디가 비어있다면 유효성 검사에 실패한다.', async () => {
       // given
-      const getCommentDto = new GetCommentRequestDto({
-        feedId: null,
-      });
+      dto.feedId = null;
 
       // when
-      const errors = await validate(getCommentDto);
+      const errors = await validate(dto);
 
       // then
       expect(errors).not.toHaveLength(0);
@@ -19,12 +25,10 @@ describe('GetCommentRequestDto Test', () => {
 
     it('게시글 아이디가 정수가 아닐 경우 유효성 검사에 실패한다.', async () => {
       // given
-      const getCommentDto = new GetCommentRequestDto({
-        feedId: 'test' as any,
-      });
+      dto.feedId = 'test' as any;
 
       // when
-      const errors = await validate(getCommentDto);
+      const errors = await validate(dto);
 
       // then
       expect(errors).not.toHaveLength(0);
@@ -33,12 +37,10 @@ describe('GetCommentRequestDto Test', () => {
 
     it('게시글 아이디가 실수일 경우 유효성 검사에 실패한다.', async () => {
       // given
-      const getCommentDto = new GetCommentRequestDto({
-        feedId: 1.1,
-      });
+      dto.feedId = 1.1;
 
       // when
-      const errors = await validate(getCommentDto);
+      const errors = await validate(dto);
 
       // then
       expect(errors).not.toHaveLength(0);

@@ -27,7 +27,7 @@ describe('DeleteRssDto Test', () => {
 
     it('인증 코드가 없다.', async () => {
       // given
-      delete dto.code;
+      dto.code = null;
 
       // when
       const errors = await validate(dto);

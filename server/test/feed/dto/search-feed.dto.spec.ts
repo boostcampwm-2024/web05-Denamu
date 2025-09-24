@@ -5,10 +5,10 @@ import {
 import { validate } from 'class-validator';
 
 describe('SearchFeedRequestDto Test', () => {
-  let searchFeedDto: SearchFeedRequestDto;
+  let dto: SearchFeedRequestDto;
 
   beforeEach(() => {
-    searchFeedDto = new SearchFeedRequestDto({
+    dto = new SearchFeedRequestDto({
       find: 'test',
       type: SearchType.TITLE,
       page: 1,
@@ -19,9 +19,10 @@ describe('SearchFeedRequestDto Test', () => {
   describe('find', () => {
     it('검색어를 입력하지 않는다.', async () => {
       //given
-      delete searchFeedDto.find;
+      dto.find = null;
+
       //when
-      const errors = await validate(searchFeedDto);
+      const errors = await validate(dto);
 
       //then
       expect(errors).toHaveLength(1);
@@ -32,10 +33,10 @@ describe('SearchFeedRequestDto Test', () => {
   describe('type', () => {
     it('검색 타입을 입력하지 않는다.', async () => {
       //given
-      delete searchFeedDto.type;
+      dto.type = null;
 
       //when
-      const errors = await validate(searchFeedDto);
+      const errors = await validate(dto);
 
       //then
       expect(errors).toHaveLength(1);
@@ -44,10 +45,10 @@ describe('SearchFeedRequestDto Test', () => {
 
     it('검색 타입을 잘 못된 입력을 한다.', async () => {
       //given
-      searchFeedDto.type = 'test' as any;
+      dto.type = 'test' as any;
 
       //when
-      const errors = await validate(searchFeedDto);
+      const errors = await validate(dto);
 
       //then
       expect(errors).toHaveLength(1);
@@ -58,10 +59,10 @@ describe('SearchFeedRequestDto Test', () => {
   describe('page', () => {
     it('페이지 번호를 정수가 아닌 문자열로 입력한다.', async () => {
       //given
-      searchFeedDto.page = 'abcdefg' as any;
+      dto.page = 'abcdefg' as any;
 
       //when
-      const errors = await validate(searchFeedDto);
+      const errors = await validate(dto);
 
       //then
       expect(errors).toHaveLength(1);
@@ -70,10 +71,10 @@ describe('SearchFeedRequestDto Test', () => {
 
     it('페이지 번호를 정수가 아닌 실수로 입력한다.', async () => {
       //given
-      searchFeedDto.page = 1.1 as any;
+      dto.page = 1.1;
 
       //when
-      const errors = await validate(searchFeedDto);
+      const errors = await validate(dto);
 
       //then
       expect(errors).toHaveLength(1);
@@ -82,10 +83,10 @@ describe('SearchFeedRequestDto Test', () => {
 
     it('페이지 번호를 양수가 아닌 음수로 입력한다.', async () => {
       //given
-      searchFeedDto.page = -1;
+      dto.page = -1;
 
       //when
-      const errors = await validate(searchFeedDto);
+      const errors = await validate(dto);
 
       //then
       expect(errors).toHaveLength(1);
@@ -96,10 +97,10 @@ describe('SearchFeedRequestDto Test', () => {
   describe('limit', () => {
     it('limit를 정수가 아닌 문자열로 입력한다.', async () => {
       //given
-      searchFeedDto.limit = 'test' as any;
+      dto.limit = 'test' as any;
 
       //when
-      const errors = await validate(searchFeedDto);
+      const errors = await validate(dto);
 
       //then
       expect(errors).toHaveLength(1);
@@ -108,10 +109,10 @@ describe('SearchFeedRequestDto Test', () => {
 
     it('limit를 정수가 아닌 실수로 입력한다.', async () => {
       //given
-      searchFeedDto.limit = 1.1;
+      dto.limit = 1.1;
 
       //when
-      const errors = await validate(searchFeedDto);
+      const errors = await validate(dto);
 
       //then
       expect(errors).toHaveLength(1);
@@ -120,10 +121,10 @@ describe('SearchFeedRequestDto Test', () => {
 
     it('limit를 양수가 아닌 음수로 입력한다.', async () => {
       //given
-      searchFeedDto.limit = -1;
+      dto.limit = -1;
 
       //when
-      const errors = await validate(searchFeedDto);
+      const errors = await validate(dto);
 
       //then
       expect(errors).toHaveLength(1);
