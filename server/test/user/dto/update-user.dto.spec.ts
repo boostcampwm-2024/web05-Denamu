@@ -41,7 +41,7 @@ describe('UpdateUserDto Test', () => {
     expect(errors).toHaveLength(0);
   });
 
-  describe('userName 유효성 검사', () => {
+  describe('userName', () => {
     it('userName이 문자열이 아니면 유효성 검사에 실패한다.', async () => {
       // given
       const dto = new UpdateUserRequestDto({
@@ -72,7 +72,7 @@ describe('UpdateUserDto Test', () => {
     });
   });
 
-  describe('profileImage 유효성 검사', () => {
+  describe('profileImage', () => {
     it('profileImage가 문자열이 아니면 유효성 검사에 실패한다.', async () => {
       // given
       const dto = new UpdateUserRequestDto({
@@ -101,7 +101,7 @@ describe('UpdateUserDto Test', () => {
     });
   });
 
-  describe('introduction 유효성 검사', () => {
+  describe('introduction', () => {
     it('introduction이 문자열이 아니면 유효성 검사에 실패한다.', async () => {
       // given
       const dto = new UpdateUserRequestDto({
