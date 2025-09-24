@@ -9,7 +9,7 @@ export default defineConfig({
   plugins: [
     react(),
     visualizer({
-      open: true,
+      open: !process.env.VITE_VISUALIZE,
       brotliSize: true,
     }),
   ],
