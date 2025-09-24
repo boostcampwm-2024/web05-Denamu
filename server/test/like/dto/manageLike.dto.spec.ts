@@ -1,7 +1,7 @@
 import { validate } from 'class-validator';
 import { ManageLikeRequestDto } from '../../../src/like/dto/request/manageLike.dto';
 
-describe('FeedLikeRequestDto Test', () => {
+describe('ManageLikeRequestDto Test', () => {
   let dto: ManageLikeRequestDto;
 
   beforeEach(() => {

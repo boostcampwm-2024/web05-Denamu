@@ -1,8 +1,7 @@
-import 'reflect-metadata';
 import { validate } from 'class-validator';
 import { ManageRssRequestDto } from '../../../src/rss/dto/request/manageRss.dto';
 
-describe('RssManagementDto Test', () => {
+describe('ManageRssRequestDto Test', () => {
   let dto: ManageRssRequestDto;
 
   beforeEach(() => {

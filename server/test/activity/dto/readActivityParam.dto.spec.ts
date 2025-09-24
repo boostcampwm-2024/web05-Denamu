@@ -1,7 +1,7 @@
+import { ReadActivityParamRequestDto } from './../../../src/activity/dto/request/readActivity.dto';
 import { validate } from 'class-validator';
-import { ReadActivityParamRequestDto } from '../../../src/activity/dto/request/readActivity.dto';
 
-describe('ActivityParamRequestDto Test', () => {
+describe('ReadActivityParamRequestDto Test', () => {
   let dto: ReadActivityParamRequestDto;
 
   beforeEach(() => {

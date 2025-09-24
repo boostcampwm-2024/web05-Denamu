@@ -1,7 +1,7 @@
 import { validate } from 'class-validator';
 import { ReadStatisticRequestDto } from '../../../src/statistic/dto/request/readStatistic.dto';
 
-describe('StatisticQueryDto', () => {
+describe('ReadStatisticRequestDto Test', () => {
   let dto: ReadStatisticRequestDto;
 
   beforeEach(() => {
