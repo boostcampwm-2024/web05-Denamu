@@ -1,13 +1,17 @@
-FROM nginx:stable-alpine
+FROM alpine:latest AS builder
 
-# Alpine에서 필요한 패키지 설치 (openssl)
-RUN apk add --no-cache openssl dos2unix
+RUN apk add --no-cache dos2unix
+RUN mkdir -p /etc/nginx/scripts
 
 # 스크립트 파일을 컨테이너에 복사
 COPY ./scripts /etc/nginx/scripts
+
 RUN dos2unix /etc/nginx/scripts/generate_cert.sh
 
-# generate_cert.sh 실행 (sh로 실행)
+FROM nginx:stable-alpine
+
+COPY --from=builder /etc/nginx/scripts /etc/nginx/scripts
+RUN apk add --no-cache openssl
 RUN sh /etc/nginx/scripts/generate_cert.sh
 
 CMD ["nginx", "-g", "daemon off;"]
