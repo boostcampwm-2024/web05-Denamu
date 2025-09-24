@@ -25,7 +25,7 @@ describe('CertificateUserRequestDto Test', () => {
       const errors = await validate(dto);
 
       // then
-      expect(errors).not.toHaveLength(0);
+      expect(errors).toHaveLength(1);
       expect(errors[0].constraints).toHaveProperty('isNotEmpty');
     });
   });

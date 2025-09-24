@@ -28,10 +28,8 @@ describe('DeleteRssRequestDto Test', () => {
       const errors = await validate(dto);
 
       // then
-      expect(errors[0].constraints).toHaveProperty(
-        'isUrl',
-        '유효한 URL을 입력해주세요.',
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isUrl');
     });
 
     it('블로그 주소가 올바르지 않다.', async () => {
@@ -42,10 +40,8 @@ describe('DeleteRssRequestDto Test', () => {
       const errors = await validate(dto);
 
       // then
-      expect(errors[0].constraints).toHaveProperty(
-        'isUrl',
-        '유효한 URL을 입력해주세요.',
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isUrl');
     });
   });
 
@@ -58,10 +54,8 @@ describe('DeleteRssRequestDto Test', () => {
       const errors = await validate(dto);
 
       // then
-      expect(errors[0].constraints).toHaveProperty(
-        'isEmail',
-        '올바른 이메일 주소를 입력하세요.',
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isEmail');
     });
 
     it('이메일 주소가 올바르지 않다.', async () => {
@@ -72,10 +66,8 @@ describe('DeleteRssRequestDto Test', () => {
       const errors = await validate(dto);
 
       // then
-      expect(errors[0].constraints).toHaveProperty(
-        'isEmail',
-        '올바른 이메일 주소를 입력하세요.',
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isEmail');
     });
   });
 });

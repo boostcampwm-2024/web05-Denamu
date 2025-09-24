@@ -27,6 +27,7 @@ describe('RejectRssRequestDto Test', () => {
       const errors = await validate(dto);
 
       // then
+      expect(errors).toHaveLength(1);
       expect(errors[0].constraints).toHaveProperty('isNotEmpty');
     });
 
@@ -38,6 +39,7 @@ describe('RejectRssRequestDto Test', () => {
       const errors = await validate(dto);
 
       // then
+      expect(errors).toHaveLength(1);
       expect(errors[0].constraints).toHaveProperty('isString');
     });
   });

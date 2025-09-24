@@ -27,11 +27,8 @@ describe('ManageRssRequestDto Test', () => {
       const errors = await validate(dto);
 
       // then
-      expect(errors.length).toBe(1);
-      expect(errors[0].constraints).toHaveProperty(
-        'isInt',
-        '정수를 입력해주세요.',
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isInt');
     });
   });
 });

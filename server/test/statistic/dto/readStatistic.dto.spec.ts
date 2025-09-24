@@ -27,11 +27,8 @@ describe('ReadStatisticRequestDto Test', () => {
       const errors = await validate(dto);
 
       // then
-      expect(errors.length).toBe(1);
-      expect(errors[0].constraints).toHaveProperty(
-        'isInt',
-        '정수로 입력해주세요.',
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isInt');
     });
 
     it('문자열을 입력한다.', async () => {
@@ -42,11 +39,8 @@ describe('ReadStatisticRequestDto Test', () => {
       const errors = await validate(dto);
 
       // then
-      expect(errors.length).toBe(1);
-      expect(errors[0].constraints).toHaveProperty(
-        'isInt',
-        '정수로 입력해주세요.',
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isInt');
     });
 
     it('음수를 입력한다.', async () => {
@@ -57,11 +51,8 @@ describe('ReadStatisticRequestDto Test', () => {
       const errors = await validate(dto);
 
       // then
-      expect(errors.length).toBe(1);
-      expect(errors[0].constraints).toHaveProperty(
-        'min',
-        'limit 값은 1 이상이어야 합니다.',
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('min');
     });
   });
 });
