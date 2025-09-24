@@ -1,10 +1,17 @@
-FROM nginx:1.18.0
+FROM alpine:latest AS builder
 
+RUN apk add --no-cache dos2unix
+RUN mkdir -p /etc/nginx/scripts
+
+# 스크립트 파일을 컨테이너에 복사
 COPY ./scripts /etc/nginx/scripts
 
-RUN apt-get update && apt-get install dos2unix
 RUN dos2unix /etc/nginx/scripts/generate_cert.sh
-RUN bash "/etc/nginx/scripts/generate_cert.sh"
 
+FROM nginx:stable-alpine
 
-CMD ["nginx","-g","daemon off;"]
+COPY --from=builder /etc/nginx/scripts /etc/nginx/scripts
+RUN apk add --no-cache openssl
+RUN sh /etc/nginx/scripts/generate_cert.sh
+
+CMD ["nginx", "-g", "daemon off;"]
