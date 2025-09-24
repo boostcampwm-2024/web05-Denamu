@@ -57,7 +57,7 @@ describe('ReadActivityQueryRequestDto Test', () => {
 
     it('year가 3000년 초과이면 유효성 검사에 실패한다.', async () => {
       // given
-      dto.year = 3000;
+      dto.year = 3001;
 
       // when
       const errors = await validate(dto);
