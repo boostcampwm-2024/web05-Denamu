@@ -20,6 +20,7 @@ services:
       - ../nginx/logs:/var/log/nginx
       - ../nginx/nginx.conf:/etc/nginx/nginx.conf
       - ../static:/var/web05-Denamu/static
+      - ../objects:/var/web05-Denamu/objects
     develop:
       watch:
         - path: ../nginx/nginx.conf
