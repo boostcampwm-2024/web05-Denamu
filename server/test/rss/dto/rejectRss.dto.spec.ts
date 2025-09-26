@@ -1,4 +1,4 @@
-import { validate, IsNotEmpty } from 'class-validator';
+import { validate } from 'class-validator';
 import { RejectRssRequestDto } from '../../../src/rss/dto/request/rejectRss';
 
 describe('RejectRssRequestDto Test', () => {
