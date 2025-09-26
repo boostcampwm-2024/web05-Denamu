@@ -1,17 +1,17 @@
 import { ResultSetHeader } from 'mysql2';
-import { ClaudeService } from '../../src/claude.service';
+import { ClaudeEventWorker } from '../../src/event_worker/workers/claude-event-worker';
 import { setupTestContainer } from '../setup/testContext.setup';
 
 describe('Claude AI e2e-test', () => {
   const testContext = setupTestContainer();
-  let claudeService: ClaudeService, feedData;
+  let claudeEventWorker: ClaudeEventWorker, feedData;
   const feedRedisAiQueueData: any = {
     content: 'test',
     deathCount: 0,
   };
 
   beforeAll(async () => {
-    claudeService = new ClaudeService(
+    claudeEventWorker = new ClaudeEventWorker(
       testContext.tagMapRepository,
       testContext.feedRepository,
       testContext.redisConnection,
@@ -37,10 +37,10 @@ describe('Claude AI e2e-test', () => {
   it('피드의 데이터를 요약하고 태그를 받아왔을 때, 태그가 DB 목록에 없다.', async () => {
     // given
     jest
-      .spyOn(claudeService as any, 'loadFeeds')
+      .spyOn(claudeEventWorker as any, 'loadFeeds')
       .mockResolvedValue([feedRedisAiQueueData]);
 
-    jest.spyOn(claudeService as any, 'requestAI').mockResolvedValue({
+    jest.spyOn(claudeEventWorker as any, 'requestAI').mockResolvedValue({
       ...feedRedisAiQueueData,
       id: feedData.insertId,
       summary: 'test summary',
@@ -48,7 +48,7 @@ describe('Claude AI e2e-test', () => {
     });
 
     // when
-    await claudeService.startRequestAI();
+    await claudeEventWorker.start();
 
     // then
     const [searchSummary] = await testContext.dbConnection.executeQuery(
@@ -67,10 +67,10 @@ describe('Claude AI e2e-test', () => {
   it('피드의 데이터를 요약하고 요약한 내용을 받아왔을 때, 알맞은 태그가 없다.', async () => {
     // given
     jest
-      .spyOn(claudeService as any, 'loadFeeds')
+      .spyOn(claudeEventWorker as any, 'loadFeeds')
       .mockResolvedValue([feedRedisAiQueueData]);
 
-    jest.spyOn(claudeService as any, 'requestAI').mockResolvedValue({
+    jest.spyOn(claudeEventWorker as any, 'requestAI').mockResolvedValue({
       ...feedRedisAiQueueData,
       id: feedData.insertId,
       summary: 'test summary',
@@ -78,7 +78,7 @@ describe('Claude AI e2e-test', () => {
     });
 
     // when
-    await claudeService.startRequestAI();
+    await claudeEventWorker.start();
 
     // then
     const [searchSummary] = await testContext.dbConnection.executeQuery(
@@ -97,10 +97,10 @@ describe('Claude AI e2e-test', () => {
   it('피드의 데이터를 요약하고 요약한 내용을 받아왔을 때, 요약 내용이 없다.', async () => {
     // given
     jest
-      .spyOn(claudeService as any, 'loadFeeds')
+      .spyOn(claudeEventWorker as any, 'loadFeeds')
       .mockResolvedValue([feedRedisAiQueueData]);
 
-    jest.spyOn(claudeService as any, 'requestAI').mockResolvedValue({
+    jest.spyOn(claudeEventWorker as any, 'requestAI').mockResolvedValue({
       ...feedRedisAiQueueData,
       id: feedData.insertId,
       summary: null,
@@ -108,7 +108,7 @@ describe('Claude AI e2e-test', () => {
     });
 
     // when
-    await claudeService.startRequestAI();
+    await claudeEventWorker.start();
 
     // then
     const [searchSummary] = await testContext.dbConnection.executeQuery(
@@ -131,10 +131,10 @@ describe('Claude AI e2e-test', () => {
   it('피드의 데이터가 있을 경우 올바른 요약과 알맞은 태그를 받았을 경우 데이터 저장을 성공한다.', async () => {
     // given
     jest
-      .spyOn(claudeService as any, 'loadFeeds')
+      .spyOn(claudeEventWorker as any, 'loadFeeds')
       .mockResolvedValue([feedRedisAiQueueData]);
 
-    jest.spyOn(claudeService as any, 'requestAI').mockResolvedValue({
+    jest.spyOn(claudeEventWorker as any, 'requestAI').mockResolvedValue({
       ...feedRedisAiQueueData,
       id: feedData.insertId,
       summary: 'test summary',
@@ -142,7 +142,7 @@ describe('Claude AI e2e-test', () => {
     });
 
     // when
-    await claudeService.startRequestAI();
+    await claudeEventWorker.start();
 
     // then
     const [searchSummary] = await testContext.dbConnection.executeQuery(
