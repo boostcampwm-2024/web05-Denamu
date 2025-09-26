@@ -10,4 +10,8 @@ export class CertificateUserRequestDto {
     message: '인증 코드를 입력해주세요.',
   })
   uuid: string;
+
+  constructor(partial: Partial<CertificateUserRequestDto>) {
+    Object.assign(this, partial);
+  }
 }
