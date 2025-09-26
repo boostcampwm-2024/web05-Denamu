@@ -1,32 +1,57 @@
 import 'reflect-metadata';
-import { injectable } from 'tsyringe';
+import { inject, injectable } from 'tsyringe';
 import Anthropic from '@anthropic-ai/sdk';
-import { ClaudeResponse, FeedAIQueueItem } from './common/types';
-import { TagMapRepository } from './repository/tag-map.repository';
-import { FeedRepository } from './repository/feed.repository';
-import logger from './common/logger';
-import { PROMPT_CONTENT, redisConstant } from './common/constant';
-import { RedisConnection } from './common/redis-access';
+import { ClaudeResponse, FeedAIQueueItem } from '../../common/types';
+import { TagMapRepository } from '../../repository/tag-map.repository';
+import { FeedRepository } from '../../repository/feed.repository';
+import logger from '../../common/logger';
+import { PROMPT_CONTENT, redisConstant } from '../../common/constant';
+import { RedisConnection } from '../../common/redis-access';
+import { AbstractQueueWorker } from '../abstract-queue-worker';
+import { DEPENDENCY_SYMBOLS } from '../../types/dependency-symbols';
 
 @injectable()
-export class ClaudeService {
+export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
   private readonly client: Anthropic;
-  private readonly nameTag: string;
 
   constructor(
+    @inject(DEPENDENCY_SYMBOLS.TagMapRepository)
     private readonly tagMapRepository: TagMapRepository,
+    @inject(DEPENDENCY_SYMBOLS.FeedRepository)
     private readonly feedRepository: FeedRepository,
-    private readonly redisConnection: RedisConnection,
+    @inject(DEPENDENCY_SYMBOLS.RedisConnection)
+    redisConnection: RedisConnection,
   ) {
+    super('[AI Service]', redisConnection);
     this.client = new Anthropic({
       apiKey: process.env.AI_API_KEY,
     });
-    this.nameTag = '[AI Service]';
   }
 
-  async startRequestAI() {
+  protected async processQueue(): Promise<void> {
     const feeds = await this.loadFeeds();
-    await Promise.all(feeds.map((feed) => this.processFeed(feed)));
+    await Promise.all(feeds.map((feed) => this.processItem(feed)));
+  }
+
+  protected getQueueKey(): string {
+    return redisConstant.FEED_AI_QUEUE;
+  }
+
+  protected parseQueueMessage(message: string): FeedAIQueueItem {
+    return JSON.parse(message);
+  }
+
+  protected async processItem(feed: FeedAIQueueItem): Promise<void> {
+    try {
+      const aiData = await this.requestAI(feed);
+      await this.saveAIResult(aiData);
+    } catch (error) {
+      logger.error(
+        `${this.nameTag} ${feed.id} 처리 중 에러 발생: ${error.message}`,
+        error.stack,
+      );
+      await this.handleFailure(feed, error);
+    }
   }
 
   private async loadFeeds() {
@@ -46,19 +71,6 @@ export class ClaudeService {
         메시지: ${error.message}
         스택 트레이스: ${error.stack}
       `);
-    }
-  }
-
-  private async processFeed(feed: FeedAIQueueItem) {
-    try {
-      const aiData = await this.requestAI(feed);
-      await this.saveAIResult(aiData);
-    } catch (error) {
-      logger.error(
-        `${this.nameTag} ${feed.id} 처리 중 에러 발생: ${error.message}`,
-        error.stack,
-      );
-      await this.handleFailure(feed, error);
     }
   }
 
@@ -93,7 +105,10 @@ export class ClaudeService {
     await this.feedRepository.updateSummary(feed.id, feed.summary);
   }
 
-  private async handleFailure(feed: FeedAIQueueItem, e: Error) {
+  protected async handleFailure(
+    feed: FeedAIQueueItem,
+    e: Error,
+  ): Promise<void> {
     if (feed.deathCount < 3) {
       feed.deathCount++;
       await this.redisConnection.rpush(redisConstant.FEED_AI_QUEUE, [
@@ -102,7 +117,7 @@ export class ClaudeService {
       logger.warn(`${this.nameTag} ${feed.id} 재시도 (${feed.deathCount})`);
     } else {
       logger.error(
-        `${this.nameTag} ${feed.id} 의 Death Count 3회 이상 발생 AI 요청 금지`,
+        `${this.nameTag} ${feed.id} 의 Death Count 3회 이상 발생. AI 요청 스킵`,
       );
       await this.feedRepository.updateNullSummary(feed.id);
     }
