@@ -29,6 +29,8 @@ services:
           action: rebuild
     environment:
       TZ: "Asia/Seoul"
+    profiles:
+      - default
 
   # Client 서비스
   web:
@@ -48,6 +50,8 @@ services:
           action: rebuild
     environment:
       TZ: "Asia/Seoul"
+    profiles:
+      - default
 
   # WAS 서비스
   app:
@@ -74,6 +78,8 @@ services:
       watch:
         - path: ../server/package.json
           action: rebuild
+    profiles:
+      - was-dev
 
   # Feed Crawler 서비스
   feed-crawler:
@@ -98,3 +104,5 @@ services:
       watch:
         - path: ../feed-crawler/package.json
           action: rebuild
+    profiles:
+      - default
