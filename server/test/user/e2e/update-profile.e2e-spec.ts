@@ -31,8 +31,6 @@ describe('PATCH /api/user/profile E2E Test', () => {
     userRepository = app.get(UserRepository);
     fileService = app.get(FileService);
 
-    jest.spyOn(fileService, 'deleteByPath').mockResolvedValue(undefined);
-
     testUser = await userRepository.save(
       await UserFixture.createUserCryptFixture({
         userName: '기존이름',
@@ -43,8 +41,8 @@ describe('PATCH /api/user/profile E2E Test', () => {
     );
   });
 
-  afterAll(async () => {
-    jest.restoreAllMocks();
+  beforeEach(() => {
+    jest.spyOn(fileService, 'deleteByPath').mockResolvedValue(undefined);
   });
 
   it('[200] 로그인한 사용자가 프로필 정보를 성공적으로 수정한다.', async () => {

@@ -28,10 +28,6 @@ describe('DELETE /api/feed/{feedId} E2E Test', () => {
     );
   });
 
-  afterAll(async () => {
-    jest.resetAllMocks();
-  });
-
   it('[200] 원본 게시글이 존재할 경우 200을 반환한다.', async () => {
     // given
     global.fetch = jest.fn().mockResolvedValue({ status: HttpStatus.OK });
