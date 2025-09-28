@@ -7,7 +7,7 @@ import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository'
 import { FeedFixture } from '../../fixture/feed.fixture';
 import { RssAcceptFixture } from '../../fixture/rssAccept.fixture';
 
-describe('POST /api/feed/:feedId E2E Test', () => {
+describe('POST /api/feed/{feedId} E2E Test', () => {
   let app: INestApplication;
   let redisService: RedisService;
   const testFeedId = 1;

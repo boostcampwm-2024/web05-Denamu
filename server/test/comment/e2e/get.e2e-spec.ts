@@ -7,7 +7,7 @@ import { RssAcceptFixture } from '../../fixture/rssAccept.fixture';
 import { FeedFixture } from '../../fixture/feed.fixture';
 import { GetCommentRequestDto } from '../../../src/comment/dto/request/getComment.dto';
 
-describe('GET /api/comment/:feedId E2E Test', () => {
+describe('GET /api/comment/{feedId} E2E Test', () => {
   let app: INestApplication;
   let feed: Feed;
 

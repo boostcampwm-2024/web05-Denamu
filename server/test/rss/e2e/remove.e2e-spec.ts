@@ -83,7 +83,7 @@ describe('/api/rss/remove E2E Test', () => {
     });
   });
 
-  describe('DELETE /api/rss/remove/:code', () => {
+  describe('DELETE /api/rss/remove/{code}', () => {
     it('[404] 삭제 신청된 RSS가 없으면 인증할 수 없다.', async () => {
       // when
       const response = await request(app.getHttpServer())
