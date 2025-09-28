@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { UserService } from '../../../src/user/service/user.service';
 import { UserRepository } from '../../../src/user/repository/user.repository';
@@ -66,7 +66,7 @@ describe('PATCH /api/user/profile E2E Test', () => {
       .send(testUpdateData.complete);
 
     // then
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(HttpStatus.OK);
     expect(response.body.message).toBe(
       '사용자 프로필 정보가 성공적으로 수정되었습니다.',
     );
@@ -98,7 +98,7 @@ describe('PATCH /api/user/profile E2E Test', () => {
       .send(testUpdateData.partial);
 
     // then
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(HttpStatus.OK);
 
     const updatedUser = await userRepository.findOneBy({ id: testUser.id });
     expect(updatedUser.userName).toBe(testUpdateData.partial.userName);
@@ -112,6 +112,6 @@ describe('PATCH /api/user/profile E2E Test', () => {
       .patch('/api/user/profile')
       .send(testUpdateData.complete);
 
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 });

@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import { UserService } from '../../../src/user/service/user.service';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
@@ -48,7 +48,7 @@ describe('POST /api/like E2E Test', () => {
     const response = await agent.post('/api/like').send(feedLikeRequest);
 
     // then
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 
   it('[404] 게시글이 존재하지 않다면 좋아요를 등록할 수 없다.', async () => {
@@ -74,7 +74,7 @@ describe('POST /api/like E2E Test', () => {
       .send(feedLikeRequest);
 
     // then
-    expect(response.status).toBe(404);
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
 
   it('[201] 로그인이 되어있고 좋아요를 하지 않았다면 좋아요를 등록할 수 있다.', async () => {
@@ -100,7 +100,7 @@ describe('POST /api/like E2E Test', () => {
       .send(feedLikeRequest);
 
     // then
-    expect(response.status).toBe(201);
+    expect(response.status).toBe(HttpStatus.CREATED);
   });
 
   it('[409] 이미 좋아요를 했다면 좋아요를 등록할 수 없다.', async () => {
@@ -126,6 +126,6 @@ describe('POST /api/like E2E Test', () => {
       .send(feedLikeRequest);
 
     // then
-    expect(response.status).toBe(409);
+    expect(response.status).toBe(HttpStatus.CONFLICT);
   });
 });

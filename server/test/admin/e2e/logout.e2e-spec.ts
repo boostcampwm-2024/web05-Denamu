@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
@@ -19,7 +19,7 @@ describe('POST /api/admin/logout E2E Test', () => {
       .set('Cookie', 'sessionId=sid');
 
     // then
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(HttpStatus.OK);
     expect(response.header['set-cookie']).toStrictEqual([
       'sessionId=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT',
     ]);
@@ -35,7 +35,7 @@ describe('POST /api/admin/logout E2E Test', () => {
       .set('Cookie', 'sessionId=invalid');
 
     // then
-    expect(noCookieResponse.status).toBe(401);
-    expect(noSessionResponse.status).toBe(401);
+    expect(noCookieResponse.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(noSessionResponse.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 });

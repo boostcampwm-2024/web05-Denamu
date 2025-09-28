@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { FeedFixture } from '../../fixture/feed.fixture';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
@@ -38,7 +38,7 @@ describe('GET api/feed/detail E2E Test', () => {
     );
 
     //then
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(HttpStatus.OK);
     expect(response.body.data.id).toBe(1);
   });
 
@@ -54,7 +54,7 @@ describe('GET api/feed/detail E2E Test', () => {
     );
 
     //then
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(HttpStatus.OK);
     expect(response.body.data.id).toBe(11);
     expect(response.body.data.tag).toStrictEqual([]);
   });
@@ -71,6 +71,6 @@ describe('GET api/feed/detail E2E Test', () => {
     );
 
     //then
-    expect(response.status).toBe(404);
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
 });

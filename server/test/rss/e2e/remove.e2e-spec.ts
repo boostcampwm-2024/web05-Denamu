@@ -1,5 +1,5 @@
 import { REDIS_KEYS } from './../../../src/common/redis/redis.constant';
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import {
   RssAcceptRepository,
   RssRepository,
@@ -45,7 +45,7 @@ describe('/api/rss/remove E2E Test', () => {
           email: 'test@test.com',
         });
       // then
-      expect(response.status).toBe(404);
+      expect(response.status).toBe(HttpStatus.NOT_FOUND);
     });
 
     it('[200] 대기 RSS가 있을 경우 신청할 수 있다.', async () => {
@@ -62,7 +62,7 @@ describe('/api/rss/remove E2E Test', () => {
         });
 
       // then
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(HttpStatus.OK);
     });
 
     it('[200] 승인된 RSS가 있을 경우 신청할 수 있다.', async () => {
@@ -79,7 +79,7 @@ describe('/api/rss/remove E2E Test', () => {
         });
 
       // then
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(HttpStatus.OK);
     });
   });
 
@@ -91,7 +91,7 @@ describe('/api/rss/remove E2E Test', () => {
         .send();
 
       // then
-      expect(response.status).toBe(404);
+      expect(response.status).toBe(HttpStatus.NOT_FOUND);
     });
 
     it('[404] 이미 지워진 RSS라면 지울 수 없다.', async () => {
@@ -107,7 +107,7 @@ describe('/api/rss/remove E2E Test', () => {
         .send();
 
       // then
-      expect(response.status).toBe(404);
+      expect(response.status).toBe(HttpStatus.NOT_FOUND);
     });
 
     it('[200] 삭제 신청된 RSS가 있을 경우 좋아요, 댓글, 게시글, RSS가 한 번에 삭제된다.', async () => {
@@ -134,7 +134,7 @@ describe('/api/rss/remove E2E Test', () => {
         .send();
 
       // then
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(HttpStatus.OK);
     });
   });
 });

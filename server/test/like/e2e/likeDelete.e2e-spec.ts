@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import { UserService } from '../../../src/user/service/user.service';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
@@ -51,7 +51,7 @@ describe('DELETE /api/like/{feedId} E2E Test', () => {
       .send();
 
     // then
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 
   it('[404] 게시글이 존재하지 않다면 좋아요를 삭제할 수 없다.', async () => {
@@ -77,7 +77,7 @@ describe('DELETE /api/like/{feedId} E2E Test', () => {
       .send();
 
     // then
-    expect(response.status).toBe(404);
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
 
   it('[200] 로그인이 되어있고 좋아요를 했다면 좋아요를 삭제할 수 있다.', async () => {
@@ -109,7 +109,7 @@ describe('DELETE /api/like/{feedId} E2E Test', () => {
       .send();
 
     // then
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(HttpStatus.OK);
   });
 
   it('[404] 이미 좋아요를 삭제했다면 좋아요를 삭제할 수 없다.', async () => {
@@ -135,6 +135,6 @@ describe('DELETE /api/like/{feedId} E2E Test', () => {
       .send();
 
     // then
-    expect(response.status).toBe(404);
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
 });

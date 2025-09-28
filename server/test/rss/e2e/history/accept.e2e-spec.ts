@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { RssAcceptRepository } from '../../../../src/rss/repository/rss.repository';
 import { RssAccept } from '../../../../src/rss/entity/rss.entity';
@@ -32,8 +32,8 @@ describe('GET /api/rss/history/accept E2E Test', () => {
       .set('Cookie', 'sessionId=invalid');
 
     // then
-    expect(noCookieResponse.status).toBe(401);
-    expect(noSessionResponse.status).toBe(401);
+    expect(noCookieResponse.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(noSessionResponse.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 
   it('[200] 관리자 로그인이 되어 있으면 최신순으로 기록 데이터를 응답한다.', async () => {
@@ -43,7 +43,7 @@ describe('GET /api/rss/history/accept E2E Test', () => {
       .set('Cookie', 'sessionId=sid');
 
     // then
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(HttpStatus.OK);
     expect(response.body.data.map((acceptRss) => acceptRss.id)).toStrictEqual([
       2, 1,
     ]);

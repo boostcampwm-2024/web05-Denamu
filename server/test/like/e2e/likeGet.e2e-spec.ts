@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import { UserService } from '../../../src/user/service/user.service';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
@@ -44,7 +44,7 @@ describe('GET /api/like/{feedId} E2E Test', () => {
     const response = await agent.get(`/api/like/${feed.id}`).send();
 
     // then
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(HttpStatus.OK);
   });
 
   it('[404] 게시글이 없다면 좋아요 조회를 할 수 없다.', async () => {
@@ -55,6 +55,6 @@ describe('GET /api/like/{feedId} E2E Test', () => {
     const response = await agent.get(`/api/like/100`).send();
 
     // then
-    expect(response.status).toBe(404);
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
 });

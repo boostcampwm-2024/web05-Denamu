@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { FeedFixture } from '../../fixture/feed.fixture';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
@@ -38,7 +38,7 @@ describe('GET api/feed E2E Test', () => {
       .query(feedPaginationQueryDto);
 
     //then
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(HttpStatus.OK);
     expect(response.body.data.result.map((feed) => feed.id)).toStrictEqual([
       latestId,
       latestId - 1,
@@ -63,7 +63,7 @@ describe('GET api/feed E2E Test', () => {
       .query(feedPaginationQueryDto);
 
     //then
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(HttpStatus.OK);
     expect(response.body.data.result.map((feed) => feed.id)).toStrictEqual([
       feedPaginationQueryDto.lastId - 1,
       feedPaginationQueryDto.lastId - 2,
@@ -88,7 +88,7 @@ describe('GET api/feed E2E Test', () => {
       .query(feedPaginationQueryDto);
 
     //then
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(HttpStatus.OK);
     expect(response.body.data.result.map((feed) => feed.id)).toStrictEqual([
       feedPaginationQueryDto.lastId - 1,
       feedPaginationQueryDto.lastId - 2,
@@ -117,7 +117,7 @@ describe('GET api/feed E2E Test', () => {
       .query(feedPaginationQueryDto);
 
     //then
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(HttpStatus.OK);
     expect(response.body.data.result.map((feed) => feed.id)).toStrictEqual([]);
     expect(response.body.data.hasMore).toBe(false);
     expect(response.body.data.lastId).toBe(0);

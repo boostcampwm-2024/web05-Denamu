@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import { RegisterRssRequestDto } from '../../../src/rss/dto/request/registerRss.dto';
 import * as request from 'supertest';
 import { Repository } from 'typeorm';
@@ -41,7 +41,7 @@ describe('/api/rss E2E Test', () => {
         .send(requestDto);
 
       // then
-      expect(response.status).toBe(201);
+      expect(response.status).toBe(HttpStatus.CREATED);
     });
 
     it('[409] 이미 신청한 RSS를 또 신청한다면 거부를 한다.', async () => {
@@ -60,7 +60,7 @@ describe('/api/rss E2E Test', () => {
         .send(requestDto);
 
       // then
-      expect(response.status).toBe(409);
+      expect(response.status).toBe(HttpStatus.CONFLICT);
     });
 
     it('[409] 이미 등록된 RSS를 또 신청한다면 거부를 한다.', async () => {
@@ -81,7 +81,7 @@ describe('/api/rss E2E Test', () => {
         .send(rssRegisterDto);
 
       // then
-      expect(response.status).toBe(409);
+      expect(response.status).toBe(HttpStatus.CONFLICT);
     });
   });
 
@@ -90,7 +90,7 @@ describe('/api/rss E2E Test', () => {
       it('[200] RSS가 등록되지 않은 경우 빈 리스트를 반환한다.', async () => {
         // when - then
         const response = await request(app.getHttpServer()).get('/api/rss');
-        expect(response.status).toBe(200);
+        expect(response.status).toBe(HttpStatus.OK);
         expect(response.body.data).toEqual([]);
       });
 
@@ -104,7 +104,7 @@ describe('/api/rss E2E Test', () => {
         const response = await request(app.getHttpServer()).get('/api/rss');
 
         //then
-        expect(response.status).toBe(200);
+        expect(response.status).toBe(HttpStatus.OK);
         expect(response.body.data).toEqual([expectedResult]);
       });
     });

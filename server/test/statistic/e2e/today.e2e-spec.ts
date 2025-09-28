@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import * as request from 'supertest';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
@@ -34,7 +34,7 @@ describe('GET /api/statistic/today E2E Test', () => {
     );
 
     // then
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(HttpStatus.OK);
     expect(response.body.data.map((feed) => feed.id)).toStrictEqual([1, 2]);
   });
 
@@ -45,7 +45,7 @@ describe('GET /api/statistic/today E2E Test', () => {
     );
 
     // then
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(HttpStatus.OK);
     expect(response.body.data.map((feed) => feed.id)).toStrictEqual([1]);
   });
 });

@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { RedisService } from '../../../src/common/redis/redis.service';
@@ -28,7 +28,7 @@ describe('POST api/user/certificate E2E Test', () => {
     const response = await agent.post('/api/user/certificate').send({ uuid });
 
     // then
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(HttpStatus.OK);
     const savedUser = await userRepository.findOne({
       where: { email: userEntity.email },
     });
@@ -45,6 +45,6 @@ describe('POST api/user/certificate E2E Test', () => {
     const response = await agent.post('/api/user/certificate').send({ uuid });
 
     // then
-    expect(response.status).toBe(404);
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
 });

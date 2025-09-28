@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import { RegisterUserRequestDto } from '../../../src/user/dto/request/registerUser.dto';
 import * as request from 'supertest';
 import { UserRepository } from '../../../src/user/repository/user.repository';
@@ -27,7 +27,7 @@ describe('POST api/user/register E2E Test', () => {
       .send(newRegisterDto);
 
     // then
-    expect(response.status).toBe(201);
+    expect(response.status).toBe(HttpStatus.CREATED);
   });
 
   it('[409] 이미 가입된 이메일을 입력하면 409 Conflict 예외가 발생한다.', async () => {
@@ -42,6 +42,6 @@ describe('POST api/user/register E2E Test', () => {
       .send(newRegisterDto);
 
     // then
-    expect(response.status).toBe(409);
+    expect(response.status).toBe(HttpStatus.CONFLICT);
   });
 });

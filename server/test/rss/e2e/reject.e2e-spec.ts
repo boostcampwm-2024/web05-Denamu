@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { Repository } from 'typeorm';
 import { Rss, RssReject } from '../../../src/rss/entity/rss.entity';
@@ -52,7 +52,7 @@ describe('Rss Reject E2E Test', () => {
         });
 
         // then
-        expect(response.status).toBe(201);
+        expect(response.status).toBe(HttpStatus.CREATED);
         expect(accepted).not.toBeNull();
       });
     });
@@ -72,7 +72,7 @@ describe('Rss Reject E2E Test', () => {
           .send(rejectRssDto);
 
         // then
-        expect(response.status).toBe(404);
+        expect(response.status).toBe(HttpStatus.NOT_FOUND);
       });
 
       it('[401] 유효한 세션이 존재하지 않을 때', async () => {
@@ -87,8 +87,8 @@ describe('Rss Reject E2E Test', () => {
           .send();
 
         // then
-        expect(noCookieResponse.status).toBe(401);
-        expect(noSessionResponse.status).toBe(401);
+        expect(noCookieResponse.status).toBe(HttpStatus.UNAUTHORIZED);
+        expect(noSessionResponse.status).toBe(HttpStatus.UNAUTHORIZED);
       });
     });
   });

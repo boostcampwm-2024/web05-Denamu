@@ -1,6 +1,6 @@
 import * as request from 'supertest';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
@@ -51,7 +51,7 @@ describe('POST /api/feed/:feedId E2E Test', () => {
       );
 
       //then
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(HttpStatus.OK);
       expect(feedDailyViewCount).toBe(1);
       expect(response.headers['set-cookie'][0]).toContain(
         `View_count_${testFeedId}`,
@@ -75,7 +75,7 @@ describe('POST /api/feed/:feedId E2E Test', () => {
     );
 
     //then
-    expect(response.status).toBe(404);
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
 
   it('[200] 쿠키가 있으면 조회수는 올라가지 않는다.', async () => {
@@ -90,7 +90,7 @@ describe('POST /api/feed/:feedId E2E Test', () => {
     );
 
     //then
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(HttpStatus.OK);
     expect(feedDailyViewCount).toBeNull();
   });
 
@@ -105,7 +105,7 @@ describe('POST /api/feed/:feedId E2E Test', () => {
     );
 
     //then
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(HttpStatus.OK);
     expect(feedDailyViewCount).toBeNull();
     expect(response.headers['set-cookie'][0]).toContain(
       `View_count_${testFeedId}`,

@@ -1,5 +1,5 @@
 import * as request from 'supertest';
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
 import { RssAcceptFixture } from '../../fixture/rssAccept.fixture';
@@ -30,7 +30,7 @@ describe('GET /api/statistic/all E2E Test', () => {
     );
 
     // then
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(HttpStatus.OK);
     expect(response.body.data.map((feed) => feed.id)).toStrictEqual([2, 1]);
   });
 
@@ -41,7 +41,7 @@ describe('GET /api/statistic/all E2E Test', () => {
     );
 
     // then
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(HttpStatus.OK);
     expect(response.body.data.map((feed) => feed.id)).toStrictEqual([2]);
   });
 });

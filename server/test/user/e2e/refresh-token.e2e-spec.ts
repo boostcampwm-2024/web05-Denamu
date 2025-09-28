@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import { UserService } from '../../../src/user/service/user.service';
 import * as request from 'supertest';
 import { UserRepository } from '../../../src/user/repository/user.repository';
@@ -29,7 +29,7 @@ describe('POST /api/user/refresh-token E2E Test', () => {
     const response = await agent.post('/api/user/refresh-token');
 
     // then
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 
   it('[200] Refresh Token이 있을 때, Access Token을 성공적으로 발급한다.', async () => {
@@ -51,6 +51,6 @@ describe('POST /api/user/refresh-token E2E Test', () => {
       .set('Cookie', `refresh_token=${refreshToken}`);
 
     // then
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(HttpStatus.OK);
   });
 });

@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { UserService } from '../../../src/user/service/user.service';
 import { UserRepository } from '../../../src/user/repository/user.repository';
@@ -47,7 +47,7 @@ describe('POST /api/comment E2E Test', () => {
     const response = await agent.post('/api/comment').send(comment);
 
     // then
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 
   it('[404] 계정 정보가 존재하지 않으면 댓글을 등록할 수 없다.', async () => {
@@ -74,7 +74,7 @@ describe('POST /api/comment E2E Test', () => {
       .send(comment);
 
     // then
-    expect(response.status).toBe(404);
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
 
   it('[404] 게시글이 존재하지 않으면 댓글을 등록할 수 없다.', async () => {
@@ -101,7 +101,7 @@ describe('POST /api/comment E2E Test', () => {
       .send(comment);
 
     // then
-    expect(response.status).toBe(404);
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
 
   it('[201] 로그인이 되어 있다면 댓글을 등록할 수 있다.', async () => {
@@ -128,6 +128,6 @@ describe('POST /api/comment E2E Test', () => {
       .send(comment);
 
     // then
-    expect(response.status).toBe(201);
+    expect(response.status).toBe(HttpStatus.CREATED);
   });
 });

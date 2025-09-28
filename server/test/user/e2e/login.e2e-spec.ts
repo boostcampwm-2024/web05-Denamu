@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { LoginUserRequestDto } from '../../../src/user/dto/request/loginUser.dto';
 import { UserRepository } from '../../../src/user/repository/user.repository';
@@ -27,7 +27,7 @@ describe('POST /api/user/login E2E Test', () => {
     const response = await agent.post('/api/user/login').send(loginDto);
 
     // then
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(HttpStatus.OK);
     expect(response.headers['set-cookie'][0]).toContain('refresh_token=');
   });
 
@@ -40,7 +40,7 @@ describe('POST /api/user/login E2E Test', () => {
     const response = await agent.post('/api/user/login').send(loginDto);
 
     // then
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 
   it('[401] 비밀번호를 틀렸을 경우 로그인 실패가 발생한다.', async () => {
@@ -53,6 +53,6 @@ describe('POST /api/user/login E2E Test', () => {
     const response = await agent.post('/api/user/login').send(loginDto);
 
     // then
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 });

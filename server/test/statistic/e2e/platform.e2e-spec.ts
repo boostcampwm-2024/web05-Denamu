@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
 import { RssAcceptFixture } from '../../fixture/rssAccept.fixture';
@@ -27,7 +27,7 @@ describe('GET /api/statistic/platform E2E Test', () => {
     );
 
     // then
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(HttpStatus.OK);
     expect(response.body.data).toStrictEqual([
       {
         platform: 'etc',

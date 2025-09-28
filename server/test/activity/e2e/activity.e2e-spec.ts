@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { ActivityRepository } from '../../../src/activity/repository/activity.repository';
@@ -44,7 +44,7 @@ describe('GET /api/activity/{userId} E2E Test', () => {
       .query({ year });
 
     // then
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(HttpStatus.OK);
     expect(response.body.message).toBe('요청이 성공적으로 처리되었습니다.');
 
     const { data } = response.body;
@@ -76,7 +76,7 @@ describe('GET /api/activity/{userId} E2E Test', () => {
       .query({ year });
 
     // then
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(HttpStatus.OK);
     expect(response.body.message).toBe('요청이 성공적으로 처리되었습니다.');
 
     const { data } = response.body;
@@ -96,6 +96,6 @@ describe('GET /api/activity/{userId} E2E Test', () => {
       .query({ year });
 
     // then
-    expect(response.status).toBe(404);
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
 });

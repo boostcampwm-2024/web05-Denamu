@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { UserService } from '../../../src/user/service/user.service';
 import { UserRepository } from '../../../src/user/repository/user.repository';
@@ -56,7 +56,7 @@ describe('PATCH /api/comment E2E Test', () => {
     const response = await agent.patch('/api/comment').send(comment);
 
     // then
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 
   it('[401] 본인이 작성한 댓글이 아니라면 댓글을 수정할 수 없다.', async () => {
@@ -83,7 +83,7 @@ describe('PATCH /api/comment E2E Test', () => {
       .send(comment);
 
     // then
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 
   it('[404] 존재하지 않는 댓글은 수정할 수 없다.', async () => {
@@ -110,7 +110,7 @@ describe('PATCH /api/comment E2E Test', () => {
       .send(comment);
 
     // then
-    expect(response.status).toBe(404);
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
 
   it('[200] 로그인이 되어 있다면 댓글을 수정할 수 있다.', async () => {
@@ -137,6 +137,6 @@ describe('PATCH /api/comment E2E Test', () => {
       .send(comment);
 
     // then
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(HttpStatus.OK);
   });
 });

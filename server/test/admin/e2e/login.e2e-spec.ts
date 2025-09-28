@@ -1,5 +1,5 @@
 import { AdminFixture } from './../../fixture/admin.fixture';
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import { LoginAdminRequestDto } from '../../../src/admin/dto/request/loginAdmin.dto';
 import * as request from 'supertest';
 import { AdminRepository } from '../../../src/admin/repository/admin.repository';
@@ -26,7 +26,7 @@ describe('POST api/admin/login E2E Test', () => {
       .send(loginAdminDto);
 
     //then
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(HttpStatus.OK);
     expect(response.headers['set-cookie'][0]).toContain('sessionId=');
   });
 
@@ -43,7 +43,7 @@ describe('POST api/admin/login E2E Test', () => {
       .send(loginWrongAdminIdDto);
 
     //then
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 
   it('[401] 비밀번호가 다르다면 401 UnAuthorized 예외가 발생한다.', async () => {
@@ -59,6 +59,6 @@ describe('POST api/admin/login E2E Test', () => {
       .send(loginWrongAdminPasswordDto);
 
     //then
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 });

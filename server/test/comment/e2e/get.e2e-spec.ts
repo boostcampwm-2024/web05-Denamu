@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { Feed } from '../../../src/feed/entity/feed.entity';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
@@ -36,7 +36,7 @@ describe('GET /api/comment/:feedId E2E Test', () => {
       .send(comment);
 
     // then
-    expect(response.status).toBe(404);
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
 
   it('[200] 게시글이 존재할 경우 올바르게 댓글을 제공한다.', async () => {
@@ -52,6 +52,6 @@ describe('GET /api/comment/:feedId E2E Test', () => {
       .send(comment);
 
     // then
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(HttpStatus.OK);
   });
 });

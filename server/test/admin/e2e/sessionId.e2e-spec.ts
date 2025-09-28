@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { v4 as uuidv4 } from 'uuid';
 import { LoginAdminRequestDto } from '../../../src/admin/dto/request/loginAdmin.dto';
@@ -27,7 +27,7 @@ describe('GET api/admin/sessionId E2E Test', () => {
     const response = await agent.get('/api/admin/sessionId');
 
     //then
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(HttpStatus.OK);
   });
 
   it('[401] session id가 일치하지 않는다면 401 UnAuthorized 예외가 발생한다.', async () => {
@@ -40,7 +40,7 @@ describe('GET api/admin/sessionId E2E Test', () => {
       .set('Cookie', [`sessionId=${randomUUID}`]);
 
     //then
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 
   it('[401] session id가 없다면 401 UnAuthorized 예외가 발생한다.', async () => {
@@ -50,6 +50,6 @@ describe('GET api/admin/sessionId E2E Test', () => {
       .set('Cookie', [`sessionId=`]);
 
     //then
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 });

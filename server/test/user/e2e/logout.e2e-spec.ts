@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { UserService } from '../../../src/user/service/user.service';
 import { UserRepository } from '../../../src/user/repository/user.repository';
@@ -39,7 +39,7 @@ describe('POST /api/user/logout E2E Test', () => {
       .set('Authorization', `Bearer ${accessToken}`);
 
     // then
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(HttpStatus.OK);
   });
 
   it('[401] Access Token이 존재하지 않았을 때, 오류가 발생한다.', async () => {
@@ -50,6 +50,6 @@ describe('POST /api/user/logout E2E Test', () => {
     const response = await agent.post('/api/user/logout');
 
     // then
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 });

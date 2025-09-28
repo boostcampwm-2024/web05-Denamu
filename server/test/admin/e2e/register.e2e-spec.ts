@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import { LoginAdminRequestDto } from '../../../src/admin/dto/request/loginAdmin.dto';
 import { RegisterAdminRequestDto } from '../../../src/admin/dto/request/registerAdmin.dto';
 import * as request from 'supertest';
@@ -31,7 +31,7 @@ describe('POST api/admin/register E2E Test', () => {
     const response = await agent.post('/api/admin/register').send(newAdminDto);
 
     //then
-    expect(response.status).toBe(201);
+    expect(response.status).toBe(HttpStatus.CREATED);
   });
 
   it('[409] 이미 가입한 ID를 입력하면 관리자 계정을 생성할 수 없다.', async () => {
@@ -43,7 +43,7 @@ describe('POST api/admin/register E2E Test', () => {
     const response = await agent.post('/api/admin/register').send(newAdminDto);
 
     //then
-    expect(response.status).toBe(409);
+    expect(response.status).toBe(HttpStatus.CONFLICT);
   });
 
   it('[401] 관리자가 로그아웃 상태면 예외가 발생한다.', async () => {
@@ -54,6 +54,6 @@ describe('POST api/admin/register E2E Test', () => {
     const response = await agent.post('/api/admin/register').send(newAdminDto);
 
     //then
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 });

@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { RssFixture } from '../../fixture/rss.fixture';
 import { RedisService } from '../../../src/common/redis/redis.service';
@@ -45,7 +45,7 @@ describe('Rss Accept E2E Test', () => {
           .send();
 
         // then
-        expect(response.status).toBe(201);
+        expect(response.status).toBe(HttpStatus.CREATED);
       });
     });
 
@@ -61,7 +61,7 @@ describe('Rss Accept E2E Test', () => {
           .send();
 
         // then
-        expect(response.status).toBe(404);
+        expect(response.status).toBe(HttpStatus.NOT_FOUND);
       });
 
       it('[401] 유효한 세션이 존재하지 않을 때', async () => {
@@ -76,8 +76,8 @@ describe('Rss Accept E2E Test', () => {
           .send();
 
         // then
-        expect(noCookieResponse.status).toBe(401);
-        expect(noSessionResponse.status).toBe(401);
+        expect(noCookieResponse.status).toBe(HttpStatus.UNAUTHORIZED);
+        expect(noSessionResponse.status).toBe(HttpStatus.UNAUTHORIZED);
       });
     });
   });
