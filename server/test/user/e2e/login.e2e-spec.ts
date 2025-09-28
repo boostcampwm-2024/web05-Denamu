@@ -19,7 +19,7 @@ describe('POST /api/user/login E2E Test', () => {
     await userRepository.save(await UserFixture.createUserCryptFixture());
   });
 
-  it('로그인을 정상적으로 성공한다.', async () => {
+  it('[200] 로그인을 정상적으로 성공한다.', async () => {
     // given
     const agent = request.agent(app.getHttpServer());
 
@@ -31,7 +31,7 @@ describe('POST /api/user/login E2E Test', () => {
     expect(response.headers['set-cookie'][0]).toContain('refresh_token=');
   });
 
-  it('아이디를 틀렸을 경우 로그인 실패가 발생한다.', async () => {
+  it('[401] 아이디를 틀렸을 경우 로그인 실패가 발생한다.', async () => {
     // given
     const agent = request.agent(app.getHttpServer());
     loginDto.email = 'test1235@test.com';
@@ -43,7 +43,7 @@ describe('POST /api/user/login E2E Test', () => {
     expect(response.status).toBe(401);
   });
 
-  it('비밀번호를 틀렸을 경우 로그인 실패가 발생한다.', async () => {
+  it('[401] 비밀번호를 틀렸을 경우 로그인 실패가 발생한다.', async () => {
     // given
     const agent = request.agent(app.getHttpServer());
     loginDto.email = 'test1234@test.com';

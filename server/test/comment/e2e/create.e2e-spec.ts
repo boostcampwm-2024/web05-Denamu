@@ -10,12 +10,10 @@ import { Feed } from '../../../src/feed/entity/feed.entity';
 import { FeedFixture } from '../../fixture/feed.fixture';
 import { RssAcceptFixture } from '../../fixture/rssAccept.fixture';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
-import { RssAccept } from '../../../src/rss/entity/rss.entity';
 
 describe('POST /api/comment E2E Test', () => {
   let app: INestApplication;
   let userService: UserService;
-  let rssAcceptInformation: RssAccept;
   let userInformation: User;
   let feed: Feed;
 
@@ -29,7 +27,7 @@ describe('POST /api/comment E2E Test', () => {
     userInformation = await userRepository.save(
       await UserFixture.createUserCryptFixture(),
     );
-    rssAcceptInformation = await rssAcceptRepository.save(
+    const rssAcceptInformation = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
     feed = await feedRepository.save(
@@ -37,7 +35,7 @@ describe('POST /api/comment E2E Test', () => {
     );
   });
 
-  it('로그인이 되어 있지 않다면 댓글을 등록할 수 없다.', async () => {
+  it('[401] 로그인이 되어 있지 않다면 댓글을 등록할 수 없다.', async () => {
     // given
     const comment = new CreateCommentRequestDto({
       comment: 'test',
@@ -52,7 +50,7 @@ describe('POST /api/comment E2E Test', () => {
     expect(response.status).toBe(401);
   });
 
-  it('계정 정보가 존재하지 않으면 댓글을 등록할 수 없다.', async () => {
+  it('[404] 계정 정보가 존재하지 않으면 댓글을 등록할 수 없다.', async () => {
     // given
     const comment = new CreateCommentRequestDto({
       comment: 'test',
@@ -79,7 +77,7 @@ describe('POST /api/comment E2E Test', () => {
     expect(response.status).toBe(404);
   });
 
-  it('게시글이 존재하지 않으면 댓글을 등록할 수 없다.', async () => {
+  it('[404] 게시글이 존재하지 않으면 댓글을 등록할 수 없다.', async () => {
     // given
     const comment = new CreateCommentRequestDto({
       comment: 'test',
@@ -106,7 +104,7 @@ describe('POST /api/comment E2E Test', () => {
     expect(response.status).toBe(404);
   });
 
-  it('로그인이 되어 있다면 댓글을 등록할 수 있다.', async () => {
+  it('[201] 로그인이 되어 있다면 댓글을 등록할 수 있다.', async () => {
     // given
     const accessToken = userService.createToken(
       {

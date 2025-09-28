@@ -21,7 +21,7 @@ describe('POST /api/user/refresh-token E2E Test', () => {
     );
   });
 
-  it('Refresh Token이 없을 때, Access Token을 발급하지 않는다.', async () => {
+  it('[401] Refresh Token이 없을 때, Access Token을 발급하지 않는다.', async () => {
     // given
     const agent = request.agent(app.getHttpServer());
 
@@ -32,7 +32,7 @@ describe('POST /api/user/refresh-token E2E Test', () => {
     expect(response.status).toBe(401);
   });
 
-  it('Refresh Token이 있을 때, Access Token을 성공적으로 발급한다.', async () => {
+  it('[200] Refresh Token이 있을 때, Access Token을 성공적으로 발급한다.', async () => {
     // given
     const agent = request.agent(app.getHttpServer());
     const refreshToken = userService.createToken(

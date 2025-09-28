@@ -47,7 +47,7 @@ describe('PATCH /api/user/profile E2E Test', () => {
     jest.restoreAllMocks();
   });
 
-  it('로그인한 사용자가 프로필 정보를 성공적으로 수정한다.', async () => {
+  it('[200] 로그인한 사용자가 프로필 정보를 성공적으로 수정한다.', async () => {
     // given
     const accessToken = userService.createToken(
       {
@@ -77,7 +77,7 @@ describe('PATCH /api/user/profile E2E Test', () => {
     expect(updatedUser.introduction).toBe(testUpdateData.complete.introduction);
   });
 
-  it('일부 필드만 수정해도 성공적으로 업데이트된다.', async () => {
+  it('[200] 일부 필드만 수정해도 성공적으로 업데이트된다.', async () => {
     // given
     const accessToken = userService.createToken(
       {
@@ -106,7 +106,7 @@ describe('PATCH /api/user/profile E2E Test', () => {
     expect(updatedUser.introduction).toBe(originalUser.introduction);
   });
 
-  it('로그인하지 않은 사용자가 프로필 수정을 시도하면 401 에러가 발생한다.', async () => {
+  it('[401] 로그인하지 않은 사용자가 프로필 수정을 시도하면 401 에러가 발생한다.', async () => {
     // when - then
     const response = await request(app.getHttpServer())
       .patch('/api/user/profile')

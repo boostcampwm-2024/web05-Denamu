@@ -34,7 +34,7 @@ describe('POST /api/feed/:feedId E2E Test', () => {
     ]);
   });
 
-  it('Redis에 저장된 IP가 아니면서 쿠키가 없으면 조회수는 정상적으로 상승한다.', async () => {
+  it('[200] Redis에 저장된 IP가 아니면서 쿠키가 없으면 조회수는 정상적으로 상승한다.', async () => {
     //given
     const testNewIp = `123.234.123.234`;
 
@@ -65,7 +65,7 @@ describe('POST /api/feed/:feedId E2E Test', () => {
     }
   });
 
-  it('해당 피드 ID가 존재하지 않으면 404 예외가 발생한다.', async () => {
+  it('[404] 해당 피드 ID가 존재하지 않으면 404 예외가 발생한다.', async () => {
     //given
     const notExistFeedId = 50000;
 
@@ -78,7 +78,7 @@ describe('POST /api/feed/:feedId E2E Test', () => {
     expect(response.status).toBe(404);
   });
 
-  it('쿠키가 있으면 조회수는 올라가지 않는다.', async () => {
+  it('[200] 쿠키가 있으면 조회수는 올라가지 않는다.', async () => {
     //when
     const response = await request(app.getHttpServer())
       .post(`/api/feed/${testFeedId}`)
@@ -94,7 +94,7 @@ describe('POST /api/feed/:feedId E2E Test', () => {
     expect(feedDailyViewCount).toBeNull();
   });
 
-  it('쿠키가 없지만 Redis에 IP가 저장되어 있으면 조회수는 올라가지 않는다.', async () => {
+  it('[200] 쿠키가 없지만 Redis에 IP가 저장되어 있으면 조회수는 올라가지 않는다.', async () => {
     //when
     const response = await request(app.getHttpServer())
       .post(`/api/feed/${testFeedId}`)

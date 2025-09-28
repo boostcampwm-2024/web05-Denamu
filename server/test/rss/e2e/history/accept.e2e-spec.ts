@@ -22,7 +22,7 @@ describe('GET /api/rss/history/accept E2E Test', () => {
     ]);
   });
 
-  it('관리자 로그인이 되어있지 않으면 조회할 수 없다.', async () => {
+  it('[401] 관리자 로그인이 되어있지 않으면 조회할 수 없다.', async () => {
     // when
     const noCookieResponse = await request(app.getHttpServer()).get(
       '/api/rss/history/accept',
@@ -36,7 +36,7 @@ describe('GET /api/rss/history/accept E2E Test', () => {
     expect(noSessionResponse.status).toBe(401);
   });
 
-  it('관리자 로그인이 되어 있으면 최신순으로 기록 데이터를 응답한다.', async () => {
+  it('[200] 관리자 로그인이 되어 있으면 최신순으로 기록 데이터를 응답한다.', async () => {
     // when
     const response = await request(app.getHttpServer())
       .get('/api/rss/history/accept')

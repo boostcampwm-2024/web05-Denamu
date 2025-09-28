@@ -12,7 +12,7 @@ describe('POST /api/admin/logout E2E Test', () => {
     await redisService.set(`${REDIS_KEYS.ADMIN_AUTH_KEY}:sid`, 'test1234');
   });
 
-  it('관리자 로그인이 되어 있으면 로그아웃을 정상적으로 할 수 있다.', async () => {
+  it('[200] 관리자 로그인이 되어 있으면 로그아웃을 정상적으로 할 수 있다.', async () => {
     // when
     const response = await request(app.getHttpServer())
       .post('/api/admin/logout')
@@ -25,7 +25,7 @@ describe('POST /api/admin/logout E2E Test', () => {
     ]);
   });
 
-  it('관리자 로그인이 되어 있지 않으면 로그아웃을 정상적으로 할 수 없다.', async () => {
+  it('[401] 관리자 로그인이 되어 있지 않으면 로그아웃을 정상적으로 할 수 없다.', async () => {
     // when
     const noCookieResponse = await request(app.getHttpServer()).post(
       '/api/admin/logout',

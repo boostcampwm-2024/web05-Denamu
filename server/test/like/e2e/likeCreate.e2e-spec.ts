@@ -37,7 +37,7 @@ describe('POST /api/like E2E Test', () => {
     );
   });
 
-  it('로그인이 되어 있지 않다면 좋아요 등록을 할 수 없다.', async () => {
+  it('[401] 로그인이 되어 있지 않다면 좋아요 등록을 할 수 없다.', async () => {
     // given
     const feedLikeRequest = new ManageLikeRequestDto({
       feedId: 1,
@@ -51,7 +51,7 @@ describe('POST /api/like E2E Test', () => {
     expect(response.status).toBe(401);
   });
 
-  it('게시글이 존재하지 않다면 좋아요를 등록할 수 없다.', async () => {
+  it('[404] 게시글이 존재하지 않다면 좋아요를 등록할 수 없다.', async () => {
     // given
     const feedLikeRequest = new ManageLikeRequestDto({
       feedId: 100,
@@ -77,7 +77,7 @@ describe('POST /api/like E2E Test', () => {
     expect(response.status).toBe(404);
   });
 
-  it('로그인이 되어있고 좋아요를 하지 않았다면 좋아요를 등록할 수 있다.', async () => {
+  it('[201] 로그인이 되어있고 좋아요를 하지 않았다면 좋아요를 등록할 수 있다.', async () => {
     // given
     const feedLikeRequest = new ManageLikeRequestDto({
       feedId: 1,
@@ -103,7 +103,7 @@ describe('POST /api/like E2E Test', () => {
     expect(response.status).toBe(201);
   });
 
-  it('이미 좋아요를 했다면 좋아요를 등록할 수 없다.', async () => {
+  it('[409] 이미 좋아요를 했다면 좋아요를 등록할 수 없다.', async () => {
     // given
     const feedLikeRequest = new ManageLikeRequestDto({
       feedId: 1,

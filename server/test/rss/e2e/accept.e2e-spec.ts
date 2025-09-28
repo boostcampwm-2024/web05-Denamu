@@ -1,7 +1,5 @@
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
-import { Repository } from 'typeorm';
-import { Rss, RssAccept } from '../../../src/rss/entity/rss.entity';
 import { RssFixture } from '../../fixture/rss.fixture';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import {
@@ -12,8 +10,8 @@ import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 
 describe('Rss Accept E2E Test', () => {
   let app: INestApplication;
-  let rssRepository: Repository<Rss>;
-  let rssAcceptRepository: Repository<RssAccept>;
+  let rssRepository: RssRepository;
+  let rssAcceptRepository: RssAcceptRepository;
   let redisService: RedisService;
 
   beforeAll(async () => {
@@ -32,7 +30,7 @@ describe('Rss Accept E2E Test', () => {
 
   describe('POST /api/rss/accept/{rssId}', () => {
     describe('정상적인 요청을 한다.', () => {
-      it('정상적으로 RSS를 승인한다.', async () => {
+      it('[201] 정상적으로 RSS를 승인한다.', async () => {
         // given
         const rss = await rssRepository.save(
           RssFixture.createRssFixture({
@@ -52,7 +50,7 @@ describe('Rss Accept E2E Test', () => {
     });
 
     describe('비정상적인 요청을 한다.', () => {
-      it('존재하지 않는 rss를 승인할 때', async () => {
+      it('[404] 존재하지 않는 rss를 승인할 때', async () => {
         // given
         jest.spyOn(rssRepository, 'findOne').mockResolvedValue(undefined);
 
@@ -66,7 +64,7 @@ describe('Rss Accept E2E Test', () => {
         expect(response.status).toBe(404);
       });
 
-      it('유효한 세션이 존재하지 않을 때', async () => {
+      it('[401] 유효한 세션이 존재하지 않을 때', async () => {
         // when
         const noCookieResponse = await request(app.getHttpServer())
           .post(`/api/rss/accept/1`)

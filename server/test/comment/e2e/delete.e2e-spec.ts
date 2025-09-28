@@ -9,18 +9,14 @@ import { Comment } from '../../../src/comment/entity/comment.entity';
 import { CommentRepository } from '../../../src/comment/repository/comment.repository';
 import { CommentFixture } from '../../fixture/comment.fixture';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
-import { Feed } from '../../../src/feed/entity/feed.entity';
 import { FeedFixture } from '../../fixture/feed.fixture';
 import { RssAcceptFixture } from '../../fixture/rssAccept.fixture';
-import { RssAccept } from '../../../src/rss/entity/rss.entity';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
 
-describe('POST /api/comment E2E Test', () => {
+describe('DELETE /api/comment E2E Test', () => {
   let app: INestApplication;
   let userService: UserService;
   let userInformation: User;
-  let rssAcceptInformation: RssAccept;
-  let feedInformation: Feed;
   let commentInformation: Comment;
 
   beforeAll(async () => {
@@ -35,11 +31,11 @@ describe('POST /api/comment E2E Test', () => {
       await UserFixture.createUserCryptFixture(),
     );
 
-    rssAcceptInformation = await rssAcceptRepository.save(
+    const rssAcceptInformation = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
 
-    feedInformation = await feedRepository.save(
+    const feedInformation = await feedRepository.save(
       FeedFixture.createFeedFixture(rssAcceptInformation),
     );
 
@@ -48,7 +44,7 @@ describe('POST /api/comment E2E Test', () => {
     );
   });
 
-  it('로그인이 되어 있지 않다면 댓글을 삭제할 수 없다.', async () => {
+  it('[401] 로그인이 되어 있지 않다면 댓글을 삭제할 수 없다.', async () => {
     // given
     const comment = new DeleteCommentRequestDto({
       commentId: commentInformation.id,
@@ -62,11 +58,11 @@ describe('POST /api/comment E2E Test', () => {
     expect(response.status).toBe(401);
   });
 
-  it('본인이 작성한 댓글이 아니라면 댓글을 삭제할 수 없다.', async () => {
+  it('[401] 본인이 작성한 댓글이 아니라면 댓글을 삭제할 수 없다.', async () => {
     // given
     const accessToken = userService.createToken(
       {
-        id: 400,
+        id: Number.MAX_SAFE_INTEGER,
         email: userInformation.email,
         userName: userInformation.userName,
         role: 'user',
@@ -88,7 +84,7 @@ describe('POST /api/comment E2E Test', () => {
     expect(response.status).toBe(401);
   });
 
-  it('존재하지 않는 댓글은 삭제할 수 없다.', async () => {
+  it('[404] 존재하지 않는 댓글은 삭제할 수 없다.', async () => {
     // given
     const accessToken = userService.createToken(
       {
@@ -100,7 +96,7 @@ describe('POST /api/comment E2E Test', () => {
       'access',
     );
     const comment = new DeleteCommentRequestDto({
-      commentId: 400,
+      commentId: Number.MAX_SAFE_INTEGER,
     });
     const agent = request.agent(app.getHttpServer());
 
@@ -114,7 +110,7 @@ describe('POST /api/comment E2E Test', () => {
     expect(response.status).toBe(404);
   });
 
-  it('로그인이 되어 있다면 댓글을 삭제할 수 있다.', async () => {
+  it('[200] 로그인이 되어 있다면 댓글을 삭제할 수 있다.', async () => {
     // given
     const accessToken = userService.createToken(
       {

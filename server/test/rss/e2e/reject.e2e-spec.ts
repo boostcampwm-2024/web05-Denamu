@@ -33,7 +33,7 @@ describe('Rss Reject E2E Test', () => {
 
   describe('POST /api/rss/reject/{rssId}', () => {
     describe('정상적인 요청을 한다.', () => {
-      it('정상적으로 RSS를 거절한다.', async () => {
+      it('[201] 정상적으로 RSS를 거절한다.', async () => {
         // given
         const REJECT_REASON = '거절 사유';
         const rss = await rssRepository.save(RssFixture.createRssFixture());
@@ -58,7 +58,7 @@ describe('Rss Reject E2E Test', () => {
     });
 
     describe('비정상적인 요청을 한다.', () => {
-      it('존재하지 않는 rss를 거절할 때', async () => {
+      it('[404] 존재하지 않는 rss를 거절할 때', async () => {
         // given
         const REJECT_REASON = '거절 사유';
         const rejectRssDto = new RejectRssRequestDto({
@@ -75,7 +75,7 @@ describe('Rss Reject E2E Test', () => {
         expect(response.status).toBe(404);
       });
 
-      it('유효한 세션이 존재하지 않을 때', async () => {
+      it('[401] 유효한 세션이 존재하지 않을 때', async () => {
         // when
         const noCookieResponse = await request(app.getHttpServer())
           .post(`/api/rss/reject/1`)

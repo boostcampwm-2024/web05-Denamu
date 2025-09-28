@@ -17,7 +17,7 @@ describe('POST api/user/register E2E Test', () => {
     app = global.testApp;
   });
 
-  it('회원가입 요청에 정상적으로 성공한다.', async () => {
+  it('[201] 회원가입 요청에 정상적으로 성공한다.', async () => {
     // given
     const agent = request.agent(app.getHttpServer());
 
@@ -30,11 +30,11 @@ describe('POST api/user/register E2E Test', () => {
     expect(response.status).toBe(201);
   });
 
-  it('이미 가입된 이메일을 입력하면 409 Conflict 예외가 발생한다.', async () => {
+  it('[409] 이미 가입된 이메일을 입력하면 409 Conflict 예외가 발생한다.', async () => {
     // given
     const agent = request.agent(app.getHttpServer());
     const userRepository = app.get(UserRepository);
-    await userRepository.insert(await UserFixture.createUserFixture());
+    await userRepository.insert(UserFixture.createUserFixture());
 
     // when
     const response = await agent

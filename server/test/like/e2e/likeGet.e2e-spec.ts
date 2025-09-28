@@ -36,7 +36,7 @@ describe('GET /api/like/{feedId} E2E Test', () => {
     );
   });
 
-  it('좋아요 조회를 할 수 있다.', async () => {
+  it('[200] 좋아요 조회를 할 수 있다.', async () => {
     // given
     const agent = request.agent(app.getHttpServer());
 
@@ -47,7 +47,7 @@ describe('GET /api/like/{feedId} E2E Test', () => {
     expect(response.status).toBe(200);
   });
 
-  it('게시글이 없다면 좋아요 조회를 할 수 없다.', async () => {
+  it('[404] 게시글이 없다면 좋아요 조회를 할 수 없다.', async () => {
     // given
     const agent = request.agent(app.getHttpServer());
 

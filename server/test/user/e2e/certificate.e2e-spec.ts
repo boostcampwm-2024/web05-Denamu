@@ -16,7 +16,7 @@ describe('POST api/user/certificate E2E Test', () => {
     userRepository = app.get(UserRepository);
   });
 
-  it('이메일 인증 요청에 성공하여 DB에 사용자 데이터가 삽입된다.', async () => {
+  it('[200] 이메일 인증 요청에 성공하여 DB에 사용자 데이터가 삽입된다.', async () => {
     // given
     const uuid = 'test-certificate-uuid';
     const userEntity = UserFixture.createUserFixture();
@@ -36,7 +36,7 @@ describe('POST api/user/certificate E2E Test', () => {
     expect(savedUser.email).toBe(userEntity.email);
   });
 
-  it('존재하지 않거나 만료된 uuid로 인증 요청 시 NotFoundException 에러를 발생시킨다.', async () => {
+  it('[404] 존재하지 않거나 만료된 uuid로 인증 요청 시 NotFoundException 에러를 발생시킨다.', async () => {
     // given
     const uuid = 'non-existent-or-expired-uuid';
 

@@ -28,7 +28,7 @@ describe('SSE /api/trend/sse E2E Test', () => {
     await Promise.all([feedRepository.insert(feeds), app.listen(7000)]);
   });
 
-  it('최초 연결이 되면 트랜드 데이터를 최대 4개 받을 수 있다.', async () => {
+  it('[SSE] 최초 연결이 되면 트랜드 데이터를 최대 4개 받을 수 있다.', async () => {
     // given
     const es = new EventSource('http://localhost:7000/api/feed/trend/sse');
     const timeout = new Promise((_, reject) =>
@@ -63,7 +63,7 @@ describe('SSE /api/trend/sse E2E Test', () => {
     expect(idList).toStrictEqual([1, 2]);
   });
 
-  it('서버로부터 데이터를 받을 때, 게시글이 지워진 상황이라면 게시글을 받지 않는다.', async () => {
+  it('[SSE] 서버로부터 데이터를 받을 때, 게시글이 지워진 상황이라면 게시글을 받지 않는다.', async () => {
     // given
     await feedRepository.delete({ id: 2 });
     const es = new EventSource('http://localhost:7000/api/feed/trend/sse');

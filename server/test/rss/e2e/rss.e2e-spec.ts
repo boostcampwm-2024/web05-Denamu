@@ -26,7 +26,7 @@ describe('/api/rss E2E Test', () => {
   });
 
   describe('POST /api/rss E2E Test', () => {
-    it('정상적인 요청이 들어왔다면 올바른 응답을 한다.', async () => {
+    it('[201] 정상적인 요청이 들어왔다면 올바른 응답을 한다.', async () => {
       // given
       const requestDto = new RegisterRssRequestDto({
         blog: 'blog1',
@@ -44,7 +44,7 @@ describe('/api/rss E2E Test', () => {
       expect(response.status).toBe(201);
     });
 
-    it('이미 신청한 RSS를 또 신청한다면 거부를 한다.', async () => {
+    it('[409] 이미 신청한 RSS를 또 신청한다면 거부를 한다.', async () => {
       // given
       const requestDto = new RegisterRssRequestDto({
         blog: 'blog1',
@@ -63,7 +63,7 @@ describe('/api/rss E2E Test', () => {
       expect(response.status).toBe(409);
     });
 
-    it('이미 등록된 RSS를 또 신청한다면 거부를 한다.', async () => {
+    it('[409] 이미 등록된 RSS를 또 신청한다면 거부를 한다.', async () => {
       // given
       const acceptedRss = await rssAcceptRepository.save(
         RssAcceptFixture.createRssAcceptFixture(),
@@ -87,14 +87,14 @@ describe('/api/rss E2E Test', () => {
 
   describe('GET /api/rss', () => {
     describe('정상적인 요청을 한다.', () => {
-      it('RSS가 등록되지 않은 경우 빈 리스트를 반환한다.', async () => {
+      it('[200] RSS가 등록되지 않은 경우 빈 리스트를 반환한다.', async () => {
         // when - then
         const response = await request(app.getHttpServer()).get('/api/rss');
         expect(response.status).toBe(200);
         expect(response.body.data).toEqual([]);
       });
 
-      it('등록된 RSS가 존재할 경우 해당 데이터를 반환한다.', async () => {
+      it('[200] 등록된 RSS가 존재할 경우 해당 데이터를 반환한다.', async () => {
         // given
         const expectedResult = await rssRepository.save(
           RssFixture.createRssFixture(),

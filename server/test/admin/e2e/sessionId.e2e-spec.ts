@@ -14,7 +14,7 @@ describe('GET api/admin/sessionId E2E Test', () => {
     await adminRepository.insert(await AdminFixture.createAdminCryptFixture());
   });
 
-  it('쿠키의 session id가 유효하다면 관리자를 로그인 상태로 취급한다.', async () => {
+  it('[200] 쿠키의 session id가 유효하다면 관리자를 로그인 상태로 취급한다.', async () => {
     //given
     const agent = request.agent(app.getHttpServer());
     const loginAdminDto = new LoginAdminRequestDto({
@@ -30,7 +30,7 @@ describe('GET api/admin/sessionId E2E Test', () => {
     expect(response.status).toBe(200);
   });
 
-  it('session id가 일치하지 않는다면 401 UnAuthorized 예외가 발생한다.', async () => {
+  it('[401] session id가 일치하지 않는다면 401 UnAuthorized 예외가 발생한다.', async () => {
     //given
     const randomUUID = uuidv4();
 
@@ -43,7 +43,7 @@ describe('GET api/admin/sessionId E2E Test', () => {
     expect(response.status).toBe(401);
   });
 
-  it('session id가 없다면 401 UnAuthorized 예외가 발생한다.', async () => {
+  it('[401] session id가 없다면 401 UnAuthorized 예외가 발생한다.', async () => {
     //when
     const response = await request(app.getHttpServer())
       .get('/api/admin/sessionId')

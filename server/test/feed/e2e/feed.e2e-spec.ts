@@ -26,7 +26,7 @@ describe('GET api/feed E2E Test', () => {
     await feedRepository.insert(feeds);
   });
 
-  it('lastId가 없으면 최신 피드부터 전송한다.', async () => {
+  it('[200] lastId가 없으면 최신 피드부터 전송한다.', async () => {
     //given
     const feedPaginationQueryDto = new ReadFeedPaginationRequestDto({
       limit: 5,
@@ -50,7 +50,7 @@ describe('GET api/feed E2E Test', () => {
     expect(response.body.data.lastId).toBe(16);
   });
 
-  it('lastId가 있으면 해당 피드 다음 순서부터 전송한다.', async () => {
+  it('[200] lastId가 있으면 해당 피드 다음 순서부터 전송한다.', async () => {
     //given
     const feedPaginationQueryDto = new ReadFeedPaginationRequestDto({
       limit: 5,
@@ -75,7 +75,7 @@ describe('GET api/feed E2E Test', () => {
     expect(response.body.data.lastId).toBe(6);
   });
 
-  it('limit의 크기보다 남은 Feed의 개수가 적은 경우면 정상적으로 동작한다.', async () => {
+  it('[200] limit의 크기보다 남은 Feed의 개수가 적은 경우면 정상적으로 동작한다.', async () => {
     //given
     const feedPaginationQueryDto = new ReadFeedPaginationRequestDto({
       limit: 15,
@@ -104,7 +104,7 @@ describe('GET api/feed E2E Test', () => {
     expect(response.body.data.lastId).toBe(1);
   });
 
-  it('남은 피드 개수가 0이면 lastId 0, 빈 배열로 응답한다.', async () => {
+  it('[200] 남은 피드 개수가 0이면 lastId 0, 빈 배열로 응답한다.', async () => {
     //given
     const feedPaginationQueryDto = new ReadFeedPaginationRequestDto({
       limit: 15,

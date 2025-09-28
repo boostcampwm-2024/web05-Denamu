@@ -38,7 +38,7 @@ describe('DELETE /api/like/{feedId} E2E Test', () => {
     );
   });
 
-  it('로그인이 되어 있지 않다면 좋아요 삭제를 할 수 없다.', async () => {
+  it('[401] 로그인이 되어 있지 않다면 좋아요 삭제를 할 수 없다.', async () => {
     // given
     const feedLikeRequest = new ManageLikeRequestDto({
       feedId: 1,
@@ -54,7 +54,7 @@ describe('DELETE /api/like/{feedId} E2E Test', () => {
     expect(response.status).toBe(401);
   });
 
-  it('게시글이 존재하지 않다면 좋아요를 삭제할 수 없다.', async () => {
+  it('[404] 게시글이 존재하지 않다면 좋아요를 삭제할 수 없다.', async () => {
     // given
     const feedLikeRequest = new ManageLikeRequestDto({
       feedId: 100,
@@ -80,7 +80,7 @@ describe('DELETE /api/like/{feedId} E2E Test', () => {
     expect(response.status).toBe(404);
   });
 
-  it('로그인이 되어있고 좋아요를 했다면 좋아요를 삭제할 수 있다.', async () => {
+  it('[200] 로그인이 되어있고 좋아요를 했다면 좋아요를 삭제할 수 있다.', async () => {
     // given
     const likeRepository = app.get(LikeRepository);
     await likeRepository.save({
@@ -112,7 +112,7 @@ describe('DELETE /api/like/{feedId} E2E Test', () => {
     expect(response.status).toBe(200);
   });
 
-  it('이미 좋아요를 삭제했다면 좋아요를 삭제할 수 없다.', async () => {
+  it('[404] 이미 좋아요를 삭제했다면 좋아요를 삭제할 수 없다.', async () => {
     // given
     const feedLikeRequest = new ManageLikeRequestDto({
       feedId: 1,
