@@ -7,6 +7,7 @@ import { RssRejectFixture } from '../../../fixture/rssReject.fixture';
 
 describe('GET /api/rss/history/reject E2E Test', () => {
   let app: INestApplication;
+
   beforeAll(async () => {
     app = global.testApp;
     const rssRejectRepository = app.get(RssRejectRepository);

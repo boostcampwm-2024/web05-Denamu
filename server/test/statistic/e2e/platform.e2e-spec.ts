@@ -6,6 +6,7 @@ import { RssAcceptFixture } from '../../fixture/rssAccept.fixture';
 describe('GET /api/statistic/platform E2E Test', () => {
   let app: INestApplication;
   let rssAcceptRepository: RssAcceptRepository;
+
   beforeAll(async () => {
     app = global.testApp;
     rssAcceptRepository = app.get(RssAcceptRepository);
