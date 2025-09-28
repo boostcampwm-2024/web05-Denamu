@@ -8,6 +8,7 @@ import { REDIS_KEYS } from '../../../../src/common/redis/redis.constant';
 
 describe('GET /api/rss/history/accept E2E Test', () => {
   let app: INestApplication;
+
   beforeAll(async () => {
     app = global.testApp;
     const rssAcceptRepository = app.get(RssAcceptRepository);
@@ -18,7 +19,10 @@ describe('GET /api/rss/history/accept E2E Test', () => {
     }
     await Promise.all([
       rssAcceptRepository.insert(rssAccepts),
-      redisService.set(`${REDIS_KEYS.ADMIN_AUTH_KEY}:sid`, 'test1234'),
+      redisService.set(
+        `${REDIS_KEYS.ADMIN_AUTH_KEY}:testSessionId`,
+        'test1234',
+      ),
     ]);
   });
 
@@ -40,7 +44,7 @@ describe('GET /api/rss/history/accept E2E Test', () => {
     // when
     const response = await request(app.getHttpServer())
       .get('/api/rss/history/accept')
-      .set('Cookie', 'sessionId=sid');
+      .set('Cookie', 'sessionId=testSessionId');
 
     // then
     expect(response.status).toBe(HttpStatus.OK);

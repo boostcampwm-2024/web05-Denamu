@@ -17,7 +17,7 @@ describe('GET /api/rss/history/reject E2E Test', () => {
     }
     await Promise.all([
       rssRejectRepository.insert(rssAccepts),
-      redisService.set('auth:sid', 'test1234'),
+      redisService.set('auth:testSessionId', 'test1234'),
     ]);
   });
 
@@ -39,7 +39,7 @@ describe('GET /api/rss/history/reject E2E Test', () => {
     // when
     const response = await request(app.getHttpServer())
       .get('/api/rss/history/reject')
-      .set('Cookie', 'sessionId=sid');
+      .set('Cookie', 'sessionId=testSessionId');
 
     // then
     expect(response.status).toBe(HttpStatus.OK);

@@ -9,14 +9,17 @@ describe('POST /api/admin/logout E2E Test', () => {
   beforeAll(async () => {
     app = global.testApp;
     const redisService = app.get(RedisService);
-    await redisService.set(`${REDIS_KEYS.ADMIN_AUTH_KEY}:sid`, 'test1234');
+    await redisService.set(
+      `${REDIS_KEYS.ADMIN_AUTH_KEY}:testSessionId`,
+      'test1234',
+    );
   });
 
   it('[200] 관리자 로그인이 되어 있으면 로그아웃을 정상적으로 할 수 있다.', async () => {
     // when
     const response = await request(app.getHttpServer())
       .post('/api/admin/logout')
-      .set('Cookie', 'sessionId=sid');
+      .set('Cookie', 'sessionId=testSessionId');
 
     // then
     expect(response.status).toBe(HttpStatus.OK);

@@ -27,7 +27,10 @@ describe('Rss Reject E2E Test', () => {
   beforeEach(async () => {
     await Promise.all([
       rssRepository.delete({}),
-      redisService.set(`${REDIS_KEYS.ADMIN_AUTH_KEY}:sid`, 'test_admin'),
+      redisService.set(
+        `${REDIS_KEYS.ADMIN_AUTH_KEY}:testSessionId`,
+        'test_admin',
+      ),
     ]);
   });
 
@@ -44,7 +47,7 @@ describe('Rss Reject E2E Test', () => {
         // when
         const response = await request(app.getHttpServer())
           .post(`/api/rss/reject/${rss.id}`)
-          .set('Cookie', 'sessionId=sid')
+          .set('Cookie', 'sessionId=testSessionId')
           .send(rejectRssDto);
 
         const accepted = await rssRejectRepository.findOne({
@@ -68,7 +71,7 @@ describe('Rss Reject E2E Test', () => {
         // when
         const response = await request(app.getHttpServer())
           .post(`/api/rss/reject/1`)
-          .set('Cookie', 'sessionId=sid')
+          .set('Cookie', 'sessionId=testSessionId')
           .send(rejectRssDto);
 
         // then
