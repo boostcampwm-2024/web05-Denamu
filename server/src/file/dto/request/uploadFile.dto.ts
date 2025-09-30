@@ -6,7 +6,7 @@ export class UploadFileQueryDto {
     description: '파일 업로드 타입',
     enum: FileUploadType,
     example: FileUploadType.PROFILE_IMAGE,
-    required: false,
+    required: true,
   })
   uploadType: FileUploadType;
 
