@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class CertificateUserRequestDto {
   @ApiProperty({
@@ -8,6 +8,9 @@ export class CertificateUserRequestDto {
   })
   @IsNotEmpty({
     message: '인증 코드를 입력해주세요.',
+  })
+  @IsString({
+    message: '문자열로 입력해주세요.',
   })
   uuid: string;
 

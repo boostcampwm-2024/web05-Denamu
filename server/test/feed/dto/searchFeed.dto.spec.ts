@@ -34,7 +34,31 @@ describe('SearchFeedRequestDto Test', () => {
 
       //then
       expect(errors).toHaveLength(1);
-      expect(errors[0].constraints).toHaveProperty('isDefined');
+      expect(errors[0].constraints).toHaveProperty('isNotEmpty');
+    });
+
+    it('검색어에 빈 문자열을 입력할 경우 유효성 검사에 실패한다.', async () => {
+      //given
+      dto.find = '';
+
+      //when
+      const errors = await validate(dto);
+
+      //then
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isNotEmpty');
+    });
+
+    it('검색어에 문자열이 아닌 값을 입력할 경우 유효성 검사에 실패한다.', async () => {
+      //given
+      dto.find = 1 as any;
+
+      //when
+      const errors = await validate(dto);
+
+      //then
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isString');
     });
   });
 
@@ -48,7 +72,19 @@ describe('SearchFeedRequestDto Test', () => {
 
       //then
       expect(errors).toHaveLength(1);
-      expect(errors[0].constraints).toHaveProperty('isDefined');
+      expect(errors[0].constraints).toHaveProperty('isNotEmpty');
+    });
+
+    it('검색 타입에 빈 문자열을 입력한다.', async () => {
+      //given
+      dto.type = '' as any;
+
+      //when
+      const errors = await validate(dto);
+
+      //then
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isNotEmpty');
     });
 
     it('검색 타입을 잘 못된 입력을 한다.', async () => {

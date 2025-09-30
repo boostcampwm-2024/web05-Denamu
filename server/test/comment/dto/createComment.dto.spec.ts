@@ -20,7 +20,19 @@ describe('CreateCommentRequestDto Test', () => {
   });
 
   describe('comment', () => {
-    it('댓글 내용이 비어있다면 유효성 검사에 실패한다.', async () => {
+    it('댓글 내용이 문자열이 아닐 경우 유효성 검사에 실패한다.', async () => {
+      // given
+      dto.comment = 1 as any;
+
+      // when
+      const errors = await validate(dto);
+
+      // then
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isString');
+    });
+
+    it('댓글 속성이 비어있다면 유효성 검사에 실패한다.', async () => {
       // given
       dto.comment = null;
 
@@ -32,16 +44,16 @@ describe('CreateCommentRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isNotEmpty');
     });
 
-    it('댓글 내용이 문자열이 아닐 경우 유효성 검사에 실패한다.', async () => {
+    it('댓글에 빈 문자열이 있다면 유효성 검사에 실패한다.', async () => {
       // given
-      dto.comment = 1 as any;
+      dto.comment = '';
 
       // when
       const errors = await validate(dto);
 
       // then
       expect(errors).toHaveLength(1);
-      expect(errors[0].constraints).toHaveProperty('isString');
+      expect(errors[0].constraints).toHaveProperty('isNotEmpty');
     });
   });
 

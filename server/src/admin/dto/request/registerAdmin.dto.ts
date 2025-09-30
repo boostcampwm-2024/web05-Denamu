@@ -1,4 +1,4 @@
-import { IsString, Length, Matches } from 'class-validator';
+import { IsNotEmpty, IsString, Length, Matches } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Admin } from '../../entity/admin.entity';
 
@@ -8,6 +8,9 @@ export class RegisterAdminRequestDto {
   @ApiProperty({
     example: 'test',
     description: '관리자 로그인 아이디를 입력해주세요.',
+  })
+  @IsNotEmpty({
+    message: '아이디가 없습니다.',
   })
   @IsString({
     message: '문자열을 입력해주세요',
@@ -21,6 +24,9 @@ export class RegisterAdminRequestDto {
     example: 'test1234!',
     description:
       '패스워드를 입력해주세요. (최소 6자, 영문/숫자/특수문자로 이루어질 수 있으며 특수문자 1개 이상 포함)',
+  })
+  @IsNotEmpty({
+    message: '비밀번호가 없습니다.',
   })
   @IsString({
     message: '문자열을 입력해주세요',

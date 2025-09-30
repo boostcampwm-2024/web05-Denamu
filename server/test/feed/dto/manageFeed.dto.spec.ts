@@ -19,6 +19,18 @@ describe('ManageFeedRequestDto Test', () => {
   });
 
   describe('feedId', () => {
+    it('feedId가 없을 경우 유효성 검사에 실패한다.', async () => {
+      //given
+      dto.feedId = null;
+
+      //when
+      const errors = await validate(dto);
+
+      //then
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isInt');
+    });
+
     it('feedId에 1보다 작은 값을 입력하면 유효성 검사에 실패한다.', async () => {
       //given
       dto.feedId = -1;

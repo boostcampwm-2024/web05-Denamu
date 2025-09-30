@@ -41,14 +41,38 @@ describe('LoginUserRequestDto Test', () => {
 
       // then
       expect(errors).toHaveLength(1);
-      expect(errors[0].constraints).toHaveProperty('isNotEmpty');
+      expect(errors[0].constraints).toHaveProperty('isEmail');
     });
   });
 
   describe('password', () => {
-    it('비밀번호가 빈 문자열이면 유효성 검사에 실패한다.', async () => {
+    it('비밀번호가 문자열이 아니면 유효성 검사에 실패한다.', async () => {
+      // given
+      dto.password = 1 as any;
+
+      // when
+      const errors = await validate(dto);
+
+      // then
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isString');
+    });
+
+    it('비밀번호가 존재하지 않으면 유효성 검사에 실패한다.', async () => {
       // given
       dto.password = null;
+
+      // when
+      const errors = await validate(dto);
+
+      // then
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isNotEmpty');
+    });
+
+    it('비밀번호가 빈 문자열이면 유효성 검사에 실패한다.', async () => {
+      // given
+      dto.password = '';
 
       // when
       const errors = await validate(dto);
