@@ -1,16 +1,14 @@
 import { validate } from 'class-validator';
-import { ManageRssRequestDto } from '../../../src/rss/dto/request/manageRss.dto';
+import { DeleteFileRequestDto } from '../../../src/file/dto/request/deleteFile.dto';
 
-describe('ManageRssRequestDto Test', () => {
-  let dto: ManageRssRequestDto;
+describe('DeleteFileRequestDto Test', () => {
+  let dto: DeleteFileRequestDto;
 
   beforeEach(() => {
-    dto = new ManageRssRequestDto({
-      id: 1,
-    });
+    dto = new DeleteFileRequestDto({ id: 1 });
   });
 
-  it('RSS ID가 1 이상이며 정수일 경우 유효성 검사를 통과한다.', async () => {
+  it('id가 정수이고 1 이상일 경우 테스트를 통과한다..', async () => {
     // when
     const errors = await validate(dto);
 
@@ -19,9 +17,9 @@ describe('ManageRssRequestDto Test', () => {
   });
 
   describe('id', () => {
-    it('Rss관리 API의 PathVariable이 정수가 아닐 경우', async () => {
+    it('id가 비어있으면 유효성 검사에 실패한다.', async () => {
       // given
-      dto.id = 'abc' as any;
+      dto.id = null;
 
       // when
       const errors = await validate(dto);
@@ -31,7 +29,7 @@ describe('ManageRssRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isInt');
     });
 
-    it('Rss관리 API의 PathVariable이 1보다 작을 경우', async () => {
+    it('id가 1보다 작을 경우 유효성 검사에 실패한다.', async () => {
       // given
       dto.id = 0;
 

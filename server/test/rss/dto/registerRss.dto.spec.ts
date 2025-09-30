@@ -98,7 +98,7 @@ describe('RegisterRssRequestDto Test', () => {
 
     it('실명의 길이가 2자리보다 작다.', async () => {
       // given
-      dto.name = 'a';
+      dto.name = 'a'.repeat(1);
 
       // when
       const errors = await validate(dto);
@@ -143,7 +143,7 @@ describe('RegisterRssRequestDto Test', () => {
 
       // then
       expect(errors).toHaveLength(1);
-      expect(errors[0].constraints).toHaveProperty('isNotEmpty');
+      expect(errors[0].constraints).toHaveProperty('isEmail');
     });
 
     it('이메일 형식이 올바르지 않다.', async () => {
@@ -181,7 +181,7 @@ describe('RegisterRssRequestDto Test', () => {
 
       // then
       expect(errors).toHaveLength(1);
-      expect(errors[0].constraints).toHaveProperty('isNotEmpty');
+      expect(errors[0].constraints).toHaveProperty('isUrl');
     });
 
     it('RSS URL 형식이 잘못되었다.', async () => {

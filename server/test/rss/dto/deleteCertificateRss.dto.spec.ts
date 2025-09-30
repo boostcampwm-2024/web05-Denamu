@@ -42,5 +42,17 @@ describe('DeleteCertificateRssRequestDto Test', () => {
       expect(errors).toHaveLength(1);
       expect(errors[0].constraints).toHaveProperty('isNotEmpty');
     });
+
+    it('인증 코드가 빈 문자열이다.', async () => {
+      // given
+      dto.code = '';
+
+      // when
+      const errors = await validate(dto);
+
+      // then
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isNotEmpty');
+    });
   });
 });

@@ -30,6 +30,30 @@ describe('LoginAdminRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isNotEmpty');
       expect(errors[0].constraints).toHaveProperty('isString');
     });
+
+    it('ID에 빈 문자열이 입력되면 유효성 검사에 실패한다.', async () => {
+      //given
+      dto.loginId = '';
+
+      //when
+      const errors = await validate(dto);
+
+      //then
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isNotEmpty');
+    });
+
+    it('ID에 문자열이 아닌 값이 입력되면 유효성 검사에 실패한다.', async () => {
+      //given
+      dto.loginId = 1 as any;
+
+      //when
+      const errors = await validate(dto);
+
+      //then
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isString');
+    });
   });
 
   describe('password', () => {
@@ -43,6 +67,30 @@ describe('LoginAdminRequestDto Test', () => {
       //then
       expect(errors).toHaveLength(1);
       expect(errors[0].constraints).toHaveProperty('isNotEmpty');
+      expect(errors[0].constraints).toHaveProperty('isString');
+    });
+
+    it('패스워드에 빈 문자열이 입력되면 유효성 검사에 실패한다.', async () => {
+      //given
+      dto.password = '';
+
+      //when
+      const errors = await validate(dto);
+
+      //then
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isNotEmpty');
+    });
+
+    it('패스워드에 문자열이 아닌 값이 입력되면 유효성 검사에 실패한다.', async () => {
+      //given
+      dto.password = 1 as any;
+
+      //when
+      const errors = await validate(dto);
+
+      //then
+      expect(errors).toHaveLength(1);
       expect(errors[0].constraints).toHaveProperty('isString');
     });
   });

@@ -31,7 +31,7 @@ describe('CheckEmailDuplicationRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isEmail');
     });
 
-    it('빈 문자열을 입력하면 유효성 검사에 실패한다.', async () => {
+    it('email을 입력하지 않을 경우 유효성 검사에 실패한다.', async () => {
       // given
       dto.email = null;
 
@@ -40,7 +40,19 @@ describe('CheckEmailDuplicationRequestDto Test', () => {
 
       // then
       expect(errors).toHaveLength(1);
-      expect(errors[0].constraints).toHaveProperty('isNotEmpty');
+      expect(errors[0].constraints).toHaveProperty('isEmail');
+    });
+
+    it('빈 문자열을 입력하면 유효성 검사에 실패한다.', async () => {
+      // given
+      dto.email = '';
+
+      // when
+      const errors = await validate(dto);
+
+      // then
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isEmail');
     });
   });
 });

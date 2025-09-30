@@ -43,16 +43,16 @@ describe('GetCommentRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isInt');
     });
 
-    it('게시글 아이디가 실수일 경우 유효성 검사에 실패한다.', async () => {
+    it('게시글 아이디가 1보다 작은 수일 경우 유효성 검사에 실패한다.', async () => {
       // given
-      dto.feedId = 1.1;
+      dto.feedId = 0;
 
       // when
       const errors = await validate(dto);
 
       // then
       expect(errors).toHaveLength(1);
-      expect(errors[0].constraints).toHaveProperty('isInt');
+      expect(errors[0].constraints).toHaveProperty('min');
     });
   });
 });

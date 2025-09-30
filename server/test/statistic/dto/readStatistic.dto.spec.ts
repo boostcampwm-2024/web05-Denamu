@@ -19,6 +19,18 @@ describe('ReadStatisticRequestDto Test', () => {
   });
 
   describe('limit', () => {
+    it('1보다 작은 수를 입력한다.', async () => {
+      // given
+      dto.limit = -1;
+
+      // when
+      const errors = await validate(dto);
+
+      // then
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('min');
+    });
+
     it('실수를 입력한다.', async () => {
       // given
       dto.limit = 1.1;
@@ -41,18 +53,6 @@ describe('ReadStatisticRequestDto Test', () => {
       // then
       expect(errors).toHaveLength(1);
       expect(errors[0].constraints).toHaveProperty('isInt');
-    });
-
-    it('음수를 입력한다.', async () => {
-      // given
-      dto.limit = -1;
-
-      // when
-      const errors = await validate(dto);
-
-      // then
-      expect(errors).toHaveLength(1);
-      expect(errors[0].constraints).toHaveProperty('min');
     });
   });
 });

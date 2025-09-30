@@ -1,4 +1,4 @@
-import { IsDefined, IsEnum, IsInt, IsString, Min } from 'class-validator';
+import { IsNotEmpty, IsEnum, IsInt, IsString, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -13,7 +13,7 @@ export class SearchFeedRequestDto {
     example: 'example',
     description: '검색어 입력',
   })
-  @IsDefined({
+  @IsNotEmpty({
     message: '검색어를 입력해주세요.',
   })
   @IsString({
@@ -26,7 +26,7 @@ export class SearchFeedRequestDto {
     description: '검색 타입 입력',
     enum: ['title', 'blogName', 'all'],
   })
-  @IsDefined({
+  @IsNotEmpty({
     message: '검색 타입을 입력해주세요.',
   })
   @IsEnum(SearchType, {

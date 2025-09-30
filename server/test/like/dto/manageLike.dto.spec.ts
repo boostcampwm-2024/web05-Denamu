@@ -42,5 +42,17 @@ describe('ManageLikeRequestDto Test', () => {
       expect(errors).toHaveLength(1);
       expect(errors[0].constraints).toHaveProperty('isInt');
     });
+
+    it('피드 ID가 1보다 작을 경우 유효성 검사에 실패한다.', async () => {
+      // given
+      dto.feedId = -1;
+
+      // when
+      const errors = await validate(dto);
+
+      // then
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('min');
+    });
   });
 });

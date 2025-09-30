@@ -31,6 +31,18 @@ describe('RejectRssRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isNotEmpty');
     });
 
+    it('거절 사유가 빈 문자열이다.', async () => {
+      // given
+      dto.description = '';
+
+      // when
+      const errors = await validate(dto);
+
+      // then
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isNotEmpty');
+    });
+
     it('거절 사유가 문자열이 아니다.', async () => {
       // given
       dto.description = 1 as any;
