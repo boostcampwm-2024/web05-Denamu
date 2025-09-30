@@ -10,5 +10,6 @@ export const REDIS_KEYS = {
   ADMIN_AUTH_ALL_KEY: 'auth:*',
   RSS_REMOVE_KEY: 'rss:remove',
   CHAT_HISTORY_KEY: 'chat:history',
+  FULL_FEED_CRAWL_QUEUE: `feed:full-crawl:queue`,
   USER_RESET_PASSWORD_KEY: 'user:password_reset',
 };

@@ -7,11 +7,12 @@ import { FeedRepository } from './repository/feed.repository';
 import { RedisConnection } from './common/redis-access';
 import { TagMapRepository } from './repository/tag-map.repository';
 import { ParserUtil } from './common/parser/utils/parser-util';
-import { ClaudeService } from './claude.service';
+import { ClaudeEventWorker } from './event_worker/workers/claude-event-worker';
 import { FeedParserManager } from './common/parser/feed-parser-manager';
 import { Rss20Parser } from './common/parser/formats/rss20-parser';
 import { Atom10Parser } from './common/parser/formats/atom10-parser';
 import { FeedCrawler } from './feed-crawler';
+import { FullFeedCrawlEventWorker } from './event_worker/workers/full-feed-crawl-event-worker';
 
 container.registerSingleton<DatabaseConnection>(
   DEPENDENCY_SYMBOLS.DatabaseConnection,
@@ -38,9 +39,9 @@ container.registerSingleton<TagMapRepository>(
   TagMapRepository,
 );
 
-container.registerSingleton<ClaudeService>(
-  DEPENDENCY_SYMBOLS.ClaudeService,
-  ClaudeService,
+container.registerSingleton<ClaudeEventWorker>(
+  DEPENDENCY_SYMBOLS.ClaudeEventWorker,
+  ClaudeEventWorker,
 );
 
 container.registerSingleton<ParserUtil>(
@@ -66,6 +67,11 @@ container.registerSingleton<FeedParserManager>(
 container.registerSingleton<FeedCrawler>(
   DEPENDENCY_SYMBOLS.FeedCrawler,
   FeedCrawler,
+);
+
+container.registerSingleton<FullFeedCrawlEventWorker>(
+  DEPENDENCY_SYMBOLS.FullFeedCrawlEventWorker,
+  FullFeedCrawlEventWorker,
 );
 
 export { container };

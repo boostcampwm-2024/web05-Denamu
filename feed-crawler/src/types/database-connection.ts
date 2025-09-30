@@ -1,4 +1,5 @@
 export interface DatabaseConnection {
-  executeQuery<T>(query: string, params: any[]): Promise<T[]>;
+  executeQuery<T>(query: string, params: any[]): Promise<T[] | null>;
+  executeQueryStrict<T>(query: string, params: any[]): Promise<T[]>;
   end(): Promise<void>;
 }

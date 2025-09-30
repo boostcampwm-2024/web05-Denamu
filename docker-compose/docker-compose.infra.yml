@@ -35,6 +35,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+    profiles:
+      - was-dev
 
   # Redis 서비스
   redis:
@@ -58,6 +60,8 @@ services:
       retries: 3
     environment:
       TZ: "Asia/Seoul"
+    profiles:
+      - was-dev
 
 volumes:
   denamu-mysql:

@@ -29,7 +29,8 @@ describe('feed crawling e2e-test', () => {
     );
 
     // when
-    await feedCrawler.start();
+    const startTime = new Date();
+    await feedCrawler.start(startTime);
 
     // then
     const feeds = await testContext.dbConnection.executeQuery(
@@ -66,7 +67,8 @@ describe('feed crawling e2e-test', () => {
     );
 
     // when
-    await feedCrawler.start();
+    const startTime = new Date();
+    await feedCrawler.start(startTime);
 
     // then
     const feedsFromDB = await testContext.dbConnection.executeQuery(

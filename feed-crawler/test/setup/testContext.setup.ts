@@ -8,7 +8,7 @@ import { FeedRepository } from '../../src/repository/feed.repository';
 import { container } from 'tsyringe';
 import { DependencyContainer } from 'tsyringe';
 import { ParserUtil } from '../../src/common/parser/utils/parser-util';
-import { ClaudeService } from '../../src/claude.service';
+import { ClaudeEventWorker } from '../../src/event_worker/workers/claude-event-worker';
 import { TagMapRepository } from '../../src/repository/tag-map.repository';
 import { FeedParserManager } from '../../src/common/parser/feed-parser-manager';
 import { Rss20Parser } from '../../src/common/parser/formats/rss20-parser';
@@ -21,7 +21,7 @@ export interface TestContext {
   feedRepository: FeedRepository;
   dbConnection: DatabaseConnection;
   redisConnection: RedisConnection;
-  claudeService: ClaudeService;
+  claudeEventWorker: ClaudeEventWorker;
   tagMapRepository: TagMapRepository;
   parserUtil: ParserUtil;
   feedParserManager: FeedParserManager;
@@ -58,9 +58,9 @@ export function setupTestContainer(): TestContext {
       FeedRepository,
     );
 
-    testContainer.registerSingleton<ClaudeService>(
-      DEPENDENCY_SYMBOLS.ClaudeService,
-      ClaudeService,
+    testContainer.registerSingleton<ClaudeEventWorker>(
+      DEPENDENCY_SYMBOLS.ClaudeEventWorker,
+      ClaudeEventWorker,
     );
 
     testContainer.registerSingleton<TagMapRepository>(
@@ -98,8 +98,8 @@ export function setupTestContainer(): TestContext {
       tagMapRepository: testContainer.resolve<TagMapRepository>(
         DEPENDENCY_SYMBOLS.TagMapRepository,
       ),
-      claudeService: testContainer.resolve<ClaudeService>(
-        DEPENDENCY_SYMBOLS.ClaudeService,
+      claudeEventWorker: testContainer.resolve<ClaudeEventWorker>(
+        DEPENDENCY_SYMBOLS.ClaudeEventWorker,
       ),
       rssRepository: testContainer.resolve<RssRepository>(
         DEPENDENCY_SYMBOLS.RssRepository,

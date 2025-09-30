@@ -15,4 +15,11 @@ export class RssRepository {
         FROM rss_accept`;
     return this.dbConnection.executeQuery(query, []);
   }
+
+  public async selectRssById(rssId: number): Promise<RssObj | null> {
+    const query = `SELECT id, rss_url as rssUrl, name as blogName, blog_platform as blogPlatform
+        FROM rss_accept WHERE id = ?`;
+    const result = await this.dbConnection.executeQuery<RssObj>(query, [rssId]);
+    return result && result.length > 0 ? result[0] : null;
+  }
 }
