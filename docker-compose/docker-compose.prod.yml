@@ -6,12 +6,11 @@ include:
 services:
   # WAS 서비스
   app:
-    build:
-      context: ../server
-      dockerfile: docker/Dockerfile.local
-    image: denamu-production-app:latest
+    image: ghcr.io/${GITHUB_REPOSITORY}/server:latest
     ports:
       - "8080:8080"
+    env_file:
+      - server/env/env.prod
     networks:
       - Denamu
     depends_on:
@@ -20,18 +19,17 @@ services:
       redis:
         condition: service_healthy
     volumes:
-      - ../server/logs:/var/web05-Denamu/server/logs
-      - /var/web05-Denamu/objects:/var/web05-Denamu/objects
+      - ../server/logs:/var/prod_data/server/logs
+      - ../server/objects:/var/prod_data/server/objects
     environment:
       NODE_ENV: "PROD"
       TZ: "Asia/Seoul"
 
   # Feed Crawler 서비스
   feed-crawler:
-    build:
-      context: ../feed-crawler
-      dockerfile: docker/Dockerfile.local
-    image: denamu-production-feed-crawler:latest
+    image: ghcr.io/${GITHUB_REPOSITORY}/feed-crawler:latest
+    env_file:
+      - feed-crawler/env/env.prod
     networks:
       - Denamu
     depends_on:
@@ -40,7 +38,7 @@ services:
       redis:
         condition: service_healthy
     volumes:
-      - ../feed-crawler/logs:/var/web05-Denamu/feed-crawler/logs
+      - ../feed-crawler/logs:/var/prod_data/feed-crawler/logs
     environment:
       NODE_ENV: "PROD"
       TZ: "Asia/Seoul"

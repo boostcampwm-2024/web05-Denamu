@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import * as path from 'path';
+import * as fs from 'fs';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { loadDBSetting } from './common/database/load.config';
@@ -20,16 +22,20 @@ import { MetricsInterceptor } from './common/metrics/metrics.interceptor';
 import { LikeModule } from './like/module/like.module';
 import { FileModule } from './file/module/file.module';
 
+const envMap = {
+  PROD: path.join(process.cwd(), 'env/.env.prod'),
+  LOCAL: path.join(process.cwd(), 'env/.env.local'),
+  DEV: path.join(process.cwd(), 'env/.env.local'),
+} as const;
+
+const chosen = envMap[process.env.NODE_ENV as keyof typeof envMap];
+const exists = !!chosen && fs.existsSync(chosen);
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath:
-        {
-          PROD: `${process.cwd()}/env/.env.prod`,
-          LOCAL: `${process.cwd()}/env/.env.local`,
-          DEV: `${process.cwd()}/env/.env.local`,
-        }[process.env.NODE_ENV] || '',
+      ignoreEnvFile: !exists,
+      envFilePath: exists ? chosen : undefined,
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],

@@ -2,53 +2,95 @@ name: BE Deployment
 
 on:
   push:
-    branches:
-      - main
-    paths:
-      - "server/**"
-  workflow_dispatch: # 수동 실행을 허용하는 이벤트
+    branches: [main]
+    paths: ["server/**", "docker-compose/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE_NAME: ghcr.io/${{ github.repository }}-server
+  IMAGE_TAG: sha-${{ github.sha }}
+  APP_ROOT: /var/web05-Denamu
+  SERVICE: app
+  ENV_DIR: /var/prod_config/server
+  ENV_FILE: /var/prod_config/server/.env.prod
+  COMPOSE_FILE: docker-compose/docker-compose.prod.yml
 
 jobs:
-  deployment:
+  build-and-push:
     runs-on: ubuntu-latest
     steps:
-      # public 서버로 ssh 접속
-      - name: ssh connection
-        uses: appleboy/ssh-action@v1.1.0
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: GHCR 로그인
+        uses: docker/login-action@v3
         with:
-          host: ${{ secrets.CLOUD_PUBLIC_INSTANCE_HOST }}
-          username: ${{ secrets.CLOUD_PUBLIC_INSTANCE_USERNAME }}
-          key: ${{ secrets.CLOUD_PUBLIC_INSTANCE_SSH_KEY }}
-          port: ${{ secrets.CLOUD_PUBLIC_INSTANCE_PORT }}
-          script: |
-            cd /var/web05-Denamu
-            git pull origin main
-            cd /var/web05-Denamu/server
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-            mkdir -p env
-            echo "PORT=${{ secrets.PRODUCT_PORT }}" > env/.env.prod
-            echo "DB_TYPE=mysql" >> env/.env.prod
-            echo "DB_DATABASE=${{ secrets.PRODUCT_DB_DATABASE }}" >> env/.env.prod
-            echo "DB_HOST=${{ secrets.PRODUCT_DB_HOST }}" >> env/.env.prod
-            echo "DB_PORT=${{ secrets.PRODUCT_DB_PORT }}" >> env/.env.prod
-            echo "DB_USERNAME=${{ secrets.PRODUCT_DB_USERNAME }}" >> env/.env.prod
-            echo "DB_PASSWORD=${{ secrets.PRODUCT_DB_PASSWORD }}" >> env/.env.prod
-            echo "REDIS_HOST=${{secrets.REDIS_HOST }}" >> env/.env.prod
-            echo "REDIS_PORT=${{secrets.REDIS_PORT}}" >> env/.env.prod
-            echo "REDIS_USERNAME=${{secrets.REDIS_USERNAME}}" >> env/.env.prod
-            echo "REDIS_PASSWORD=${{secrets.REDIS_PASSWORD}}" >> env/.env.prod
-            echo "EMAIL_USER=${{secrets.EMAIL_USER}}" >> env/.env.prod
-            echo "EMAIL_PASSWORD=${{secrets.EMAIL_PASSWORD}}" >> env/.env.prod
-            echo "JWT_ACCESS_SECRET=${{secrets.JWT_ACCESS_SECRET}}" >> env/.env.prod
-            echo "JWT_REFRESH_SECRET=${{secrets.JWT_REFRESH_SECRET}}" >> env/.env.prod
-            echo "REFRESH_TOKEN_EXPIRE=${{secrets.REFRESH_TOKEN_EXPIRE}}" >> env/.env.prod
-            echo "ACCESS_TOKEN_EXPIRE=${{secrets.ACCESS_TOKEN_EXPIRE}}" >> env/.env.prod
-            echo "GOOGLE_CLIENT_ID=${{secrets.GOOGLE_CLIENT_ID}}" >> env/.env.prod
-            echo "GOOGLE_CLIENT_SECRET=${{secrets.GOOGLE_CLIENT_SECRET}}" >> env/.env.prod
-            echo "GITHUB_CLIENT_ID=${{secrets.GIT_CLIENT_ID}}" >> env/.env.prod
-            echo "GITHUB_CLIENT_SECRET=${{secrets.GIT_CLIENT_SECRET}}" >> env/.env.prod
+      - name: Docker 이미지 Build 및 Push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./server
+          file: ./server/Dockerfile.prod
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+            ${{ env.IMAGE_NAME }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-            cd /var/web05-Denamu
-            docker-compose -f docker-compose/docker-compose.prod.yml up --build --no-deps --force-recreate -d app
-            docker image prune -f
-            docker builder prune -f
+  deploy:
+    runs-on: [self-hosted, prod]
+    needs: build-and-push # Build 및 Push가 끝나면 시작
+    steps:
+      - name: GHCR 로그인 (prod)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 환경변수 최신화
+        run: |
+          sudo mkdir -p "$ENV_DIR"
+          sudo install -m 600 /dev/null "$ENV_FILE"
+          {
+            echo "PORT=${{ secrets.PRODUCT_PORT }}"
+            echo "DB_TYPE=mysql"
+            echo "DB_DATABASE=${{ secrets.PRODUCT_DB_DATABASE }}"
+            echo "DB_HOST=${{ secrets.PRODUCT_DB_HOST }}"
+            echo "DB_PORT=${{ secrets.PRODUCT_DB_PORT }}"
+            echo "DB_USERNAME=${{ secrets.PRODUCT_DB_USERNAME }}"
+            echo "DB_PASSWORD=${{ secrets.PRODUCT_DB_PASSWORD }}"
+            echo "REDIS_HOST=${{ secrets.REDIS_HOST }}"
+            echo "REDIS_PORT=${{ secrets.REDIS_PORT }}"
+            echo "REDIS_USERNAME=${{ secrets.REDIS_USERNAME }}"
+            echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}"
+            echo "EMAIL_USER=${{ secrets.EMAIL_USER }}"
+            echo "EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}"
+            echo "JWT_ACCESS_SECRET=${{ secrets.JWT_ACCESS_SECRET }}"
+            echo "JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }}"
+            echo "REFRESH_TOKEN_EXPIRE=${{ secrets.REFRESH_TOKEN_EXPIRE }}"
+            echo "ACCESS_TOKEN_EXPIRE=${{ secrets.ACCESS_TOKEN_EXPIRE }}"
+            echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}"
+            echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}"
+            echo "GITHUB_CLIENT_ID=${{ secrets.GIT_CLIENT_ID }}"
+            echo "GITHUB_CLIENT_SECRET=${{ secrets.GIT_CLIENT_SECRET }}"
+          } | sudo tee "$ENV_FILE" >/dev/null
+
+      - name: Docker 이미지 Pull & 서비스 재시작
+        working-directory: ${{ env.APP_ROOT }}
+        run: |
+          if docker compose version >/dev/null 2>&1; then DC="docker compose"; else DC="docker-compose"; fi
+          docker pull "${IMAGE_NAME}:${IMAGE_TAG}" || true
+          docker pull "${IMAGE_NAME}:latest" || true
+          $DC -f "$COMPOSE_FILE" pull "$SERVICE"
+          $DC -f "$COMPOSE_FILE" up -d --no-deps --force-recreate "$SERVICE"
+          docker image prune -f || true
