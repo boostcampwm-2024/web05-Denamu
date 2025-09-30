@@ -27,8 +27,7 @@ export class ResetPasswordRequestDto {
   )
   password: string;
 
-  constructor(uuid: string, password: string) {
-    this.uuid = uuid;
-    this.password = password;
+  constructor(partial: Partial<ResetPasswordRequestDto>) {
+    Object.assign(this, partial);
   }
 }

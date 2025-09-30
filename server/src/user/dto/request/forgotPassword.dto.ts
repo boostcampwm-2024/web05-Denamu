@@ -17,7 +17,7 @@ export class ForgotPasswordRequestDto {
   })
   email: string;
 
-  constructor(email: string) {
-    this.email = email;
+  constructor(partial: Partial<ForgotPasswordRequestDto>) {
+    Object.assign(this, partial);
   }
 }
