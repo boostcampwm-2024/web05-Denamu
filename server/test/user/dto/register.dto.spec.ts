@@ -144,7 +144,7 @@ describe('RegisterUserRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isNotEmpty');
     });
 
-    it('사용자 이름이 빈 문자열이면 유효성 검사에 실패한다.', async () => {
+    it('사용자 이름이 없으면 유효성 검사에 실패한다.', async () => {
       // given
       dto.userName = null;
 
@@ -156,7 +156,7 @@ describe('RegisterUserRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isNotEmpty');
     });
 
-    it('사용자 이름이 빈 문자열이면 유효성 검사에 실패한다.', async () => {
+    it('사용자 이름이 문자열이 아니면 유효성 검사에 실패한다.', async () => {
       // given
       dto.userName = 1 as any;
 

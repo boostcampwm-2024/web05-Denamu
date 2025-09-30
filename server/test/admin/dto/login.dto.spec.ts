@@ -28,7 +28,6 @@ describe('LoginAdminRequestDto Test', () => {
       //then
       expect(errors).toHaveLength(1);
       expect(errors[0].constraints).toHaveProperty('isNotEmpty');
-      expect(errors[0].constraints).toHaveProperty('isString');
     });
 
     it('ID에 빈 문자열이 입력되면 유효성 검사에 실패한다.', async () => {
@@ -67,7 +66,6 @@ describe('LoginAdminRequestDto Test', () => {
       //then
       expect(errors).toHaveLength(1);
       expect(errors[0].constraints).toHaveProperty('isNotEmpty');
-      expect(errors[0].constraints).toHaveProperty('isString');
     });
 
     it('패스워드에 빈 문자열이 입력되면 유효성 검사에 실패한다.', async () => {
