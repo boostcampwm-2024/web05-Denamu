@@ -30,7 +30,7 @@ jobs:
         run: npm ci
 
       # 4. DTO 테스트 실행
-      - name: Run Integration Test
+      - name: Run DTO Test
         working-directory: ./server
         run: npm run test:dto
 
