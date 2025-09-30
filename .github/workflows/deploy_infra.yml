@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - ../../docker-compose/docker-compose.prod.yml
+      - docker-compose/docker-compose.prod*.yml
   workflow_dispatch:
 
 jobs:
