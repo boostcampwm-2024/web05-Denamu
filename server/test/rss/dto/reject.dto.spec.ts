@@ -10,7 +10,7 @@ describe('RejectRssRequestDto Test', () => {
     });
   });
 
-  it('거절 사유가 문자열로 작성되어 있을 경우 유효성 검사를 통과한다.', async () => {
+  it('거절 사유가 문자열일 경우 유효성 검사에 성공한다.', async () => {
     // when
     const errors = await validate(dto);
 
@@ -19,7 +19,7 @@ describe('RejectRssRequestDto Test', () => {
   });
 
   describe('description', () => {
-    it('거절 사유가 비어있다.', async () => {
+    it('거절 사유가 없을 경우 유효성 검사에 실패한다.', async () => {
       // given
       dto.description = null;
 
@@ -31,7 +31,7 @@ describe('RejectRssRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isNotEmpty');
     });
 
-    it('거절 사유가 빈 문자열이다.', async () => {
+    it('거절 사유가 빈 문자열일 경우 유효성 검사에 실패한다.', async () => {
       // given
       dto.description = '';
 
@@ -43,7 +43,7 @@ describe('RejectRssRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isNotEmpty');
     });
 
-    it('거절 사유가 문자열이 아니다.', async () => {
+    it('거절 사유가 문자열이 아니고 정수일 경우 유효성 검사에 실패한다.', async () => {
       // given
       dto.description = 1 as any;
 

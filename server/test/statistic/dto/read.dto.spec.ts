@@ -10,7 +10,7 @@ describe('ReadStatisticRequestDto Test', () => {
     });
   });
 
-  it('통계 결과의 개수가 1 이상의 정수일 경우 유효성 검사를 통과한다.', async () => {
+  it('통계 결과 개수가 1 이상의 정수일 경우 유효성 검사를 통과한다.', async () => {
     // when
     const errors = await validate(dto);
 
@@ -19,7 +19,7 @@ describe('ReadStatisticRequestDto Test', () => {
   });
 
   describe('limit', () => {
-    it('1보다 작은 수를 입력한다.', async () => {
+    it('통계 결과 개수가 1 미만의 정수일 경우 유효성 검사에 실패한다.', async () => {
       // given
       dto.limit = -1;
 
@@ -31,7 +31,7 @@ describe('ReadStatisticRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('min');
     });
 
-    it('실수를 입력한다.', async () => {
+    it('통계 결과 개수가 정수가 아닌 실수일 경우 유효성 검사에 실패한다.', async () => {
       // given
       dto.limit = 1.1;
 
@@ -43,7 +43,7 @@ describe('ReadStatisticRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isInt');
     });
 
-    it('문자열을 입력한다.', async () => {
+    it('통계 결과 개수가 정수가 아닌 문자열일 경우 유효성 검사에 실패한다.', async () => {
       // given
       dto.limit = 'test' as any;
 

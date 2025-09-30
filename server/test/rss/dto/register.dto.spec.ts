@@ -13,7 +13,7 @@ describe('RegisterRssRequestDto Test', () => {
     });
   });
 
-  it('RSS 신청 정보가 올바를 경우 유효성 검사를 통과한다.', async () => {
+  it('RSS 신청 정보가 모두 유효할 경우 유효성 검사에 성공한다.', async () => {
     // when
     const errors = await validate(dto);
 
@@ -22,7 +22,7 @@ describe('RegisterRssRequestDto Test', () => {
   });
 
   describe('blog', () => {
-    it('블로그 이름이 없다.', async () => {
+    it('블로그 이름이 없을 경우 유효성 검사에 실패한다.', async () => {
       // given
       dto.blog = null;
 
@@ -34,7 +34,7 @@ describe('RegisterRssRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isString');
     });
 
-    it('블로그 이름이 빈 문자열이다.', async () => {
+    it('블로그 이름이 빈 문자열일 경우 유효성 검사에 실패한다.', async () => {
       // given
       dto.blog = '';
 
@@ -46,7 +46,7 @@ describe('RegisterRssRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isNotEmpty');
     });
 
-    it('블로그 이름이 문자열이 아니다.', async () => {
+    it('블로그 이름이 문자열이 아니고 정수일 경우 유효성 검사에 실패한다.', async () => {
       // given
       dto.blog = 1 as any;
 
@@ -60,7 +60,7 @@ describe('RegisterRssRequestDto Test', () => {
   });
 
   describe('name', () => {
-    it('실명이 없다.', async () => {
+    it('신청자 이름이 없을 경우 유효성 검사에 실패한다.', async () => {
       // given
       dto.name = null;
 
@@ -72,7 +72,7 @@ describe('RegisterRssRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isString');
     });
 
-    it('실명이 빈 문자열이다.', async () => {
+    it('신청자 이름이 빈 문자열일 경우 유효성 검사에 실패한다.', async () => {
       // given
       dto.name = '';
 
@@ -84,7 +84,7 @@ describe('RegisterRssRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isNotEmpty');
     });
 
-    it('실명이 문자열이 아니다.', async () => {
+    it('신청자 이름이 문자열이 아니고 정수일 경우 유효성 검사에 실패한다.', async () => {
       // given
       dto.name = 1 as any;
 
@@ -96,7 +96,7 @@ describe('RegisterRssRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isString');
     });
 
-    it('실명의 길이가 2자리보다 작다.', async () => {
+    it('신청자 이름의 문자열 길이가 2 미만일 경우 유효성 검사에 실패한다.', async () => {
       // given
       dto.name = 'a'.repeat(1);
 
@@ -108,7 +108,7 @@ describe('RegisterRssRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isLength');
     });
 
-    it('실명의 길이가 50자리보다 크다.', async () => {
+    it('신청자 이름의 문자열 길이가 50 초과일 경우 유효성 검사에 실패한다.', async () => {
       // given
       dto.name = 'a'.repeat(60);
 
@@ -122,7 +122,7 @@ describe('RegisterRssRequestDto Test', () => {
   });
 
   describe('email', () => {
-    it('이메일이 없다.', async () => {
+    it('이메일이 없을 경우 유효성 검사에 실패한다.', async () => {
       // given
       dto.email = null;
 
@@ -134,7 +134,7 @@ describe('RegisterRssRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isEmail');
     });
 
-    it('이메일이 빈 문자열이다.', async () => {
+    it('이메일이 빈 문자열일 경우 유효성 검사에 실패한다.', async () => {
       // given
       dto.email = '';
 
@@ -146,7 +146,7 @@ describe('RegisterRssRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isEmail');
     });
 
-    it('이메일 형식이 올바르지 않다.', async () => {
+    it('이메일이 유효하지 않을 경우 유효성 검사에 실패한다.', async () => {
       // given
       dto.email = 'test';
 
@@ -160,7 +160,7 @@ describe('RegisterRssRequestDto Test', () => {
   });
 
   describe('rssUrl', () => {
-    it('RSS URL이 없다.', async () => {
+    it('RSS 주소가 없을 경우 유효성 검사에 실패한다.', async () => {
       // given
       dto.rssUrl = null;
 
@@ -172,7 +172,7 @@ describe('RegisterRssRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isUrl');
     });
 
-    it('RSS URL이 빈 문자열이다.', async () => {
+    it('RSS 주소가 빈 문자열일 경우 유효성 검사에 실패한다.', async () => {
       // given
       dto.rssUrl = '';
 
@@ -184,7 +184,7 @@ describe('RegisterRssRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isUrl');
     });
 
-    it('RSS URL 형식이 잘못되었다.', async () => {
+    it('RSS 주소가 유효하지 않을 경우 유효성 검사에 실패한다.', async () => {
       // given
       dto.rssUrl = 'http://test';
 
@@ -196,7 +196,7 @@ describe('RegisterRssRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isUrl');
     });
 
-    it('http, https 프로토콜을 제외한 다른 프로토콜을 입력한다.', async () => {
+    it('RSS 주소가 HTTP, HTTPS 프로토콜이 아닐 경우 유효성 검사에 실패한다.', async () => {
       // given
       dto.rssUrl = 'ftp://test.com';
 

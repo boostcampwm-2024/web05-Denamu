@@ -9,7 +9,7 @@ describe('LoginAdminRequestDto Test', () => {
     dto = new LoginAdminRequestDto(AdminFixture.createAdminFixture());
   });
 
-  it('ID와 패스워드가 있을 경우 유효성 검사에 성공한다.', async () => {
+  it('ID와 패스워드가 문자열일 경우 유효성 검사에 성공한다.', async () => {
     //when
     const errors = await validate(dto);
 
@@ -18,7 +18,7 @@ describe('LoginAdminRequestDto Test', () => {
   });
 
   describe('loginId', () => {
-    it('ID에 null이 입력되면 유효성 검사에 실패한다.', async () => {
+    it('로그인 ID가 없을 경우 유효성 검사에 실패한다.', async () => {
       //given
       dto.loginId = null;
 
@@ -30,7 +30,7 @@ describe('LoginAdminRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isNotEmpty');
     });
 
-    it('ID에 빈 문자열이 입력되면 유효성 검사에 실패한다.', async () => {
+    it('로그인 ID가 빈 문자열일 경우 유효성 검사에 실패한다.', async () => {
       //given
       dto.loginId = '';
 
@@ -42,7 +42,7 @@ describe('LoginAdminRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isNotEmpty');
     });
 
-    it('ID에 문자열이 아닌 값이 입력되면 유효성 검사에 실패한다.', async () => {
+    it('로그인 ID가 문자열이 아니고 정수일 경우 유효성 검사에 실패한다.', async () => {
       //given
       dto.loginId = 1 as any;
 
@@ -56,7 +56,7 @@ describe('LoginAdminRequestDto Test', () => {
   });
 
   describe('password', () => {
-    it('패스워드에 null이 입력되면 유효성 검사에 실패한다.', async () => {
+    it('패스워드가 없을 경우 유효성 검사에 실패한다.', async () => {
       //given
       dto.password = null;
 
@@ -68,7 +68,7 @@ describe('LoginAdminRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isNotEmpty');
     });
 
-    it('패스워드에 빈 문자열이 입력되면 유효성 검사에 실패한다.', async () => {
+    it('패스워드가 빈 문자열일 경우 유효성 검사에 실패한다.', async () => {
       //given
       dto.password = '';
 
@@ -80,7 +80,7 @@ describe('LoginAdminRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isNotEmpty');
     });
 
-    it('패스워드에 문자열이 아닌 값이 입력되면 유효성 검사에 실패한다.', async () => {
+    it('패스워드가 문자열이 아니고 정수일 경우 유효성 검사에 실패한다.', async () => {
       //given
       dto.password = 1 as any;
 

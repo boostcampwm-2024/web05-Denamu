@@ -10,7 +10,7 @@ describe('DeleteCommentRequestDto Test', () => {
     });
   });
 
-  it('댓글 아이디가 1보다 큰 정수일 경우 유효성 검사에 성공한다.', async () => {
+  it('댓글 ID가 1 이상의 정수일 경우 유효성 검사에 성공한다.', async () => {
     // when
     const errors = await validate(dto);
 
@@ -19,7 +19,7 @@ describe('DeleteCommentRequestDto Test', () => {
   });
 
   describe('commentId', () => {
-    it('댓글 아이디가 비어있다면 유효성 검사에 실패한다.', async () => {
+    it('댓글 ID가 없을 경우 유효성 검사에 실패한다.', async () => {
       // given
       dto.commentId = null;
 
@@ -31,7 +31,7 @@ describe('DeleteCommentRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isInt');
     });
 
-    it('댓글 아이디가 정수가 아닐 경우 유효성 검사에 실패한다.', async () => {
+    it('댓글 ID가 정수가 아니고 문자열일 경우 유효성 검사에 실패한다.', async () => {
       // given
       dto.commentId = 'test' as any;
 
@@ -43,7 +43,7 @@ describe('DeleteCommentRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isInt');
     });
 
-    it('댓글 아이디가 1보다 작은 수일 경우 유효성 검사에 실패한다.', async () => {
+    it('댓글 ID가 1 미만의 정수일 경우 유효성 검사에 실패한다.', async () => {
       // given
       dto.commentId = 0;
 

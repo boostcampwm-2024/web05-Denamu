@@ -8,7 +8,7 @@ describe('DeleteFileRequestDto Test', () => {
     dto = new DeleteFileRequestDto({ id: 1 });
   });
 
-  it('id가 정수이고 1 이상일 경우 테스트를 통과한다.', async () => {
+  it('파일 ID가 1 이상의 정수일 경우 유효성 검사에 성공한다.', async () => {
     // when
     const errors = await validate(dto);
 
@@ -17,7 +17,7 @@ describe('DeleteFileRequestDto Test', () => {
   });
 
   describe('id', () => {
-    it('id가 비어있으면 유효성 검사에 실패한다.', async () => {
+    it('파일 ID가 없을 경우 유효성 검사에 실패한다.', async () => {
       // given
       dto.id = null;
 
@@ -29,7 +29,7 @@ describe('DeleteFileRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isInt');
     });
 
-    it('id가 1보다 작을 경우 유효성 검사에 실패한다.', async () => {
+    it('파일 ID가 1 미만의 정수일 경우 유효성 검사에 실패한다.', async () => {
       // given
       dto.id = 0;
 

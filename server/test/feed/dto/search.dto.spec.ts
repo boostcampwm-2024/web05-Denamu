@@ -25,7 +25,7 @@ describe('SearchFeedRequestDto Test', () => {
   });
 
   describe('find', () => {
-    it('검색어를 입력하지 않는다.', async () => {
+    it('검색어가 없을 경우 유효성 검사에 실패한다.', async () => {
       //given
       dto.find = null;
 
@@ -37,7 +37,7 @@ describe('SearchFeedRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isNotEmpty');
     });
 
-    it('검색어에 빈 문자열을 입력할 경우 유효성 검사에 실패한다.', async () => {
+    it('검색어가 빈 문자열일 경우 유효성 검사에 실패한다.', async () => {
       //given
       dto.find = '';
 
@@ -49,7 +49,7 @@ describe('SearchFeedRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isNotEmpty');
     });
 
-    it('검색어에 문자열이 아닌 값을 입력할 경우 유효성 검사에 실패한다.', async () => {
+    it('검색어가 문자열이 아니고 정수일 경우 유효성 검사에 실패한다.', async () => {
       //given
       dto.find = 1 as any;
 
@@ -63,7 +63,7 @@ describe('SearchFeedRequestDto Test', () => {
   });
 
   describe('type', () => {
-    it('검색 타입을 입력하지 않는다.', async () => {
+    it('검색 타입이 없을 경우 유효성 검사에 실패한다.', async () => {
       //given
       dto.type = null;
 
@@ -75,7 +75,7 @@ describe('SearchFeedRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isNotEmpty');
     });
 
-    it('검색 타입에 빈 문자열을 입력한다.', async () => {
+    it('검색 타입이 빈 문자열일 경우 유효성 검사에 실패한다.', async () => {
       //given
       dto.type = '' as any;
 
@@ -87,7 +87,7 @@ describe('SearchFeedRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isNotEmpty');
     });
 
-    it('검색 타입을 잘 못된 입력을 한다.', async () => {
+    it('검색 타입이 잘못된 입력일 경우 유효성 검사에 실패한다.', async () => {
       //given
       dto.type = 'test' as any;
 
@@ -101,7 +101,7 @@ describe('SearchFeedRequestDto Test', () => {
   });
 
   describe('page', () => {
-    it('페이지 번호를 정수가 아닌 문자열로 입력한다.', async () => {
+    it('페이지 번호가 정수가 아니고 문자열일 경우 유효성 검사에 실패한다.', async () => {
       //given
       dto.page = 'abcdefg' as any;
 
@@ -113,7 +113,7 @@ describe('SearchFeedRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isInt');
     });
 
-    it('페이지 번호를 정수가 아닌 실수로 입력한다.', async () => {
+    it('페이지 번호가 1 이상의 실수일 경우 유효성 검사에 실패한다.', async () => {
       //given
       dto.page = 1.1;
 
@@ -125,9 +125,9 @@ describe('SearchFeedRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isInt');
     });
 
-    it('페이지 번호를 양수가 아닌 음수로 입력한다.', async () => {
+    it('페이지 번호가 1 미만의 정수일 경우 유효성 검사에 실패한다.', async () => {
       //given
-      dto.page = -1;
+      dto.page = 0;
 
       //when
       const errors = await validate(dto);
@@ -139,7 +139,7 @@ describe('SearchFeedRequestDto Test', () => {
   });
 
   describe('limit', () => {
-    it('limit를 정수가 아닌 문자열로 입력한다.', async () => {
+    it('검색 결과 개수 제한이 정수가 아니고 문자열일 경우 유효성 검사에 실패한다.', async () => {
       //given
       dto.limit = 'test' as any;
 
@@ -151,7 +151,7 @@ describe('SearchFeedRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isInt');
     });
 
-    it('limit를 정수가 아닌 실수로 입력한다.', async () => {
+    it('검색 결과 개수 제한이 정수가 아니고 실수일 경우 유효성 검사에 실패한다.', async () => {
       //given
       dto.limit = 1.1;
 
@@ -163,9 +163,9 @@ describe('SearchFeedRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isInt');
     });
 
-    it('limit를 양수가 아닌 음수로 입력한다.', async () => {
+    it('검색 결과 개수 제한이 1 미만의 정수일 경우 유효성 검사에 실패한다.', async () => {
       //given
-      dto.limit = -1;
+      dto.limit = 0;
 
       //when
       const errors = await validate(dto);

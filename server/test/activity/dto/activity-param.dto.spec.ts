@@ -10,7 +10,7 @@ describe('ReadActivityParamRequestDto Test', () => {
     });
   });
 
-  it('정상적인 userId로 유효성 검사를 통과한다.', async () => {
+  it('유저 ID가 1보다 큰 정수일 경우 유효성 검사에 성공한다.', async () => {
     // when
     const errors = await validate(dto);
 
@@ -19,7 +19,7 @@ describe('ReadActivityParamRequestDto Test', () => {
   });
 
   describe('userId', () => {
-    it('userId가 정수가 아닌 문자열이면 유효성 검사에 실패한다.', async () => {
+    it('유저 ID가 정수가 아니고 문자열일 경우 유효성 검사에 실패한다.', async () => {
       // given
       dto.userId = 'invalid' as any;
 
@@ -31,7 +31,7 @@ describe('ReadActivityParamRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isInt');
     });
 
-    it('userId가 정수가 아닌 실수이면 유효성 검사에 실패한다.', async () => {
+    it('유저 ID가 정수가 아니고 실수일 경우 유효성 검사에 실패한다.', async () => {
       // given
       dto.userId = 1.5;
 
@@ -43,7 +43,7 @@ describe('ReadActivityParamRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isInt');
     });
 
-    it('userId가 1보다 작으면 유효성 검사에 실패한다.', async () => {
+    it('유저 ID가 1 미만일 경우 유효성 검사에 실패한다.', async () => {
       // given
       dto.userId = 0;
 
@@ -55,7 +55,7 @@ describe('ReadActivityParamRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('min');
     });
 
-    it('userId가 음수이면 유효성 검사에 실패한다.', async () => {
+    it('유저 ID가 음수일 경우 유효성 검사에 실패한다.', async () => {
       // given
       dto.userId = -1;
 

@@ -9,7 +9,7 @@ describe('RegisterAdminRequestDto Test', () => {
     dto = new RegisterAdminRequestDto(AdminFixture.createAdminFixture());
   });
 
-  it('ID와 패스워드가 올바르게 있을 경우 유효성 검사에 성공한다.', async () => {
+  it('ID와 패스워드가 정책에 부합할 경우 유효성 검사에 성공한다.', async () => {
     // when
     const errors = await validate(dto);
 
@@ -18,7 +18,7 @@ describe('RegisterAdminRequestDto Test', () => {
   });
 
   describe('loginId', () => {
-    it('ID의 길이가 6 이상이 아니라면 유효성 검사에 실패한다.', async () => {
+    it('ID의 길이가 6 미만일 경우 유효성 검사에 실패한다.', async () => {
       //given
       dto.loginId = 'test';
 
@@ -30,7 +30,7 @@ describe('RegisterAdminRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isLength');
     });
 
-    it('ID의 길이가 255 이하가 아니라면 유효성 검사에 실패한다.', async () => {
+    it('ID의 길이가 255 초과일 경우 유효성 검사에 실패한다.', async () => {
       //given
       dto.loginId = 'a'.repeat(256);
 
@@ -42,7 +42,7 @@ describe('RegisterAdminRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isLength');
     });
 
-    it('ID에 null이 입력되면 유효성 검사에 실패한다.', async () => {
+    it('ID가 없을 경우 유효성 검사에 실패한다.', async () => {
       //given
       dto.loginId = null;
 
@@ -54,7 +54,7 @@ describe('RegisterAdminRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isNotEmpty');
     });
 
-    it('ID에 빈 문자열이 입력되면 유효성 검사에 실패한다.', async () => {
+    it('ID가 빈 문자열일 경우 유효성 검사에 실패한다.', async () => {
       //given
       dto.loginId = '';
 
@@ -66,7 +66,7 @@ describe('RegisterAdminRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isNotEmpty');
     });
 
-    it('ID에 문자열이 아닌 값이 입력되면 유효성 검사에 실패한다.', async () => {
+    it('ID가 문자열이 아니고 정수일 경우 유효성 검사에 실패한다.', async () => {
       //given
       dto.loginId = 1 as any;
 
@@ -80,7 +80,7 @@ describe('RegisterAdminRequestDto Test', () => {
   });
 
   describe('password', () => {
-    it('패스워드의 길이가 6 이상이 아니라면 유효성 검사에 실패한다.', async () => {
+    it('패스워드 길이가 6 미만일 경우 유효성 검사에 실패한다.', async () => {
       //given
       dto.password = 'a'.repeat(5);
 
@@ -92,7 +92,7 @@ describe('RegisterAdminRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isLength');
     });
 
-    it('패스워드의 길이가 6 이상, 60 이하가 아니라면 유효성 검사에 실패한다.', async () => {
+    it('패스워드 길이가 61 초과일 경우 유효성 검사에 실패한다.', async () => {
       //given
       dto.password = 'a'.repeat(61);
 
@@ -104,7 +104,7 @@ describe('RegisterAdminRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isLength');
     });
 
-    it('패스워드에 특수문자가 하나 이상 없다면 유효성 검사에 실패한다.', async () => {
+    it('패스워드에 특수문자가 하나 이상 없을 경우 유효성 검사에 실패한다.', async () => {
       //given
       dto.password = 'testAdminPassword';
 
@@ -116,7 +116,7 @@ describe('RegisterAdminRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('matches');
     });
 
-    it('패스워드에 null이 입력되면 유효성 검사에 실패한다.', async () => {
+    it('패스워드가 없을 경우 유효성 검사에 실패한다.', async () => {
       //given
       dto.password = null;
 
@@ -128,7 +128,7 @@ describe('RegisterAdminRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isNotEmpty');
     });
 
-    it('패스워드에 빈 문자열이 입력되면 유효성 검사에 실패한다.', async () => {
+    it('패스워드가 빈 문자열일 경우 유효성 검사에 실패한다.', async () => {
       //given
       dto.password = '';
 
