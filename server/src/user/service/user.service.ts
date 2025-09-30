@@ -193,7 +193,7 @@ export class UserService {
     await this.userRepository.save(user);
   }
 
-  async requestPasswordReset(email: string) {
+  async forgotPassword(email: string) {
     const user = await this.userRepository.findOne({
       where: { email: email },
     });

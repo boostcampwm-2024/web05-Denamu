@@ -30,7 +30,7 @@ import { UpdateUserRequestDto } from '../dto/request/updateUser.dto';
 import { ApiUpdateUser } from '../api-docs/updateUser.api-docs';
 import { PasswordResetRequestDto } from '../dto/request/passwordReset.dto';
 import { ForgotPasswordRequestDto } from '../dto/request/forgotPassword.dto';
-import { ApiRequestPasswordReset } from '../api-docs/requestPasswordReset.api-docs';
+import { ApiForgotPassword } from '../api-docs/forgotPassword.api-docs';
 import { ApiResetPassword } from '../api-docs/resetPassword.api-docs';
 
 @ApiTags('User')
@@ -118,13 +118,11 @@ export class UserController {
     );
   }
 
-  @ApiRequestPasswordReset()
+  @ApiForgotPassword()
   @Post('/password-reset')
   @HttpCode(HttpStatus.OK)
-  async requestPasswordReset(
-    @Body() forgotPasswordDto: ForgotPasswordRequestDto,
-  ) {
-    await this.userService.requestPasswordReset(forgotPasswordDto.email);
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordRequestDto) {
+    await this.userService.forgotPassword(forgotPasswordDto.email);
     return ApiResponse.responseWithNoContent(
       '비밀번호 재설정 링크를 이메일로 발송했습니다.',
     );

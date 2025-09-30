@@ -1,7 +1,7 @@
 import { applyDecorators } from '@nestjs/common';
 import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 
-export function ApiRequestPasswordReset() {
+export function ApiForgotPassword() {
   return applyDecorators(
     ApiOperation({
       summary: '비밀번호 변경 요청 API',
