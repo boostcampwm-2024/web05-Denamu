@@ -38,9 +38,6 @@ export class RegisterRssRequestDto {
       message: '이메일 주소 형식에 맞춰서 작성해주세요.',
     },
   )
-  @IsNotEmpty({
-    message: '이메일이 없습니다.',
-  })
   email: string;
 
   @ApiProperty({
@@ -56,9 +53,6 @@ export class RegisterRssRequestDto {
       message: 'http, https 프로토콜과 URL 형식을 맞춰주세요.',
     },
   )
-  @IsNotEmpty({
-    message: 'RSS URL이 없습니다.',
-  })
   rssUrl: string;
 
   constructor(partial: Partial<RegisterRssRequestDto>) {

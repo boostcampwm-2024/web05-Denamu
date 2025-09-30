@@ -8,11 +8,10 @@ export class CheckEmailDuplicationRequestDto {
     description: '중복 확인할 이메일을 입력해주세요.',
   })
   @IsEmail({}, { message: '이메일 형식이 아닙니다.' })
-  @IsNotEmpty({ message: '이메일을 입력해주세요.' })
   @Type(() => String)
   email: string;
 
-  constructor(email: string) {
-    this.email = email;
+  constructor(partial: Partial<CheckEmailDuplicationRequestDto>) {
+    Object.assign(this, partial);
   }
 }
