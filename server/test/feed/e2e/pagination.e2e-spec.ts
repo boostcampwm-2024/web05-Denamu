@@ -3,10 +3,10 @@ import * as request from 'supertest';
 import { FeedFixture } from '../../fixture/feed.fixture';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
-import { RssAcceptFixture } from '../../fixture/rssAccept.fixture';
+import { RssAcceptFixture } from '../../fixture/rss-accept.fixture';
 import { ReadFeedPaginationRequestDto } from '../../../src/feed/dto/request/readFeedPagination.dto';
 
-describe('GET api/feed E2E Test', () => {
+describe('GET /api/feed?limit={}&lastId={} E2E Test', () => {
   let app: INestApplication;
   const latestId = 20;
 

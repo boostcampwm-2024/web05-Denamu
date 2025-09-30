@@ -3,7 +3,7 @@ import * as request from 'supertest';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../fixture/user.fixture';
 
-describe('GET api/user/email-check E2E Test', () => {
+describe('GET /api/user/email-check E2E Test', () => {
   let app: INestApplication;
 
   beforeAll(async () => {

@@ -5,7 +5,7 @@ import { LoginAdminRequestDto } from '../../../src/admin/dto/request/loginAdmin.
 import { AdminRepository } from '../../../src/admin/repository/admin.repository';
 import { AdminFixture } from '../../fixture/admin.fixture';
 
-describe('GET api/admin/sessionId E2E Test', () => {
+describe('GET /api/admin/sessionId E2E Test', () => {
   let app: INestApplication;
 
   beforeAll(async () => {

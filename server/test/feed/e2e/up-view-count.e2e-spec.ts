@@ -5,7 +5,7 @@ import { RedisService } from '../../../src/common/redis/redis.service';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
 import { FeedFixture } from '../../fixture/feed.fixture';
-import { RssAcceptFixture } from '../../fixture/rssAccept.fixture';
+import { RssAcceptFixture } from '../../fixture/rss-accept.fixture';
 
 describe('POST /api/feed/{feedId} E2E Test', () => {
   let app: INestApplication;

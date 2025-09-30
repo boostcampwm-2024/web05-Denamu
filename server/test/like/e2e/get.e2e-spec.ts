@@ -4,7 +4,7 @@ import { UserRepository } from '../../../src/user/repository/user.repository';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
 import { UserFixture } from '../../fixture/user.fixture';
-import { RssAcceptFixture } from '../../fixture/rssAccept.fixture';
+import { RssAcceptFixture } from '../../fixture/rss-accept.fixture';
 import { FeedFixture } from '../../fixture/feed.fixture';
 import { RssAccept } from '../../../src/rss/entity/rss.entity';
 import { User } from '../../../src/user/entity/user.entity';
