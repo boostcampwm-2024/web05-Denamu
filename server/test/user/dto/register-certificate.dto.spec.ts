@@ -8,7 +8,7 @@ describe('CertificateUserRequestDto Test', () => {
     dto = new CertificateUserRequestDto({ uuid: 'test' });
   });
 
-  it('uuid가 문자열일 경우 유효성 검사를 통과한다.', async () => {
+  it('인증 코드가 유효할 경우 유효성 검사에 성공한다.', async () => {
     // when
     const errors = await validate(dto);
 
@@ -17,7 +17,7 @@ describe('CertificateUserRequestDto Test', () => {
   });
 
   describe('uuid', () => {
-    it('uuid가 비어있으면 유효성 검사에 실패한다.', async () => {
+    it('인증 코드가 빈 문자열일 경우 유효성 검사에 실패한다.', async () => {
       // given
       dto.uuid = '';
 
@@ -29,7 +29,7 @@ describe('CertificateUserRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isNotEmpty');
     });
 
-    it('uuid가 문자열이 아닐 경우 유효성 검사에 실패한다.', async () => {
+    it('인증 코드가 문자열이 아니고 정수일 경우 유효성 검사에 실패한다.', async () => {
       // given
       dto.uuid = 1 as any;
 

@@ -10,7 +10,7 @@ describe('ManageRssRequestDto Test', () => {
     });
   });
 
-  it('RSS ID가 1 이상이며 정수일 경우 유효성 검사를 통과한다.', async () => {
+  it('RSS ID가 1 이상의 정수일 경우 유효성 검사에 성공한다.', async () => {
     // when
     const errors = await validate(dto);
 
@@ -19,7 +19,7 @@ describe('ManageRssRequestDto Test', () => {
   });
 
   describe('id', () => {
-    it('Rss관리 API의 PathVariable이 정수가 아닐 경우', async () => {
+    it('RSS ID가 정수가 아니고 문자열일 경우 유효성 검사에 실패한다.', async () => {
       // given
       dto.id = 'abc' as any;
 
@@ -31,7 +31,7 @@ describe('ManageRssRequestDto Test', () => {
       expect(errors[0].constraints).toHaveProperty('isInt');
     });
 
-    it('Rss관리 API의 PathVariable이 1보다 작을 경우', async () => {
+    it('RSS ID가 1 미만의 정수일 경우 유효성 검사에 실패한다.', async () => {
       // given
       dto.id = 0;
 

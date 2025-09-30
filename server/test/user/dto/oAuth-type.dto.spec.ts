@@ -11,7 +11,7 @@ describe('OAuthTypeRequest Test', () => {
     });
   });
 
-  it('type이 OAuthType에 적합할 경우 유효성 검사에 성공한다.', async () => {
+  it('OAuth 타입이 서비스에서 제공하는 타입에 포함될 경우 유효성 검사에 성공한다.', async () => {
     // when
     const errors = await validate(dto);
 
@@ -20,7 +20,7 @@ describe('OAuthTypeRequest Test', () => {
   });
 
   describe('type', () => {
-    it('type이 OAuthType이 아닐 경우 유효성 검사에 실패한다.', async () => {
+    it('OAuth 타입이 서비스에서 제공하는 타입이 아닐 경우 유효성 검사에 실패한다.', async () => {
       // given
       dto.type = 'test' as any;
 
@@ -32,7 +32,7 @@ describe('OAuthTypeRequest Test', () => {
       expect(errors[0].constraints).toHaveProperty('isEnum');
     });
 
-    it('type이 없으면 유효성 검사에 실패한다.', async () => {
+    it('OAuth 타입이 없을 경우 유효성 검사에 실패한다.', async () => {
       // given
       dto.type = null;
 
