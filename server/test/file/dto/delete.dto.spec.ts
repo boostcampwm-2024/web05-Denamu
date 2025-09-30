@@ -8,7 +8,7 @@ describe('DeleteFileRequestDto Test', () => {
     dto = new DeleteFileRequestDto({ id: 1 });
   });
 
-  it('id가 정수이고 1 이상일 경우 테스트를 통과한다..', async () => {
+  it('id가 정수이고 1 이상일 경우 테스트를 통과한다.', async () => {
     // when
     const errors = await validate(dto);
 
