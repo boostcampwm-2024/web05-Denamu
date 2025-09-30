@@ -5,7 +5,7 @@ import { RedisService } from '../../../src/common/redis/redis.service';
 import { UserFixture } from '../../fixture/user.fixture';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 
-describe('POST api/user/certificate E2E Test', () => {
+describe('POST /api/user/certificate E2E Test', () => {
   let app: INestApplication;
   let redisService: RedisService;
   let userRepository: UserRepository;

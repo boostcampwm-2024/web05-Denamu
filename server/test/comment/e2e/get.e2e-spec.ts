@@ -3,7 +3,7 @@ import * as request from 'supertest';
 import { Feed } from '../../../src/feed/entity/feed.entity';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
-import { RssAcceptFixture } from '../../fixture/rssAccept.fixture';
+import { RssAcceptFixture } from '../../fixture/rss-accept.fixture';
 import { FeedFixture } from '../../fixture/feed.fixture';
 import { GetCommentRequestDto } from '../../../src/comment/dto/request/getComment.dto';
 

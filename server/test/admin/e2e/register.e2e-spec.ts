@@ -5,7 +5,7 @@ import * as request from 'supertest';
 import { AdminFixture } from '../../fixture/admin.fixture';
 import { AdminRepository } from '../../../src/admin/repository/admin.repository';
 
-describe('POST api/admin/register E2E Test', () => {
+describe('POST /api/admin/register E2E Test', () => {
   let app: INestApplication;
   const loginAdminDto = new LoginAdminRequestDto({
     loginId: 'test1234',

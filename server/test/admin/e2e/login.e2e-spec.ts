@@ -4,7 +4,7 @@ import { LoginAdminRequestDto } from '../../../src/admin/dto/request/loginAdmin.
 import * as request from 'supertest';
 import { AdminRepository } from '../../../src/admin/repository/admin.repository';
 
-describe('POST api/admin/login E2E Test', () => {
+describe('POST /api/admin/login E2E Test', () => {
   let app: INestApplication;
 
   beforeAll(async () => {

@@ -10,7 +10,7 @@ import { CommentRepository } from '../../../src/comment/repository/comment.repos
 import { CommentFixture } from '../../fixture/comment.fixture';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
 import { FeedFixture } from '../../fixture/feed.fixture';
-import { RssAcceptFixture } from '../../fixture/rssAccept.fixture';
+import { RssAcceptFixture } from '../../fixture/rss-accept.fixture';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
 
 describe('DELETE /api/comment E2E Test', () => {

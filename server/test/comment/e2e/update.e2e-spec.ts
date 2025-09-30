@@ -7,7 +7,7 @@ import { User } from '../../../src/user/entity/user.entity';
 import { Comment } from '../../../src/comment/entity/comment.entity';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
 import { CommentRepository } from '../../../src/comment/repository/comment.repository';
-import { RssAcceptFixture } from '../../fixture/rssAccept.fixture';
+import { RssAcceptFixture } from '../../fixture/rss-accept.fixture';
 import { FeedFixture } from '../../fixture/feed.fixture';
 import { CommentFixture } from '../../fixture/comment.fixture';
 import { UpdateCommentRequestDto } from '../../../src/comment/dto/request/updateComment.dto';

@@ -8,7 +8,7 @@ import { CreateCommentRequestDto } from '../../../src/comment/dto/request/create
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
 import { Feed } from '../../../src/feed/entity/feed.entity';
 import { FeedFixture } from '../../fixture/feed.fixture';
-import { RssAcceptFixture } from '../../fixture/rssAccept.fixture';
+import { RssAcceptFixture } from '../../fixture/rss-accept.fixture';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
 
 describe('POST /api/comment E2E Test', () => {

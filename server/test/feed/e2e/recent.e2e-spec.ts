@@ -2,7 +2,7 @@ import * as request from 'supertest';
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { Feed } from '../../../src/feed/entity/feed.entity';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
-import { RssAcceptFixture } from '../../fixture/rssAccept.fixture';
+import { RssAcceptFixture } from '../../fixture/rss-accept.fixture';
 import { FeedFixture } from '../../fixture/feed.fixture';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
 import { RedisService } from '../../../src/common/redis/redis.service';

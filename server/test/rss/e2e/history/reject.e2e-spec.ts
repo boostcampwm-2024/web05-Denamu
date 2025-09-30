@@ -3,7 +3,7 @@ import * as request from 'supertest';
 import { RedisService } from '../../../../src/common/redis/redis.service';
 import { RssRejectRepository } from '../../../../src/rss/repository/rss.repository';
 import { RssReject } from '../../../../src/rss/entity/rss.entity';
-import { RssRejectFixture } from '../../../fixture/rssReject.fixture';
+import { RssRejectFixture } from '../../../fixture/rss-reject.fixture';
 
 describe('GET /api/rss/history/reject E2E Test', () => {
   let app: INestApplication;
