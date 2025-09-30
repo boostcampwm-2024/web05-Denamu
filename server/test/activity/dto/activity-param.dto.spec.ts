@@ -10,7 +10,7 @@ describe('ReadActivityParamRequestDto Test', () => {
     });
   });
 
-  it('유저 ID가 1보다 큰 정수일 경우 유효성 검사에 성공한다.', async () => {
+  it('유저 ID가 1 이상의 정수일 경우 유효성 검사에 성공한다.', async () => {
     // when
     const errors = await validate(dto);
 
