@@ -1,5 +1,5 @@
 import { validate } from 'class-validator';
-import { PasswordResetRequestDto } from '../../../src/user/dto/request/passwordReset.dto';
+import { PasswordResetRequestDto } from '../../../src/user/dto/request/resetPassword.dto';
 
 describe('PasswordResetRequestDto Test', () => {
   it('uuid에 빈 문자열을 입력하면 유효성 검사에 실패한다.', async () => {

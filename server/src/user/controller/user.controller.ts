@@ -28,7 +28,7 @@ import { ApiRefreshToken } from '../api-docs/refreshToken.api-docs';
 import { ApiLogoutUser } from '../api-docs/logoutUser.api-docs';
 import { UpdateUserRequestDto } from '../dto/request/updateUser.dto';
 import { ApiUpdateUser } from '../api-docs/updateUser.api-docs';
-import { PasswordResetRequestDto } from '../dto/request/passwordReset.dto';
+import { ResetPasswordRequestDto } from '../dto/request/resetPassword.dto';
 import { ForgotPasswordRequestDto } from '../dto/request/forgotPassword.dto';
 import { ApiForgotPassword } from '../api-docs/forgotPassword.api-docs';
 import { ApiResetPassword } from '../api-docs/resetPassword.api-docs';
@@ -131,10 +131,12 @@ export class UserController {
   @ApiResetPassword()
   @Patch('/password')
   @HttpCode(HttpStatus.OK)
-  async resetPassword(@Body() passwordResetDto: PasswordResetRequestDto) {
+  async resetPassword(
+    @Body() resetPasswordRequestDto: ResetPasswordRequestDto,
+  ) {
     await this.userService.resetPassword(
-      passwordResetDto.uuid,
-      passwordResetDto.password,
+      resetPasswordRequestDto.uuid,
+      resetPasswordRequestDto.password,
     );
     return ApiResponse.responseWithNoContent(
       '비밀번호가 성공적으로 수정되었습니다.',
