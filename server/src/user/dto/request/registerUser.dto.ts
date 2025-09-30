@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, Matches } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, Matches } from 'class-validator';
 import { User } from '../../entity/user.entity';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -13,14 +13,14 @@ export class RegisterUserRequestDto {
       message: '이메일 주소 형식에 맞춰서 작성해주세요.',
     },
   )
-  @IsNotEmpty({
-    message: '이메일이 없습니다.',
-  })
   email: string;
 
   @ApiProperty({
     example: 'example1234!',
     description: '비밀번호를 입력해주세요.',
+  })
+  @IsString({
+    message: '문자열로 입력해주세요.',
   })
   @IsNotEmpty({
     message: '비밀번호가 없습니다.',
@@ -37,6 +37,9 @@ export class RegisterUserRequestDto {
   @ApiProperty({
     example: '홍길동',
     description: '사용자 이름을 입력해주세요.',
+  })
+  @IsString({
+    message: '사용자 이름은 문자열로 입력해주세요.',
   })
   @IsNotEmpty({
     message: '사용자 이름이 없습니다.',
