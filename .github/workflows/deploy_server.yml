@@ -1,0 +1,54 @@
+name: BE Deployment
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "../../server"
+  workflow_dispatch: # 수동 실행을 허용하는 이벤트
+
+jobs:
+  deployment:
+    runs-on: ubuntu-latest
+    steps:
+      # public 서버로 ssh 접속
+      - name: ssh connection
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.CLOUD_PUBLIC_INSTANCE_HOST }}
+          username: ${{ secrets.CLOUD_PUBLIC_INSTANCE_USERNAME }}
+          key: ${{ secrets.CLOUD_PUBLIC_INSTANCE_SSH_KEY }}
+          port: ${{ secrets.CLOUD_PUBLIC_INSTANCE_PORT }}
+          script: |
+            cd /var/web05-Denamu
+            git pull origin main
+            cd /var/web05-Denamu/server
+
+            mkdir -p env
+            echo "PORT=${{ secrets.PRODUCT_PORT }}" > env/.env.prod
+            echo "DB_TYPE=mysql" >> env/.env.prod
+            echo "DB_DATABASE=${{ secrets.PRODUCT_DB_DATABASE }}" >> env/.env.prod
+            echo "DB_HOST=${{ secrets.PRODUCT_DB_HOST }}" >> env/.env.prod
+            echo "DB_PORT=${{ secrets.PRODUCT_DB_PORT }}" >> env/.env.prod
+            echo "DB_USERNAME=${{ secrets.PRODUCT_DB_USERNAME }}" >> env/.env.prod
+            echo "DB_PASSWORD=${{ secrets.PRODUCT_DB_PASSWORD }}" >> env/.env.prod
+            echo "REDIS_HOST=${{secrets.REDIS_HOST }}" >> env/.env.prod
+            echo "REDIS_PORT=${{secrets.REDIS_PORT}}" >> env/.env.prod
+            echo "REDIS_USERNAME=${{secrets.REDIS_USERNAME}}" >> env/.env.prod
+            echo "REDIS_PASSWORD=${{secrets.REDIS_PASSWORD}}" >> env/.env.prod
+            echo "EMAIL_USER=${{secrets.EMAIL_USER}}" >> env/.env.prod
+            echo "EMAIL_PASSWORD=${{secrets.EMAIL_PASSWORD}}" >> env/.env.prod
+            echo "JWT_ACCESS_SECRET=${{secrets.JWT_ACCESS_SECRET}}" >> env/.env.prod
+            echo "JWT_REFRESH_SECRET=${{secrets.JWT_REFRESH_SECRET}}" >> env/.env.prod
+            echo "REFRESH_TOKEN_EXPIRE=${{secrets.REFRESH_TOKEN_EXPIRE}}" >> env/.env.prod
+            echo "ACCESS_TOKEN_EXPIRE=${{secrets.ACCESS_TOKEN_EXPIRE}}" >> env/.env.prod
+            echo "GOOGLE_CLIENT_ID=${{secrets.GOOGLE_CLIENT_ID}}" >> env/.env.prod
+            echo "GOOGLE_CLIENT_SECRET=${{secrets.GOOGLE_CLIENT_SECRET}}" >> env/.env.prod
+            echo "GITHUB_CLIENT_ID=${{secrets.GIT_CLIENT_ID}}" >> env/.env.prod
+            echo "GITHUB_CLIENT_SECRET=${{secrets.GIT_CLIENT_SECRET}}" >> env/.env.prod
+
+            cd /var/web05-Denamu
+            docker-compose -f docker-compose/docker-compose.prod.yml up --build --no-deps --force-recreate -d app
+            docker image prune -f
+            docker builder prune -f
