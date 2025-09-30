@@ -22,7 +22,8 @@ describe('PATCH api/user/password E2E Test', () => {
     const uuid = 'test-reset-password-uuid';
     const redisKey = `${REDIS_KEYS.USER_RESET_PASSWORD_KEY}:${uuid}`;
     const userEntity = UserFixture.createUserFixture();
-    await redisService.set(redisKey, JSON.stringify(userEntity));
+    const savedUser = await userRepository.save(userEntity);
+    await redisService.set(redisKey, JSON.stringify(savedUser.id));
     const updatedPassword = 'test1234@';
 
     // when
