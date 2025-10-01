@@ -1,0 +1,87 @@
+name: Feed-Crawler Deployment
+
+on:
+  push:
+    branches: [main]
+    paths: ["feed-crawler/**", "docker-compose/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE_NAME: ghcr.io/${{ github.repository }}-feed-crawler
+  IMAGE_TAG: sha-${{ github.sha }}
+  APP_ROOT: /var/web05-Denamu
+  SERVICE: feed-crawler
+  ENV_DIR: /var/prod_config/feed-crawler
+  ENV_FILE: /var/prod_config/feed-crawler/.env.prod
+  COMPOSE_FILE: docker-compose/docker-compose.prod.yml
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: GHCR 로그인
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker 이미지 Build 및 Push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./feed-crawler
+          file: ./feed-crawler/Dockerfile.prod
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+            ${{ env.IMAGE_NAME }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    runs-on: [self-hosted, prod]
+    needs: build-and-push # Build 및 Push가 끝나면 시작
+    steps:
+      - name: GHCR 로그인 (prod)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 환경변수 최신화
+        run: |
+          sudo mkdir -p "$ENV_DIR"
+          sudo install -m 600 /dev/null "$ENV_FILE"
+          {
+            echo "DB_PORT=${{ secrets.FEED_CRAWLER_DB_PORT }}"
+            echo "DB_HOST=${{ secrets.FEED_CRAWLER_DB_HOST }}"
+            echo "DB_NAME=${{ secrets.FEED_CRAWLER_DB_NAME }}"
+            echo "DB_USER=${{ secrets.FEED_CRAWLER_DB_USER }}"
+            echo "DB_PASS=${{ secrets.FEED_CRAWLER_DB_PASSWORD }}"
+            echo "TIME_INTERVAL=${{ vars.FEED_CRAWLER_TIME_INTERVAL }}"
+            echo "REDIS_HOST=${{ secrets.REDIS_HOST }}"
+            echo "REDIS_PORT=${{ secrets.REDIS_PORT }}"
+            echo "REDIS_USERNAME=${{ secrets.REDIS_USERNAME }}"
+            echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}"
+            echo "AI_API_KEY=${{ secrets.AI_API_KEY }}"
+            echo "AI_RATE_LIMIT_COUNT=${{ vars.AI_RATE_LIMIT_COUNT }}"
+          } | sudo tee "$ENV_FILE" >/dev/null
+
+      - name: Docker 이미지 Pull & 서비스 재시작
+        working-directory: ${{ env.APP_ROOT }}
+        run: |
+          if docker compose version >/dev/null 2>&1; then DC="docker compose"; else DC="docker-compose"; fi
+          docker pull "${IMAGE_NAME}:${IMAGE_TAG}" || true
+          docker pull "${IMAGE_NAME}:latest" || true
+          $DC -f "$COMPOSE_FILE" pull "$SERVICE"
+          $DC -f "$COMPOSE_FILE" up -d --no-deps --force-recreate "$SERVICE"
+          docker image prune -f || true
