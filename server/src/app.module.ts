@@ -23,12 +23,25 @@ import { LikeModule } from './like/module/like.module';
 import { FileModule } from './file/module/file.module';
 
 const envMap = {
-  PROD: path.join(process.cwd(), 'env/.env.prod'),
   LOCAL: path.join(process.cwd(), 'env/.env.local'),
   DEV: path.join(process.cwd(), 'env/.env.local'),
 } as const;
 
-const chosen = envMap[process.env.NODE_ENV as keyof typeof envMap];
+// PROD 환경에서는 런타임 환경 변수만 사용
+const chosen =
+  process.env.NODE_ENV !== 'PROD'
+    ? envMap[process.env.NODE_ENV as keyof typeof envMap]
+    : undefined;
+
+if (process.env.NODE_ENV !== 'PROD') {
+  if (!chosen) {
+    throw new Error(`Unknown NODE_ENV: ${process.env.NODE_ENV}`);
+  }
+  if (!fs.existsSync(chosen)) {
+    throw new Error(`Environment file not found: ${chosen}`);
+  }
+}
+
 const exists = !!chosen && fs.existsSync(chosen);
 @Module({
   imports: [
