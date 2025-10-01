@@ -6,7 +6,7 @@ include:
 services:
   # WAS 서비스
   app:
-    image: ghcr.io/${GITHUB_REPOSITORY}/server:latest
+    image: ghcr.io/boostcampwm-2024/web05-Denamu/server:latest
     ports:
       - "8080:8080"
     env_file:
@@ -27,7 +27,7 @@ services:
 
   # Feed Crawler 서비스
   feed-crawler:
-    image: ghcr.io/${GITHUB_REPOSITORY}/feed-crawler:latest
+    image: ghcr.io/boostcampwm-2024/web05-Denamu/feed-crawler:latest
     env_file:
       - /var/prod_config/feed-crawler/.env.prod
     networks:
