@@ -10,7 +10,7 @@ services:
     ports:
       - "8080:8080"
     env_file:
-      - server/env/env.prod
+      - /var/prod_config/server/.env.prod
     networks:
       - Denamu
     depends_on:
@@ -19,8 +19,8 @@ services:
       redis:
         condition: service_healthy
     volumes:
-      - ../server/logs:/var/prod_data/server/logs
-      - ../server/objects:/var/prod_data/server/objects
+      - /var/prod_data/server/logs:/app/logs
+      - /var/prod_data/server/objects:/app/objects
     environment:
       NODE_ENV: "PROD"
       TZ: "Asia/Seoul"
@@ -29,7 +29,7 @@ services:
   feed-crawler:
     image: ghcr.io/${GITHUB_REPOSITORY}/feed-crawler:latest
     env_file:
-      - feed-crawler/env/env.prod
+      - /var/prod_config/feed-crawler/.env.prod
     networks:
       - Denamu
     depends_on:
@@ -38,7 +38,7 @@ services:
       redis:
         condition: service_healthy
     volumes:
-      - ../feed-crawler/logs:/var/prod_data/feed-crawler/logs
+      - /var/prod_data/feed-crawler/logs:/app/logs
     environment:
       NODE_ENV: "PROD"
       TZ: "Asia/Seoul"
