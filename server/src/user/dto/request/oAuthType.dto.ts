@@ -11,4 +11,8 @@ export class OAuthTypeRequestDto {
     message: '지원하지 않는 인증 제공자입니다.',
   })
   type: OAuthType;
+
+  constructor(partial: Partial<OAuthTypeRequestDto>) {
+    Object.assign(this, partial);
+  }
 }

@@ -30,7 +30,7 @@ jobs:
         run: npm ci
 
       # 4. E2E 테스트 실행
-      - name: Run Integration Test
+      - name: Run E2E Test
         working-directory: ./server
         run: npm run test:e2e
 
