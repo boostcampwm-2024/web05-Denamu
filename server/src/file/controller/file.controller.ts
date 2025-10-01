@@ -15,13 +15,14 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FileService } from '../service/file.service';
 import { ApiTags } from '@nestjs/swagger';
-import { JwtGuard } from '../../common/guard/jwt.guard';
+import { JwtGuard, Payload } from '../../common/guard/jwt.guard';
 import { createDynamicStorage } from '../../common/disk/diskStorage';
 import { ApiResponse } from '../../common/response/common.response';
 import { ApiUploadProfileFile } from '../api-docs/uploadProfileFile.api-docs';
 import { ApiDeleteFile } from '../api-docs/deleteFile.api-docs';
 import { DeleteFileRequestDto } from '../dto/request/deleteFile.dto';
 import { UploadFileQueryDto } from '../dto/request/uploadFile.dto';
+import { Request } from 'express';
 
 @ApiTags('File')
 @Controller('file')
@@ -36,7 +37,7 @@ export class FileController {
   async upload(
     @UploadedFile() file: any,
     @Query() query: UploadFileQueryDto,
-    @Req() req,
+    @Req() req: Request & { user: Payload },
   ) {
     if (!file) {
       throw new BadRequestException('파일이 선택되지 않았습니다.');
@@ -44,7 +45,7 @@ export class FileController {
 
     return ApiResponse.responseWithData(
       '파일 업로드에 성공했습니다.',
-      await this.fileService.create(file, Number.parseInt(req.user.id)),
+      await this.fileService.create(file, req.user.id),
     );
   }
 

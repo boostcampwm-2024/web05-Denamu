@@ -11,7 +11,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { JwtGuard } from '../../common/guard/jwt.guard';
+import { JwtGuard, Payload } from '../../common/guard/jwt.guard';
 import { ApiResponse } from '../../common/response/common.response';
 import { LikeService } from '../service/like.service';
 import { ApiTags } from '@nestjs/swagger';
@@ -20,6 +20,7 @@ import { ApiDeleteLike } from '../api-docs/deleteLike.api-docs';
 import { ManageLikeRequestDto } from '../dto/request/manageLike.dto';
 import { ApiGetLike } from '../api-docs/getLike.api-docs';
 import { InjectUserInterceptor } from '../../common/auth/jwt.interceptor';
+import { Request } from 'express';
 
 @ApiTags('Like')
 @Controller('like')
@@ -30,7 +31,10 @@ export class LikeController {
   @Get('/:feedId')
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(InjectUserInterceptor)
-  async getLike(@Req() req, @Param() feedLikeDto: ManageLikeRequestDto) {
+  async getLike(
+    @Req() req: Request & { user: Payload },
+    @Param() feedLikeDto: ManageLikeRequestDto,
+  ) {
     return ApiResponse.responseWithData(
       '좋아요 조회를 성공했습니다.',
       await this.likeService.get(req.user, feedLikeDto),
@@ -41,7 +45,10 @@ export class LikeController {
   @Post()
   @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.CREATED)
-  async createLike(@Req() req, @Body() feedLikeDto: ManageLikeRequestDto) {
+  async createLike(
+    @Req() req: Request & { user: Payload },
+    @Body() feedLikeDto: ManageLikeRequestDto,
+  ) {
     await this.likeService.create(req.user, feedLikeDto);
     return ApiResponse.responseWithNoContent('좋아요 등록을 성공했습니다.');
   }
@@ -50,7 +57,10 @@ export class LikeController {
   @Delete('/:feedId')
   @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.OK)
-  async deleteLike(@Req() req, @Param() feedLikeDto: ManageLikeRequestDto) {
+  async deleteLike(
+    @Req() req: Request & { user: Payload },
+    @Param() feedLikeDto: ManageLikeRequestDto,
+  ) {
     await this.likeService.delete(req.user, feedLikeDto);
     return ApiResponse.responseWithNoContent('좋아요 삭제를 성공했습니다.');
   }

@@ -23,11 +23,16 @@ import { CheckEmailDuplicationRequestDto } from '../dto/request/checkEmailDuplic
 import { LoginUserRequestDto } from '../dto/request/loginUser.dto';
 import { Response } from 'express';
 import { ApiLoginUser } from '../api-docs/loginUser.api-docs';
-import { JwtGuard, RefreshJwtGuard } from '../../common/guard/jwt.guard';
+import {
+  JwtGuard,
+  Payload,
+  RefreshJwtGuard,
+} from '../../common/guard/jwt.guard';
 import { ApiRefreshToken } from '../api-docs/refreshToken.api-docs';
 import { ApiLogoutUser } from '../api-docs/logoutUser.api-docs';
 import { UpdateUserRequestDto } from '../dto/request/updateUser.dto';
 import { ApiUpdateUser } from '../api-docs/updateUser.api-docs';
+import { Request } from 'express';
 
 @ApiTags('User')
 @Controller('user')
@@ -86,7 +91,7 @@ export class UserController {
   @Post('/refresh-token')
   @HttpCode(HttpStatus.OK)
   @UseGuards(RefreshJwtGuard)
-  async refreshAccessToken(@Req() req) {
+  async refreshAccessToken(@Req() req: Request & { user: Payload }) {
     const userInformation = req.user;
     return ApiResponse.responseWithData(
       '엑세스 토큰을 재발급했습니다.',
@@ -107,7 +112,10 @@ export class UserController {
   @Patch('/profile')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtGuard)
-  async updateUser(@Body() updateUserDto: UpdateUserRequestDto, @Req() req) {
+  async updateUser(
+    @Body() updateUserDto: UpdateUserRequestDto,
+    @Req() req: Request & { user: Payload },
+  ) {
     await this.userService.updateUser(req.user.id, updateUserDto);
     return ApiResponse.responseWithNoContent(
       '사용자 프로필 정보가 성공적으로 수정되었습니다.',
