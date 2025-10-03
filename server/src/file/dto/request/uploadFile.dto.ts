@@ -9,4 +9,8 @@ export class UploadFileQueryDto {
     required: false,
   })
   uploadType: FileUploadType;
+
+  constructor(partial: Partial<UploadFileQueryDto>) {
+    Object.assign(this, partial);
+  }
 }
