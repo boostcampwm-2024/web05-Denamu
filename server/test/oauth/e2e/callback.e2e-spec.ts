@@ -1,8 +1,8 @@
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
-import { OAuthService } from '../../src/user/service/oauth.service';
-import { OAuthCallbackRequestDto } from '../../src/user/dto/request/oAuthCallbackDto';
-import { OAuthType } from '../../src/user/constant/oauth.constant';
+import { OAuthService } from '../../../src/user/service/oauth.service';
+import { OAuthCallbackRequestDto } from '../../../src/user/dto/request/oAuthCallbackDto';
+import { OAuthType } from '../../../src/user/constant/oauth.constant';
 
 describe('GET /api/oauth/callback', () => {
   let app: INestApplication;

@@ -1,12 +1,12 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
-import { UploadFileQueryDto } from '../../src/file/dto/request/uploadFile.dto';
+import { UploadFileQueryDto } from '../../../src/file/dto/request/uploadFile.dto';
 import * as fs from 'fs';
-import { FileUploadType } from '../../src/common/disk/fileValidator';
-import { UserService } from '../../src/user/service/user.service';
-import { User } from '../../src/user/entity/user.entity';
-import { UserRepository } from '../../src/user/repository/user.repository';
-import { UserFixture } from '../fixture/user.fixture';
+import { FileUploadType } from '../../../src/common/disk/fileValidator';
+import { UserService } from '../../../src/user/service/user.service';
+import { User } from '../../../src/user/entity/user.entity';
+import { UserRepository } from '../../../src/user/repository/user.repository';
+import { UserFixture } from '../../fixture/user.fixture';
 import * as path from 'path';
 
 describe('POST /api/file', () => {
@@ -40,7 +40,7 @@ describe('POST /api/file', () => {
 
   it('[400] 파일 형식을 나타내는 쿼리가 없을 경우 파일 업로드를 실패한다.', async () => {
     // given
-    const filePath = path.resolve(__dirname, '../fixture/test.png');
+    const filePath = path.resolve(__dirname, '../../fixture/test.png');
     const fileBuffer = fs.readFileSync(filePath);
 
     const accessToken = userService.createToken(
@@ -95,7 +95,7 @@ describe('POST /api/file', () => {
       uploadType: FileUploadType.PROFILE_IMAGE,
     });
 
-    const filePath = path.resolve(__dirname, '../fixture/test.png');
+    const filePath = path.resolve(__dirname, '../../fixture/test.png');
     const accessToken = userService.createToken(
       {
         id: testUser.id,
@@ -106,8 +106,8 @@ describe('POST /api/file', () => {
       'access',
     );
 
-    jest.mock('../../src/common/disk/fileUtils', () => ({
-      ...jest.requireActual('../../src/common/disk/fileUtils'),
+    jest.mock('../../../src/common/disk/fileUtils', () => ({
+      ...jest.requireActual('../../../src/common/disk/fileUtils'),
       createDirectoryIfNotExists: jest.fn().mockReturnValue('/test/20251002/'),
       getFileName: jest.fn().mockReturnValue('test-uuidv4-code.png'),
     }));

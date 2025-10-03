@@ -1,8 +1,8 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
-import { OAuthTypeRequestDto } from '../../src/user/dto/request/oAuthType.dto';
-import { OAuthType } from '../../src/user/constant/oauth.constant';
+import { OAuthTypeRequestDto } from '../../../src/user/dto/request/oAuthType.dto';
+import { OAuthType } from '../../../src/user/constant/oauth.constant';
 import * as request from 'supertest';
-import { OAuthService } from '../../src/user/service/oauth.service';
+import { OAuthService } from '../../../src/user/service/oauth.service';
 
 describe('GET /api/oauth', () => {
   let app: INestApplication;
