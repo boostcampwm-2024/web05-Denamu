@@ -1,5 +1,4 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
-import { UserService } from '../../../src/user/service/user.service';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
@@ -7,27 +6,21 @@ import { UserFixture } from '../../fixture/user.fixture';
 import { RssAcceptFixture } from '../../fixture/rss-accept.fixture';
 import { FeedFixture } from '../../fixture/feed.fixture';
 import { RssAccept } from '../../../src/rss/entity/rss.entity';
-import { User } from '../../../src/user/entity/user.entity';
 import { Feed } from '../../../src/feed/entity/feed.entity';
 import * as request from 'supertest';
 
 describe('GET /api/like/{feedId} E2E Test', () => {
   let app: INestApplication;
-  let userService: UserService;
   let rssAcceptInformation: RssAccept;
-  let userInformation: User;
   let feed: Feed;
 
   beforeAll(async () => {
     app = global.testApp;
-    userService = app.get(UserService);
     const userRepository = app.get(UserRepository);
     const rssAcceptRepository = app.get(RssAcceptRepository);
     const feedRepository = app.get(FeedRepository);
 
-    userInformation = await userRepository.save(
-      await UserFixture.createUserCryptFixture(),
-    );
+    await userRepository.save(await UserFixture.createUserCryptFixture());
     rssAcceptInformation = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );

@@ -8,7 +8,7 @@ import {
 } from '../../../src/rss/repository/rss.repository';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 
-describe('Rss Accept E2E Test', () => {
+describe('POST /api/rss/accept/{rssId} E2E Test', () => {
   let app: INestApplication;
   let rssRepository: RssRepository;
   let rssAcceptRepository: RssAcceptRepository;
@@ -31,57 +31,55 @@ describe('Rss Accept E2E Test', () => {
     ]);
   });
 
-  describe('POST /api/rss/accept/{rssId}', () => {
-    describe('정상적인 요청을 한다.', () => {
-      it('[201] 정상적으로 RSS를 승인한다.', async () => {
-        // given
-        const rss = await rssRepository.save(
-          RssFixture.createRssFixture({
-            rssUrl: 'https://v2.velog.io/rss/@seok3765',
-          }),
-        );
+  describe('정상적인 요청을 한다.', () => {
+    it('[201] 정상적으로 RSS를 승인한다.', async () => {
+      // given
+      const rss = await rssRepository.save(
+        RssFixture.createRssFixture({
+          rssUrl: 'https://v2.velog.io/rss/@seok3765',
+        }),
+      );
 
-        // when
-        const response = await request(app.getHttpServer())
-          .post(`/api/rss/accept/${rss.id}`)
-          .set('Cookie', 'sessionId=testSessionId')
-          .send();
+      // when
+      const response = await request(app.getHttpServer())
+        .post(`/api/rss/accept/${rss.id}`)
+        .set('Cookie', 'sessionId=testSessionId')
+        .send();
 
-        // then
-        expect(response.status).toBe(HttpStatus.CREATED);
-      });
+      // then
+      expect(response.status).toBe(HttpStatus.CREATED);
+    });
+  });
+
+  describe('비정상적인 요청을 한다.', () => {
+    it('[404] 존재하지 않는 rss를 승인할 때', async () => {
+      // given
+      jest.spyOn(rssRepository, 'findOne').mockResolvedValue(undefined);
+
+      // when
+      const response = await request(app.getHttpServer())
+        .post(`/api/rss/accept/1`)
+        .set('Cookie', 'sessionId=testSessionId')
+        .send();
+
+      // then
+      expect(response.status).toBe(HttpStatus.NOT_FOUND);
     });
 
-    describe('비정상적인 요청을 한다.', () => {
-      it('[404] 존재하지 않는 rss를 승인할 때', async () => {
-        // given
-        jest.spyOn(rssRepository, 'findOne').mockResolvedValue(undefined);
+    it('[401] 유효한 세션이 존재하지 않을 때', async () => {
+      // when
+      const noCookieResponse = await request(app.getHttpServer())
+        .post(`/api/rss/accept/1`)
+        .send();
 
-        // when
-        const response = await request(app.getHttpServer())
-          .post(`/api/rss/accept/1`)
-          .set('Cookie', 'sessionId=testSessionId')
-          .send();
+      const noSessionResponse = await request(app.getHttpServer())
+        .post(`/api/rss/accept/1`)
+        .set('Cookie', 'sessionId=invalid')
+        .send();
 
-        // then
-        expect(response.status).toBe(HttpStatus.NOT_FOUND);
-      });
-
-      it('[401] 유효한 세션이 존재하지 않을 때', async () => {
-        // when
-        const noCookieResponse = await request(app.getHttpServer())
-          .post(`/api/rss/accept/1`)
-          .send();
-
-        const noSessionResponse = await request(app.getHttpServer())
-          .post(`/api/rss/accept/1`)
-          .set('Cookie', 'sessionId=invalid')
-          .send();
-
-        // then
-        expect(noCookieResponse.status).toBe(HttpStatus.UNAUTHORIZED);
-        expect(noSessionResponse.status).toBe(HttpStatus.UNAUTHORIZED);
-      });
+      // then
+      expect(noCookieResponse.status).toBe(HttpStatus.UNAUTHORIZED);
+      expect(noSessionResponse.status).toBe(HttpStatus.UNAUTHORIZED);
     });
   });
 });
