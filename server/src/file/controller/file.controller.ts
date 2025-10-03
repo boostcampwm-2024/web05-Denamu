@@ -20,8 +20,8 @@ import { createDynamicStorage } from '../../common/disk/diskStorage';
 import { ApiResponse } from '../../common/response/common.response';
 import { ApiUploadProfileFile } from '../api-docs/uploadProfileFile.api-docs';
 import { ApiDeleteFile } from '../api-docs/deleteFile.api-docs';
-import { DeleteFileRequestDto } from '../dto/request/deleteFile.dto';
-import { UploadFileQueryDto } from '../dto/request/uploadFile.dto';
+import { DeleteFileParamRequestDto } from '../dto/request/deleteFile.dto';
+import { UploadFileQueryRequestDto } from '../dto/request/uploadFile.dto';
 import { Request } from 'express';
 
 @ApiTags('File')
@@ -36,7 +36,7 @@ export class FileController {
   @UseInterceptors(FileInterceptor('file', createDynamicStorage()))
   async upload(
     @UploadedFile() file: any,
-    @Query() query: UploadFileQueryDto,
+    @Query() query: UploadFileQueryRequestDto,
     @Req() req: Request & { user: Payload },
   ) {
     if (!file) {
@@ -53,7 +53,7 @@ export class FileController {
   @Delete(':id')
   @ApiDeleteFile()
   @HttpCode(HttpStatus.OK)
-  async deleteFile(@Param() fileDeleteRequestDto: DeleteFileRequestDto) {
+  async deleteFile(@Param() fileDeleteRequestDto: DeleteFileParamRequestDto) {
     await this.fileService.deleteFile(fileDeleteRequestDto.id);
     return ApiResponse.responseWithNoContent(
       '파일이 성공적으로 삭제되었습니다.',

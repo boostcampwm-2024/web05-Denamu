@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { FileUploadType } from '../../../common/disk/fileValidator';
 
-export class UploadFileQueryDto {
+export class UploadFileQueryRequestDto {
   @ApiProperty({
     description: '파일 업로드 타입',
     enum: FileUploadType,
@@ -10,7 +10,7 @@ export class UploadFileQueryDto {
   })
   uploadType: FileUploadType;
 
-  constructor(partial: Partial<UploadFileQueryDto>) {
+  constructor(partial: Partial<UploadFileQueryRequestDto>) {
     Object.assign(this, partial);
   }
 }

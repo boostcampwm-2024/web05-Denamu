@@ -1,6 +1,6 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
-import { UploadFileQueryDto } from '../../../src/file/dto/request/uploadFile.dto';
+import { UploadFileQueryRequestDto } from '../../../src/file/dto/request/uploadFile.dto';
 import * as fs from 'fs';
 import { FileUploadType } from '../../../src/common/disk/fileValidator';
 import { UserService } from '../../../src/user/service/user.service';
@@ -26,7 +26,7 @@ describe('POST /api/file', () => {
 
   it('[401] 인증되지 않은 사용자가 요청할 경우 파일 업로드를 실패한다.', async () => {
     // given
-    const dto = new UploadFileQueryDto({
+    const dto = new UploadFileQueryRequestDto({
       uploadType: FileUploadType.PROFILE_IMAGE,
     });
 
@@ -65,7 +65,7 @@ describe('POST /api/file', () => {
 
   it('[400] 파일이 포함되어 있지 않을 경우 파일 업로드를 실패한다.', async () => {
     // given
-    const dto = new UploadFileQueryDto({
+    const dto = new UploadFileQueryRequestDto({
       uploadType: FileUploadType.PROFILE_IMAGE,
     });
     const accessToken = userService.createToken(
@@ -91,7 +91,7 @@ describe('POST /api/file', () => {
 
   it('[201] 이미지를 포함하고 쿼리를 포함하여 보낼 경우 올바르게 통과할 수 있다.', async () => {
     // given
-    const dto = new UploadFileQueryDto({
+    const dto = new UploadFileQueryRequestDto({
       uploadType: FileUploadType.PROFILE_IMAGE,
     });
 
