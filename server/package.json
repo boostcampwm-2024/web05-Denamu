@@ -23,6 +23,7 @@
     "test": "cross-env NODE_ENV=TEST jest --config test/jest-integration.json",
     "test:cov": "cross-env NODE_ENV=TEST jest --config test/jest-integration.json --coverage",
     "test:watch": "cross-env NODE_ENV=TEST jest --config test/jest-integration.json --watch",
+    "test:debug": "cross-env NODE_ENV=TEST node --inspect-brk ./node_modules/jest/bin/jest.js --runInBand --config test/jest-integration.json",
     "typeorm": "typeorm-ts-node-commonjs",
     "migration:create": "cross-env NODE_ENV=PROD npm run typeorm -- migration:create",
     "prod:migration:generate": "cross-env NODE_ENV=PROD npm run typeorm -- migration:generate -d dataSource.ts",
