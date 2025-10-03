@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { FileUploadType } from '../../../common/disk/fileValidator';
+import { IsEnum } from 'class-validator';
 
 export class UploadFileQueryRequestDto {
   @ApiProperty({
@@ -7,6 +8,9 @@ export class UploadFileQueryRequestDto {
     enum: FileUploadType,
     example: FileUploadType.PROFILE_IMAGE,
     required: true,
+  })
+  @IsEnum(FileUploadType, {
+    message: '지원하지 않는 파일 타입입니다.',
   })
   uploadType: FileUploadType;
 
