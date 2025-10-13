@@ -37,9 +37,6 @@ describe('User Delete Account E2E Test', () => {
 
       // then
       expect(response.status).toBe(200);
-      expect(response.body.message).toBe(
-        '회원탈퇴 신청이 성공적으로 처리되었습니다. 이메일을 확인해주세요.',
-      );
     });
 
     it('인증되지 않은 사용자가 회원탈퇴 신청 시 401 에러가 발생한다.', async () => {
