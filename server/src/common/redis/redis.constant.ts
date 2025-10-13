@@ -11,4 +11,5 @@ export const REDIS_KEYS = {
   RSS_REMOVE_KEY: 'rss:remove',
   CHAT_HISTORY_KEY: 'chat:history',
   FULL_FEED_CRAWL_QUEUE: `feed:full-crawl:queue`,
+  USER_DELETE_ACCOUNT_KEY: 'user:delete-account',
 };
