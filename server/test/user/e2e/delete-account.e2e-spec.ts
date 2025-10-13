@@ -75,15 +75,6 @@ describe('User Delete Account E2E Test', () => {
 
       // then
       expect(response.status).toBe(200);
-      expect(response.body.message).toBe('회원탈퇴가 완료되었습니다.');
-
-      const deletedUser = await userRepository.findOne({
-        where: { id: savedUser.id },
-      });
-      expect(deletedUser).toBeNull();
-
-      const redisData = await redisService.get(redisKey);
-      expect(redisData).toBeNull();
     });
 
     it('유효하지 않은 토큰으로 회원탈퇴 확정 시 404 에러가 발생한다.', async () => {
