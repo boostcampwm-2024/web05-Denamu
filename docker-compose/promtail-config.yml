@@ -1,0 +1,127 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  # WAS (NestJS Server) 로그 수집
+  - job_name: server-logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: server
+          service: nestjs-was
+          __path__: /var/log/server/*.log
+    pipeline_stages:
+      # JSON 로그 파싱
+      - json:
+          expressions:
+            level: level
+            message: message
+            timestamp: timestamp
+            context: context
+            method: method
+            url: url
+            statusCode: statusCode
+            responseTime: responseTime
+      # 타임스탬프 추출
+      - timestamp:
+          source: timestamp
+          format: RFC3339
+      # 레이블 설정
+      - labels:
+          level:
+          context:
+          method:
+          statusCode:
+      # 출력 메시지 설정
+      - output:
+          source: message
+
+  # WAS 에러 로그 수집
+  - job_name: server-error-logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: server-error
+          service: nestjs-was
+          level: error
+          __path__: /var/log/server/error/*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            level: level
+            message: message
+            timestamp: timestamp
+            context: context
+            stack: stack
+      - timestamp:
+          source: timestamp
+          format: RFC3339
+      - labels:
+          level:
+          context:
+      - output:
+          source: message
+
+  # Feed Crawler 로그 수집
+  - job_name: feed-crawler-logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: feed-crawler
+          service: feed-crawler
+          __path__: /var/log/feed-crawler/*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            level: level
+            message: message
+            timestamp: timestamp
+            context: context
+            feedUrl: feedUrl
+            articleCount: articleCount
+      - timestamp:
+          source: timestamp
+          format: RFC3339
+      - labels:
+          level:
+          context:
+      - output:
+          source: message
+
+  # Feed Crawler 에러 로그 수집
+  - job_name: feed-crawler-error-logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: feed-crawler-error
+          service: feed-crawler
+          level: error
+          __path__: /var/log/feed-crawler/error/*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            level: level
+            message: message
+            timestamp: timestamp
+            context: context
+            stack: stack
+            feedUrl: feedUrl
+      - timestamp:
+          source: timestamp
+          format: RFC3339
+      - labels:
+          level:
+          context:
+      - output:
+          source: message

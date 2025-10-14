@@ -19,8 +19,8 @@ services:
       redis:
         condition: service_healthy
     volumes:
-      - /var/prod_data/server/logs:/app/logs
-      - /var/prod_data/server/objects:/app/objects
+      - /var/prod_data/logs/server:/app/logs
+      - /var/prod_data/objects:/app/objects
     environment:
       NODE_ENV: "PROD"
       TZ: "Asia/Seoul"
@@ -38,7 +38,7 @@ services:
       redis:
         condition: service_healthy
     volumes:
-      - /var/prod_data/feed-crawler/logs:/app/logs
+      - /var/prod_data/logs/feed-crawler:/app/logs
     environment:
       NODE_ENV: "PROD"
       TZ: "Asia/Seoul"
