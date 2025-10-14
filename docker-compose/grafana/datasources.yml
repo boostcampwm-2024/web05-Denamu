@@ -1,0 +1,27 @@
+apiVersion: 1
+
+datasources:
+  # Prometheus 데이터소스
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: true
+    jsonData:
+      timeInterval: 15s
+
+  # Loki 데이터소스
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    editable: true
+    jsonData:
+      maxLines: 1000
+      derivedFields:
+        # 트레이스 ID 추출 (있는 경우)
+        - datasourceUid: Loki
+          matcherRegex: "traceID=(\\w+)"
+          name: TraceID
+          url: "$${__value.raw}"

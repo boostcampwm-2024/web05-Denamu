@@ -1,0 +1,12 @@
+apiVersion: 1
+
+providers:
+  - name: "Denamu Dashboards"
+    orgId: 1
+    folder: "Denamu"
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards
