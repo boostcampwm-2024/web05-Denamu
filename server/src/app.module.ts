@@ -33,7 +33,7 @@ const chosen =
     ? envMap[process.env.NODE_ENV as keyof typeof envMap]
     : undefined;
 
-if (process.env.NODE_ENV !== 'PROD') {
+if (process.env.NODE_ENV !== 'PROD' && process.env.NODE_ENV !== 'TEST') {
   if (!chosen) {
     throw new Error(`Unknown NODE_ENV: ${process.env.NODE_ENV}`);
   }
