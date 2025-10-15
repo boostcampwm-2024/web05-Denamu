@@ -27,9 +27,9 @@ const envMap = {
   DEV: path.join(process.cwd(), 'env/.env.local'),
 } as const;
 
-// PROD 환경에서는 런타임 환경 변수만 사용
+// PROD 및 TEST 환경에서는 런타임 환경 변수만 사용
 const chosen =
-  process.env.NODE_ENV !== 'PROD'
+  process.env.NODE_ENV !== 'PROD' && process.env.NODE_ENV !== 'TEST'
     ? envMap[process.env.NODE_ENV as keyof typeof envMap]
     : undefined;
 
