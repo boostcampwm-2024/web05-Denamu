@@ -20,7 +20,6 @@ jobs:
 
       - name: 인프라 서비스 재시작
         run: |
-          if docker compose version >/dev/null 2>&1; then DC="docker compose"; else DC="docker-compose"; fi
-          $DC -f "$COMPOSE_FILE" down
-          $DC -f "$COMPOSE_FILE" up -d
+          docker compose -f "$COMPOSE_FILE" down
+          docker compose -f "$COMPOSE_FILE" up -d
           docker image prune -f || true
