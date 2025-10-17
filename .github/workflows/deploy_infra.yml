@@ -8,20 +8,18 @@ on:
       - docker-compose/docker-compose.prod*.yml
   workflow_dispatch:
 
+env:
+  COMPOSE_FILE: docker-compose/docker-compose.prod.yml
+
 jobs:
   deployment:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, prod]
     steps:
-      # public 서버로 ssh 접속
-      - name: ssh connection
-        uses: appleboy/ssh-action@v1.1.0
-        with:
-          host: ${{ secrets.CLOUD_PUBLIC_INSTANCE_HOST }}
-          username: ${{ secrets.CLOUD_PUBLIC_INSTANCE_USERNAME }}
-          key: ${{ secrets.CLOUD_PUBLIC_INSTANCE_SSH_KEY }}
-          port: ${{ secrets.CLOUD_PUBLIC_INSTANCE_PORT }}
-          script: |
-            cd /var/web05-Denamu
-            git pull origin main
-            docker-compose -f docker-compose/docker-compose.prod.yml down
-            docker-compose -f docker-compose/docker-compose.prod.yml up -d
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: 인프라 서비스 재시작
+        run: |
+          docker compose -f "$COMPOSE_FILE" down
+          docker compose -f "$COMPOSE_FILE" up -d
+          docker image prune -f || true

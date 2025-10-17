@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { BadRequestException } from '@nestjs/common';
 import { FileUploadType } from './fileValidator';
 
-const BASE_UPLOAD_PATH = '/var/web05-Denamu/objects';
+const BASE_UPLOAD_PATH = '/app/objects';
 
 export const generateFilePath = (originalPath: string): string => {
   const now = new Date();

@@ -28,7 +28,7 @@ export class FileService {
   }
 
   private generateAccessUrl(filePath: string): string {
-    const baseUploadPath = '/var/web05-Denamu/objects';
+    const baseUploadPath = '/app/objects';
     const relativePath = filePath.replace(baseUploadPath, '');
     return `/objects${relativePath}`;
   }
