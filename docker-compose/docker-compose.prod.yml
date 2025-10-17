@@ -20,7 +20,7 @@ services:
         condition: service_healthy
     volumes:
       - /var/prod_data/server/logs:/app/logs
-      - /var/prod_data/server/objects:/app/objects
+      - /var/prod_data/objects:/app/objects
     environment:
       NODE_ENV: "PROD"
       TZ: "Asia/Seoul"
