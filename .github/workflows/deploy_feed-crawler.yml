@@ -11,7 +11,7 @@ permissions:
   packages: write
 
 env:
-  IMAGE_NAME: ghcr.io/${{ github.repository }}/feed-crawler
+  IMAGE_NAME: ghcr.io/boostcampwm-2024/web05-denamu/feed-crawler
   IMAGE_TAG: sha-${{ github.sha }}
   SERVICE: feed-crawler
   ENV_DIR: /var/prod_config/feed-crawler

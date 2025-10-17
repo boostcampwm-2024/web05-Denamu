@@ -11,7 +11,7 @@ permissions:
   packages: write
 
 env:
-  IMAGE_NAME: ghcr.io/${{ github.repository }}/server
+  IMAGE_NAME: ghcr.io/boostcampwm-2024/web05-denamu/server
   IMAGE_TAG: sha-${{ github.sha }}
   SERVICE: app
   ENV_DIR: /var/prod_config/server
