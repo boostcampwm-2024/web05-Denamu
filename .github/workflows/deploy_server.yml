@@ -50,11 +50,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: manifests 로깅
-        run: |
-          docker buildx imagetools inspect "${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"
-          docker buildx imagetools inspect "${{ env.IMAGE_NAME }}:latest"
-
   deploy:
     runs-on: [self-hosted, prod]
     needs: build-and-push # Build 및 Push가 끝나면 시작
