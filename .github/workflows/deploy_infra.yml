@@ -18,6 +18,19 @@ jobs:
       - name: 코드 체크아웃
         uses: actions/checkout@v4
 
+      - name: 인프라 환경변수 최신화
+        run: |
+          sudo mkdir -p /var/prod_config/infra
+          sudo install -m 600 /dev/null /var/prod_config/infra/.env.prod
+          {
+            echo "REDIS_USER=${{ secrets.REDIS_USERNAME }}"
+            echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}"
+            echo "MYSQL_ROOT_PASSWORD=${{ secrets.PRODUCT_DB_PASSWORD }}"
+            echo "MYSQL_DATABASE=${{ secrets.PRODUCT_DB_DATABASE }}"
+            echo "MYSQL_USER=${{ secrets.PRODUCT_DB_USERNAME }}"
+            echo "MYSQL_PASSWORD=${{ secrets.PRODUCT_DB_PASSWORD }}"
+          } | sudo tee /var/prod_config/infra/.env.prod >/dev/null
+
       - name: 인프라 서비스 재시작
         run: |
           docker compose -f "$COMPOSE_FILE" down

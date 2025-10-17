@@ -50,6 +50,11 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: manifests 로깅
+        run: |
+          docker buildx imagetools inspect "${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"
+          docker buildx imagetools inspect "${{ env.IMAGE_NAME }}:latest"
+
   deploy:
     runs-on: [self-hosted, prod]
     needs: build-and-push # Build 및 Push가 끝나면 시작
@@ -82,6 +87,18 @@ jobs:
             echo "AI_API_KEY=${{ secrets.AI_API_KEY }}"
             echo "AI_RATE_LIMIT_COUNT=${{ vars.AI_RATE_LIMIT_COUNT }}"
           } | sudo tee "$ENV_FILE" >/dev/null
+
+          # 인프라용 환경변수 파일 생성 (Redis, MySQL 등)
+          sudo mkdir -p /var/prod_config/infra
+          sudo install -m 600 /dev/null /var/prod_config/infra/.env.prod
+          {
+            echo "REDIS_USER=${{ secrets.REDIS_USERNAME }}"
+            echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}"
+            echo "MYSQL_ROOT_PASSWORD=${{ secrets.PRODUCT_DB_PASSWORD }}"
+            echo "MYSQL_DATABASE=${{ secrets.PRODUCT_DB_DATABASE }}"
+            echo "MYSQL_USER=${{ secrets.PRODUCT_DB_USERNAME }}"
+            echo "MYSQL_PASSWORD=${{ secrets.PRODUCT_DB_PASSWORD }}"
+          } | sudo tee /var/prod_config/infra/.env.prod >/dev/null
 
       - name: Docker 이미지 Pull & 서비스 재시작
         run: |
