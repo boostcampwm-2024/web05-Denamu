@@ -81,7 +81,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s  # RabbitMQ는 시작이 느림
+      start_period: 40s
     profiles:
       - was-dev
 
