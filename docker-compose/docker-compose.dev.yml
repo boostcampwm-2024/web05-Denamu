@@ -24,7 +24,7 @@ services:
     develop:
       watch:
         - path: ../nginx/nginx.conf
-          action: restart
+          action: rebuild
         - path: ../nginx/scripts/generate_cert.sh
           action: rebuild
     environment:
@@ -68,6 +68,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     volumes:
       - ../server:/var/web05-Denamu/server
       - /var/web05-Denamu/server/node_modules
@@ -93,6 +95,8 @@ services:
       mysql-db:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     volumes:
       - ../feed-crawler:/var/web05-Denamu/feed-crawler

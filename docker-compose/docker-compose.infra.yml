@@ -63,9 +63,32 @@ services:
     profiles:
       - was-dev
 
+  # RabbitMQ 서비스
+  rabbitmq:
+    image: rabbitmq:4.1-management
+    networks:
+      - Denamu
+    ports:
+      - "5672:5672" #AMQP 프로토콜 포트
+      - "15672:15672" # Management UI 포트
+    environment:
+      RABBITMQ_DEFAULT_USER: "denamu-rabbitmq-id"
+      RABBITMQ_DEFAULT_PASS: "denamu-rabbitmq-password"
+    volumes:
+      - denamu-rabbitmq:/var/lib/rabbitmq
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "ping" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s  # RabbitMQ는 시작이 느림
+    profiles:
+      - was-dev
+
 volumes:
   denamu-mysql:
   denamu-redis:
+  denamu-rabbitmq:
 
 networks:
   Denamu:
