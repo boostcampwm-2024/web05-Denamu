@@ -24,7 +24,7 @@ services:
     develop:
       watch:
         - path: ../nginx/nginx.conf
-          action: rebuild
+          action: restart
         - path: ../nginx/scripts/generate_cert.sh
           action: rebuild
     environment:
