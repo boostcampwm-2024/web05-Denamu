@@ -102,6 +102,11 @@ jobs:
             echo "MYSQL_DATABASE=${{ secrets.PRODUCT_DB_DATABASE }}"
             echo "MYSQL_USER=${{ secrets.PRODUCT_DB_USERNAME }}"
             echo "MYSQL_PASSWORD=${{ secrets.PRODUCT_DB_PASSWORD }}"
+            echo "RABBITMQ_USERNAME=${{ secrets.PRODUCT_RABBITMQ_USERNAME}}"
+            echo "RABBITMQ_PASSWORD=${{secrets.PRODUCT_RABBITMQ_PASSWORD}}"  
+            echo "RABBITMQ_HOST=${{secrets.PRODUCT_RABBITMQ_HOST}}"  
+            echo "RABBITMQ_PORT=${{secrets.PRODUCT_RABBITMQ_PORT}}"  
+            echo "RABBITMQ_MANAGEMENT_PORT=${{secrets.PRODUCT_RABBITMQ_MANAGEMENT_PORT}}"  
           } | sudo tee /var/prod_config/infra/.env.prod >/dev/null
 
       - name: Docker 이미지 Pull & 서비스 재시작
