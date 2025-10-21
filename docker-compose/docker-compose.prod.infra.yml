@@ -169,6 +169,7 @@ services:
 volumes:
   denamu-mysql:
   denamu-redis:
+  denamu-rabbitmq:
   denamu-prometheus:
   denamu-grafana:
 
