@@ -1,10 +1,11 @@
 import { injectable } from 'tsyringe';
 import * as amqp from 'amqplib';
-import { ChannelModel } from 'amqplib';
+import { Channel, ChannelModel } from 'amqplib';
 
 @injectable()
-export class RmqConnection {
+export class RabbitMQConnection {
   private connection: ChannelModel;
+  private channel: Channel;
   private nameTag: string;
 
   constructor() {
