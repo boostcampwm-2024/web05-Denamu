@@ -79,6 +79,28 @@ services:
     environment:
       TZ: "Asia/Seoul"
 
+  # RabbitMQ 서비스
+  rabbitmq:
+    image: rabbitmq:4.1-management
+    networks:
+      - Denamu
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    env_file:
+      - /var/prod_config/infra/.env.prod
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    volumes:
+      - denamu-rabbitmq:/var/lib/rabbitmq
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "ping" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
   # Redis Metrics
   redis_metrics:
     image: oliver006/redis_exporter
