@@ -1,3 +1,6 @@
+import { RabbitMQConfig } from '../common/rabbitmq.config';
+import { RabbitMQManager } from '../common/rabbitmq.manager';
+
 export const DEPENDENCY_SYMBOLS = {
   DatabaseConnection: Symbol.for('DatabaseConnection'),
   RssRepository: Symbol.for('RssRepository'),
@@ -12,4 +15,6 @@ export const DEPENDENCY_SYMBOLS = {
   FeedCrawler: Symbol.for('FeedCrawler'),
   FullFeedCrawlEventWorker: Symbol.for('FullFeedCrawlEventWorker'),
   RabbitMQConnection: Symbol.for('RabbitMQConnection'),
+  RabbitMQConfig: Symbol.for('RabbitMQConfig'),
+  RabbitMQManager: Symbol.for('RabbitMQManager'),
 };
