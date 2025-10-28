@@ -1,45 +1,104 @@
-name: Feed-Crawler-Deployment
+name: Feed-Crawler Deployment
 
 on:
   push:
-    branches:
-      - main
-    paths:
-      - "feed-crawler/**"
-  workflow_dispatch: # 수동 실행을 허용하는 이벤트
+    branches: [main]
+    paths: ["feed-crawler/**", "docker-compose/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE_NAME: ghcr.io/boostcampwm-2024/web05-denamu/feed-crawler
+  IMAGE_TAG: sha-${{ github.sha }}
+  SERVICE: feed-crawler
+  ENV_DIR: /var/prod_config/feed-crawler
+  ENV_FILE: /var/prod_config/feed-crawler/.env.prod
+  COMPOSE_FILE: docker-compose/docker-compose.prod.yml
 
 jobs:
-  deployment:
+  build-and-push:
     runs-on: ubuntu-latest
     steps:
-      # public 서버로 ssh 접속
-      - name: ssh connection
-        uses: appleboy/ssh-action@v1.1.0
+      - uses: actions/checkout@v4
+
+      - name: QEMU 멀티 아키텍쳐 에뮬레이터
+        uses: docker/setup-qemu-action@v3
+
+      - name: Buildx 멀티 아키텍쳐 빌더
+        uses: docker/setup-buildx-action@v3
+
+      - name: GHCR 로그인
+        uses: docker/login-action@v3
         with:
-          host: ${{ secrets.CLOUD_PUBLIC_INSTANCE_HOST }}
-          username: ${{ secrets.CLOUD_PUBLIC_INSTANCE_USERNAME }}
-          key: ${{ secrets.CLOUD_PUBLIC_INSTANCE_SSH_KEY }}
-          port: ${{ secrets.CLOUD_PUBLIC_INSTANCE_PORT }}
-          script: |
-            cd /var/web05-Denamu
-            git pull origin main
-            cd /var/web05-Denamu/feed-crawler/
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_GITHUB_TOKEN }}
 
-            mkdir -p env
-            echo "DB_PORT=${{ secrets.FEED_CRAWLER_DB_PORT }}" > env/.env.prod
-            echo "DB_HOST=${{ secrets.FEED_CRAWLER_DB_HOST }}" >> env/.env.prod
-            echo "DB_NAME=${{ secrets.FEED_CRAWLER_DB_NAME }}" >> env/.env.prod
-            echo "DB_USER=${{ secrets.FEED_CRAWLER_DB_USER }}" >> env/.env.prod
-            echo "DB_PASS=${{ secrets.FEED_CRAWLER_DB_PASSWORD }}" >> env/.env.prod
-            echo "TIME_INTERVAL=${{ vars.FEED_CRAWLER_TIME_INTERVAL }}" >> env/.env.prod
-            echo "REDIS_HOST=${{secrets.REDIS_HOST }}" >> env/.env.prod
-            echo "REDIS_PORT=${{secrets.REDIS_PORT}}" >> env/.env.prod
-            echo "REDIS_USERNAME=${{secrets.REDIS_USERNAME}}" >> env/.env.prod
-            echo "REDIS_PASSWORD=${{secrets.REDIS_PASSWORD}}" >> env/.env.prod
-            echo "AI_API_KEY=${{secrets.AI_API_KEY}}" >> env/.env.prod
-            echo "AI_RATE_LIMIT_COUNT=${{ vars.AI_RATE_LIMIT_COUNT }}" >> env/.env.prod
+      - name: Docker 이미지 Build 및 Push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./feed-crawler
+          file: ./feed-crawler/docker/Dockerfile.prod
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+            ${{ env.IMAGE_NAME }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-            cd /var/web05-Denamu
-            docker-compose -f docker-compose/docker-compose.prod.yml up --build --no-deps --force-recreate -d feed-crawler
-            docker image prune -f
-            docker builder prune -f
+  deploy:
+    runs-on: [self-hosted, prod]
+    needs: build-and-push # Build 및 Push가 끝나면 시작
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: GHCR 로그인 (prod)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_GITHUB_TOKEN }}
+
+      - name: 환경변수 최신화
+        run: |
+          sudo mkdir -p "$ENV_DIR"
+          sudo install -m 600 /dev/null "$ENV_FILE"
+          {
+            echo "DB_PORT=${{ secrets.FEED_CRAWLER_DB_PORT }}"
+            echo "DB_HOST=${{ secrets.FEED_CRAWLER_DB_HOST }}"
+            echo "DB_NAME=${{ secrets.FEED_CRAWLER_DB_NAME }}"
+            echo "DB_USER=${{ secrets.FEED_CRAWLER_DB_USER }}"
+            echo "DB_PASS=${{ secrets.FEED_CRAWLER_DB_PASSWORD }}"
+            echo "TIME_INTERVAL=${{ vars.FEED_CRAWLER_TIME_INTERVAL }}"
+            echo "REDIS_HOST=${{ secrets.REDIS_HOST }}"
+            echo "REDIS_PORT=${{ secrets.REDIS_PORT }}"
+            echo "REDIS_USERNAME=${{ secrets.REDIS_USERNAME }}"
+            echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}"
+            echo "AI_API_KEY=${{ secrets.AI_API_KEY }}"
+            echo "AI_RATE_LIMIT_COUNT=${{ vars.AI_RATE_LIMIT_COUNT }}"
+          } | sudo tee "$ENV_FILE" >/dev/null
+
+          # 인프라용 환경변수 파일 생성 (Redis, MySQL 등)
+          sudo mkdir -p /var/prod_config/infra
+          sudo install -m 600 /dev/null /var/prod_config/infra/.env.prod
+          {
+            echo "REDIS_USER=${{ secrets.REDIS_USERNAME }}"
+            echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}"
+            echo "MYSQL_ROOT_PASSWORD=${{ secrets.PRODUCT_DB_PASSWORD }}"
+            echo "MYSQL_DATABASE=${{ secrets.PRODUCT_DB_DATABASE }}"
+            echo "MYSQL_USER=${{ secrets.PRODUCT_DB_USERNAME }}"
+            echo "MYSQL_PASSWORD=${{ secrets.PRODUCT_DB_PASSWORD }}"
+          } | sudo tee /var/prod_config/infra/.env.prod >/dev/null
+
+      - name: Docker 이미지 Pull & 서비스 재시작
+        run: |
+          docker pull "${IMAGE_NAME}:${IMAGE_TAG}" || true
+          docker pull "${IMAGE_NAME}:latest" || true
+          docker compose -f "$COMPOSE_FILE" pull "$SERVICE"
+          docker compose -f "$COMPOSE_FILE" up -d --no-deps --force-recreate "$SERVICE"
+          docker image prune -f || true

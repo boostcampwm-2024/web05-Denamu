@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import * as path from 'path';
+import * as fs from 'fs';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { loadDBSetting } from './common/database/load.config';
@@ -20,16 +22,33 @@ import { MetricsInterceptor } from './common/metrics/metrics.interceptor';
 import { LikeModule } from './like/module/like.module';
 import { FileModule } from './file/module/file.module';
 
+const envMap = {
+  LOCAL: path.join(process.cwd(), 'env/.env.local'),
+  DEV: path.join(process.cwd(), 'env/.env.local'),
+} as const;
+
+// PROD 및 TEST 환경에서는 런타임 환경 변수만 사용
+const chosen =
+  process.env.NODE_ENV !== 'PROD' && process.env.NODE_ENV !== 'TEST'
+    ? envMap[process.env.NODE_ENV as keyof typeof envMap]
+    : undefined;
+
+if (process.env.NODE_ENV !== 'PROD' && process.env.NODE_ENV !== 'TEST') {
+  if (!chosen) {
+    throw new Error(`Unknown NODE_ENV: ${process.env.NODE_ENV}`);
+  }
+  if (!fs.existsSync(chosen)) {
+    throw new Error(`Environment file not found: ${chosen}`);
+  }
+}
+
+const exists = !!chosen && fs.existsSync(chosen);
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath:
-        {
-          PROD: `${process.cwd()}/env/.env.prod`,
-          LOCAL: `${process.cwd()}/env/.env.local`,
-          DEV: `${process.cwd()}/env/.env.local`,
-        }[process.env.NODE_ENV] || '',
+      ignoreEnvFile: !exists,
+      envFilePath: exists ? chosen : undefined,
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],

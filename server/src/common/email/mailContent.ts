@@ -1,4 +1,5 @@
 import { Rss } from '../../rss/entity/rss.entity';
+
 export const PRODUCT_DOMAIN = 'https://denamu.site';
 
 export function createRssRegistrationContent(
@@ -124,5 +125,43 @@ export function createRssRemoveCertificateContent(
               </div>
             </div>
           </div>
+`;
+}
+
+export function createPasswordResetMailContent(
+  userName: string,
+  passwordResetLink: string,
+  serviceAddress: string,
+) {
+  return `
+  <div style="font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', '맑은 고딕', sans-serif; margin: 0; padding: 1px; background-color: #f4f4f4;">
+    <div style="max-width: 600px; margin: 20px auto; background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+      <div style="text-align: center; padding: 20px 0; border-bottom: 2px solid #f0f0f0;">
+        <img src="https://denamu.site/files/Denamu_Logo_KOR.png" alt="Denamu Logo" width="244" height="120">
+      </div>
+      <div style="padding: 20px 0;">
+        <div style="color: #007bff; font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center;">비밀번호 재설정</div>
+          <div style="background-color: #f8f9fa; padding: 15px; border-radius: 4px; margin: 15px 0;">
+            <p><strong>안녕하세요, ${userName}님!</strong></p>
+            <p>비밀번호 재설정을 요청하셨습니다.</p>
+            <p>아래 버튼을 클릭하여 새로운 비밀번호를 설정해 주세요.</p>
+          </div>
+          <center>
+            <a href="${passwordResetLink}" style="display: inline-block; padding: 12px 24px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; margin: 20px 0; font-weight: bold;">비밀번호 재설정하기</a>
+          </center>
+          <div style="font-size: 14px; color: #6c757d; margin-top: 20px; text-align: center;">
+            <p>버튼이 작동하지 않는 경우, 아래 링크를 복사하여 브라우저에 붙여넣기 해주세요:</p>
+            <p style="word-break: break-all; background-color: #f8f9fa; padding: 10px; border-radius: 4px;">${passwordResetLink}</p>
+            <p>이 링크는 10분 동안 유효합니다.</p>
+            <p style="color: #dc3545; font-weight: bold;">만약 비밀번호 재설정을 요청하지 않으셨다면, 이 메일을 무시하셔도 됩니다.</p>
+          </div>
+        </div>  
+      </div>
+      <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; border-top: 2px solid #f0f0f0; color: #6c757d; font-size: 14px; height: 100px;">
+        <p>본 메일은 발신전용입니다.</p>
+        <p>문의사항이 있으시다면 ${serviceAddress}로 연락주세요.</p>
+      </div>
+    </div>
+  </div>
 `;
 }
