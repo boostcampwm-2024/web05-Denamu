@@ -3,7 +3,7 @@ name: BE Deployment
 on:
   push:
     branches: [main]
-    paths: ["server/**", "docker-compose/**"]
+    paths: ["server/**"]
   workflow_dispatch:
 
 permissions:
