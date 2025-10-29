@@ -11,7 +11,7 @@ permissions:
   packages: write
 
 env:
-  IMAGE_NAME: ghcr.io/${{ github.repository }}/server
+  IMAGE_NAME: ghcr.io/boostcampwm-2024/web05-denamu/server
   IMAGE_TAG: sha-${{ github.sha }}
   SERVICE: app
   ENV_DIR: /var/prod_config/server
@@ -24,7 +24,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: docker/setup-buildx-action@v3
+      - name: QEMU 멀티 아키텍쳐 에뮬레이터
+        uses: docker/setup-qemu-action@v3
+
+      - name: Buildx 멀티 아키텍쳐 빌더
+        uses: docker/setup-buildx-action@v3
 
       - name: GHCR 로그인
         uses: docker/login-action@v3
@@ -39,6 +43,7 @@ jobs:
           context: ./server
           file: ./server/docker/Dockerfile.prod
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: |
             ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
             ${{ env.IMAGE_NAME }}:latest
@@ -87,11 +92,22 @@ jobs:
             echo "GITHUB_CLIENT_SECRET=${{ secrets.GIT_CLIENT_SECRET }}"
           } | sudo tee "$ENV_FILE" >/dev/null
 
+          # 인프라용 환경변수 파일 생성 (Redis, MySQL 등)
+          sudo mkdir -p /var/prod_config/infra
+          sudo install -m 600 /dev/null /var/prod_config/infra/.env.prod
+          {
+            echo "REDIS_USER=${{ secrets.REDIS_USERNAME }}"
+            echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}"
+            echo "MYSQL_ROOT_PASSWORD=${{ secrets.PRODUCT_DB_PASSWORD }}"
+            echo "MYSQL_DATABASE=${{ secrets.PRODUCT_DB_DATABASE }}"
+            echo "MYSQL_USER=${{ secrets.PRODUCT_DB_USERNAME }}"
+            echo "MYSQL_PASSWORD=${{ secrets.PRODUCT_DB_PASSWORD }}"
+          } | sudo tee /var/prod_config/infra/.env.prod >/dev/null
+
       - name: Docker 이미지 Pull & 서비스 재시작
         run: |
-          if docker compose version >/dev/null 2>&1; then DC="docker compose"; else DC="docker-compose"; fi
           docker pull "${IMAGE_NAME}:${IMAGE_TAG}" || true
           docker pull "${IMAGE_NAME}:latest" || true
-          $DC -f "$COMPOSE_FILE" pull "$SERVICE"
-          $DC -f "$COMPOSE_FILE" up -d --no-deps --force-recreate "$SERVICE"
+          docker compose -f "$COMPOSE_FILE" pull "$SERVICE"
+          docker compose -f "$COMPOSE_FILE" up -d --no-deps --force-recreate "$SERVICE"
           docker image prune -f || true

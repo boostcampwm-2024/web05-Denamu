@@ -83,7 +83,7 @@ export class UserService {
     if (!user) {
       throw new NotFoundException('인증에 실패했습니다.');
     }
-    this.redisService.del(`${REDIS_KEYS.USER_AUTH_KEY}:${uuid}`);
+    await this.redisService.del(`${REDIS_KEYS.USER_AUTH_KEY}:${uuid}`);
     await this.userRepository.save(JSON.parse(user));
   }
 
@@ -190,6 +190,48 @@ export class UserService {
       user.introduction = updateData.introduction;
     }
 
+    await this.userRepository.save(user);
+  }
+
+  async forgotPassword(email: string) {
+    const user = await this.userRepository.findOne({
+      where: { email: email },
+    });
+
+    if (!user) {
+      return;
+    }
+
+    const uuid = uuidv4();
+    await this.redisService.set(
+      `${REDIS_KEYS.USER_RESET_PASSWORD_KEY}:${uuid}`,
+      JSON.stringify(user.id),
+      'EX',
+      600,
+    );
+
+    this.emailService.sendPasswordResetEmail(user, uuid);
+  }
+
+  async resetPassword(uuid: string, password: string): Promise<void> {
+    const userId = Number(
+      await this.redisService.get(
+        `${REDIS_KEYS.USER_RESET_PASSWORD_KEY}:${uuid}`,
+      ),
+    );
+
+    if (isNaN(userId) || userId === 0) {
+      throw new NotFoundException('인증에 실패했습니다.');
+    }
+
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+    user.password = await this.createHashedPassword(password);
+
+    await this.redisService.del(
+      `${REDIS_KEYS.USER_RESET_PASSWORD_KEY}:${uuid}`,
+    );
     await this.userRepository.save(user);
   }
 }

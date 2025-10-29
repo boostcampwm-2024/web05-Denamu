@@ -6,7 +6,7 @@ include:
 services:
   # WAS 서비스
   app:
-    image: ghcr.io/boostcampwm-2024/web05-Denamu/server:latest
+    image: ghcr.io/boostcampwm-2024/web05-denamu/server:latest
     ports:
       - "8080:8080"
     env_file:
@@ -19,7 +19,7 @@ services:
       redis:
         condition: service_healthy
     volumes:
-      - /var/prod_data/logs/server:/app/logs
+      - /var/prod_data/server/logs:/app/logs
       - /var/prod_data/objects:/app/objects
     environment:
       NODE_ENV: "PROD"
@@ -27,7 +27,7 @@ services:
 
   # Feed Crawler 서비스
   feed-crawler:
-    image: ghcr.io/boostcampwm-2024/web05-Denamu/feed-crawler:latest
+    image: ghcr.io/boostcampwm-2024/web05-denamu/feed-crawler:latest
     env_file:
       - /var/prod_config/feed-crawler/.env.prod
     networks:
