@@ -59,10 +59,7 @@ describe('User Delete Account E2E Test', () => {
       const savedUser = await userRepository.save(userEntity);
 
       const redisKey = `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${token}`;
-      await redisService.set(
-        redisKey,
-        JSON.stringify({ userId: savedUser.id, email: savedUser.email }),
-      );
+      await redisService.set(redisKey, savedUser.id.toString(), 'EX', 600);
 
       // when
       const agent = request.agent(app.getHttpServer());
