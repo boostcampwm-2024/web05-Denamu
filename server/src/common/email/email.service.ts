@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { WinstonLoggerService } from '../logger/logger.service';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
 import {
+  createPasswordResetMailContent,
   createRssRegistrationContent,
   createRssRemoveCertificateContent,
   createVerificationMailContent,
@@ -136,6 +137,29 @@ export class EmailService {
         certificateCode,
         this.emailUser,
         rssUrl,
+      ),
+    };
+  }
+
+  async sendPasswordResetEmail(user: User, uuid: string): Promise<void> {
+    const mailOptions = this.createPasswordResetEmail(user, uuid);
+
+    await this.sendMail(mailOptions);
+  }
+
+  private createPasswordResetEmail(
+    user: User,
+    uuid: string,
+  ): nodemailer.SendMailOptions {
+    const redirectUrl = `${PRODUCT_DOMAIN}/user/password?token=${uuid}`;
+    return {
+      from: `Denamu<${this.emailUser}>`,
+      to: user.email,
+      subject: `[🎋 Denamu] 비밀번호 재설정`,
+      html: createPasswordResetMailContent(
+        user.userName,
+        redirectUrl,
+        this.emailUser,
       ),
     };
   }

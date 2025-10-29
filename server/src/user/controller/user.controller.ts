@@ -31,6 +31,10 @@ import { ApiUpdateUser } from '../api-docs/updateUser.api-docs';
 import { ConfirmDeleteAccountDto } from '../dto/request/confirmDeleteAccount.dto';
 import { ApiRequestDeleteAccount } from '../api-docs/requestDeleteAccount.api-docs';
 import { ApiConfirmDeleteAccount } from '../api-docs/confirmDeleteAccount.api-docs';
+import { ResetPasswordRequestDto } from '../dto/request/resetPassword.dto';
+import { ForgotPasswordRequestDto } from '../dto/request/forgotPassword.dto';
+import { ApiForgotPassword } from '../api-docs/forgotPassword.api-docs';
+import { ApiResetPassword } from '../api-docs/resetPassword.api-docs';
 
 @ApiTags('User')
 @Controller('user')
@@ -134,5 +138,30 @@ export class UserController {
   async confirmDeleteAccount(@Body() confirmDto: ConfirmDeleteAccountDto) {
     await this.userService.confirmDeleteAccount(confirmDto.token);
     return ApiResponse.responseWithNoContent('회원탈퇴가 완료되었습니다.');
+  }
+
+  @ApiForgotPassword()
+  @Post('/password-reset')
+  @HttpCode(HttpStatus.OK)
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordRequestDto) {
+    await this.userService.forgotPassword(forgotPasswordDto.email);
+    return ApiResponse.responseWithNoContent(
+      '비밀번호 재설정 링크를 이메일로 발송했습니다.',
+    );
+  }
+
+  @ApiResetPassword()
+  @Patch('/password')
+  @HttpCode(HttpStatus.OK)
+  async resetPassword(
+    @Body() resetPasswordRequestDto: ResetPasswordRequestDto,
+  ) {
+    await this.userService.resetPassword(
+      resetPasswordRequestDto.uuid,
+      resetPasswordRequestDto.password,
+    );
+    return ApiResponse.responseWithNoContent(
+      '비밀번호가 성공적으로 수정되었습니다.',
+    );
   }
 }
