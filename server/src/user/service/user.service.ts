@@ -199,7 +199,7 @@ export class UserService {
     const token = uuidv4();
     await this.redisService.set(
       `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${token}`,
-      JSON.stringify({ userId: user.id, email: user.email }),
+      user.id.toString(),
       'EX',
       600,
     );
@@ -208,15 +208,15 @@ export class UserService {
   }
 
   async confirmDeleteAccount(token: string): Promise<void> {
-    const deleteAccountData = await this.redisService.get(
+    const userIdString = await this.redisService.get(
       `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${token}`,
     );
 
-    if (!deleteAccountData) {
+    if (!userIdString) {
       throw new NotFoundException('유효하지 않거나 만료된 토큰입니다.');
     }
 
-    const { userId } = JSON.parse(deleteAccountData);
+    const userId = parseInt(userIdString, 10);
 
     const user = await this.getUser(userId);
 
