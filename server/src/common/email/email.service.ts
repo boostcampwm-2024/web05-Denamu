@@ -8,6 +8,7 @@ import {
   createRssRegistrationContent,
   createRssRemoveCertificateContent,
   createVerificationMailContent,
+  createDeleteAccountContent,
   PRODUCT_DOMAIN,
 } from './mailContent';
 import { Rss } from '../../rss/entity/rss.entity';
@@ -156,6 +157,30 @@ export class EmailService {
       to: user.email,
       subject: `[🎋 Denamu] 비밀번호 재설정`,
       html: createPasswordResetMailContent(
+        user.userName,
+        redirectUrl,
+        this.emailUser,
+      ),
+    };
+  }
+
+  async sendDeleteAccountMail(user: User, token: string): Promise<void> {
+    const mailOptions = this.createDeleteAccountMail(user, token);
+
+    await this.sendMail(mailOptions);
+  }
+
+  private createDeleteAccountMail(
+    user: User,
+    token: string,
+  ): nodemailer.SendMailOptions {
+    const redirectUrl = `${PRODUCT_DOMAIN}/user/delete-account?token=${token}`;
+
+    return {
+      from: `Denamu<${this.emailUser}>`,
+      to: user.email,
+      subject: `[🎋 Denamu] 회원탈퇴 확인 메일`,
+      html: createDeleteAccountContent(
         user.userName,
         redirectUrl,
         this.emailUser,
