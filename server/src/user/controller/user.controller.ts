@@ -8,7 +8,6 @@ import {
   Patch,
   Post,
   Query,
-  Req,
   Res,
   UseGuards,
 } from '@nestjs/common';
@@ -23,7 +22,7 @@ import { CheckEmailDuplicationRequestDto } from '../dto/request/checkEmailDuplic
 import { LoginUserRequestDto } from '../dto/request/loginUser.dto';
 import { Response } from 'express';
 import { ApiLoginUser } from '../api-docs/loginUser.api-docs';
-import { JwtGuard, RefreshJwtGuard } from '../../common/guard/jwt.guard';
+import { JwtGuard, Payload, RefreshJwtGuard } from '../../common/guard/jwt.guard';
 import { ApiRefreshToken } from '../api-docs/refreshToken.api-docs';
 import { ApiLogoutUser } from '../api-docs/logoutUser.api-docs';
 import { UpdateUserRequestDto } from '../dto/request/updateUser.dto';
@@ -32,6 +31,7 @@ import { ResetPasswordRequestDto } from '../dto/request/resetPassword.dto';
 import { ForgotPasswordRequestDto } from '../dto/request/forgotPassword.dto';
 import { ApiForgotPassword } from '../api-docs/forgotPassword.api-docs';
 import { ApiResetPassword } from '../api-docs/resetPassword.api-docs';
+import { CurrentUser } from '../../common/decorator';
 
 @ApiTags('User')
 @Controller('user')
@@ -90,11 +90,10 @@ export class UserController {
   @Post('/refresh-token')
   @HttpCode(HttpStatus.OK)
   @UseGuards(RefreshJwtGuard)
-  async refreshAccessToken(@Req() req) {
-    const userInformation = req.user;
+  async refreshAccessToken(@CurrentUser() user: Payload) {
     return ApiResponse.responseWithData(
       '엑세스 토큰을 재발급했습니다.',
-      this.userService.refreshAccessToken(userInformation),
+      this.userService.refreshAccessToken(user),
     );
   }
 
@@ -111,8 +110,11 @@ export class UserController {
   @Patch('/profile')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtGuard)
-  async updateUser(@Body() updateUserDto: UpdateUserRequestDto, @Req() req) {
-    await this.userService.updateUser(req.user.id, updateUserDto);
+  async updateUser(
+    @Body() updateUserDto: UpdateUserRequestDto,
+    @CurrentUser() user: Payload,
+  ) {
+    await this.userService.updateUser(user.id, updateUserDto);
     return ApiResponse.responseWithNoContent(
       '사용자 프로필 정보가 성공적으로 수정되었습니다.',
     );
