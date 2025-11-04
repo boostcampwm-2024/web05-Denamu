@@ -4,6 +4,9 @@ on:
   pull_request:
     branches:
       - main
+    paths:
+      - 'feed-crawler/**'
+      - '.github/workflows/test_feed-crawler.yml'
   workflow_dispatch:
 
 jobs:
