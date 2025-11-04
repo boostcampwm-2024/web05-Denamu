@@ -234,4 +234,42 @@ export class UserService {
     );
     await this.userRepository.save(user);
   }
+
+  async requestDeleteAccount(userId: number): Promise<void> {
+    const user = await this.getUser(userId);
+
+    const token = uuidv4();
+    await this.redisService.set(
+      `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${token}`,
+      user.id.toString(),
+      'EX',
+      600,
+    );
+
+    this.emailService.sendDeleteAccountMail(user, token);
+  }
+
+  async confirmDeleteAccount(token: string): Promise<void> {
+    const userIdString = await this.redisService.get(
+      `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${token}`,
+    );
+
+    if (!userIdString) {
+      throw new NotFoundException('유효하지 않거나 만료된 토큰입니다.');
+    }
+
+    const userId = parseInt(userIdString, 10);
+
+    const user = await this.getUser(userId);
+
+    if (user.profileImage) {
+      await this.fileService.deleteByPath(user.profileImage);
+    }
+
+    await this.userRepository.remove(user);
+
+    await this.redisService.del(
+      `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${token}`,
+    );
+  }
 }
