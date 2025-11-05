@@ -181,7 +181,7 @@ services:
       - Denamu
     volumes:
       - ./promtail/promtail-config.yml:/etc/promtail/config.yml
-      - /var/prod_data/logs/server:/var/log/server:ro
+      - /var/prod_data/server/logs:/var/log/server:ro
       - /var/prod_data/logs/feed-crawler:/var/log/feed-crawler:ro
     command: -config.file=/etc/promtail/config.yml
     depends_on:
