@@ -28,6 +28,9 @@ import { ApiRefreshToken } from '../api-docs/refreshToken.api-docs';
 import { ApiLogoutUser } from '../api-docs/logoutUser.api-docs';
 import { UpdateUserRequestDto } from '../dto/request/updateUser.dto';
 import { ApiUpdateUser } from '../api-docs/updateUser.api-docs';
+import { ConfirmDeleteAccountDto } from '../dto/request/confirmDeleteAccount.dto';
+import { ApiRequestDeleteAccount } from '../api-docs/requestDeleteAccount.api-docs';
+import { ApiConfirmDeleteAccount } from '../api-docs/confirmDeleteAccount.api-docs';
 import { ResetPasswordRequestDto } from '../dto/request/resetPassword.dto';
 import { ForgotPasswordRequestDto } from '../dto/request/forgotPassword.dto';
 import { ApiForgotPassword } from '../api-docs/forgotPassword.api-docs';
@@ -116,6 +119,25 @@ export class UserController {
     return ApiResponse.responseWithNoContent(
       '사용자 프로필 정보가 성공적으로 수정되었습니다.',
     );
+  }
+
+  @ApiRequestDeleteAccount()
+  @Post('/delete-account/request')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtGuard)
+  async requestDeleteAccount(@Req() req) {
+    await this.userService.requestDeleteAccount(req.user.id);
+    return ApiResponse.responseWithNoContent(
+      '회원탈퇴 신청이 성공적으로 처리되었습니다. 이메일을 확인해주세요.',
+    );
+  }
+
+  @ApiConfirmDeleteAccount()
+  @Post('/delete-account/confirm')
+  @HttpCode(HttpStatus.OK)
+  async confirmDeleteAccount(@Body() confirmDto: ConfirmDeleteAccountDto) {
+    await this.userService.confirmDeleteAccount(confirmDto.token);
+    return ApiResponse.responseWithNoContent('회원탈퇴가 완료되었습니다.');
   }
 
   @ApiForgotPassword()
