@@ -85,9 +85,6 @@ services:
       - "15672:15672"
     env_file:
       - /var/prod_config/infra/.env.prod
-    environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
     volumes:
       - denamu-rabbitmq:/var/lib/rabbitmq
     healthcheck:
