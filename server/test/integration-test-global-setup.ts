@@ -1,11 +1,17 @@
 import { MySqlContainer, StartedMySqlContainer } from '@testcontainers/mysql';
 import { RedisContainer, StartedRedisContainer } from '@testcontainers/redis';
+import {
+  RabbitMQContainer,
+  StartedRabbitMQContainer,
+} from '@testcontainers/rabbitmq';
+
 const globalAny: any = global;
 
 export default async () => {
   console.log('Starting global setup...');
   await createMysqlContainer();
   await createRedisContainer();
+  await createRabbitMQContainer();
   jwtEnvSetup();
   console.log('Global setup completed.');
 };
@@ -38,6 +44,18 @@ const createRedisContainer = async () => {
   process.env.REDIS_PORT = redisContainer.getPort().toString();
   process.env.REDIS_USERNAME = '';
   process.env.REDIS_PASSWORD = '';
+};
+
+const createRabbitMQContainer = async () => {
+  console.log('Starting RabbitMQ container...');
+  const rabbitMQContainer: StartedRabbitMQContainer =
+    await new RabbitMQContainer('rabbitmq:4.1-management').start();
+  globalAny.__RABBITMQ_CONTAINER__ = rabbitMQContainer;
+
+  process.env.RABBITMQ_HOST = rabbitMQContainer.getHost();
+  process.env.RABBITMQ_PORT = rabbitMQContainer.getMappedPort(5672).toString();
+  process.env.RABBITMQ_DEFAULT_USER = 'guest';
+  process.env.RABBITMQ_DEFAULT_PASS = 'guest';
 };
 
 const jwtEnvSetup = () => {

@@ -7,6 +7,7 @@ import { HttpExceptionsFilter } from '../src/common/filters/http.exception.filte
 import * as cookieParser from 'cookie-parser';
 import { TestService } from '../src/common/test/test.service';
 import { RedisService } from '../src/common/redis/redis.service';
+import { RabbitMQService } from '../src/common/rabbitmq/rabbitmq.service';
 
 const globalAny: any = global;
 
@@ -39,6 +40,8 @@ afterAll(async () => {
   await redisService.flushall();
   redisService.disconnect();
 
+  await cleanupRabbitMQ();
+
   console.log('Closing NestJS application...');
   if (globalAny.testApp) {
     await globalAny.testApp.close();
@@ -46,6 +49,20 @@ afterAll(async () => {
   }
   console.log('NestJS application closed.');
 });
+
+async function cleanupRabbitMQ() {
+  try {
+    const rabbitMQService: RabbitMQService =
+      globalAny.testApp.get(RabbitMQService);
+
+    if (rabbitMQService.connection) {
+      await rabbitMQService.connection.close();
+      console.log('RabbitMQ connection closed.');
+    }
+  } catch (error) {
+    console.error('Error cleaning up RabbitMQ:', error);
+  }
+}
 
 beforeEach(() => {
   jest.resetAllMocks();
