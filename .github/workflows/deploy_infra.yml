@@ -18,7 +18,7 @@ jobs:
       - name: 코드 체크아웃
         uses: actions/checkout@v4
 
-      - name: 인프라 환경변수 최신화
+      - name: 인프라 환경변수 및 설정 파일 최신화
         run: |
           sudo mkdir -p /var/prod_config/infra
           sudo install -m 600 /dev/null /var/prod_config/infra/.env.prod
@@ -35,6 +35,8 @@ jobs:
             echo "RABBITMQ_PORT=${{ secrets.PRODUCT_RABBITMQ_PORT }}"  
             echo "RABBITMQ_MANAGEMENT_PORT=${{ secrets.PRODUCT_RABBITMQ_MANAGEMENT_PORT }}"  
           } | sudo tee /var/prod_config/infra/.env.prod >/dev/null
+
+          sudo chmod +x docker-compose/redis-init.sh
 
       - name: 인프라 서비스 재시작
         run: |

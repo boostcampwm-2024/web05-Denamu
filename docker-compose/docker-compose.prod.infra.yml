@@ -61,16 +61,12 @@ services:
       - "6379:6379"
     volumes:
       - denamu-redis:/data
+      - ./redis-init.sh:/usr/local/bin/redis-init.sh:ro
     networks:
       - Denamu
     env_file:
       - /var/prod_config/infra/.env.prod
-    entrypoint:
-      [
-        "sh",
-        "-c",
-        "redis-server & sleep 5 && echo 'ACL SETUSER ${REDIS_USER} on >${REDIS_PASSWORD} allkeys allcommands' | redis-cli && tail -f /dev/null",
-      ]
+    entrypoint: ["/usr/local/bin/redis-init.sh"]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
