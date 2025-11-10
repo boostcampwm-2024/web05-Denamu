@@ -18,6 +18,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     volumes:
       - /var/prod_data/server/logs:/app/logs
       - /var/prod_data/objects:/app/objects
@@ -36,6 +38,8 @@ services:
       mysql-db:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     volumes:
       - /var/prod_data/feed-crawler/logs:/app/logs

@@ -21,6 +21,7 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
 import { MetricsInterceptor } from './common/metrics/metrics.interceptor';
 import { LikeModule } from './like/module/like.module';
 import { FileModule } from './file/module/file.module';
+import { RabbitMQModule } from './common/rabbitmq/rabbitmq.module';
 
 const envMap = {
   LOCAL: path.join(process.cwd(), 'env/.env.local'),
@@ -71,6 +72,7 @@ const exists = !!chosen && fs.existsSync(chosen);
     CommentModule,
     LikeModule,
     FileModule,
+    RabbitMQModule,
   ],
   controllers: [],
   providers: [
