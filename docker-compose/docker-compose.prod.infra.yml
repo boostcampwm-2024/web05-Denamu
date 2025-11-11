@@ -8,6 +8,8 @@ services:
       - denamu-mysql:/var/lib/mysql
     networks:
       - Denamu
+    env_file:
+      - /var/prod_config/infra/.env.prod
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
@@ -42,6 +44,8 @@ services:
       - "9104:9104"
     networks:
       - Denamu
+    env_file:
+      - /var/prod_config/infra/.env.prod
     command:
       - "--mysqld.username=$MYSQL_USER:$MYSQL_PASSWORD"
       - "--mysqld.address=mysql-db:3306"
@@ -57,14 +61,12 @@ services:
       - "6379:6379"
     volumes:
       - denamu-redis:/data
+      - ./redis-init.sh:/usr/local/bin/redis-init.sh:ro
     networks:
       - Denamu
-    entrypoint:
-      [
-        "sh",
-        "-c",
-        "redis-server & sleep 5 && echo 'ACL SETUSER ${REDIS_USER} on >${REDIS_PASSWORD} allkeys allcommands' | redis-cli && tail -f /dev/null",
-      ]
+    env_file:
+      - /var/prod_config/infra/.env.prod
+    entrypoint: ["/usr/local/bin/redis-init.sh"]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -73,6 +75,25 @@ services:
     environment:
       TZ: "Asia/Seoul"
 
+  # RabbitMQ 서비스
+  rabbitmq:
+    image: rabbitmq:4.1-management
+    networks:
+      - Denamu
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    env_file:
+      - /var/prod_config/infra/.env.prod
+    volumes:
+      - denamu-rabbitmq:/var/lib/rabbitmq
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "ping" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
   # Redis Metrics
   redis_metrics:
     image: oliver006/redis_exporter
@@ -80,6 +101,8 @@ services:
       - "9121:9121"
     networks:
       - Denamu
+    env_file:
+      - /var/prod_config/infra/.env.prod
     environment:
       REDIS_ADDR: "redis://redis:6379"
       REDIS_USER: "${REDIS_USER}"
@@ -139,6 +162,7 @@ services:
 volumes:
   denamu-mysql:
   denamu-redis:
+  denamu-rabbitmq:
   denamu-prometheus:
   denamu-grafana:
 
