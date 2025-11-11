@@ -30,7 +30,7 @@ describe('GET /api/admin/sessionId E2E Test', () => {
     expect(response.status).toBe(HttpStatus.OK);
   });
 
-  it('[401] session id가 일치하지 않는다면 401 UnAuthorized 예외가 발생한다.', async () => {
+  it('[401] session id가 서버에 존재하지 않는다면 401 UnAuthorized 예외가 발생한다.', async () => {
     //given
     const randomUUID = uuidv4();
 
@@ -43,7 +43,7 @@ describe('GET /api/admin/sessionId E2E Test', () => {
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 
-  it('[401] session id가 없다면 401 UnAuthorized 예외가 발생한다.', async () => {
+  it('[401] session id가 클라이언트에 존재하지 않는다면 401 UnAuthorized 예외가 발생한다.', async () => {
     //when
     const response = await request(app.getHttpServer())
       .get('/api/admin/sessionId')
