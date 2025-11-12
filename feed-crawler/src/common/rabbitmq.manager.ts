@@ -4,8 +4,8 @@ import * as amqp from 'amqplib';
 
 @injectable()
 export class RabbitMQManager {
-  private connection: ChannelModel;
-  private channel: Channel;
+  private connection: ChannelModel | null;
+  private channel: Channel | null;
 
   constructor() {
     this.connection = null;
