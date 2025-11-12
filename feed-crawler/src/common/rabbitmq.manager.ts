@@ -41,8 +41,14 @@ export class RabbitMQManager {
   }
 
   async disconnect() {
-    if (!this.connection) return;
+    if (this.channel) {
+      await this.channel.close();
+      this.channel = null;
+    }
 
-    await this.connection.close();
+    if (this.connection) {
+      await this.connection.close();
+      this.connection = null;
+    }
   }
 }
