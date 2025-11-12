@@ -94,7 +94,7 @@ async function initializeRabbitMQ(
 
     logger.info(`RabbitMQ 초기화 완료`);
   } catch (error) {
-    logger.error(`RabbitMQ 초기화 실패: ${error}`);
+    logger.error(`RabbitMQ 초기화 실패:`, error);
     throw error;
   }
 }
