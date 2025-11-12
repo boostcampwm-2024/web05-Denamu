@@ -20,8 +20,8 @@ export class RabbitMQManager {
       protocol: 'amqp',
       hostname: process.env.RABBITMQ_HOST,
       port: Number.parseInt(process.env.RABBITMQ_PORT),
-      username: process.env.RABBITMQ_USERNAME,
-      password: process.env.RABBITMQ_PASSWORD,
+      username: process.env.RABBITMQ_DEFAULT_USER,
+      password: process.env.RABBITMQ_DEFAULT_PASS,
     });
 
     return this.connection;
