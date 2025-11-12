@@ -23,8 +23,7 @@ export class RabbitMQService {
     await channel.consume(queue, async (message) => {
       try {
         const parsedMessage = JSON.parse(message.content.toString());
-
-        await onMessage(message);
+        await onMessage(parsedMessage);
 
         channel.ack(message);
       } catch (err) {
