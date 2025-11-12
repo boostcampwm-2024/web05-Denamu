@@ -40,8 +40,9 @@ describe('POST /api/user/certificate E2E Test', () => {
 
   it('[404] 존재하지 않거나 만료된 uuid로 인증 요청 시 NotFoundException 에러를 발생시킨다.', async () => {
     // given
-    const uuid = 'non-existent-or-expired-uuid';
-    const requestDto = new CertificateUserRequestDto({ uuid });
+    const requestDto = new CertificateUserRequestDto({
+      uuid: 'non-existent-or-expired-uuid',
+    });
 
     // when
     const agent = request.agent(app.getHttpServer());

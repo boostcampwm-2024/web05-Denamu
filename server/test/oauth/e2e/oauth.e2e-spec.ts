@@ -15,7 +15,7 @@ describe('GET /api/oauth', () => {
 
   it('[302] 올바른 제공자를 입력했을 경우 Redirect를 받을 수 있다.', async () => {
     // given
-    const dto = new OAuthTypeRequestDto({ type: OAuthType.Github });
+    const requestDto = new OAuthTypeRequestDto({ type: OAuthType.Github });
     const mockProvider = {
       getAuthUrl: jest.fn().mockReturnValue('http://mocked.redirect.url'),
     };
@@ -35,7 +35,7 @@ describe('GET /api/oauth', () => {
     // when
     const response = await request(app.getHttpServer())
       .get('/api/oauth')
-      .query(dto);
+      .query(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.FOUND);

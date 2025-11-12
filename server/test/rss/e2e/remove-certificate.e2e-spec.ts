@@ -30,8 +30,9 @@ describe('DELETE /api/rss/remove/{code}', () => {
 
   it('[404] 삭제 신청된 RSS가 없으면 인증할 수 없다.', async () => {
     // when
-    const response = await request(app.getHttpServer())
-      .delete(`/api/rss/remove/testfail`)
+    const response = await request(app.getHttpServer()).delete(
+      '/api/rss/remove/testfail',
+    );
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
@@ -42,8 +43,9 @@ describe('DELETE /api/rss/remove/{code}', () => {
     await redisService.set(`${REDIS_KEYS.RSS_REMOVE_KEY}:rssNotFound`, 'test');
 
     // when
-    const response = await request(app.getHttpServer())
-      .delete(`/api/rss/remove/rssNotFound`)
+    const response = await request(app.getHttpServer()).delete(
+      '/api/rss/remove/rssNotFound',
+    );
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
@@ -66,8 +68,9 @@ describe('DELETE /api/rss/remove/{code}', () => {
     );
 
     // when
-    const response = await request(app.getHttpServer())
-      .delete(`/api/rss/remove/${certificateCode}`)
+    const response = await request(app.getHttpServer()).delete(
+      `/api/rss/remove/${certificateCode}`,
+    );
 
     // then
     expect(response.status).toBe(HttpStatus.OK);

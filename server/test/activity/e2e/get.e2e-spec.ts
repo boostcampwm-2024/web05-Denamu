@@ -5,14 +5,18 @@ import { ActivityRepository } from '../../../src/activity/repository/activity.re
 import { UserFixture } from '../../fixture/user.fixture';
 import { ActivityFixture } from '../../fixture/activity.fixture';
 import { User } from '../../../src/user/entity/user.entity';
+import TestAgent from 'supertest/lib/agent';
+import { ReadActivityQueryRequestDto } from '../../../src/activity/dto/request/readActivity.dto';
 
 describe('GET /api/activity/{userId} E2E Test', () => {
   let app: INestApplication;
   let testUser: User;
   let activitiesData: Array<{ activityDate: Date; viewCount: number }>;
+  let agent: TestAgent;
 
   beforeAll(async () => {
     app = global.testApp;
+    agent = request(app.getHttpServer());
     const userRepository = app.get(UserRepository);
     const activityRepository = app.get(ActivityRepository);
 
@@ -36,12 +40,14 @@ describe('GET /api/activity/{userId} E2E Test', () => {
   it('[200] 존재하는 사용자의 활동 데이터를 정상적으로 조회한다.', async () => {
     // given
     const userId = testUser.id;
-    const year = activitiesData[0].activityDate.getFullYear();
+    const requestDto = new ReadActivityQueryRequestDto({
+      year: activitiesData[0].activityDate.getFullYear(),
+    });
 
     // when
-    const response = await request(app.getHttpServer())
+    const response = await agent
       .get(`/api/activity/${userId}`)
-      .query({ year });
+      .query(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
@@ -68,12 +74,14 @@ describe('GET /api/activity/{userId} E2E Test', () => {
   it('[200] 다른 연도를 요청하면 해당 연도의 데이터만 조회된다.', async () => {
     // given
     const userId = testUser.id;
-    const year = activitiesData[0].activityDate.getFullYear() - 1;
+    const requestDto = new ReadActivityQueryRequestDto({
+      year: activitiesData[0].activityDate.getFullYear() - 1,
+    });
 
     // when
-    const response = await request(app.getHttpServer())
+    const response = await agent
       .get(`/api/activity/${userId}`)
-      .query({ year });
+      .query(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
@@ -88,12 +96,14 @@ describe('GET /api/activity/{userId} E2E Test', () => {
 
   it('[404] 존재하지 않는 사용자 ID로 요청하면 404 에러를 반환한다.', async () => {
     // given
-    const year = activitiesData[0].activityDate.getFullYear();
+    const requestDto = new ReadActivityQueryRequestDto({
+      year: activitiesData[0].activityDate.getFullYear(),
+    });
 
     // when
-    const response = await request(app.getHttpServer())
+    const response = await agent
       .get(`/api/activity/${Number.MAX_SAFE_INTEGER}`)
-      .query({ year });
+      .query(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);

@@ -15,7 +15,7 @@ describe('GET /api/oauth/callback', () => {
 
   it('[302] ', async () => {
     // given
-    const dto = new OAuthCallbackRequestDto({
+    const requestDto = new OAuthCallbackRequestDto({
       code: 'testCode',
       state: Buffer.from(
         JSON.stringify({ provider: OAuthType.Github }),
@@ -44,7 +44,7 @@ describe('GET /api/oauth/callback', () => {
     // when
     const response = await request(app.getHttpServer())
       .get('/api/oauth/callback')
-      .query(dto);
+      .query(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.FOUND);

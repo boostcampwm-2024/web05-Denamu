@@ -51,9 +51,10 @@ describe('PATCH api/user/password E2E Test', () => {
 
   it('없거나 만료된 uuid 토큰으로 요청하면 404 NotFoundException를 반환한다.', async () => {
     // given
-    const uuid = 'non-existent-or-expired-uuid';
-    const password = 'test1234@';
-    const requestDto = new ResetPasswordRequestDto({ uuid, password });
+    const requestDto = new ResetPasswordRequestDto({
+      uuid: 'non-existent-or-expired-uuid',
+      password: 'test1234@',
+    });
 
     // when
     const agent = request.agent(app.getHttpServer());
