@@ -1,5 +1,5 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import * as supertest from 'supertest';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { ActivityRepository } from '../../../src/activity/repository/activity.repository';
 import { UserFixture } from '../../fixture/user.fixture';
@@ -16,7 +16,7 @@ describe('GET /api/activity/{userId} E2E Test', () => {
 
   beforeAll(async () => {
     app = global.testApp;
-    agent = request(app.getHttpServer());
+    agent = supertest(app.getHttpServer());
     const userRepository = app.get(UserRepository);
     const activityRepository = app.get(ActivityRepository);
 

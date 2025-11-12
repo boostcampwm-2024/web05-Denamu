@@ -1,13 +1,16 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import * as supertest from 'supertest';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
+import TestAgent from 'supertest/lib/agent';
 
 describe('POST /api/admin/logout E2E Test', () => {
   let app: INestApplication;
+  let agent: TestAgent;
 
   beforeAll(async () => {
     app = global.testApp;
+    agent = supertest(app.getHttpServer());
     const redisService = app.get(RedisService);
     await redisService.set(
       `${REDIS_KEYS.ADMIN_AUTH_KEY}:testSessionId`,
@@ -17,7 +20,7 @@ describe('POST /api/admin/logout E2E Test', () => {
 
   it('[200] 관리자 로그인이 되어 있으면 로그아웃을 정상적으로 할 수 있다.', async () => {
     // when
-    const response = await request(app.getHttpServer())
+    const response = await agent
       .post('/api/admin/logout')
       .set('Cookie', 'sessionId=testSessionId');
 
@@ -30,10 +33,8 @@ describe('POST /api/admin/logout E2E Test', () => {
 
   it('[401] 관리자 로그인이 되어 있지 않으면 로그아웃을 정상적으로 할 수 없다.', async () => {
     // when
-    const noCookieResponse = await request(app.getHttpServer()).post(
-      '/api/admin/logout',
-    );
-    const noSessionResponse = await request(app.getHttpServer())
+    const noCookieResponse = await agent.post('/api/admin/logout');
+    const noSessionResponse = await agent
       .post('/api/admin/logout')
       .set('Cookie', 'sessionId=invalid');
 

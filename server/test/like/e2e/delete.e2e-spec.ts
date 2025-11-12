@@ -12,6 +12,7 @@ import { Feed } from '../../../src/feed/entity/feed.entity';
 import { ManageLikeRequestDto } from '../../../src/like/dto/request/manageLike.dto';
 import * as request from 'supertest';
 import { LikeRepository } from '../../../src/like/repository/like.repository';
+import TestAgent from 'supertest/lib/agent';
 
 describe('DELETE /api/like/{feedId} E2E Test', () => {
   let app: INestApplication;
@@ -19,9 +20,11 @@ describe('DELETE /api/like/{feedId} E2E Test', () => {
   let rssAcceptInformation: RssAccept;
   let userInformation: User;
   let feed: Feed;
+  let agent: TestAgent;
 
   beforeAll(async () => {
     app = global.testApp;
+    agent = request.agent(app.getHttpServer());
     userService = app.get(UserService);
     const userRepository = app.get(UserRepository);
     const rssAcceptRepository = app.get(RssAcceptRepository);
@@ -43,7 +46,6 @@ describe('DELETE /api/like/{feedId} E2E Test', () => {
     const feedLikeRequest = new ManageLikeRequestDto({
       feedId: 1,
     });
-    const agent = request.agent(app.getHttpServer());
 
     // when
     const response = await agent.delete(`/api/like/${feedLikeRequest.feedId}`);
@@ -66,7 +68,6 @@ describe('DELETE /api/like/{feedId} E2E Test', () => {
       },
       'access',
     );
-    const agent = request.agent(app.getHttpServer());
 
     // when
     const response = await agent
@@ -97,7 +98,6 @@ describe('DELETE /api/like/{feedId} E2E Test', () => {
       },
       'access',
     );
-    const agent = request.agent(app.getHttpServer());
 
     // when
     const response = await agent
@@ -122,7 +122,6 @@ describe('DELETE /api/like/{feedId} E2E Test', () => {
       },
       'access',
     );
-    const agent = request.agent(app.getHttpServer());
 
     // when
     const response = await agent

@@ -10,15 +10,18 @@ import { Feed } from '../../../src/feed/entity/feed.entity';
 import { FeedFixture } from '../../fixture/feed.fixture';
 import { RssAcceptFixture } from '../../fixture/rss-accept.fixture';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
+import TestAgent from 'supertest/lib/agent';
 
 describe('POST /api/comment E2E Test', () => {
   let app: INestApplication;
+  let agent: TestAgent;
   let userService: UserService;
   let userInformation: User;
   let feed: Feed;
 
   beforeAll(async () => {
     app = global.testApp;
+    agent = request.agent(app.getHttpServer());
     userService = app.get(UserService);
     const userRepository = app.get(UserRepository);
     const rssAcceptRepository = app.get(RssAcceptRepository);
@@ -41,7 +44,6 @@ describe('POST /api/comment E2E Test', () => {
       comment: 'test',
       feedId: feed.id,
     });
-    const agent = request.agent(app.getHttpServer());
 
     // when
     const response = await agent.post('/api/comment').send(requestDto);
@@ -65,7 +67,6 @@ describe('POST /api/comment E2E Test', () => {
       },
       'access',
     );
-    const agent = request.agent(app.getHttpServer());
 
     // when
     const response = await agent
@@ -92,7 +93,6 @@ describe('POST /api/comment E2E Test', () => {
       },
       'access',
     );
-    const agent = request.agent(app.getHttpServer());
 
     // when
     const response = await agent
@@ -119,7 +119,6 @@ describe('POST /api/comment E2E Test', () => {
       comment: 'test',
       feedId: feed.id,
     });
-    const agent = request.agent(app.getHttpServer());
 
     // when
     const response = await agent

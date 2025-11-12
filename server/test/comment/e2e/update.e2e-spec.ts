@@ -12,15 +12,18 @@ import { FeedFixture } from '../../fixture/feed.fixture';
 import { CommentFixture } from '../../fixture/comment.fixture';
 import { UpdateCommentRequestDto } from '../../../src/comment/dto/request/updateComment.dto';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
+import TestAgent from 'supertest/lib/agent';
 
 describe('PATCH /api/comment E2E Test', () => {
   let app: INestApplication;
+  let agent: TestAgent;
   let userService: UserService;
   let userInformation: User;
   let commentInformation: Comment;
 
   beforeAll(async () => {
     app = global.testApp;
+    agent = request.agent(app.getHttpServer());
     userService = app.get(UserService);
     const userRepository = app.get(UserRepository);
     const rssAcceptRepository = app.get(RssAcceptRepository);
@@ -50,7 +53,6 @@ describe('PATCH /api/comment E2E Test', () => {
       commentId: commentInformation.id,
       newComment: 'newComment',
     });
-    const agent = request.agent(app.getHttpServer());
 
     // when
     const response = await agent.patch('/api/comment').send(requestDto);
@@ -74,7 +76,6 @@ describe('PATCH /api/comment E2E Test', () => {
       },
       'access',
     );
-    const agent = request.agent(app.getHttpServer());
 
     // when
     const response = await agent
@@ -101,7 +102,6 @@ describe('PATCH /api/comment E2E Test', () => {
       },
       'access',
     );
-    const agent = request.agent(app.getHttpServer());
 
     // when
     const response = await agent
@@ -128,7 +128,6 @@ describe('PATCH /api/comment E2E Test', () => {
       },
       'access',
     );
-    const agent = request.agent(app.getHttpServer());
 
     // when
     const response = await agent

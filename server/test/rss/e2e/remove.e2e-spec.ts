@@ -6,14 +6,17 @@ import {
 import { RssFixture } from '../../fixture/rss.fixture';
 import * as request from 'supertest';
 import { DeleteRssRequestDto } from '../../../src/rss/dto/request/deleteRss.dto';
+import TestAgent from 'supertest/lib/agent';
 
 describe('POST /api/rss/remove E2E Test', () => {
   let app: INestApplication;
+  let agent: TestAgent;
   let rssRepository: RssRepository;
   let rssAcceptRepository: RssAcceptRepository;
 
   beforeAll(() => {
     app = global.testApp;
+    agent = request.agent(app.getHttpServer());
     rssRepository = app.get(RssRepository);
     rssAcceptRepository = app.get(RssAcceptRepository);
   });
@@ -26,9 +29,7 @@ describe('POST /api/rss/remove E2E Test', () => {
     });
 
     // when
-    const response = await request(app.getHttpServer())
-      .post('/api/rss/remove')
-      .send(requestDto);
+    const response = await agent.post('/api/rss/remove').send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
@@ -43,9 +44,7 @@ describe('POST /api/rss/remove E2E Test', () => {
     });
 
     // when
-    const response = await request(app.getHttpServer())
-      .post('/api/rss/remove')
-      .send(requestDto);
+    const response = await agent.post('/api/rss/remove').send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
@@ -60,9 +59,7 @@ describe('POST /api/rss/remove E2E Test', () => {
     });
 
     // when
-    const response = await request(app.getHttpServer())
-      .post('/api/rss/remove')
-      .send(requestDto);
+    const response = await agent.post('/api/rss/remove').send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.OK);

@@ -8,15 +8,18 @@ import {
   RssRepository,
 } from '../../../src/rss/repository/rss.repository';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
+import TestAgent from 'supertest/lib/agent';
 
 describe('POST /api/rss/reject/{rssId} E2E Test', () => {
   let app: INestApplication;
+  let agent: TestAgent;
   let rssRepository: RssRepository;
   let rssRejectRepository: RssRejectRepository;
   let redisService: RedisService;
 
   beforeAll(async () => {
     app = global.testApp;
+    agent = request.agent(app.getHttpServer());
     rssRepository = app.get(RssRepository);
     rssRejectRepository = app.get(RssRejectRepository);
     redisService = app.get(RedisService);
@@ -41,7 +44,7 @@ describe('POST /api/rss/reject/{rssId} E2E Test', () => {
     });
 
     // when
-    const response = await request(app.getHttpServer())
+    const response = await agent
       .post(`/api/rss/reject/${rss.id}`)
       .set('Cookie', 'sessionId=testSessionId')
       .send(requestDto);
@@ -63,7 +66,7 @@ describe('POST /api/rss/reject/{rssId} E2E Test', () => {
     });
 
     // when
-    const response = await request(app.getHttpServer())
+    const response = await agent
       .post(`/api/rss/reject/1`)
       .set('Cookie', 'sessionId=testSessionId')
       .send(requestDTO);
@@ -74,11 +77,8 @@ describe('POST /api/rss/reject/{rssId} E2E Test', () => {
 
   it('[401] 유효한 세션이 존재하지 않을 때', async () => {
     // when
-    const noCookieResponse = await request(app.getHttpServer()).post(
-      `/api/rss/reject/1`,
-    );
-
-    const noSessionResponse = await request(app.getHttpServer())
+    const noCookieResponse = await agent.post(`/api/rss/reject/1`);
+    const noSessionResponse = await agent
       .post(`/api/rss/reject/1`)
       .set('Cookie', 'sessionId=invalid');
 

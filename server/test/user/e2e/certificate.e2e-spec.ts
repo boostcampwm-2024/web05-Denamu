@@ -5,14 +5,17 @@ import { RedisService } from '../../../src/common/redis/redis.service';
 import { UserFixture } from '../../fixture/user.fixture';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 import { CertificateUserRequestDto } from '../../../src/user/dto/request/certificateUser.dto';
+import TestAgent from 'supertest/lib/agent';
 
 describe('POST /api/user/certificate E2E Test', () => {
   let app: INestApplication;
+  let agent: TestAgent;
   let redisService: RedisService;
   let userRepository: UserRepository;
 
   beforeAll(async () => {
     app = global.testApp;
+    agent = request.agent(app.getHttpServer());
     redisService = app.get(RedisService);
     userRepository = app.get(UserRepository);
   });
@@ -26,7 +29,6 @@ describe('POST /api/user/certificate E2E Test', () => {
     await redisService.set(redisKey, JSON.stringify(userEntity));
 
     // when
-    const agent = request.agent(app.getHttpServer());
     const response = await agent.post('/api/user/certificate').send(requestDto);
 
     // then
@@ -45,7 +47,6 @@ describe('POST /api/user/certificate E2E Test', () => {
     });
 
     // when
-    const agent = request.agent(app.getHttpServer());
     const response = await agent.post('/api/user/certificate').send(requestDto);
 
     // then

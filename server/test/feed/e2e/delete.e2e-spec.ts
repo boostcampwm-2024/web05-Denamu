@@ -6,14 +6,17 @@ import { RssAcceptFixture } from '../../fixture/rss-accept.fixture';
 import { Feed } from '../../../src/feed/entity/feed.entity';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../fixture/user.fixture';
-import * as request from 'supertest';
+import * as supertest from 'supertest';
+import TestAgent from 'supertest/lib/agent';
 
 describe('DELETE /api/feed/{feedId} E2E Test', () => {
   let app: INestApplication;
   let feed: Feed;
+  let agent: TestAgent;
 
   beforeAll(async () => {
     app = global.testApp;
+    agent = supertest(app.getHttpServer());
 
     const userRepository = app.get(UserRepository);
     const rssAcceptRepository = app.get(RssAcceptRepository);
@@ -33,9 +36,7 @@ describe('DELETE /api/feed/{feedId} E2E Test', () => {
     global.fetch = jest.fn().mockResolvedValue({ status: HttpStatus.OK });
 
     // when
-    const response = await request(app.getHttpServer()).delete(
-      `/api/feed/${feed.id}`,
-    );
+    const response = await agent.delete(`/api/feed/${feed.id}`);
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
@@ -48,9 +49,7 @@ describe('DELETE /api/feed/{feedId} E2E Test', () => {
       .mockResolvedValue({ status: HttpStatus.NOT_FOUND });
 
     // when
-    const response = await request(app.getHttpServer()).delete(
-      `/api/feed/${feed.id}`,
-    );
+    const response = await agent.delete(`/api/feed/${feed.id}`);
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
@@ -58,9 +57,7 @@ describe('DELETE /api/feed/{feedId} E2E Test', () => {
 
   it('[404] 존재하지 않는 게시글 ID에 요청을 보낼 경우 404를 응답한다.', async () => {
     // when
-    const response = await request(app.getHttpServer()).delete(
-      `/api/feed/${feed.id}`,
-    );
+    const response = await agent.delete(`/api/feed/${feed.id}`);
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);

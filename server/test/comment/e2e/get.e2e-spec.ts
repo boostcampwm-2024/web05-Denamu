@@ -6,13 +6,16 @@ import { FeedRepository } from '../../../src/feed/repository/feed.repository';
 import { RssAcceptFixture } from '../../fixture/rss-accept.fixture';
 import { FeedFixture } from '../../fixture/feed.fixture';
 import { GetCommentRequestDto } from '../../../src/comment/dto/request/getComment.dto';
+import TestAgent from 'supertest/lib/agent';
 
 describe('GET /api/comment/{feedId} E2E Test', () => {
   let app: INestApplication;
+  let agent: TestAgent;
   let feed: Feed;
 
   beforeAll(async () => {
     app = global.testApp;
+    agent = request.agent(app.getHttpServer());
     const rssAcceptRepository = app.get(RssAcceptRepository);
     const feedRepository = app.get(FeedRepository);
     const rssAcceptInformation = await rssAcceptRepository.save(
@@ -28,7 +31,6 @@ describe('GET /api/comment/{feedId} E2E Test', () => {
     const requestDto = new GetCommentRequestDto({
       feedId: 100,
     });
-    const agent = request.agent(app.getHttpServer());
 
     // when
     const response = await agent
@@ -44,7 +46,6 @@ describe('GET /api/comment/{feedId} E2E Test', () => {
     const requestDto = new GetCommentRequestDto({
       feedId: feed.id,
     });
-    const agent = request.agent(app.getHttpServer());
 
     // when
     const response = await agent

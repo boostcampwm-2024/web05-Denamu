@@ -5,14 +5,17 @@ import { RedisService } from '../../../../src/common/redis/redis.service';
 import { UserFixture } from '../../../fixture/user.fixture';
 import { REDIS_KEYS } from '../../../../src/common/redis/redis.constant';
 import { ConfirmDeleteAccountDto } from '../../../../src/user/dto/request/confirmDeleteAccount.dto';
+import TestAgent from 'supertest/lib/agent';
 
 describe('POST /api/user/delete-account/confirm', () => {
   let app: INestApplication;
+  let agent: TestAgent;
   let redisService: RedisService;
   let userRepository: UserRepository;
 
   beforeAll(async () => {
     app = global.testApp;
+    agent = request.agent(app.getHttpServer());
     redisService = app.get(RedisService);
     userRepository = app.get(UserRepository);
   });
@@ -28,7 +31,6 @@ describe('POST /api/user/delete-account/confirm', () => {
     await redisService.set(redisKey, savedUser.id.toString(), 'EX', 600);
 
     // when
-    const agent = request.agent(app.getHttpServer());
     const response = await agent
       .post('/api/user/delete-account/confirm')
       .send(requestDto);
@@ -42,7 +44,6 @@ describe('POST /api/user/delete-account/confirm', () => {
     const requestDto = new ConfirmDeleteAccountDto({ token: 'invalid-token' });
 
     // when
-    const agent = request.agent(app.getHttpServer());
     const response = await agent
       .post('/api/user/delete-account/confirm')
       .send(requestDto);
@@ -67,7 +68,6 @@ describe('POST /api/user/delete-account/confirm', () => {
     await new Promise((resolve) => setTimeout(resolve, 1100));
 
     // when
-    const agent = request.agent(app.getHttpServer());
     const response = await agent
       .post('/api/user/delete-account/confirm')
       .send(requestDto);

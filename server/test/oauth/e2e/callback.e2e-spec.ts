@@ -3,13 +3,16 @@ import * as request from 'supertest';
 import { OAuthService } from '../../../src/user/service/oauth.service';
 import { OAuthCallbackRequestDto } from '../../../src/user/dto/request/oAuthCallbackDto';
 import { OAuthType } from '../../../src/user/constant/oauth.constant';
+import TestAgent from 'supertest/lib/agent';
 
 describe('GET /api/oauth/callback', () => {
   let app: INestApplication;
+  let agent: TestAgent;
   let oauthService: OAuthService;
 
   beforeAll(() => {
     app = global.testApp;
+    agent = request.agent(app.getHttpServer());
     oauthService = app.get(OAuthService);
   });
 
@@ -42,9 +45,7 @@ describe('GET /api/oauth/callback', () => {
     });
 
     // when
-    const response = await request(app.getHttpServer())
-      .get('/api/oauth/callback')
-      .query(requestDto);
+    const response = await agent.get('/api/oauth/callback').query(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.FOUND);

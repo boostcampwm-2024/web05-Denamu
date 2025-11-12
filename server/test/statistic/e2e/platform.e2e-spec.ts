@@ -2,13 +2,16 @@ import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
 import { RssAcceptFixture } from '../../fixture/rss-accept.fixture';
+import TestAgent from 'supertest/lib/agent';
 
 describe('GET /api/statistic/platform E2E Test', () => {
   let app: INestApplication;
+  let agent: TestAgent;
   let rssAcceptRepository: RssAcceptRepository;
 
   beforeAll(async () => {
     app = global.testApp;
+    agent = request.agent(app.getHttpServer());
     rssAcceptRepository = app.get(RssAcceptRepository);
     await Promise.all([
       rssAcceptRepository.insert(RssAcceptFixture.createRssAcceptFixture({})),
@@ -23,9 +26,7 @@ describe('GET /api/statistic/platform E2E Test', () => {
 
   it('[200] 요청을 받으면 블로그 플랫폼별 통계 결과를 응답한다.', async () => {
     // when
-    const response = await request(app.getHttpServer()).get(
-      '/api/statistic/platform',
-    );
+    const response = await agent.get('/api/statistic/platform');
 
     // then
     expect(response.status).toBe(HttpStatus.OK);

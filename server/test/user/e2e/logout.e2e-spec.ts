@@ -4,14 +4,17 @@ import { UserService } from '../../../src/user/service/user.service';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../fixture/user.fixture';
 import { User } from '../../../src/user/entity/user.entity';
+import TestAgent from 'supertest/lib/agent';
 
 describe('POST /api/user/logout E2E Test', () => {
   let app: INestApplication;
+  let agent: TestAgent;
   let userService: UserService;
   let userInformation: User;
 
   beforeAll(async () => {
     app = global.testApp;
+    agent = request.agent(app.getHttpServer());
     userService = app.get(UserService);
     const userRepository = app.get(UserRepository);
 
@@ -31,7 +34,6 @@ describe('POST /api/user/logout E2E Test', () => {
       },
       'access',
     );
-    const agent = request.agent(app.getHttpServer());
 
     // when
     const response = await agent
@@ -43,9 +45,6 @@ describe('POST /api/user/logout E2E Test', () => {
   });
 
   it('[401] Access Token이 존재하지 않았을 때, 오류가 발생한다.', async () => {
-    // given
-    const agent = request.agent(app.getHttpServer());
-
     // when
     const response = await agent.post('/api/user/logout');
 

@@ -6,9 +6,11 @@ import { UserFixture } from '../../fixture/user.fixture';
 import { User } from '../../../src/user/entity/user.entity';
 import { FileService } from '../../../src/file/service/file.service';
 import { UpdateUserRequestDto } from '../../../src/user/dto/request/updateUser.dto';
+import TestAgent from 'supertest/lib/agent';
 
 describe('PATCH /api/user/profile E2E Test', () => {
   let app: INestApplication;
+  let agent: TestAgent;
   let userService: UserService;
   let userRepository: UserRepository;
   let fileService: FileService;
@@ -16,6 +18,7 @@ describe('PATCH /api/user/profile E2E Test', () => {
 
   beforeAll(async () => {
     app = global.testApp;
+    agent = request.agent(app.getHttpServer());
     userService = app.get(UserService);
     userRepository = app.get(UserRepository);
     fileService = app.get(FileService);
@@ -53,7 +56,7 @@ describe('PATCH /api/user/profile E2E Test', () => {
     });
 
     // when
-    const response = await request(app.getHttpServer())
+    const response = await agent
       .patch('/api/user/profile')
       .set('Authorization', `Bearer ${accessToken}`)
       .send(requestDto);
@@ -87,7 +90,7 @@ describe('PATCH /api/user/profile E2E Test', () => {
     });
 
     // when
-    const response = await request(app.getHttpServer())
+    const response = await agent
       .patch('/api/user/profile')
       .set('Authorization', `Bearer ${accessToken}`)
       .send(requestDto);
@@ -111,9 +114,7 @@ describe('PATCH /api/user/profile E2E Test', () => {
     });
 
     // when
-    const response = await request(app.getHttpServer())
-      .patch('/api/user/profile')
-      .send(requestDto);
+    const response = await agent.patch('/api/user/profile').send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);

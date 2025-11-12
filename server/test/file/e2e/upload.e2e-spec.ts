@@ -1,5 +1,5 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import * as supertest from 'supertest';
 import { UploadFileQueryRequestDto } from '../../../src/file/dto/request/uploadFile.dto';
 import * as fs from 'fs';
 import { FileUploadType } from '../../../src/common/disk/fileValidator';
@@ -8,15 +8,18 @@ import { User } from '../../../src/user/entity/user.entity';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../fixture/user.fixture';
 import * as path from 'path';
+import TestAgent from 'supertest/lib/agent';
 
 describe('POST /api/file', () => {
   let app: INestApplication;
+  let agent: TestAgent;
   let testUser: User;
   let userService: UserService;
   let userRepository: UserRepository;
 
   beforeAll(async () => {
     app = global.testApp;
+    agent = supertest(app.getHttpServer());
     userRepository = app.get(UserRepository);
     userService = app.get(UserService);
     testUser = await userRepository.save(
@@ -26,14 +29,12 @@ describe('POST /api/file', () => {
 
   it('[401] 인증되지 않은 사용자가 요청할 경우 파일 업로드를 실패한다.', async () => {
     // given
-    const dto = new UploadFileQueryRequestDto({
+    const requestDto = new UploadFileQueryRequestDto({
       uploadType: FileUploadType.PROFILE_IMAGE,
     });
 
     // when
-    const response = await request(app.getHttpServer())
-      .post('/api/file')
-      .query(dto);
+    const response = await agent.post('/api/file').query(requestDto);
 
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
@@ -54,7 +55,7 @@ describe('POST /api/file', () => {
     );
 
     // when
-    const response = await request(app.getHttpServer())
+    const response = await agent
       .post('/api/file')
       .set('Authorization', `Bearer ${accessToken}`)
       .attach('file', fileBuffer, 'test.png');
@@ -65,7 +66,7 @@ describe('POST /api/file', () => {
 
   it('[400] 파일이 포함되어 있지 않을 경우 파일 업로드를 실패한다.', async () => {
     // given
-    const dto = new UploadFileQueryRequestDto({
+    const requestDto = new UploadFileQueryRequestDto({
       uploadType: FileUploadType.PROFILE_IMAGE,
     });
     const accessToken = userService.createToken(
@@ -79,9 +80,9 @@ describe('POST /api/file', () => {
     );
 
     // when
-    const response = await request(app.getHttpServer())
+    const response = await agent
       .post('/api/file')
-      .query(dto)
+      .query(requestDto)
       .set('Authorization', `Bearer ${accessToken}`);
 
     // then
@@ -90,7 +91,7 @@ describe('POST /api/file', () => {
 
   it('[201] 이미지를 포함하고 쿼리를 포함하여 보낼 경우 올바르게 통과할 수 있다.', async () => {
     // given
-    const dto = new UploadFileQueryRequestDto({
+    const requestDto = new UploadFileQueryRequestDto({
       uploadType: FileUploadType.PROFILE_IMAGE,
     });
 
@@ -112,9 +113,9 @@ describe('POST /api/file', () => {
     }));
 
     // when
-    const response = await request(app.getHttpServer())
+    const response = await agent
       .post('/api/file')
-      .query(dto)
+      .query(requestDto)
       .set('Authorization', `Bearer ${accessToken}`)
       .attach('file', filePath);
 

@@ -1,17 +1,20 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import * as supertest from 'supertest';
 import { FeedFixture } from '../../fixture/feed.fixture';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
 import { RssAcceptFixture } from '../../fixture/rss-accept.fixture';
 import { ManageFeedRequestDto } from '../../../src/feed/dto/request/manageFeed.dto';
+import TestAgent from 'supertest/lib/agent';
 
 describe('GET /api/feed/detail/{feedId} E2E Test', () => {
   let app: INestApplication;
+  let agent: TestAgent;
   const latestId = 20;
 
   beforeAll(async () => {
     app = global.testApp;
+    agent = supertest(app.getHttpServer());
     const feedRepository = app.get(FeedRepository);
     const rssAcceptRepository = app.get(RssAcceptRepository);
 
@@ -33,7 +36,7 @@ describe('GET /api/feed/detail/{feedId} E2E Test', () => {
     });
 
     // when
-    const response = await request(app.getHttpServer()).get(
+    const response = await agent.get(
       `/api/feed/detail/${feedDetailRequestDto.feedId}`,
     );
 
@@ -49,7 +52,7 @@ describe('GET /api/feed/detail/{feedId} E2E Test', () => {
     });
 
     // when
-    const response = await request(app.getHttpServer()).get(
+    const response = await agent.get(
       `/api/feed/detail/${feedDetailRequestDto.feedId}`,
     );
 
@@ -66,7 +69,7 @@ describe('GET /api/feed/detail/{feedId} E2E Test', () => {
     });
 
     // when
-    const response = await request(app.getHttpServer()).get(
+    const response = await agent.get(
       `/api/feed/detail/${feedDetailRequestDto.feedId}`,
     );
 

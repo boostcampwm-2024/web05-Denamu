@@ -5,14 +5,17 @@ import {
   RssAcceptRepository,
   RssRepository,
 } from '../../../src/rss/repository/rss.repository';
+import TestAgent from 'supertest/lib/agent';
 
 describe('GET /api/rss E2E Test', () => {
   let app: INestApplication;
+  let agent: TestAgent;
   let rssRepository: RssRepository;
   let rssAcceptRepository: RssAcceptRepository;
 
   beforeAll(() => {
     app = global.testApp;
+    agent = request.agent(app.getHttpServer());
     rssRepository = app.get(RssRepository);
     rssAcceptRepository = app.get(RssAcceptRepository);
   });
@@ -23,7 +26,7 @@ describe('GET /api/rss E2E Test', () => {
 
   it('[200] RSS가 등록되지 않은 경우 빈 리스트를 반환한다.', async () => {
     // when
-    const response = await request(app.getHttpServer()).get('/api/rss');
+    const response = await agent.get('/api/rss');
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
@@ -37,7 +40,7 @@ describe('GET /api/rss E2E Test', () => {
     );
 
     // when
-    const response = await request(app.getHttpServer()).get('/api/rss');
+    const response = await agent.get('/api/rss');
 
     //then
     expect(response.status).toBe(HttpStatus.OK);

@@ -8,14 +8,17 @@ import { FeedFixture } from '../../fixture/feed.fixture';
 import { RssAccept } from '../../../src/rss/entity/rss.entity';
 import { Feed } from '../../../src/feed/entity/feed.entity';
 import * as request from 'supertest';
+import TestAgent from 'supertest/lib/agent';
 
 describe('GET /api/like/{feedId} E2E Test', () => {
   let app: INestApplication;
+  let agent: TestAgent;
   let rssAcceptInformation: RssAccept;
   let feed: Feed;
 
   beforeAll(async () => {
     app = global.testApp;
+    agent = request.agent(app.getHttpServer());
     const userRepository = app.get(UserRepository);
     const rssAcceptRepository = app.get(RssAcceptRepository);
     const feedRepository = app.get(FeedRepository);
@@ -30,9 +33,6 @@ describe('GET /api/like/{feedId} E2E Test', () => {
   });
 
   it('[200] 좋아요 조회를 할 수 있다.', async () => {
-    // given
-    const agent = request.agent(app.getHttpServer());
-
     // when
     const response = await agent.get(`/api/like/${feed.id}`);
 
@@ -41,9 +41,6 @@ describe('GET /api/like/{feedId} E2E Test', () => {
   });
 
   it('[404] 게시글이 없다면 좋아요 조회를 할 수 없다.', async () => {
-    // given
-    const agent = request.agent(app.getHttpServer());
-
     // when
     const response = await agent.get(`/api/like/100`);
 

@@ -6,14 +6,17 @@ import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import * as bcrypt from 'bcrypt';
 import { ResetPasswordRequestDto } from '../../../src/user/dto/request/resetPassword.dto';
+import TestAgent from 'supertest/lib/agent';
 
 describe('PATCH api/user/password E2E Test', () => {
   let app: INestApplication;
+  let agent: TestAgent;
   let redisService: RedisService;
   let userRepository: UserRepository;
 
   beforeAll(async () => {
     app = global.testApp;
+    agent = request.agent(app.getHttpServer());
     redisService = app.get(RedisService);
     userRepository = app.get(UserRepository);
   });
@@ -32,7 +35,6 @@ describe('PATCH api/user/password E2E Test', () => {
     await redisService.set(redisKey, JSON.stringify(savedUser.id));
 
     // when
-    const agent = request.agent(app.getHttpServer());
     const response = await agent.patch('/api/user/password').send(requestDto);
 
     // then
@@ -57,7 +59,6 @@ describe('PATCH api/user/password E2E Test', () => {
     });
 
     // when
-    const agent = request.agent(app.getHttpServer());
     const response = await agent.patch('/api/user/password').send(requestDto);
 
     // then

@@ -4,19 +4,21 @@ import { RegisterAdminRequestDto } from '../../../src/admin/dto/request/register
 import * as request from 'supertest';
 import { AdminFixture } from '../../fixture/admin.fixture';
 import { AdminRepository } from '../../../src/admin/repository/admin.repository';
+import TestAgent from 'supertest/lib/agent';
 
 describe('POST /api/admin/register E2E Test', () => {
   let app: INestApplication;
+  let agent: TestAgent;
 
   beforeAll(async () => {
     app = global.testApp;
+    agent = request.agent(app.getHttpServer());
     const adminRepository = app.get(AdminRepository);
     await adminRepository.insert(await AdminFixture.createAdminCryptFixture());
   });
 
   it('[201] 관리자가 로그인되어 있으면 다른 관리자 계정 회원가입을 할 수 있다.', async () => {
     // given
-    const agent = request.agent(app.getHttpServer());
     const loginAdminDto = new LoginAdminRequestDto({
       loginId: 'test1234',
       password: 'test1234!',
@@ -36,7 +38,6 @@ describe('POST /api/admin/register E2E Test', () => {
 
   it('[409] 이미 가입한 ID를 입력하면 관리자 계정을 생성할 수 없다.', async () => {
     // given
-    const agent = request.agent(app.getHttpServer());
     const loginAdminDto = new LoginAdminRequestDto({
       loginId: 'test1234',
       password: 'test1234!',
@@ -56,7 +57,6 @@ describe('POST /api/admin/register E2E Test', () => {
 
   it('[401] 관리자가 로그아웃 상태면 예외가 발생한다.', async () => {
     // given
-    const agent = request.agent(app.getHttpServer());
     const newAdminDto = new RegisterAdminRequestDto({
       loginId: 'testNewAdminId',
       password: 'testNewAdminPassword!',

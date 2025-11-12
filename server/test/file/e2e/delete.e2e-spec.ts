@@ -1,5 +1,5 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import * as supertest from 'supertest';
 import { UserService } from '../../../src/user/service/user.service';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { User } from '../../../src/user/entity/user.entity';
@@ -7,9 +7,11 @@ import { UserFixture } from '../../fixture/user.fixture';
 import { FileRepository } from '../../../src/file/repository/file.repository';
 import { File } from '../../../src/file/entity/file.entity';
 import { FileFixture } from '../../fixture/file.fixture';
+import TestAgent from 'supertest/lib/agent';
 
 describe('DELETE /api/file/{fileId}', () => {
   let app: INestApplication;
+  let agent: TestAgent;
   let testUser: User;
   let userService: UserService;
   let userRepository: UserRepository;
@@ -18,6 +20,7 @@ describe('DELETE /api/file/{fileId}', () => {
 
   beforeAll(async () => {
     app = global.testApp;
+    agent = supertest(app.getHttpServer());
     userRepository = app.get(UserRepository);
     userService = app.get(UserService);
     fileRepository = app.get(FileRepository);
@@ -46,7 +49,7 @@ describe('DELETE /api/file/{fileId}', () => {
     );
 
     // when
-    const response = await request(app.getHttpServer())
+    const response = await agent
       .delete(`/api/file/${file.id}`)
       .set('Authorization', `Bearer ${accessToken}`);
 
@@ -64,7 +67,7 @@ describe('DELETE /api/file/{fileId}', () => {
     }));
 
     // when
-    const response = await request(app.getHttpServer()).delete('/api/file/1');
+    const response = await agent.delete('/api/file/1');
 
     // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
@@ -91,7 +94,7 @@ describe('DELETE /api/file/{fileId}', () => {
     );
 
     // when
-    const response = await request(app.getHttpServer())
+    const response = await agent
       .delete(`/api/file/${file.id}`)
       .set('Authorization', `Bearer ${accessToken}`);
 
@@ -101,7 +104,7 @@ describe('DELETE /api/file/{fileId}', () => {
 
   it('[401] 파일에 삭제 권한이 없을 경우 권한 오류가 발생한다.', async () => {
     // when
-    const response = await request(app.getHttpServer()).delete('/api/file/1');
+    const response = await agent.delete('/api/file/1');
 
     // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
@@ -125,7 +128,7 @@ describe('DELETE /api/file/{fileId}', () => {
     );
 
     // when
-    const response = await request(app.getHttpServer())
+    const response = await agent
       .delete(`/api/file/${Number.MAX_SAFE_INTEGER}`)
       .set('Authorization', `Bearer ${accessToken}`);
 

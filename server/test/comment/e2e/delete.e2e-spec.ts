@@ -12,15 +12,18 @@ import { FeedRepository } from '../../../src/feed/repository/feed.repository';
 import { FeedFixture } from '../../fixture/feed.fixture';
 import { RssAcceptFixture } from '../../fixture/rss-accept.fixture';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
+import TestAgent from 'supertest/lib/agent';
 
 describe('DELETE /api/comment E2E Test', () => {
   let app: INestApplication;
+  let agent: TestAgent;
   let userService: UserService;
   let userInformation: User;
   let commentInformation: Comment;
 
   beforeAll(async () => {
     app = global.testApp;
+    agent = request.agent(app.getHttpServer());
     userService = app.get(UserService);
     const userRepository = app.get(UserRepository);
     const rssAcceptRepository = app.get(RssAcceptRepository);
@@ -49,7 +52,6 @@ describe('DELETE /api/comment E2E Test', () => {
     const requestDto = new DeleteCommentRequestDto({
       commentId: commentInformation.id,
     });
-    const agent = request.agent(app.getHttpServer());
 
     // when
     const response = await agent.delete('/api/comment').send(requestDto);
@@ -72,7 +74,6 @@ describe('DELETE /api/comment E2E Test', () => {
     const requestDto = new DeleteCommentRequestDto({
       commentId: commentInformation.id,
     });
-    const agent = request.agent(app.getHttpServer());
 
     // when
     const response = await agent
@@ -98,7 +99,6 @@ describe('DELETE /api/comment E2E Test', () => {
     const requestDto = new DeleteCommentRequestDto({
       commentId: Number.MAX_SAFE_INTEGER,
     });
-    const agent = request.agent(app.getHttpServer());
 
     // when
     const response = await agent
@@ -124,7 +124,6 @@ describe('DELETE /api/comment E2E Test', () => {
     const requestDto = new DeleteCommentRequestDto({
       commentId: commentInformation.id,
     });
-    const agent = request.agent(app.getHttpServer());
 
     // when
     const response = await agent

@@ -6,14 +6,17 @@ import {
   RssAcceptRepository,
   RssRepository,
 } from '../../../src/rss/repository/rss.repository';
+import TestAgent from 'supertest/lib/agent';
 
 describe('POST /api/rss E2E Test', () => {
   let app: INestApplication;
+  let agent: TestAgent;
   let rssRepository: RssRepository;
   let rssAcceptRepository: RssAcceptRepository;
 
   beforeAll(() => {
     app = global.testApp;
+    agent = request.agent(app.getHttpServer());
     rssRepository = app.get(RssRepository);
     rssAcceptRepository = app.get(RssAcceptRepository);
   });
@@ -32,9 +35,7 @@ describe('POST /api/rss E2E Test', () => {
     });
 
     // when
-    const response = await request(app.getHttpServer())
-      .post('/api/rss')
-      .send(requestDto);
+    const response = await agent.post('/api/rss').send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.CREATED);
@@ -48,12 +49,10 @@ describe('POST /api/rss E2E Test', () => {
       email: 'test1@test.com',
       rssUrl: 'https://example1.com/rss',
     });
-    await request(app.getHttpServer()).post('/api/rss').send(requestDto);
+    await agent.post('/api/rss').send(requestDto);
 
     // when
-    const response = await request(app.getHttpServer())
-      .post('/api/rss')
-      .send(requestDto);
+    const response = await agent.post('/api/rss').send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.CONFLICT);
@@ -72,9 +71,7 @@ describe('POST /api/rss E2E Test', () => {
     });
 
     // when
-    const response = await request(app.getHttpServer())
-      .post('/api/rss')
-      .send(requestDto);
+    const response = await agent.post('/api/rss').send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.CONFLICT);

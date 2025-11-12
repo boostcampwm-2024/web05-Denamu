@@ -10,9 +10,11 @@ import { CommentRepository } from '../../../src/comment/repository/comment.repos
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import * as request from 'supertest';
 import { RssFixture } from '../../fixture/rss.fixture';
+import TestAgent from 'supertest/lib/agent';
 
 describe('DELETE /api/rss/remove/{code}', () => {
   let app: INestApplication;
+  let agent: TestAgent;
   let feedRepository: FeedRepository;
   let rssAcceptRepository: RssAcceptRepository;
   let redisService: RedisService;
@@ -21,6 +23,7 @@ describe('DELETE /api/rss/remove/{code}', () => {
 
   beforeAll(() => {
     app = global.testApp;
+    agent = request.agent(app.getHttpServer());
     rssAcceptRepository = app.get(RssAcceptRepository);
     redisService = app.get(RedisService);
     feedRepository = app.get(FeedRepository);
@@ -30,9 +33,7 @@ describe('DELETE /api/rss/remove/{code}', () => {
 
   it('[404] 삭제 신청된 RSS가 없으면 인증할 수 없다.', async () => {
     // when
-    const response = await request(app.getHttpServer()).delete(
-      '/api/rss/remove/testfail',
-    );
+    const response = await agent.delete('/api/rss/remove/testfail');
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
@@ -43,9 +44,7 @@ describe('DELETE /api/rss/remove/{code}', () => {
     await redisService.set(`${REDIS_KEYS.RSS_REMOVE_KEY}:rssNotFound`, 'test');
 
     // when
-    const response = await request(app.getHttpServer()).delete(
-      '/api/rss/remove/rssNotFound',
-    );
+    const response = await agent.delete('/api/rss/remove/rssNotFound');
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
@@ -68,9 +67,7 @@ describe('DELETE /api/rss/remove/{code}', () => {
     );
 
     // when
-    const response = await request(app.getHttpServer()).delete(
-      `/api/rss/remove/${certificateCode}`,
-    );
+    const response = await agent.delete(`/api/rss/remove/${certificateCode}`);
 
     // then
     expect(response.status).toBe(HttpStatus.OK);

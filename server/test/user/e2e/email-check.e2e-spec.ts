@@ -3,19 +3,21 @@ import * as request from 'supertest';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../fixture/user.fixture';
 import { CheckEmailDuplicationRequestDto } from '../../../src/user/dto/request/checkEmailDuplication.dto';
+import TestAgent from 'supertest/lib/agent';
 
 describe('GET /api/user/email-check E2E Test', () => {
   let app: INestApplication;
+  let agent: TestAgent;
 
   beforeAll(async () => {
     app = global.testApp;
+    agent = request.agent(app.getHttpServer());
     const userRepository = app.get(UserRepository);
     await userRepository.insert(UserFixture.createUserFixture());
   });
 
   it('[200] 이메일 중복 조회 검사에 성공한다.', async () => {
     // given
-    const agent = request.agent(app.getHttpServer());
     const requestDto = new CheckEmailDuplicationRequestDto({
       email: UserFixture.createUserFixture().email + 'test',
     });
@@ -30,7 +32,6 @@ describe('GET /api/user/email-check E2E Test', () => {
 
   it('[200] 이메일 중복 조회 검사에 실패한다.', async () => {
     // given
-    const agent = request.agent(app.getHttpServer());
     const requestDto = new CheckEmailDuplicationRequestDto({
       email: UserFixture.createUserFixture().email,
     });

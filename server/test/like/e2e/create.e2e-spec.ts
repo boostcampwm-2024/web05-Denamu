@@ -11,6 +11,7 @@ import { User } from '../../../src/user/entity/user.entity';
 import { Feed } from '../../../src/feed/entity/feed.entity';
 import { ManageLikeRequestDto } from '../../../src/like/dto/request/manageLike.dto';
 import * as request from 'supertest';
+import TestAgent from 'supertest/lib/agent';
 
 describe('POST /api/like E2E Test', () => {
   let app: INestApplication;
@@ -18,9 +19,11 @@ describe('POST /api/like E2E Test', () => {
   let rssAcceptInformation: RssAccept;
   let userInformation: User;
   let feed: Feed;
+  let agent: TestAgent;
 
   beforeAll(async () => {
     app = global.testApp;
+    agent = request.agent(app.getHttpServer());
     userService = app.get(UserService);
     const userRepository = app.get(UserRepository);
     const rssAcceptRepository = app.get(RssAcceptRepository);
@@ -42,7 +45,6 @@ describe('POST /api/like E2E Test', () => {
     const requestDto = new ManageLikeRequestDto({
       feedId: 1,
     });
-    const agent = request.agent(app.getHttpServer());
 
     // when
     const response = await agent.post('/api/like').send(requestDto);
@@ -65,7 +67,6 @@ describe('POST /api/like E2E Test', () => {
       },
       'access',
     );
-    const agent = request.agent(app.getHttpServer());
 
     // when
     const response = await agent
@@ -91,7 +92,6 @@ describe('POST /api/like E2E Test', () => {
       },
       'access',
     );
-    const agent = request.agent(app.getHttpServer());
 
     // when
     const response = await agent
@@ -117,7 +117,6 @@ describe('POST /api/like E2E Test', () => {
       },
       'access',
     );
-    const agent = request.agent(app.getHttpServer());
 
     // when
     const response = await agent

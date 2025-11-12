@@ -1,4 +1,4 @@
-import * as request from 'supertest';
+import * as supertest from 'supertest';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { RedisService } from '../../../src/common/redis/redis.service';
@@ -6,9 +6,11 @@ import { FeedRepository } from '../../../src/feed/repository/feed.repository';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
 import { FeedFixture } from '../../fixture/feed.fixture';
 import { RssAcceptFixture } from '../../fixture/rss-accept.fixture';
+import TestAgent from 'supertest/lib/agent';
 
 describe('POST /api/feed/{feedId} E2E Test', () => {
   let app: INestApplication;
+  let agent: TestAgent;
   let redisService: RedisService;
   const testFeedId = 1;
   const testIp = `1.1.1.1`;
@@ -16,6 +18,7 @@ describe('POST /api/feed/{feedId} E2E Test', () => {
 
   beforeAll(async () => {
     app = global.testApp;
+    agent = supertest(app.getHttpServer());
     redisService = app.get(RedisService);
     const feedRepository = app.get(FeedRepository);
     const rssAcceptRepository = app.get(RssAcceptRepository);
@@ -40,7 +43,7 @@ describe('POST /api/feed/{feedId} E2E Test', () => {
 
     try {
       // when
-      const response = await request(app.getHttpServer())
+      const response = await agent
         .post(`/api/feed/${testFeedId}`)
         .set('X-Forwarded-For', testNewIp);
       const feedDailyViewCount = parseInt(
@@ -70,9 +73,7 @@ describe('POST /api/feed/{feedId} E2E Test', () => {
     const notExistFeedId = 50000;
 
     // when
-    const response = await request(app.getHttpServer()).post(
-      `/api/feed/${notExistFeedId}`,
-    );
+    const response = await agent.post(`/api/feed/${notExistFeedId}`);
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
@@ -80,7 +81,7 @@ describe('POST /api/feed/{feedId} E2E Test', () => {
 
   it('[200] 쿠키가 있으면 조회수는 올라가지 않는다.', async () => {
     // when
-    const response = await request(app.getHttpServer())
+    const response = await agent
       .post(`/api/feed/${testFeedId}`)
       .set('Cookie', `View_count_${testFeedId}=${testFeedId}`)
       .set('X-Forwarded-For', testIp);
@@ -96,7 +97,7 @@ describe('POST /api/feed/{feedId} E2E Test', () => {
 
   it('[200] 쿠키가 없지만 Redis에 IP가 저장되어 있으면 조회수는 올라가지 않는다.', async () => {
     // when
-    const response = await request(app.getHttpServer())
+    const response = await agent
       .post(`/api/feed/${testFeedId}`)
       .set('X-Forwarded-For', testIp);
     const feedDailyViewCount = await redisService.zscore(

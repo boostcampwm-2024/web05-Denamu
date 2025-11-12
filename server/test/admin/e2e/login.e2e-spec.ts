@@ -1,14 +1,17 @@
 import { AdminFixture } from './../../fixture/admin.fixture';
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { LoginAdminRequestDto } from '../../../src/admin/dto/request/loginAdmin.dto';
-import * as request from 'supertest';
+import * as supertest from 'supertest';
 import { AdminRepository } from '../../../src/admin/repository/admin.repository';
+import TestAgent from 'supertest/lib/agent';
 
 describe('POST /api/admin/login E2E Test', () => {
   let app: INestApplication;
+  let agent: TestAgent;
 
   beforeAll(async () => {
     app = global.testApp;
+    agent = supertest(app.getHttpServer());
     const adminRepository = app.get(AdminRepository);
     await adminRepository.insert(await AdminFixture.createAdminCryptFixture());
   });
@@ -21,9 +24,7 @@ describe('POST /api/admin/login E2E Test', () => {
     });
 
     // when
-    const response = await request(app.getHttpServer())
-      .post('/api/admin/login')
-      .send(requestDto);
+    const response = await agent.post('/api/admin/login').send(requestDto);
 
     //then
     expect(response.status).toBe(HttpStatus.OK);
@@ -38,9 +39,7 @@ describe('POST /api/admin/login E2E Test', () => {
     });
 
     // when
-    const response = await request(app.getHttpServer())
-      .post('/api/admin/login')
-      .send(requestDto);
+    const response = await agent.post('/api/admin/login').send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
@@ -54,9 +53,7 @@ describe('POST /api/admin/login E2E Test', () => {
     });
 
     // when
-    const response = await request(app.getHttpServer())
-      .post('/api/admin/login')
-      .send(requestDto);
+    const response = await agent.post('/api/admin/login').send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);

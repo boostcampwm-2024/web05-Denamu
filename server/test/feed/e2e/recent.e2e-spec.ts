@@ -1,4 +1,4 @@
-import * as request from 'supertest';
+import * as supertest from 'supertest';
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { Feed } from '../../../src/feed/entity/feed.entity';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
@@ -7,13 +7,16 @@ import { FeedFixture } from '../../fixture/feed.fixture';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
+import TestAgent from 'supertest/lib/agent';
 
 describe('GET /api/feed/recent E2E Test', () => {
   let app: INestApplication;
+  let agent: TestAgent;
   let rssAcceptRepository: RssAcceptRepository;
 
   beforeAll(async () => {
     app = global.testApp;
+    agent = supertest(app.getHttpServer());
     rssAcceptRepository = app.get(RssAcceptRepository);
   });
 
@@ -40,7 +43,7 @@ describe('GET /api/feed/recent E2E Test', () => {
     });
 
     // when
-    const response = await request(app.getHttpServer()).get('/api/feed/recent');
+    const response = await agent.get('/api/feed/recent');
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
@@ -53,7 +56,7 @@ describe('GET /api/feed/recent E2E Test', () => {
     redisService.flushdb();
 
     // when
-    const response = await request(app.getHttpServer()).get('/api/feed/recent');
+    const response = await agent.get('/api/feed/recent');
 
     // then
     expect(response.status).toBe(HttpStatus.OK);

@@ -4,12 +4,15 @@ import { RedisService } from '../../../../src/common/redis/redis.service';
 import { RssRejectRepository } from '../../../../src/rss/repository/rss.repository';
 import { RssReject } from '../../../../src/rss/entity/rss.entity';
 import { RssRejectFixture } from '../../../fixture/rss-reject.fixture';
+import TestAgent from 'supertest/lib/agent';
 
 describe('GET /api/rss/history/reject E2E Test', () => {
   let app: INestApplication;
+  let agent: TestAgent;
 
   beforeAll(async () => {
     app = global.testApp;
+    agent = request.agent(app.getHttpServer());
     const rssRejectRepository = app.get(RssRejectRepository);
     const redisService = app.get(RedisService);
     const rssAccepts: RssReject[] = [];
@@ -24,10 +27,8 @@ describe('GET /api/rss/history/reject E2E Test', () => {
 
   it('[401] 관리자 로그인이 되어있지 않으면 조회할 수 없다.', async () => {
     // when
-    const noCookieResponse = await request(app.getHttpServer()).get(
-      '/api/rss/history/reject',
-    );
-    const noSessionResponse = await request(app.getHttpServer())
+    const noCookieResponse = await agent.get('/api/rss/history/reject');
+    const noSessionResponse = await agent
       .get('/api/rss/history/reject')
       .set('Cookie', 'sessionId=invalid');
 
@@ -38,7 +39,7 @@ describe('GET /api/rss/history/reject E2E Test', () => {
 
   it('[200] 관리자 로그인이 되어 있으면 최신순으로 기록 데이터를 응답한다.', async () => {
     // when
-    const response = await request(app.getHttpServer())
+    const response = await agent
       .get('/api/rss/history/reject')
       .set('Cookie', 'sessionId=testSessionId');
 
