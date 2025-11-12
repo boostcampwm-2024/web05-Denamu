@@ -64,7 +64,7 @@ describe('POST /api/rss E2E Test', () => {
     const acceptedRss = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
-    const rssRegisterDto = new RegisterRssRequestDto({
+    const requestDto = new RegisterRssRequestDto({
       blog: acceptedRss.name,
       name: acceptedRss.userName,
       email: acceptedRss.email,
@@ -74,7 +74,7 @@ describe('POST /api/rss E2E Test', () => {
     // when
     const response = await request(app.getHttpServer())
       .post('/api/rss')
-      .send(rssRegisterDto);
+      .send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.CONFLICT);

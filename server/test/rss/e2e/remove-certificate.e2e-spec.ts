@@ -32,7 +32,6 @@ describe('DELETE /api/rss/remove/{code}', () => {
     // when
     const response = await request(app.getHttpServer())
       .delete(`/api/rss/remove/testfail`)
-      .send();
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
@@ -45,7 +44,6 @@ describe('DELETE /api/rss/remove/{code}', () => {
     // when
     const response = await request(app.getHttpServer())
       .delete(`/api/rss/remove/rssNotFound`)
-      .send();
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
@@ -70,7 +68,6 @@ describe('DELETE /api/rss/remove/{code}', () => {
     // when
     const response = await request(app.getHttpServer())
       .delete(`/api/rss/remove/${certificateCode}`)
-      .send();
 
     // then
     expect(response.status).toBe(HttpStatus.OK);

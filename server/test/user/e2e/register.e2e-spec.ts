@@ -7,12 +7,6 @@ import { UserFixture } from '../../fixture/user.fixture';
 describe('POST api/user/register E2E Test', () => {
   let app: INestApplication;
 
-  const newRegisterDto = new RegisterUserRequestDto({
-    email: 'test1234@test.com',
-    password: 'test1234!',
-    userName: 'test1234',
-  });
-
   beforeAll(async () => {
     app = global.testApp;
   });
@@ -20,11 +14,14 @@ describe('POST api/user/register E2E Test', () => {
   it('[201] 회원가입 요청에 정상적으로 성공한다.', async () => {
     // given
     const agent = request.agent(app.getHttpServer());
+    const requestDto = new RegisterUserRequestDto({
+      email: 'test1234@test.com',
+      password: 'test1234!',
+      userName: 'test1234',
+    });
 
     // when
-    const response = await agent
-      .post('/api/user/register')
-      .send(newRegisterDto);
+    const response = await agent.post('/api/user/register').send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.CREATED);
@@ -35,11 +32,14 @@ describe('POST api/user/register E2E Test', () => {
     const agent = request.agent(app.getHttpServer());
     const userRepository = app.get(UserRepository);
     await userRepository.insert(UserFixture.createUserFixture());
+    const requestDto = new RegisterUserRequestDto({
+      email: 'test1234@test.com',
+      password: 'test1234!',
+      userName: 'test1234',
+    });
 
     // when
-    const response = await agent
-      .post('/api/user/register')
-      .send(newRegisterDto);
+    const response = await agent.post('/api/user/register').send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.CONFLICT);

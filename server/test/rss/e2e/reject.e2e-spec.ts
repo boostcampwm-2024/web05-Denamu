@@ -36,7 +36,7 @@ describe('POST /api/rss/reject/{rssId} E2E Test', () => {
     // given
     const REJECT_REASON = '거절 사유';
     const rss = await rssRepository.save(RssFixture.createRssFixture());
-    const rejectRssDto = new RejectRssRequestDto({
+    const requestDto = new RejectRssRequestDto({
       description: REJECT_REASON,
     });
 
@@ -44,7 +44,7 @@ describe('POST /api/rss/reject/{rssId} E2E Test', () => {
     const response = await request(app.getHttpServer())
       .post(`/api/rss/reject/${rss.id}`)
       .set('Cookie', 'sessionId=testSessionId')
-      .send(rejectRssDto);
+      .send(requestDto);
 
     const accepted = await rssRejectRepository.findOne({
       where: { description: REJECT_REASON },
@@ -58,7 +58,7 @@ describe('POST /api/rss/reject/{rssId} E2E Test', () => {
   it('[404] 존재하지 않는 rss를 거절할 때', async () => {
     // given
     const REJECT_REASON = '거절 사유';
-    const rejectRssDto = new RejectRssRequestDto({
+    const requestDTO = new RejectRssRequestDto({
       description: REJECT_REASON,
     });
 
@@ -66,7 +66,7 @@ describe('POST /api/rss/reject/{rssId} E2E Test', () => {
     const response = await request(app.getHttpServer())
       .post(`/api/rss/reject/1`)
       .set('Cookie', 'sessionId=testSessionId')
-      .send(rejectRssDto);
+      .send(requestDTO);
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
@@ -74,14 +74,13 @@ describe('POST /api/rss/reject/{rssId} E2E Test', () => {
 
   it('[401] 유효한 세션이 존재하지 않을 때', async () => {
     // when
-    const noCookieResponse = await request(app.getHttpServer())
-      .post(`/api/rss/reject/1`)
-      .send();
+    const noCookieResponse = await request(app.getHttpServer()).post(
+      `/api/rss/reject/1`,
+    );
 
     const noSessionResponse = await request(app.getHttpServer())
       .post(`/api/rss/reject/1`)
-      .set('Cookie', 'sessionId=invalid')
-      .send();
+      .set('Cookie', 'sessionId=invalid');
 
     // then
     expect(noCookieResponse.status).toBe(HttpStatus.UNAUTHORIZED);

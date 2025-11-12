@@ -48,8 +48,7 @@ describe('DELETE /api/file/{fileId}', () => {
     // when
     const response = await request(app.getHttpServer())
       .delete(`/api/file/${file.id}`)
-      .set('Authorization', `Bearer ${accessToken}`)
-      .send();
+      .set('Authorization', `Bearer ${accessToken}`);
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
@@ -65,9 +64,7 @@ describe('DELETE /api/file/{fileId}', () => {
     }));
 
     // when
-    const response = await request(app.getHttpServer())
-      .delete('/api/file/1')
-      .send();
+    const response = await request(app.getHttpServer()).delete('/api/file/1');
 
     // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
@@ -96,8 +93,7 @@ describe('DELETE /api/file/{fileId}', () => {
     // when
     const response = await request(app.getHttpServer())
       .delete(`/api/file/${file.id}`)
-      .set('Authorization', `Bearer ${accessToken}`)
-      .send();
+      .set('Authorization', `Bearer ${accessToken}`);
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
@@ -105,9 +101,7 @@ describe('DELETE /api/file/{fileId}', () => {
 
   it('[401] 파일에 삭제 권한이 없을 경우 권한 오류가 발생한다.', async () => {
     // when
-    const response = await request(app.getHttpServer())
-      .delete('/api/file/1')
-      .send();
+    const response = await request(app.getHttpServer()).delete('/api/file/1');
 
     // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
@@ -133,8 +127,7 @@ describe('DELETE /api/file/{fileId}', () => {
     // when
     const response = await request(app.getHttpServer())
       .delete(`/api/file/${Number.MAX_SAFE_INTEGER}`)
-      .set('Authorization', `Bearer ${accessToken}`)
-      .send();
+      .set('Authorization', `Bearer ${accessToken}`);
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);

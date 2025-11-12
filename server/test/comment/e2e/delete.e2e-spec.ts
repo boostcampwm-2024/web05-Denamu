@@ -46,13 +46,13 @@ describe('DELETE /api/comment E2E Test', () => {
 
   it('[401] 로그인이 되어 있지 않다면 댓글을 삭제할 수 없다.', async () => {
     // given
-    const comment = new DeleteCommentRequestDto({
+    const requestDto = new DeleteCommentRequestDto({
       commentId: commentInformation.id,
     });
     const agent = request.agent(app.getHttpServer());
 
     // when
-    const response = await agent.delete('/api/comment').send(comment);
+    const response = await agent.delete('/api/comment').send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
@@ -69,7 +69,7 @@ describe('DELETE /api/comment E2E Test', () => {
       },
       'access',
     );
-    const comment = new DeleteCommentRequestDto({
+    const requestDto = new DeleteCommentRequestDto({
       commentId: commentInformation.id,
     });
     const agent = request.agent(app.getHttpServer());
@@ -78,7 +78,7 @@ describe('DELETE /api/comment E2E Test', () => {
     const response = await agent
       .delete('/api/comment')
       .set('Authorization', `Bearer ${accessToken}`)
-      .send(comment);
+      .send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
@@ -95,7 +95,7 @@ describe('DELETE /api/comment E2E Test', () => {
       },
       'access',
     );
-    const comment = new DeleteCommentRequestDto({
+    const requestDto = new DeleteCommentRequestDto({
       commentId: Number.MAX_SAFE_INTEGER,
     });
     const agent = request.agent(app.getHttpServer());
@@ -104,7 +104,7 @@ describe('DELETE /api/comment E2E Test', () => {
     const response = await agent
       .delete('/api/comment')
       .set('Authorization', `Bearer ${accessToken}`)
-      .send(comment);
+      .send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
@@ -121,7 +121,7 @@ describe('DELETE /api/comment E2E Test', () => {
       },
       'access',
     );
-    const comment = new DeleteCommentRequestDto({
+    const requestDto = new DeleteCommentRequestDto({
       commentId: commentInformation.id,
     });
     const agent = request.agent(app.getHttpServer());
@@ -130,7 +130,7 @@ describe('DELETE /api/comment E2E Test', () => {
     const response = await agent
       .delete('/api/comment')
       .set('Authorization', `Bearer ${accessToken}`)
-      .send(comment);
+      .send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.OK);

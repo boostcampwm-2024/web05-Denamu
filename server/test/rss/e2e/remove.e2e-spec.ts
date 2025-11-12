@@ -5,6 +5,7 @@ import {
 } from '../../../src/rss/repository/rss.repository';
 import { RssFixture } from '../../fixture/rss.fixture';
 import * as request from 'supertest';
+import { DeleteRssRequestDto } from '../../../src/rss/dto/request/deleteRss.dto';
 
 describe('POST /api/rss/remove E2E Test', () => {
   let app: INestApplication;
@@ -18,14 +19,17 @@ describe('POST /api/rss/remove E2E Test', () => {
   });
 
   it('[404] RSS가 없을 경우 신청할 수 없다.', async () => {
+    // given
+    const requestDto = new DeleteRssRequestDto({
+      blogUrl: 'https://test.com',
+      email: 'test@test.com',
+    });
+
     // when
     const response = await request(app.getHttpServer())
       .post('/api/rss/remove')
-      .send({
-        blogUrl: 'https://test.com',
-        userName: 'test',
-        email: 'test@test.com',
-      });
+      .send(requestDto);
+
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
@@ -33,15 +37,15 @@ describe('POST /api/rss/remove E2E Test', () => {
   it('[200] 대기 RSS가 있을 경우 신청할 수 있다.', async () => {
     // given
     const rss = await rssRepository.save(RssFixture.createRssFixture());
+    const requestDto = new DeleteRssRequestDto({
+      blogUrl: rss.rssUrl,
+      email: rss.email,
+    });
 
     // when
     const response = await request(app.getHttpServer())
       .post('/api/rss/remove')
-      .send({
-        blogUrl: rss.rssUrl,
-        userName: rss.userName,
-        email: rss.email,
-      });
+      .send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
@@ -50,15 +54,15 @@ describe('POST /api/rss/remove E2E Test', () => {
   it('[200] 승인된 RSS가 있을 경우 신청할 수 있다.', async () => {
     // given
     const rss = await rssAcceptRepository.save(RssFixture.createRssFixture());
+    const requestDto = new DeleteRssRequestDto({
+      blogUrl: rss.rssUrl,
+      email: rss.email,
+    });
 
     // when
     const response = await request(app.getHttpServer())
       .post('/api/rss/remove')
-      .send({
-        blogUrl: rss.rssUrl,
-        userName: rss.userName,
-        email: rss.email,
-      });
+      .send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.OK);

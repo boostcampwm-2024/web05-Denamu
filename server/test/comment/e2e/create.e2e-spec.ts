@@ -37,14 +37,14 @@ describe('POST /api/comment E2E Test', () => {
 
   it('[401] 로그인이 되어 있지 않다면 댓글을 등록할 수 없다.', async () => {
     // given
-    const comment = new CreateCommentRequestDto({
+    const requestDto = new CreateCommentRequestDto({
       comment: 'test',
       feedId: feed.id,
     });
     const agent = request.agent(app.getHttpServer());
 
     // when
-    const response = await agent.post('/api/comment').send(comment);
+    const response = await agent.post('/api/comment').send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
@@ -52,7 +52,7 @@ describe('POST /api/comment E2E Test', () => {
 
   it('[404] 계정 정보가 존재하지 않으면 댓글을 등록할 수 없다.', async () => {
     // given
-    const comment = new CreateCommentRequestDto({
+    const requestDto = new CreateCommentRequestDto({
       comment: 'test',
       feedId: feed.id,
     });
@@ -71,7 +71,7 @@ describe('POST /api/comment E2E Test', () => {
     const response = await agent
       .post('/api/comment')
       .set('Authorization', `Bearer ${accessToken}`)
-      .send(comment);
+      .send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
@@ -79,7 +79,7 @@ describe('POST /api/comment E2E Test', () => {
 
   it('[404] 게시글이 존재하지 않으면 댓글을 등록할 수 없다.', async () => {
     // given
-    const comment = new CreateCommentRequestDto({
+    const requestDto = new CreateCommentRequestDto({
       comment: 'test',
       feedId: 400,
     });
@@ -98,7 +98,7 @@ describe('POST /api/comment E2E Test', () => {
     const response = await agent
       .post('/api/comment')
       .set('Authorization', `Bearer ${accessToken}`)
-      .send(comment);
+      .send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
@@ -115,7 +115,7 @@ describe('POST /api/comment E2E Test', () => {
       },
       'access',
     );
-    const comment = new CreateCommentRequestDto({
+    const requestDto = new CreateCommentRequestDto({
       comment: 'test',
       feedId: feed.id,
     });
@@ -125,7 +125,7 @@ describe('POST /api/comment E2E Test', () => {
     const response = await agent
       .post('/api/comment')
       .set('Authorization', `Bearer ${accessToken}`)
-      .send(comment);
+      .send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.CREATED);

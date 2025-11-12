@@ -82,8 +82,7 @@ describe('POST /api/file', () => {
     const response = await request(app.getHttpServer())
       .post('/api/file')
       .query(dto)
-      .set('Authorization', `Bearer ${accessToken}`)
-      .send();
+      .set('Authorization', `Bearer ${accessToken}`);
 
     // then
     expect(response.status).toBe(HttpStatus.BAD_REQUEST);

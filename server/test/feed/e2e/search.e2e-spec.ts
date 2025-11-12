@@ -38,8 +38,7 @@ describe('GET /api/feed/search', () => {
     // when
     const response = await request(app.getHttpServer())
       .get('/api/feed/search')
-      .query(searchQueryDto)
-      .send();
+      .query(searchQueryDto);
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
@@ -55,8 +54,7 @@ describe('GET /api/feed/search', () => {
     // when
     const response = await request(app.getHttpServer())
       .get('/api/feed/search')
-      .query(searchQueryDto)
-      .send();
+      .query(searchQueryDto);
 
     // then
     expect(response.status).toBe(HttpStatus.OK);

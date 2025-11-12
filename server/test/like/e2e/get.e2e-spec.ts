@@ -34,7 +34,7 @@ describe('GET /api/like/{feedId} E2E Test', () => {
     const agent = request.agent(app.getHttpServer());
 
     // when
-    const response = await agent.get(`/api/like/${feed.id}`).send();
+    const response = await agent.get(`/api/like/${feed.id}`);
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
@@ -45,7 +45,7 @@ describe('GET /api/like/{feedId} E2E Test', () => {
     const agent = request.agent(app.getHttpServer());
 
     // when
-    const response = await agent.get(`/api/like/100`).send();
+    const response = await agent.get(`/api/like/100`);
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);

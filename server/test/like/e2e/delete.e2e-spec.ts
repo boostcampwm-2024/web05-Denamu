@@ -46,9 +46,7 @@ describe('DELETE /api/like/{feedId} E2E Test', () => {
     const agent = request.agent(app.getHttpServer());
 
     // when
-    const response = await agent
-      .delete(`/api/like/${feedLikeRequest.feedId}`)
-      .send();
+    const response = await agent.delete(`/api/like/${feedLikeRequest.feedId}`);
 
     // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
@@ -73,8 +71,7 @@ describe('DELETE /api/like/{feedId} E2E Test', () => {
     // when
     const response = await agent
       .delete(`/api/like/${feedLikeRequest.feedId}`)
-      .set('Authorization', `Bearer ${accessToken}`)
-      .send();
+      .set('Authorization', `Bearer ${accessToken}`);
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
@@ -105,8 +102,7 @@ describe('DELETE /api/like/{feedId} E2E Test', () => {
     // when
     const response = await agent
       .delete(`/api/like/${feedLikeRequest.feedId}`)
-      .set('Authorization', `Bearer ${accessToken}`)
-      .send();
+      .set('Authorization', `Bearer ${accessToken}`);
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
@@ -131,8 +127,7 @@ describe('DELETE /api/like/{feedId} E2E Test', () => {
     // when
     const response = await agent
       .delete(`/api/like/${feedLikeRequest.feedId}`)
-      .set('Authorization', `Bearer ${accessToken}`)
-      .send();
+      .set('Authorization', `Bearer ${accessToken}`);
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);

@@ -42,8 +42,7 @@ describe('POST /api/rss/accept/{rssId} E2E Test', () => {
     // when
     const response = await request(app.getHttpServer())
       .post(`/api/rss/accept/${rss.id}`)
-      .set('Cookie', 'sessionId=testSessionId')
-      .send();
+      .set('Cookie', 'sessionId=testSessionId');
 
     // then
     expect(response.status).toBe(HttpStatus.CREATED);
@@ -56,8 +55,7 @@ describe('POST /api/rss/accept/{rssId} E2E Test', () => {
     // when
     const response = await request(app.getHttpServer())
       .post(`/api/rss/accept/1`)
-      .set('Cookie', 'sessionId=testSessionId')
-      .send();
+      .set('Cookie', 'sessionId=testSessionId');
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
@@ -65,14 +63,13 @@ describe('POST /api/rss/accept/{rssId} E2E Test', () => {
 
   it('[401] 유효한 세션이 존재하지 않을 때', async () => {
     // when
-    const noCookieResponse = await request(app.getHttpServer())
-      .post(`/api/rss/accept/1`)
-      .send();
+    const noCookieResponse = await request(app.getHttpServer()).post(
+      `/api/rss/accept/1`,
+    );
 
     const noSessionResponse = await request(app.getHttpServer())
       .post(`/api/rss/accept/1`)
-      .set('Cookie', 'sessionId=invalid')
-      .send();
+      .set('Cookie', 'sessionId=invalid');
 
     // then
     expect(noCookieResponse.status).toBe(HttpStatus.UNAUTHORIZED);

@@ -39,13 +39,13 @@ describe('POST /api/like E2E Test', () => {
 
   it('[401] 로그인이 되어 있지 않다면 좋아요 등록을 할 수 없다.', async () => {
     // given
-    const feedLikeRequest = new ManageLikeRequestDto({
+    const requestDto = new ManageLikeRequestDto({
       feedId: 1,
     });
     const agent = request.agent(app.getHttpServer());
 
     // when
-    const response = await agent.post('/api/like').send(feedLikeRequest);
+    const response = await agent.post('/api/like').send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
@@ -53,7 +53,7 @@ describe('POST /api/like E2E Test', () => {
 
   it('[404] 게시글이 존재하지 않다면 좋아요를 등록할 수 없다.', async () => {
     // given
-    const feedLikeRequest = new ManageLikeRequestDto({
+    const requestDto = new ManageLikeRequestDto({
       feedId: 100,
     });
     const accessToken = userService.createToken(
@@ -71,7 +71,7 @@ describe('POST /api/like E2E Test', () => {
     const response = await agent
       .post('/api/like')
       .set('Authorization', `Bearer ${accessToken}`)
-      .send(feedLikeRequest);
+      .send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
@@ -79,7 +79,7 @@ describe('POST /api/like E2E Test', () => {
 
   it('[201] 로그인이 되어있고 좋아요를 하지 않았다면 좋아요를 등록할 수 있다.', async () => {
     // given
-    const feedLikeRequest = new ManageLikeRequestDto({
+    const requestDto = new ManageLikeRequestDto({
       feedId: 1,
     });
     const accessToken = userService.createToken(
@@ -97,7 +97,7 @@ describe('POST /api/like E2E Test', () => {
     const response = await agent
       .post('/api/like')
       .set('Authorization', `Bearer ${accessToken}`)
-      .send(feedLikeRequest);
+      .send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.CREATED);
@@ -105,7 +105,7 @@ describe('POST /api/like E2E Test', () => {
 
   it('[409] 이미 좋아요를 했다면 좋아요를 등록할 수 없다.', async () => {
     // given
-    const feedLikeRequest = new ManageLikeRequestDto({
+    const requestDto = new ManageLikeRequestDto({
       feedId: 1,
     });
     const accessToken = userService.createToken(
@@ -123,7 +123,7 @@ describe('POST /api/like E2E Test', () => {
     const response = await agent
       .post('/api/like')
       .set('Authorization', `Bearer ${accessToken}`)
-      .send(feedLikeRequest);
+      .send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.CONFLICT);

@@ -5,6 +5,7 @@ import { UserFixture } from '../../fixture/user.fixture';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import * as bcrypt from 'bcrypt';
+import { ResetPasswordRequestDto } from '../../../src/user/dto/request/resetPassword.dto';
 
 describe('PATCH api/user/password E2E Test', () => {
   let app: INestApplication;
@@ -23,14 +24,16 @@ describe('PATCH api/user/password E2E Test', () => {
     const redisKey = `${REDIS_KEYS.USER_RESET_PASSWORD_KEY}:${uuid}`;
     const userEntity = UserFixture.createUserFixture();
     const savedUser = await userRepository.save(userEntity);
-    await redisService.set(redisKey, JSON.stringify(savedUser.id));
     const updatedPassword = 'test1234@';
+    const requestDto = new ResetPasswordRequestDto({
+      uuid,
+      password: updatedPassword,
+    });
+    await redisService.set(redisKey, JSON.stringify(savedUser.id));
 
     // when
     const agent = request.agent(app.getHttpServer());
-    const response = await agent
-      .patch('/api/user/password')
-      .send({ uuid, password: updatedPassword });
+    const response = await agent.patch('/api/user/password').send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
@@ -50,12 +53,11 @@ describe('PATCH api/user/password E2E Test', () => {
     // given
     const uuid = 'non-existent-or-expired-uuid';
     const password = 'test1234@';
+    const requestDto = new ResetPasswordRequestDto({ uuid, password });
 
     // when
     const agent = request.agent(app.getHttpServer());
-    const response = await agent
-      .patch('/api/user/password')
-      .send({ uuid, password });
+    const response = await agent.patch('/api/user/password').send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);

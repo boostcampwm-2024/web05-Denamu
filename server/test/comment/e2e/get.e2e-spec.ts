@@ -25,15 +25,15 @@ describe('GET /api/comment/{feedId} E2E Test', () => {
 
   it('[404] 게시글이 존재하지 않을 경우 조회 오류가 발생한다.', async () => {
     // given
-    const comment = new GetCommentRequestDto({
+    const requestDto = new GetCommentRequestDto({
       feedId: 100,
     });
     const agent = request.agent(app.getHttpServer());
 
     // when
     const response = await agent
-      .get(`/api/comment/${comment.feedId}`)
-      .send(comment);
+      .get(`/api/comment/${requestDto.feedId}`)
+      .send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
@@ -41,15 +41,15 @@ describe('GET /api/comment/{feedId} E2E Test', () => {
 
   it('[200] 게시글이 존재할 경우 올바르게 댓글을 제공한다.', async () => {
     // given
-    const comment = new GetCommentRequestDto({
+    const requestDto = new GetCommentRequestDto({
       feedId: feed.id,
     });
     const agent = request.agent(app.getHttpServer());
 
     // when
     const response = await agent
-      .get(`/api/comment/${comment.feedId}`)
-      .send(comment);
+      .get(`/api/comment/${requestDto.feedId}`)
+      .send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.OK);

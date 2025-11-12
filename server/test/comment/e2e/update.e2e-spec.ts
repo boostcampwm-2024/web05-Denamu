@@ -46,14 +46,14 @@ describe('PATCH /api/comment E2E Test', () => {
 
   it('[401] 로그인이 되어 있지 않다면 댓글을 수정할 수 없다.', async () => {
     // given
-    const comment = new UpdateCommentRequestDto({
+    const requestDto = new UpdateCommentRequestDto({
       commentId: commentInformation.id,
       newComment: 'newComment',
     });
     const agent = request.agent(app.getHttpServer());
 
     // when
-    const response = await agent.patch('/api/comment').send(comment);
+    const response = await agent.patch('/api/comment').send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
@@ -61,7 +61,7 @@ describe('PATCH /api/comment E2E Test', () => {
 
   it('[401] 본인이 작성한 댓글이 아니라면 댓글을 수정할 수 없다.', async () => {
     // given
-    const comment = new UpdateCommentRequestDto({
+    const requestDto = new UpdateCommentRequestDto({
       commentId: commentInformation.id,
       newComment: 'newComment',
     });
@@ -80,7 +80,7 @@ describe('PATCH /api/comment E2E Test', () => {
     const response = await agent
       .patch('/api/comment')
       .set('Authorization', `Bearer ${accessToken}`)
-      .send(comment);
+      .send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
@@ -88,7 +88,7 @@ describe('PATCH /api/comment E2E Test', () => {
 
   it('[404] 존재하지 않는 댓글은 수정할 수 없다.', async () => {
     // given
-    const comment = new UpdateCommentRequestDto({
+    const requestDto = new UpdateCommentRequestDto({
       commentId: 400,
       newComment: 'newComment',
     });
@@ -107,7 +107,7 @@ describe('PATCH /api/comment E2E Test', () => {
     const response = await agent
       .patch('/api/comment')
       .set('Authorization', `Bearer ${accessToken}`)
-      .send(comment);
+      .send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
@@ -115,7 +115,7 @@ describe('PATCH /api/comment E2E Test', () => {
 
   it('[200] 로그인이 되어 있다면 댓글을 수정할 수 있다.', async () => {
     // given
-    const comment = new UpdateCommentRequestDto({
+    const requestDto = new UpdateCommentRequestDto({
       commentId: commentInformation.id,
       newComment: 'newComment',
     });
@@ -134,7 +134,7 @@ describe('PATCH /api/comment E2E Test', () => {
     const response = await agent
       .patch('/api/comment')
       .set('Authorization', `Bearer ${accessToken}`)
-      .send(comment);
+      .send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.OK);

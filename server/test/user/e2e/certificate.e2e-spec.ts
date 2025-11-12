@@ -4,6 +4,7 @@ import { UserRepository } from '../../../src/user/repository/user.repository';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import { UserFixture } from '../../fixture/user.fixture';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
+import { CertificateUserRequestDto } from '../../../src/user/dto/request/certificateUser.dto';
 
 describe('POST /api/user/certificate E2E Test', () => {
   let app: INestApplication;
@@ -21,11 +22,12 @@ describe('POST /api/user/certificate E2E Test', () => {
     const uuid = 'test-certificate-uuid';
     const userEntity = UserFixture.createUserFixture();
     const redisKey = `${REDIS_KEYS.USER_AUTH_KEY}:${uuid}`;
+    const requestDto = new CertificateUserRequestDto({ uuid });
     await redisService.set(redisKey, JSON.stringify(userEntity));
 
     // when
     const agent = request.agent(app.getHttpServer());
-    const response = await agent.post('/api/user/certificate').send({ uuid });
+    const response = await agent.post('/api/user/certificate').send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
@@ -39,10 +41,11 @@ describe('POST /api/user/certificate E2E Test', () => {
   it('[404] 존재하지 않거나 만료된 uuid로 인증 요청 시 NotFoundException 에러를 발생시킨다.', async () => {
     // given
     const uuid = 'non-existent-or-expired-uuid';
+    const requestDto = new CertificateUserRequestDto({ uuid });
 
     // when
     const agent = request.agent(app.getHttpServer());
-    const response = await agent.post('/api/user/certificate').send({ uuid });
+    const response = await agent.post('/api/user/certificate').send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
