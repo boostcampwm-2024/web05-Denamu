@@ -6,6 +6,7 @@ import * as amqp from 'amqplib';
 export class RabbitMQManager {
   private connection: ChannelModel | null;
   private channel: Channel | null;
+  private connectionPromise: Promise<ChannelModel> | null = null;
   private channelPromise: Promise<Channel> | null = null;
 
   constructor() {
@@ -15,8 +16,9 @@ export class RabbitMQManager {
 
   async connect() {
     if (this.connection) return this.connection;
+    if (this.connectionPromise) return this.connectionPromise;
 
-    this.connection = await amqp.connect({
+    this.connectionPromise = amqp.connect({
       protocol: 'amqp',
       hostname: process.env.RABBITMQ_HOST,
       port: Number.parseInt(process.env.RABBITMQ_PORT),
@@ -24,6 +26,8 @@ export class RabbitMQManager {
       password: process.env.RABBITMQ_DEFAULT_PASS,
     });
 
+    this.connection = await this.connectionPromise;
+    this.connectionPromise = null;
     return this.connection;
   }
 
