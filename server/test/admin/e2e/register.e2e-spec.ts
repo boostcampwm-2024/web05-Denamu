@@ -23,22 +23,22 @@ describe('POST /api/admin/register E2E Test', () => {
   });
 
   it('[201] 관리자가 로그인되어 있으면 다른 관리자 계정 회원가입을 할 수 있다.', async () => {
-    //given
+    // given
     const agent = request.agent(app.getHttpServer());
 
-    //when
+    // when
     await agent.post('/api/admin/login').send(loginAdminDto);
     const response = await agent.post('/api/admin/register').send(newAdminDto);
 
-    //then
+    // then
     expect(response.status).toBe(HttpStatus.CREATED);
   });
 
   it('[409] 이미 가입한 ID를 입력하면 관리자 계정을 생성할 수 없다.', async () => {
-    //given
+    // given
     const agent = request.agent(app.getHttpServer());
 
-    //when
+    // when
     await agent.post('/api/admin/login').send(loginAdminDto);
     const response = await agent.post('/api/admin/register').send(newAdminDto);
 
@@ -50,10 +50,10 @@ describe('POST /api/admin/register E2E Test', () => {
     // given
     const agent = request.agent(app.getHttpServer());
 
-    //when
+    // when
     const response = await agent.post('/api/admin/register').send(newAdminDto);
 
-    //then
+    // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 });

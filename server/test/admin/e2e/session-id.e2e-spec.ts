@@ -15,41 +15,41 @@ describe('GET /api/admin/sessionId E2E Test', () => {
   });
 
   it('[200] 쿠키의 session id가 유효하다면 관리자를 로그인 상태로 취급한다.', async () => {
-    //given
+    // given
     const agent = request.agent(app.getHttpServer());
     const loginAdminDto = new LoginAdminRequestDto({
       loginId: 'test1234',
       password: 'test1234!',
     });
 
-    //when
+    // when
     await agent.post('/api/admin/login').send(loginAdminDto);
     const response = await agent.get('/api/admin/sessionId');
 
-    //then
+    // then
     expect(response.status).toBe(HttpStatus.OK);
   });
 
   it('[401] session id가 서버에 존재하지 않는다면 401 UnAuthorized 예외가 발생한다.', async () => {
-    //given
+    // given
     const randomUUID = uuidv4();
 
-    //when
+    // when
     const response = await request(app.getHttpServer())
       .get('/api/admin/sessionId')
       .set('Cookie', [`sessionId=${randomUUID}`]);
 
-    //then
+    // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 
   it('[401] session id가 클라이언트에 존재하지 않는다면 401 UnAuthorized 예외가 발생한다.', async () => {
-    //when
+    // when
     const response = await request(app.getHttpServer())
       .get('/api/admin/sessionId')
       .set('Cookie', [`sessionId=`]);
 
-    //then
+    // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 });

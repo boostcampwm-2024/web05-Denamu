@@ -27,17 +27,17 @@ describe('GET /api/feed?limit={}&lastId={} E2E Test', () => {
   });
 
   it('[200] lastId가 없으면 최신 피드부터 전송한다.', async () => {
-    //given
+    // given
     const feedPaginationQueryDto = new ReadFeedPaginationRequestDto({
       limit: 5,
     });
 
-    //when
+    // when
     const response = await request(app.getHttpServer())
       .get('/api/feed')
       .query(feedPaginationQueryDto);
 
-    //then
+    // then
     expect(response.status).toBe(HttpStatus.OK);
     expect(response.body.data.result.map((feed) => feed.id)).toStrictEqual([
       latestId,
@@ -51,18 +51,18 @@ describe('GET /api/feed?limit={}&lastId={} E2E Test', () => {
   });
 
   it('[200] lastId가 있으면 해당 피드 다음 순서부터 전송한다.', async () => {
-    //given
+    // given
     const feedPaginationQueryDto = new ReadFeedPaginationRequestDto({
       limit: 5,
       lastId: 11,
     });
 
-    //when
+    // when
     const response = await request(app.getHttpServer())
       .get('/api/feed')
       .query(feedPaginationQueryDto);
 
-    //then
+    // then
     expect(response.status).toBe(HttpStatus.OK);
     expect(response.body.data.result.map((feed) => feed.id)).toStrictEqual([
       feedPaginationQueryDto.lastId - 1,
@@ -76,18 +76,18 @@ describe('GET /api/feed?limit={}&lastId={} E2E Test', () => {
   });
 
   it('[200] limit의 크기보다 남은 Feed의 개수가 적은 경우면 정상적으로 동작한다.', async () => {
-    //given
+    // given
     const feedPaginationQueryDto = new ReadFeedPaginationRequestDto({
       limit: 15,
       lastId: 10,
     });
 
-    //when
+    // when
     const response = await request(app.getHttpServer())
       .get('/api/feed')
       .query(feedPaginationQueryDto);
 
-    //then
+    // then
     expect(response.status).toBe(HttpStatus.OK);
     expect(response.body.data.result.map((feed) => feed.id)).toStrictEqual([
       feedPaginationQueryDto.lastId - 1,
@@ -105,18 +105,18 @@ describe('GET /api/feed?limit={}&lastId={} E2E Test', () => {
   });
 
   it('[200] 남은 피드 개수가 0이면 lastId 0, 빈 배열로 응답한다.', async () => {
-    //given
+    // given
     const feedPaginationQueryDto = new ReadFeedPaginationRequestDto({
       limit: 15,
       lastId: 1,
     });
 
-    //when
+    // when
     const response = await request(app.getHttpServer())
       .get('/api/feed')
       .query(feedPaginationQueryDto);
 
-    //then
+    // then
     expect(response.status).toBe(HttpStatus.OK);
     expect(response.body.data.result.map((feed) => feed.id)).toStrictEqual([]);
     expect(response.body.data.hasMore).toBe(false);

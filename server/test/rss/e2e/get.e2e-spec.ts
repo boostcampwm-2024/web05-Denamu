@@ -22,8 +22,10 @@ describe('GET /api/rss E2E Test', () => {
   });
 
   it('[200] RSS가 등록되지 않은 경우 빈 리스트를 반환한다.', async () => {
-    // when - then
+    // when
     const response = await request(app.getHttpServer()).get('/api/rss');
+
+    // then
     expect(response.status).toBe(HttpStatus.OK);
     expect(response.body.data).toEqual([]);
   });

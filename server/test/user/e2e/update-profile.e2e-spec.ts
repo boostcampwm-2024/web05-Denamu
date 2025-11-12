@@ -105,11 +105,12 @@ describe('PATCH /api/user/profile E2E Test', () => {
   });
 
   it('[401] 로그인하지 않은 사용자가 프로필 수정을 시도하면 401 에러가 발생한다.', async () => {
-    // when - then
+    // when
     const response = await request(app.getHttpServer())
       .patch('/api/user/profile')
       .send(testUpdateData.complete);
 
+    // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 });

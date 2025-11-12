@@ -27,50 +27,50 @@ describe('GET /api/feed/detail/{feedId} E2E Test', () => {
   });
 
   it('[200] feedId를 요청 받으면 해당 Feed의 정보로 응답한다.', async () => {
-    //given
+    // given
     const feedDetailRequestDto = new ManageFeedRequestDto({
       feedId: 1,
     });
 
-    //when
+    // when
     const response = await request(app.getHttpServer()).get(
       `/api/feed/detail/${feedDetailRequestDto.feedId}`,
     );
 
-    //then
+    // then
     expect(response.status).toBe(HttpStatus.OK);
     expect(response.body.data.id).toBe(1);
   });
 
   it('[200] 태그가 없다면 빈 배열로 응답한다.', async () => {
-    //given
+    // given
     const feedDetailRequestDto = new ManageFeedRequestDto({
       feedId: 11,
     });
 
-    //when
+    // when
     const response = await request(app.getHttpServer()).get(
       `/api/feed/detail/${feedDetailRequestDto.feedId}`,
     );
 
-    //then
+    // then
     expect(response.status).toBe(HttpStatus.OK);
     expect(response.body.data.id).toBe(11);
     expect(response.body.data.tag).toStrictEqual([]);
   });
 
   it('[404] 없는 피드를 조회한다면 404번 에러를 반환한다.', async () => {
-    //given
+    // given
     const feedDetailRequestDto = new ManageFeedRequestDto({
       feedId: 100,
     });
 
-    //when
+    // when
     const response = await request(app.getHttpServer()).get(
       `/api/feed/detail/${feedDetailRequestDto.feedId}`,
     );
 
-    //then
+    // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
 });

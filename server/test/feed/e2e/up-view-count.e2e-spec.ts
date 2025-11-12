@@ -35,11 +35,11 @@ describe('POST /api/feed/{feedId} E2E Test', () => {
   });
 
   it('[200] Redis에 저장된 IP가 아니면서 쿠키가 없으면 조회수는 정상적으로 상승한다.', async () => {
-    //given
+    // given
     const testNewIp = `123.234.123.234`;
 
     try {
-      //when
+      // when
       const response = await request(app.getHttpServer())
         .post(`/api/feed/${testFeedId}`)
         .set('X-Forwarded-For', testNewIp);
@@ -50,14 +50,14 @@ describe('POST /api/feed/{feedId} E2E Test', () => {
         ),
       );
 
-      //then
+      // then
       expect(response.status).toBe(HttpStatus.OK);
       expect(feedDailyViewCount).toBe(1);
       expect(response.headers['set-cookie'][0]).toContain(
         `View_count_${testFeedId}`,
       );
     } finally {
-      //cleanup
+      // cleanup
       await Promise.all([
         redisService.zrem(REDIS_KEYS.FEED_TREND_KEY, testFeedId.toString()),
         redisService.srem(`feed:${testFeedId}:ip`, testNewIp),
@@ -66,20 +66,20 @@ describe('POST /api/feed/{feedId} E2E Test', () => {
   });
 
   it('[404] 해당 피드 ID가 존재하지 않으면 404 예외가 발생한다.', async () => {
-    //given
+    // given
     const notExistFeedId = 50000;
 
-    //when
+    // when
     const response = await request(app.getHttpServer()).post(
       `/api/feed/${notExistFeedId}`,
     );
 
-    //then
+    // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
 
   it('[200] 쿠키가 있으면 조회수는 올라가지 않는다.', async () => {
-    //when
+    // when
     const response = await request(app.getHttpServer())
       .post(`/api/feed/${testFeedId}`)
       .set('Cookie', `View_count_${testFeedId}=${testFeedId}`)
@@ -89,13 +89,13 @@ describe('POST /api/feed/{feedId} E2E Test', () => {
       testFeedId.toString(),
     );
 
-    //then
+    // then
     expect(response.status).toBe(HttpStatus.OK);
     expect(feedDailyViewCount).toBeNull();
   });
 
   it('[200] 쿠키가 없지만 Redis에 IP가 저장되어 있으면 조회수는 올라가지 않는다.', async () => {
-    //when
+    // when
     const response = await request(app.getHttpServer())
       .post(`/api/feed/${testFeedId}`)
       .set('X-Forwarded-For', testIp);
@@ -104,7 +104,7 @@ describe('POST /api/feed/{feedId} E2E Test', () => {
       testFeedId.toString(),
     );
 
-    //then
+    // then
     expect(response.status).toBe(HttpStatus.OK);
     expect(feedDailyViewCount).toBeNull();
     expect(response.headers['set-cookie'][0]).toContain(

@@ -14,13 +14,13 @@ describe('POST /api/admin/login E2E Test', () => {
   });
 
   it('[200] 등록된 계정이면 정상적으로 로그인할 수 있다.', async () => {
-    //given
+    // given
     const loginAdminDto = new LoginAdminRequestDto({
       loginId: 'test1234',
       password: 'test1234!',
     });
 
-    //when
+    // when
     const response = await request(app.getHttpServer())
       .post('/api/admin/login')
       .send(loginAdminDto);
@@ -31,34 +31,34 @@ describe('POST /api/admin/login E2E Test', () => {
   });
 
   it('[401] 등록되지 않은 ID로 로그인을 시도하면 401 UnAuthorized 예외가 발생한다.', async () => {
-    //given
+    // given
     const loginWrongAdminIdDto = new LoginAdminRequestDto({
       loginId: 'testWrongAdminId',
       password: 'test1234!',
     });
 
-    //when
+    // when
     const response = await request(app.getHttpServer())
       .post('/api/admin/login')
       .send(loginWrongAdminIdDto);
 
-    //then
+    // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 
   it('[401] 비밀번호가 다르다면 401 UnAuthorized 예외가 발생한다.', async () => {
-    //given
+    // given
     const loginWrongAdminPasswordDto = new LoginAdminRequestDto({
       loginId: 'test1234',
       password: 'testWrongAdminPassword!',
     });
 
-    //when
+    // when
     const response = await request(app.getHttpServer())
       .post('/api/admin/login')
       .send(loginWrongAdminPasswordDto);
 
-    //then
+    // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 });
