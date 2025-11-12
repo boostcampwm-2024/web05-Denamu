@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../fixture/user.fixture';
@@ -33,7 +33,7 @@ describe('PATCH api/user/password E2E Test', () => {
       .send({ uuid, password: updatedPassword });
 
     // then
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(HttpStatus.OK);
     const updatedUser = await userRepository.findOne({
       where: { email: userEntity.email },
     });
@@ -58,6 +58,6 @@ describe('PATCH api/user/password E2E Test', () => {
       .send({ uuid, password });
 
     // then
-    expect(response.status).toBe(404);
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
 });

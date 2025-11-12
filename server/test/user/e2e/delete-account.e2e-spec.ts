@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { RedisService } from '../../../src/common/redis/redis.service';
@@ -36,7 +36,7 @@ describe('User Delete Account E2E Test', () => {
         .set('Authorization', `Bearer ${accessToken}`);
 
       // then
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(HttpStatus.OK);
     });
 
     it('인증되지 않은 사용자가 회원탈퇴 신청 시 401 에러가 발생한다.', async () => {
@@ -47,7 +47,7 @@ describe('User Delete Account E2E Test', () => {
       const response = await agent.post('/api/user/delete-account/request');
 
       // then
-      expect(response.status).toBe(401);
+      expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     });
   });
 
@@ -68,7 +68,7 @@ describe('User Delete Account E2E Test', () => {
         .send({ token });
 
       // then
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(HttpStatus.OK);
     });
 
     it('유효하지 않은 토큰으로 회원탈퇴 확정 시 404 에러가 발생한다.', async () => {
@@ -82,7 +82,7 @@ describe('User Delete Account E2E Test', () => {
         .send({ token });
 
       // then
-      expect(response.status).toBe(404);
+      expect(response.status).toBe(HttpStatus.NOT_FOUND);
     });
 
     it('만료된 토큰으로 회원탈퇴 확정 시 404 에러가 발생한다.', async () => {
@@ -106,7 +106,7 @@ describe('User Delete Account E2E Test', () => {
         .send({ token });
 
       // then
-      expect(response.status).toBe(404);
+      expect(response.status).toBe(HttpStatus.NOT_FOUND);
     });
   });
 });

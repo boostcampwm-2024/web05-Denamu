@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { OAuthService } from '../../../src/user/service/oauth.service';
 import { OAuthCallbackRequestDto } from '../../../src/user/dto/request/oAuthCallbackDto';
@@ -47,7 +47,7 @@ describe('GET /api/oauth/callback', () => {
       .query(dto);
 
     // then
-    expect(response.status).toBe(302);
+    expect(response.status).toBe(HttpStatus.FOUND);
     expect(response.headers['location']).toBeDefined();
   });
 });
