@@ -2,6 +2,7 @@ import { inject, injectable } from 'tsyringe';
 import { RabbitMQManager } from './rabbitmq.manager';
 import { ConsumeMessage } from 'amqplib/properties';
 import { DEPENDENCY_SYMBOLS } from '../types/dependency-symbols';
+import logger from './logger';
 
 @injectable()
 export class RabbitMQConnection {
@@ -31,7 +32,12 @@ export class RabbitMQConnection {
         await onMessage(message);
 
         channel.ack(message);
-      } catch (err) {
+      } catch (error) {
+        logger.error(
+          `${this.nameTag} 메시지 처리 중 오류 발생
+          오류 메시지: ${error.message}
+          스택 트레이스: ${error.stack}`,
+        );
         channel.nack(message, false, false);
       }
     });
