@@ -12,4 +12,6 @@ export const DEPENDENCY_SYMBOLS = {
   FeedCrawler: Symbol.for('FeedCrawler'),
   FullFeedCrawlEventWorker: Symbol.for('FullFeedCrawlEventWorker'),
   RabbitMQConnection: Symbol.for('RabbitMQConnection'),
+  RabbitMQConfig: Symbol.for('RabbitMQConfig'),
+  RabbitMQManager: Symbol.for('RabbitMQManager'),
 };

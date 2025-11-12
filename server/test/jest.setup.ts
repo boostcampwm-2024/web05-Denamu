@@ -7,7 +7,7 @@ import { HttpExceptionsFilter } from '../src/common/filters/http.exception.filte
 import * as cookieParser from 'cookie-parser';
 import { TestService } from '../src/common/test/test.service';
 import { RedisService } from '../src/common/redis/redis.service';
-import { RabbitMQService } from '../src/common/rabbitmq/rabbitmq.service';
+import { RabbitMQManager } from '../src/common/rabbitmq/rabbitmq.manager';
 
 const globalAny: any = global;
 
@@ -52,11 +52,11 @@ afterAll(async () => {
 
 async function cleanupRabbitMQ() {
   try {
-    const rabbitMQService: RabbitMQService =
-      globalAny.testApp.get(RabbitMQService);
+    const rabbitMQManager: RabbitMQManager =
+      globalAny.testApp.get(RabbitMQManager);
 
-    if (rabbitMQService.connection) {
-      await rabbitMQService.connection.close();
+    if (rabbitMQManager.connection) {
+      await rabbitMQManager.connection.close();
       console.log('RabbitMQ connection closed.');
     }
   } catch (error) {
