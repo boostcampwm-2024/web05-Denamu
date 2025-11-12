@@ -22,6 +22,8 @@ export class RabbitMQService {
     const channel = await this.rabbitMQManager.getChannel();
     await channel.consume(queue, async (message) => {
       try {
+        if (!message) return;
+
         const parsedMessage = JSON.parse(message.content.toString());
         await onMessage(parsedMessage);
 
