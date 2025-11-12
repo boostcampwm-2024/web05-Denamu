@@ -100,6 +100,6 @@ async function initializeRabbitMQ(
 }
 
 startScheduler().catch((error) => {
-  logger.error(`스케줄러 시작 실패: ${error}`);
+  logger.error(`스케줄러 시작 실패: `, error);
   process.exit(1);
 });
