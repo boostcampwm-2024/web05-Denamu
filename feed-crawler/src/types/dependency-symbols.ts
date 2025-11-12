@@ -1,6 +1,3 @@
-import { RabbitMQConfig } from '../common/rabbitmq.config';
-import { RabbitMQManager } from '../common/rabbitmq.manager';
-
 export const DEPENDENCY_SYMBOLS = {
   DatabaseConnection: Symbol.for('DatabaseConnection'),
   RssRepository: Symbol.for('RssRepository'),
