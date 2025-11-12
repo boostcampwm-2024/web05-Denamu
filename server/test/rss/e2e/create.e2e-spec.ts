@@ -1,6 +1,6 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { RegisterRssRequestDto } from '../../../src/rss/dto/request/registerRss.dto';
-import * as request from 'supertest';
+import * as supertest from 'supertest';
 import { RssAcceptFixture } from '../../fixture/rss-accept.fixture';
 import {
   RssAcceptRepository,
@@ -16,7 +16,7 @@ describe('POST /api/rss E2E Test', () => {
 
   beforeAll(() => {
     app = global.testApp;
-    agent = request.agent(app.getHttpServer());
+    agent = supertest(app.getHttpServer());
     rssRepository = app.get(RssRepository);
     rssAcceptRepository = app.get(RssAcceptRepository);
   });

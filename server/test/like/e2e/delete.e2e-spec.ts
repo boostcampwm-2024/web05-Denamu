@@ -10,7 +10,7 @@ import { RssAccept } from '../../../src/rss/entity/rss.entity';
 import { User } from '../../../src/user/entity/user.entity';
 import { Feed } from '../../../src/feed/entity/feed.entity';
 import { ManageLikeRequestDto } from '../../../src/like/dto/request/manageLike.dto';
-import * as request from 'supertest';
+import * as supertest from 'supertest';
 import { LikeRepository } from '../../../src/like/repository/like.repository';
 import TestAgent from 'supertest/lib/agent';
 
@@ -24,7 +24,7 @@ describe('DELETE /api/like/{feedId} E2E Test', () => {
 
   beforeAll(async () => {
     app = global.testApp;
-    agent = request.agent(app.getHttpServer());
+    agent = supertest(app.getHttpServer());
     userService = app.get(UserService);
     const userRepository = app.get(UserRepository);
     const rssAcceptRepository = app.get(RssAcceptRepository);

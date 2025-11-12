@@ -1,4 +1,4 @@
-import * as request from 'supertest';
+import * as supertest from 'supertest';
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
@@ -13,7 +13,7 @@ describe('GET /api/statistic/all E2E Test', () => {
 
   beforeAll(async () => {
     app = global.testApp;
-    agent = request.agent(app.getHttpServer());
+    agent = supertest(app.getHttpServer());
     const rssAcceptRepository = app.get(RssAcceptRepository);
     const feedRepository = app.get(FeedRepository);
     const blog = await rssAcceptRepository.save(

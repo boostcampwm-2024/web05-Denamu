@@ -8,7 +8,7 @@ import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository'
 import { RedisService } from '../../../src/common/redis/redis.service';
 import { CommentRepository } from '../../../src/comment/repository/comment.repository';
 import { UserRepository } from '../../../src/user/repository/user.repository';
-import * as request from 'supertest';
+import * as supertest from 'supertest';
 import { RssFixture } from '../../fixture/rss.fixture';
 import TestAgent from 'supertest/lib/agent';
 
@@ -23,7 +23,7 @@ describe('DELETE /api/rss/remove/{code}', () => {
 
   beforeAll(() => {
     app = global.testApp;
-    agent = request.agent(app.getHttpServer());
+    agent = supertest(app.getHttpServer());
     rssAcceptRepository = app.get(RssAcceptRepository);
     redisService = app.get(RedisService);
     feedRepository = app.get(FeedRepository);

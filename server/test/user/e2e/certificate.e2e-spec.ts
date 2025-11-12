@@ -1,5 +1,5 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import * as supertest from 'supertest';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import { UserFixture } from '../../fixture/user.fixture';
@@ -15,7 +15,7 @@ describe('POST /api/user/certificate E2E Test', () => {
 
   beforeAll(async () => {
     app = global.testApp;
-    agent = request.agent(app.getHttpServer());
+    agent = supertest(app.getHttpServer());
     redisService = app.get(RedisService);
     userRepository = app.get(UserRepository);
   });

@@ -1,5 +1,5 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import * as supertest from 'supertest';
 import { RedisService } from '../../../../src/common/redis/redis.service';
 import { RssRejectRepository } from '../../../../src/rss/repository/rss.repository';
 import { RssReject } from '../../../../src/rss/entity/rss.entity';
@@ -12,7 +12,7 @@ describe('GET /api/rss/history/reject E2E Test', () => {
 
   beforeAll(async () => {
     app = global.testApp;
-    agent = request.agent(app.getHttpServer());
+    agent = supertest(app.getHttpServer());
     const rssRejectRepository = app.get(RssRejectRepository);
     const redisService = app.get(RedisService);
     const rssAccepts: RssReject[] = [];

@@ -7,7 +7,7 @@ import { RssAcceptFixture } from '../../fixture/rss-accept.fixture';
 import { FeedFixture } from '../../fixture/feed.fixture';
 import { RssAccept } from '../../../src/rss/entity/rss.entity';
 import { Feed } from '../../../src/feed/entity/feed.entity';
-import * as request from 'supertest';
+import * as supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 
 describe('GET /api/like/{feedId} E2E Test', () => {
@@ -18,7 +18,7 @@ describe('GET /api/like/{feedId} E2E Test', () => {
 
   beforeAll(async () => {
     app = global.testApp;
-    agent = request.agent(app.getHttpServer());
+    agent = supertest(app.getHttpServer());
     const userRepository = app.get(UserRepository);
     const rssAcceptRepository = app.get(RssAcceptRepository);
     const feedRepository = app.get(FeedRepository);

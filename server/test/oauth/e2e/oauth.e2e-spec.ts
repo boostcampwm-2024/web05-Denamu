@@ -1,7 +1,7 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { OAuthTypeRequestDto } from '../../../src/user/dto/request/oAuthType.dto';
 import { OAuthType } from '../../../src/user/constant/oauth.constant';
-import * as request from 'supertest';
+import * as supertest from 'supertest';
 import { OAuthService } from '../../../src/user/service/oauth.service';
 import TestAgent from 'supertest/lib/agent';
 
@@ -12,7 +12,7 @@ describe('GET /api/oauth', () => {
 
   beforeAll(() => {
     app = global.testApp;
-    agent = request.agent(app.getHttpServer());
+    agent = supertest(app.getHttpServer());
     oauthService = app.get(OAuthService);
   });
 

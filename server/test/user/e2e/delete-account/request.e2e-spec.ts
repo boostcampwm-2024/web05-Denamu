@@ -1,5 +1,5 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import * as supertest from 'supertest';
 import { UserRepository } from '../../../../src/user/repository/user.repository';
 import { UserFixture } from '../../../fixture/user.fixture';
 import TestAgent from 'supertest/lib/agent';
@@ -11,7 +11,7 @@ describe('POST /api/user/delete-account/request', () => {
 
   beforeAll(async () => {
     app = global.testApp;
-    agent = request.agent(app.getHttpServer());
+    agent = supertest(app.getHttpServer());
     userRepository = app.get(UserRepository);
   });
 

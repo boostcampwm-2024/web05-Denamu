@@ -1,5 +1,5 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import * as supertest from 'supertest';
 import { OAuthService } from '../../../src/user/service/oauth.service';
 import { OAuthCallbackRequestDto } from '../../../src/user/dto/request/oAuthCallbackDto';
 import { OAuthType } from '../../../src/user/constant/oauth.constant';
@@ -12,7 +12,7 @@ describe('GET /api/oauth/callback', () => {
 
   beforeAll(() => {
     app = global.testApp;
-    agent = request.agent(app.getHttpServer());
+    agent = supertest(app.getHttpServer());
     oauthService = app.get(OAuthService);
   });
 

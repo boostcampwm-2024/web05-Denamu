@@ -4,7 +4,7 @@ import {
   RssRepository,
 } from '../../../src/rss/repository/rss.repository';
 import { RssFixture } from '../../fixture/rss.fixture';
-import * as request from 'supertest';
+import * as supertest from 'supertest';
 import { DeleteRssRequestDto } from '../../../src/rss/dto/request/deleteRss.dto';
 import TestAgent from 'supertest/lib/agent';
 
@@ -16,7 +16,7 @@ describe('POST /api/rss/remove E2E Test', () => {
 
   beforeAll(() => {
     app = global.testApp;
-    agent = request.agent(app.getHttpServer());
+    agent = supertest(app.getHttpServer());
     rssRepository = app.get(RssRepository);
     rssAcceptRepository = app.get(RssAcceptRepository);
   });

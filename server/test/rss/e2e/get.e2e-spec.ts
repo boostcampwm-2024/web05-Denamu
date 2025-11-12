@@ -1,21 +1,20 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import * as supertest from 'supertest';
 import { RssFixture } from '../../fixture/rss.fixture';
 import {
   RssAcceptRepository,
   RssRepository,
 } from '../../../src/rss/repository/rss.repository';
-import TestAgent from 'supertest/lib/agent';
 
 describe('GET /api/rss E2E Test', () => {
   let app: INestApplication;
-  let agent: TestAgent;
+  let agent: ReturnType<typeof supertest>;
   let rssRepository: RssRepository;
   let rssAcceptRepository: RssAcceptRepository;
 
   beforeAll(() => {
     app = global.testApp;
-    agent = request.agent(app.getHttpServer());
+    agent = supertest(app.getHttpServer());
     rssRepository = app.get(RssRepository);
     rssAcceptRepository = app.get(RssAcceptRepository);
   });

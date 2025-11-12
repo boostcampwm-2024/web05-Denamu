@@ -1,6 +1,6 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { RedisService } from '../../../src/common/redis/redis.service';
-import * as request from 'supertest';
+import * as supertest from 'supertest';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 import { RssAcceptFixture } from '../../fixture/rss-accept.fixture';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
@@ -15,7 +15,7 @@ describe('GET /api/statistic/today E2E Test', () => {
 
   beforeAll(async () => {
     app = global.testApp;
-    agent = request.agent(app.getHttpServer());
+    agent = supertest(app.getHttpServer());
     const feedRepository = app.get(FeedRepository);
     const rssAcceptRepository = app.get(RssAcceptRepository);
     const redisService = app.get(RedisService);

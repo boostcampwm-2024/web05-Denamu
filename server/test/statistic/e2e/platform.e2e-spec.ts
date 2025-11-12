@@ -1,5 +1,5 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import * as supertest from 'supertest';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
 import { RssAcceptFixture } from '../../fixture/rss-accept.fixture';
 import TestAgent from 'supertest/lib/agent';
@@ -11,7 +11,7 @@ describe('GET /api/statistic/platform E2E Test', () => {
 
   beforeAll(async () => {
     app = global.testApp;
-    agent = request.agent(app.getHttpServer());
+    agent = supertest(app.getHttpServer());
     rssAcceptRepository = app.get(RssAcceptRepository);
     await Promise.all([
       rssAcceptRepository.insert(RssAcceptFixture.createRssAcceptFixture({})),

@@ -1,7 +1,7 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { LoginAdminRequestDto } from '../../../src/admin/dto/request/loginAdmin.dto';
 import { RegisterAdminRequestDto } from '../../../src/admin/dto/request/registerAdmin.dto';
-import * as request from 'supertest';
+import * as supertest from 'supertest';
 import { AdminFixture } from '../../fixture/admin.fixture';
 import { AdminRepository } from '../../../src/admin/repository/admin.repository';
 import TestAgent from 'supertest/lib/agent';
@@ -12,7 +12,7 @@ describe('POST /api/admin/register E2E Test', () => {
 
   beforeAll(async () => {
     app = global.testApp;
-    agent = request.agent(app.getHttpServer());
+    agent = supertest(app.getHttpServer());
     const adminRepository = app.get(AdminRepository);
     await adminRepository.insert(await AdminFixture.createAdminCryptFixture());
   });
