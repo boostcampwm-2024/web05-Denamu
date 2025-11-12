@@ -6,6 +6,7 @@ import * as amqp from 'amqplib';
 export class RabbitMQManager {
   private connection: ChannelModel | null;
   private channel: Channel | null;
+  private channelPromise: Promise<Channel> | null = null;
 
   constructor() {
     this.connection = null;
@@ -28,7 +29,14 @@ export class RabbitMQManager {
 
   async getChannel() {
     if (this.channel) return this.channel;
-    this.channel = await this.connection.createChannel();
+    if (this.channelPromise) return this.channelPromise;
+
+    if (!this.connection) {
+      await this.connect();
+    }
+    this.channelPromise = this.connection.createChannel();
+    this.channel = await this.channelPromise;
+    this.channelPromise = null;
     return this.channel;
   }
 
