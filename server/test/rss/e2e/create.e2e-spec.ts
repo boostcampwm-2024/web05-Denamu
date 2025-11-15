@@ -25,7 +25,7 @@ describe('POST /api/rss E2E Test', () => {
     await rssRepository.delete({});
   });
 
-  it('[201] 정상적인 요청이 들어왔다면 올바른 응답을 한다.', async () => {
+  it('[201] 등록되지 않은 RSS 등록 요청을 받았을 경우 RSS 등록 요청을 성공한다.', async () => {
     // given
     const requestDto = new RegisterRssRequestDto({
       blog: 'blog1',
@@ -41,7 +41,7 @@ describe('POST /api/rss E2E Test', () => {
     expect(response.status).toBe(HttpStatus.CREATED);
   });
 
-  it('[409] 이미 신청한 RSS를 또 신청한다면 거부를 한다.', async () => {
+  it('[409] 이미 신청한 RSS를 다시 신청할 경우 RSS 등록 요청을 실패한다.', async () => {
     // given
     const requestDto = new RegisterRssRequestDto({
       blog: 'blog1',
@@ -58,7 +58,7 @@ describe('POST /api/rss E2E Test', () => {
     expect(response.status).toBe(HttpStatus.CONFLICT);
   });
 
-  it('[409] 이미 등록된 RSS를 또 신청한다면 거부를 한다.', async () => {
+  it('[409] 이미 등록 완료된 RSS를 다시 신청할 경우 RSS 등록 요청을 실패한다.', async () => {
     // given
     const acceptedRss = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),

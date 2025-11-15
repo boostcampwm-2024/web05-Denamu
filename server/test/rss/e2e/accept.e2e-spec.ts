@@ -34,7 +34,7 @@ describe('POST /api/rss/accept/{rssId} E2E Test', () => {
     ]);
   });
 
-  it('[201] 정상적으로 RSS를 승인한다.', async () => {
+  it('[201] 관리자 로그인이 되어 있을 경우 RSS 승인을 성공한다.', async () => {
     // given
     const rss = await rssRepository.save(
       RssFixture.createRssFixture({
@@ -51,7 +51,7 @@ describe('POST /api/rss/accept/{rssId} E2E Test', () => {
     expect(response.status).toBe(HttpStatus.CREATED);
   });
 
-  it('[404] 존재하지 않는 rss를 승인할 때', async () => {
+  it('[404] 존재하지 않은 RSS를 승인할 경우 RSS 승인을 실패한다.', async () => {
     // given
     jest.spyOn(rssRepository, 'findOne').mockResolvedValue(undefined);
 
@@ -64,7 +64,7 @@ describe('POST /api/rss/accept/{rssId} E2E Test', () => {
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
 
-  it('[401] 유효한 세션이 존재하지 않을 때', async () => {
+  it('[401] 관리자 로그인이 되어 있지 않을 경우 RSS 승인을 실패한다.', async () => {
     // when
     const noCookieResponse = await agent.post(`/api/rss/accept/1`);
 

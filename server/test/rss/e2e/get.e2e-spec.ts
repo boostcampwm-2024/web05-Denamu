@@ -23,7 +23,7 @@ describe('GET /api/rss E2E Test', () => {
     await rssRepository.delete({});
   });
 
-  it('[200] RSS가 등록되지 않은 경우 빈 리스트를 반환한다.', async () => {
+  it('[200] 신청된 RSS가 없을 경우 RSS 신청 조회를 성공한다.', async () => {
     // when
     const response = await agent.get('/api/rss');
 
@@ -32,7 +32,7 @@ describe('GET /api/rss E2E Test', () => {
     expect(response.body.data).toEqual([]);
   });
 
-  it('[200] 등록된 RSS가 존재할 경우 해당 데이터를 반환한다.', async () => {
+  it('[200] 신청된 RSS가 있을 경우 RSS 신청 조회를 성공한다.', async () => {
     // given
     const expectedResult = await rssRepository.save(
       RssFixture.createRssFixture(),

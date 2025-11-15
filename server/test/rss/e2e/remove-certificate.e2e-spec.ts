@@ -31,7 +31,7 @@ describe('DELETE /api/rss/remove/{code}', () => {
     userRepository = app.get(UserRepository);
   });
 
-  it('[404] 삭제 신청된 RSS가 없으면 인증할 수 없다.', async () => {
+  it('[404] RSS 삭제 요청이 없을 경우 RSS 삭제 인증을 실패한다.', async () => {
     // when
     const response = await agent.delete('/api/rss/remove/testfail');
 
@@ -39,7 +39,7 @@ describe('DELETE /api/rss/remove/{code}', () => {
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
 
-  it('[404] 이미 지워진 RSS라면 지울 수 없다.', async () => {
+  it('[404] 존재하지 않는 RSS일 경우 RSS 삭제 인증을 실패한다.', async () => {
     // given
     await redisService.set(`${REDIS_KEYS.RSS_REMOVE_KEY}:rssNotFound`, 'test');
 
@@ -50,7 +50,7 @@ describe('DELETE /api/rss/remove/{code}', () => {
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
 
-  it('[200] 삭제 신청된 RSS가 있을 경우 좋아요, 댓글, 게시글, RSS가 한 번에 삭제된다.', async () => {
+  it('[200] 삭제 신청된 RSS가 있을 경우 RSS와 관련된 모든 데이터들의 삭제 인증을 성공한다.', async () => {
     // given
     const certificateCode = 'test';
     const rss = await rssAcceptRepository.save(RssFixture.createRssFixture());

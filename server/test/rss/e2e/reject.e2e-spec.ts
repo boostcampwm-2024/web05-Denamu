@@ -35,7 +35,7 @@ describe('POST /api/rss/reject/{rssId} E2E Test', () => {
     ]);
   });
 
-  it('[201] 정상적으로 RSS를 거절한다.', async () => {
+  it('[201] 신청된 RSS를 거부할 경우 RSS 거부를 성공한다.', async () => {
     // given
     const REJECT_REASON = '거절 사유';
     const rss = await rssRepository.save(RssFixture.createRssFixture());
@@ -58,7 +58,7 @@ describe('POST /api/rss/reject/{rssId} E2E Test', () => {
     expect(accepted).not.toBeNull();
   });
 
-  it('[404] 존재하지 않는 rss를 거절할 때', async () => {
+  it('[404] 존재하지 않는 RSS를 거부할 경우 RSS 거부를 실패한다.', async () => {
     // given
     const REJECT_REASON = '거절 사유';
     const requestDTO = new RejectRssRequestDto({
@@ -75,7 +75,7 @@ describe('POST /api/rss/reject/{rssId} E2E Test', () => {
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
 
-  it('[401] 유효한 세션이 존재하지 않을 때', async () => {
+  it('[401] 관리자 로그인이 되어 있지 않은 경우 RSS 거부를 실패한다.', async () => {
     // when
     const noCookieResponse = await agent.post(`/api/rss/reject/1`);
     const noSessionResponse = await agent
