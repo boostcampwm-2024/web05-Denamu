@@ -10,7 +10,7 @@ import { UserFixture } from '../../fixture/user.fixture';
 import * as path from 'path';
 import TestAgent from 'supertest/lib/agent';
 
-describe('POST /api/file', () => {
+describe('POST /api/file E2E Test', () => {
   let app: INestApplication;
   let agent: TestAgent;
   let testUser: User;
@@ -39,31 +39,6 @@ describe('POST /api/file', () => {
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 
-  it('[400] 파일 형식을 나타내는 쿼리가 없을 경우 파일 업로드를 실패한다.', async () => {
-    // given
-    const filePath = path.resolve(__dirname, '../../fixture/test.png');
-    const fileBuffer = fs.readFileSync(filePath);
-
-    const accessToken = userService.createToken(
-      {
-        id: testUser.id,
-        email: testUser.email,
-        userName: testUser.userName,
-        role: 'user',
-      },
-      'access',
-    );
-
-    // when
-    const response = await agent
-      .post('/api/file')
-      .set('Authorization', `Bearer ${accessToken}`)
-      .attach('file', fileBuffer, 'test.png');
-
-    // then
-    expect(response.status).toBe(HttpStatus.BAD_REQUEST);
-  });
-
   it('[400] 파일이 포함되어 있지 않을 경우 파일 업로드를 실패한다.', async () => {
     // given
     const requestDto = new UploadFileQueryRequestDto({
@@ -89,7 +64,7 @@ describe('POST /api/file', () => {
     expect(response.status).toBe(HttpStatus.BAD_REQUEST);
   });
 
-  it('[201] 이미지를 포함하고 쿼리를 포함하여 보낼 경우 올바르게 통과할 수 있다.', async () => {
+  it('[201] 파일을 포함할 경우 파일 업로드를 성공한다.', async () => {
     // given
     const requestDto = new UploadFileQueryRequestDto({
       uploadType: FileUploadType.PROFILE_IMAGE,

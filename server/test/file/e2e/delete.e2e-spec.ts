@@ -9,7 +9,7 @@ import { File } from '../../../src/file/entity/file.entity';
 import { FileFixture } from '../../fixture/file.fixture';
 import TestAgent from 'supertest/lib/agent';
 
-describe('DELETE /api/file/{fileId}', () => {
+describe('DELETE /api/file/{fileId} E2E Test', () => {
   let app: INestApplication;
   let agent: TestAgent;
   let testUser: User;
@@ -29,7 +29,7 @@ describe('DELETE /api/file/{fileId}', () => {
     );
   });
 
-  it('[200] fs 라이브러리 파일의 삭제에 실패했을 경우 오류를 발생하지 않는다.', async () => {
+  it('[200] DB에서 파일을 삭제했지만 FS 라이브러리릍 통해서 실패했을 경우에 서비스에서 파일 삭제를 성공한다.', async () => {
     // given
     file = await fileRepository.save(
       FileFixture.createFileFixture({ user: testUser }),
@@ -57,7 +57,7 @@ describe('DELETE /api/file/{fileId}', () => {
     expect(response.status).toBe(HttpStatus.OK);
   });
 
-  it('[200] fs 라이브러리 파일에 삭제 권한이 없을 경우 오류가 발생하지 않는다..', async () => {
+  it('[200] DB에서 파일을 삭제했지만 FS 라이브러리에서 권한 문제일 경우 서비스에서 파일 삭제를 성공한다.', async () => {
     // given
     file = await fileRepository.save(
       FileFixture.createFileFixture({ user: testUser }),
@@ -73,7 +73,7 @@ describe('DELETE /api/file/{fileId}', () => {
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 
-  it('[200] 파일을 삭제했을 경우 응답을 한다.', async () => {
+  it('[200] 파일 삭제 요청을 받을 경우 파일 삭제를 성공한다.', async () => {
     // given
     file = await fileRepository.save(
       FileFixture.createFileFixture({ user: testUser }),
@@ -102,7 +102,7 @@ describe('DELETE /api/file/{fileId}', () => {
     expect(response.status).toBe(HttpStatus.OK);
   });
 
-  it('[401] 파일에 삭제 권한이 없을 경우 권한 오류가 발생한다.', async () => {
+  it('[401] 파일에 삭제 권한이 없을 경우 파일 삭제를 실패한다.', async () => {
     // when
     const response = await agent.delete('/api/file/1');
 
@@ -110,7 +110,7 @@ describe('DELETE /api/file/{fileId}', () => {
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 
-  it('[404] 파일이 없을 경우 응답을 한다.', async () => {
+  it('[404] 파일이 서비스에 존재하지 않을 경우 파일 삭제를 실패한다.', async () => {
     jest.mock('fs/promises', () => ({
       access: jest.fn().mockResolvedValue(null),
       unlink: jest.fn().mockResolvedValue(null),
