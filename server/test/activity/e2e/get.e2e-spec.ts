@@ -37,7 +37,7 @@ describe('GET /api/activity/{userId} E2E Test', () => {
     await activityRepository.save(activities);
   });
 
-  it('[200] 존재하는 사용자의 활동 데이터를 정상적으로 조회한다.', async () => {
+  it('[200] 존재하는 사용자의 아이디로 요청할 경우 활동 데이터 조회를 성공한다.', async () => {
     // given
     const userId = testUser.id;
     const requestDto = new ReadActivityQueryRequestDto({
@@ -71,7 +71,7 @@ describe('GET /api/activity/{userId} E2E Test', () => {
     );
   });
 
-  it('[200] 다른 연도를 요청하면 해당 연도의 데이터만 조회된다.', async () => {
+  it('[200] 다른 연도를 요청할 경우 해당 연도의 활동 데이터 조회를 성공한다.', async () => {
     // given
     const userId = testUser.id;
     const requestDto = new ReadActivityQueryRequestDto({
@@ -94,7 +94,7 @@ describe('GET /api/activity/{userId} E2E Test', () => {
     expect(data.dailyActivities).toHaveLength(0);
   });
 
-  it('[404] 존재하지 않는 사용자 ID로 요청하면 404 에러를 반환한다.', async () => {
+  it('[404] 존재하지 않는 사용자 ID로 요청할 경우 활동 데이터 조회를 실패한다.', async () => {
     // given
     const requestDto = new ReadActivityQueryRequestDto({
       year: activitiesData[0].activityDate.getFullYear(),
