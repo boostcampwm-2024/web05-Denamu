@@ -38,7 +38,7 @@ describe('POST /api/comment E2E Test', () => {
     );
   });
 
-  it('[401] 로그인이 되어 있지 않다면 댓글을 등록할 수 없다.', async () => {
+  it('[401] 로그인이 되어 있지 않을 경우 댓글 등록을 실패한다.', async () => {
     // given
     const requestDto = new CreateCommentRequestDto({
       comment: 'test',
@@ -52,7 +52,7 @@ describe('POST /api/comment E2E Test', () => {
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 
-  it('[404] 계정 정보가 존재하지 않으면 댓글을 등록할 수 없다.', async () => {
+  it('[404] 회원 정보가 없을 경우 댓글 등록을 실패한다.', async () => {
     // given
     const requestDto = new CreateCommentRequestDto({
       comment: 'test',
@@ -78,7 +78,7 @@ describe('POST /api/comment E2E Test', () => {
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
 
-  it('[404] 게시글이 존재하지 않으면 댓글을 등록할 수 없다.', async () => {
+  it('[404] 게시글이 존재하지 않을 경우 댓글 등록을 실패한다.', async () => {
     // given
     const requestDto = new CreateCommentRequestDto({
       comment: 'test',
@@ -104,7 +104,7 @@ describe('POST /api/comment E2E Test', () => {
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
 
-  it('[201] 로그인이 되어 있다면 댓글을 등록할 수 있다.', async () => {
+  it('[201] 로그인이 되어 있을 경우 댓글 등록을 성공한다.', async () => {
     // given
     const accessToken = userService.createToken(
       {

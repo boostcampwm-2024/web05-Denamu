@@ -47,7 +47,7 @@ describe('PATCH /api/comment E2E Test', () => {
     );
   });
 
-  it('[401] 로그인이 되어 있지 않다면 댓글을 수정할 수 없다.', async () => {
+  it('[401] 로그인이 되어있지 않을 경우 댓글 수정을 실패한다.', async () => {
     // given
     const requestDto = new UpdateCommentRequestDto({
       commentId: commentInformation.id,
@@ -61,7 +61,7 @@ describe('PATCH /api/comment E2E Test', () => {
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 
-  it('[401] 본인이 작성한 댓글이 아니라면 댓글을 수정할 수 없다.', async () => {
+  it('[401] 본인이 작성한 댓글이 아닐 경우 댓글 수정을 실패한다.', async () => {
     // given
     const requestDto = new UpdateCommentRequestDto({
       commentId: commentInformation.id,
@@ -87,7 +87,7 @@ describe('PATCH /api/comment E2E Test', () => {
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 
-  it('[404] 존재하지 않는 댓글은 수정할 수 없다.', async () => {
+  it('[404] 게시글이 존재하지 않을 경우 댓글 수정을 실패한다.', async () => {
     // given
     const requestDto = new UpdateCommentRequestDto({
       commentId: 400,
@@ -113,7 +113,7 @@ describe('PATCH /api/comment E2E Test', () => {
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
 
-  it('[200] 로그인이 되어 있다면 댓글을 수정할 수 있다.', async () => {
+  it('[200] 본인이 작성한 댓글일 경우 댓글 수정을 성공한다.', async () => {
     // given
     const requestDto = new UpdateCommentRequestDto({
       commentId: commentInformation.id,

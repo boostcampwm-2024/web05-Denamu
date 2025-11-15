@@ -26,7 +26,7 @@ describe('GET /api/comment/{feedId} E2E Test', () => {
     );
   });
 
-  it('[404] 게시글이 존재하지 않을 경우 조회 오류가 발생한다.', async () => {
+  it('[404] 게시글이 존재하지 않을 경우 댓글 조회를 실패한다.', async () => {
     // given
     const requestDto = new GetCommentRequestDto({
       feedId: 100,
@@ -41,7 +41,7 @@ describe('GET /api/comment/{feedId} E2E Test', () => {
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
 
-  it('[200] 게시글이 존재할 경우 올바르게 댓글을 제공한다.', async () => {
+  it('[200] 게시글이 존재할 경우 댓글 조회를 성공한다.', async () => {
     // given
     const requestDto = new GetCommentRequestDto({
       feedId: feed.id,
