@@ -29,7 +29,7 @@ describe('GET /api/feed/detail/{feedId} E2E Test', () => {
     await feedRepository.insert(feeds);
   });
 
-  it('[200] feedId를 요청 받으면 해당 Feed의 정보로 응답한다.', async () => {
+  it('[200] 존재하는 피드 ID로 요청할 경우 게시글 상세 조회에 성공한다.', async () => {
     // given
     const feedDetailRequestDto = new ManageFeedRequestDto({
       feedId: 1,
@@ -45,7 +45,7 @@ describe('GET /api/feed/detail/{feedId} E2E Test', () => {
     expect(response.body.data.id).toBe(1);
   });
 
-  it('[200] 태그가 없다면 빈 배열로 응답한다.', async () => {
+  it('[200] 태그가 없는 게시글로 요청할 경우 게시글 상세 조회에 성공한다.', async () => {
     // given
     const feedDetailRequestDto = new ManageFeedRequestDto({
       feedId: 11,
@@ -62,7 +62,7 @@ describe('GET /api/feed/detail/{feedId} E2E Test', () => {
     expect(response.body.data.tag).toStrictEqual([]);
   });
 
-  it('[404] 없는 피드를 조회한다면 404번 에러를 반환한다.', async () => {
+  it('[404] 존재하지 않는 피드 ID로 요청할 경우 게시글 상세 조회에 실패한다.', async () => {
     // given
     const feedDetailRequestDto = new ManageFeedRequestDto({
       feedId: 100,

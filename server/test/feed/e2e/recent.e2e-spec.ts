@@ -20,7 +20,7 @@ describe('GET /api/feed/recent E2E Test', () => {
     rssAcceptRepository = app.get(RssAcceptRepository);
   });
 
-  it('[200] 최신 피드 업데이트 요청이 들어오면 내림차순 정렬된 피드 배열을 반환한다.', async () => {
+  it('[200] 최신 피드 업데이트 요청이 들어올 경우 최신 피드 제공을 성공한다.', async () => {
     // given
     const blog = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
@@ -50,7 +50,7 @@ describe('GET /api/feed/recent E2E Test', () => {
     expect(response.body.data.map((feed) => feed.id)).toStrictEqual(['2', '1']);
   });
 
-  it('[200] 최신 피드가 없다면 빈 배열을 반환한다.', async () => {
+  it('[200] 최신 피드가 없을 경우 빈 배열 제공을 성공한다.', async () => {
     // given
     const redisService = app.get(RedisService);
     redisService.flushdb();

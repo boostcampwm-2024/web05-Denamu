@@ -31,7 +31,7 @@ describe('GET /api/feed/search', () => {
     await feedRepository.insert(feeds);
   });
 
-  it('[200] 검색 결과에 적합한 게시글이 존재할 경우 검색 결과를 반환한다.', async () => {
+  it('[200] 검색 결과에 적합한 게시글이 존재할 경우 검색 결과 제공을 성공한다.', async () => {
     // given
     const requestDto = new SearchFeedRequestDto({
       type: SearchType.TITLE,
@@ -45,7 +45,7 @@ describe('GET /api/feed/search', () => {
     expect(response.status).toBe(HttpStatus.OK);
   });
 
-  it('[200] 검색 결과에 적합한 게시글이 없더라도 오류를 발생하지 않는다.', async () => {
+  it('[200] 검색 결과에 적합한 게시글이 없을 경우 빈 배열 제공을 성공한다.', async () => {
     // given
     const requestDto = new SearchFeedRequestDto({
       type: SearchType.TITLE,

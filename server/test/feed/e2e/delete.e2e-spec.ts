@@ -31,7 +31,7 @@ describe('DELETE /api/feed/{feedId} E2E Test', () => {
     );
   });
 
-  it('[200] 원본 게시글이 존재할 경우 200을 반환한다.', async () => {
+  it('[200] 원본 게시글이 존재할 경우 조회를 성공한다.', async () => {
     // given
     global.fetch = jest.fn().mockResolvedValue({ status: HttpStatus.OK });
 
@@ -42,7 +42,7 @@ describe('DELETE /api/feed/{feedId} E2E Test', () => {
     expect(response.status).toBe(HttpStatus.OK);
   });
 
-  it('[404] 원본 게시글이 존재하지 않을 경우 데나무 서비스에서 삭제하고 404를 반환한다.', async () => {
+  it('[404] 원본 게시글이 존재하지 않을 경우 서비스에서 게시글 정보를 삭제하여 조회를 실패한다.', async () => {
     // given
     global.fetch = jest
       .fn()
