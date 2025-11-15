@@ -5,7 +5,7 @@ import { OAuthCallbackRequestDto } from '../../../src/user/dto/request/oAuthCall
 import { OAuthType } from '../../../src/user/constant/oauth.constant';
 import TestAgent from 'supertest/lib/agent';
 
-describe('GET /api/oauth/callback', () => {
+describe('GET /api/oauth/callback E2E Test', () => {
   let app: INestApplication;
   let agent: TestAgent;
   let oauthService: OAuthService;
@@ -16,7 +16,7 @@ describe('GET /api/oauth/callback', () => {
     oauthService = app.get(OAuthService);
   });
 
-  it('[302] ', async () => {
+  it('[302] OAuth 로그인 콜백으로 인증 서버에서 데이터를 받을 경우 리다이렉트를 성공한다.', async () => {
     // given
     const requestDto = new OAuthCallbackRequestDto({
       code: 'testCode',

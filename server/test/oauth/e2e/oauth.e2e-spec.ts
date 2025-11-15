@@ -5,7 +5,7 @@ import * as supertest from 'supertest';
 import { OAuthService } from '../../../src/user/service/oauth.service';
 import TestAgent from 'supertest/lib/agent';
 
-describe('GET /api/oauth', () => {
+describe('GET /api/oauth?type={} E2E Test', () => {
   let app: INestApplication;
   let agent: TestAgent;
   let oauthService: OAuthService;
@@ -16,7 +16,7 @@ describe('GET /api/oauth', () => {
     oauthService = app.get(OAuthService);
   });
 
-  it('[302] 올바른 제공자를 입력했을 경우 Redirect를 받을 수 있다.', async () => {
+  it('[302] 올바른 제공자를 입력했을 경우 리다이렉트를 성공한다.', async () => {
     // given
     const requestDto = new OAuthTypeRequestDto({ type: OAuthType.Github });
     const mockProvider = {
