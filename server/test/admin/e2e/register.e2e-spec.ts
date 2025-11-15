@@ -23,7 +23,7 @@ describe('POST /api/admin/register E2E Test', () => {
     );
   });
 
-  it('[201] 관리자가 로그인되어 있으면 다른 관리자 계정 회원가입을 할 수 있다.', async () => {
+  it('[201] 관리자 로그인이 되어 있을 경우 다른 관리자 계정 회원가입을 성공한다.', async () => {
     // given
     const newAdminDto = new RegisterAdminRequestDto({
       loginId: 'testNewAdminId',
@@ -40,7 +40,7 @@ describe('POST /api/admin/register E2E Test', () => {
     expect(response.status).toBe(HttpStatus.CREATED);
   });
 
-  it('[409] 이미 가입한 ID를 입력하면 관리자 계정을 생성할 수 없다.', async () => {
+  it('[409] 중복된 ID로 회원가입을 할 경우 다른 관리자 계정 회원가입을 실패한다.', async () => {
     // given
     const newAdminDto = new RegisterAdminRequestDto({
       loginId: 'testNewAdminId',
@@ -57,7 +57,7 @@ describe('POST /api/admin/register E2E Test', () => {
     expect(response.status).toBe(HttpStatus.CONFLICT);
   });
 
-  it('[401] 관리자가 로그아웃 상태면 예외가 발생한다.', async () => {
+  it('[401] 관리자가 로그인 상태가 아닐 경우 회원가입을 실패한다.', async () => {
     // given
     const newAdminDto = new RegisterAdminRequestDto({
       loginId: 'testNewAdminId',

@@ -18,7 +18,7 @@ describe('POST /api/admin/logout E2E Test', () => {
     );
   });
 
-  it('[200] 관리자 로그인이 되어 있으면 로그아웃을 정상적으로 할 수 있다.', async () => {
+  it('[200] 관리자 로그인이 되어 있을 경우 로그아웃을 성공한다.', async () => {
     // when
     const response = await agent
       .post('/api/admin/logout')
@@ -31,15 +31,21 @@ describe('POST /api/admin/logout E2E Test', () => {
     ]);
   });
 
-  it('[401] 관리자 로그인이 되어 있지 않으면 로그아웃을 정상적으로 할 수 없다.', async () => {
+  it('[401] 관리자 로그인이 되어 있지 않을 경우 로그아웃을 실패한다.', async () => {
     // when
-    const noCookieResponse = await agent.post('/api/admin/logout');
-    const noSessionResponse = await agent
-      .post('/api/admin/logout')
-      .set('Cookie', 'sessionId=invalid');
+    const response = await agent.post('/api/admin/logout');
 
     // then
-    expect(noCookieResponse.status).toBe(HttpStatus.UNAUTHORIZED);
-    expect(noSessionResponse.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+  });
+
+  it('[401] 존재하지 않는 세션ID로 로그아웃할 경우 로그아웃을 실패한다.', async () => {
+    // when
+    const response = await agent
+      .post('/api/admin/logout')
+      .set('Cookie', 'sessionId=nonExistentSessionId');
+
+    // then
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 });

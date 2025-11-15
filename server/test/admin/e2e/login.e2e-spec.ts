@@ -16,7 +16,7 @@ describe('POST /api/admin/login E2E Test', () => {
     await adminRepository.insert(await AdminFixture.createAdminCryptFixture());
   });
 
-  it('[200] 등록된 계정이면 정상적으로 로그인할 수 있다.', async () => {
+  it('[200] 존재하는 사용자의 정보로 로그인할 경우 로그인을 성공한다.', async () => {
     // given
     const requestDto = new LoginAdminRequestDto({
       loginId: 'test1234',
@@ -31,7 +31,7 @@ describe('POST /api/admin/login E2E Test', () => {
     expect(response.headers['set-cookie'][0]).toContain('sessionId=');
   });
 
-  it('[401] 등록되지 않은 ID로 로그인을 시도하면 로그인을 실패한다.', async () => {
+  it('[401] 등록되지 않은 ID로 로그인할 경우 로그인을 실패한다.', async () => {
     // given
     const requestDto = new LoginAdminRequestDto({
       loginId: 'testWrongAdminId',
@@ -45,7 +45,7 @@ describe('POST /api/admin/login E2E Test', () => {
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 
-  it('[401] 비밀번호가 다르면 로그인을 실패한다.', async () => {
+  it('[401] 비밀번호가 다를 경우 로그인을 실패한다.', async () => {
     // given
     const requestDto = new LoginAdminRequestDto({
       loginId: 'test1234',

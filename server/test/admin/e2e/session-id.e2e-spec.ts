@@ -1,6 +1,5 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as supertest from 'supertest';
-import { v4 as uuidv4 } from 'uuid';
 import { AdminRepository } from '../../../src/admin/repository/admin.repository';
 import { AdminFixture } from '../../fixture/admin.fixture';
 import TestAgent from 'supertest/lib/agent';
@@ -23,7 +22,7 @@ describe('GET /api/admin/sessionId E2E Test', () => {
     );
   });
 
-  it('[200] 쿠키의 session id가 유효하다면 관리자를 로그인 상태로 취급한다.', async () => {
+  it('[200] 세션 ID가 존재할 경우 관리자 자동 로그인을 성공한다.', async () => {
     // when
     const response = await agent
       .get('/api/admin/sessionId')
@@ -33,24 +32,19 @@ describe('GET /api/admin/sessionId E2E Test', () => {
     expect(response.status).toBe(HttpStatus.OK);
   });
 
-  it('[401] session id가 서버에 존재하지 않는다면 401 UnAuthorized 예외가 발생한다.', async () => {
-    // given
-    const randomUUID = uuidv4();
-
+  it('[401] 세션 ID가 존재하지 않을 경우 관리자 자동 로그인을 실패한다.', async () => {
     // when
     const response = await agent
       .get('/api/admin/sessionId')
-      .set('Cookie', `sessionId=${randomUUID}`);
+      .set('Cookie', 'sessionId=WrongSessionId');
 
     // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 
-  it('[401] session id가 클라이언트에 존재하지 않는다면 401 UnAuthorized 예외가 발생한다.', async () => {
+  it('[401] 세션 ID가 쿠키에 포함되지 않을 경우 관리자 자동 로그인을 실패한다.', async () => {
     // when
-    const response = await agent
-      .get('/api/admin/sessionId')
-      .set('Cookie', 'sessionId=');
+    const response = await agent.get('/api/admin/sessionId');
 
     // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
