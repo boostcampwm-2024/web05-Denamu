@@ -30,7 +30,7 @@ describe('GET /api/statistic/today E2E Test', () => {
     await feedRepository.insert(feeds);
   });
 
-  it('[200] 값을 입력 하지 않으면 10개의 데이터만 응답한다.', async () => {
+  it('[200] 금일 조회수 통계 요청을 받은 경우 금일 조회수 통계 조회를 성공한다. ', async () => {
     // when
     const response = await agent.get('/api/statistic/today');
 
@@ -39,7 +39,7 @@ describe('GET /api/statistic/today E2E Test', () => {
     expect(response.body.data.map((feed) => feed.id)).toStrictEqual([1, 2]);
   });
 
-  it('[200] 양수를 입력하면 제한된 개수의 통계 결과를 응답한다.', async () => {
+  it('[200] 금일 조회수 통계에서 개수 제한을 걸 경우 특정 개수만큼의 금일 조회수 통계 조회를 성공한다.', async () => {
     // when
     const response = await agent.get('/api/statistic/today?limit=1');
 

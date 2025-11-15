@@ -24,7 +24,7 @@ describe('GET /api/statistic/platform E2E Test', () => {
     ]);
   });
 
-  it('[200] 요청을 받으면 블로그 플랫폼별 통계 결과를 응답한다.', async () => {
+  it('[200] 블로그 플랫폼별 통계 요청을 받은 경우 블로그 플랫폼별 통계 조회를 성공한다.', async () => {
     // when
     const response = await agent.get('/api/statistic/platform');
 
