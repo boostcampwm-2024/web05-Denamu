@@ -8,7 +8,7 @@ import * as bcrypt from 'bcrypt';
 import { ResetPasswordRequestDto } from '../../../src/user/dto/request/resetPassword.dto';
 import TestAgent from 'supertest/lib/agent';
 
-describe('PATCH api/user/password E2E Test', () => {
+describe('PATCH /api/user/password E2E Test', () => {
   let app: INestApplication;
   let agent: TestAgent;
   let redisService: RedisService;
@@ -21,7 +21,7 @@ describe('PATCH api/user/password E2E Test', () => {
     userRepository = app.get(UserRepository);
   });
 
-  it('비밀번호 변경 요청에 성공하면 DB의 사용자 비밀번호를 갱신한다.', async () => {
+  it('[200] 존재하는 비밀번호 세션 ID를 통해 비밀번호 변경 요청을 할 경우 비밀번호 변경을 성공한다.', async () => {
     // given
     const uuid = 'test-reset-password-uuid';
     const redisKey = `${REDIS_KEYS.USER_RESET_PASSWORD_KEY}:${uuid}`;
@@ -51,7 +51,7 @@ describe('PATCH api/user/password E2E Test', () => {
     ).toBe(false);
   });
 
-  it('없거나 만료된 uuid 토큰으로 요청하면 404 NotFoundException를 반환한다.', async () => {
+  it('[404] 존재하지 않는 비밀번호 세션 ID를 통해 비밀번호 변경 요청을 할 경우 비밀번호 변경을 실패한다.', async () => {
     // given
     const requestDto = new ResetPasswordRequestDto({
       uuid: 'non-existent-or-expired-uuid',

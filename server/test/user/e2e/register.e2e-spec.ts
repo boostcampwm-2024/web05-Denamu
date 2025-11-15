@@ -5,7 +5,7 @@ import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../fixture/user.fixture';
 import TestAgent from 'supertest/lib/agent';
 
-describe('POST api/user/register E2E Test', () => {
+describe('POST /api/user/register E2E Test', () => {
   let app: INestApplication;
   let agent: TestAgent;
 
@@ -14,7 +14,7 @@ describe('POST api/user/register E2E Test', () => {
     agent = supertest(app.getHttpServer());
   });
 
-  it('[201] 회원가입 요청에 정상적으로 성공한다.', async () => {
+  it('[201] 중복되는 회원이 없을 경우 회원가입을 성공한다.', async () => {
     // given
     const requestDto = new RegisterUserRequestDto({
       email: 'test1234@test.com',
@@ -29,7 +29,7 @@ describe('POST api/user/register E2E Test', () => {
     expect(response.status).toBe(HttpStatus.CREATED);
   });
 
-  it('[409] 이미 가입된 이메일을 입력하면 409 Conflict 예외가 발생한다.', async () => {
+  it('[409] 이미 가입된 이메일을 입력할 경우 회원가입을 실패한다.', async () => {
     // given
     const userRepository = app.get(UserRepository);
     await userRepository.insert(UserFixture.createUserFixture());

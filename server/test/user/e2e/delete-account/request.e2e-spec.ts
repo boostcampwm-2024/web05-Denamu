@@ -4,7 +4,7 @@ import { UserRepository } from '../../../../src/user/repository/user.repository'
 import { UserFixture } from '../../../fixture/user.fixture';
 import TestAgent from 'supertest/lib/agent';
 
-describe('POST /api/user/delete-account/request', () => {
+describe('POST /api/user/delete-account/request E2E Test', () => {
   let app: INestApplication;
   let agent: TestAgent;
   let userRepository: UserRepository;
@@ -15,7 +15,7 @@ describe('POST /api/user/delete-account/request', () => {
     userRepository = app.get(UserRepository);
   });
 
-  it('회원탈퇴 신청 요청에 성공하고 Redis에 토큰이 저장된다.', async () => {
+  it('[200] 회원 탈퇴 신청을 받을 경우 회원 탈퇴 신청을 성공한다.', async () => {
     // given
     const userEntity = await UserFixture.createUserCryptFixture();
     await userRepository.insert(userEntity);
@@ -36,7 +36,7 @@ describe('POST /api/user/delete-account/request', () => {
     expect(response.status).toBe(HttpStatus.OK);
   });
 
-  it('인증되지 않은 사용자가 회원탈퇴 신청 시 401 에러가 발생한다.', async () => {
+  it('[401] 로그인 되지 않은 유저가 회원 탈퇴를 신청할 경우 회원 탈퇴 신청을 실패한다.', async () => {
     // when
     const response = await agent.post('/api/user/delete-account/request');
 

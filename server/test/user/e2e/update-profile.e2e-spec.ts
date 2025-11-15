@@ -37,7 +37,7 @@ describe('PATCH /api/user/profile E2E Test', () => {
     jest.spyOn(fileService, 'deleteByPath').mockResolvedValue(undefined);
   });
 
-  it('[200] 로그인한 사용자가 프로필 정보를 성공적으로 수정한다.', async () => {
+  it('[200] 사용자가 로그인한 경우 회원 정보 수정을 성공한다.', async () => {
     // given
     const accessToken = userService.createToken(
       {
@@ -73,7 +73,7 @@ describe('PATCH /api/user/profile E2E Test', () => {
     expect(updatedUser.introduction).toBe(requestDto.introduction);
   });
 
-  it('[200] 일부 필드만 수정해도 성공적으로 업데이트된다.', async () => {
+  it('[200] 사용자가 일부 필드만 수정 요청을 할 경우 회원 정보 수정을 성공한다.', async () => {
     // given
     const accessToken = userService.createToken(
       {
@@ -104,7 +104,7 @@ describe('PATCH /api/user/profile E2E Test', () => {
     expect(updatedUser.introduction).toBe(originalUser.introduction);
   });
 
-  it('[401] 로그인하지 않은 사용자가 프로필 수정을 시도하면 401 에러가 발생한다.', async () => {
+  it('[401] 로그인하지 않은 유저가 회원 정보 수정 요청을 할 경우 회원 정보 수정을 실패한다.', async () => {
     // given
     const requestDto = new UpdateUserRequestDto({
       userName: '변경된이름',

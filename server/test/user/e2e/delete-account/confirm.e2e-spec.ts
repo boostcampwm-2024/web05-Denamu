@@ -7,7 +7,7 @@ import { REDIS_KEYS } from '../../../../src/common/redis/redis.constant';
 import { ConfirmDeleteAccountDto } from '../../../../src/user/dto/request/confirmDeleteAccount.dto';
 import TestAgent from 'supertest/lib/agent';
 
-describe('POST /api/user/delete-account/confirm', () => {
+describe('POST /api/user/delete-account/confirm E2E Test', () => {
   let app: INestApplication;
   let agent: TestAgent;
   let redisService: RedisService;
@@ -20,7 +20,7 @@ describe('POST /api/user/delete-account/confirm', () => {
     userRepository = app.get(UserRepository);
   });
 
-  it('회원탈퇴 확정 요청에 성공하고 DB에서 사용자가 삭제된다.', async () => {
+  it('[200] 회원 탈퇴 인증 코드가 있을 경우 회원 탈퇴를 성공한다.', async () => {
     // given
     const token = 'test-delete-account-token';
     const requestDto = new ConfirmDeleteAccountDto({ token });
@@ -39,7 +39,7 @@ describe('POST /api/user/delete-account/confirm', () => {
     expect(response.status).toBe(HttpStatus.OK);
   });
 
-  it('유효하지 않은 토큰으로 회원탈퇴 확정 시 404 에러가 발생한다.', async () => {
+  it('[404] 회원 탈퇴 인증 코드가 잘 못된 경우 회원 탈퇴를 실패한다.', async () => {
     // given
     const requestDto = new ConfirmDeleteAccountDto({ token: 'invalid-token' });
 
@@ -52,7 +52,7 @@ describe('POST /api/user/delete-account/confirm', () => {
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
 
-  it('만료된 토큰으로 회원탈퇴 확정 시 404 에러가 발생한다.', async () => {
+  it('[404] 회원 탈퇴 인증 코드가 만료된 경우 회원 탈퇴를 실패한다.', async () => {
     // given
     const token = 'expired-token';
     const redisKey = `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${token}`;

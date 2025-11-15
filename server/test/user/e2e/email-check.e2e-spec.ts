@@ -16,7 +16,7 @@ describe('GET /api/user/email-check E2E Test', () => {
     await userRepository.insert(UserFixture.createUserFixture());
   });
 
-  it('[200] 이메일 중복 조회 검사에 성공한다.', async () => {
+  it('[200] 중복 이메일이 존재하지 않을 경우 이메일 중복 검사를 성공한다.', async () => {
     // given
     const requestDto = new CheckEmailDuplicationRequestDto({
       email: UserFixture.createUserFixture().email + 'test',
@@ -30,7 +30,7 @@ describe('GET /api/user/email-check E2E Test', () => {
     expect(response.body.data.exists).toBe(false);
   });
 
-  it('[200] 이메일 중복 조회 검사에 실패한다.', async () => {
+  it('[200] 중복 이메일이 존재할 경우 이메일 중복 검사를 성공한다.', async () => {
     // given
     const requestDto = new CheckEmailDuplicationRequestDto({
       email: UserFixture.createUserFixture().email,
