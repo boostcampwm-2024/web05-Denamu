@@ -12,7 +12,7 @@ import * as supertest from 'supertest';
 import { RssFixture } from '../../fixture/rss.fixture';
 import TestAgent from 'supertest/lib/agent';
 
-describe('DELETE /api/rss/remove/{code}', () => {
+describe('DELETE /api/rss/remove/{code} E2E Test', () => {
   let app: INestApplication;
   let agent: TestAgent;
   let feedRepository: FeedRepository;

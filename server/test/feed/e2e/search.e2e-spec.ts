@@ -10,7 +10,7 @@ import {
 } from '../../../src/feed/dto/request/searchFeed.dto';
 import TestAgent from 'supertest/lib/agent';
 
-describe('GET /api/feed/search', () => {
+describe('GET /api/feed/search E2E Test', () => {
   let app: INestApplication;
   let agent: TestAgent;
 
