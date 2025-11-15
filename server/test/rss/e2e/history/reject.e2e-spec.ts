@@ -25,7 +25,7 @@ describe('GET /api/rss/history/reject E2E Test', () => {
     ]);
   });
 
-  it('[401] 관리자 로그인이 되어있지 않으면 조회할 수 없다.', async () => {
+  it('[401] 관리자 로그인이 되어 있지 않을 경우 RSS 거절 기록 조회를 실패한다.', async () => {
     // when
     const noCookieResponse = await agent.get('/api/rss/history/reject');
     const noSessionResponse = await agent
@@ -37,7 +37,7 @@ describe('GET /api/rss/history/reject E2E Test', () => {
     expect(noSessionResponse.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 
-  it('[200] 관리자 로그인이 되어 있으면 최신순으로 기록 데이터를 응답한다.', async () => {
+  it('[200] 관리자 로그인이 되어 있을 경우 RSS 거절 기록 조회를 성공한다.', async () => {
     // when
     const response = await agent
       .get('/api/rss/history/reject')
