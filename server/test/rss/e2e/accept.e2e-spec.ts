@@ -41,6 +41,10 @@ describe('POST /api/rss/accept/{rssId} E2E Test', () => {
         rssUrl: 'https://v2.velog.io/rss/@seok3765',
       }),
     );
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: HttpStatus.OK,
+    });
 
     // when
     const response = await agent
@@ -49,6 +53,27 @@ describe('POST /api/rss/accept/{rssId} E2E Test', () => {
 
     // then
     expect(response.status).toBe(HttpStatus.CREATED);
+  });
+
+  it('[400] 잘못된 RSS URL을 승인할 경우 RSS 승인을 실패한다.', async () => {
+    // given
+    const rss = await rssRepository.save(
+      RssFixture.createRssFixture({
+        rssUrl: 'https://test/rss/@seok3766',
+      }),
+    );
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: HttpStatus.BAD_REQUEST,
+    });
+
+    // when
+    const response = await agent
+      .post(`/api/rss/accept/${rss.id}`)
+      .set('Cookie', 'sessionId=testSessionId');
+
+    // then
+    expect(response.status).toBe(HttpStatus.BAD_REQUEST);
   });
 
   it('[404] 존재하지 않은 RSS를 승인할 경우 RSS 승인을 실패한다.', async () => {
