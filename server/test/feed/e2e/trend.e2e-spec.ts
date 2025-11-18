@@ -11,6 +11,7 @@ import * as EventSource from 'eventsource';
 describe('SSE /api/trend/sse E2E Test', () => {
   let app: INestApplication;
   let feedRepository: FeedRepository;
+  let serverUrl: string;
 
   beforeAll(async () => {
     app = global.testApp;
@@ -25,12 +26,17 @@ describe('SSE /api/trend/sse E2E Test', () => {
     for (let i = 1; i <= 2; i++) {
       feeds.push(FeedFixture.createFeedFixture(blog, {}, i));
     }
-    await Promise.all([feedRepository.insert(feeds), app.listen(7000)]);
+    const [_, httpServer] = await Promise.all([
+      feedRepository.insert(feeds),
+      app.listen(7000),
+    ]);
+    const port = httpServer.address().port;
+    serverUrl = `http://localhost:${port}/api/feed/trend/sse`;
   });
 
   it('[SSE] 최초 연결을 할 경우 트랜드 데이터 최대 4개 제공 수신을 성공한다.', async () => {
     // given
-    const es = new EventSource('http://localhost:7000/api/feed/trend/sse');
+    const es = new EventSource(serverUrl);
     const timeout = new Promise((_, reject) =>
       setTimeout(
         () => reject(new Error('Timeout occurred before receiving data')),
@@ -66,7 +72,7 @@ describe('SSE /api/trend/sse E2E Test', () => {
   it('[SSE] 서버로부터 데이터를 받을 때 게시글이 데나무에서 지워진 경우 빈 피드 정보 수신을 성공한다.', async () => {
     // given
     await feedRepository.delete({ id: 2 });
-    const es = new EventSource('http://localhost:7000/api/feed/trend/sse');
+    const es = new EventSource(serverUrl);
     const timeout = new Promise((_, reject) =>
       setTimeout(
         () => reject(new Error('Timeout occurred before receiving data')),
