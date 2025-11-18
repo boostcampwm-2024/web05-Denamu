@@ -119,4 +119,32 @@ describe('PATCH /api/user/profile E2E Test', () => {
     // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
+
+  it('[404] 회원 데이터가 서비스에 없을 경우 회원 정보 수정을 실패한다.', async () => {
+    // given
+    const requestDto = new UpdateUserRequestDto({
+      userName: '변경된이름',
+      profileImage:
+        'https://denamu.site/objects/PROFILE_IMAGE/20000902/uuid.png',
+      introduction: '변경된 소개글입니다.',
+    });
+    const accessToken = userService.createToken(
+      {
+        id: Number.MAX_SAFE_INTEGER,
+        email: 'invalid@test.com',
+        userName: 'testInvalidUser',
+        role: 'user',
+      },
+      'access',
+    );
+
+    // when
+    const response = await agent
+      .patch('/api/user/profile')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send(requestDto);
+
+    // then
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
+  });
 });
