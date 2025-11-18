@@ -33,7 +33,9 @@ describe('DELETE /api/feed/{feedId} E2E Test', () => {
 
   it('[200] 원본 게시글이 존재할 경우 조회를 성공한다.', async () => {
     // given
-    global.fetch = jest.fn().mockResolvedValue({ status: HttpStatus.OK });
+    global.fetch = jest
+      .fn()
+      .mockResolvedValue({ ok: true, status: HttpStatus.OK });
 
     // when
     const response = await agent.delete(`/api/feed/${feed.id}`);

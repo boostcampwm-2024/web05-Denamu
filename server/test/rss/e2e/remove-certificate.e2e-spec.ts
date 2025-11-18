@@ -39,7 +39,7 @@ describe('DELETE /api/rss/remove/{code} E2E Test', () => {
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
 
-  it('[404] 존재하지 않는 RSS일 경우 RSS 삭제 인증을 실패한다.', async () => {
+  it('[404] 만료된 RSS 삭제 신청일 경우 RSS 삭제 인증을 실패한다.', async () => {
     // given
     await redisService.set(`${REDIS_KEYS.RSS_REMOVE_KEY}:rssNotFound`, 'test');
 
