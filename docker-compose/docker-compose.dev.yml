@@ -110,3 +110,31 @@ services:
           action: rebuild
     profiles:
       - default
+
+  # Email Worker 서비스
+  email-worker:
+    build:
+      context: ../email-worker
+      dockerfile: docker/Dockerfile.dev
+    image: denamu-dev-email-worker:latest
+    networks:
+      - Denamu
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - ../email-worker:/var/web05-Denamu/email-worker
+      - /var/web05-Denamu/email-worker/node_modules
+    environment:
+      NODE_ENV: "DEV"
+      TZ: "Asia/Seoul"
+    develop:
+      watch:
+        - path: ../email-worker/package.json
+          action: rebuild
+    profiles:
+      - was-dev
