@@ -24,7 +24,7 @@ describe('POST /api/rss/remove E2E Test', () => {
   it('[404] RSS가 없을 경우 RSS 삭제 신청을 실패한다.', async () => {
     // given
     const requestDto = new DeleteRssRequestDto({
-      blogUrl: 'https://test.com',
+      blogUrl: 'https://notfound.com',
       email: 'test@test.com',
     });
 
@@ -48,6 +48,9 @@ describe('POST /api/rss/remove E2E Test', () => {
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
+
+    // cleanup
+    await rssRepository.delete({ id: rss.id });
   });
 
   it('[200] 이미 등록된 RSS가 있을 경우 RSS 삭제 신청을 성공한다.', async () => {
@@ -63,5 +66,8 @@ describe('POST /api/rss/remove E2E Test', () => {
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
+
+    // cleanup
+    await rssAcceptRepository.delete({ id: rss.id });
   });
 });
