@@ -11,13 +11,15 @@ import { FeedFixture } from '../../fixture/feed.fixture';
 import { RssAcceptFixture } from '../../fixture/rss-accept.fixture';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
 import TestAgent from 'supertest/lib/agent';
+import { CommentRepository } from '../../../src/comment/repository/comment.repository';
 
 describe('POST /api/comment E2E Test', () => {
   let app: INestApplication;
   let agent: TestAgent;
   let userService: UserService;
-  let userInformation: User;
+  let user: User;
   let feed: Feed;
+  let commentRepository: CommentRepository;
 
   beforeAll(async () => {
     app = global.testApp;
@@ -27,7 +29,7 @@ describe('POST /api/comment E2E Test', () => {
     const rssAcceptRepository = app.get(RssAcceptRepository);
     const feedRepository = app.get(FeedRepository);
 
-    userInformation = await userRepository.save(
+    user = await userRepository.save(
       await UserFixture.createUserCryptFixture(),
     );
     const rssAcceptInformation = await rssAcceptRepository.save(
@@ -36,6 +38,7 @@ describe('POST /api/comment E2E Test', () => {
     feed = await feedRepository.save(
       FeedFixture.createFeedFixture(rssAcceptInformation),
     );
+    commentRepository = app.get(CommentRepository);
   });
 
   it('[401] 로그인이 되어 있지 않을 경우 댓글 등록을 실패한다.', async () => {
@@ -60,9 +63,9 @@ describe('POST /api/comment E2E Test', () => {
     });
     const accessToken = userService.createToken(
       {
-        id: 400,
-        email: userInformation.email,
-        userName: userInformation.userName,
+        id: Number.MAX_SAFE_INTEGER,
+        email: user.email,
+        userName: user.userName,
         role: 'user',
       },
       'access',
@@ -82,13 +85,13 @@ describe('POST /api/comment E2E Test', () => {
     // given
     const requestDto = new CreateCommentRequestDto({
       comment: 'test',
-      feedId: 400,
+      feedId: Number.MAX_SAFE_INTEGER,
     });
     const accessToken = userService.createToken(
       {
-        id: userInformation.id,
-        email: userInformation.email,
-        userName: userInformation.userName,
+        id: user.id,
+        email: user.email,
+        userName: user.userName,
         role: 'user',
       },
       'access',
@@ -108,9 +111,9 @@ describe('POST /api/comment E2E Test', () => {
     // given
     const accessToken = userService.createToken(
       {
-        id: userInformation.id,
-        email: userInformation.email,
-        userName: userInformation.userName,
+        id: user.id,
+        email: user.email,
+        userName: user.userName,
         role: 'user',
       },
       'access',
@@ -128,5 +131,8 @@ describe('POST /api/comment E2E Test', () => {
 
     // then
     expect(response.status).toBe(HttpStatus.CREATED);
+
+    // cleanup
+    await commentRepository.delete({ user: user, feed: feed });
   });
 });
