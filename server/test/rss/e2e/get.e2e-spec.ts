@@ -5,10 +5,11 @@ import {
   RssAcceptRepository,
   RssRepository,
 } from '../../../src/rss/repository/rss.repository';
+import TestAgent from 'supertest/lib/agent';
 
 describe('GET /api/rss E2E Test', () => {
   let app: INestApplication;
-  let agent: ReturnType<typeof supertest>;
+  let agent: TestAgent;
   let rssRepository: RssRepository;
   let rssAcceptRepository: RssAcceptRepository;
 
@@ -34,15 +35,13 @@ describe('GET /api/rss E2E Test', () => {
 
   it('[200] 신청된 RSS가 있을 경우 RSS 신청 조회를 성공한다.', async () => {
     // given
-    const expectedResult = await rssRepository.save(
-      RssFixture.createRssFixture(),
-    );
+    const rss = await rssRepository.save(RssFixture.createRssFixture());
 
     // when
     const response = await agent.get('/api/rss');
 
     //then
     expect(response.status).toBe(HttpStatus.OK);
-    expect(response.body.data).toEqual([expectedResult]);
+    expect(response.body.data).toEqual([rss]);
   });
 });
