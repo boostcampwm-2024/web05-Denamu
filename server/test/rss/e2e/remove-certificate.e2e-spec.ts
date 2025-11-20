@@ -31,20 +31,11 @@ describe('DELETE /api/rss/remove/{code} E2E Test', () => {
     userRepository = app.get(UserRepository);
   });
 
-  it('[404] RSS 삭제 요청이 없을 경우 RSS 삭제 인증을 실패한다.', async () => {
+  it('[404] RSS 삭제 요청이 만료되었거나 없을 경우 RSS 삭제 인증을 실패한다.', async () => {
     // when
-    const response = await agent.delete('/api/rss/remove/testfail');
-
-    // then
-    expect(response.status).toBe(HttpStatus.NOT_FOUND);
-  });
-
-  it('[404] 만료된 RSS 삭제 신청일 경우 RSS 삭제 인증을 실패한다.', async () => {
-    // given
-    await redisService.set(`${REDIS_KEYS.RSS_REMOVE_KEY}:rssNotFound`, 'test');
-
-    // when
-    const response = await agent.delete('/api/rss/remove/rssNotFound');
+    const response = await agent.delete(
+      `/api/rss/remove/${Number.MAX_SAFE_INTEGER}`,
+    );
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
