@@ -4,7 +4,6 @@ import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 import { RssAcceptFixture } from '../../fixture/rss-accept.fixture';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
-import { Feed } from '../../../src/feed/entity/feed.entity';
 import { FeedFixture } from '../../fixture/feed.fixture';
 import * as EventSource from 'eventsource';
 
@@ -18,17 +17,20 @@ describe('SSE /api/trend/sse E2E Test', () => {
     feedRepository = app.get(FeedRepository);
     const rssAcceptRepository = app.get(RssAcceptRepository);
     const redisService = app.get(RedisService);
-    const [blog] = await Promise.all([
-      rssAcceptRepository.save(RssAcceptFixture.createRssAcceptFixture()),
-      redisService.rpush(REDIS_KEYS.FEED_ORIGIN_TREND_KEY, 1, 2),
-    ]);
-    const feeds: Feed[] = [];
-    for (let i = 1; i <= 2; i++) {
-      feeds.push(FeedFixture.createFeedFixture(blog, {}, i));
-    }
-    const [_, httpServer] = await Promise.all([
-      feedRepository.insert(feeds),
-      app.listen(7000),
+    const blog = await rssAcceptRepository.save(
+      RssAcceptFixture.createRssAcceptFixture(),
+    );
+    const feedData = Array.from({ length: 2 }).map((_, i) =>
+      FeedFixture.createFeedFixture(blog, _, i + 1),
+    );
+    const feedList = await feedRepository.save(feedData);
+    const [httpServer] = await Promise.all([
+      app.listen(0),
+      redisService.rpush(
+        REDIS_KEYS.FEED_ORIGIN_TREND_KEY,
+        feedList[0].id,
+        feedList[1].id,
+      ),
     ]);
     const port = httpServer.address().port;
     serverUrl = `http://localhost:${port}/api/feed/trend/sse`;
