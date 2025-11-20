@@ -13,7 +13,7 @@ import TestAgent from 'supertest/lib/agent';
 describe('GET /api/like/{feedId} E2E Test', () => {
   let app: INestApplication;
   let agent: TestAgent;
-  let rssAcceptInformation: RssAccept;
+  let rssAccept: RssAccept;
   let feed: Feed;
 
   beforeAll(async () => {
@@ -24,12 +24,10 @@ describe('GET /api/like/{feedId} E2E Test', () => {
     const feedRepository = app.get(FeedRepository);
 
     await userRepository.save(await UserFixture.createUserCryptFixture());
-    rssAcceptInformation = await rssAcceptRepository.save(
+    rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
-    feed = await feedRepository.save(
-      FeedFixture.createFeedFixture(rssAcceptInformation),
-    );
+    feed = await feedRepository.save(FeedFixture.createFeedFixture(rssAccept));
   });
 
   it('[200] 게시글에 대한 좋아요 조회 요청을 받을 경우 좋아요 정보 제공을 성공한다.', async () => {
@@ -42,7 +40,7 @@ describe('GET /api/like/{feedId} E2E Test', () => {
 
   it('[404] 게시글이 존재하지 않을 경우 좋아요 정보 제공을 실패한다.', async () => {
     // when
-    const response = await agent.get(`/api/like/100`);
+    const response = await agent.get(`/api/like/${Number.MAX_SAFE_INTEGER}`);
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
