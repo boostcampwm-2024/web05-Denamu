@@ -8,10 +8,12 @@ import TestAgent from 'supertest/lib/agent';
 describe('POST /api/user/register E2E Test', () => {
   let app: INestApplication;
   let agent: TestAgent;
+  let userRepository: UserRepository;
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
+    userRepository = app.get(UserRepository);
   });
 
   it('[201] 중복되는 회원이 없을 경우 회원가입을 성공한다.', async () => {
@@ -27,16 +29,19 @@ describe('POST /api/user/register E2E Test', () => {
 
     // then
     expect(response.status).toBe(HttpStatus.CREATED);
+
+    // cleanup
+    await userRepository.delete({ email: requestDto.email });
   });
 
   it('[409] 이미 가입된 이메일을 입력할 경우 회원가입을 실패한다.', async () => {
     // given
     const userRepository = app.get(UserRepository);
-    await userRepository.insert(UserFixture.createUserFixture());
+    const user = await userRepository.save(UserFixture.createUserFixture());
     const requestDto = new RegisterUserRequestDto({
-      email: 'test1234@test.com',
-      password: 'test1234!',
-      userName: 'test1234',
+      email: user.email,
+      password: user.password,
+      userName: user.userName,
     });
 
     // when
