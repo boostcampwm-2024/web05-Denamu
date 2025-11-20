@@ -48,7 +48,7 @@ describe('DELETE /api/feed/{feedId} E2E Test', () => {
     // given
     global.fetch = jest
       .fn()
-      .mockResolvedValue({ status: HttpStatus.NOT_FOUND });
+      .mockResolvedValue({ ok: false, status: HttpStatus.NOT_FOUND });
 
     // when
     const response = await agent.delete(`/api/feed/${feed.id}`);
@@ -59,7 +59,7 @@ describe('DELETE /api/feed/{feedId} E2E Test', () => {
 
   it('[404] 존재하지 않는 게시글 ID에 요청을 보낼 경우 404를 응답한다.', async () => {
     // when
-    const response = await agent.delete(`/api/feed/${feed.id}`);
+    const response = await agent.delete(`/api/feed/${Number.MAX_SAFE_INTEGER}`);
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
