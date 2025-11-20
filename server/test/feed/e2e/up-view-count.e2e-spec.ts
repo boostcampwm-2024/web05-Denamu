@@ -7,49 +7,45 @@ import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository'
 import { FeedFixture } from '../../fixture/feed.fixture';
 import { RssAcceptFixture } from '../../fixture/rss-accept.fixture';
 import TestAgent from 'supertest/lib/agent';
+import { Feed } from '../../../src/feed/entity/feed.entity';
 
 describe('POST /api/feed/{feedId} E2E Test', () => {
   let app: INestApplication;
   let agent: TestAgent;
   let redisService: RedisService;
-  const testFeedId = 1;
-  const testIp = `1.1.1.1`;
-  const latestId = 20;
+  let feed: Feed;
+  let feedRepository: FeedRepository;
+  const testIp = '1.1.1.1';
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
     redisService = app.get(RedisService);
-    const feedRepository = app.get(FeedRepository);
+    feedRepository = app.get(FeedRepository);
     const rssAcceptRepository = app.get(RssAcceptRepository);
 
-    const blog = await rssAcceptRepository.save(
+    const rssAcceptData = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
-
-    const feeds = Array.from({ length: latestId }).map((_, i) => {
-      return FeedFixture.createFeedFixture(blog, _, i + 1);
-    });
-
-    await Promise.all([
-      feedRepository.insert(feeds),
-      redisService.sadd(`feed:${testFeedId}:ip`, testIp),
-    ]);
+    feed = await feedRepository.save(
+      FeedFixture.createFeedFixture(rssAcceptData, {}, 1),
+    );
+    await redisService.sadd(`feed:${feed.id}:ip`, testIp);
   });
 
   it('[200] 피드를 읽은 기록이 없을 경우 조회수 상승을 성공한다.', async () => {
     // given
-    const testNewIp = `123.234.123.234`;
+    const testNewIp = '123.234.123.234';
 
     try {
       // when
       const response = await agent
-        .post(`/api/feed/${testFeedId}`)
+        .post(`/api/feed/${feed.id}`)
         .set('X-Forwarded-For', testNewIp);
       const feedDailyViewCount = parseInt(
         await redisService.zscore(
           REDIS_KEYS.FEED_TREND_KEY,
-          testFeedId.toString(),
+          feed.id.toString(),
         ),
       );
 
@@ -57,23 +53,21 @@ describe('POST /api/feed/{feedId} E2E Test', () => {
       expect(response.status).toBe(HttpStatus.OK);
       expect(feedDailyViewCount).toBe(1);
       expect(response.headers['set-cookie'][0]).toContain(
-        `View_count_${testFeedId}`,
+        `View_count_${feed.id}`,
       );
     } finally {
       // cleanup
       await Promise.all([
-        redisService.zrem(REDIS_KEYS.FEED_TREND_KEY, testFeedId.toString()),
-        redisService.srem(`feed:${testFeedId}:ip`, testNewIp),
+        redisService.zrem(REDIS_KEYS.FEED_TREND_KEY, feed.id.toString()),
+        redisService.srem(`feed:${feed.id}:ip`, testNewIp),
       ]);
+      await feedRepository.update(feed.id, { viewCount: 0 });
     }
   });
 
   it('[404] 피드가 서비스에 존재하지 않을 경우 조회수 상승을 실패한다.', async () => {
-    // given
-    const notExistFeedId = 50000;
-
     // when
-    const response = await agent.post(`/api/feed/${notExistFeedId}`);
+    const response = await agent.post(`/api/feed/${Number.MAX_SAFE_INTEGER}`);
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
@@ -82,12 +76,12 @@ describe('POST /api/feed/{feedId} E2E Test', () => {
   it('[200] 읽은 기록 쿠키가 존재할 경우 조회수 상승을 하지 않는 행위를 성공한다.', async () => {
     // when
     const response = await agent
-      .post(`/api/feed/${testFeedId}`)
-      .set('Cookie', `View_count_${testFeedId}=${testFeedId}`)
+      .post(`/api/feed/${feed.id}`)
+      .set('Cookie', `View_count_${feed.id}=${feed.id}`)
       .set('X-Forwarded-For', testIp);
     const feedDailyViewCount = await redisService.zscore(
       REDIS_KEYS.FEED_TREND_KEY,
-      testFeedId.toString(),
+      feed.id.toString(),
     );
 
     // then
@@ -98,18 +92,18 @@ describe('POST /api/feed/{feedId} E2E Test', () => {
   it('[200] 읽은 기록 쿠기가 없지만 읽은 기록 IP가 있을 경우 조회수 상승을 하지 않는 행위를 성공한다.', async () => {
     // when
     const response = await agent
-      .post(`/api/feed/${testFeedId}`)
+      .post(`/api/feed/${feed.id}`)
       .set('X-Forwarded-For', testIp);
     const feedDailyViewCount = await redisService.zscore(
       REDIS_KEYS.FEED_TREND_KEY,
-      testFeedId.toString(),
+      feed.id.toString(),
     );
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
     expect(feedDailyViewCount).toBeNull();
     expect(response.headers['set-cookie'][0]).toContain(
-      `View_count_${testFeedId}`,
+      `View_count_${feed.id}`,
     );
   });
 });
