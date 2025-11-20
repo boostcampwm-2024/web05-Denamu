@@ -37,7 +37,6 @@ async function handleShutdown(
 ) {
   logger.info(`${signal} 신호 수신, email-worker 종료 중...`);
 
-  // Graceful Shutdown: Consumer 먼저 중지
   await dependencies.emailConsumer.close();
   await dependencies.rabbitMQManager.disconnect();
 
