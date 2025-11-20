@@ -29,7 +29,7 @@ describe('GET /api/comment/{feedId} E2E Test', () => {
   it('[404] 게시글이 존재하지 않을 경우 댓글 조회를 실패한다.', async () => {
     // given
     const requestDto = new GetCommentRequestDto({
-      feedId: 100,
+      feedId: Number.MAX_SAFE_INTEGER,
     });
 
     // when
