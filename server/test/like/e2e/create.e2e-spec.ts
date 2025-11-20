@@ -1,3 +1,4 @@
+import { AdminFixture } from './../../fixture/admin.fixture';
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { UserService } from '../../../src/user/service/user.service';
 import { UserRepository } from '../../../src/user/repository/user.repository';
@@ -12,14 +13,16 @@ import { Feed } from '../../../src/feed/entity/feed.entity';
 import { ManageLikeRequestDto } from '../../../src/like/dto/request/manageLike.dto';
 import * as supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
+import { LikeRepository } from '../../../src/like/repository/like.repository';
 
 describe('POST /api/like E2E Test', () => {
   let app: INestApplication;
   let userService: UserService;
-  let rssAcceptInformation: RssAccept;
-  let userInformation: User;
+  let rssAccept: RssAccept;
+  let user: User;
   let feed: Feed;
   let agent: TestAgent;
+  let likeRepository: LikeRepository;
 
   beforeAll(async () => {
     app = global.testApp;
@@ -28,22 +31,21 @@ describe('POST /api/like E2E Test', () => {
     const userRepository = app.get(UserRepository);
     const rssAcceptRepository = app.get(RssAcceptRepository);
     const feedRepository = app.get(FeedRepository);
+    likeRepository = app.get(LikeRepository);
 
-    userInformation = await userRepository.save(
+    user = await userRepository.save(
       await UserFixture.createUserCryptFixture(),
     );
-    rssAcceptInformation = await rssAcceptRepository.save(
+    rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
-    feed = await feedRepository.save(
-      FeedFixture.createFeedFixture(rssAcceptInformation),
-    );
+    feed = await feedRepository.save(FeedFixture.createFeedFixture(rssAccept));
   });
 
   it('[401] 로그인이 되어 있지 않을 경우 좋아요 등록을 실패한다.', async () => {
     // given
     const requestDto = new ManageLikeRequestDto({
-      feedId: 1,
+      feedId: feed.id,
     });
 
     // when
@@ -56,13 +58,13 @@ describe('POST /api/like E2E Test', () => {
   it('[404] 게시글이 서비스에 존재하지 않을 경우 좋아요 등록을 실패한다.', async () => {
     // given
     const requestDto = new ManageLikeRequestDto({
-      feedId: 100,
+      feedId: Number.MAX_SAFE_INTEGER,
     });
     const accessToken = userService.createToken(
       {
-        id: 1,
-        email: userInformation.email,
-        userName: userInformation.userName,
+        id: user.id,
+        email: user.email,
+        userName: user.userName,
         role: 'user',
       },
       'access',
@@ -81,13 +83,13 @@ describe('POST /api/like E2E Test', () => {
   it('[201] 로그인이 되어 있으며 좋아요를 한 적이 없을 경우 좋아요 등록을 성공한다.', async () => {
     // given
     const requestDto = new ManageLikeRequestDto({
-      feedId: 1,
+      feedId: feed.id,
     });
     const accessToken = userService.createToken(
       {
-        id: 1,
-        email: userInformation.email,
-        userName: userInformation.userName,
+        id: user.id,
+        email: user.email,
+        userName: user.userName,
         role: 'user',
       },
       'access',
@@ -101,18 +103,25 @@ describe('POST /api/like E2E Test', () => {
 
     // then
     expect(response.status).toBe(HttpStatus.CREATED);
+
+    // cleanup
+    await likeRepository.delete({ user: user, feed: feed });
   });
 
   it('[409] 이미 좋아요를 한 게시글일 경우 좋아요 등록을 실패한다.', async () => {
     // given
+    const like = await likeRepository.save({
+      user: user,
+      feed: feed,
+    });
     const requestDto = new ManageLikeRequestDto({
-      feedId: 1,
+      feedId: feed.id,
     });
     const accessToken = userService.createToken(
       {
-        id: 1,
-        email: userInformation.email,
-        userName: userInformation.userName,
+        id: user.id,
+        email: user.email,
+        userName: user.userName,
         role: 'user',
       },
       'access',
@@ -126,5 +135,8 @@ describe('POST /api/like E2E Test', () => {
 
     // then
     expect(response.status).toBe(HttpStatus.CONFLICT);
+
+    // cleanup
+    await likeRepository.delete(like.id);
   });
 });
