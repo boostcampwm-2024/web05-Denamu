@@ -1,9 +1,12 @@
-name: BE Test
+name: FEED-CRAWLER Test
 
 on:
   pull_request:
     branches:
       - main
+    paths:
+      - 'feed-crawler/**'
+      - '.github/workflows/test_feed-crawler.yml'
   workflow_dispatch:
 
 jobs:
@@ -21,17 +24,19 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: 'npm'
+          node-version: "22"
+          cache: "npm"
 
       # 3. 의존성 설치
       - name: Install dependencies
-        working-directory: ./server
-        run: npm install
+        working-directory: ./feed-crawler
+        run: npm ci
 
       # 4. 통합 테스트 실행
       - name: Run Integration Test
-        working-directory: ./server
+        working-directory: ./feed-crawler
         run: npm run test
+        env:
+          TEST_TIME_INTERVAL: ${{ vars.FEED_CRAWLER_TEST_TIME_INTERVAL }}
 
       # TODO: 테스트 커버리지, 혹은 테스트 로그 커멘트 작성 로직 추가하기

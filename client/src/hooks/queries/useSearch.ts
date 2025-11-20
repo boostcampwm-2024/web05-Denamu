@@ -23,7 +23,8 @@ export const useSearch = ({ query, filter, page, pageSize }: SearchRequest) => {
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["getSearch", debouncedQuery, filter, page, pageSize],
-    queryFn: () => getSearch({ query, filter, page, pageSize }),
+    queryFn: () => getSearch({ query: debouncedQuery, filter, page, pageSize }),
+    enabled: debouncedQuery.trim().length > 0,
     staleTime: 1000 * 60 * 5,
     retry: 1,
   });

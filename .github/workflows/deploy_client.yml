@@ -8,25 +8,35 @@ on:
       - "client/**"
   workflow_dispatch: # 수동 실행을 허용하는 이벤트
 
+env:
+  DIST_TARGET: /var/dist
+
 jobs:
-  deployment:
-    runs-on: ubuntu-latest
+  deploy:
+    runs-on: [self-hosted, prod]
     steps:
-      # public 서버로 ssh 접속
-      - name: ssh connection
-        uses: appleboy/ssh-action@v1.1.0
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Node.js 설정
+        uses: actions/setup-node@v4
         with:
-          host: ${{ secrets.CLOUD_PUBLIC_INSTANCE_HOST }}
-          username: ${{ secrets.CLOUD_PUBLIC_INSTANCE_USERNAME }}
-          key: ${{ secrets.CLOUD_PUBLIC_INSTANCE_SSH_KEY }}
-          port: ${{ secrets.CLOUD_PUBLIC_INSTANCE_PORT }}
-          script: |
-            export NVM_DIR=~/.nvm
-            source ~/.nvm/nvm.sh
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: client/package-lock.json
 
-            cd /var/web05-Denamu
-            git pull origin main
-            cd client/
+      - name: 의존성 설치
+        working-directory: ./client
+        run: npm ci
 
-            npm ci
-            npm run build
+      - name: 클라이언트 빌드
+        working-directory: ./client
+        run: npm run build
+
+      - name: 빌드 결과물 배포
+        run: |
+          sudo mkdir -p "$DIST_TARGET"
+          sudo rm -rf "$DIST_TARGET"/*
+          sudo cp -r ./client/dist/* "$DIST_TARGET"/
+          sudo chown -R www-data:www-data "$DIST_TARGET"
+          echo "✅ FE 빌드 결과물이 $DIST_TARGET 에 배포되었습니다."

@@ -8,20 +8,38 @@ on:
       - docker-compose/docker-compose.prod*.yml
   workflow_dispatch:
 
+env:
+  COMPOSE_FILE: docker-compose/docker-compose.prod.yml
+
 jobs:
   deployment:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, prod]
     steps:
-      # public 서버로 ssh 접속
-      - name: ssh connection
-        uses: appleboy/ssh-action@v1.1.0
-        with:
-          host: ${{ secrets.CLOUD_PUBLIC_INSTANCE_HOST }}
-          username: ${{ secrets.CLOUD_PUBLIC_INSTANCE_USERNAME }}
-          key: ${{ secrets.CLOUD_PUBLIC_INSTANCE_SSH_KEY }}
-          port: ${{ secrets.CLOUD_PUBLIC_INSTANCE_PORT }}
-          script: |
-            cd /var/web05-Denamu
-            git pull origin main
-            docker-compose -f docker-compose/docker-compose.prod.yml down
-            docker-compose -f docker-compose/docker-compose.prod.yml up -d
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: 인프라 환경변수 및 설정 파일 최신화
+        run: |
+          sudo mkdir -p /var/prod_config/infra
+          sudo install -m 600 /dev/null /var/prod_config/infra/.env.prod
+          {
+            echo "REDIS_USER=${{ secrets.REDIS_USERNAME }}"
+            echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}"
+            echo "MYSQL_ROOT_PASSWORD=${{ secrets.PRODUCT_DB_PASSWORD }}"
+            echo "MYSQL_DATABASE=${{ secrets.PRODUCT_DB_DATABASE }}"
+            echo "MYSQL_USER=${{ secrets.PRODUCT_DB_USERNAME }}"
+            echo "MYSQL_PASSWORD=${{ secrets.PRODUCT_DB_PASSWORD }}"
+            echo "RABBITMQ_DEFAULT_USER=${{ secrets.PRODUCT_RABBITMQ_DEFAULT_USER }}"
+            echo "RABBITMQ_DEFAULT_PASS=${{ secrets.PRODUCT_RABBITMQ_DEFAULT_PASS }}"
+            echo "RABBITMQ_HOST=${{ secrets.PRODUCT_RABBITMQ_HOST }}"
+            echo "RABBITMQ_PORT=${{ secrets.PRODUCT_RABBITMQ_PORT }}"
+            echo "RABBITMQ_MANAGEMENT_PORT=${{ secrets.PRODUCT_RABBITMQ_MANAGEMENT_PORT }}"  
+          } | sudo tee /var/prod_config/infra/.env.prod >/dev/null
+
+          sudo chmod +x docker-compose/redis-init.sh
+
+      - name: 인프라 서비스 재시작
+        run: |
+          docker compose -f "$COMPOSE_FILE" down
+          docker compose -f "$COMPOSE_FILE" up -d
+          docker image prune -f || true

@@ -29,6 +29,8 @@ services:
           action: rebuild
     environment:
       TZ: "Asia/Seoul"
+    profiles:
+      - default
 
   # Client 서비스
   web:
@@ -48,6 +50,8 @@ services:
           action: rebuild
     environment:
       TZ: "Asia/Seoul"
+    profiles:
+      - default
 
   # WAS 서비스
   app:
@@ -64,6 +68,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     volumes:
       - ../server:/var/web05-Denamu/server
       - /var/web05-Denamu/server/node_modules
@@ -74,6 +80,8 @@ services:
       watch:
         - path: ../server/package.json
           action: rebuild
+    profiles:
+      - was-dev
 
   # Feed Crawler 서비스
   feed-crawler:
@@ -88,6 +96,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     volumes:
       - ../feed-crawler:/var/web05-Denamu/feed-crawler
       - /var/web05-Denamu/feed-crawler/node_modules
@@ -98,3 +108,5 @@ services:
       watch:
         - path: ../feed-crawler/package.json
           action: rebuild
+    profiles:
+      - default

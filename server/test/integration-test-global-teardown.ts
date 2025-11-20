@@ -13,5 +13,11 @@ export default async () => {
     delete globalAny.__REDIS_CONTAINER__;
   }
 
+  console.log('Stopping RabbitMQ container...');
+  if (globalAny.__RABBITMQ_CONTAINER__) {
+    await globalAny.__RABBITMQ_CONTAINER__.stop();
+    delete globalAny.__RABBITMQ_CONTAINER__;
+  }
+
   console.log('Global teardown completed.');
 };
