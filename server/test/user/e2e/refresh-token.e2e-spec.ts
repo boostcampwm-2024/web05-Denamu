@@ -10,7 +10,7 @@ describe('POST /api/user/refresh-token E2E Test', () => {
   let app: INestApplication;
   let agent: TestAgent;
   let userService: UserService;
-  let userInformation: User;
+  let user: User;
 
   beforeAll(async () => {
     app = global.testApp;
@@ -19,7 +19,7 @@ describe('POST /api/user/refresh-token E2E Test', () => {
 
     const userRepository = app.get(UserRepository);
 
-    userInformation = await userRepository.save(
+    user = await userRepository.save(
       await UserFixture.createUserCryptFixture(),
     );
   });
@@ -36,9 +36,9 @@ describe('POST /api/user/refresh-token E2E Test', () => {
     // given
     const refreshToken = userService.createToken(
       {
-        id: userInformation.id,
-        email: userInformation.email,
-        userName: userInformation.userName,
+        id: user.id,
+        email: user.email,
+        userName: user.userName,
         role: 'user',
       },
       'refresh',
