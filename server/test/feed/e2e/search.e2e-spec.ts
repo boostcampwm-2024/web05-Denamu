@@ -24,9 +24,9 @@ describe('GET /api/feed/search E2E Test', () => {
       RssAcceptFixture.createRssAcceptFixture(),
     );
 
-    const feeds = Array.from({ length: 5 }).map((_, i) => {
-      return FeedFixture.createFeedFixture(blog, _, i + 1);
-    });
+    const feeds = Array.from({ length: 5 }).map((_, i) =>
+      FeedFixture.createFeedFixture(blog, _, i + 1),
+    );
 
     await feedRepository.insert(feeds);
   });
