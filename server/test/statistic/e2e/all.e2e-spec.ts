@@ -10,6 +10,7 @@ import TestAgent from 'supertest/lib/agent';
 describe('GET /api/statistic/all E2E Test', () => {
   let app: INestApplication;
   let agent: TestAgent;
+  let feedList: Feed[];
 
   beforeAll(async () => {
     app = global.testApp;
@@ -19,11 +20,10 @@ describe('GET /api/statistic/all E2E Test', () => {
     const blog = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
-    const feeds: Feed[] = [];
-    for (let i = 1; i <= 2; i++) {
-      feeds.push(FeedFixture.createFeedFixture(blog, { viewCount: i - 1 }, i));
-    }
-    await feedRepository.insert(feeds);
+    const feedData = Array.from({ length: 2 }).map((_, i) =>
+      FeedFixture.createFeedFixture(blog, { viewCount: i }, i + 1),
+    );
+    feedList = await feedRepository.save(feedData);
   });
 
   it('[200] 전체 조회수 통계 요청을 받은 경우 전체 조회수 통계 조회를 성공한다.', async () => {
@@ -32,7 +32,9 @@ describe('GET /api/statistic/all E2E Test', () => {
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
-    expect(response.body.data.map((feed) => feed.id)).toStrictEqual([2, 1]);
+    expect(response.body.data.map((feed) => feed.id)).toStrictEqual(
+      feedList.map((feed) => feed.id).reverse(),
+    );
   });
 
   it('[200] 전체 조회수 통계에서 개수 제한을 걸 경우 특정 개수만큼의 전체 조회수 통계 조회를 성공한다.', async () => {
@@ -41,6 +43,11 @@ describe('GET /api/statistic/all E2E Test', () => {
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
-    expect(response.body.data.map((feed) => feed.id)).toStrictEqual([2]);
+    expect(response.body.data.map((feed) => feed.id)).toStrictEqual(
+      feedList
+        .map((feed) => feed.id)
+        .reverse()
+        .slice(0, 1),
+    );
   });
 });
