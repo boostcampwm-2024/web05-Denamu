@@ -17,8 +17,8 @@ import TestAgent from 'supertest/lib/agent';
 describe('DELETE /api/like/{feedId} E2E Test', () => {
   let app: INestApplication;
   let userService: UserService;
-  let rssAcceptInformation: RssAccept;
-  let userInformation: User;
+  let rssAccept: RssAccept;
+  let user: User;
   let feed: Feed;
   let agent: TestAgent;
 
@@ -30,25 +30,23 @@ describe('DELETE /api/like/{feedId} E2E Test', () => {
     const rssAcceptRepository = app.get(RssAcceptRepository);
     const feedRepository = app.get(FeedRepository);
 
-    userInformation = await userRepository.save(
+    user = await userRepository.save(
       await UserFixture.createUserCryptFixture(),
     );
-    rssAcceptInformation = await rssAcceptRepository.save(
+    rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
-    feed = await feedRepository.save(
-      FeedFixture.createFeedFixture(rssAcceptInformation),
-    );
+    feed = await feedRepository.save(FeedFixture.createFeedFixture(rssAccept));
   });
 
   it('[401] 로그인이 되어 있지 않을 경우 좋아요 삭제를 실패한다.', async () => {
     // given
-    const feedLikeRequest = new ManageLikeRequestDto({
-      feedId: 1,
+    const requestDto = new ManageLikeRequestDto({
+      feedId: feed.id,
     });
 
     // when
-    const response = await agent.delete(`/api/like/${feedLikeRequest.feedId}`);
+    const response = await agent.delete(`/api/like/${requestDto.feedId}`);
 
     // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
@@ -56,14 +54,14 @@ describe('DELETE /api/like/{feedId} E2E Test', () => {
 
   it('[404] 피드가 존재하지 않을 경우 좋아요 삭제를 실패한다.', async () => {
     // given
-    const feedLikeRequest = new ManageLikeRequestDto({
-      feedId: 100,
+    const requestDto = new ManageLikeRequestDto({
+      feedId: Number.MAX_SAFE_INTEGER,
     });
     const accessToken = userService.createToken(
       {
-        id: 1,
-        email: userInformation.email,
-        userName: userInformation.userName,
+        id: user.id,
+        email: user.email,
+        userName: user.userName,
         role: 'user',
       },
       'access',
@@ -71,7 +69,7 @@ describe('DELETE /api/like/{feedId} E2E Test', () => {
 
     // when
     const response = await agent
-      .delete(`/api/like/${feedLikeRequest.feedId}`)
+      .delete(`/api/like/${requestDto.feedId}`)
       .set('Authorization', `Bearer ${accessToken}`);
 
     // then
@@ -82,18 +80,18 @@ describe('DELETE /api/like/{feedId} E2E Test', () => {
     // given
     const likeRepository = app.get(LikeRepository);
     await likeRepository.save({
-      feed: { id: 1 },
-      user: { id: 1 },
+      feed,
+      user: user,
       likeDate: new Date(),
     });
-    const feedLikeRequest = new ManageLikeRequestDto({
-      feedId: 1,
+    const requestDto = new ManageLikeRequestDto({
+      feedId: feed.id,
     });
     const accessToken = userService.createToken(
       {
-        id: 1,
-        email: userInformation.email,
-        userName: userInformation.userName,
+        id: user.id,
+        email: user.email,
+        userName: user.userName,
         role: 'user',
       },
       'access',
@@ -101,7 +99,7 @@ describe('DELETE /api/like/{feedId} E2E Test', () => {
 
     // when
     const response = await agent
-      .delete(`/api/like/${feedLikeRequest.feedId}`)
+      .delete(`/api/like/${requestDto.feedId}`)
       .set('Authorization', `Bearer ${accessToken}`);
 
     // then
@@ -110,14 +108,14 @@ describe('DELETE /api/like/{feedId} E2E Test', () => {
 
   it('[404] 좋아요를 안 했을 경우 좋아요 삭제를 실패한다.', async () => {
     // given
-    const feedLikeRequest = new ManageLikeRequestDto({
-      feedId: 1,
+    const requestDto = new ManageLikeRequestDto({
+      feedId: feed.id,
     });
     const accessToken = userService.createToken(
       {
-        id: 1,
-        email: userInformation.email,
-        userName: userInformation.userName,
+        id: user.id,
+        email: user.email,
+        userName: user.userName,
         role: 'user',
       },
       'access',
@@ -125,7 +123,7 @@ describe('DELETE /api/like/{feedId} E2E Test', () => {
 
     // when
     const response = await agent
-      .delete(`/api/like/${feedLikeRequest.feedId}`)
+      .delete(`/api/like/${requestDto.feedId}`)
       .set('Authorization', `Bearer ${accessToken}`);
 
     // then
