@@ -10,11 +10,12 @@ import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 describe('POST /api/admin/register E2E Test', () => {
   let app: INestApplication;
   let agent: TestAgent;
+  let adminRepository: AdminRepository;
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
-    const adminRepository = app.get(AdminRepository);
+    adminRepository = app.get(AdminRepository);
     const redisService = app.get(RedisService);
     await adminRepository.insert(await AdminFixture.createAdminCryptFixture());
     await redisService.set(
@@ -38,14 +39,14 @@ describe('POST /api/admin/register E2E Test', () => {
 
     // then
     expect(response.status).toBe(HttpStatus.CREATED);
+
+    // cleanup
+    await adminRepository.delete({ loginId: newAdminDto.loginId });
   });
 
   it('[409] 중복된 ID로 회원가입을 할 경우 다른 관리자 계정 회원가입을 실패한다.', async () => {
     // given
-    const newAdminDto = new RegisterAdminRequestDto({
-      loginId: 'testNewAdminId',
-      password: 'testNewAdminPassword!',
-    });
+    const newAdminDto = new RegisterAdminRequestDto(AdminFixture.GENERAL_ADMIN);
 
     // when
     const response = await agent
