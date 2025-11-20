@@ -38,7 +38,7 @@ describe('POST /api/rss/accept/{rssId} E2E Test', () => {
     // given
     const rss = await rssRepository.save(
       RssFixture.createRssFixture({
-        rssUrl: 'https://v2.velog.io/rss/@seok3765',
+        rssUrl: 'https://test.com/rss',
       }),
     );
     global.fetch = jest.fn().mockResolvedValue({
@@ -53,13 +53,16 @@ describe('POST /api/rss/accept/{rssId} E2E Test', () => {
 
     // then
     expect(response.status).toBe(HttpStatus.CREATED);
+
+    // cleanup
+    await rssAcceptRepository.delete({ rssUrl: rss.rssUrl });
   });
 
   it('[400] 잘못된 RSS URL을 승인할 경우 RSS 승인을 실패한다.', async () => {
     // given
     const rss = await rssRepository.save(
       RssFixture.createRssFixture({
-        rssUrl: 'https://test/rss/@seok3766',
+        rssUrl: 'https://test.com/rss',
       }),
     );
     global.fetch = jest.fn().mockResolvedValue({
@@ -76,13 +79,10 @@ describe('POST /api/rss/accept/{rssId} E2E Test', () => {
     expect(response.status).toBe(HttpStatus.BAD_REQUEST);
   });
 
-  it('[404] 존재하지 않은 RSS를 승인할 경우 RSS 승인을 실패한다.', async () => {
-    // given
-    jest.spyOn(rssRepository, 'findOne').mockResolvedValue(undefined);
-
+  it('[404] 대기 목록에 없는 RSS를 승인할 경우 RSS 승인을 실패한다.', async () => {
     // when
     const response = await agent
-      .post(`/api/rss/accept/1`)
+      .post(`/api/rss/accept/${Number.MAX_SAFE_INTEGER}`)
       .set('Cookie', 'sessionId=testSessionId');
 
     // then
@@ -91,10 +91,11 @@ describe('POST /api/rss/accept/{rssId} E2E Test', () => {
 
   it('[401] 관리자 로그인이 되어 있지 않을 경우 RSS 승인을 실패한다.', async () => {
     // when
-    const noCookieResponse = await agent.post(`/api/rss/accept/1`);
-
+    const noCookieResponse = await agent.post(
+      `/api/rss/accept/${Number.MAX_SAFE_INTEGER}`,
+    );
     const noSessionResponse = await agent
-      .post(`/api/rss/accept/1`)
+      .post(`/api/rss/accept/${Number.MAX_SAFE_INTEGER}`)
       .set('Cookie', 'sessionId=invalid');
 
     // then
