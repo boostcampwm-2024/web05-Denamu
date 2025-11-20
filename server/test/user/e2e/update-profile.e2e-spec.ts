@@ -14,7 +14,7 @@ describe('PATCH /api/user/profile E2E Test', () => {
   let userService: UserService;
   let userRepository: UserRepository;
   let fileService: FileService;
-  let testUser: User;
+  let user: User;
 
   beforeAll(async () => {
     app = global.testApp;
@@ -23,7 +23,7 @@ describe('PATCH /api/user/profile E2E Test', () => {
     userRepository = app.get(UserRepository);
     fileService = app.get(FileService);
 
-    testUser = await userRepository.save(
+    user = await userRepository.save(
       await UserFixture.createUserCryptFixture({
         userName: '기존이름',
         profileImage:
@@ -41,9 +41,9 @@ describe('PATCH /api/user/profile E2E Test', () => {
     // given
     const accessToken = userService.createToken(
       {
-        id: testUser.id,
-        email: testUser.email,
-        userName: testUser.userName,
+        id: user.id,
+        email: user.email,
+        userName: user.userName,
         role: 'user',
       },
       'access',
@@ -67,7 +67,7 @@ describe('PATCH /api/user/profile E2E Test', () => {
       '사용자 프로필 정보가 성공적으로 수정되었습니다.',
     );
 
-    const updatedUser = await userRepository.findOneBy({ id: testUser.id });
+    const updatedUser = await userRepository.findOneBy({ id: user.id });
     expect(updatedUser.userName).toBe(requestDto.userName);
     expect(updatedUser.profileImage).toBe(requestDto.profileImage);
     expect(updatedUser.introduction).toBe(requestDto.introduction);
@@ -77,14 +77,14 @@ describe('PATCH /api/user/profile E2E Test', () => {
     // given
     const accessToken = userService.createToken(
       {
-        id: testUser.id,
-        email: testUser.email,
-        userName: testUser.userName,
+        id: user.id,
+        email: user.email,
+        userName: user.userName,
         role: 'user',
       },
       'access',
     );
-    const originalUser = await userRepository.findOneBy({ id: testUser.id });
+    const originalUser = await userRepository.findOneBy({ id: user.id });
     const requestDto = new UpdateUserRequestDto({
       userName: '부분수정이름',
     });
@@ -98,7 +98,7 @@ describe('PATCH /api/user/profile E2E Test', () => {
     // then
     expect(response.status).toBe(HttpStatus.OK);
 
-    const updatedUser = await userRepository.findOneBy({ id: testUser.id });
+    const updatedUser = await userRepository.findOneBy({ id: user.id });
     expect(updatedUser.userName).toBe(requestDto.userName);
     expect(updatedUser.profileImage).toBe(originalUser.profileImage);
     expect(updatedUser.introduction).toBe(originalUser.introduction);
