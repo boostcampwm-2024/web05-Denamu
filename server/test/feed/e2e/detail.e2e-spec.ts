@@ -24,9 +24,9 @@ describe('GET /api/feed/detail/{feedId} E2E Test', () => {
       RssAcceptFixture.createRssAcceptFixture(),
     );
 
-    feedList = Array.from({ length: 2 }).map((_, i) => {
-      return FeedFixture.createFeedFixture(rssAccept, _, i + 1);
-    });
+    feedList = Array.from({ length: 2 }).map((_, i) =>
+      FeedFixture.createFeedFixture(rssAccept, _, i + 1),
+    );
 
     feedList = await feedRepository.save(feedList);
     await tagRepository.insert({
