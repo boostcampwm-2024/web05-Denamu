@@ -18,8 +18,8 @@ describe('PATCH /api/comment E2E Test', () => {
   let app: INestApplication;
   let agent: TestAgent;
   let userService: UserService;
-  let userInformation: User;
-  let commentInformation: Comment;
+  let user: User;
+  let comment: Comment;
 
   beforeAll(async () => {
     app = global.testApp;
@@ -30,7 +30,7 @@ describe('PATCH /api/comment E2E Test', () => {
     const feedRepository = app.get(FeedRepository);
     const commentRepository = app.get(CommentRepository);
 
-    userInformation = await userRepository.save(
+    user = await userRepository.save(
       await UserFixture.createUserCryptFixture(),
     );
 
@@ -42,15 +42,15 @@ describe('PATCH /api/comment E2E Test', () => {
       FeedFixture.createFeedFixture(rssAcceptInformation),
     );
 
-    commentInformation = await commentRepository.save(
-      CommentFixture.createCommentFixture(feedInformation, userInformation),
+    comment = await commentRepository.save(
+      CommentFixture.createCommentFixture(feedInformation, user),
     );
   });
 
   it('[401] 로그인이 되어있지 않을 경우 댓글 수정을 실패한다.', async () => {
     // given
     const requestDto = new UpdateCommentRequestDto({
-      commentId: commentInformation.id,
+      commentId: comment.id,
       newComment: 'newComment',
     });
 
@@ -64,14 +64,14 @@ describe('PATCH /api/comment E2E Test', () => {
   it('[401] 본인이 작성한 댓글이 아닐 경우 댓글 수정을 실패한다.', async () => {
     // given
     const requestDto = new UpdateCommentRequestDto({
-      commentId: commentInformation.id,
+      commentId: comment.id,
       newComment: 'newComment',
     });
     const accessToken = userService.createToken(
       {
-        id: 400,
-        email: userInformation.email,
-        userName: userInformation.userName,
+        id: Number.MAX_SAFE_INTEGER,
+        email: user.email,
+        userName: user.userName,
         role: 'user',
       },
       'access',
@@ -87,17 +87,17 @@ describe('PATCH /api/comment E2E Test', () => {
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 
-  it('[404] 게시글이 존재하지 않을 경우 댓글 수정을 실패한다.', async () => {
+  it('[404] 댓글이 존재하지 않을 경우 댓글 수정을 실패한다.', async () => {
     // given
     const requestDto = new UpdateCommentRequestDto({
-      commentId: 400,
+      commentId: Number.MAX_SAFE_INTEGER,
       newComment: 'newComment',
     });
     const accessToken = userService.createToken(
       {
-        id: userInformation.id,
-        email: userInformation.email,
-        userName: userInformation.userName,
+        id: user.id,
+        email: user.email,
+        userName: user.userName,
         role: 'user',
       },
       'access',
@@ -116,14 +116,14 @@ describe('PATCH /api/comment E2E Test', () => {
   it('[200] 본인이 작성한 댓글일 경우 댓글 수정을 성공한다.', async () => {
     // given
     const requestDto = new UpdateCommentRequestDto({
-      commentId: commentInformation.id,
+      commentId: comment.id,
       newComment: 'newComment',
     });
     const accessToken = userService.createToken(
       {
-        id: userInformation.id,
-        email: userInformation.email,
-        userName: userInformation.userName,
+        id: user.id,
+        email: user.email,
+        userName: user.userName,
         role: 'user',
       },
       'access',
