@@ -18,8 +18,8 @@ describe('DELETE /api/comment E2E Test', () => {
   let app: INestApplication;
   let agent: TestAgent;
   let userService: UserService;
-  let userInformation: User;
-  let commentInformation: Comment;
+  let user: User;
+  let comment: Comment;
 
   beforeAll(async () => {
     app = global.testApp;
@@ -30,7 +30,7 @@ describe('DELETE /api/comment E2E Test', () => {
     const feedRepository = app.get(FeedRepository);
     const commentRepository = app.get(CommentRepository);
 
-    userInformation = await userRepository.save(
+    user = await userRepository.save(
       await UserFixture.createUserCryptFixture(),
     );
 
@@ -42,15 +42,15 @@ describe('DELETE /api/comment E2E Test', () => {
       FeedFixture.createFeedFixture(rssAcceptInformation),
     );
 
-    commentInformation = await commentRepository.save(
-      CommentFixture.createCommentFixture(feedInformation, userInformation),
+    comment = await commentRepository.save(
+      CommentFixture.createCommentFixture(feedInformation, user),
     );
   });
 
   it('[401] 로그인이 되어 있지 않을 경우 댓글 삭제를 실패한다.', async () => {
     // given
     const requestDto = new DeleteCommentRequestDto({
-      commentId: commentInformation.id,
+      commentId: comment.id,
     });
 
     // when
@@ -65,14 +65,14 @@ describe('DELETE /api/comment E2E Test', () => {
     const accessToken = userService.createToken(
       {
         id: Number.MAX_SAFE_INTEGER,
-        email: userInformation.email,
-        userName: userInformation.userName,
+        email: user.email,
+        userName: user.userName,
         role: 'user',
       },
       'access',
     );
     const requestDto = new DeleteCommentRequestDto({
-      commentId: commentInformation.id,
+      commentId: comment.id,
     });
 
     // when
@@ -89,9 +89,9 @@ describe('DELETE /api/comment E2E Test', () => {
     // given
     const accessToken = userService.createToken(
       {
-        id: userInformation.id,
-        email: userInformation.email,
-        userName: userInformation.userName,
+        id: user.id,
+        email: user.email,
+        userName: user.userName,
         role: 'user',
       },
       'access',
@@ -114,15 +114,15 @@ describe('DELETE /api/comment E2E Test', () => {
     // given
     const accessToken = userService.createToken(
       {
-        id: userInformation.id,
-        email: userInformation.email,
-        userName: userInformation.userName,
+        id: user.id,
+        email: user.email,
+        userName: user.userName,
         role: 'user',
       },
       'access',
     );
     const requestDto = new DeleteCommentRequestDto({
-      commentId: commentInformation.id,
+      commentId: comment.id,
     });
 
     // when
