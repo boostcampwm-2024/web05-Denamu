@@ -67,7 +67,7 @@ describe('POST /api/rss/reject/{rssId} E2E Test', () => {
 
     // when
     const response = await agent
-      .post(`/api/rss/reject/1`)
+      .post(`/api/rss/reject/${Number.MAX_SAFE_INTEGER}`)
       .set('Cookie', 'sessionId=testSessionId')
       .send(requestDTO);
 
@@ -77,9 +77,11 @@ describe('POST /api/rss/reject/{rssId} E2E Test', () => {
 
   it('[401] 관리자 로그인이 되어 있지 않은 경우 RSS 거부를 실패한다.', async () => {
     // when
-    const noCookieResponse = await agent.post(`/api/rss/reject/1`);
+    const noCookieResponse = await agent.post(
+      `/api/rss/reject/${Number.MAX_SAFE_INTEGER}`,
+    );
     const noSessionResponse = await agent
-      .post(`/api/rss/reject/1`)
+      .post(`/api/rss/reject/${Number.MAX_SAFE_INTEGER}`)
       .set('Cookie', 'sessionId=invalid');
 
     // then
