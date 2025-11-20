@@ -10,18 +10,18 @@ import TestAgent from 'supertest/lib/agent';
 describe('GET /api/rss/history/accept E2E Test', () => {
   let app: INestApplication;
   let agent: TestAgent;
+  let rssAcceptList: RssAccept[];
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
     const rssAcceptRepository = app.get(RssAcceptRepository);
     const redisService = app.get(RedisService);
-    const rssAccepts: RssAccept[] = [];
-    for (let i = 1; i <= 2; i++) {
-      rssAccepts.push(RssAcceptFixture.createRssAcceptFixture({}, i));
-    }
-    await Promise.all([
-      rssAcceptRepository.insert(rssAccepts),
+    const rssAcceptData = Array.from({ length: 2 }).map((_, i) =>
+      RssAcceptFixture.createRssAcceptFixture({}, i + 1),
+    );
+    [rssAcceptList] = await Promise.all([
+      rssAcceptRepository.save(rssAcceptData),
       redisService.set(
         `${REDIS_KEYS.ADMIN_AUTH_KEY}:testSessionId`,
         'test1234',
@@ -49,8 +49,8 @@ describe('GET /api/rss/history/accept E2E Test', () => {
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
-    expect(response.body.data.map((acceptRss) => acceptRss.id)).toStrictEqual([
-      2, 1,
-    ]);
+    expect(response.body.data.map((acceptRss) => acceptRss.id)).toStrictEqual(
+      rssAcceptList.map((rss) => rss.id).reverse(),
+    );
   });
 });
