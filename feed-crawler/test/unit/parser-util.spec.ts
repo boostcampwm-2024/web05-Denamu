@@ -319,7 +319,7 @@ describe('ParserUtil', () => {
     it('중복된 엔티티를 모두 변환해야 한다', () => {
       // Given
       const input = '&middot;&middot;&middot; 여러개 &nbsp;&nbsp; 공백';
-      const expected = '··· 여러개   공백';
+      const expected = '··· 여러개    공백';
 
       // When
       const result = parserUtil.customUnescape(input);
@@ -329,5 +329,3 @@ describe('ParserUtil', () => {
     });
   });
 });
-
-

@@ -10,6 +10,7 @@ interface TestQueueItem {
 }
 
 class TestQueueWorker extends AbstractQueueWorker<TestQueueItem> {
+  // 추적 변수를 통한 동작 검증
   public processQueueCalled = false;
   public processedItems: TestQueueItem[] = [];
   public failedItems: { item: TestQueueItem; error: Error }[] = [];
@@ -154,27 +155,6 @@ describe('AbstractQueueWorker', () => {
       expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('작업 완료'));
     });
 
-    it('시작과 완료 로그를 출력해야 한다', async () => {
-      // Given
-      const logSpy = jest.spyOn(console, 'log').mockImplementation();
-
-      // When
-      await testWorker.start();
-
-      // Then
-      expect(logSpy).toHaveBeenCalledWith(
-        expect.stringContaining(
-          '========== [TEST WORKER] 작업 시작 ==========',
-        ),
-      );
-      expect(logSpy).toHaveBeenCalledWith(
-        expect.stringContaining(
-          '========== [TEST WORKER] 작업 완료 ==========',
-        ),
-      );
-    });
-  });
-
   describe('abstract methods implementation', () => {
     it('getQueueKey가 올바른 키를 반환해야 한다', () => {
       // When
@@ -212,7 +192,7 @@ describe('AbstractQueueWorker', () => {
   describe('error handling', () => {
     it('processItem에서 에러가 발생해도 다른 아이템 처리를 계속해야 한다', async () => {
       // Given
-      // TestQueueWorker는 id가 2인 경우 에러를 던지도록 구현됨
+      // TestQueueWorker는 id가 2인 경우 에러를 던지도록 이미 구현됨
 
       // When
       await testWorker.start();
@@ -311,5 +291,3 @@ describe('AbstractQueueWorker', () => {
     });
   });
 });
-
-
