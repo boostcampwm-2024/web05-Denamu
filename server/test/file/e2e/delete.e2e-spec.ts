@@ -12,19 +12,18 @@ import TestAgent from 'supertest/lib/agent';
 describe('DELETE /api/file/{fileId} E2E Test', () => {
   let app: INestApplication;
   let agent: TestAgent;
-  let testUser: User;
+  let user: User;
   let userService: UserService;
-  let userRepository: UserRepository;
   let fileRepository: FileRepository;
   let file: File;
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
-    userRepository = app.get(UserRepository);
+    const userRepository = app.get(UserRepository);
     userService = app.get(UserService);
     fileRepository = app.get(FileRepository);
-    testUser = await userRepository.save(
+    user = await userRepository.save(
       await UserFixture.createUserCryptFixture(),
     );
   });
@@ -32,7 +31,7 @@ describe('DELETE /api/file/{fileId} E2E Test', () => {
   it('[200] DB에서 파일을 삭제했지만 FS 라이브러리릍 통해서 실패했을 경우에 서비스에서 파일 삭제를 성공한다.', async () => {
     // given
     file = await fileRepository.save(
-      FileFixture.createFileFixture({ user: testUser }),
+      FileFixture.createFileFixture({ user: user }),
     );
     jest.mock('fs/promises', () => ({
       access: jest.fn().mockResolvedValue(null),
@@ -40,9 +39,9 @@ describe('DELETE /api/file/{fileId} E2E Test', () => {
 
     const accessToken = userService.createToken(
       {
-        id: testUser.id,
-        email: testUser.email,
-        userName: testUser.userName,
+        id: user.id,
+        email: user.email,
+        userName: user.userName,
         role: 'user',
       },
       'access',
@@ -60,7 +59,7 @@ describe('DELETE /api/file/{fileId} E2E Test', () => {
   it('[200] DB에서 파일을 삭제했지만 FS 라이브러리에서 권한 문제일 경우 서비스에서 파일 삭제를 성공한다.', async () => {
     // given
     file = await fileRepository.save(
-      FileFixture.createFileFixture({ user: testUser }),
+      FileFixture.createFileFixture({ user: user }),
     );
     jest.mock('fs/promises', () => ({
       unlink: jest.fn().mockResolvedValue(null),
@@ -76,7 +75,7 @@ describe('DELETE /api/file/{fileId} E2E Test', () => {
   it('[200] 파일 삭제 요청을 받을 경우 파일 삭제를 성공한다.', async () => {
     // given
     file = await fileRepository.save(
-      FileFixture.createFileFixture({ user: testUser }),
+      FileFixture.createFileFixture({ user: user }),
     );
     jest.mock('fs/promises', () => ({
       access: jest.fn().mockResolvedValue(null),
@@ -85,9 +84,9 @@ describe('DELETE /api/file/{fileId} E2E Test', () => {
 
     const accessToken = userService.createToken(
       {
-        id: testUser.id,
-        email: testUser.email,
-        userName: testUser.userName,
+        id: user.id,
+        email: user.email,
+        userName: user.userName,
         role: 'user',
       },
       'access',
@@ -104,24 +103,24 @@ describe('DELETE /api/file/{fileId} E2E Test', () => {
 
   it('[401] 파일에 삭제 권한이 없을 경우 파일 삭제를 실패한다.', async () => {
     // when
-    const response = await agent.delete('/api/file/1');
+    const response = await agent.delete(`/api/file/${Number.MAX_SAFE_INTEGER}`);
 
     // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 
   it('[404] 파일이 서비스에 존재하지 않을 경우 파일 삭제를 실패한다.', async () => {
+    // given
     jest.mock('fs/promises', () => ({
       access: jest.fn().mockResolvedValue(null),
       unlink: jest.fn().mockResolvedValue(null),
     }));
     jest.spyOn(fileRepository, 'findOne').mockResolvedValue(undefined);
-
     const accessToken = userService.createToken(
       {
-        id: testUser.id,
-        email: testUser.email,
-        userName: testUser.userName,
+        id: user.id,
+        email: user.email,
+        userName: user.userName,
         role: 'user',
       },
       'access',
