@@ -7,6 +7,7 @@ import {
   RssRepository,
 } from '../../../src/rss/repository/rss.repository';
 import TestAgent from 'supertest/lib/agent';
+import { RssFixture } from '../../fixture/rss.fixture';
 
 describe('POST /api/rss E2E Test', () => {
   let app: INestApplication;
@@ -43,19 +44,22 @@ describe('POST /api/rss E2E Test', () => {
 
   it('[409] 이미 신청한 RSS를 다시 신청할 경우 RSS 등록 요청을 실패한다.', async () => {
     // given
+    const rss = await rssRepository.save(RssFixture.createRssFixture());
     const requestDto = new RegisterRssRequestDto({
       blog: 'blog1',
       name: 'name1',
       email: 'test1@test.com',
-      rssUrl: 'https://example1.com/rss',
+      rssUrl: rss.rssUrl,
     });
-    await agent.post('/api/rss').send(requestDto);
 
     // when
     const response = await agent.post('/api/rss').send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.CONFLICT);
+
+    // cleanup
+    await rssRepository.delete({ id: rss.id });
   });
 
   it('[409] 이미 등록 완료된 RSS를 다시 신청할 경우 RSS 등록 요청을 실패한다.', async () => {
@@ -75,5 +79,8 @@ describe('POST /api/rss E2E Test', () => {
 
     // then
     expect(response.status).toBe(HttpStatus.CONFLICT);
+
+    // cleanup
+    await rssAcceptRepository.delete({ id: acceptedRss.id });
   });
 });
