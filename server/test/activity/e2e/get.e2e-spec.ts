@@ -38,6 +38,21 @@ describe('GET /api/activity/{userId} E2E Test', () => {
     await activityRepository.save(activities);
   });
 
+  it('[404] 존재하지 않는 사용자 ID로 요청할 경우 활동 데이터 조회를 실패한다.', async () => {
+    // given
+    const requestDto = new ReadActivityQueryRequestDto({
+      year: activityData[0].activityDate.getFullYear(),
+    });
+
+    // when
+    const response = await agent
+      .get(`/api/activity/${Number.MAX_SAFE_INTEGER}`)
+      .query(requestDto);
+
+    // then
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
+  });
+
   it('[200] 존재하는 사용자의 아이디로 요청할 경우 활동 데이터 조회를 성공한다.', async () => {
     // given
     const userId = user.id;
@@ -82,20 +97,5 @@ describe('GET /api/activity/{userId} E2E Test', () => {
     expect(data).toStrictEqual({
       ...ReadActivityResponseDto.toResponseDto([], user),
     });
-  });
-
-  it('[404] 존재하지 않는 사용자 ID로 요청할 경우 활동 데이터 조회를 실패한다.', async () => {
-    // given
-    const requestDto = new ReadActivityQueryRequestDto({
-      year: activityData[0].activityDate.getFullYear(),
-    });
-
-    // when
-    const response = await agent
-      .get(`/api/activity/${Number.MAX_SAFE_INTEGER}`)
-      .query(requestDto);
-
-    // then
-    expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
 });
