@@ -10,9 +10,9 @@ export class CommentRepository extends Repository<Comment> {
 
   async getCommentInformation(feedId: number) {
     return await this.createQueryBuilder('comment')
+      .select(['comment', 'comment.date', 'user'])
       .innerJoin('comment.user', 'user')
       .where('comment.feed_id = :feedId', { feedId })
-      .select(['comment', 'comment.date', 'user'])
       .orderBy('comment.date', 'ASC')
       .getMany();
   }
