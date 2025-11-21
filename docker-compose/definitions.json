@@ -1,0 +1,86 @@
+{
+  "exchanges": [
+    {
+      "name": "email",
+      "vhost": "/",
+      "type": "direct",
+      "durable": true
+    },
+    {
+      "name": "crawling",
+      "vhost": "/",
+      "type": "topic",
+      "durable": true
+    },
+    {
+      "name": "dead_letter",
+      "vhost": "/",
+      "type": "topic",
+      "durable": true
+    }
+  ],
+  "queues": [
+    {
+      "name": "email_send",
+      "vhost": "/",
+      "durable": true,
+      "arguments": {
+        "x-dead-letter-exchange": "dead_letter",
+        "x-dead-letter-routing-key": "email.dead_letter"
+      }
+    },
+    {
+      "name": "crawling_full",
+      "vhost": "/",
+      "durable": true,
+      "arguments": {
+        "x-dead-letter-exchange": "dead_letter",
+        "x-dead-letter-routing-key": "crawling.full.dead_letter"
+      }
+    },
+    {
+      "name": "email_dead_letter",
+      "vhost": "/",
+      "durable": true
+    },
+    {
+      "name": "crawling_full_dead_letter",
+      "vhost": "/",
+      "durable": true
+    }
+  ],
+  "bindings": [
+    {
+      "source": "email",
+      "vhost": "/",
+      "destination": "email_send",
+      "destination_type": "queue",
+      "routing_key": "email.send",
+      "arguments": {}
+    },
+    {
+      "source": "crawling",
+      "vhost": "/",
+      "destination": "crawling_full",
+      "destination_type": "queue",
+      "routing_key": "crawling.full",
+      "arguments": {}
+    },
+    {
+      "source": "dead_letter",
+      "vhost": "/",
+      "destination": "email_dead_letter",
+      "destination_type": "queue",
+      "routing_key": "email.dead_letter",
+      "arguments": {}
+    },
+    {
+      "source": "dead_letter",
+      "vhost": "/",
+      "destination": "crawling_full_dead_letter",
+      "destination_type": "queue",
+      "routing_key": "crawling.full.dead_letter",
+      "arguments": {}
+    }
+  ]
+}
