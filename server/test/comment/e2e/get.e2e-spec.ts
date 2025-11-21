@@ -7,11 +7,17 @@ import { RssAcceptFixture } from '../../fixture/rss-accept.fixture';
 import { FeedFixture } from '../../fixture/feed.fixture';
 import { GetCommentRequestDto } from '../../../src/comment/dto/request/getComment.dto';
 import TestAgent from 'supertest/lib/agent';
+import { CommentRepository } from '../../../src/comment/repository/comment.repository';
+import { UserRepository } from '../../../src/user/repository/user.repository';
+import { UserFixture } from '../../fixture/user.fixture';
+import { CommentFixture } from '../../fixture/comment.fixture';
 
 describe('GET /api/comment/{feedId} E2E Test', () => {
   let app: INestApplication;
   let agent: TestAgent;
   let feed: Feed;
+  let commentRepository: CommentRepository;
+  let userRepository: UserRepository;
 
   beforeAll(async () => {
     app = global.testApp;
@@ -21,21 +27,16 @@ describe('GET /api/comment/{feedId} E2E Test', () => {
     const rssAcceptInformation = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
+    commentRepository = app.get(CommentRepository);
+    userRepository = app.get(UserRepository);
     feed = await feedRepository.save(
       FeedFixture.createFeedFixture(rssAcceptInformation),
     );
   });
 
   it('[404] 게시글이 존재하지 않을 경우 댓글 조회를 실패한다.', async () => {
-    // given
-    const requestDto = new GetCommentRequestDto({
-      feedId: Number.MAX_SAFE_INTEGER,
-    });
-
     // when
-    const response = await agent
-      .get(`/api/comment/${requestDto.feedId}`)
-      .send(requestDto);
+    const response = await agent.get(`/api/comment/${Number.MAX_SAFE_INTEGER}`);
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
@@ -43,16 +44,34 @@ describe('GET /api/comment/{feedId} E2E Test', () => {
 
   it('[200] 게시글이 존재할 경우 댓글 조회를 성공한다.', async () => {
     // given
+    const user = await userRepository.save(UserFixture.createUserFixture());
+    const comment = await commentRepository.save(
+      CommentFixture.createCommentFixture(feed, user),
+    );
     const requestDto = new GetCommentRequestDto({
       feedId: feed.id,
     });
 
     // when
-    const response = await agent
-      .get(`/api/comment/${requestDto.feedId}`)
-      .send(requestDto);
+    const response = await agent.get(`/api/comment/${requestDto.feedId}`);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
+    expect(data).toStrictEqual([
+      {
+        id: comment.id,
+        comment: comment.comment,
+        date: comment.date.toISOString(),
+        user: {
+          id: user.id,
+          userName: user.userName,
+          profileImage: user.profileImage,
+        },
+      },
+    ]);
+
+    // cleanup
+    await commentRepository.delete(comment.id);
   });
 });
