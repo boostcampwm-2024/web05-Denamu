@@ -6,7 +6,7 @@ export class FileFixture {
     mimetype: 'image/png',
     path: 'https://test.com/test.png',
     size: 1024,
-    createdAt: new Date(Date.now()),
+    createdAt: new Date('2025-11-22'),
   };
 
   static createFileFixture(overwrites: Partial<File> = {}) {
