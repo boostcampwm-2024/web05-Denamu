@@ -7,7 +7,6 @@ import { ActivityFixture } from '../../fixture/activity.fixture';
 import { User } from '../../../src/user/entity/user.entity';
 import TestAgent from 'supertest/lib/agent';
 import { ReadActivityQueryRequestDto } from '../../../src/activity/dto/request/readActivity.dto';
-import { ReadActivityResponseDto } from '../../../src/activity/dto/response/readActivity.dto';
 
 describe('GET /api/activity/{userId} E2E Test', () => {
   let app: INestApplication;
@@ -23,19 +22,15 @@ describe('GET /api/activity/{userId} E2E Test', () => {
 
     user = await userRepository.save(UserFixture.createUserFixture());
 
-    activityData = [
-      { activityDate: new Date('2024-01-15'), viewCount: 5 },
-      { activityDate: new Date('2024-01-16'), viewCount: 3 },
-      { activityDate: new Date('2024-06-01'), viewCount: 8 },
-      { activityDate: new Date('2024-12-25'), viewCount: 2 },
-    ];
-
-    const activities = ActivityFixture.createMultipleActivitiesFixture(
-      user,
-      activityData,
+    activityData = Array.from({ length: 5 }).map((_, i) =>
+      ActivityFixture.createActivityFixture(
+        user,
+        { viewCount: (i + 1) * 2 },
+        i,
+      ),
     );
 
-    await activityRepository.save(activities);
+    await activityRepository.insert(activityData);
   });
 
   it('[404] 존재하지 않는 사용자 ID로 요청할 경우 활동 데이터 조회를 실패한다.', async () => {
@@ -69,13 +64,16 @@ describe('GET /api/activity/{userId} E2E Test', () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual({
-      ...ReadActivityResponseDto.toResponseDto(
-        activityData.map((activity) => ({
-          date: activity.activityDate.toISOString().split('T')[0],
-          viewCount: activity.viewCount,
-        })),
-        user,
-      ),
+      dailyActivities: [
+        { date: '2024-01-01', viewCount: 2 },
+        { date: '2024-01-02', viewCount: 4 },
+        { date: '2024-01-03', viewCount: 6 },
+        { date: '2024-01-04', viewCount: 8 },
+        { date: '2024-01-05', viewCount: 10 },
+      ],
+      maxStreak: user.maxStreak,
+      currentStreak: user.currentStreak,
+      totalViews: user.totalViews,
     });
   });
 
@@ -95,7 +93,10 @@ describe('GET /api/activity/{userId} E2E Test', () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual({
-      ...ReadActivityResponseDto.toResponseDto([], user),
+      dailyActivities: [],
+      maxStreak: user.maxStreak,
+      currentStreak: user.currentStreak,
+      totalViews: user.totalViews,
     });
   });
 });
