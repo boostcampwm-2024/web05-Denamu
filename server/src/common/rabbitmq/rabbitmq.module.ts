@@ -2,6 +2,7 @@ import { Global, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as amqp from 'amqplib';
 import { RabbitMQService } from './rabbitmq.service';
+import { RabbitMQManager } from './rabbitmq.manager';
 
 @Global()
 @Module({
@@ -20,6 +21,7 @@ import { RabbitMQService } from './rabbitmq.service';
         });
       },
     },
+    RabbitMQManager,
     RabbitMQService,
   ],
   exports: [RabbitMQService],

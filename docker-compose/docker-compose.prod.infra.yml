@@ -87,6 +87,8 @@ services:
       - /var/prod_config/infra/.env.prod
     volumes:
       - denamu-rabbitmq:/var/lib/rabbitmq
+      - ./definitions.json:/etc/rabbitmq/definitions.json:ro
+      - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
     healthcheck:
       test: [ "CMD", "rabbitmq-diagnostics", "ping" ]
       interval: 30s
