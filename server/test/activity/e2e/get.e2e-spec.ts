@@ -7,6 +7,7 @@ import { ActivityFixture } from '../../fixture/activity.fixture';
 import { User } from '../../../src/user/entity/user.entity';
 import TestAgent from 'supertest/lib/agent';
 import { ReadActivityQueryRequestDto } from '../../../src/activity/dto/request/readActivity.dto';
+import { ReadActivityResponseDto } from '../../../src/activity/dto/response/readActivity.dto';
 
 describe('GET /api/activity/{userId} E2E Test', () => {
   let app: INestApplication;
@@ -50,25 +51,17 @@ describe('GET /api/activity/{userId} E2E Test', () => {
       .query(requestDto);
 
     // then
-    expect(response.status).toBe(HttpStatus.OK);
-    expect(response.body.message).toBe('요청이 성공적으로 처리되었습니다.');
-
     const { data } = response.body;
-    expect(data.maxStreak).toBe(user.maxStreak);
-    expect(data.currentStreak).toBe(user.currentStreak);
-    expect(data.totalViews).toBe(user.totalViews);
-
-    expect(data.dailyActivities).toHaveLength(activityData.length);
-    expect(data.dailyActivities).toEqual(
-      expect.arrayContaining(
-        activityData.map((activity) =>
-          expect.objectContaining({
-            date: activity.activityDate.toISOString().split('T')[0],
-            viewCount: activity.viewCount,
-          }),
-        ),
+    expect(response.status).toBe(HttpStatus.OK);
+    expect(data).toStrictEqual({
+      ...ReadActivityResponseDto.toResponseDto(
+        activityData.map((activity) => ({
+          date: activity.activityDate.toISOString().split('T')[0],
+          viewCount: activity.viewCount,
+        })),
+        user,
       ),
-    );
+    });
   });
 
   it('[200] 다른 연도를 요청할 경우 해당 연도의 활동 데이터 조회를 성공한다.', async () => {
@@ -84,14 +77,11 @@ describe('GET /api/activity/{userId} E2E Test', () => {
       .query(requestDto);
 
     // then
-    expect(response.status).toBe(HttpStatus.OK);
-    expect(response.body.message).toBe('요청이 성공적으로 처리되었습니다.');
-
     const { data } = response.body;
-    expect(data.maxStreak).toBe(user.maxStreak);
-    expect(data.currentStreak).toBe(user.currentStreak);
-    expect(data.totalViews).toBe(user.totalViews);
-    expect(data.dailyActivities).toHaveLength(0);
+    expect(response.status).toBe(HttpStatus.OK);
+    expect(data).toStrictEqual({
+      ...ReadActivityResponseDto.toResponseDto([], user),
+    });
   });
 
   it('[404] 존재하지 않는 사용자 ID로 요청할 경우 활동 데이터 조회를 실패한다.', async () => {
