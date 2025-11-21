@@ -7,63 +7,95 @@ import { FeedRepository } from '../../../src/feed/repository/feed.repository';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 import TestAgent from 'supertest/lib/agent';
+import { Feed } from '../../../src/feed/entity/feed.entity';
+import _ from 'lodash';
 
 describe('GET /api/feed/recent E2E Test', () => {
   let app: INestApplication;
   let agent: TestAgent;
   let redisService: RedisService;
   let rssAcceptRepository: RssAcceptRepository;
+  let feeds: Feed[];
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
     rssAcceptRepository = app.get(RssAcceptRepository);
     redisService = app.get(RedisService);
-  });
-
-  it('[200] 최신 피드 업데이트 요청이 들어올 경우 최신 피드 제공을 성공한다.', async () => {
-    // given
-    const blog = await rssAcceptRepository.save(
+    const rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
     const feedRepository = app.get(FeedRepository);
     const feedList = Array.from({ length: 2 }).map((_, i) => {
-      const date = new Date();
-      date.setHours(date.getHours() + i);
-      return FeedFixture.createFeedFixture(blog, { createdAt: date }, i + 1);
+      return FeedFixture.createFeedFixture(rssAccept, {}, i + 1);
     });
-    const feeds = await feedRepository.save(feedList);
+
+    feeds = await feedRepository.save(feedList);
+  });
+
+  it('[200] 최신 피드 업데이트 요청이 들어올 경우 최신 피드 제공을 성공한다.', async () => {
+    // given
     await redisService.executePipeline((pipeline) => {
-      pipeline.hset(`${REDIS_KEYS.FEED_RECENT_KEY}:${feeds[0].id}`, feeds[0]);
-      pipeline.hset(`${REDIS_KEYS.FEED_RECENT_KEY}:${feeds[1].id}`, feeds[1]);
+      [feeds[0], feeds[1]].forEach((feed) => {
+        pipeline.hset(`${REDIS_KEYS.FEED_RECENT_KEY}:${feed.id}`, {
+          id: feed.id,
+          blogPlatform: feed.blog.blogPlatform,
+          createdAt: feed.createdAt.toISOString(),
+          viewCount: feed.viewCount,
+          blogName: feed.blog.name,
+          thumbnail: feed.thumbnail,
+          path: feed.path,
+          title: feed.title,
+          tag: [],
+          likes: feed.likeCount,
+          comments: feed.commentCount,
+        });
+      });
     });
 
     // when
     const response = await agent.get('/api/feed/recent');
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
-    expect(response.body.data.map((feed) => feed.id)).toStrictEqual([
-      feeds[1].id.toString(),
-      feeds[0].id.toString(),
-    ]);
+    expect(data).toStrictEqual(
+      Array.from({ length: 2 })
+        .map((_, i) => {
+          const feed = feeds[i];
+          return {
+            id: feed.id,
+            author: feed.blog.name,
+            blogPlatform: feed.blog.blogPlatform,
+            title: feed.title,
+            path: feed.path,
+            tag: [],
+            createdAt: feed.createdAt.toISOString(),
+            thumbnail: feed.thumbnail,
+            viewCount: feed.viewCount,
+            likes: feed.likeCount,
+            isNew: true,
+            comments: feed.commentCount,
+          };
+        })
+        .reverse(),
+    );
 
     // cleanup
     await redisService.executePipeline((pipeline) => {
-      pipeline.del(`${REDIS_KEYS.FEED_RECENT_KEY}:${feeds[0].id}`);
-      pipeline.del(`${REDIS_KEYS.FEED_RECENT_KEY}:${feeds[1].id}`);
+      [feeds[0], feeds[1]].forEach((feed) => {
+        pipeline.del(`${REDIS_KEYS.FEED_RECENT_KEY}:${feed.id}`);
+      });
     });
   });
 
   it('[200] 최신 피드가 없을 경우 빈 배열 제공을 성공한다.', async () => {
-    // given
-    await redisService.flushdb();
-
     // when
     const response = await agent.get('/api/feed/recent');
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
-    expect(response.body.data.map((feed) => feed.id)).toStrictEqual([]);
+    expect(data).toStrictEqual([]);
   });
 });
