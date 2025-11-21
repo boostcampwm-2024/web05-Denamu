@@ -16,6 +16,26 @@ describe('POST /api/user/register E2E Test', () => {
     userRepository = app.get(UserRepository);
   });
 
+  it('[409] 이미 가입된 이메일을 입력할 경우 회원가입을 실패한다.', async () => {
+    // given
+    const userRepository = app.get(UserRepository);
+    const user = await userRepository.save(UserFixture.createUserFixture());
+    const requestDto = new RegisterUserRequestDto({
+      email: user.email,
+      password: user.password,
+      userName: user.userName,
+    });
+
+    // when
+    const response = await agent.post('/api/user/register').send(requestDto);
+
+    // then
+    expect(response.status).toBe(HttpStatus.CONFLICT);
+
+    // cleanup
+    await userRepository.delete(user.id);
+  });
+
   it('[201] 중복되는 회원이 없을 경우 회원가입을 성공한다.', async () => {
     // given
     const requestDto = new RegisterUserRequestDto({
@@ -32,22 +52,5 @@ describe('POST /api/user/register E2E Test', () => {
 
     // cleanup
     await userRepository.delete({ email: requestDto.email });
-  });
-
-  it('[409] 이미 가입된 이메일을 입력할 경우 회원가입을 실패한다.', async () => {
-    // given
-    const userRepository = app.get(UserRepository);
-    const user = await userRepository.save(UserFixture.createUserFixture());
-    const requestDto = new RegisterUserRequestDto({
-      email: user.email,
-      password: user.password,
-      userName: user.userName,
-    });
-
-    // when
-    const response = await agent.post('/api/user/register').send(requestDto);
-
-    // then
-    expect(response.status).toBe(HttpStatus.CONFLICT);
   });
 });

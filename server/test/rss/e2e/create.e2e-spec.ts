@@ -26,22 +26,6 @@ describe('POST /api/rss E2E Test', () => {
     await rssRepository.delete({});
   });
 
-  it('[201] 등록되지 않은 RSS 등록 요청을 받았을 경우 RSS 등록 요청을 성공한다.', async () => {
-    // given
-    const requestDto = new RegisterRssRequestDto({
-      blog: 'blog1',
-      name: 'name1',
-      email: 'test1@test.com',
-      rssUrl: 'https://example1.com/rss',
-    });
-
-    // when
-    const response = await agent.post('/api/rss').send(requestDto);
-
-    // then
-    expect(response.status).toBe(HttpStatus.CREATED);
-  });
-
   it('[409] 이미 신청한 RSS를 다시 신청할 경우 RSS 등록 요청을 실패한다.', async () => {
     // given
     const rss = await rssRepository.save(RssFixture.createRssFixture());
@@ -82,5 +66,21 @@ describe('POST /api/rss E2E Test', () => {
 
     // cleanup
     await rssAcceptRepository.delete({ id: acceptedRss.id });
+  });
+
+  it('[201] 등록되지 않은 RSS 등록 요청을 받았을 경우 RSS 등록 요청을 성공한다.', async () => {
+    // given
+    const requestDto = new RegisterRssRequestDto({
+      blog: 'blog1',
+      name: 'name1',
+      email: 'test1@test.com',
+      rssUrl: 'https://example1.com/rss',
+    });
+
+    // when
+    const response = await agent.post('/api/rss').send(requestDto);
+
+    // then
+    expect(response.status).toBe(HttpStatus.CREATED);
   });
 });

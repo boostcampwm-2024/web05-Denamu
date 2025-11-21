@@ -34,28 +34,28 @@ describe('POST /api/rss/accept/{rssId} E2E Test', () => {
     ]);
   });
 
-  it('[201] 관리자 로그인이 되어 있을 경우 RSS 승인을 성공한다.', async () => {
-    // given
-    const rss = await rssRepository.save(
-      RssFixture.createRssFixture({
-        rssUrl: 'https://test.com/rss',
-      }),
+  it('[401] 관리자 로그인이 되어 있지 않을 경우 RSS 승인을 실패한다.', async () => {
+    // when
+    const noCookieResponse = await agent.post(
+      `/api/rss/accept/${Number.MAX_SAFE_INTEGER}`,
     );
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      status: HttpStatus.OK,
-    });
+    const noSessionResponse = await agent
+      .post(`/api/rss/accept/${Number.MAX_SAFE_INTEGER}`)
+      .set('Cookie', 'sessionId=invalid');
 
+    // then
+    expect(noCookieResponse.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(noSessionResponse.status).toBe(HttpStatus.UNAUTHORIZED);
+  });
+
+  it('[404] 대기 목록에 없는 RSS를 승인할 경우 RSS 승인을 실패한다.', async () => {
     // when
     const response = await agent
-      .post(`/api/rss/accept/${rss.id}`)
+      .post(`/api/rss/accept/${Number.MAX_SAFE_INTEGER}`)
       .set('Cookie', 'sessionId=testSessionId');
 
     // then
-    expect(response.status).toBe(HttpStatus.CREATED);
-
-    // cleanup
-    await rssAcceptRepository.delete({ rssUrl: rss.rssUrl });
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
 
   it('[400] 잘못된 RSS URL을 승인할 경우 RSS 승인을 실패한다.', async () => {
@@ -79,27 +79,27 @@ describe('POST /api/rss/accept/{rssId} E2E Test', () => {
     expect(response.status).toBe(HttpStatus.BAD_REQUEST);
   });
 
-  it('[404] 대기 목록에 없는 RSS를 승인할 경우 RSS 승인을 실패한다.', async () => {
+  it('[201] 관리자 로그인이 되어 있을 경우 RSS 승인을 성공한다.', async () => {
+    // given
+    const rss = await rssRepository.save(
+      RssFixture.createRssFixture({
+        rssUrl: 'https://test.com/rss',
+      }),
+    );
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: HttpStatus.OK,
+    });
+
     // when
     const response = await agent
-      .post(`/api/rss/accept/${Number.MAX_SAFE_INTEGER}`)
+      .post(`/api/rss/accept/${rss.id}`)
       .set('Cookie', 'sessionId=testSessionId');
 
     // then
-    expect(response.status).toBe(HttpStatus.NOT_FOUND);
-  });
+    expect(response.status).toBe(HttpStatus.CREATED);
 
-  it('[401] 관리자 로그인이 되어 있지 않을 경우 RSS 승인을 실패한다.', async () => {
-    // when
-    const noCookieResponse = await agent.post(
-      `/api/rss/accept/${Number.MAX_SAFE_INTEGER}`,
-    );
-    const noSessionResponse = await agent
-      .post(`/api/rss/accept/${Number.MAX_SAFE_INTEGER}`)
-      .set('Cookie', 'sessionId=invalid');
-
-    // then
-    expect(noCookieResponse.status).toBe(HttpStatus.UNAUTHORIZED);
-    expect(noSessionResponse.status).toBe(HttpStatus.UNAUTHORIZED);
+    // cleanup
+    await rssAcceptRepository.delete({ rssUrl: rss.rssUrl });
   });
 });

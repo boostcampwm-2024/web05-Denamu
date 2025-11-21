@@ -21,6 +21,20 @@ describe('PATCH /api/user/password E2E Test', () => {
     userRepository = app.get(UserRepository);
   });
 
+  it('[404] 존재하지 않는 비밀번호 세션 ID를 통해 비밀번호 변경 요청을 할 경우 비밀번호 변경을 실패한다.', async () => {
+    // given
+    const requestDto = new ResetPasswordRequestDto({
+      uuid: 'non-existent-or-expired-uuid',
+      password: 'test1234@',
+    });
+
+    // when
+    const response = await agent.patch('/api/user/password').send(requestDto);
+
+    // then
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
+  });
+
   it('[200] 존재하는 비밀번호 세션 ID를 통해 비밀번호 변경 요청을 할 경우 비밀번호 변경을 성공한다.', async () => {
     // given
     const uuid = 'test-reset-password-uuid';
@@ -50,19 +64,5 @@ describe('PATCH /api/user/password E2E Test', () => {
     expect(await bcrypt.compare(user.password, updatedUser.password)).toBe(
       false,
     );
-  });
-
-  it('[404] 존재하지 않는 비밀번호 세션 ID를 통해 비밀번호 변경 요청을 할 경우 비밀번호 변경을 실패한다.', async () => {
-    // given
-    const requestDto = new ResetPasswordRequestDto({
-      uuid: 'non-existent-or-expired-uuid',
-      password: 'test1234@',
-    });
-
-    // when
-    const response = await agent.patch('/api/user/password').send(requestDto);
-
-    // then
-    expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
 });

@@ -76,6 +76,30 @@ describe('DELETE /api/like/{feedId} E2E Test', () => {
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
 
+  it('[404] 좋아요를 안 했을 경우 좋아요 삭제를 실패한다.', async () => {
+    // given
+    const requestDto = new ManageLikeRequestDto({
+      feedId: feed.id,
+    });
+    const accessToken = userService.createToken(
+      {
+        id: user.id,
+        email: user.email,
+        userName: user.userName,
+        role: 'user',
+      },
+      'access',
+    );
+
+    // when
+    const response = await agent
+      .delete(`/api/like/${requestDto.feedId}`)
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    // then
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
+  });
+
   it('[200] 로그인이 되어 있고 좋아요를 한 경우 좋아요 삭제를 성공한다.', async () => {
     // given
     const likeRepository = app.get(LikeRepository);
@@ -104,29 +128,5 @@ describe('DELETE /api/like/{feedId} E2E Test', () => {
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
-  });
-
-  it('[404] 좋아요를 안 했을 경우 좋아요 삭제를 실패한다.', async () => {
-    // given
-    const requestDto = new ManageLikeRequestDto({
-      feedId: feed.id,
-    });
-    const accessToken = userService.createToken(
-      {
-        id: user.id,
-        email: user.email,
-        userName: user.userName,
-        role: 'user',
-      },
-      'access',
-    );
-
-    // when
-    const response = await agent
-      .delete(`/api/like/${requestDto.feedId}`)
-      .set('Authorization', `Bearer ${accessToken}`);
-
-    // then
-    expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
 });

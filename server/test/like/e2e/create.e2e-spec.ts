@@ -80,34 +80,6 @@ describe('POST /api/like E2E Test', () => {
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
 
-  it('[201] 로그인이 되어 있으며 좋아요를 한 적이 없을 경우 좋아요 등록을 성공한다.', async () => {
-    // given
-    const requestDto = new ManageLikeRequestDto({
-      feedId: feed.id,
-    });
-    const accessToken = userService.createToken(
-      {
-        id: user.id,
-        email: user.email,
-        userName: user.userName,
-        role: 'user',
-      },
-      'access',
-    );
-
-    // when
-    const response = await agent
-      .post('/api/like')
-      .set('Authorization', `Bearer ${accessToken}`)
-      .send(requestDto);
-
-    // then
-    expect(response.status).toBe(HttpStatus.CREATED);
-
-    // cleanup
-    await likeRepository.delete({ user: user, feed: feed });
-  });
-
   it('[409] 이미 좋아요를 한 게시글일 경우 좋아요 등록을 실패한다.', async () => {
     // given
     const like = await likeRepository.save({
@@ -138,5 +110,33 @@ describe('POST /api/like E2E Test', () => {
 
     // cleanup
     await likeRepository.delete(like.id);
+  });
+
+  it('[201] 로그인이 되어 있으며 좋아요를 한 적이 없을 경우 좋아요 등록을 성공한다.', async () => {
+    // given
+    const requestDto = new ManageLikeRequestDto({
+      feedId: feed.id,
+    });
+    const accessToken = userService.createToken(
+      {
+        id: user.id,
+        email: user.email,
+        userName: user.userName,
+        role: 'user',
+      },
+      'access',
+    );
+
+    // when
+    const response = await agent
+      .post('/api/like')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send(requestDto);
+
+    // then
+    expect(response.status).toBe(HttpStatus.CREATED);
+
+    // cleanup
+    await likeRepository.delete({ user: user, feed: feed });
   });
 });

@@ -20,6 +20,19 @@ describe('POST /api/user/delete-account/confirm E2E Test', () => {
     userRepository = app.get(UserRepository);
   });
 
+  it('[404] 회원 탈퇴 인증 코드가 만료되었거나 잘 못된 경우 회원 탈퇴를 실패한다.', async () => {
+    // given
+    const requestDto = new ConfirmDeleteAccountDto({ token: 'invalid-token' });
+
+    // when
+    const response = await agent
+      .post('/api/user/delete-account/confirm')
+      .send(requestDto);
+
+    // then
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
+  });
+
   it('[200] 회원 탈퇴 인증 코드가 있을 경우 회원 탈퇴를 성공한다.', async () => {
     // given
     const token = 'test-delete-account-token';
@@ -42,18 +55,5 @@ describe('POST /api/user/delete-account/confirm E2E Test', () => {
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
-  });
-
-  it('[404] 회원 탈퇴 인증 코드가 만료되었거나 잘 못된 경우 회원 탈퇴를 실패한다.', async () => {
-    // given
-    const requestDto = new ConfirmDeleteAccountDto({ token: 'invalid-token' });
-
-    // when
-    const response = await agent
-      .post('/api/user/delete-account/confirm')
-      .send(requestDto);
-
-    // then
-    expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
 });

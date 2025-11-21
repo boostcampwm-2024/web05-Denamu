@@ -61,32 +61,6 @@ describe('PATCH /api/comment E2E Test', () => {
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 
-  it('[401] 본인이 작성한 댓글이 아닐 경우 댓글 수정을 실패한다.', async () => {
-    // given
-    const requestDto = new UpdateCommentRequestDto({
-      commentId: comment.id,
-      newComment: 'newComment',
-    });
-    const accessToken = userService.createToken(
-      {
-        id: Number.MAX_SAFE_INTEGER,
-        email: user.email,
-        userName: user.userName,
-        role: 'user',
-      },
-      'access',
-    );
-
-    // when
-    const response = await agent
-      .patch('/api/comment')
-      .set('Authorization', `Bearer ${accessToken}`)
-      .send(requestDto);
-
-    // then
-    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
-  });
-
   it('[404] 댓글이 존재하지 않을 경우 댓글 수정을 실패한다.', async () => {
     // given
     const requestDto = new UpdateCommentRequestDto({
@@ -111,6 +85,32 @@ describe('PATCH /api/comment E2E Test', () => {
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
+  });
+
+  it('[401] 본인이 작성한 댓글이 아닐 경우 댓글 수정을 실패한다.', async () => {
+    // given
+    const requestDto = new UpdateCommentRequestDto({
+      commentId: comment.id,
+      newComment: 'newComment',
+    });
+    const accessToken = userService.createToken(
+      {
+        id: Number.MAX_SAFE_INTEGER,
+        email: user.email,
+        userName: user.userName,
+        role: 'user',
+      },
+      'access',
+    );
+
+    // when
+    const response = await agent
+      .patch('/api/comment')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send(requestDto);
+
+    // then
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 
   it('[200] 본인이 작성한 댓글일 경우 댓글 수정을 성공한다.', async () => {

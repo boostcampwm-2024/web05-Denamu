@@ -28,6 +28,39 @@ describe('DELETE /api/file/{fileId} E2E Test', () => {
     );
   });
 
+  it('[401] 파일에 삭제 권한이 없을 경우 파일 삭제를 실패한다.', async () => {
+    // when
+    const response = await agent.delete(`/api/file/${Number.MAX_SAFE_INTEGER}`);
+
+    // then
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+  });
+
+  it('[404] 파일이 서비스에 존재하지 않을 경우 파일 삭제를 실패한다.', async () => {
+    // given
+    jest.mock('fs/promises', () => ({
+      access: jest.fn().mockResolvedValue(null),
+      unlink: jest.fn().mockResolvedValue(null),
+    }));
+    const accessToken = userService.createToken(
+      {
+        id: user.id,
+        email: user.email,
+        userName: user.userName,
+        role: 'user',
+      },
+      'access',
+    );
+
+    // when
+    const response = await agent
+      .delete(`/api/file/${Number.MAX_SAFE_INTEGER}`)
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    // then
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
+  });
+
   it('[200] DB에서 파일을 삭제했지만 FS 라이브러리릍 통해서 실패했을 경우에 서비스에서 파일 삭제를 성공한다.', async () => {
     // given
     file = await fileRepository.save(
@@ -64,12 +97,23 @@ describe('DELETE /api/file/{fileId} E2E Test', () => {
     jest.mock('fs/promises', () => ({
       unlink: jest.fn().mockResolvedValue(null),
     }));
+    const accessToken = userService.createToken(
+      {
+        id: user.id,
+        email: user.email,
+        userName: user.userName,
+        role: 'user',
+      },
+      'access',
+    );
 
     // when
-    const response = await agent.delete('/api/file/1');
+    const response = await agent
+      .delete(`/api/file/${file.id}`)
+      .set('Authorization', `Bearer ${accessToken}`);
 
     // then
-    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(response.status).toBe(HttpStatus.OK);
   });
 
   it('[200] 파일 삭제 요청을 받을 경우 파일 삭제를 성공한다.', async () => {
@@ -99,39 +143,5 @@ describe('DELETE /api/file/{fileId} E2E Test', () => {
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
-  });
-
-  it('[401] 파일에 삭제 권한이 없을 경우 파일 삭제를 실패한다.', async () => {
-    // when
-    const response = await agent.delete(`/api/file/${Number.MAX_SAFE_INTEGER}`);
-
-    // then
-    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
-  });
-
-  it('[404] 파일이 서비스에 존재하지 않을 경우 파일 삭제를 실패한다.', async () => {
-    // given
-    jest.mock('fs/promises', () => ({
-      access: jest.fn().mockResolvedValue(null),
-      unlink: jest.fn().mockResolvedValue(null),
-    }));
-    jest.spyOn(fileRepository, 'findOne').mockResolvedValue(undefined);
-    const accessToken = userService.createToken(
-      {
-        id: user.id,
-        email: user.email,
-        userName: user.userName,
-        role: 'user',
-      },
-      'access',
-    );
-
-    // when
-    const response = await agent
-      .delete(`/api/file/${Number.MAX_SAFE_INTEGER}`)
-      .set('Authorization', `Bearer ${accessToken}`);
-
-    // then
-    expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
 });

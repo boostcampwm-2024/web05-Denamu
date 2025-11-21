@@ -35,6 +35,21 @@ describe('GET /api/feed/detail/{feedId} E2E Test', () => {
     });
   });
 
+  it('[404] 존재하지 않는 피드 ID로 요청할 경우 게시글 상세 조회에 실패한다.', async () => {
+    // given
+    const feedDetailRequestDto = new ManageFeedRequestDto({
+      feedId: Number.MAX_SAFE_INTEGER,
+    });
+
+    // when
+    const response = await agent.get(
+      `/api/feed/detail/${feedDetailRequestDto.feedId}`,
+    );
+
+    // then
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
+  });
+
   it('[200] 존재하는 피드 ID로 요청할 경우 게시글 상세 조회에 성공한다.', async () => {
     // given
     const feedDetailRequestDto = new ManageFeedRequestDto({
@@ -66,20 +81,5 @@ describe('GET /api/feed/detail/{feedId} E2E Test', () => {
     expect(response.status).toBe(HttpStatus.OK);
     expect(response.body.data.id).toBe(feedList[1].id);
     expect(response.body.data.tag).toStrictEqual([]);
-  });
-
-  it('[404] 존재하지 않는 피드 ID로 요청할 경우 게시글 상세 조회에 실패한다.', async () => {
-    // given
-    const feedDetailRequestDto = new ManageFeedRequestDto({
-      feedId: Number.MAX_SAFE_INTEGER,
-    });
-
-    // when
-    const response = await agent.get(
-      `/api/feed/detail/${feedDetailRequestDto.feedId}`,
-    );
-
-    // then
-    expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
 });

@@ -20,6 +20,19 @@ describe('POST /api/user/certificate E2E Test', () => {
     userRepository = app.get(UserRepository);
   });
 
+  it('[404] 존재하지 않거나 만료된 UUID로 인증을 요청할 경우 회원 가입 인증을 실패한다.', async () => {
+    // given
+    const requestDto = new CertificateUserRequestDto({
+      uuid: 'non-existent-or-expired-uuid',
+    });
+
+    // when
+    const response = await agent.post('/api/user/certificate').send(requestDto);
+
+    // then
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
+  });
+
   it('[200] 올바른 UUID로 인증을 요청할 경우 회원 가입 인증을 성공한다.', async () => {
     // given
     const uuid = 'test-certificate-uuid';
@@ -38,18 +51,5 @@ describe('POST /api/user/certificate E2E Test', () => {
     });
     expect(savedUser).toBeDefined();
     expect(savedUser.email).toBe(userEntity.email);
-  });
-
-  it('[404] 존재하지 않거나 만료된 UUID로 인증을 요청할 경우 회원 가입 인증을 실패한다.', async () => {
-    // given
-    const requestDto = new CertificateUserRequestDto({
-      uuid: 'non-existent-or-expired-uuid',
-    });
-
-    // when
-    const response = await agent.post('/api/user/certificate').send(requestDto);
-
-    // then
-    expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
 });

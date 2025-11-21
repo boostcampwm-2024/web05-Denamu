@@ -55,15 +55,15 @@ describe('POST /api/comment E2E Test', () => {
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 
-  it('[404] 회원 정보가 없을 경우 댓글 등록을 실패한다.', async () => {
+  it('[404] 게시글이 존재하지 않을 경우 댓글 등록을 실패한다.', async () => {
     // given
     const requestDto = new CreateCommentRequestDto({
       comment: 'test',
-      feedId: feed.id,
+      feedId: Number.MAX_SAFE_INTEGER,
     });
     const accessToken = userService.createToken(
       {
-        id: Number.MAX_SAFE_INTEGER,
+        id: user.id,
         email: user.email,
         userName: user.userName,
         role: 'user',
@@ -81,15 +81,15 @@ describe('POST /api/comment E2E Test', () => {
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
 
-  it('[404] 게시글이 존재하지 않을 경우 댓글 등록을 실패한다.', async () => {
+  it('[404] 회원 정보가 없을 경우 댓글 등록을 실패한다.', async () => {
     // given
     const requestDto = new CreateCommentRequestDto({
       comment: 'test',
-      feedId: Number.MAX_SAFE_INTEGER,
+      feedId: feed.id,
     });
     const accessToken = userService.createToken(
       {
-        id: user.id,
+        id: Number.MAX_SAFE_INTEGER,
         email: user.email,
         userName: user.userName,
         role: 'user',

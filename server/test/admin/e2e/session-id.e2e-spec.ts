@@ -22,16 +22,6 @@ describe('GET /api/admin/sessionId E2E Test', () => {
     );
   });
 
-  it('[200] 세션 ID가 존재할 경우 관리자 자동 로그인을 성공한다.', async () => {
-    // when
-    const response = await agent
-      .get('/api/admin/sessionId')
-      .set('Cookie', 'sessionId=testSessionId');
-
-    // then
-    expect(response.status).toBe(HttpStatus.OK);
-  });
-
   it('[401] 세션 ID가 존재하지 않을 경우 관리자 자동 로그인을 실패한다.', async () => {
     // when
     const response = await agent
@@ -48,5 +38,15 @@ describe('GET /api/admin/sessionId E2E Test', () => {
 
     // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+  });
+
+  it('[200] 세션 ID가 존재할 경우 관리자 자동 로그인을 성공한다.', async () => {
+    // when
+    const response = await agent
+      .get('/api/admin/sessionId')
+      .set('Cookie', 'sessionId=testSessionId');
+
+    // then
+    expect(response.status).toBe(HttpStatus.OK);
   });
 });

@@ -33,6 +33,14 @@ describe('POST /api/feed/{feedId} E2E Test', () => {
     await redisService.sadd(`feed:${feed.id}:ip`, testIp);
   });
 
+  it('[404] 피드가 서비스에 존재하지 않을 경우 조회수 상승을 실패한다.', async () => {
+    // when
+    const response = await agent.post(`/api/feed/${Number.MAX_SAFE_INTEGER}`);
+
+    // then
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
+  });
+
   it('[200] 피드를 읽은 기록이 없을 경우 조회수 상승을 성공한다.', async () => {
     // given
     const testNewIp = '123.234.123.234';
@@ -63,14 +71,6 @@ describe('POST /api/feed/{feedId} E2E Test', () => {
       ]);
       await feedRepository.update(feed.id, { viewCount: 0 });
     }
-  });
-
-  it('[404] 피드가 서비스에 존재하지 않을 경우 조회수 상승을 실패한다.', async () => {
-    // when
-    const response = await agent.post(`/api/feed/${Number.MAX_SAFE_INTEGER}`);
-
-    // then
-    expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
 
   it('[200] 읽은 기록 쿠키가 존재할 경우 조회수 상승을 하지 않는 행위를 성공한다.', async () => {

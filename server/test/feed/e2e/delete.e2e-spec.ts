@@ -8,10 +8,14 @@ import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../fixture/user.fixture';
 import * as supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
+import { RssAccept } from '../../../src/rss/entity/rss.entity';
 
 describe('DELETE /api/feed/{feedId} E2E Test', () => {
   let app: INestApplication;
   let feed: Feed;
+  let feedRepository: FeedRepository;
+  let rssAcceptRepository: RssAcceptRepository;
+  let rssAccept: RssAccept;
   let agent: TestAgent;
 
   beforeAll(async () => {
@@ -19,33 +23,26 @@ describe('DELETE /api/feed/{feedId} E2E Test', () => {
     agent = supertest(app.getHttpServer());
 
     const userRepository = app.get(UserRepository);
-    const rssAcceptRepository = app.get(RssAcceptRepository);
-    const feedRepository = app.get(FeedRepository);
+    rssAcceptRepository = app.get(RssAcceptRepository);
+    feedRepository = app.get(FeedRepository);
 
     await userRepository.save(await UserFixture.createUserCryptFixture());
-    const rssAcceptInformation = await rssAcceptRepository.save(
+    rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
-    );
-    feed = await feedRepository.save(
-      FeedFixture.createFeedFixture(rssAcceptInformation),
     );
   });
 
-  it('[200] 원본 게시글이 존재할 경우 조회를 성공한다.', async () => {
-    // given
-    global.fetch = jest
-      .fn()
-      .mockResolvedValue({ ok: true, status: HttpStatus.OK });
-
+  it('[404] 존재하지 않는 게시글 ID에 요청을 보낼 경우 404를 응답한다.', async () => {
     // when
-    const response = await agent.delete(`/api/feed/${feed.id}`);
+    const response = await agent.delete(`/api/feed/${Number.MAX_SAFE_INTEGER}`);
 
     // then
-    expect(response.status).toBe(HttpStatus.OK);
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
 
   it('[404] 원본 게시글이 존재하지 않을 경우 서비스에서 게시글 정보를 삭제하여 조회를 실패한다.', async () => {
     // given
+    feed = await feedRepository.save(FeedFixture.createFeedFixture(rssAccept));
     global.fetch = jest
       .fn()
       .mockResolvedValue({ ok: false, status: HttpStatus.NOT_FOUND });
@@ -57,11 +54,20 @@ describe('DELETE /api/feed/{feedId} E2E Test', () => {
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
 
-  it('[404] 존재하지 않는 게시글 ID에 요청을 보낼 경우 404를 응답한다.', async () => {
+  it('[200] 원본 게시글이 존재할 경우 조회를 성공한다.', async () => {
+    // given
+    feed = await feedRepository.save(FeedFixture.createFeedFixture(rssAccept));
+    global.fetch = jest
+      .fn()
+      .mockResolvedValue({ ok: true, status: HttpStatus.OK });
+
     // when
-    const response = await agent.delete(`/api/feed/${Number.MAX_SAFE_INTEGER}`);
+    const response = await agent.delete(`/api/feed/${feed.id}`);
 
     // then
-    expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    expect(response.status).toBe(HttpStatus.OK);
+
+    // cleanup
+    await feedRepository.delete(feed.id);
   });
 });

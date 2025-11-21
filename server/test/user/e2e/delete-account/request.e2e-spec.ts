@@ -18,6 +18,14 @@ describe('POST /api/user/delete-account/request E2E Test', () => {
     userService = app.get(UserService);
   });
 
+  it('[401] 로그인 되지 않은 유저가 회원 탈퇴를 신청할 경우 회원 탈퇴 신청을 실패한다.', async () => {
+    // when
+    const response = await agent.post('/api/user/delete-account/request');
+
+    // then
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+  });
+
   it('[200] 회원 탈퇴 신청을 받을 경우 회원 탈퇴 신청을 성공한다.', async () => {
     // given
     const userEntity = await UserFixture.createUserCryptFixture();
@@ -39,13 +47,5 @@ describe('POST /api/user/delete-account/request E2E Test', () => {
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
-  });
-
-  it('[401] 로그인 되지 않은 유저가 회원 탈퇴를 신청할 경우 회원 탈퇴 신청을 실패한다.', async () => {
-    // when
-    const response = await agent.post('/api/user/delete-account/request');
-
-    // then
-    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 });

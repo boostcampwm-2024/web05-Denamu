@@ -35,6 +35,37 @@ describe('POST /api/rss/reject/{rssId} E2E Test', () => {
     ]);
   });
 
+  it('[401] 관리자 로그인이 되어 있지 않은 경우 RSS 거부를 실패한다.', async () => {
+    // when
+    const noCookieResponse = await agent.post(
+      `/api/rss/reject/${Number.MAX_SAFE_INTEGER}`,
+    );
+    const noSessionResponse = await agent
+      .post(`/api/rss/reject/${Number.MAX_SAFE_INTEGER}`)
+      .set('Cookie', 'sessionId=invalid');
+
+    // then
+    expect(noCookieResponse.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(noSessionResponse.status).toBe(HttpStatus.UNAUTHORIZED);
+  });
+
+  it('[404] 존재하지 않는 RSS를 거부할 경우 RSS 거부를 실패한다.', async () => {
+    // given
+    const REJECT_REASON = '거절 사유';
+    const requestDTO = new RejectRssRequestDto({
+      description: REJECT_REASON,
+    });
+
+    // when
+    const response = await agent
+      .post(`/api/rss/reject/${Number.MAX_SAFE_INTEGER}`)
+      .set('Cookie', 'sessionId=testSessionId')
+      .send(requestDTO);
+
+    // then
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
+  });
+
   it('[201] 신청된 RSS를 거부할 경우 RSS 거부를 성공한다.', async () => {
     // given
     const REJECT_REASON = '거절 사유';
@@ -56,36 +87,5 @@ describe('POST /api/rss/reject/{rssId} E2E Test', () => {
     // then
     expect(response.status).toBe(HttpStatus.CREATED);
     expect(accepted).not.toBeNull();
-  });
-
-  it('[404] 존재하지 않는 RSS를 거부할 경우 RSS 거부를 실패한다.', async () => {
-    // given
-    const REJECT_REASON = '거절 사유';
-    const requestDTO = new RejectRssRequestDto({
-      description: REJECT_REASON,
-    });
-
-    // when
-    const response = await agent
-      .post(`/api/rss/reject/${Number.MAX_SAFE_INTEGER}`)
-      .set('Cookie', 'sessionId=testSessionId')
-      .send(requestDTO);
-
-    // then
-    expect(response.status).toBe(HttpStatus.NOT_FOUND);
-  });
-
-  it('[401] 관리자 로그인이 되어 있지 않은 경우 RSS 거부를 실패한다.', async () => {
-    // when
-    const noCookieResponse = await agent.post(
-      `/api/rss/reject/${Number.MAX_SAFE_INTEGER}`,
-    );
-    const noSessionResponse = await agent
-      .post(`/api/rss/reject/${Number.MAX_SAFE_INTEGER}`)
-      .set('Cookie', 'sessionId=invalid');
-
-    // then
-    expect(noCookieResponse.status).toBe(HttpStatus.UNAUTHORIZED);
-    expect(noSessionResponse.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 });

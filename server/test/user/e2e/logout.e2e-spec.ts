@@ -23,6 +23,14 @@ describe('POST /api/user/logout E2E Test', () => {
     );
   });
 
+  it('[401] Access Token이 존재하지 않을 경우 로그아웃을 실패한다.', async () => {
+    // when
+    const response = await agent.post('/api/user/logout');
+
+    // then
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+  });
+
   it('[200] 로그인된 상태일 경우 로그아웃을 성공한다.', async () => {
     // given
     const accessToken = userService.createToken(
@@ -42,13 +50,5 @@ describe('POST /api/user/logout E2E Test', () => {
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
-  });
-
-  it('[401] Access Token이 존재하지 않을 경우 로그아웃을 실패한다.', async () => {
-    // when
-    const response = await agent.post('/api/user/logout');
-
-    // then
-    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 });

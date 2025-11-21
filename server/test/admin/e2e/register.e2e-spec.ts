@@ -24,6 +24,34 @@ describe('POST /api/admin/register E2E Test', () => {
     );
   });
 
+  it('[401] 관리자가 로그인 상태가 아닐 경우 회원가입을 실패한다.', async () => {
+    // given
+    const newAdminDto = new RegisterAdminRequestDto({
+      loginId: 'testNewAdminId',
+      password: 'testNewAdminPassword!',
+    });
+
+    // when
+    const response = await agent.post('/api/admin/register').send(newAdminDto);
+
+    // then
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+  });
+
+  it('[409] 중복된 ID로 회원가입을 할 경우 다른 관리자 계정 회원가입을 실패한다.', async () => {
+    // given
+    const newAdminDto = new RegisterAdminRequestDto(AdminFixture.GENERAL_ADMIN);
+
+    // when
+    const response = await agent
+      .post('/api/admin/register')
+      .send(newAdminDto)
+      .set('Cookie', 'sessionId=testSessionId');
+
+    //then
+    expect(response.status).toBe(HttpStatus.CONFLICT);
+  });
+
   it('[201] 관리자 로그인이 되어 있을 경우 다른 관리자 계정 회원가입을 성공한다.', async () => {
     // given
     const newAdminDto = new RegisterAdminRequestDto({
@@ -42,33 +70,5 @@ describe('POST /api/admin/register E2E Test', () => {
 
     // cleanup
     await adminRepository.delete({ loginId: newAdminDto.loginId });
-  });
-
-  it('[409] 중복된 ID로 회원가입을 할 경우 다른 관리자 계정 회원가입을 실패한다.', async () => {
-    // given
-    const newAdminDto = new RegisterAdminRequestDto(AdminFixture.GENERAL_ADMIN);
-
-    // when
-    const response = await agent
-      .post('/api/admin/register')
-      .send(newAdminDto)
-      .set('Cookie', 'sessionId=testSessionId');
-
-    //then
-    expect(response.status).toBe(HttpStatus.CONFLICT);
-  });
-
-  it('[401] 관리자가 로그인 상태가 아닐 경우 회원가입을 실패한다.', async () => {
-    // given
-    const newAdminDto = new RegisterAdminRequestDto({
-      loginId: 'testNewAdminId',
-      password: 'testNewAdminPassword!',
-    });
-
-    // when
-    const response = await agent.post('/api/admin/register').send(newAdminDto);
-
-    // then
-    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 });
