@@ -212,9 +212,19 @@ describe('FeedCrawler', () => {
     it('모든 RSS 객체에 대해 병렬 처리해야 한다', async () => {
       // Given
       const startTime = new Date('2024-01-01T12:00:00Z');
+      const callOrder: number[] = [];
+
+      // 병렬 실행 검증: 첫 번째 호출에 지연을 주어 병렬 실행 시 순서가 뒤바뀌는지 확인
       mockFeedParserManager.fetchAndParse
-        .mockResolvedValueOnce([mockFeedDetails[0]])
-        .mockResolvedValueOnce([mockFeedDetails[1]]);
+        .mockImplementationOnce(async () => {
+          await new Promise((resolve) => setTimeout(resolve, 50));
+          callOrder.push(1);
+          return [mockFeedDetails[0]];
+        })
+        .mockImplementationOnce(async () => {
+          callOrder.push(2);
+          return [mockFeedDetails[1]];
+        });
 
       // When
       const result = await feedCrawler['feedGroupByRss'](
@@ -225,6 +235,8 @@ describe('FeedCrawler', () => {
       // Then
       expect(mockFeedParserManager.fetchAndParse).toHaveBeenCalledTimes(2);
       expect(result).toEqual([[mockFeedDetails[0]], [mockFeedDetails[1]]]);
+      // 병렬 실행이면 지연이 없는 두 번째가 먼저 완료됨
+      expect(callOrder).toEqual([2, 1]);
     });
 
     it('빈 RSS 배열에 대해 빈 결과를 반환해야 한다', async () => {
@@ -240,5 +252,3 @@ describe('FeedCrawler', () => {
     });
   });
 });
-
-

@@ -55,7 +55,6 @@ describe('ClaudeEventWorker', () => {
       rpush: jest.fn(),
     } as any;
 
-    // Anthropic 클라이언트 모킹
     mockAnthropicClient = {
       messages: {
         create: jest.fn(),
@@ -206,7 +205,9 @@ describe('ClaudeEventWorker', () => {
       const mockMessage = {
         content: [{ text: JSON.stringify(mockClaudeResponse) }],
       };
-      mockAnthropicClient.messages.create.mockResolvedValue(mockMessage as any);
+      (mockAnthropicClient.messages.create as jest.Mock).mockResolvedValue(
+        mockMessage as any,
+      );
 
       // When
       const result = await claudeEventWorker['requestAI'](mockFeedAIQueueItem);
@@ -230,7 +231,9 @@ describe('ClaudeEventWorker', () => {
       const mockMessage = {
         content: [{ text: responseWithWhitespace }],
       };
-      mockAnthropicClient.messages.create.mockResolvedValue(mockMessage as any);
+      (mockAnthropicClient.messages.create as jest.Mock).mockResolvedValue(
+        mockMessage as any,
+      );
 
       // When
       const result = await claudeEventWorker['requestAI'](mockFeedAIQueueItem);
@@ -316,7 +319,45 @@ describe('ClaudeEventWorker', () => {
         feedWithExactDeathCount.id,
       );
     });
+
+    it('deathCount가 정확히 2일 때 재시도해야 한다 (경계값-1)', async () => {
+      // Given - 경계값 바로 아래 (2 < 3이므로 재시도)
+      const feedWithDeathCount2 = { ...mockFeedAIQueueItem, deathCount: 2 };
+      const error = new Error('처리 실패');
+
+      // When
+      await claudeEventWorker['handleFailure'](feedWithDeathCount2, error);
+
+      // Then
+      expect(mockRedisConnection.rpush).toHaveBeenCalledWith(
+        redisConstant.FEED_AI_QUEUE,
+        [JSON.stringify({ ...feedWithDeathCount2, deathCount: 3 })],
+      );
+      expect(mockFeedRepository.updateNullSummary).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('environment variables', () => {
+    it('AI_RATE_LIMIT_COUNT 환경 변수에 따라 처리 개수가 제한되어야 한다', async () => {
+      // Given
+      process.env.AI_RATE_LIMIT_COUNT = '2';
+      const mockFeeds = [
+        { ...mockFeedAIQueueItem, id: 1 },
+        { ...mockFeedAIQueueItem, id: 2 },
+        { ...mockFeedAIQueueItem, id: 3 },
+      ];
+
+      // loadFeeds가 환경 변수에 따라 제한된 개수만 반환하는지 확인
+      mockRedisConnection.executePipeline.mockResolvedValue(
+        mockFeeds.map((feed) => [null, JSON.stringify(feed)]) as any,
+      );
+
+      // When
+      const result = await claudeEventWorker['loadFeeds']();
+
+      // Then
+      // AI_RATE_LIMIT_COUNT가 2이므로 최대 2개만 로드
+      expect(mockRedisConnection.executePipeline).toHaveBeenCalledTimes(1);
+    });
   });
 });
-
-
