@@ -8,7 +8,6 @@ import { RedisService } from '../../../src/common/redis/redis.service';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 import TestAgent from 'supertest/lib/agent';
 import { Feed } from '../../../src/feed/entity/feed.entity';
-import _ from 'lodash';
 
 describe('GET /api/feed/recent E2E Test', () => {
   let app: INestApplication;
@@ -36,7 +35,7 @@ describe('GET /api/feed/recent E2E Test', () => {
   it('[200] 최신 피드 업데이트 요청이 들어올 경우 최신 피드 제공을 성공한다.', async () => {
     // given
     await redisService.executePipeline((pipeline) => {
-      [feeds[0], feeds[1]].forEach((feed) => {
+      feeds.forEach((feed) => {
         pipeline.hset(`${REDIS_KEYS.FEED_RECENT_KEY}:${feed.id}`, {
           id: feed.id,
           blogPlatform: feed.blog.blogPlatform,
@@ -60,7 +59,7 @@ describe('GET /api/feed/recent E2E Test', () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual(
-      Array.from({ length: 2 })
+      feeds
         .map((_, i) => {
           const feed = feeds[i];
           return {
@@ -83,7 +82,7 @@ describe('GET /api/feed/recent E2E Test', () => {
 
     // cleanup
     await redisService.executePipeline((pipeline) => {
-      [feeds[0], feeds[1]].forEach((feed) => {
+      feeds.forEach((feed) => {
         pipeline.del(`${REDIS_KEYS.FEED_RECENT_KEY}:${feed.id}`);
       });
     });
