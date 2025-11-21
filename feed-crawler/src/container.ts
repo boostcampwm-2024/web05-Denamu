@@ -14,7 +14,6 @@ import { Atom10Parser } from './common/parser/formats/atom10-parser';
 import { FeedCrawler } from './feed-crawler';
 import { FullFeedCrawlEventWorker } from './event_worker/workers/full-feed-crawl-event-worker';
 import { RabbitMQConnection } from './common/rmq-access';
-import { RabbitMQConfig } from './common/rabbitmq.config';
 import { RabbitMQManager } from './common/rabbitmq.manager';
 
 container.registerSingleton<DatabaseConnection>(
@@ -80,11 +79,6 @@ container.registerSingleton<FullFeedCrawlEventWorker>(
 container.registerSingleton<RabbitMQConnection>(
   DEPENDENCY_SYMBOLS.RabbitMQConnection,
   RabbitMQConnection,
-);
-
-container.registerSingleton<RabbitMQConfig>(
-  DEPENDENCY_SYMBOLS.RabbitMQConfig,
-  RabbitMQConfig,
 );
 
 container.registerSingleton<RabbitMQManager>(
