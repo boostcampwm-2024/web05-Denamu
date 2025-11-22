@@ -78,8 +78,8 @@ services:
     volumes:
       - denamu-rabbitmq:/var/lib/rabbitmq
       - ./definitions.json:/etc/rabbitmq/definitions.json:ro
-      - ./import-definitions.sh:/etc/rabbitmq/import-definitions.sh
-      - ./check-rabbitmq-ready.sh:/etc/rabbitmq/check-rabbitmq-ready.sh
+      - ./import-definitions.sh:/etc/rabbitmq/import-definitions.sh:ro
+      - ./check-rabbitmq-ready.sh:/etc/rabbitmq/check-rabbitmq-ready.sh:ro
     entrypoint: ["/bin/sh", "/etc/rabbitmq/import-definitions.sh"]
     healthcheck:
       test: [ "CMD", "/bin/sh", "/etc/rabbitmq/check-rabbitmq-ready.sh" ]
