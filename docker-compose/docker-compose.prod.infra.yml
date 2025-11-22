@@ -78,6 +78,7 @@ services:
   # RabbitMQ 서비스
   rabbitmq:
     image: rabbitmq:4.1-management
+    user: "999:999"
     networks:
       - Denamu
     ports:
@@ -87,11 +88,15 @@ services:
       - /var/prod_config/infra/.env.prod
     volumes:
       - denamu-rabbitmq:/var/lib/rabbitmq
+      - ./definitions.json:/etc/rabbitmq/definitions.json:ro
+      - ./import-definitions.sh:/etc/rabbitmq/import-definitions.sh:ro
+      - ./check-rabbitmq-ready.sh:/etc/rabbitmq/check-rabbitmq-ready.sh:ro
+    entrypoint: [ "/bin/sh", "/etc/rabbitmq/import-definitions.sh" ]
     healthcheck:
-      test: [ "CMD", "rabbitmq-diagnostics", "ping" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      test: [ "CMD", "/bin/sh", "/etc/rabbitmq/check-rabbitmq-ready.sh" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
       start_period: 40s
 
   # Redis Metrics

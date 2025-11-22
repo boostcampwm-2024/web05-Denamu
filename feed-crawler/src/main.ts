@@ -10,7 +10,6 @@ import * as schedule from 'node-schedule';
 import { RedisConnection } from './common/redis-access';
 import { FullFeedCrawlEventWorker } from './event_worker/workers/full-feed-crawl-event-worker';
 import { RabbitMQManager } from './common/rabbitmq.manager';
-import { RabbitMQConfig } from './common/rabbitmq.config';
 
 function initializeDependencies() {
   return {
@@ -29,9 +28,6 @@ function initializeDependencies() {
     ),
     rabbitMQManager: container.resolve<RabbitMQManager>(
       DEPENDENCY_SYMBOLS.RabbitMQManager,
-    ),
-    rabbitMQConfig: container.resolve<RabbitMQConfig>(
-      DEPENDENCY_SYMBOLS.RabbitMQConfig,
     ),
   };
 }
@@ -90,7 +86,6 @@ async function initializeRabbitMQ(
     logger.info(`RabbitMQ 초기화 시작...`);
 
     await dependencies.rabbitMQManager.connect();
-    await dependencies.rabbitMQConfig.setup();
 
     logger.info(`RabbitMQ 초기화 완료`);
   } catch (error) {
