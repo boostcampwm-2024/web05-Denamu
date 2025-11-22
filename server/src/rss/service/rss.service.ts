@@ -10,7 +10,6 @@ import {
   RssAcceptRepository,
 } from '../repository/rss.repository';
 import { RegisterRssRequestDto } from '../dto/request/registerRss.dto';
-import { EmailService } from '../../common/email/email.service';
 import { DataSource } from 'typeorm';
 import { Rss, RssReject, RssAccept } from '../entity/rss.entity';
 import { ReadRssResponseDto } from '../dto/response/readRss.dto';
@@ -23,6 +22,7 @@ import { RedisService } from '../../common/redis/redis.service';
 import { DeleteCertificateRssRequestDto } from '../dto/request/deleteCertificateRss.dto';
 import { FeedRepository } from '../../feed/repository/feed.repository';
 import { REDIS_KEYS } from '../../common/redis/redis.constant';
+import { EmailProducer } from '../../common/email/email.producer';
 
 type FullFeedCrawlMessage = {
   rssId: number;
@@ -36,7 +36,7 @@ export class RssService {
     private readonly rssRepository: RssRepository,
     private readonly rssAcceptRepository: RssAcceptRepository,
     private readonly rssRejectRepository: RssRejectRepository,
-    private readonly emailService: EmailService,
+    private readonly emailProducer: EmailProducer,
     private readonly dataSource: DataSource,
     private readonly redisService: RedisService,
     private readonly feedRepository: FeedRepository,
@@ -118,7 +118,7 @@ export class RssService {
       ]);
       return rejectRss;
     });
-    this.emailService.sendRssMail(
+    await this.emailProducer.produceRssRegistration(
       rejectRss,
       false,
       rssRejectBodyDto.description,
@@ -174,7 +174,7 @@ export class RssService {
     });
 
     this.enqueueFullFeedCrawlMessage(rssAccept.id);
-    this.emailService.sendRssMail(rssAccept, true);
+    await this.emailProducer.produceRssRegistration(rssAccept, true);
   }
 
   private async enqueueFullFeedCrawlMessage(rssId: number) {
@@ -219,7 +219,7 @@ export class RssService {
       300,
     );
 
-    this.emailService.sendRssRemoveCertificationMail(
+    await this.emailProducer.produceRssRemoval(
       rssAccept?.userName ?? rssWait.userName,
       requestDeleteRssDto.email,
       requestDeleteRssDto.blogUrl,
