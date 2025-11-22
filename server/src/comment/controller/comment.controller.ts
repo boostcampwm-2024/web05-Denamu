@@ -8,7 +8,6 @@ import {
   Param,
   Patch,
   Post,
-  Req,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
@@ -16,13 +15,14 @@ import { CommentService } from '../service/comment.service';
 import { ApiCreateComment } from '../api-docs/createComment.api-docs';
 import { ApiDeleteComment } from '../api-docs/deleteComment.api-docs';
 import { ApiUpdateComment } from '../api-docs/updateComment.api-docs';
-import { JwtGuard } from '../../common/guard/jwt.guard';
+import { JwtGuard, Payload } from '../../common/guard/jwt.guard';
 import { ApiResponse } from '../../common/response/common.response';
 import { CreateCommentRequestDto } from '../dto/request/createComment.dto';
 import { DeleteCommentRequestDto } from '../dto/request/deleteComment.dto';
 import { UpdateCommentRequestDto } from '../dto/request/updateComment.dto';
 import { GetCommentRequestDto } from '../dto/request/getComment.dto';
 import { ApiGetComment } from '../api-docs/getComment.api-docs';
+import { CurrentUser } from '../../common/decorator';
 
 @ApiTags('Comment')
 @Controller('comment')
@@ -43,8 +43,11 @@ export class CommentController {
   @Post()
   @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.CREATED)
-  async createComment(@Req() req, @Body() commentDto: CreateCommentRequestDto) {
-    await this.commentService.create(req.user, commentDto);
+  async createComment(
+    @CurrentUser() user: Payload,
+    @Body() commentDto: CreateCommentRequestDto,
+  ) {
+    await this.commentService.create(user, commentDto);
     return ApiResponse.responseWithNoContent('댓글 등록을 성공했습니다.');
   }
 
@@ -52,8 +55,11 @@ export class CommentController {
   @Delete()
   @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.OK)
-  async deleteComment(@Req() req, @Body() commentDto: DeleteCommentRequestDto) {
-    await this.commentService.delete(req.user, commentDto);
+  async deleteComment(
+    @CurrentUser() user: Payload,
+    @Body() commentDto: DeleteCommentRequestDto,
+  ) {
+    await this.commentService.delete(user, commentDto);
     return ApiResponse.responseWithNoContent('댓글 삭제를 성공했습니다.');
   }
 
@@ -61,8 +67,11 @@ export class CommentController {
   @Patch()
   @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.OK)
-  async updateComment(@Req() req, @Body() commentDto: UpdateCommentRequestDto) {
-    await this.commentService.update(req.user, commentDto);
+  async updateComment(
+    @CurrentUser() user: Payload,
+    @Body() commentDto: UpdateCommentRequestDto,
+  ) {
+    await this.commentService.update(user, commentDto);
     return ApiResponse.responseWithNoContent('댓글 수정을 성공했습니다.');
   }
 }
