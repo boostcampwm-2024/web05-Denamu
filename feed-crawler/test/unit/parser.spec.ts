@@ -5,6 +5,11 @@ import { Atom10Parser } from '../../src/common/parser/formats/atom10-parser';
 import { FeedParserManager } from '../../src/common/parser/feed-parser-manager';
 import { RssObj } from '../../src/common/types';
 
+// test시에는 필터링 하는 시간대가 매우 광범위하기에, 시간대를 신경 쓸 필요없음.
+const FIXED_DATE = new Date();
+const FIXED_DATE_UTC = FIXED_DATE.toUTCString();
+const FIXED_DATE_ISO = FIXED_DATE.toISOString();
+
 const RSS_20_SAMPLE = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
@@ -16,13 +21,13 @@ const RSS_20_SAMPLE = `<?xml version="1.0" encoding="UTF-8"?>
       <description>첫 번째 글 내용입니다.</description>
       <content:encoded><![CDATA[<p>첫 번째 글 내용입니다.</p>]]></content:encoded>
       <link>https://rssfeed.com/post1</link>
-      <pubDate>${new Date().toUTCString()}</pubDate>
+      <pubDate>${FIXED_DATE_UTC}</pubDate>
     </item>
     <item>
       <title>&middot; 특수문자 제목 &nbsp;</title>
       <description>두 번째 글 내용입니다.</description>
       <link>https://rssfeed.com/post2</link>
-      <pubDate>${new Date().toUTCString()}</pubDate>
+      <pubDate>${FIXED_DATE_UTC}</pubDate>
     </item>
   </channel>
 </rss>`;
@@ -33,13 +38,13 @@ const ATOM_10_SAMPLE = `<?xml version="1.0" encoding="UTF-8"?>
   <title>테스트 Atom 피드</title>
   <link href="https://atomfeed.com"/>
   <id>https://atomfeed.com</id>
-  <updated>${new Date().toISOString()}</updated>
+  <updated>${FIXED_DATE_ISO}</updated>
   <entry>
     <title>Atom 첫 번째 글</title>
     <link rel="alternate" href="https://atomfeed.com/entry1"/>
     <id>https://atomfeed.com/entry1</id>
-    <published>${new Date().toISOString()}</published>
-    <updated>${new Date().toISOString()}</updated>
+    <published>${FIXED_DATE_ISO}</published>
+    <updated>${FIXED_DATE_ISO}</updated>
     <summary>Atom 첫 번째 글 요약</summary>
     <content>Atom 첫 번째 글 내용</content>
   </entry>
@@ -47,8 +52,8 @@ const ATOM_10_SAMPLE = `<?xml version="1.0" encoding="UTF-8"?>
     <title>&middot; Atom 특수문자 제목 &nbsp;</title>
     <link rel="alternate" href="https://atomfeed.com/entry2"/>
     <id>https://atomfeed.com/entry2</id>
-    <published>${new Date().toISOString()}</published>
-    <updated>${new Date().toISOString()}</updated>
+    <published>${FIXED_DATE_ISO}</published>
+    <updated>${FIXED_DATE_ISO}</updated>
     <summary>Atom 두 번째 글 요약</summary>
   </entry>
 </feed>`;
@@ -79,13 +84,23 @@ describe('Parser 모듈 테스트', () => {
     atom10Parser = new Atom10Parser(parserUtil);
     feedParserManager = new FeedParserManager(rss20Parser, atom10Parser);
 
-    // getThumbnailUrl 메서드 응답 모킹킹
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      text: () =>
-        Promise.resolve(
-          '<html><head><meta property="og:image" content="https://example.com/image.jpg"></head></html>',
-        ),
+    // URL 기반 조건부 fetch 모킹 (순서 의존성 제거)
+    global.fetch = jest.fn().mockImplementation((url: string) => {
+      // RSS/Atom 피드 URL
+      if (url.includes('/rss') || url.includes('denamu.site')) {
+        return Promise.resolve({
+          ok: true,
+          text: () => Promise.resolve(RSS_20_SAMPLE),
+        });
+      }
+      // HTML 페이지 (og:image 추출용)
+      return Promise.resolve({
+        ok: true,
+        text: () =>
+          Promise.resolve(
+            '<html><head><meta property="og:image" content="https://example.com/image.jpg"></head></html>',
+          ),
+      });
     });
   });
 
@@ -114,21 +129,26 @@ describe('Parser 모듈 테스트', () => {
     describe('fetchAndParse', () => {
       describe('RSS 2.0 피드', () => {
         beforeEach(() => {
-          (global.fetch as jest.Mock)
-            .mockResolvedValueOnce({
-              ok: true,
-              text: () => Promise.resolve(RSS_20_SAMPLE),
-            })
-            .mockResolvedValue({
+          // URL 기반 조건부 모킹으로 순서 의존성 제거
+          (global.fetch as jest.Mock).mockImplementation((url: string) => {
+            if (url.includes('denamu.site')) {
+              return Promise.resolve({
+                ok: true,
+                text: () => Promise.resolve(RSS_20_SAMPLE),
+              });
+            }
+            return Promise.resolve({
               ok: true,
               text: () =>
                 Promise.resolve(
                   '<html><head><meta property="og:image" content="https://example.com/image.jpg"></head></html>',
                 ),
             });
+          });
         });
 
         it('정상적인 feedDetail을 반환해야 한다.', async () => {
+          // 고정 날짜보다 이전 시간을 startTime으로 사용하여 피드가 필터링되도록 함
           const startTime = new Date();
           const result = await feedParserManager.fetchAndParse(
             MOCK_RSS_OBJ,
@@ -151,21 +171,26 @@ describe('Parser 모듈 테스트', () => {
 
       describe('Atom 1.0 피드', () => {
         beforeEach(() => {
-          (global.fetch as jest.Mock)
-            .mockResolvedValueOnce({
-              ok: true,
-              text: () => Promise.resolve(ATOM_10_SAMPLE),
-            })
-            .mockResolvedValue({
+          // URL 기반 조건부 모킹으로 순서 의존성 제거
+          (global.fetch as jest.Mock).mockImplementation((url: string) => {
+            if (url.includes('denamu.site')) {
+              return Promise.resolve({
+                ok: true,
+                text: () => Promise.resolve(ATOM_10_SAMPLE),
+              });
+            }
+            return Promise.resolve({
               ok: true,
               text: () =>
                 Promise.resolve(
                   '<html><head><meta property="og:image" content="https://example.com/image.jpg"></head></html>',
                 ),
             });
+          });
         });
 
         it('정상적인 feedDetail을 반환해야 한다.', async () => {
+          // 고정 날짜보다 이전 시간을 startTime으로 사용하여 피드가 필터링되도록 함
           const startTime = new Date();
           const result = await feedParserManager.fetchAndParse(
             MOCK_RSS_OBJ,
@@ -208,9 +233,7 @@ describe('Parser 모듈 테스트', () => {
 
     describe('extractRawFeeds', () => {
       it('RSS 2.0 피드를 올바르게 파싱해야 한다', () => {
-        // Mock the time filter to include all feeds
-        jest.spyOn(Date.prototype, 'setSeconds').mockReturnValue(Date.now());
-
+        // 고정 날짜를 사용하므로 시간 모킹이 필요 없음
         const rawFeeds = rss20Parser['extractRawFeeds'](RSS_20_SAMPLE);
 
         expect(rawFeeds).toHaveLength(2);
