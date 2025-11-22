@@ -9,10 +9,12 @@ import {
   SearchType,
 } from '../../../src/feed/dto/request/searchFeed.dto';
 import TestAgent from 'supertest/lib/agent';
+import { Feed } from '../../../src/feed/entity/feed.entity';
 
 describe('GET /api/feed/search E2E Test', () => {
   let app: INestApplication;
   let agent: TestAgent;
+  let feedList: Feed[];
 
   beforeAll(async () => {
     app = global.testApp;
@@ -20,15 +22,15 @@ describe('GET /api/feed/search E2E Test', () => {
     const feedRepository = app.get(FeedRepository);
     const rssAcceptRepository = app.get(RssAcceptRepository);
 
-    const blog = await rssAcceptRepository.save(
+    const rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
 
     const feeds = Array.from({ length: 5 }).map((_, i) =>
-      FeedFixture.createFeedFixture(blog, _, i + 1),
+      FeedFixture.createFeedFixture(rssAccept, _, i + 1),
     );
 
-    await feedRepository.insert(feeds);
+    feedList = (await feedRepository.save(feeds)).reverse();
   });
 
   it('[200] 검색 결과에 적합한 게시글이 존재할 경우 검색 결과 제공을 성공한다.', async () => {
@@ -42,7 +44,25 @@ describe('GET /api/feed/search E2E Test', () => {
     const response = await agent.get('/api/feed/search').query(requestDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
+    expect(data).toStrictEqual({
+      totalCount: 5,
+      result: Array.from({ length: 4 }).map((_, i) => {
+        const feed = feedList[i];
+        return {
+          id: feed.id,
+          blogName: feed.blog.name,
+          title: feed.title,
+          likes: feed.likeCount,
+          comments: feed.commentCount,
+          path: feed.path,
+          createdAt: feed.createdAt.toISOString(),
+        };
+      }),
+      totalPages: 2,
+      limit: 4,
+    });
   });
 
   it('[200] 검색 결과에 적합한 게시글이 없을 경우 빈 배열 제공을 성공한다.', async () => {
@@ -56,6 +76,13 @@ describe('GET /api/feed/search E2E Test', () => {
     const response = await agent.get('/api/feed/search').query(requestDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
+    expect(data).toStrictEqual({
+      totalCount: 0,
+      result: [],
+      totalPages: 0,
+      limit: 4,
+    });
   });
 });
