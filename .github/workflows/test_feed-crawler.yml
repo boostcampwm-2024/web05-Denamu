@@ -32,17 +32,17 @@ jobs:
         working-directory: ./feed-crawler
         run: npm ci
 
-      # 4. E2E 테스트 실행
-      - name: Run E2E Test
-        working-directory: ./feed-crawler
-        run: npm run test:e2e
-        env:
-          TEST_TIME_INTERVAL: ${{ vars.FEED_CRAWLER_TEST_TIME_INTERVAL }}
-
-      # 5. Unit 테스트 실행
+      # 4. Unit 테스트 실행
       - name: Run Unit Test
         working-directory: ./feed-crawler
         run: npm run test:unit
+        env:
+          TEST_TIME_INTERVAL: ${{ vars.FEED_CRAWLER_TEST_TIME_INTERVAL }}
+
+      # 5. E2E 테스트 실행
+      - name: Run E2E Test
+        working-directory: ./feed-crawler
+        run: npm run test:e2e
         env:
           TEST_TIME_INTERVAL: ${{ vars.FEED_CRAWLER_TEST_TIME_INTERVAL }}
 
