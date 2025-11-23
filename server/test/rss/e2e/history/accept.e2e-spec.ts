@@ -27,6 +27,7 @@ describe('GET /api/rss/history/accept E2E Test', () => {
         'test1234',
       ),
     ]);
+    rssAcceptList.reverse();
   });
 
   it('[401] 관리자 로그인 쿠키가 없을 경우 RSS 승인 기록 조회를 실패한다.', async () => {
@@ -57,19 +58,17 @@ describe('GET /api/rss/history/accept E2E Test', () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual(
-      Array.from({ length: 2 })
-        .map((_, i) => {
-          const rssAccept = rssAcceptList[i];
-          return {
-            id: rssAccept.id,
-            name: rssAccept.name,
-            userName: rssAccept.userName,
-            email: rssAccept.email,
-            rssUrl: rssAccept.rssUrl,
-            blogPlatform: rssAccept.blogPlatform,
-          };
-        })
-        .reverse(),
+      Array.from({ length: 2 }).map((_, i) => {
+        const rssAccept = rssAcceptList[i];
+        return {
+          id: rssAccept.id,
+          name: rssAccept.name,
+          userName: rssAccept.userName,
+          email: rssAccept.email,
+          rssUrl: rssAccept.rssUrl,
+          blogPlatform: rssAccept.blogPlatform,
+        };
+      }),
     );
   });
 });

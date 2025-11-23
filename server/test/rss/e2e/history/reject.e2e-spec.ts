@@ -23,6 +23,7 @@ describe('GET /api/rss/history/reject E2E Test', () => {
       rssRejectRepository.save(rssAcceptData),
       redisService.set('auth:testSessionId', 'test1234'),
     ]);
+    rssRejectList.reverse();
   });
 
   it('[401] 관리자 로그인 쿠키가 없을 경우 RSS 승인 기록 조회를 실패한다.', async () => {
@@ -53,19 +54,17 @@ describe('GET /api/rss/history/reject E2E Test', () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual(
-      Array.from({ length: 2 })
-        .map((_, i) => {
-          const rssReject = rssRejectList[i];
-          return {
-            id: rssReject.id,
-            name: rssReject.name,
-            userName: rssReject.userName,
-            email: rssReject.email,
-            rssUrl: rssReject.rssUrl,
-            description: rssReject.description,
-          };
-        })
-        .reverse(),
+      Array.from({ length: 2 }).map((_, i) => {
+        const rssReject = rssRejectList[i];
+        return {
+          id: rssReject.id,
+          name: rssReject.name,
+          userName: rssReject.userName,
+          email: rssReject.email,
+          rssUrl: rssReject.rssUrl,
+          description: rssReject.description,
+        };
+      }),
     );
   });
 });
