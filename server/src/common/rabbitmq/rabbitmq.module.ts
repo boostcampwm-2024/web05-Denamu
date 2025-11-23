@@ -2,6 +2,7 @@ import { Global, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as amqp from 'amqplib';
 import { RabbitMQService } from './rabbitmq.service';
+import { RabbitMQManager } from './rabbitmq.manager';
 
 @Global()
 @Module({
@@ -15,11 +16,12 @@ import { RabbitMQService } from './rabbitmq.service';
           protocol: 'amqp',
           hostname: configService.get<string>('RABBITMQ_HOST'),
           port: configService.get<number>('RABBITMQ_PORT'),
-          username: configService.get<string>('RABBITMQ_USERNAME'),
-          password: configService.get<string>('RABBITMQ_PASSWORD'),
+          username: configService.get<string>('RABBITMQ_DEFAULT_USER'),
+          password: configService.get<string>('RABBITMQ_DEFAULT_PASS'),
         });
       },
     },
+    RabbitMQManager,
     RabbitMQService,
   ],
   exports: [RabbitMQService],
