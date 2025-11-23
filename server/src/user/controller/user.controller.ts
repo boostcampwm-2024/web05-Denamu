@@ -22,7 +22,11 @@ import { CheckEmailDuplicationRequestDto } from '../dto/request/checkEmailDuplic
 import { LoginUserRequestDto } from '../dto/request/loginUser.dto';
 import { Response } from 'express';
 import { ApiLoginUser } from '../api-docs/loginUser.api-docs';
-import { JwtGuard, Payload, RefreshJwtGuard } from '../../common/guard/jwt.guard';
+import {
+  JwtGuard,
+  Payload,
+  RefreshJwtGuard,
+} from '../../common/guard/jwt.guard';
 import { ApiRefreshToken } from '../api-docs/refreshToken.api-docs';
 import { ApiLogoutUser } from '../api-docs/logoutUser.api-docs';
 import { UpdateUserRequestDto } from '../dto/request/updateUser.dto';
@@ -127,8 +131,8 @@ export class UserController {
   @Post('/delete-account/request')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtGuard)
-  async requestDeleteAccount(@Req() req) {
-    await this.userService.requestDeleteAccount(req.user.id);
+  async requestDeleteAccount(@CurrentUser() user: Payload) {
+    await this.userService.requestDeleteAccount(user.id);
     return ApiResponse.responseWithNoContent(
       '회원탈퇴 신청이 성공적으로 처리되었습니다. 이메일을 확인해주세요.',
     );
