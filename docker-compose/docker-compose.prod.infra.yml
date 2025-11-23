@@ -66,7 +66,7 @@ services:
       - Denamu
     env_file:
       - /var/prod_config/infra/.env.prod
-    entrypoint: ["/usr/local/bin/redis-init.sh"]
+    entrypoint: ["/bin/sh", "/usr/local/bin/redis-init.sh"]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -91,9 +91,9 @@ services:
       - ./definitions.json:/etc/rabbitmq/definitions.json:ro
       - ./import-definitions.sh:/etc/rabbitmq/import-definitions.sh:ro
       - ./check-rabbitmq-ready.sh:/etc/rabbitmq/check-rabbitmq-ready.sh:ro
-    entrypoint: [ "/bin/sh", "/etc/rabbitmq/import-definitions.sh" ]
+    entrypoint: ["/bin/sh", "/etc/rabbitmq/import-definitions.sh"]
     healthcheck:
-      test: [ "CMD", "/bin/sh", "/etc/rabbitmq/check-rabbitmq-ready.sh" ]
+      test: ["CMD", "/bin/sh", "/etc/rabbitmq/check-rabbitmq-ready.sh"]
       interval: 10s
       timeout: 5s
       retries: 5

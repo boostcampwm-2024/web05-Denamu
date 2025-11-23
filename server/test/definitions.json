@@ -1,22 +1,39 @@
 {
+  "vhosts": [
+    {
+      "name": "/"
+    }
+  ],
+  "permissions": [
+    {
+      "user": "guest",
+      "vhost": "/",
+      "configure": ".*",
+      "write": ".*",
+      "read": ".*"
+    }
+  ],
   "exchanges": [
     {
       "name": "EmailExchange",
       "vhost": "/",
       "type": "direct",
-      "durable": true
+      "durable": true,
+      "auto_delete": false
     },
     {
       "name": "CrawlingExchange",
       "vhost": "/",
       "type": "topic",
-      "durable": true
+      "durable": true,
+      "auto_delete": false
     },
     {
       "name": "DeadLetterExchange",
       "vhost": "/",
       "type": "topic",
-      "durable": true
+      "durable": true,
+      "auto_delete": false
     }
   ],
   "queues": [
@@ -24,6 +41,7 @@
       "name": "email.send.queue",
       "vhost": "/",
       "durable": true,
+      "auto_delete": false,
       "arguments": {
         "x-dead-letter-exchange": "DeadLetterExchange",
         "x-dead-letter-routing-key": "email.deadLetter"
@@ -33,6 +51,7 @@
       "name": "crawling.full.queue",
       "vhost": "/",
       "durable": true,
+      "auto_delete": false,
       "arguments": {
         "x-dead-letter-exchange": "DeadLetterExchange",
         "x-dead-letter-routing-key": "crawling.full.deadLetter"
@@ -42,12 +61,14 @@
       "name": "email.deadLetter.queue",
       "vhost": "/",
       "durable": true,
+      "auto_delete": false,
       "arguments": {}
     },
     {
       "name": "crawling.full.deadLetter.queue",
       "vhost": "/",
       "durable": true,
+      "auto_delete": false,
       "arguments": {}
     }
   ],

@@ -1,36 +1,43 @@
 #!/bin/sh
 set -e
 
-# Redis 서버를 백그라운드에서 시작
-redis-server --daemonize yes
+echo "Starting Redis initialization..."
 
-# Redis가 완전히 시작될 때까지 대기
-sleep 5
-
-# 환경변수를 사용하여 ACL 사용자 생성
-# 컨테이너 내부에서 실행되므로 env_file로 주입된 환경변수 사용 가능
-if [ -n "$REDIS_USER" ] && [ -n "$REDIS_PASSWORD" ]; then
-    # heredoc을 사용하여 비밀번호 노출 방지
-    if redis-cli <<EOF
-ACL SETUSER $REDIS_USER on >$REDIS_PASSWORD allkeys allcommands
-ACL SAVE
-EOF
-    then
-        echo "Redis ACL user created and saved: $REDIS_USER"
-    else
-        echo "Error: Failed to create Redis ACL user"
-        exit 1
-    fi
-else
-    echo "Warning: REDIS_USER or REDIS_PASSWORD not set"
-    echo "Error: Redis credentials are required"
+# 환경변수 확인
+if [ -z "$REDIS_USER" ] || [ -z "$REDIS_PASSWORD" ]; then
+    echo "Error: REDIS_USER or REDIS_PASSWORD not set"
     exit 1
 fi
 
-# ACL 설정이 완료되었으므로 Redis를 안전하게 종료
+echo "REDIS_USER: $REDIS_USER"
+
+# ACL파일이 없으면 생성
+if [ ! -f /data/users.acl ]; then
+    echo "Creating empty ACL file..."
+    touch /data/users.acl
+fi
+
+# Redis를 설정 파일과 함께 백그라운드 시작
+redis-server --daemonize yes --dir /data --aclfile /data/users.acl
+
+# 시작 대기
+sleep 8
+
+# ACL 사용자 생성
+echo "Creating ACL user..."
+redis-cli ACL SETUSER "$REDIS_USER" on ">$REDIS_PASSWORD" allkeys allcommands
+
+# ACL 설정을 파일에 저장 (이제 가능!)
+redis-cli ACL SAVE
+echo "ACL saved to /data/users.acl"
+
+# 확인
+redis-cli ACL LIST
+
+# Redis 종료
 redis-cli shutdown
-# Redis가 완전히 종료될 때까지 대기
 sleep 2
 
-# 포그라운드로 Redis 재시작 (컨테이너가 종료되지 않도록)
-exec redis-server
+# 재시작 시에도 ACL 파일 사용
+echo "Starting Redis with ACL configuration..."
+exec redis-server --dir /data --aclfile /data/users.acl
