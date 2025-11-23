@@ -4,6 +4,7 @@ import {
   RabbitMQContainer,
   StartedRabbitMQContainer,
 } from '@testcontainers/rabbitmq';
+import * as path from 'path';
 
 const globalAny: any = global;
 
@@ -49,13 +50,25 @@ const createRedisContainer = async () => {
 const createRabbitMQContainer = async () => {
   console.log('Starting RabbitMQ container...');
   const rabbitMQContainer: StartedRabbitMQContainer =
-    await new RabbitMQContainer('rabbitmq:4.1-management').start();
+    await new RabbitMQContainer('rabbitmq:4.1-management')
+      .withCopyFilesToContainer([
+        {
+          source: `${path.resolve(__dirname, 'definitions.json')}`,
+          target: '/etc/rabbitmq/definitions.json',
+        },
+      ])
+      .start();
   globalAny.__RABBITMQ_CONTAINER__ = rabbitMQContainer;
 
   process.env.RABBITMQ_HOST = rabbitMQContainer.getHost();
   process.env.RABBITMQ_PORT = rabbitMQContainer.getMappedPort(5672).toString();
   process.env.RABBITMQ_DEFAULT_USER = 'guest';
   process.env.RABBITMQ_DEFAULT_PASS = 'guest';
+  const result = await rabbitMQContainer.exec([
+    'rabbitmqctl',
+    'import_definitions',
+    '/etc/rabbitmq/definitions.json',
+  ]);
 };
 
 const jwtEnvSetup = () => {
