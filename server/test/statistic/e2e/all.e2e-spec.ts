@@ -17,13 +17,13 @@ describe('GET /api/statistic/all E2E Test', () => {
     agent = supertest(app.getHttpServer());
     const rssAcceptRepository = app.get(RssAcceptRepository);
     const feedRepository = app.get(FeedRepository);
-    const blog = await rssAcceptRepository.save(
+    const rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
     const feedData = Array.from({ length: 2 }).map((_, i) =>
-      FeedFixture.createFeedFixture(blog, { viewCount: i }, i + 1),
+      FeedFixture.createFeedFixture(rssAccept, { viewCount: i }, i + 1),
     );
-    feedList = await feedRepository.save(feedData);
+    feedList = (await feedRepository.save(feedData)).reverse();
   });
 
   it('[200] 전체 조회수 통계 요청을 받은 경우 전체 조회수 통계 조회를 성공한다.', async () => {
@@ -31,9 +31,17 @@ describe('GET /api/statistic/all E2E Test', () => {
     const response = await agent.get('/api/statistic/all');
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
-    expect(response.body.data.map((feed) => feed.id)).toStrictEqual(
-      feedList.map((feed) => feed.id).reverse(),
+    expect(data).toStrictEqual(
+      Array.from({ length: 2 }).map((_, i) => {
+        const feed = feedList[i];
+        return {
+          id: feed.id,
+          title: feed.title,
+          viewCount: feed.viewCount,
+        };
+      }),
     );
   });
 
@@ -42,12 +50,17 @@ describe('GET /api/statistic/all E2E Test', () => {
     const response = await agent.get('/api/statistic/all?limit=1');
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
-    expect(response.body.data.map((feed) => feed.id)).toStrictEqual(
-      feedList
-        .map((feed) => feed.id)
-        .reverse()
-        .slice(0, 1),
+    expect(data).toStrictEqual(
+      Array.from({ length: 1 }).map((_, i) => {
+        const feed = feedList[i];
+        return {
+          id: feed.id,
+          title: feed.title,
+          viewCount: feed.viewCount,
+        };
+      }),
     );
   });
 });
