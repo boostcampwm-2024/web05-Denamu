@@ -11,6 +11,12 @@ fi
 
 echo "REDIS_USER: $REDIS_USER"
 
+# ACL파일이 없으면 생성
+if [ ! -f /data/users.acl ]; then
+    echo "Creating empty ACL file..."
+    touch /data/users.acl
+fi
+
 # Redis를 설정 파일과 함께 백그라운드 시작
 redis-server --daemonize yes --dir /data --aclfile /data/users.acl
 
