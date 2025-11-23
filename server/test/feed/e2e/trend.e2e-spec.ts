@@ -22,7 +22,6 @@ describe('SSE /api/trend/sse E2E Test', () => {
 
   it('[SSE] 최초 연결을 할 경우 트랜드 데이터 최대 4개 제공 수신을 성공한다.', async () => {
     // given
-    let data: any;
     const feedRepository = app.get(FeedRepository);
     const rssAcceptRepository = app.get(RssAcceptRepository);
     const redisService = app.get(RedisService);
@@ -45,9 +44,8 @@ describe('SSE /api/trend/sse E2E Test', () => {
       es.onmessage = (event) => {
         try {
           const response = JSON.parse(event.data);
-          data = response.data;
           es.close();
-          resolve(null);
+          resolve(response.data);
         } catch (error) {
           es.close();
           reject(error);
@@ -59,9 +57,8 @@ describe('SSE /api/trend/sse E2E Test', () => {
       };
     });
 
-    await eventResult;
-
     // then
+    const data = await eventResult;
     expect(data).toStrictEqual(
       Array.from({ length: 2 }).map((_, i) => {
         const feed = feedList[i];
@@ -86,18 +83,14 @@ describe('SSE /api/trend/sse E2E Test', () => {
   });
 
   it('[SSE] 서버로부터 데이터를 받을 때 게시글이 데나무에서 지워진 경우 빈 피드 정보 수신을 성공한다.', async () => {
-    // given
-    let data: any;
-
     // when
     const es = new EventSource(serverUrl);
     const eventResult = new Promise((resolve, reject) => {
       es.onmessage = (event) => {
         try {
           const response = JSON.parse(event.data);
-          data = response.data;
           es.close();
-          resolve(null);
+          resolve(response.data);
         } catch (error) {
           es.close();
           reject(error);
@@ -109,9 +102,8 @@ describe('SSE /api/trend/sse E2E Test', () => {
       };
     });
 
-    await eventResult;
-
     // then
+    const data = await eventResult;
     expect(data).toStrictEqual([]);
   });
 });
