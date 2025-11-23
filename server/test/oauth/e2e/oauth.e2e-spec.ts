@@ -18,9 +18,10 @@ describe('GET /api/oauth?type={} E2E Test', () => {
 
   it('[302] 올바른 제공자를 입력했을 경우 리다이렉트를 성공한다.', async () => {
     // given
+    const redirectUrl = 'http://mocked.redirect.url';
     const requestDto = new OAuthTypeRequestDto({ type: OAuthType.Github });
     const mockProvider = {
-      getAuthUrl: jest.fn().mockReturnValue('http://mocked.redirect.url'),
+      getAuthUrl: jest.fn().mockReturnValue(redirectUrl),
     };
 
     Object.defineProperty(oauthService, 'providers', {
@@ -29,17 +30,11 @@ describe('GET /api/oauth?type={} E2E Test', () => {
       },
     });
 
-    jest
-      .spyOn(oauthService, 'getAuthUrl')
-      .mockImplementation((type: OAuthType) => {
-        return 'https://test.com/oauth';
-      });
-
     // when
     const response = await agent.get('/api/oauth').query(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.FOUND);
-    expect(response.headers['location']).toBeDefined();
+    expect(response.headers['location']).toBe(redirectUrl);
   });
 });
