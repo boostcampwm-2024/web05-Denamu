@@ -353,7 +353,7 @@ describe('ClaudeEventWorker', () => {
       );
 
       // When
-      const result = await claudeEventWorker['loadFeeds']();
+      await claudeEventWorker['loadFeeds']();
 
       // Then
       // AI_RATE_LIMIT_COUNT가 2이므로 최대 2개만 로드

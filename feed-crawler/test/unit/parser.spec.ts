@@ -149,7 +149,7 @@ describe('Parser 모듈 테스트', () => {
 
         it('정상적인 feedDetail을 반환해야 한다.', async () => {
           // 고정 날짜보다 이전 시간을 startTime으로 사용하여 피드가 필터링되도록 함
-          const startTime = new Date();
+          const startTime = new Date(FIXED_DATE.getTime() - 1000);
           const result = await feedParserManager.fetchAndParse(
             MOCK_RSS_OBJ,
             startTime,
