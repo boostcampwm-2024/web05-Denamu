@@ -29,16 +29,22 @@ describe('GET /api/rss/history/accept E2E Test', () => {
     ]);
   });
 
-  it('[401] 관리자 로그인이 되어있지 않을 경우 RSS 승인 기록 조회를 실패한다.', async () => {
+  it('[401] 관리자 로그인 쿠키가 없을 경우 RSS 승인 기록 조회를 실패한다.', async () => {
     // when
-    const noCookieResponse = await agent.get('/api/rss/history/accept');
-    const noSessionResponse = await agent
+    const response = await agent.get('/api/rss/history/accept');
+
+    // then
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+  });
+
+  it('[401] 관리자 로그인 쿠키가 만료됐을 경우 RSS 승인 기록 조회를 실패한다.', async () => {
+    // when
+    const response = await agent
       .get('/api/rss/history/accept')
       .set('Cookie', 'sessionId=invalid');
 
     // then
-    expect(noCookieResponse.status).toBe(HttpStatus.UNAUTHORIZED);
-    expect(noSessionResponse.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 
   it('[200] 관리자 로그인이 되어있을 경우 RSS 승인 기록 조회를 성공한다.', async () => {
@@ -48,9 +54,22 @@ describe('GET /api/rss/history/accept E2E Test', () => {
       .set('Cookie', 'sessionId=testSessionId');
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
-    expect(response.body.data.map((acceptRss) => acceptRss.id)).toStrictEqual(
-      rssAcceptList.map((rss) => rss.id).reverse(),
+    expect(data).toStrictEqual(
+      Array.from({ length: 2 })
+        .map((_, i) => {
+          const rssAccept = rssAcceptList[i];
+          return {
+            id: rssAccept.id,
+            name: rssAccept.name,
+            userName: rssAccept.userName,
+            email: rssAccept.email,
+            rssUrl: rssAccept.rssUrl,
+            blogPlatform: rssAccept.blogPlatform,
+          };
+        })
+        .reverse(),
     );
   });
 });
