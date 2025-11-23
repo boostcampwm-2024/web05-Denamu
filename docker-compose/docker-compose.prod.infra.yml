@@ -66,7 +66,7 @@ services:
       - Denamu
     env_file:
       - /var/prod_config/infra/.env.prod
-    entrypoint: ["/usr/local/bin/redis-init.sh"]
+    entrypoint: ["/bin/sh", "/usr/local/bin/redis-init.sh"]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -91,7 +91,7 @@ services:
     volumes:
       - denamu-rabbitmq:/var/lib/rabbitmq
     healthcheck:
-      test: [ "CMD", "rabbitmq-diagnostics", "ping" ]
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
       interval: 30s
       timeout: 10s
       retries: 3
