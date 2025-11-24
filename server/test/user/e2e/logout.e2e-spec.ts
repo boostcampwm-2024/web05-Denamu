@@ -50,5 +50,6 @@ describe('POST /api/user/logout E2E Test', () => {
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
+    expect(response.headers['set-cookie'][0]).toContain('refresh_token=');
   });
 });
