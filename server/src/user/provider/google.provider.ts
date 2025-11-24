@@ -57,14 +57,12 @@ export class GoogleOAuthProvider implements OAuthProvider {
       const {
         id_token: id_token,
         access_token: access_token,
-        refresh_token: refresh_token,
         expires_in: expires_in,
       } = response.data as OAuthTokenResponse;
 
       return {
         id_token,
         access_token,
-        refresh_token,
         expires_in,
       };
     } catch (error) {
@@ -73,6 +71,7 @@ export class GoogleOAuthProvider implements OAuthProvider {
       );
     }
   }
+
   async getUserInfo(tokenResponse: OAuthTokenResponse) {
     const { id_token: idToken, access_token: accessToken } = tokenResponse;
 
