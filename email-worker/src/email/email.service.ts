@@ -24,9 +24,10 @@ export class EmailService {
     this.emailUser = process.env.EMAIL_USER;
     const emailPassword = process.env.EMAIL_PASSWORD;
     this.transporter = nodemailer.createTransport({
-      host: `192.168.1.243`,
-      // port: 587,
-      port: 1025,
+      host: 'smtp.gmail.com',
+      port: 587,
+      // host: `192.168.1.243`,
+      // port: 1025,
       secure: false,
       auth: {
         user: this.emailUser,
