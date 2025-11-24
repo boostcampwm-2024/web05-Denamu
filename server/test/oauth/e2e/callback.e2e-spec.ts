@@ -2,18 +2,24 @@ import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as supertest from 'supertest';
 import { OAuthService } from '../../../src/user/service/oauth.service';
 import { OAuthCallbackRequestDto } from '../../../src/user/dto/request/oAuthCallbackDto';
-import { OAuthType } from '../../../src/user/constant/oauth.constant';
+import {
+  OAUTH_URL_PATH,
+  OAuthType,
+} from '../../../src/user/constant/oauth.constant';
 import TestAgent from 'supertest/lib/agent';
+import { UserService } from '../../../src/user/service/user.service';
 
 describe('GET /api/oauth/callback E2E Test', () => {
   let app: INestApplication;
   let agent: TestAgent;
   let oauthService: OAuthService;
+  let userService: UserService;
 
   beforeAll(() => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
     oauthService = app.get(OAuthService);
+    userService = app.get(UserService);
   });
 
   it('[302] OAuth 로그인 콜백으로 인증 서버에서 데이터를 받을 경우 리다이렉트를 성공한다.', async () => {
@@ -31,12 +37,21 @@ describe('GET /api/oauth/callback E2E Test', () => {
         expires_in: 3600,
       }),
       getUserInfo: jest.fn().mockResolvedValue({
-        id: 1,
+        id: '1',
         email: 'test@test.com',
         name: 'test',
         picture: 'https://test.com/test.png',
       }),
     };
+    const accessToken = userService.createToken(
+      {
+        id: 1,
+        email: 'test@test.com',
+        userName: 'test',
+        role: 'user',
+      },
+      'access',
+    );
 
     Object.defineProperty(oauthService, 'providers', {
       value: {
@@ -49,6 +64,9 @@ describe('GET /api/oauth/callback E2E Test', () => {
 
     // then
     expect(response.status).toBe(HttpStatus.FOUND);
-    expect(response.headers['location']).toBeDefined();
+    expect(response.headers['set-cookie'][0]).toContain('refresh_token=');
+    expect(response.headers['location']).toBe(
+      `${OAUTH_URL_PATH.BASE_URL}/oauth-success?token=${accessToken}`,
+    );
   });
 });
