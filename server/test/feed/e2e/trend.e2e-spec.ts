@@ -40,7 +40,7 @@ describe('SSE /api/trend/sse E2E Test', () => {
 
     // when
     const es = new EventSource(serverUrl);
-    const eventResult = new Promise((resolve, reject) => {
+    const data = await new Promise((resolve, reject) => {
       es.onmessage = (event) => {
         try {
           const response = JSON.parse(event.data);
@@ -58,7 +58,6 @@ describe('SSE /api/trend/sse E2E Test', () => {
     });
 
     // then
-    const data = await eventResult;
     expect(data).toStrictEqual(
       Array.from({ length: 2 }).map((_, i) => {
         const feed = feedList[i];
@@ -85,7 +84,7 @@ describe('SSE /api/trend/sse E2E Test', () => {
   it('[SSE] 서버로부터 데이터를 받을 때 게시글이 데나무에서 지워진 경우 빈 피드 정보 수신을 성공한다.', async () => {
     // when
     const es = new EventSource(serverUrl);
-    const eventResult = new Promise((resolve, reject) => {
+    const data = await new Promise((resolve, reject) => {
       es.onmessage = (event) => {
         try {
           const response = JSON.parse(event.data);
@@ -103,7 +102,6 @@ describe('SSE /api/trend/sse E2E Test', () => {
     });
 
     // then
-    const data = await eventResult;
     expect(data).toStrictEqual([]);
   });
 });
