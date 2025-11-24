@@ -8,6 +8,7 @@ import {
 } from '../../../src/user/constant/oauth.constant';
 import TestAgent from 'supertest/lib/agent';
 import { UserService } from '../../../src/user/service/user.service';
+import axios from 'axios';
 
 describe('GET /api/oauth/callback E2E Test', () => {
   let app: INestApplication;
@@ -22,7 +23,7 @@ describe('GET /api/oauth/callback E2E Test', () => {
     userService = app.get(UserService);
   });
 
-  it('[302] OAuth 로그인 콜백으로 인증 서버에서 데이터를 받을 경우 리다이렉트를 성공한다.', async () => {
+  it('[302] Github OAuth 로그인 콜백으로 인증 서버에서 데이터를 받을 경우 리다이렉트를 성공한다.', async () => {
     // given
     const requestDto = new OAuthCallbackRequestDto({
       code: 'testCode',
@@ -30,19 +31,24 @@ describe('GET /api/oauth/callback E2E Test', () => {
         JSON.stringify({ provider: OAuthType.Github }),
       ).toString('base64'),
     });
-    const mockProvider = {
-      getTokens: jest.fn().mockResolvedValue({
+
+    jest.spyOn(axios, 'post').mockResolvedValue({
+      data: {
         access_token: 'test_access_token',
         refresh_token: 'test_refresh_token',
         expires_in: 3600,
-      }),
-      getUserInfo: jest.fn().mockResolvedValue({
+      },
+    });
+
+    jest.spyOn(axios, 'get').mockResolvedValue({
+      data: {
         id: '1',
         email: 'test@test.com',
         name: 'test',
-        picture: 'https://test.com/test.png',
-      }),
-    };
+        avatar_url: 'https://test.com/test.png',
+      },
+    });
+
     const accessToken = userService.createToken(
       {
         id: 1,
@@ -53,11 +59,52 @@ describe('GET /api/oauth/callback E2E Test', () => {
       'access',
     );
 
-    Object.defineProperty(oauthService, 'providers', {
-      value: {
-        [OAuthType.Github]: mockProvider,
+    // when
+    const response = await agent.get('/api/oauth/callback').query(requestDto);
+
+    // then
+    expect(response.status).toBe(HttpStatus.FOUND);
+    expect(response.headers['set-cookie'][0]).toContain('refresh_token=');
+    expect(response.headers['location']).toBe(
+      `${OAUTH_URL_PATH.BASE_URL}/oauth-success?token=${accessToken}`,
+    );
+  });
+
+  it('[302] Google OAuth 로그인 콜백으로 인증 서버에서 데이터를 받을 경우 리다이렉트를 성공한다.', async () => {
+    // given
+    const requestDto = new OAuthCallbackRequestDto({
+      code: 'testCode',
+      state: Buffer.from(
+        JSON.stringify({ provider: OAuthType.Google }),
+      ).toString('base64'),
+    });
+
+    jest.spyOn(axios, 'post').mockResolvedValue({
+      data: {
+        id_token: '1',
+        access_token: 'test_access_token',
+        expires_in: 3600,
       },
     });
+
+    jest.spyOn(axios, 'get').mockResolvedValue({
+      data: {
+        id: '1',
+        email: 'test@test.com',
+        name: 'test',
+        picture: 'https://test.com/test.png',
+      },
+    });
+
+    const accessToken = userService.createToken(
+      {
+        id: 1,
+        email: 'test@test.com',
+        userName: 'test',
+        role: 'user',
+      },
+      'access',
+    );
 
     // when
     const response = await agent.get('/api/oauth/callback').query(requestDto);
