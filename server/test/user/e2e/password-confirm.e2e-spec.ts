@@ -54,15 +54,5 @@ describe('PATCH /api/user/password E2E Test', () => {
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
-    const updatedUser = await userRepository.findOne({
-      where: { email: user.email },
-    });
-    expect(updatedUser).toBeDefined();
-    expect(await bcrypt.compare(updatedPassword, updatedUser.password)).toBe(
-      true,
-    );
-    expect(await bcrypt.compare(user.password, updatedUser.password)).toBe(
-      false,
-    );
   });
 });

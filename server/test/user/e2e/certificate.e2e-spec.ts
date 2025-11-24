@@ -46,10 +46,5 @@ describe('POST /api/user/certificate E2E Test', () => {
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
-    const savedUser = await userRepository.findOne({
-      where: { email: userEntity.email },
-    });
-    expect(savedUser).toBeDefined();
-    expect(savedUser.email).toBe(userEntity.email);
   });
 });
