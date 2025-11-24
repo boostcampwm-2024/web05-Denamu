@@ -3,7 +3,6 @@ import './env-load';
 import { container } from './container';
 import { DEPENDENCY_SYMBOLS } from './types/dependency-symbols';
 import { RabbitMQManager } from './rabbitmq/rabbitmq.manager';
-import { RabbitMQConfig } from './rabbitmq/rabbitmq.config';
 import { EmailConsumer } from './email/email.consumer';
 import logger from './logger';
 
@@ -11,9 +10,6 @@ function initializeDependencies() {
   return {
     rabbitMQManager: container.resolve<RabbitMQManager>(
       DEPENDENCY_SYMBOLS.RabbitMQManager,
-    ),
-    rabbitMQConfig: container.resolve<RabbitMQConfig>(
-      DEPENDENCY_SYMBOLS.RabbitMQConfig,
     ),
     emailConsumer: container.resolve<EmailConsumer>(
       DEPENDENCY_SYMBOLS.EmailConsumer,
@@ -51,7 +47,6 @@ async function initializeRabbitMQ(
     logger.info(`RabbitMQ 초기화 시작...`);
 
     await dependencies.rabbitMQManager.connect();
-    await dependencies.rabbitMQConfig.setup();
     logger.info(`RabbitMQ 초기화 완료`);
 
     await dependencies.emailConsumer.start();

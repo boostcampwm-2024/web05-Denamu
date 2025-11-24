@@ -1,7 +1,6 @@
 import { container } from 'tsyringe';
 import { RabbitmqService } from './rabbitmq/rabbitmq.service';
 import { DEPENDENCY_SYMBOLS } from './types/dependency-symbols';
-import { RabbitMQConfig } from './rabbitmq/rabbitmq.config';
 import { RabbitMQManager } from './rabbitmq/rabbitmq.manager';
 import { EmailConsumer } from './email/email.consumer';
 import { EmailService } from './email/email.service';
@@ -9,11 +8,6 @@ import { EmailService } from './email/email.service';
 container.registerSingleton<RabbitmqService>(
   DEPENDENCY_SYMBOLS.RabbitMQService,
   RabbitmqService,
-);
-
-container.registerSingleton<RabbitMQConfig>(
-  DEPENDENCY_SYMBOLS.RabbitMQConfig,
-  RabbitMQConfig,
 );
 
 container.registerSingleton<RabbitMQManager>(
