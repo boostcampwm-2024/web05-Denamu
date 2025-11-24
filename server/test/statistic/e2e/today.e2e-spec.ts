@@ -7,11 +7,13 @@ import { FeedRepository } from '../../../src/feed/repository/feed.repository';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
 import { FeedFixture } from '../../fixture/feed.fixture';
 import TestAgent from 'supertest/lib/agent';
+import { Feed } from '../../../src/feed/entity/feed.entity';
 
 describe('GET /api/statistic/today E2E Test', () => {
   let app: INestApplication;
   let agent: TestAgent;
   let redisService: RedisService;
+  let feedList: Feed[];
 
   beforeAll(async () => {
     app = global.testApp;
@@ -25,7 +27,7 @@ describe('GET /api/statistic/today E2E Test', () => {
     const feeds = Array.from({ length: 2 }).map((_, i) =>
       FeedFixture.createFeedFixture(rssAccept, {}, i + 1),
     );
-    const feedList = await feedRepository.save(feeds);
+    feedList = await feedRepository.save(feeds);
     await redisService.zadd(
       REDIS_KEYS.FEED_TREND_KEY,
       5,
@@ -40,10 +42,23 @@ describe('GET /api/statistic/today E2E Test', () => {
     const response = await agent.get('/api/statistic/today');
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
-    expect(response.body.data.map((feed) => feed.id)).toStrictEqual(
-      (await redisService.zrevrange(REDIS_KEYS.FEED_TREND_KEY, 0, -1)).map(
-        (id) => parseInt(id),
+    expect(data).toStrictEqual(
+      await Promise.all(
+        Array.from({ length: 2 }).map(async (_, i) => {
+          const feed = feedList[i];
+          return {
+            id: feed.id,
+            title: feed.title,
+            viewCount: parseInt(
+              await redisService.zscore(
+                REDIS_KEYS.FEED_TREND_KEY,
+                feed.id.toString(),
+              ),
+            ),
+          };
+        }),
       ),
     );
   });
@@ -53,10 +68,23 @@ describe('GET /api/statistic/today E2E Test', () => {
     const response = await agent.get('/api/statistic/today?limit=1');
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
-    expect(response.body.data.map((feed) => feed.id)).toStrictEqual(
-      (await redisService.zrevrange(REDIS_KEYS.FEED_TREND_KEY, 0, 0)).map(
-        (id) => parseInt(id),
+    expect(data).toStrictEqual(
+      await Promise.all(
+        Array.from({ length: 1 }).map(async (_, i) => {
+          const feed = feedList[i];
+          return {
+            id: feed.id,
+            title: feed.title,
+            viewCount: parseInt(
+              await redisService.zscore(
+                REDIS_KEYS.FEED_TREND_KEY,
+                feed.id.toString(),
+              ),
+            ),
+          };
+        }),
       ),
     );
   });
