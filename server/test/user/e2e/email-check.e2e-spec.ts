@@ -26,8 +26,11 @@ describe('GET /api/user/email-check E2E Test', () => {
     const response = await agent.get('/api/user/email-check').query(requestDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
-    expect(response.body.data.exists).toBe(false);
+    expect(data).toStrictEqual({
+      exists: false,
+    });
   });
 
   it('[200] 중복 이메일이 존재할 경우 이메일 중복 검사를 성공한다.', async () => {
@@ -40,7 +43,10 @@ describe('GET /api/user/email-check E2E Test', () => {
     const response = await agent.get('/api/user/email-check').query(requestDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
-    expect(response.body.data.exists).toBe(true);
+    expect(data).toStrictEqual({
+      exists: true,
+    });
   });
 });
