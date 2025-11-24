@@ -31,7 +31,6 @@ export class GithubOAuthProvider implements OAuthProvider {
     return `${OAUTH_URL_PATH.GITHUB.AUTH_URL}?${querystring.stringify(options)}`;
   }
 
-  // state의 검증 + code를 사용한 UserResource에 대한 AccessToken 반환
   async getTokens(code: string): Promise<OAuthTokenResponse> {
     const tokenUrl = OAUTH_URL_PATH.GITHUB.TOKEN_URL;
 
