@@ -116,8 +116,10 @@ describe('Socket.IO /chat E2E Test', () => {
     });
 
     // then
-    expect(typeof data.userCount).toBe('number');
-    expect(typeof data.name).toBe('string');
+    expect(data).toStrictEqual({
+      userCount: expect.any(Number),
+      name: expect.any(String),
+    });
   });
 
   it('[Connect] 클라이언트가 연결될 경우 이전 채팅 기록을 정상적으로 받는다.', async () => {
