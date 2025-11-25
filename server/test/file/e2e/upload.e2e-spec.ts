@@ -100,7 +100,17 @@ describe(`POST ${URL} E2E Test`, () => {
       .attach('file', filePath);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.CREATED);
+    expect(data).toStrictEqual({
+      id: expect.any(Number),
+      originalName: 'test.png',
+      mimetype: 'image/png',
+      size: expect.any(Number),
+      url: expect.any(String),
+      userId: user.id,
+      createdAt: expect.any(String),
+    });
 
     // cleanup
     await fileRepository.delete({ user });
