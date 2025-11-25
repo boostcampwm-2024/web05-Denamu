@@ -165,6 +165,6 @@ describe('Socket.IO Anonymous Chat E2E Test', () => {
     });
 
     // then
-    expect(data[0]).toStrictEqual(mockChatHistory[1]);
+    expect(data).toStrictEqual(mockChatHistory.reverse());
   });
 });
