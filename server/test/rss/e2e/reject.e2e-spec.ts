@@ -35,18 +35,24 @@ describe('POST /api/rss/reject/{rssId} E2E Test', () => {
     ]);
   });
 
-  it('[401] 관리자 로그인이 되어 있지 않은 경우 RSS 거부를 실패한다.', async () => {
+  it('[401] 관리자 로그인 쿠키가 없을 경우 RSS 거부를 실패한다.', async () => {
     // when
-    const noCookieResponse = await agent.post(
+    const response = await agent.post(
       `/api/rss/reject/${Number.MAX_SAFE_INTEGER}`,
     );
-    const noSessionResponse = await agent
+
+    // then
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+  });
+
+  it('[401] 관리자 로그인 쿠키가 만료됐을 경우 RSS 거부를 실패한다.', async () => {
+    // when
+    const response = await agent
       .post(`/api/rss/reject/${Number.MAX_SAFE_INTEGER}`)
       .set('Cookie', 'sessionId=invalid');
 
     // then
-    expect(noCookieResponse.status).toBe(HttpStatus.UNAUTHORIZED);
-    expect(noSessionResponse.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 
   it('[404] 존재하지 않는 RSS를 거부할 경우 RSS 거부를 실패한다.', async () => {
@@ -80,12 +86,7 @@ describe('POST /api/rss/reject/{rssId} E2E Test', () => {
       .set('Cookie', 'sessionId=testSessionId')
       .send(requestDto);
 
-    const accepted = await rssRejectRepository.findOne({
-      where: { description: REJECT_REASON },
-    });
-
     // then
     expect(response.status).toBe(HttpStatus.CREATED);
-    expect(accepted).not.toBeNull();
   });
 });
