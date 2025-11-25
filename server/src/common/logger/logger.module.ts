@@ -11,7 +11,7 @@ const winstonModule = WinstonModule.forRoot({
     logFormat,
   ),
   transports: getLogTransport(),
-  silent: process.env.NODE_ENV === 'test',
+  silent: process.env.NODE_ENV === 'TEST',
 });
 
 @Global()
