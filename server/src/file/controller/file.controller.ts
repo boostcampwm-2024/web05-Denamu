@@ -4,7 +4,6 @@ import {
   Delete,
   UseInterceptors,
   UploadedFile,
-  Req,
   Param,
   UseGuards,
   BadRequestException,
@@ -22,7 +21,7 @@ import { ApiUploadProfileFile } from '../api-docs/uploadProfileFile.api-docs';
 import { ApiDeleteFile } from '../api-docs/deleteFile.api-docs';
 import { DeleteFileParamRequestDto } from '../dto/request/deleteFile.dto';
 import { UploadFileQueryRequestDto } from '../dto/request/uploadFile.dto';
-import { Request } from 'express';
+import { CurrentUser } from '../../common/decorator';
 
 @ApiTags('File')
 @Controller('file')
@@ -37,7 +36,7 @@ export class FileController {
   async upload(
     @UploadedFile() file: any,
     @Query() query: UploadFileQueryRequestDto,
-    @Req() req: Request & { user: Payload },
+    @CurrentUser() user: Payload,
   ) {
     if (!file) {
       throw new BadRequestException('파일이 선택되지 않았습니다.');
@@ -45,7 +44,7 @@ export class FileController {
 
     return ApiResponse.responseWithData(
       '파일 업로드에 성공했습니다.',
-      await this.fileService.create(file, req.user.id),
+      await this.fileService.create(file, user.id),
     );
   }
 

@@ -19,7 +19,10 @@ export class LikeService {
     private readonly dataSource: DataSource,
   ) {}
 
-  async get(userInformation: Payload, feedLikeGetDto: ManageLikeRequestDto) {
+  async get(
+    userInformation: Payload | null,
+    feedLikeGetDto: ManageLikeRequestDto,
+  ) {
     await this.feedService.getFeed(feedLikeGetDto.feedId);
     let isLike = false;
 

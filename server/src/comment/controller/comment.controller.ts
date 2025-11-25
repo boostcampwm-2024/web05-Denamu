@@ -8,7 +8,6 @@ import {
   Param,
   Patch,
   Post,
-  Req,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
@@ -23,7 +22,7 @@ import { DeleteCommentRequestDto } from '../dto/request/deleteComment.dto';
 import { UpdateCommentRequestDto } from '../dto/request/updateComment.dto';
 import { GetCommentRequestDto } from '../dto/request/getComment.dto';
 import { ApiGetComment } from '../api-docs/getComment.api-docs';
-import { Request } from 'express';
+import { CurrentUser } from '../../common/decorator';
 
 @ApiTags('Comment')
 @Controller('comment')
@@ -45,10 +44,10 @@ export class CommentController {
   @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.CREATED)
   async createComment(
-    @Req() req: Request & { user: Payload },
+    @CurrentUser() user: Payload,
     @Body() commentDto: CreateCommentRequestDto,
   ) {
-    await this.commentService.create(req.user, commentDto);
+    await this.commentService.create(user, commentDto);
     return ApiResponse.responseWithNoContent('댓글 등록을 성공했습니다.');
   }
 
@@ -57,10 +56,10 @@ export class CommentController {
   @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.OK)
   async deleteComment(
-    @Req() req: Request & { user: Payload },
+    @CurrentUser() user: Payload,
     @Body() commentDto: DeleteCommentRequestDto,
   ) {
-    await this.commentService.delete(req.user, commentDto);
+    await this.commentService.delete(user, commentDto);
     return ApiResponse.responseWithNoContent('댓글 삭제를 성공했습니다.');
   }
 
@@ -69,10 +68,10 @@ export class CommentController {
   @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.OK)
   async updateComment(
-    @Req() req: Request & { user: Payload },
+    @CurrentUser() user: Payload,
     @Body() commentDto: UpdateCommentRequestDto,
   ) {
-    await this.commentService.update(req.user, commentDto);
+    await this.commentService.update(user, commentDto);
     return ApiResponse.responseWithNoContent('댓글 수정을 성공했습니다.');
   }
 }
