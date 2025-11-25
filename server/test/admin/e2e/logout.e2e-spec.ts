@@ -20,7 +20,7 @@ describe(`POST ${URL} E2E Test`, () => {
     );
   });
 
-  it('[401] 관리자 로그인이 되어 있지 않을 경우 로그아웃을 실패한다.', async () => {
+  it('[401] 관리자 로그인 쿠키가 없을 경우 로그아웃을 실패한다.', async () => {
     // when
     const response = await agent.post(URL);
 
@@ -28,7 +28,7 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 
-  it('[401] 존재하지 않는 세션ID로 로그아웃할 경우 로그아웃을 실패한다.', async () => {
+  it('[401] 관리자 로그인 쿠키가 만료됐을 경우 로그아웃을 실패한다.', async () => {
     // when
     const response = await agent
       .post(URL)

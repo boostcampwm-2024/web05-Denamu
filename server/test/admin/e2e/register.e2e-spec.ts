@@ -26,7 +26,7 @@ describe(`POST ${URL} E2E Test`, () => {
     );
   });
 
-  it('[401] 관리자가 로그인 상태가 아닐 경우 회원가입을 실패한다.', async () => {
+  it('[401] 관리자 로그인 쿠키가 없을 경우 회원가입을 실패한다.', async () => {
     // given
     const newAdminDto = new RegisterAdminRequestDto({
       loginId: 'testNewAdminId',
@@ -35,6 +35,23 @@ describe(`POST ${URL} E2E Test`, () => {
 
     // when
     const response = await agent.post(URL).send(newAdminDto);
+
+    // then
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+  });
+
+  it('[401] 관리자 로그인 쿠키가 만료됐을 경우 회원가입을 실패한다.', async () => {
+    // given
+    const newAdminDto = new RegisterAdminRequestDto({
+      loginId: 'testNewAdminId',
+      password: 'testNewAdminPassword!',
+    });
+
+    // when
+    const response = await agent
+      .post(URL)
+      .send(newAdminDto)
+      .set('Cookie', 'sessionId=wrongTestSessionId');
 
     // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
