@@ -6,6 +6,8 @@ import {
   RssRepository,
 } from '../../../src/rss/repository/rss.repository';
 import TestAgent from 'supertest/lib/agent';
+import { RedisService } from '../../../src/common/redis/redis.service';
+import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 
 const URL = '/api/rss';
 
@@ -14,21 +16,45 @@ describe(`GET ${URL} E2E Test`, () => {
   let agent: TestAgent;
   let rssRepository: RssRepository;
   let rssAcceptRepository: RssAcceptRepository;
+  let redisService: RedisService;
 
   beforeAll(() => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
     rssRepository = app.get(RssRepository);
     rssAcceptRepository = app.get(RssAcceptRepository);
+    redisService = app.get(RedisService);
   });
 
   beforeEach(async () => {
     await rssRepository.delete({});
+    await redisService.set(
+      `${REDIS_KEYS.ADMIN_AUTH_KEY}:testSessionId`,
+      'test_admin',
+    );
+  });
+
+  it('[401] 관리자 로그인 쿠키가 없을 경우 RSS 승인을 실패한다.', async () => {
+    // when
+    const response = await agent.get(URL);
+
+    // then
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+  });
+
+  it('[401] 관리자 로그인 쿠키가 만료됐을 경우 RSS 승인을 실패한다.', async () => {
+    // when
+    const response = await agent.get(URL).set('Cookie', 'sessionId=invalid');
+
+    // then
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
   });
 
   it('[200] 신청된 RSS가 없을 경우 RSS 신청 조회를 성공한다.', async () => {
     // when
-    const response = await agent.get(URL);
+    const response = await agent
+      .get(URL)
+      .set('Cookie', 'sessionId=testSessionId');
 
     // then
     const { data } = response.body;
@@ -41,7 +67,9 @@ describe(`GET ${URL} E2E Test`, () => {
     const rss = await rssRepository.save(RssFixture.createRssFixture());
 
     // when
-    const response = await agent.get(URL);
+    const response = await agent
+      .get(URL)
+      .set('Cookie', 'sessionId=testSessionId');
 
     //then
     const { data } = response.body;
