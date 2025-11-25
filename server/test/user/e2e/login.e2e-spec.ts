@@ -7,7 +7,9 @@ import TestAgent from 'supertest/lib/agent';
 import { UserService } from '../../../src/user/service/user.service';
 import { User } from '../../../src/user/entity/user.entity';
 
-describe('POST /api/user/login E2E Test', () => {
+const URL = '/api/user/login';
+
+describe(`POST ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let userService: UserService;
@@ -32,7 +34,7 @@ describe('POST /api/user/login E2E Test', () => {
     });
 
     // when
-    const response = await agent.post('/api/user/login').send(requestDto);
+    const response = await agent.post(URL).send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
@@ -46,7 +48,7 @@ describe('POST /api/user/login E2E Test', () => {
     });
 
     // when
-    const response = await agent.post('/api/user/login').send(requestDto);
+    const response = await agent.post(URL).send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
@@ -69,7 +71,7 @@ describe('POST /api/user/login E2E Test', () => {
     );
 
     // when
-    const response = await agent.post('/api/user/login').send(requestDto);
+    const response = await agent.post(URL).send(requestDto);
 
     // then
     const { data } = response.body;

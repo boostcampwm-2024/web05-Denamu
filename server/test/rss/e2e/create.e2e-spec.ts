@@ -9,7 +9,9 @@ import {
 import TestAgent from 'supertest/lib/agent';
 import { RssFixture } from '../../fixture/rss.fixture';
 
-describe('POST /api/rss E2E Test', () => {
+const URL = '/api/rss';
+
+describe(`POST ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let rssRepository: RssRepository;
@@ -37,7 +39,7 @@ describe('POST /api/rss E2E Test', () => {
     });
 
     // when
-    const response = await agent.post('/api/rss').send(requestDto);
+    const response = await agent.post(URL).send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.CONFLICT);
@@ -59,7 +61,7 @@ describe('POST /api/rss E2E Test', () => {
     });
 
     // when
-    const response = await agent.post('/api/rss').send(requestDto);
+    const response = await agent.post(URL).send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.CONFLICT);
@@ -78,7 +80,7 @@ describe('POST /api/rss E2E Test', () => {
     });
 
     // when
-    const response = await agent.post('/api/rss').send(requestDto);
+    const response = await agent.post(URL).send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.CREATED);

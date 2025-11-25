@@ -14,7 +14,9 @@ import { UpdateCommentRequestDto } from '../../../src/comment/dto/request/update
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
 import TestAgent from 'supertest/lib/agent';
 
-describe('PATCH /api/comment E2E Test', () => {
+const URL = '/api/comment';
+
+describe(`PATCH ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let userService: UserService;
@@ -55,7 +57,7 @@ describe('PATCH /api/comment E2E Test', () => {
     });
 
     // when
-    const response = await agent.patch('/api/comment').send(requestDto);
+    const response = await agent.patch(URL).send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
@@ -79,7 +81,7 @@ describe('PATCH /api/comment E2E Test', () => {
 
     // when
     const response = await agent
-      .patch('/api/comment')
+      .patch(URL)
       .set('Authorization', `Bearer ${accessToken}`)
       .send(requestDto);
 
@@ -105,7 +107,7 @@ describe('PATCH /api/comment E2E Test', () => {
 
     // when
     const response = await agent
-      .patch('/api/comment')
+      .patch(URL)
       .set('Authorization', `Bearer ${accessToken}`)
       .send(requestDto);
 
@@ -131,7 +133,7 @@ describe('PATCH /api/comment E2E Test', () => {
 
     // when
     const response = await agent
-      .patch('/api/comment')
+      .patch(URL)
       .set('Authorization', `Bearer ${accessToken}`)
       .send(requestDto);
 

@@ -6,7 +6,9 @@ import TestAgent from 'supertest/lib/agent';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 
-describe('GET /api/admin/sessionId E2E Test', () => {
+const URL = '/api/admin/sessionId';
+
+describe(`GET ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
 
@@ -25,7 +27,7 @@ describe('GET /api/admin/sessionId E2E Test', () => {
   it('[401] 세션 ID가 존재하지 않을 경우 관리자 자동 로그인을 실패한다.', async () => {
     // when
     const response = await agent
-      .get('/api/admin/sessionId')
+      .get(URL)
       .set('Cookie', 'sessionId=WrongSessionId');
 
     // then
@@ -34,7 +36,7 @@ describe('GET /api/admin/sessionId E2E Test', () => {
 
   it('[401] 세션 ID가 쿠키에 포함되지 않을 경우 관리자 자동 로그인을 실패한다.', async () => {
     // when
-    const response = await agent.get('/api/admin/sessionId');
+    const response = await agent.get(URL);
 
     // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
@@ -43,7 +45,7 @@ describe('GET /api/admin/sessionId E2E Test', () => {
   it('[200] 세션 ID가 존재할 경우 관리자 자동 로그인을 성공한다.', async () => {
     // when
     const response = await agent
-      .get('/api/admin/sessionId')
+      .get(URL)
       .set('Cookie', 'sessionId=testSessionId');
 
     // then

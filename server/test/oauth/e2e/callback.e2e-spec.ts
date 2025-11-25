@@ -10,7 +10,9 @@ import TestAgent from 'supertest/lib/agent';
 import { UserService } from '../../../src/user/service/user.service';
 import axios from 'axios';
 
-describe('GET /api/oauth/callback E2E Test', () => {
+const URL = '/api/oauth/callback';
+
+describe(`GET ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let oauthService: OAuthService;
@@ -60,7 +62,7 @@ describe('GET /api/oauth/callback E2E Test', () => {
     );
 
     // when
-    const response = await agent.get('/api/oauth/callback').query(requestDto);
+    const response = await agent.get(URL).query(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.FOUND);
@@ -107,7 +109,7 @@ describe('GET /api/oauth/callback E2E Test', () => {
     );
 
     // when
-    const response = await agent.get('/api/oauth/callback').query(requestDto);
+    const response = await agent.get(URL).query(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.FOUND);

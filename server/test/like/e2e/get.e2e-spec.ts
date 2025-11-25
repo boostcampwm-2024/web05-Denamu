@@ -13,7 +13,9 @@ import { User } from '../../../src/user/entity/user.entity';
 import { UserService } from '../../../src/user/service/user.service';
 import { LikeRepository } from '../../../src/like/repository/like.repository';
 
-describe('GET /api/like/{feedId} E2E Test', () => {
+const URL = '/api/like';
+
+describe(`GET ${URL}/{feedId} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let rssAccept: RssAccept;
@@ -42,7 +44,7 @@ describe('GET /api/like/{feedId} E2E Test', () => {
 
   it('[404] 게시글이 존재하지 않을 경우 좋아요 정보 제공을 실패한다.', async () => {
     // when
-    const response = await agent.get(`/api/like/${Number.MAX_SAFE_INTEGER}`);
+    const response = await agent.get(`${URL}/${Number.MAX_SAFE_INTEGER}`);
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
@@ -50,7 +52,7 @@ describe('GET /api/like/{feedId} E2E Test', () => {
 
   it('[200] 로그인하지 않은 상황에서 게시글에 대한 좋아요 조회 요청을 받을 경우 좋아요 정보 제공을 성공한다.', async () => {
     // when
-    const response = await agent.get(`/api/like/${feed.id}`);
+    const response = await agent.get(`${URL}/${feed.id}`);
 
     // then
     const { data } = response.body;
@@ -74,7 +76,7 @@ describe('GET /api/like/{feedId} E2E Test', () => {
 
     // when
     const response = await agent
-      .get(`/api/like/${feed.id}`)
+      .get(`${URL}/${feed.id}`)
       .set('Authorization', `Bearer ${accessToken}`);
 
     // then

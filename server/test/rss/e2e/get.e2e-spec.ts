@@ -7,7 +7,9 @@ import {
 } from '../../../src/rss/repository/rss.repository';
 import TestAgent from 'supertest/lib/agent';
 
-describe('GET /api/rss E2E Test', () => {
+const URL = '/api/rss';
+
+describe(`GET ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let rssRepository: RssRepository;
@@ -26,7 +28,7 @@ describe('GET /api/rss E2E Test', () => {
 
   it('[200] 신청된 RSS가 없을 경우 RSS 신청 조회를 성공한다.', async () => {
     // when
-    const response = await agent.get('/api/rss');
+    const response = await agent.get(URL);
 
     // then
     const { data } = response.body;
@@ -39,7 +41,7 @@ describe('GET /api/rss E2E Test', () => {
     const rss = await rssRepository.save(RssFixture.createRssFixture());
 
     // when
-    const response = await agent.get('/api/rss');
+    const response = await agent.get(URL);
 
     //then
     const { data } = response.body;

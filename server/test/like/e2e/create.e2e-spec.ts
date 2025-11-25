@@ -15,7 +15,9 @@ import * as supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 import { LikeRepository } from '../../../src/like/repository/like.repository';
 
-describe('POST /api/like E2E Test', () => {
+const URL = '/api/like';
+
+describe(`POST ${URL} E2E Test`, () => {
   let app: INestApplication;
   let userService: UserService;
   let rssAccept: RssAccept;
@@ -49,7 +51,7 @@ describe('POST /api/like E2E Test', () => {
     });
 
     // when
-    const response = await agent.post('/api/like').send(requestDto);
+    const response = await agent.post(URL).send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
@@ -72,7 +74,7 @@ describe('POST /api/like E2E Test', () => {
 
     // when
     const response = await agent
-      .post('/api/like')
+      .post(URL)
       .set('Authorization', `Bearer ${accessToken}`)
       .send(requestDto);
 
@@ -101,7 +103,7 @@ describe('POST /api/like E2E Test', () => {
 
     // when
     const response = await agent
-      .post('/api/like')
+      .post(URL)
       .set('Authorization', `Bearer ${accessToken}`)
       .send(requestDto);
 
@@ -129,7 +131,7 @@ describe('POST /api/like E2E Test', () => {
 
     // when
     const response = await agent
-      .post('/api/like')
+      .post(URL)
       .set('Authorization', `Bearer ${accessToken}`)
       .send(requestDto);
 

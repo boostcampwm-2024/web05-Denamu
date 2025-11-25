@@ -9,7 +9,9 @@ import {
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 import TestAgent from 'supertest/lib/agent';
 
-describe('POST /api/rss/accept/{rssId} E2E Test', () => {
+const URL = '/api/rss/accept';
+
+describe(`POST ${URL}/{rssId} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let rssRepository: RssRepository;
@@ -36,9 +38,7 @@ describe('POST /api/rss/accept/{rssId} E2E Test', () => {
 
   it('[401] 관리자 로그인 쿠키가 없을 경우 RSS 승인을 실패한다.', async () => {
     // when
-    const response = await agent.post(
-      `/api/rss/accept/${Number.MAX_SAFE_INTEGER}`,
-    );
+    const response = await agent.post(`${URL}/${Number.MAX_SAFE_INTEGER}`);
 
     // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
@@ -47,7 +47,7 @@ describe('POST /api/rss/accept/{rssId} E2E Test', () => {
   it('[401] 관리자 로그인 쿠키가 만료됐을 경우 RSS 승인을 실패한다.', async () => {
     // when
     const response = await agent
-      .post(`/api/rss/accept/${Number.MAX_SAFE_INTEGER}`)
+      .post(`${URL}/${Number.MAX_SAFE_INTEGER}`)
       .set('Cookie', 'sessionId=invalid');
 
     // then
@@ -57,7 +57,7 @@ describe('POST /api/rss/accept/{rssId} E2E Test', () => {
   it('[404] 대기 목록에 없는 RSS를 승인할 경우 RSS 승인을 실패한다.', async () => {
     // when
     const response = await agent
-      .post(`/api/rss/accept/${Number.MAX_SAFE_INTEGER}`)
+      .post(`${URL}/${Number.MAX_SAFE_INTEGER}`)
       .set('Cookie', 'sessionId=testSessionId');
 
     // then
@@ -78,7 +78,7 @@ describe('POST /api/rss/accept/{rssId} E2E Test', () => {
 
     // when
     const response = await agent
-      .post(`/api/rss/accept/${rss.id}`)
+      .post(`${URL}/${rss.id}`)
       .set('Cookie', 'sessionId=testSessionId');
 
     // then
@@ -99,7 +99,7 @@ describe('POST /api/rss/accept/{rssId} E2E Test', () => {
 
     // when
     const response = await agent
-      .post(`/api/rss/accept/${rss.id}`)
+      .post(`${URL}/${rss.id}`)
       .set('Cookie', 'sessionId=testSessionId');
 
     // then

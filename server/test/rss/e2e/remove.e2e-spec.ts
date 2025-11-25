@@ -8,7 +8,9 @@ import * as supertest from 'supertest';
 import { DeleteRssRequestDto } from '../../../src/rss/dto/request/deleteRss.dto';
 import TestAgent from 'supertest/lib/agent';
 
-describe('POST /api/rss/remove E2E Test', () => {
+const URL = '/api/rss/remove';
+
+describe(`POST ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let rssRepository: RssRepository;
@@ -29,7 +31,7 @@ describe('POST /api/rss/remove E2E Test', () => {
     });
 
     // when
-    const response = await agent.post('/api/rss/remove').send(requestDto);
+    const response = await agent.post(URL).send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
@@ -44,7 +46,7 @@ describe('POST /api/rss/remove E2E Test', () => {
     });
 
     // when
-    const response = await agent.post('/api/rss/remove').send(requestDto);
+    const response = await agent.post(URL).send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
@@ -62,7 +64,7 @@ describe('POST /api/rss/remove E2E Test', () => {
     });
 
     // when
-    const response = await agent.post('/api/rss/remove').send(requestDto);
+    const response = await agent.post(URL).send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.OK);

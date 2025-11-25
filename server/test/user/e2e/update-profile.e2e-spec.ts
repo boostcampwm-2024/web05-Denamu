@@ -8,7 +8,9 @@ import { FileService } from '../../../src/file/service/file.service';
 import { UpdateUserRequestDto } from '../../../src/user/dto/request/updateUser.dto';
 import TestAgent from 'supertest/lib/agent';
 
-describe('PATCH /api/user/profile E2E Test', () => {
+const URL = '/api/user/profile';
+
+describe(`PATCH ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let userService: UserService;
@@ -47,7 +49,7 @@ describe('PATCH /api/user/profile E2E Test', () => {
     });
 
     // when
-    const response = await agent.patch('/api/user/profile').send(requestDto);
+    const response = await agent.patch(URL).send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
@@ -73,7 +75,7 @@ describe('PATCH /api/user/profile E2E Test', () => {
 
     // when
     const response = await agent
-      .patch('/api/user/profile')
+      .patch(URL)
       .set('Authorization', `Bearer ${accessToken}`)
       .send(requestDto);
 
@@ -101,7 +103,7 @@ describe('PATCH /api/user/profile E2E Test', () => {
 
     // when
     const response = await agent
-      .patch('/api/user/profile')
+      .patch(URL)
       .set('Authorization', `Bearer ${accessToken}`)
       .send(requestDto);
 
@@ -126,7 +128,7 @@ describe('PATCH /api/user/profile E2E Test', () => {
 
     // when
     const response = await agent
-      .patch('/api/user/profile')
+      .patch(URL)
       .set('Authorization', `Bearer ${accessToken}`)
       .send(requestDto);
 

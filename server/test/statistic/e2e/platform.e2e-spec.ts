@@ -4,7 +4,9 @@ import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository'
 import { RssAcceptFixture } from '../../fixture/rss-accept.fixture';
 import TestAgent from 'supertest/lib/agent';
 
-describe('GET /api/statistic/platform E2E Test', () => {
+const URL = '/api/statistic/platform';
+
+describe(`GET ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let rssAcceptRepository: RssAcceptRepository;
@@ -26,7 +28,7 @@ describe('GET /api/statistic/platform E2E Test', () => {
 
   it('[200] 블로그 플랫폼별 통계 요청을 받은 경우 블로그 플랫폼별 개수 통계 조회를 성공한다.', async () => {
     // when
-    const response = await agent.get('/api/statistic/platform');
+    const response = await agent.get(URL);
 
     // then
     const { data } = response.body;

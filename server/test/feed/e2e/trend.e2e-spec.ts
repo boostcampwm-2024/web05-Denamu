@@ -8,7 +8,9 @@ import { FeedFixture } from '../../fixture/feed.fixture';
 import * as EventSource from 'eventsource';
 import { Feed } from '../../../src/feed/entity/feed.entity';
 
-describe('SSE /api/trend/sse E2E Test', () => {
+const URL = '/api/feed/trend/sse';
+
+describe(`SSE ${URL} E2E Test`, () => {
   let app: INestApplication;
   let serverUrl: string;
   let feedList: Feed[];
@@ -17,7 +19,7 @@ describe('SSE /api/trend/sse E2E Test', () => {
     app = global.testApp;
     const httpServer = await app.listen(0);
     const port = httpServer.address().port;
-    serverUrl = `http://localhost:${port}/api/feed/trend/sse`;
+    serverUrl = `http://localhost:${port}${URL}`;
   });
 
   it('[SSE] 최초 연결을 할 경우 트랜드 데이터 최대 4개 제공 수신을 성공한다.', async () => {

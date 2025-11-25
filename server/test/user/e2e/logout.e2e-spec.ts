@@ -6,7 +6,9 @@ import { UserFixture } from '../../fixture/user.fixture';
 import { User } from '../../../src/user/entity/user.entity';
 import TestAgent from 'supertest/lib/agent';
 
-describe('POST /api/user/logout E2E Test', () => {
+const URL = '/api/user/logout';
+
+describe(`POST ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let userService: UserService;
@@ -25,7 +27,7 @@ describe('POST /api/user/logout E2E Test', () => {
 
   it('[401] Access Token이 존재하지 않을 경우 로그아웃을 실패한다.', async () => {
     // when
-    const response = await agent.post('/api/user/logout');
+    const response = await agent.post(URL);
 
     // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
@@ -45,7 +47,7 @@ describe('POST /api/user/logout E2E Test', () => {
 
     // when
     const response = await agent
-      .post('/api/user/logout')
+      .post(URL)
       .set('Authorization', `Bearer ${accessToken}`);
 
     // then

@@ -6,8 +6,11 @@ import { RssAcceptFixture } from '../../fixture/rss-accept.fixture';
 import { FeedFixture } from '../../fixture/feed.fixture';
 import { Feed } from '../../../src/feed/entity/feed.entity';
 import TestAgent from 'supertest/lib/agent';
+import { ReadStatisticRequestDto } from '../../../src/statistic/dto/request/readStatistic.dto';
 
-describe('GET /api/statistic/all E2E Test', () => {
+const URL = '/api/statistic/all';
+
+describe(`GET ${URL}?limit={} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let feedList: Feed[];
@@ -28,7 +31,7 @@ describe('GET /api/statistic/all E2E Test', () => {
 
   it('[200] 전체 조회수 통계 요청을 받은 경우 전체 조회수 통계 조회를 성공한다.', async () => {
     // when
-    const response = await agent.get('/api/statistic/all');
+    const response = await agent.get(URL);
 
     // then
     const { data } = response.body;
@@ -46,8 +49,11 @@ describe('GET /api/statistic/all E2E Test', () => {
   });
 
   it('[200] 전체 조회수 통계에서 개수 제한을 걸 경우 특정 개수만큼의 전체 조회수 통계 조회를 성공한다.', async () => {
+    // given
+    const reqeustDto = new ReadStatisticRequestDto({ limit: 1 });
+
     // when
-    const response = await agent.get('/api/statistic/all?limit=1');
+    const response = await agent.get(URL).query(reqeustDto);
 
     // then
     const { data } = response.body;

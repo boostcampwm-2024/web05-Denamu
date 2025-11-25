@@ -9,7 +9,9 @@ import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 import TestAgent from 'supertest/lib/agent';
 import { Feed } from '../../../src/feed/entity/feed.entity';
 
-describe('GET /api/feed/recent E2E Test', () => {
+const URL = '/api/feed/recent';
+
+describe(`GET ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let redisService: RedisService;
@@ -53,7 +55,7 @@ describe('GET /api/feed/recent E2E Test', () => {
     });
 
     // when
-    const response = await agent.get('/api/feed/recent');
+    const response = await agent.get(URL);
 
     // then
     const { data } = response.body;
@@ -90,7 +92,7 @@ describe('GET /api/feed/recent E2E Test', () => {
 
   it('[200] 최신 피드가 없을 경우 빈 배열 제공을 성공한다.', async () => {
     // when
-    const response = await agent.get('/api/feed/recent');
+    const response = await agent.get(URL);
 
     // then
     const { data } = response.body;

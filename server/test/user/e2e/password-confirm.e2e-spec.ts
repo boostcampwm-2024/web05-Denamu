@@ -7,7 +7,9 @@ import { RedisService } from '../../../src/common/redis/redis.service';
 import { ResetPasswordRequestDto } from '../../../src/user/dto/request/resetPassword.dto';
 import TestAgent from 'supertest/lib/agent';
 
-describe('PATCH /api/user/password E2E Test', () => {
+const URL = '/api/user/password';
+
+describe(`PATCH ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let redisService: RedisService;
@@ -28,7 +30,7 @@ describe('PATCH /api/user/password E2E Test', () => {
     });
 
     // when
-    const response = await agent.patch('/api/user/password').send(requestDto);
+    const response = await agent.patch(URL).send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
@@ -49,7 +51,7 @@ describe('PATCH /api/user/password E2E Test', () => {
     );
 
     // when
-    const response = await agent.patch('/api/user/password').send(requestDto);
+    const response = await agent.patch(URL).send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.OK);

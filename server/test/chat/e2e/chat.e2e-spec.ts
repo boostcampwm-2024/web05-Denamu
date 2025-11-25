@@ -5,7 +5,9 @@ import { RedisService } from '../../../src/common/redis/redis.service';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 import { ChatService } from '../../../src/chat/service/chat.service';
 
-describe('Socket.IO /chat E2E Test', () => {
+const URL = '/chat';
+
+describe('Socket.IO Anonymous Chat E2E Test', () => {
   let app: INestApplication;
   let clientSocket: Socket;
   let chatService: ChatService;
@@ -40,7 +42,7 @@ describe('Socket.IO /chat E2E Test', () => {
     clientSocket = io(serverUrl, {
       forceNew: true,
       reconnection: false,
-      path: '/chat',
+      path: URL,
     });
     clientSocket.emit('message', messagePayload);
 
@@ -72,7 +74,7 @@ describe('Socket.IO /chat E2E Test', () => {
     clientSocket = io(serverUrl, {
       forceNew: true,
       reconnection: false,
-      path: '/chat',
+      path: URL,
     });
 
     // when
@@ -99,7 +101,7 @@ describe('Socket.IO /chat E2E Test', () => {
     clientSocket = io(serverUrl, {
       forceNew: true,
       reconnection: false,
-      path: '/chat',
+      path: URL,
     });
 
     // when
@@ -146,7 +148,7 @@ describe('Socket.IO /chat E2E Test', () => {
     clientSocket = io(serverUrl, {
       forceNew: true,
       reconnection: false,
-      path: '/chat',
+      path: URL,
     });
 
     // when

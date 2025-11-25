@@ -5,7 +5,9 @@ import * as supertest from 'supertest';
 import { OAuthService } from '../../../src/user/service/oauth.service';
 import TestAgent from 'supertest/lib/agent';
 
-describe('GET /api/oauth?type={} E2E Test', () => {
+const URL = '/api/oauth';
+
+describe(`GET ${URL}?type={} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let oauthService: OAuthService;
@@ -31,7 +33,7 @@ describe('GET /api/oauth?type={} E2E Test', () => {
     });
 
     // when
-    const response = await agent.get('/api/oauth').query(requestDto);
+    const response = await agent.get(URL).query(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.FOUND);

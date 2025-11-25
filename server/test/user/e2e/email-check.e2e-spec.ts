@@ -5,7 +5,9 @@ import { UserFixture } from '../../fixture/user.fixture';
 import { CheckEmailDuplicationRequestDto } from '../../../src/user/dto/request/checkEmailDuplication.dto';
 import TestAgent from 'supertest/lib/agent';
 
-describe('GET /api/user/email-check E2E Test', () => {
+const URL = '/api/user/email-check';
+
+describe(`GET ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
 
@@ -23,7 +25,7 @@ describe('GET /api/user/email-check E2E Test', () => {
     });
 
     // when
-    const response = await agent.get('/api/user/email-check').query(requestDto);
+    const response = await agent.get(URL).query(requestDto);
 
     // then
     const { data } = response.body;
@@ -40,7 +42,7 @@ describe('GET /api/user/email-check E2E Test', () => {
     });
 
     // when
-    const response = await agent.get('/api/user/email-check').query(requestDto);
+    const response = await agent.get(URL).query(requestDto);
 
     // then
     const { data } = response.body;

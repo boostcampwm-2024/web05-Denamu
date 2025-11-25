@@ -5,7 +5,9 @@ import * as supertest from 'supertest';
 import { AdminRepository } from '../../../src/admin/repository/admin.repository';
 import TestAgent from 'supertest/lib/agent';
 
-describe('POST /api/admin/login E2E Test', () => {
+const URL = '/api/admin/login';
+
+describe(`POST ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
 
@@ -24,7 +26,7 @@ describe('POST /api/admin/login E2E Test', () => {
     });
 
     // when
-    const response = await agent.post('/api/admin/login').send(requestDto);
+    const response = await agent.post(URL).send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
@@ -38,7 +40,7 @@ describe('POST /api/admin/login E2E Test', () => {
     });
 
     // when
-    const response = await agent.post('/api/admin/login').send(requestDto);
+    const response = await agent.post(URL).send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
@@ -52,7 +54,7 @@ describe('POST /api/admin/login E2E Test', () => {
     });
 
     // when
-    const response = await agent.post('/api/admin/login').send(requestDto);
+    const response = await agent.post(URL).send(requestDto);
 
     //then
     expect(response.status).toBe(HttpStatus.OK);

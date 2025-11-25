@@ -6,7 +6,9 @@ import TestAgent from 'supertest/lib/agent';
 import { UserFixture } from '../../fixture/user.fixture';
 import { User } from '../../../src/user/entity/user.entity';
 
-describe('POST /api/user/password-reset E2E Test', () => {
+const URL = '/api/user/password-reset';
+
+describe(`POST ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let userRepository: UserRepository;
@@ -26,9 +28,7 @@ describe('POST /api/user/password-reset E2E Test', () => {
     });
 
     // when
-    const response = await agent
-      .post('/api/user/password-reset')
-      .send(requestDto);
+    const response = await agent.post(URL).send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
@@ -41,9 +41,7 @@ describe('POST /api/user/password-reset E2E Test', () => {
     });
 
     // when
-    const response = await agent
-      .post('/api/user/password-reset')
-      .send(requestDto);
+    const response = await agent.post(URL).send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.OK);

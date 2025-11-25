@@ -10,7 +10,9 @@ import * as path from 'path';
 import TestAgent from 'supertest/lib/agent';
 import { FileRepository } from '../../../src/file/repository/file.repository';
 
-describe('POST /api/file E2E Test', () => {
+const URL = '/api/file';
+
+describe(`POST ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let user: User;
@@ -36,7 +38,7 @@ describe('POST /api/file E2E Test', () => {
     });
 
     // when
-    const response = await agent.post('/api/file').query(requestDto);
+    const response = await agent.post(URL).query(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
@@ -59,7 +61,7 @@ describe('POST /api/file E2E Test', () => {
 
     // when
     const response = await agent
-      .post('/api/file')
+      .post(URL)
       .query(requestDto)
       .set('Authorization', `Bearer ${accessToken}`);
 
@@ -92,7 +94,7 @@ describe('POST /api/file E2E Test', () => {
 
     // when
     const response = await agent
-      .post('/api/file')
+      .post(URL)
       .query(requestDto)
       .set('Authorization', `Bearer ${accessToken}`)
       .attach('file', filePath);

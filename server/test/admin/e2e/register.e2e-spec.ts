@@ -7,7 +7,9 @@ import TestAgent from 'supertest/lib/agent';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 
-describe('POST /api/admin/register E2E Test', () => {
+const URL = '/api/admin/register';
+
+describe(`POST ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let adminRepository: AdminRepository;
@@ -32,7 +34,7 @@ describe('POST /api/admin/register E2E Test', () => {
     });
 
     // when
-    const response = await agent.post('/api/admin/register').send(newAdminDto);
+    const response = await agent.post(URL).send(newAdminDto);
 
     // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
@@ -44,7 +46,7 @@ describe('POST /api/admin/register E2E Test', () => {
 
     // when
     const response = await agent
-      .post('/api/admin/register')
+      .post(URL)
       .send(newAdminDto)
       .set('Cookie', 'sessionId=testSessionId');
 
@@ -61,7 +63,7 @@ describe('POST /api/admin/register E2E Test', () => {
 
     // when
     const response = await agent
-      .post('/api/admin/register')
+      .post(URL)
       .send(newAdminDto)
       .set('Cookie', 'sessionId=testSessionId');
 

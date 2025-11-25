@@ -9,7 +9,9 @@ import { RssAcceptFixture } from '../../fixture/rss-accept.fixture';
 import TestAgent from 'supertest/lib/agent';
 import { Feed } from '../../../src/feed/entity/feed.entity';
 
-describe('POST /api/feed/{feedId} E2E Test', () => {
+const URL = '/api/feed';
+
+describe(`POST ${URL}/{feedId} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let redisService: RedisService;
@@ -35,7 +37,7 @@ describe('POST /api/feed/{feedId} E2E Test', () => {
 
   it('[404] 피드가 서비스에 존재하지 않을 경우 조회수 상승을 실패한다.', async () => {
     // when
-    const response = await agent.post(`/api/feed/${Number.MAX_SAFE_INTEGER}`);
+    const response = await agent.post(`${URL}/${Number.MAX_SAFE_INTEGER}`);
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
@@ -48,7 +50,7 @@ describe('POST /api/feed/{feedId} E2E Test', () => {
     try {
       // when
       const response = await agent
-        .post(`/api/feed/${feed.id}`)
+        .post(`${URL}/${feed.id}`)
         .set('X-Forwarded-For', testNewIp);
       const feedDailyViewCount = parseInt(
         await redisService.zscore(
@@ -76,7 +78,7 @@ describe('POST /api/feed/{feedId} E2E Test', () => {
   it('[200] 읽은 기록 쿠키가 존재할 경우 조회수 상승을 하지 않는 행위를 성공한다.', async () => {
     // when
     const response = await agent
-      .post(`/api/feed/${feed.id}`)
+      .post(`${URL}/${feed.id}`)
       .set('Cookie', `View_count_${feed.id}=${feed.id}`)
       .set('X-Forwarded-For', testIp);
     const feedDailyViewCount = await redisService.zscore(
@@ -92,7 +94,7 @@ describe('POST /api/feed/{feedId} E2E Test', () => {
   it('[200] 읽은 기록 쿠기가 없지만 읽은 기록 IP가 있을 경우 조회수 상승을 하지 않는 행위를 성공한다.', async () => {
     // when
     const response = await agent
-      .post(`/api/feed/${feed.id}`)
+      .post(`${URL}/${feed.id}`)
       .set('X-Forwarded-For', testIp);
     const feedDailyViewCount = await redisService.zscore(
       REDIS_KEYS.FEED_TREND_KEY,

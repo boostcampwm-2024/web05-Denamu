@@ -12,7 +12,9 @@ import * as supertest from 'supertest';
 import { RssFixture } from '../../fixture/rss.fixture';
 import TestAgent from 'supertest/lib/agent';
 
-describe('DELETE /api/rss/remove/{code} E2E Test', () => {
+const URL = '/api/rss/remove';
+
+describe(`DELETE ${URL}/{code} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let feedRepository: FeedRepository;
@@ -33,9 +35,7 @@ describe('DELETE /api/rss/remove/{code} E2E Test', () => {
 
   it('[404] RSS 삭제 요청이 만료되었거나 없을 경우 RSS 삭제 인증을 실패한다.', async () => {
     // when
-    const response = await agent.delete(
-      `/api/rss/remove/${Number.MAX_SAFE_INTEGER}`,
-    );
+    const response = await agent.delete(`${URL}/${Number.MAX_SAFE_INTEGER}`);
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
@@ -58,7 +58,7 @@ describe('DELETE /api/rss/remove/{code} E2E Test', () => {
     );
 
     // when
-    const response = await agent.delete(`/api/rss/remove/${certificateCode}`);
+    const response = await agent.delete(`${URL}/${certificateCode}`);
 
     // then
     expect(response.status).toBe(HttpStatus.OK);

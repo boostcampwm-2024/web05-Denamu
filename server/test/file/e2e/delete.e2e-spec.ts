@@ -9,7 +9,9 @@ import { File } from '../../../src/file/entity/file.entity';
 import { FileFixture } from '../../fixture/file.fixture';
 import TestAgent from 'supertest/lib/agent';
 
-describe('DELETE /api/file/{fileId} E2E Test', () => {
+const URL = '/api/file';
+
+describe(`DELETE ${URL}/{fileId} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let user: User;
@@ -30,7 +32,7 @@ describe('DELETE /api/file/{fileId} E2E Test', () => {
 
   it('[401] 파일에 삭제 권한이 없을 경우 파일 삭제를 실패한다.', async () => {
     // when
-    const response = await agent.delete(`/api/file/${Number.MAX_SAFE_INTEGER}`);
+    const response = await agent.delete(`${URL}/${Number.MAX_SAFE_INTEGER}`);
 
     // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
@@ -54,7 +56,7 @@ describe('DELETE /api/file/{fileId} E2E Test', () => {
 
     // when
     const response = await agent
-      .delete(`/api/file/${Number.MAX_SAFE_INTEGER}`)
+      .delete(`${URL}/${Number.MAX_SAFE_INTEGER}`)
       .set('Authorization', `Bearer ${accessToken}`);
 
     // then
@@ -82,7 +84,7 @@ describe('DELETE /api/file/{fileId} E2E Test', () => {
 
     // when
     const response = await agent
-      .delete(`/api/file/${file.id}`)
+      .delete(`${URL}/${file.id}`)
       .set('Authorization', `Bearer ${accessToken}`);
 
     // then
@@ -109,7 +111,7 @@ describe('DELETE /api/file/{fileId} E2E Test', () => {
 
     // when
     const response = await agent
-      .delete(`/api/file/${file.id}`)
+      .delete(`${URL}/${file.id}`)
       .set('Authorization', `Bearer ${accessToken}`);
 
     // then
@@ -138,7 +140,7 @@ describe('DELETE /api/file/{fileId} E2E Test', () => {
 
     // when
     const response = await agent
-      .delete(`/api/file/${file.id}`)
+      .delete(`${URL}/${file.id}`)
       .set('Authorization', `Bearer ${accessToken}`);
 
     // then

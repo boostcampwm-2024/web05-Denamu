@@ -14,7 +14,9 @@ import * as supertest from 'supertest';
 import { LikeRepository } from '../../../src/like/repository/like.repository';
 import TestAgent from 'supertest/lib/agent';
 
-describe('DELETE /api/like/{feedId} E2E Test', () => {
+const URL = '/api/like';
+
+describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
   let app: INestApplication;
   let userService: UserService;
   let rssAccept: RssAccept;
@@ -46,7 +48,7 @@ describe('DELETE /api/like/{feedId} E2E Test', () => {
     });
 
     // when
-    const response = await agent.delete(`/api/like/${requestDto.feedId}`);
+    const response = await agent.delete(`${URL}/${requestDto.feedId}`);
 
     // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
@@ -69,7 +71,7 @@ describe('DELETE /api/like/{feedId} E2E Test', () => {
 
     // when
     const response = await agent
-      .delete(`/api/like/${requestDto.feedId}`)
+      .delete(`${URL}/${requestDto.feedId}`)
       .set('Authorization', `Bearer ${accessToken}`);
 
     // then
@@ -93,7 +95,7 @@ describe('DELETE /api/like/{feedId} E2E Test', () => {
 
     // when
     const response = await agent
-      .delete(`/api/like/${requestDto.feedId}`)
+      .delete(`${URL}/${requestDto.feedId}`)
       .set('Authorization', `Bearer ${accessToken}`);
 
     // then
@@ -123,7 +125,7 @@ describe('DELETE /api/like/{feedId} E2E Test', () => {
 
     // when
     const response = await agent
-      .delete(`/api/like/${requestDto.feedId}`)
+      .delete(`${URL}/${requestDto.feedId}`)
       .set('Authorization', `Bearer ${accessToken}`);
 
     // then

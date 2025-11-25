@@ -14,7 +14,9 @@ import { RssAcceptFixture } from '../../fixture/rss-accept.fixture';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
 import TestAgent from 'supertest/lib/agent';
 
-describe('DELETE /api/comment E2E Test', () => {
+const URL = '/api/comment';
+
+describe(`DELETE ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let userService: UserService;
@@ -54,7 +56,7 @@ describe('DELETE /api/comment E2E Test', () => {
     });
 
     // when
-    const response = await agent.delete('/api/comment').send(requestDto);
+    const response = await agent.delete(URL).send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
@@ -77,7 +79,7 @@ describe('DELETE /api/comment E2E Test', () => {
 
     // when
     const response = await agent
-      .delete('/api/comment')
+      .delete(URL)
       .set('Authorization', `Bearer ${accessToken}`)
       .send(requestDto);
 
@@ -102,7 +104,7 @@ describe('DELETE /api/comment E2E Test', () => {
 
     // when
     const response = await agent
-      .delete('/api/comment')
+      .delete(URL)
       .set('Authorization', `Bearer ${accessToken}`)
       .send(requestDto);
 
@@ -127,7 +129,7 @@ describe('DELETE /api/comment E2E Test', () => {
 
     // when
     const response = await agent
-      .delete('/api/comment')
+      .delete(URL)
       .set('Authorization', `Bearer ${accessToken}`)
       .send(requestDto);
 

@@ -6,7 +6,9 @@ import { UserFixture } from '../../fixture/user.fixture';
 import { User } from '../../../src/user/entity/user.entity';
 import TestAgent from 'supertest/lib/agent';
 
-describe('POST /api/user/refresh-token E2E Test', () => {
+const URL = '/api/user/refresh-token';
+
+describe(`POST ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let userService: UserService;
@@ -26,7 +28,7 @@ describe('POST /api/user/refresh-token E2E Test', () => {
 
   it('[401] Refresh Token이 없을 경우 Access Token 발급을 실패한다.', async () => {
     // when
-    const response = await agent.post('/api/user/refresh-token');
+    const response = await agent.post(URL);
 
     // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
@@ -55,7 +57,7 @@ describe('POST /api/user/refresh-token E2E Test', () => {
 
     // when
     const response = await agent
-      .post('/api/user/refresh-token')
+      .post(URL)
       .set('Cookie', `refresh_token=${refreshToken}`);
 
     // then

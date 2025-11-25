@@ -12,7 +12,9 @@ import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../fixture/user.fixture';
 import { CommentFixture } from '../../fixture/comment.fixture';
 
-describe('GET /api/comment/{feedId} E2E Test', () => {
+const URL = '/api/comment';
+
+describe(`GET ${URL}/{feedId} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let feed: Feed;
@@ -36,7 +38,7 @@ describe('GET /api/comment/{feedId} E2E Test', () => {
 
   it('[404] 게시글이 존재하지 않을 경우 댓글 조회를 실패한다.', async () => {
     // when
-    const response = await agent.get(`/api/comment/${Number.MAX_SAFE_INTEGER}`);
+    const response = await agent.get(`${URL}/${Number.MAX_SAFE_INTEGER}`);
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
@@ -53,7 +55,7 @@ describe('GET /api/comment/{feedId} E2E Test', () => {
     });
 
     // when
-    const response = await agent.get(`/api/comment/${requestDto.feedId}`);
+    const response = await agent.get(`${URL}/${requestDto.feedId}`);
 
     // then
     const { data } = response.body;

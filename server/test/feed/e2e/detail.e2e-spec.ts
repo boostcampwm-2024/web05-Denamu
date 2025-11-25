@@ -10,7 +10,9 @@ import TestAgent from 'supertest/lib/agent';
 import { Feed } from '../../../src/feed/entity/feed.entity';
 import { TagFixture } from '../../fixture/tag.fixture';
 
-describe('GET /api/feed/detail/{feedId} E2E Test', () => {
+const URL = '/api/feed/detail';
+
+describe(`GET ${URL}/{feedId} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let feedList: Feed[];
@@ -41,9 +43,7 @@ describe('GET /api/feed/detail/{feedId} E2E Test', () => {
     });
 
     // when
-    const response = await agent.get(
-      `/api/feed/detail/${feedDetailRequestDto.feedId}`,
-    );
+    const response = await agent.get(`${URL}/${feedDetailRequestDto.feedId}`);
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
@@ -56,9 +56,7 @@ describe('GET /api/feed/detail/{feedId} E2E Test', () => {
     });
 
     // when
-    const response = await agent.get(
-      `/api/feed/detail/${feedDetailRequestDto.feedId}`,
-    );
+    const response = await agent.get(`${URL}/${feedDetailRequestDto.feedId}`);
 
     // then
     const { data } = response.body;
@@ -85,9 +83,7 @@ describe('GET /api/feed/detail/{feedId} E2E Test', () => {
       feedId: feedList[1].id,
     });
     // when
-    const response = await agent.get(
-      `/api/feed/detail/${feedDetailRequestDto.feedId}`,
-    );
+    const response = await agent.get(`${URL}/${feedDetailRequestDto.feedId}`);
 
     // then
     const { data } = response.body;

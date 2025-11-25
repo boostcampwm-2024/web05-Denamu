@@ -13,7 +13,9 @@ import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository'
 import TestAgent from 'supertest/lib/agent';
 import { CommentRepository } from '../../../src/comment/repository/comment.repository';
 
-describe('POST /api/comment E2E Test', () => {
+const URL = '/api/comment';
+
+describe(`POST ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let userService: UserService;
@@ -49,7 +51,7 @@ describe('POST /api/comment E2E Test', () => {
     });
 
     // when
-    const response = await agent.post('/api/comment').send(requestDto);
+    const response = await agent.post(URL).send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
@@ -73,7 +75,7 @@ describe('POST /api/comment E2E Test', () => {
 
     // when
     const response = await agent
-      .post('/api/comment')
+      .post(URL)
       .set('Authorization', `Bearer ${accessToken}`)
       .send(requestDto);
 
@@ -99,7 +101,7 @@ describe('POST /api/comment E2E Test', () => {
 
     // when
     const response = await agent
-      .post('/api/comment')
+      .post(URL)
       .set('Authorization', `Bearer ${accessToken}`)
       .send(requestDto);
 
@@ -125,7 +127,7 @@ describe('POST /api/comment E2E Test', () => {
 
     // when
     const response = await agent
-      .post('/api/comment')
+      .post(URL)
       .set('Authorization', `Bearer ${accessToken}`)
       .send(requestDto);
 

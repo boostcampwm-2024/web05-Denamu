@@ -10,7 +10,9 @@ import * as supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 import { RssAccept } from '../../../src/rss/entity/rss.entity';
 
-describe('DELETE /api/feed/{feedId} E2E Test', () => {
+const URL = '/api/feed';
+
+describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
   let app: INestApplication;
   let feed: Feed;
   let feedRepository: FeedRepository;
@@ -34,7 +36,7 @@ describe('DELETE /api/feed/{feedId} E2E Test', () => {
 
   it('[404] 존재하지 않는 게시글 ID에 요청을 보낼 경우 404를 응답한다.', async () => {
     // when
-    const response = await agent.delete(`/api/feed/${Number.MAX_SAFE_INTEGER}`);
+    const response = await agent.delete(`${URL}/${Number.MAX_SAFE_INTEGER}`);
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
@@ -48,7 +50,7 @@ describe('DELETE /api/feed/{feedId} E2E Test', () => {
       .mockResolvedValue({ ok: false, status: HttpStatus.NOT_FOUND });
 
     // when
-    const response = await agent.delete(`/api/feed/${feed.id}`);
+    const response = await agent.delete(`${URL}/${feed.id}`);
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
@@ -62,7 +64,7 @@ describe('DELETE /api/feed/{feedId} E2E Test', () => {
       .mockResolvedValue({ ok: true, status: HttpStatus.OK });
 
     // when
-    const response = await agent.delete(`/api/feed/${feed.id}`);
+    const response = await agent.delete(`${URL}/${feed.id}`);
 
     // then
     expect(response.status).toBe(HttpStatus.OK);

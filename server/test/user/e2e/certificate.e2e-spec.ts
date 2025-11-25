@@ -7,7 +7,9 @@ import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 import { CertificateUserRequestDto } from '../../../src/user/dto/request/certificateUser.dto';
 import TestAgent from 'supertest/lib/agent';
 
-describe('POST /api/user/certificate E2E Test', () => {
+const URL = '/api/user/certificate';
+
+describe(`POST ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let redisService: RedisService;
@@ -27,7 +29,7 @@ describe('POST /api/user/certificate E2E Test', () => {
     });
 
     // when
-    const response = await agent.post('/api/user/certificate').send(requestDto);
+    const response = await agent.post(URL).send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
@@ -42,7 +44,7 @@ describe('POST /api/user/certificate E2E Test', () => {
     await redisService.set(redisKey, JSON.stringify(userEntity));
 
     // when
-    const response = await agent.post('/api/user/certificate').send(requestDto);
+    const response = await agent.post(URL).send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.OK);

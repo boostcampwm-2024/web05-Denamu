@@ -8,8 +8,11 @@ import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository'
 import { FeedFixture } from '../../fixture/feed.fixture';
 import TestAgent from 'supertest/lib/agent';
 import { Feed } from '../../../src/feed/entity/feed.entity';
+import { ReadStatisticRequestDto } from '../../../src/statistic/dto/request/readStatistic.dto';
 
-describe('GET /api/statistic/today E2E Test', () => {
+const URL = '/api/statistic/today';
+
+describe(`GET ${URL}?limit={} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let redisService: RedisService;
@@ -39,7 +42,7 @@ describe('GET /api/statistic/today E2E Test', () => {
 
   it('[200] 금일 조회수 통계 요청을 받은 경우 금일 조회수 통계 조회를 성공한다. ', async () => {
     // when
-    const response = await agent.get('/api/statistic/today');
+    const response = await agent.get(URL);
 
     // then
     const { data } = response.body;
@@ -64,8 +67,11 @@ describe('GET /api/statistic/today E2E Test', () => {
   });
 
   it('[200] 금일 조회수 통계에서 개수 제한을 걸 경우 특정 개수만큼의 금일 조회수 통계 조회를 성공한다.', async () => {
+    // given
+    const requestDto = new ReadStatisticRequestDto({ limit: 1 });
+
     // when
-    const response = await agent.get('/api/statistic/today?limit=1');
+    const response = await agent.get(URL).query(requestDto);
 
     // then
     const { data } = response.body;

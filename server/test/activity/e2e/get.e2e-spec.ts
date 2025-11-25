@@ -8,7 +8,9 @@ import { User } from '../../../src/user/entity/user.entity';
 import TestAgent from 'supertest/lib/agent';
 import { ReadActivityQueryRequestDto } from '../../../src/activity/dto/request/readActivity.dto';
 
-describe('GET /api/activity/{userId} E2E Test', () => {
+const URL = '/api/activity';
+
+describe(`GET ${URL}/{userId} E2E Test`, () => {
   let app: INestApplication;
   let user: User;
   let activityData: Array<{ activityDate: Date; viewCount: number }>;
@@ -41,7 +43,7 @@ describe('GET /api/activity/{userId} E2E Test', () => {
 
     // when
     const response = await agent
-      .get(`/api/activity/${Number.MAX_SAFE_INTEGER}`)
+      .get(`${URL}/${Number.MAX_SAFE_INTEGER}`)
       .query(requestDto);
 
     // then
@@ -56,9 +58,7 @@ describe('GET /api/activity/{userId} E2E Test', () => {
     });
 
     // when
-    const response = await agent
-      .get(`/api/activity/${userId}`)
-      .query(requestDto);
+    const response = await agent.get(`${URL}/${userId}`).query(requestDto);
 
     // then
     const { data } = response.body;
@@ -85,9 +85,7 @@ describe('GET /api/activity/{userId} E2E Test', () => {
     });
 
     // when
-    const response = await agent
-      .get(`/api/activity/${userId}`)
-      .query(requestDto);
+    const response = await agent.get(`${URL}/${userId}`).query(requestDto);
 
     // then
     const { data } = response.body;

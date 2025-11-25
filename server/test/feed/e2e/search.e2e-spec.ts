@@ -11,7 +11,9 @@ import {
 import TestAgent from 'supertest/lib/agent';
 import { Feed } from '../../../src/feed/entity/feed.entity';
 
-describe('GET /api/feed/search E2E Test', () => {
+const URL = '/api/feed/search';
+
+describe(`GET ${URL}?type={}&find={} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let feedList: Feed[];
@@ -41,7 +43,7 @@ describe('GET /api/feed/search E2E Test', () => {
     });
 
     // when
-    const response = await agent.get('/api/feed/search').query(requestDto);
+    const response = await agent.get(URL).query(requestDto);
 
     // then
     const { data } = response.body;
@@ -73,7 +75,7 @@ describe('GET /api/feed/search E2E Test', () => {
     });
 
     // when
-    const response = await agent.get('/api/feed/search').query(requestDto);
+    const response = await agent.get(URL).query(requestDto);
 
     // then
     const { data } = response.body;

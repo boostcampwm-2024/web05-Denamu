@@ -7,7 +7,9 @@ import { REDIS_KEYS } from '../../../../src/common/redis/redis.constant';
 import { ConfirmDeleteAccountDto } from '../../../../src/user/dto/request/confirmDeleteAccount.dto';
 import TestAgent from 'supertest/lib/agent';
 
-describe('POST /api/user/delete-account/confirm E2E Test', () => {
+const URL = '/api/user/delete-account/confirm';
+
+describe(`POST ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let redisService: RedisService;
@@ -25,9 +27,7 @@ describe('POST /api/user/delete-account/confirm E2E Test', () => {
     const requestDto = new ConfirmDeleteAccountDto({ token: 'invalid-token' });
 
     // when
-    const response = await agent
-      .post('/api/user/delete-account/confirm')
-      .send(requestDto);
+    const response = await agent.post(URL).send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
@@ -49,9 +49,7 @@ describe('POST /api/user/delete-account/confirm E2E Test', () => {
     );
 
     // when
-    const response = await agent
-      .post('/api/user/delete-account/confirm')
-      .send(requestDto);
+    const response = await agent.post(URL).send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.OK);

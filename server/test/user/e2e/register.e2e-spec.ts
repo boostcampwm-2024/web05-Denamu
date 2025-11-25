@@ -5,7 +5,9 @@ import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../fixture/user.fixture';
 import TestAgent from 'supertest/lib/agent';
 
-describe('POST /api/user/register E2E Test', () => {
+const URL = '/api/user/register';
+
+describe(`POST ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let userRepository: UserRepository;
@@ -27,7 +29,7 @@ describe('POST /api/user/register E2E Test', () => {
     });
 
     // when
-    const response = await agent.post('/api/user/register').send(requestDto);
+    const response = await agent.post(URL).send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.CONFLICT);
@@ -45,7 +47,7 @@ describe('POST /api/user/register E2E Test', () => {
     });
 
     // when
-    const response = await agent.post('/api/user/register').send(requestDto);
+    const response = await agent.post(URL).send(requestDto);
 
     // then
     expect(response.status).toBe(HttpStatus.CREATED);
