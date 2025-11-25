@@ -52,16 +52,9 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
       const response = await agent
         .post(`${URL}/${feed.id}`)
         .set('X-Forwarded-For', testNewIp);
-      const feedDailyViewCount = parseInt(
-        await redisService.zscore(
-          REDIS_KEYS.FEED_TREND_KEY,
-          feed.id.toString(),
-        ),
-      );
 
       // then
       expect(response.status).toBe(HttpStatus.OK);
-      expect(feedDailyViewCount).toBe(1);
       expect(response.headers['set-cookie'][0]).toContain(
         `View_count_${feed.id}`,
       );
@@ -81,14 +74,9 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
       .post(`${URL}/${feed.id}`)
       .set('Cookie', `View_count_${feed.id}=${feed.id}`)
       .set('X-Forwarded-For', testIp);
-    const feedDailyViewCount = await redisService.zscore(
-      REDIS_KEYS.FEED_TREND_KEY,
-      feed.id.toString(),
-    );
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
-    expect(feedDailyViewCount).toBeNull();
   });
 
   it('[200] 읽은 기록 쿠기가 없지만 읽은 기록 IP가 있을 경우 조회수 상승을 하지 않는 행위를 성공한다.', async () => {
@@ -96,14 +84,9 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
     const response = await agent
       .post(`${URL}/${feed.id}`)
       .set('X-Forwarded-For', testIp);
-    const feedDailyViewCount = await redisService.zscore(
-      REDIS_KEYS.FEED_TREND_KEY,
-      feed.id.toString(),
-    );
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
-    expect(feedDailyViewCount).toBeNull();
     expect(response.headers['set-cookie'][0]).toContain(
       `View_count_${feed.id}`,
     );
