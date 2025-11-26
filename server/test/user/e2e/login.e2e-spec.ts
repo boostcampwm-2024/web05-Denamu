@@ -22,7 +22,7 @@ describe(`POST ${URL} E2E Test`, () => {
   it('[401] 아이디가 틀렸을 경우 로그인을 실패한다.', async () => {
     // given
     const requestDto = new LoginUserRequestDto({
-      email: 'test1235@test.com',
+      email: 'testWrong@test.com',
       password: UserFixture.GENERAL_USER.password,
     });
 
@@ -39,7 +39,7 @@ describe(`POST ${URL} E2E Test`, () => {
     // given
     const requestDto = new LoginUserRequestDto({
       email: UserFixture.GENERAL_USER.email,
-      password: 'test1235!',
+      password: 'testWrongPassword!',
     });
 
     // when
