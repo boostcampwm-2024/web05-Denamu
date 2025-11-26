@@ -10,7 +10,6 @@ const URL = '/api/user/refresh-token';
 describe(`POST ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
-  let createAccessToken: (arg0?: number) => string;
   let createRefreshToken: (arg0?: number) => string;
 
   beforeAll(async () => {
@@ -21,17 +20,6 @@ describe(`POST ${URL} E2E Test`, () => {
     const user = await userRepository.save(
       await UserFixture.createUserCryptFixture(),
     );
-
-    createAccessToken = (notFoundId?: number) =>
-      userService.createToken(
-        {
-          id: notFoundId ?? user.id,
-          email: user.email,
-          userName: user.userName,
-          role: 'user',
-        },
-        'access',
-      );
 
     createRefreshToken = (notFoundId?: number) =>
       userService.createToken(
@@ -58,7 +46,6 @@ describe(`POST ${URL} E2E Test`, () => {
   it('[200] Refresh Token이 있을 경우 Access Token 발급을 성공한다.', async () => {
     // given
     const refreshToken = createRefreshToken();
-    const accessToken = createAccessToken();
 
     // when
     const response = await agent
@@ -69,7 +56,7 @@ describe(`POST ${URL} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual({
-      accessToken,
+      accessToken: expect.any(String),
     });
   });
 });

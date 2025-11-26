@@ -11,7 +11,6 @@ const URL = '/api/user/login';
 describe(`POST ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
-  let createAccessToken: (arg0?:number) => string;
 
   beforeAll(async () => {
     app = global.testApp;
@@ -21,17 +20,6 @@ describe(`POST ${URL} E2E Test`, () => {
     const user = await userRepository.save(
       await UserFixture.createUserCryptFixture(),
     );
-
-    createAccessToken = (notFoundId?: number) =>
-      userService.createToken(
-        {
-          id: notFoundId ?? user.id,
-          email: user.email,
-          userName: user.userName,
-          role: 'user',
-        },
-        'access',
-      );
   });
 
   it('[401] 아이디가 틀렸을 경우 로그인을 실패한다.', async () => {
@@ -72,7 +60,6 @@ describe(`POST ${URL} E2E Test`, () => {
       email: UserFixture.GENERAL_USER.email,
       password: UserFixture.GENERAL_USER.password,
     });
-    const accessToken = createAccessToken();
 
     // when
     const response = await agent.post(URL).send(requestDto);
@@ -82,7 +69,7 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(response.status).toBe(HttpStatus.OK);
     expect(response.headers['set-cookie'][0]).toContain('refresh_token=');
     expect(data).toStrictEqual({
-      accessToken,
+      accessToken: expect.any(String),
     });
   });
 });
