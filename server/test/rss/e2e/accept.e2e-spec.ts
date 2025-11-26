@@ -66,11 +66,7 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
 
   it('[400] 잘못된 RSS URL을 승인할 경우 RSS 승인을 실패한다.', async () => {
     // given
-    const rss = await rssRepository.save(
-      RssFixture.createRssFixture({
-        rssUrl: 'https://test.com/rss',
-      }),
-    );
+    const rss = await rssRepository.save(RssFixture.createRssFixture());
     global.fetch = jest.fn().mockResolvedValue({
       ok: false,
       status: HttpStatus.BAD_REQUEST,
@@ -87,11 +83,7 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
 
   it('[201] 관리자 로그인이 되어 있을 경우 RSS 승인을 성공한다.', async () => {
     // given
-    const rss = await rssRepository.save(
-      RssFixture.createRssFixture({
-        rssUrl: 'https://test.com/rss',
-      }),
-    );
+    const rss = await rssRepository.save(RssFixture.createRssFixture());
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
       status: HttpStatus.OK,

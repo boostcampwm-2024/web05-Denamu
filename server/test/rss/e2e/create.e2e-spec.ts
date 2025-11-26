@@ -76,7 +76,7 @@ describe(`POST ${URL} E2E Test`, () => {
       blog: 'blog1',
       name: 'name1',
       email: 'test1@test.com',
-      rssUrl: 'https://example1.com/rss',
+      rssUrl: 'https://test.com/rss',
     });
 
     // when
