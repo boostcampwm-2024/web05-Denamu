@@ -33,7 +33,7 @@ export class GoogleOAuthProvider implements OAuthProvider {
     return `${googleOAuthUrl}?${querystring.stringify(options)}`;
   }
 
-  async getTokens(code) {
+  async getTokens(code: string) {
     const tokenUrl = OAUTH_URL_PATH.GOOGLE.TOKEN_URL;
     const values = {
       code,
