@@ -235,7 +235,10 @@ export class UserService {
     await this.userRepository.save(user);
   }
 
-  async requestDeleteAccount(userId: number): Promise<void> {
+  async requestDeleteAccount(
+    userId: number,
+    accessToken?: string,
+  ): Promise<void> {
     const user = await this.getUser(userId);
 
     const token = uuidv4();
@@ -245,6 +248,15 @@ export class UserService {
       'EX',
       600,
     );
+
+    if (accessToken) {
+      await this.redisService.set(
+        `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${token}:access-token`,
+        accessToken,
+        'EX',
+        600,
+      );
+    }
 
     this.emailService.sendDeleteAccountMail(user, token);
   }
@@ -266,10 +278,58 @@ export class UserService {
       await this.fileService.deleteByPath(user.profileImage);
     }
 
+    const accessToken = await this.redisService.get(
+      `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${token}:access-token`,
+    );
+
+    if (accessToken) {
+      const accessTokenExpire = this.configService.get('ACCESS_TOKEN_EXPIRE');
+      const ttlInSeconds = this.parseTimeToSeconds(accessTokenExpire);
+      await this.addToJwtBlacklist(accessToken, ttlInSeconds);
+    }
+
     await this.userRepository.remove(user);
 
     await this.redisService.del(
       `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${token}`,
+      `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${token}:access-token`,
+    );
+  }
+
+  private parseTimeToSeconds(time: string): number {
+    const regex = /^(\d+)([smhd])$/;
+    const match = time.match(regex);
+
+    if (!match) {
+      const defaultExpire = this.configService.get('ACCESS_TOKEN_EXPIRE');
+      if (defaultExpire && defaultExpire !== time) {
+        return this.parseTimeToSeconds(defaultExpire);
+      }
+      return 3600;
+    }
+
+    const value = parseInt(match[1], 10);
+    const unit = match[2];
+
+    const multipliers: Record<string, number> = {
+      s: 1,
+      m: 60,
+      h: 3600,
+      d: 86400,
+    };
+
+    return value * multipliers[unit];
+  }
+
+  private async addToJwtBlacklist(
+    token: string,
+    ttl: number,
+  ): Promise<number> {
+    const expirationTime = Date.now() + ttl * 1000;
+    return this.redisService.hset(
+      REDIS_KEYS.USER_BLACKLIST_JWT_KEY,
+      token,
+      expirationTime.toString(),
     );
   }
 }

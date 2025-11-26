@@ -135,4 +135,20 @@ export class RedisService {
   ): Promise<string> {
     return this.redisClient.zincrby(key, increment, member);
   }
+
+  async hset(
+    key: string,
+    field: string,
+    value: string | number,
+  ): Promise<number> {
+    return this.redisClient.hset(key, field, value);
+  }
+
+  async hget(key: string, field: string): Promise<string | null> {
+    return this.redisClient.hget(key, field);
+  }
+
+  async hdel(key: string, ...fields: string[]): Promise<number> {
+    return this.redisClient.hdel(key, ...fields);
+  }
 }
