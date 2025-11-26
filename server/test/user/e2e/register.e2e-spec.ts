@@ -20,7 +20,6 @@ describe(`POST ${URL} E2E Test`, () => {
 
   it('[409] 이미 가입된 이메일을 입력할 경우 회원가입을 실패한다.', async () => {
     // given
-    const userRepository = app.get(UserRepository);
     const user = await userRepository.save(UserFixture.createUserFixture());
     const requestDto = new RegisterUserRequestDto({
       email: user.email,

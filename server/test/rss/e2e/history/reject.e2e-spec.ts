@@ -28,7 +28,7 @@ describe(`GET ${URL} E2E Test`, () => {
     rssRejectList.reverse();
   });
 
-  it('[401] 관리자 로그인 쿠키가 없을 경우 RSS 승인 기록 조회를 실패한다.', async () => {
+  it('[401] 관리자 로그인 쿠키가 없을 경우 RSS 거절 기록 조회를 실패한다.', async () => {
     // when
     const response = await agent.get(URL);
 
@@ -38,7 +38,7 @@ describe(`GET ${URL} E2E Test`, () => {
     expect(data).toBeUndefined();
   });
 
-  it('[401] 관리자 로그인 쿠키가 만료됐을 경우 RSS 승인 기록 조회를 실패한다.', async () => {
+  it('[401] 관리자 로그인 쿠키가 만료됐을 경우 RSS 거절 기록 조회를 실패한다.', async () => {
     // when
     const response = await agent.get(URL).set('Cookie', 'sessionId=invalid');
 

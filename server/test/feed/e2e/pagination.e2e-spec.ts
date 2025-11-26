@@ -106,7 +106,7 @@ describe(`GET ${URL}?limit={}&lastId={} E2E Test`, () => {
     });
   });
 
-  it('[200] 받고자 하는 수신 피드 개수가 남은 피드 개수보다 적을 경우 남은 모든 피드 목록 제공을 성공한다.', async () => {
+  it('[200] 받고자 하는 수신 피드 개수가 남은 피드 개수보다 많을 경우 남은 모든 피드 목록 제공을 성공한다.', async () => {
     // given
     const requestDto = new ReadFeedPaginationRequestDto({
       limit: 10,
