@@ -18,7 +18,6 @@ describe('Socket.IO Anonymous Chat E2E Test', () => {
     app = global.testApp;
     redisService = app.get(RedisService);
     chatService = app.get(ChatService);
-
     const httpServer = await app.listen(0);
     const port = httpServer.address().port;
     serverUrl = `http://localhost:${port}`;

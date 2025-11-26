@@ -1,6 +1,5 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as supertest from 'supertest';
-import { UserRepository } from '../../../src/user/repository/user.repository';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import { UserFixture } from '../../fixture/user.fixture';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
@@ -13,13 +12,11 @@ describe(`POST ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let redisService: RedisService;
-  let userRepository: UserRepository;
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
     redisService = app.get(RedisService);
-    userRepository = app.get(UserRepository);
   });
 
   it('[404] 존재하지 않거나 만료된 UUID로 인증을 요청할 경우 회원 가입 인증을 실패한다.', async () => {

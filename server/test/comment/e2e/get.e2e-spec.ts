@@ -24,13 +24,13 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
+    commentRepository = app.get(CommentRepository);
+    userRepository = app.get(UserRepository);
     const rssAcceptRepository = app.get(RssAcceptRepository);
     const feedRepository = app.get(FeedRepository);
     const rssAcceptInformation = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
-    commentRepository = app.get(CommentRepository);
-    userRepository = app.get(UserRepository);
     feed = await feedRepository.save(
       FeedFixture.createFeedFixture(rssAcceptInformation),
     );

@@ -16,17 +16,15 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
   let app: INestApplication;
   let feed: Feed;
   let feedRepository: FeedRepository;
-  let rssAcceptRepository: RssAcceptRepository;
   let rssAccept: RssAccept;
   let agent: TestAgent;
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
-
-    const userRepository = app.get(UserRepository);
-    rssAcceptRepository = app.get(RssAcceptRepository);
     feedRepository = app.get(FeedRepository);
+    const userRepository = app.get(UserRepository);
+    const rssAcceptRepository = app.get(RssAcceptRepository);
 
     await userRepository.save(await UserFixture.createUserCryptFixture());
     rssAccept = await rssAcceptRepository.save(

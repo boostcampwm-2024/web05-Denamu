@@ -11,13 +11,12 @@ const URL = '/api/user/password-reset';
 describe(`POST ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
-  let userRepository: UserRepository;
   let user: User;
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
-    userRepository = app.get(UserRepository);
+    const userRepository = app.get(UserRepository);
     user = await userRepository.save(UserFixture.createUserFixture());
   });
 

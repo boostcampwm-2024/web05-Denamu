@@ -3,10 +3,7 @@ import * as supertest from 'supertest';
 import { RssFixture } from '../../fixture/rss.fixture';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import { RejectRssRequestDto } from '../../../src/rss/dto/request/rejectRss';
-import {
-  RssRejectRepository,
-  RssRepository,
-} from '../../../src/rss/repository/rss.repository';
+import { RssRepository } from '../../../src/rss/repository/rss.repository';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 import TestAgent from 'supertest/lib/agent';
 
@@ -16,14 +13,12 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let rssRepository: RssRepository;
-  let rssRejectRepository: RssRejectRepository;
   let redisService: RedisService;
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
     rssRepository = app.get(RssRepository);
-    rssRejectRepository = app.get(RssRejectRepository);
     redisService = app.get(RedisService);
   });
 

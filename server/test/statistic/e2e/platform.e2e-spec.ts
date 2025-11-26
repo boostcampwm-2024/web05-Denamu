@@ -9,12 +9,11 @@ const URL = '/api/statistic/platform';
 describe(`GET ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
-  let rssAcceptRepository: RssAcceptRepository;
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
-    rssAcceptRepository = app.get(RssAcceptRepository);
+    const rssAcceptRepository = app.get(RssAcceptRepository);
     await Promise.all([
       rssAcceptRepository.insert(RssAcceptFixture.createRssAcceptFixture({})),
       rssAcceptRepository.insert(

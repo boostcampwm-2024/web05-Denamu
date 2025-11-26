@@ -50,10 +50,10 @@ describe(`GET ${URL}?limit={} E2E Test`, () => {
 
   it('[200] 전체 조회수 통계에서 개수 제한을 걸 경우 특정 개수만큼의 전체 조회수 통계 조회를 성공한다.', async () => {
     // given
-    const reqeustDto = new ReadStatisticRequestDto({ limit: 1 });
+    const requestDto = new ReadStatisticRequestDto({ limit: 1 });
 
     // when
-    const response = await agent.get(URL).query(reqeustDto);
+    const response = await agent.get(URL).query(requestDto);
 
     // then
     const { data } = response.body;

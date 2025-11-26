@@ -20,11 +20,9 @@ describe(`GET ${URL}?limit={}&lastId={} E2E Test`, () => {
     agent = supertest(app.getHttpServer());
     const feedRepository = app.get(FeedRepository);
     const rssAcceptRepository = app.get(RssAcceptRepository);
-
     const rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
-
     const feeds = Array.from({ length: 10 }).map((_, i) =>
       FeedFixture.createFeedFixture(rssAccept, _, i + 1),
     );

@@ -6,14 +6,12 @@ import { FeedRepository } from '../../../src/feed/repository/feed.repository';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
 import { FeedFixture } from '../../fixture/feed.fixture';
 import * as EventSource from 'eventsource';
-import { Feed } from '../../../src/feed/entity/feed.entity';
 
 const URL = '/api/feed/trend/sse';
 
 describe(`SSE ${URL} E2E Test`, () => {
   let app: INestApplication;
   let serverUrl: string;
-  let feedList: Feed[];
 
   beforeAll(async () => {
     app = global.testApp;
@@ -33,7 +31,7 @@ describe(`SSE ${URL} E2E Test`, () => {
     const feeds = Array.from({ length: 2 }).map((_, i) =>
       FeedFixture.createFeedFixture(rssAccept, _, i + 1),
     );
-    feedList = await feedRepository.save(feeds);
+    const feedList = await feedRepository.save(feeds);
     await redisService.rpush(
       REDIS_KEYS.FEED_ORIGIN_TREND_KEY,
       feedList[0].id,

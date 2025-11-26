@@ -23,13 +23,11 @@ describe(`GET ${URL}?type={}&find={} E2E Test`, () => {
     agent = supertest(app.getHttpServer());
     const feedRepository = app.get(FeedRepository);
     const rssAcceptRepository = app.get(RssAcceptRepository);
-
     const rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
-
     const feeds = Array.from({ length: 5 }).map((_, i) =>
-      FeedFixture.createFeedFixture(rssAccept, _, i + 1),
+      FeedFixture.createFeedFixture(rssAccept, {}, i + 1),
     );
 
     feedList = (await feedRepository.save(feeds)).reverse();

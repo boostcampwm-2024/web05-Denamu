@@ -15,14 +15,13 @@ describe(`GET ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let redisService: RedisService;
-  let rssAcceptRepository: RssAcceptRepository;
   let feeds: Feed[];
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
-    rssAcceptRepository = app.get(RssAcceptRepository);
     redisService = app.get(RedisService);
+    const rssAcceptRepository = app.get(RssAcceptRepository);
     const rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );

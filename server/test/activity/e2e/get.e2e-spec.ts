@@ -21,9 +21,7 @@ describe(`GET ${URL}/{userId} E2E Test`, () => {
     agent = supertest(app.getHttpServer());
     const userRepository = app.get(UserRepository);
     const activityRepository = app.get(ActivityRepository);
-
     user = await userRepository.save(UserFixture.createUserFixture());
-
     activityData = Array.from({ length: 5 }).map((_, i) =>
       ActivityFixture.createActivityFixture(
         user,
@@ -64,21 +62,18 @@ describe(`GET ${URL}/{userId} E2E Test`, () => {
 
     // then
     const { data } = response.body;
+    const expectedDailyActivities = activityData.map((activity) => ({
+      date: activity.activityDate.toISOString().split('T')[0],
+      viewCount: activity.viewCount,
+    }));
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual({
-      dailyActivities: [
-        { date: '2024-01-01', viewCount: 2 },
-        { date: '2024-01-02', viewCount: 4 },
-        { date: '2024-01-03', viewCount: 6 },
-        { date: '2024-01-04', viewCount: 8 },
-        { date: '2024-01-05', viewCount: 10 },
-      ],
+      dailyActivities: expectedDailyActivities,
       maxStreak: user.maxStreak,
       currentStreak: user.currentStreak,
       totalViews: user.totalViews,
     });
   });
-
   it('[200] 다른 연도를 요청할 경우 해당 연도의 활동 데이터 조회를 성공한다.', async () => {
     // given
     const userId = user.id;

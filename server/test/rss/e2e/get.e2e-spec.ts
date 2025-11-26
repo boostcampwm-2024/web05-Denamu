@@ -27,14 +27,16 @@ describe(`GET ${URL} E2E Test`, () => {
   });
 
   beforeEach(async () => {
-    await rssRepository.delete({});
-    await redisService.set(
-      `${REDIS_KEYS.ADMIN_AUTH_KEY}:testSessionId`,
-      'test_admin',
-    );
+    await Promise.all([
+      rssRepository.delete({}),
+      redisService.set(
+        `${REDIS_KEYS.ADMIN_AUTH_KEY}:testSessionId`,
+        'test_admin',
+      ),
+    ]);
   });
 
-  it('[401] 관리자 로그인 쿠키가 없을 경우 RSS 승인을 실패한다.', async () => {
+  it('[401] 관리자 로그인 쿠키가 없을 경우 RSS 조회를 실패한다.', async () => {
     // when
     const response = await agent.get(URL);
 
@@ -44,7 +46,7 @@ describe(`GET ${URL} E2E Test`, () => {
     expect(data).toBeUndefined();
   });
 
-  it('[401] 관리자 로그인 쿠키가 만료됐을 경우 RSS 승인을 실패한다.', async () => {
+  it('[401] 관리자 로그인 쿠키가 만료됐을 경우 RSS 조회를 실패한다.', async () => {
     // when
     const response = await agent.get(URL).set('Cookie', 'sessionId=invalid');
 
