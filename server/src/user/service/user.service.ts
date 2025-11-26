@@ -199,7 +199,7 @@ export class UserService {
     });
 
     if (!user) {
-      throw new NotFoundException('존재하지 않는 이메일입니다.');
+      return;
     }
 
     const uuid = uuidv4();

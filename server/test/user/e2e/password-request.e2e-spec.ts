@@ -20,7 +20,7 @@ describe(`POST ${URL} E2E Test`, () => {
     user = await userRepository.save(UserFixture.createUserFixture());
   });
 
-  it('[404] 존재하지 않는 이메일로 요청한 경우 비밀번호 재설정 이메일 요청을 실패한다.', async () => {
+  it('[200] 존재하지 않는 이메일로 요청한 경우 비밀번호 재설정 이메일 요청을 성공한다.', async () => {
     // given
     const requestDto = new ForgotPasswordRequestDto({
       email: 'invalid@test.com',
@@ -31,7 +31,7 @@ describe(`POST ${URL} E2E Test`, () => {
 
     // then
     const { data } = response.body;
-    expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    expect(response.status).toBe(HttpStatus.OK);
     expect(data).toBeUndefined();
   });
 
