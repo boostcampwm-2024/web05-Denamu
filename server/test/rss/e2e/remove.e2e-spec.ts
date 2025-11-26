@@ -34,7 +34,9 @@ describe(`POST ${URL} E2E Test`, () => {
     const response = await agent.post(URL).send(requestDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    expect(data).toBeUndefined();
   });
 
   it('[200] RSS 등록 요청이 있을 경우 RSS 삭제 신청을 성공한다.', async () => {
@@ -49,7 +51,9 @@ describe(`POST ${URL} E2E Test`, () => {
     const response = await agent.post(URL).send(requestDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
+    expect(data).toBeUndefined();
 
     // cleanup
     await rssRepository.delete({ id: rss.id });
@@ -67,7 +71,9 @@ describe(`POST ${URL} E2E Test`, () => {
     const response = await agent.post(URL).send(requestDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
+    expect(data).toBeUndefined();
 
     // cleanup
     await rssAcceptRepository.delete({ id: rss.id });

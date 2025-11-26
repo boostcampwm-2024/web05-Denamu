@@ -46,7 +46,9 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
     const response = await agent.get(`${URL}/${feedDetailRequestDto.feedId}`);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    expect(data).toBeUndefined();
   });
 
   it('[200] 존재하는 피드 ID로 요청할 경우 게시글 상세 조회에 성공한다.', async () => {

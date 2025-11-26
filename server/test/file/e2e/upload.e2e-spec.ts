@@ -41,7 +41,9 @@ describe(`POST ${URL} E2E Test`, () => {
     const response = await agent.post(URL).query(requestDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(data).toBeUndefined();
   });
 
   it('[400] 파일이 포함되어 있지 않을 경우 파일 업로드를 실패한다.', async () => {
@@ -66,7 +68,9 @@ describe(`POST ${URL} E2E Test`, () => {
       .set('Authorization', `Bearer ${accessToken}`);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.BAD_REQUEST);
+    expect(data).toBeUndefined();
   });
 
   it('[201] 파일을 포함할 경우 파일 업로드를 성공한다.', async () => {

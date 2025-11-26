@@ -25,7 +25,9 @@ describe(`POST ${URL} E2E Test`, () => {
     const response = await agent.post(URL);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(data).toBeUndefined();
   });
 
   it('[401] 관리자 로그인 쿠키가 만료됐을 경우 로그아웃을 실패한다.', async () => {
@@ -35,7 +37,9 @@ describe(`POST ${URL} E2E Test`, () => {
       .set('Cookie', 'sessionId=nonExistentSessionId');
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(data).toBeUndefined();
   });
 
   it('[200] 관리자 로그인이 되어 있을 경우 로그아웃을 성공한다.', async () => {
@@ -45,9 +49,11 @@ describe(`POST ${URL} E2E Test`, () => {
       .set('Cookie', 'sessionId=testSessionId');
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(response.header['set-cookie']).toStrictEqual([
       'sessionId=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT',
     ]);
+    expect(data).toBeUndefined();
   });
 });

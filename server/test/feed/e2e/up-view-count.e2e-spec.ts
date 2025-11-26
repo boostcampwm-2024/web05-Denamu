@@ -40,7 +40,9 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
     const response = await agent.post(`${URL}/${Number.MAX_SAFE_INTEGER}`);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    expect(data).toBeUndefined();
   });
 
   it('[200] 피드를 읽은 기록이 없을 경우 조회수 상승을 성공한다.', async () => {
@@ -54,10 +56,12 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
         .set('X-Forwarded-For', testNewIp);
 
       // then
+      const { data } = response.body;
       expect(response.status).toBe(HttpStatus.OK);
       expect(response.headers['set-cookie'][0]).toContain(
         `View_count_${feed.id}`,
       );
+      expect(data).toBeUndefined();
     } finally {
       // cleanup
       await Promise.all([
@@ -76,7 +80,9 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
       .set('X-Forwarded-For', testIp);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
+    expect(data).toBeUndefined();
   });
 
   it('[200] 읽은 기록 쿠기가 없지만 읽은 기록 IP가 있을 경우 조회수 상승을 하지 않는 행위를 성공한다.', async () => {
@@ -86,9 +92,11 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
       .set('X-Forwarded-For', testIp);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(response.headers['set-cookie'][0]).toContain(
       `View_count_${feed.id}`,
     );
+    expect(data).toBeUndefined();
   });
 });

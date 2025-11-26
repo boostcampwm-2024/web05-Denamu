@@ -54,7 +54,9 @@ describe(`POST ${URL} E2E Test`, () => {
     const response = await agent.post(URL).send(requestDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(data).toBeUndefined();
   });
 
   it('[404] 게시글이 존재하지 않을 경우 댓글 등록을 실패한다.', async () => {
@@ -80,7 +82,9 @@ describe(`POST ${URL} E2E Test`, () => {
       .send(requestDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    expect(data).toBeUndefined();
   });
 
   it('[404] 회원 정보가 없을 경우 댓글 등록을 실패한다.', async () => {
@@ -106,7 +110,9 @@ describe(`POST ${URL} E2E Test`, () => {
       .send(requestDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    expect(data).toBeUndefined();
   });
 
   it('[201] 로그인이 되어 있을 경우 댓글 등록을 성공한다.', async () => {
@@ -132,7 +138,9 @@ describe(`POST ${URL} E2E Test`, () => {
       .send(requestDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.CREATED);
+    expect(data).toBeUndefined();
 
     // cleanup
     await commentRepository.delete({ user: user, feed: feed });

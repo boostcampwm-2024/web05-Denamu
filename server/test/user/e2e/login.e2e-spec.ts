@@ -37,7 +37,9 @@ describe(`POST ${URL} E2E Test`, () => {
     const response = await agent.post(URL).send(requestDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(data).toBeUndefined();
   });
 
   it('[401] 비밀번호가 틀렸을 경우 로그인을 실패한다.', async () => {
@@ -51,7 +53,9 @@ describe(`POST ${URL} E2E Test`, () => {
     const response = await agent.post(URL).send(requestDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(data).toBeUndefined();
   });
 
   it('[200] 아이디와 비밀번호에 해당하는 유저가 존재할 경우 로그인을 성공한다.', async () => {

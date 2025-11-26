@@ -39,7 +39,9 @@ describe(`GET ${URL} E2E Test`, () => {
     const response = await agent.get(URL);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(data).toBeUndefined();
   });
 
   it('[401] 관리자 로그인 쿠키가 만료됐을 경우 RSS 승인을 실패한다.', async () => {
@@ -47,7 +49,9 @@ describe(`GET ${URL} E2E Test`, () => {
     const response = await agent.get(URL).set('Cookie', 'sessionId=invalid');
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(data).toBeUndefined();
   });
 
   it('[200] 신청된 RSS가 없을 경우 RSS 신청 조회를 성공한다.', async () => {

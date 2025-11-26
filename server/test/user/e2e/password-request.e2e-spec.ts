@@ -31,7 +31,9 @@ describe(`POST ${URL} E2E Test`, () => {
     const response = await agent.post(URL).send(requestDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    expect(data).toBeUndefined();
   });
 
   it('[200] 존재하는 이메일로 요청한 경우 비밀번호 재설정 이메일 요청을 성공한다.', async () => {
@@ -44,6 +46,8 @@ describe(`POST ${URL} E2E Test`, () => {
     const response = await agent.post(URL).send(requestDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
+    expect(data).toBeUndefined();
   });
 });

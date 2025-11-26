@@ -54,7 +54,9 @@ describe(`POST ${URL} E2E Test`, () => {
     const response = await agent.post(URL).send(requestDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(data).toBeUndefined();
   });
 
   it('[404] 게시글이 서비스에 존재하지 않을 경우 좋아요 등록을 실패한다.', async () => {
@@ -79,7 +81,9 @@ describe(`POST ${URL} E2E Test`, () => {
       .send(requestDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    expect(data).toBeUndefined();
   });
 
   it('[409] 이미 좋아요를 한 게시글일 경우 좋아요 등록을 실패한다.', async () => {
@@ -108,7 +112,9 @@ describe(`POST ${URL} E2E Test`, () => {
       .send(requestDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.CONFLICT);
+    expect(data).toBeUndefined();
 
     // cleanup
     await likeRepository.delete(like.id);
@@ -136,7 +142,9 @@ describe(`POST ${URL} E2E Test`, () => {
       .send(requestDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.CREATED);
+    expect(data).toBeUndefined();
 
     // cleanup
     await likeRepository.delete({ user: user, feed: feed });

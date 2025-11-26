@@ -47,7 +47,9 @@ describe(`GET ${URL}/{userId} E2E Test`, () => {
       .query(requestDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    expect(data).toBeUndefined();
   });
 
   it('[200] 존재하는 사용자의 아이디로 요청할 경우 활동 데이터 조회를 성공한다.', async () => {

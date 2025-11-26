@@ -29,7 +29,9 @@ describe(`POST ${URL} E2E Test`, () => {
     const response = await agent.post(URL).send(requestDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(data).toBeUndefined();
   });
 
   it('[401] 비밀번호가 다를 경우 로그인을 실패한다.', async () => {
@@ -43,7 +45,9 @@ describe(`POST ${URL} E2E Test`, () => {
     const response = await agent.post(URL).send(requestDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(data).toBeUndefined();
   });
 
   it('[200] 존재하는 사용자의 정보로 로그인할 경우 로그인을 성공한다.', async () => {
@@ -57,7 +61,9 @@ describe(`POST ${URL} E2E Test`, () => {
     const response = await agent.post(URL).send(requestDto);
 
     //then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(response.headers['set-cookie'][0]).toContain('sessionId=');
+    expect(data).toBeUndefined();
   });
 });

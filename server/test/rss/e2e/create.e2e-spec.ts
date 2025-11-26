@@ -42,7 +42,9 @@ describe(`POST ${URL} E2E Test`, () => {
     const response = await agent.post(URL).send(requestDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.CONFLICT);
+    expect(data).toBeUndefined();
 
     // cleanup
     await rssRepository.delete({ id: rss.id });
@@ -64,7 +66,9 @@ describe(`POST ${URL} E2E Test`, () => {
     const response = await agent.post(URL).send(requestDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.CONFLICT);
+    expect(data).toBeUndefined();
 
     // cleanup
     await rssAcceptRepository.delete({ id: acceptedRss.id });
@@ -83,6 +87,8 @@ describe(`POST ${URL} E2E Test`, () => {
     const response = await agent.post(URL).send(requestDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.CREATED);
+    expect(data).toBeUndefined();
   });
 });

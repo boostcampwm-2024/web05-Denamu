@@ -30,7 +30,9 @@ describe(`POST ${URL} E2E Test`, () => {
     const response = await agent.post(URL);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(data).toBeUndefined();
   });
 
   it('[200] 로그인된 상태일 경우 로그아웃을 성공한다.', async () => {
@@ -51,7 +53,9 @@ describe(`POST ${URL} E2E Test`, () => {
       .set('Authorization', `Bearer ${accessToken}`);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(response.headers['set-cookie'][0]).toContain('refresh_token=');
+    expect(data).toBeUndefined();
   });
 });

@@ -52,7 +52,9 @@ describe(`PATCH ${URL} E2E Test`, () => {
     const response = await agent.patch(URL).send(requestDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(data).toBeUndefined();
   });
 
   it('[404] 회원 데이터가 서비스에 없을 경우 회원 정보 수정을 실패한다.', async () => {
@@ -80,7 +82,9 @@ describe(`PATCH ${URL} E2E Test`, () => {
       .send(requestDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    expect(data).toBeUndefined();
   });
 
   it('[200] 사용자가 로그인한 경우 회원 정보 수정을 성공한다.', async () => {
@@ -108,7 +112,9 @@ describe(`PATCH ${URL} E2E Test`, () => {
       .send(requestDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
+    expect(data).toBeUndefined();
   });
 
   it('[200] 사용자가 일부 필드만 수정 요청을 할 경우 회원 정보 수정을 성공한다.', async () => {
@@ -133,6 +139,8 @@ describe(`PATCH ${URL} E2E Test`, () => {
       .send(requestDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
+    expect(data).toBeUndefined();
   });
 });

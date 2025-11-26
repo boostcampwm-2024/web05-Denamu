@@ -51,7 +51,9 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
     const response = await agent.delete(`${URL}/${requestDto.feedId}`);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(data).toBeUndefined();
   });
 
   it('[404] 피드가 존재하지 않을 경우 좋아요 삭제를 실패한다.', async () => {
@@ -75,7 +77,9 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
       .set('Authorization', `Bearer ${accessToken}`);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    expect(data).toBeUndefined();
   });
 
   it('[404] 좋아요를 안 했을 경우 좋아요 삭제를 실패한다.', async () => {
@@ -99,7 +103,9 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
       .set('Authorization', `Bearer ${accessToken}`);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    expect(data).toBeUndefined();
   });
 
   it('[200] 로그인이 되어 있고 좋아요를 한 경우 좋아요 삭제를 성공한다.', async () => {
@@ -129,6 +135,8 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
       .set('Authorization', `Bearer ${accessToken}`);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
+    expect(data).toBeUndefined();
   });
 });

@@ -39,7 +39,9 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
     const response = await agent.delete(`${URL}/${Number.MAX_SAFE_INTEGER}`);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    expect(data).toBeUndefined();
   });
 
   it('[404] 원본 게시글이 존재하지 않을 경우 서비스에서 게시글 정보를 삭제하여 조회를 실패한다.', async () => {
@@ -53,7 +55,9 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
     const response = await agent.delete(`${URL}/${feed.id}`);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    expect(data).toBeUndefined();
   });
 
   it('[200] 원본 게시글이 존재할 경우 조회를 성공한다.', async () => {
@@ -67,7 +71,9 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
     const response = await agent.delete(`${URL}/${feed.id}`);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
+    expect(data).toBeUndefined();
 
     // cleanup
     await feedRepository.delete(feed.id);

@@ -41,7 +41,9 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
     const response = await agent.post(`${URL}/${Number.MAX_SAFE_INTEGER}`);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(data).toBeUndefined();
   });
 
   it('[401] 관리자 로그인 쿠키가 만료됐을 경우 RSS 승인을 실패한다.', async () => {
@@ -51,7 +53,9 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
       .set('Cookie', 'sessionId=invalid');
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(data).toBeUndefined();
   });
 
   it('[404] 대기 목록에 없는 RSS를 승인할 경우 RSS 승인을 실패한다.', async () => {
@@ -61,7 +65,9 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
       .set('Cookie', 'sessionId=testSessionId');
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    expect(data).toBeUndefined();
   });
 
   it('[400] 잘못된 RSS URL을 승인할 경우 RSS 승인을 실패한다.', async () => {
@@ -78,7 +84,9 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
       .set('Cookie', 'sessionId=testSessionId');
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.BAD_REQUEST);
+    expect(data).toBeUndefined();
   });
 
   it('[201] 관리자 로그인이 되어 있을 경우 RSS 승인을 성공한다.', async () => {
@@ -95,7 +103,9 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
       .set('Cookie', 'sessionId=testSessionId');
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.CREATED);
+    expect(data).toBeUndefined();
 
     // cleanup
     await rssAcceptRepository.delete({ rssUrl: rss.rssUrl });

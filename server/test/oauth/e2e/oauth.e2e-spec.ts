@@ -36,7 +36,9 @@ describe(`GET ${URL}?type={} E2E Test`, () => {
     const response = await agent.get(URL).query(requestDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.FOUND);
     expect(response.headers['location']).toBe(redirectUrl);
+    expect(data).toBeUndefined();
   });
 });

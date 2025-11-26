@@ -25,7 +25,9 @@ describe(`POST ${URL} E2E Test`, () => {
     const response = await agent.post(URL);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(data).toBeUndefined();
   });
 
   it('[200] 회원 탈퇴 신청을 받을 경우 회원 탈퇴 신청을 성공한다.', async () => {
@@ -48,6 +50,8 @@ describe(`POST ${URL} E2E Test`, () => {
       .set('Authorization', `Bearer ${accessToken}`);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
+    expect(data).toBeUndefined();
   });
 });

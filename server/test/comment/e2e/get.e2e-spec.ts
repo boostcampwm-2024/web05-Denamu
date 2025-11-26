@@ -41,7 +41,9 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
     const response = await agent.get(`${URL}/${Number.MAX_SAFE_INTEGER}`);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    expect(data).toBeUndefined();
   });
 
   it('[200] 게시글이 존재할 경우 댓글 조회를 성공한다.', async () => {

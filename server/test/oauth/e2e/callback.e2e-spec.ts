@@ -65,11 +65,13 @@ describe(`GET ${URL} E2E Test`, () => {
     const response = await agent.get(URL).query(requestDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.FOUND);
     expect(response.headers['set-cookie'][0]).toContain('refresh_token=');
     expect(response.headers['location']).toBe(
       `${OAUTH_URL_PATH.BASE_URL}/oauth-success?token=${accessToken}`,
     );
+    expect(data).toBeUndefined();
   });
 
   it('[302] Google OAuth 로그인 콜백으로 인증 서버에서 데이터를 받을 경우 리다이렉트를 성공한다.', async () => {
@@ -112,10 +114,12 @@ describe(`GET ${URL} E2E Test`, () => {
     const response = await agent.get(URL).query(requestDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.FOUND);
     expect(response.headers['set-cookie'][0]).toContain('refresh_token=');
     expect(response.headers['location']).toBe(
       `${OAUTH_URL_PATH.BASE_URL}/oauth-success?token=${accessToken}`,
     );
+    expect(data).toBeUndefined();
   });
 });

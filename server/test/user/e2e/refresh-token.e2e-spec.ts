@@ -31,7 +31,9 @@ describe(`POST ${URL} E2E Test`, () => {
     const response = await agent.post(URL);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(data).toBeUndefined();
   });
 
   it('[200] Refresh Token이 있을 경우 Access Token 발급을 성공한다.', async () => {

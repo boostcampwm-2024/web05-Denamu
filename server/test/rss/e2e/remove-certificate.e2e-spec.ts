@@ -38,7 +38,9 @@ describe(`DELETE ${URL}/{code} E2E Test`, () => {
     const response = await agent.delete(`${URL}/${Number.MAX_SAFE_INTEGER}`);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    expect(data).toBeUndefined();
   });
 
   it('[200] 삭제 신청된 RSS가 있을 경우 RSS와 관련된 모든 데이터들의 삭제 인증을 성공한다.', async () => {
@@ -61,6 +63,8 @@ describe(`DELETE ${URL}/{code} E2E Test`, () => {
     const response = await agent.delete(`${URL}/${certificateCode}`);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
+    expect(data).toBeUndefined();
   });
 });

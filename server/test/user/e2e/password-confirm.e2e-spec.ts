@@ -33,7 +33,9 @@ describe(`PATCH ${URL} E2E Test`, () => {
     const response = await agent.patch(URL).send(requestDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    expect(data).toBeUndefined();
   });
 
   it('[200] 존재하는 비밀번호 세션 ID를 통해 비밀번호 변경 요청을 할 경우 비밀번호 변경을 성공한다.', async () => {
@@ -54,6 +56,8 @@ describe(`PATCH ${URL} E2E Test`, () => {
     const response = await agent.patch(URL).send(requestDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
+    expect(data).toBeUndefined();
   });
 });

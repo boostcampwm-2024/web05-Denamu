@@ -32,7 +32,9 @@ describe(`POST ${URL} E2E Test`, () => {
     const response = await agent.post(URL).send(requestDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.CONFLICT);
+    expect(data).toBeUndefined();
 
     // cleanup
     await userRepository.delete(user.id);
@@ -50,7 +52,9 @@ describe(`POST ${URL} E2E Test`, () => {
     const response = await agent.post(URL).send(requestDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.CREATED);
+    expect(data).toBeUndefined();
 
     // cleanup
     await userRepository.delete({ email: requestDto.email });

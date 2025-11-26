@@ -37,7 +37,9 @@ describe(`POST ${URL} E2E Test`, () => {
     const response = await agent.post(URL).send(newAdminDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(data).toBeUndefined();
   });
 
   it('[401] 관리자 로그인 쿠키가 만료됐을 경우 회원가입을 실패한다.', async () => {
@@ -54,7 +56,9 @@ describe(`POST ${URL} E2E Test`, () => {
       .set('Cookie', 'sessionId=wrongTestSessionId');
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(data).toBeUndefined();
   });
 
   it('[409] 중복된 ID로 회원가입을 할 경우 다른 관리자 계정 회원가입을 실패한다.', async () => {
@@ -68,7 +72,9 @@ describe(`POST ${URL} E2E Test`, () => {
       .set('Cookie', 'sessionId=testSessionId');
 
     //then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.CONFLICT);
+    expect(data).toBeUndefined();
   });
 
   it('[201] 관리자 로그인이 되어 있을 경우 다른 관리자 계정 회원가입을 성공한다.', async () => {
@@ -85,7 +91,9 @@ describe(`POST ${URL} E2E Test`, () => {
       .set('Cookie', 'sessionId=testSessionId');
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.CREATED);
+    expect(data).toBeUndefined();
 
     // cleanup
     await adminRepository.delete({ loginId: newAdminDto.loginId });

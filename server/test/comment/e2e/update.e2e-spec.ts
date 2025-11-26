@@ -60,7 +60,9 @@ describe(`PATCH ${URL} E2E Test`, () => {
     const response = await agent.patch(URL).send(requestDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(data).toBeUndefined();
   });
 
   it('[404] 댓글이 존재하지 않을 경우 댓글 수정을 실패한다.', async () => {
@@ -86,7 +88,9 @@ describe(`PATCH ${URL} E2E Test`, () => {
       .send(requestDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    expect(data).toBeUndefined();
   });
 
   it('[401] 본인이 작성한 댓글이 아닐 경우 댓글 수정을 실패한다.', async () => {
@@ -112,7 +116,9 @@ describe(`PATCH ${URL} E2E Test`, () => {
       .send(requestDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(data).toBeUndefined();
   });
 
   it('[200] 본인이 작성한 댓글일 경우 댓글 수정을 성공한다.', async () => {
@@ -138,6 +144,8 @@ describe(`PATCH ${URL} E2E Test`, () => {
       .send(requestDto);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
+    expect(data).toBeUndefined();
   });
 });

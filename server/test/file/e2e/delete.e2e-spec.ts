@@ -35,7 +35,9 @@ describe(`DELETE ${URL}/{fileId} E2E Test`, () => {
     const response = await agent.delete(`${URL}/${Number.MAX_SAFE_INTEGER}`);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(data).toBeUndefined();
   });
 
   it('[404] 파일이 서비스에 존재하지 않을 경우 파일 삭제를 실패한다.', async () => {
@@ -60,7 +62,9 @@ describe(`DELETE ${URL}/{fileId} E2E Test`, () => {
       .set('Authorization', `Bearer ${accessToken}`);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    expect(data).toBeUndefined();
   });
 
   it('[200] DB에서 파일을 삭제했지만 FS 라이브러리릍 통해서 실패했을 경우에 서비스에서 파일 삭제를 성공한다.', async () => {
@@ -88,7 +92,9 @@ describe(`DELETE ${URL}/{fileId} E2E Test`, () => {
       .set('Authorization', `Bearer ${accessToken}`);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
+    expect(data).toBeUndefined();
   });
 
   it('[200] DB에서 파일을 삭제했지만 FS 라이브러리에서 권한 문제일 경우 서비스에서 파일 삭제를 성공한다.', async () => {
@@ -115,7 +121,9 @@ describe(`DELETE ${URL}/{fileId} E2E Test`, () => {
       .set('Authorization', `Bearer ${accessToken}`);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
+    expect(data).toBeUndefined();
   });
 
   it('[200] 파일 삭제 요청을 받을 경우 파일 삭제를 성공한다.', async () => {
@@ -144,6 +152,8 @@ describe(`DELETE ${URL}/{fileId} E2E Test`, () => {
       .set('Authorization', `Bearer ${accessToken}`);
 
     // then
+    const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
+    expect(data).toBeUndefined();
   });
 });
