@@ -10,6 +10,12 @@ import * as path from 'path';
 import TestAgent from 'supertest/lib/agent';
 import { FileRepository } from '../../../src/file/repository/file.repository';
 
+jest.mock('../../../src/common/disk/fileUtils', () => ({
+  ...jest.requireActual('../../../src/common/disk/fileUtils'),
+  createDirectoryIfNotExists: jest.fn().mockReturnValue('/test/20251002/'),
+  getFileName: jest.fn().mockReturnValue('test-uuidv4-code.png'),
+}));
+
 const URL = '/api/file';
 
 describe(`POST ${URL} E2E Test`, () => {
@@ -83,12 +89,6 @@ describe(`POST ${URL} E2E Test`, () => {
 
     const filePath = path.resolve(__dirname, '../../fixture/test.png');
     const accessToken = createAccessToken();
-
-    jest.mock('../../../src/common/disk/fileUtils', () => ({
-      ...jest.requireActual('../../../src/common/disk/fileUtils'),
-      createDirectoryIfNotExists: jest.fn().mockReturnValue('/test/20251002/'),
-      getFileName: jest.fn().mockReturnValue('test-uuidv4-code.png'),
-    }));
 
     // when
     const response = await agent
