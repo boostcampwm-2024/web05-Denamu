@@ -19,11 +19,11 @@ describe(`GET ${URL} E2E Test`, () => {
     agent = supertest(app.getHttpServer());
     const rssAcceptRepository = app.get(RssAcceptRepository);
     const redisService = app.get(RedisService);
-    const rssAcceptData = Array.from({ length: 2 }).map((_, i) =>
+    const rssAccepts = Array.from({ length: 2 }).map((_, i) =>
       RssAcceptFixture.createRssAcceptFixture({}, i + 1),
     );
     [rssAcceptList] = await Promise.all([
-      rssAcceptRepository.save(rssAcceptData),
+      rssAcceptRepository.save(rssAccepts),
       redisService.set(
         `${REDIS_KEYS.ADMIN_AUTH_KEY}:testSessionId`,
         'test1234',

@@ -13,7 +13,7 @@ const URL = '/api/activity';
 describe(`GET ${URL}/{userId} E2E Test`, () => {
   let app: INestApplication;
   let user: User;
-  let activityData: Array<{ activityDate: Date; viewCount: number }>;
+  let activities: Array<{ activityDate: Date; viewCount: number }>;
   let agent: TestAgent;
 
   beforeAll(async () => {
@@ -22,7 +22,7 @@ describe(`GET ${URL}/{userId} E2E Test`, () => {
     const userRepository = app.get(UserRepository);
     const activityRepository = app.get(ActivityRepository);
     user = await userRepository.save(UserFixture.createUserFixture());
-    activityData = Array.from({ length: 5 }).map((_, i) =>
+    activities = Array.from({ length: 5 }).map((_, i) =>
       ActivityFixture.createActivityFixture(
         user,
         { viewCount: (i + 1) * 2 },
@@ -30,13 +30,13 @@ describe(`GET ${URL}/{userId} E2E Test`, () => {
       ),
     );
 
-    await activityRepository.insert(activityData);
+    await activityRepository.insert(activities);
   });
 
   it('[404] 존재하지 않는 사용자 ID로 요청할 경우 활동 데이터 조회를 실패한다.', async () => {
     // given
     const requestDto = new ReadActivityQueryRequestDto({
-      year: activityData[0].activityDate.getFullYear(),
+      year: activities[0].activityDate.getFullYear(),
     });
 
     // when
@@ -54,7 +54,7 @@ describe(`GET ${URL}/{userId} E2E Test`, () => {
     // given
     const userId = user.id;
     const requestDto = new ReadActivityQueryRequestDto({
-      year: activityData[0].activityDate.getFullYear(),
+      year: activities[0].activityDate.getFullYear(),
     });
 
     // when
@@ -62,7 +62,7 @@ describe(`GET ${URL}/{userId} E2E Test`, () => {
 
     // then
     const { data } = response.body;
-    const expectedDailyActivities = activityData.map((activity) => ({
+    const expectedDailyActivities = activities.map((activity) => ({
       date: activity.activityDate.toISOString().split('T')[0],
       viewCount: activity.viewCount,
     }));
@@ -78,7 +78,7 @@ describe(`GET ${URL}/{userId} E2E Test`, () => {
     // given
     const userId = user.id;
     const requestDto = new ReadActivityQueryRequestDto({
-      year: activityData[0].activityDate.getFullYear() - 1,
+      year: activities[0].activityDate.getFullYear() - 1,
     });
 
     // when

@@ -25,11 +25,11 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
     redisService = app.get(RedisService);
     feedRepository = app.get(FeedRepository);
     const rssAcceptRepository = app.get(RssAcceptRepository);
-    const rssAcceptData = await rssAcceptRepository.save(
+    const rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
     feed = await feedRepository.save(
-      FeedFixture.createFeedFixture(rssAcceptData, {}, 1),
+      FeedFixture.createFeedFixture(rssAccept, {}, 1),
     );
     await redisService.sadd(`feed:${feed.id}:ip`, testIp);
   });

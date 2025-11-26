@@ -15,7 +15,7 @@ describe(`GET ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let redisService: RedisService;
-  let feeds: Feed[];
+  let feedList: Feed[];
 
   beforeAll(async () => {
     app = global.testApp;
@@ -26,17 +26,17 @@ describe(`GET ${URL} E2E Test`, () => {
       RssAcceptFixture.createRssAcceptFixture(),
     );
     const feedRepository = app.get(FeedRepository);
-    const feedList = Array.from({ length: 2 }).map((_, i) => {
+    const feeds = Array.from({ length: 2 }).map((_, i) => {
       return FeedFixture.createFeedFixture(rssAccept, {}, i + 1);
     });
 
-    feeds = await feedRepository.save(feedList);
+    feedList = await feedRepository.save(feeds);
   });
 
   it('[200] 최신 피드 업데이트 요청이 들어올 경우 최신 피드 제공을 성공한다.', async () => {
     // given
     await redisService.executePipeline((pipeline) => {
-      feeds.forEach((feed) => {
+      feedList.forEach((feed) => {
         pipeline.hset(`${REDIS_KEYS.FEED_RECENT_KEY}:${feed.id}`, {
           id: feed.id,
           blogPlatform: feed.blog.blogPlatform,
@@ -60,9 +60,9 @@ describe(`GET ${URL} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual(
-      feeds
+      feedList
         .map((_, i) => {
-          const feed = feeds[i];
+          const feed = feedList[i];
           return {
             id: feed.id,
             author: feed.blog.name,
@@ -83,7 +83,7 @@ describe(`GET ${URL} E2E Test`, () => {
 
     // cleanup
     await redisService.executePipeline((pipeline) => {
-      feeds.forEach((feed) => {
+      feedList.forEach((feed) => {
         pipeline.del(`${REDIS_KEYS.FEED_RECENT_KEY}:${feed.id}`);
       });
     });

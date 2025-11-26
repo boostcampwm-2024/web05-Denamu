@@ -23,10 +23,10 @@ describe(`GET ${URL}?limit={} E2E Test`, () => {
     const rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
-    const feedData = Array.from({ length: 2 }).map((_, i) =>
+    const feeds = Array.from({ length: 2 }).map((_, i) =>
       FeedFixture.createFeedFixture(rssAccept, { viewCount: i }, i + 1),
     );
-    feedList = (await feedRepository.save(feedData)).reverse();
+    feedList = (await feedRepository.save(feeds)).reverse();
   });
 
   it('[200] 전체 조회수 통계 요청을 받은 경우 전체 조회수 통계 조회를 성공한다.', async () => {

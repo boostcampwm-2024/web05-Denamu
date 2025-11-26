@@ -18,11 +18,11 @@ describe(`GET ${URL} E2E Test`, () => {
     agent = supertest(app.getHttpServer());
     const rssRejectRepository = app.get(RssRejectRepository);
     const redisService = app.get(RedisService);
-    const rssAcceptData = Array.from({ length: 2 }).map((_, i) =>
+    const rssAccepts = Array.from({ length: 2 }).map((_, i) =>
       RssRejectFixture.createRssRejectFixture({}, i),
     );
     [rssRejectList] = await Promise.all([
-      rssRejectRepository.save(rssAcceptData),
+      rssRejectRepository.save(rssAccepts),
       redisService.set('auth:testSessionId', 'test1234'),
     ]);
     rssRejectList.reverse();

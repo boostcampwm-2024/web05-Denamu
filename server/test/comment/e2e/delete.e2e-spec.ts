@@ -32,15 +32,15 @@ describe(`DELETE ${URL} E2E Test`, () => {
     const user = await userRepository.save(
       await UserFixture.createUserCryptFixture(),
     );
-    const rssAcceptInformation = await rssAcceptRepository.save(
+    const rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
-    const feedInformation = await feedRepository.save(
-      FeedFixture.createFeedFixture(rssAcceptInformation),
+    const feed = await feedRepository.save(
+      FeedFixture.createFeedFixture(rssAccept),
     );
 
     comment = await commentRepository.save(
-      CommentFixture.createCommentFixture(feedInformation, user),
+      CommentFixture.createCommentFixture(feed, user),
     );
 
     createAccessToken = (notFoundId?: number) =>

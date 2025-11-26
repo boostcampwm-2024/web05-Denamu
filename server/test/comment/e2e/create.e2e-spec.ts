@@ -32,12 +32,12 @@ describe(`POST ${URL} E2E Test`, () => {
     const userRepository = app.get(UserRepository);
     const rssAcceptRepository = app.get(RssAcceptRepository);
     const feedRepository = app.get(FeedRepository);
-    const rssAcceptInformation = await rssAcceptRepository.save(
+    const rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
     [user, feed] = await Promise.all([
       userRepository.save(await UserFixture.createUserCryptFixture()),
-      feedRepository.save(FeedFixture.createFeedFixture(rssAcceptInformation)),
+      feedRepository.save(FeedFixture.createFeedFixture(rssAccept)),
     ]);
 
     createAccessToken = (notFoundId?: number) =>
