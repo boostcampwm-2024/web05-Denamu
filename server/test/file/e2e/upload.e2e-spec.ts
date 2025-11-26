@@ -16,19 +16,29 @@ describe(`POST ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let user: User;
-  let userService: UserService;
-  let userRepository: UserRepository;
   let fileRepository: FileRepository;
+  let createAccessToken: (arg0?: number) => string;
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
-    userRepository = app.get(UserRepository);
-    userService = app.get(UserService);
+    fileRepository = app.get(FileRepository);
+    const userRepository = app.get(UserRepository);
+    const userService = app.get(UserService);
     user = await userRepository.save(
       await UserFixture.createUserCryptFixture(),
     );
-    fileRepository = app.get(FileRepository);
+
+    createAccessToken = (notFoundId?: number) =>
+      userService.createToken(
+        {
+          id: notFoundId ?? user.id,
+          email: user.email,
+          userName: user.userName,
+          role: 'user',
+        },
+        'access',
+      );
   });
 
   it('[401] 인증되지 않은 사용자가 요청할 경우 파일 업로드를 실패한다.', async () => {
@@ -51,15 +61,7 @@ describe(`POST ${URL} E2E Test`, () => {
     const requestDto = new UploadFileQueryRequestDto({
       uploadType: FileUploadType.PROFILE_IMAGE,
     });
-    const accessToken = userService.createToken(
-      {
-        id: user.id,
-        email: user.email,
-        userName: user.userName,
-        role: 'user',
-      },
-      'access',
-    );
+    const accessToken = createAccessToken();
 
     // when
     const response = await agent
@@ -80,15 +82,7 @@ describe(`POST ${URL} E2E Test`, () => {
     });
 
     const filePath = path.resolve(__dirname, '../../fixture/test.png');
-    const accessToken = userService.createToken(
-      {
-        id: user.id,
-        email: user.email,
-        userName: user.userName,
-        role: 'user',
-      },
-      'access',
-    );
+    const accessToken = createAccessToken();
 
     jest.mock('../../../src/common/disk/fileUtils', () => ({
       ...jest.requireActual('../../../src/common/disk/fileUtils'),

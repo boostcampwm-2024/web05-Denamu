@@ -3,7 +3,6 @@ import * as supertest from 'supertest';
 import { UserService } from '../../../src/user/service/user.service';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../fixture/user.fixture';
-import { User } from '../../../src/user/entity/user.entity';
 import { Comment } from '../../../src/comment/entity/comment.entity';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
 import { CommentRepository } from '../../../src/comment/repository/comment.repository';
@@ -19,27 +18,23 @@ const URL = '/api/comment';
 describe(`PATCH ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
-  let userService: UserService;
-  let user: User;
   let comment: Comment;
+  let createAccessToken: (arg0?: number) => string;
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
-    userService = app.get(UserService);
+    const userService = app.get(UserService);
     const userRepository = app.get(UserRepository);
     const rssAcceptRepository = app.get(RssAcceptRepository);
     const feedRepository = app.get(FeedRepository);
     const commentRepository = app.get(CommentRepository);
-
-    user = await userRepository.save(
+    const user = await userRepository.save(
       await UserFixture.createUserCryptFixture(),
     );
-
     const rssAcceptInformation = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
-
     const feedInformation = await feedRepository.save(
       FeedFixture.createFeedFixture(rssAcceptInformation),
     );
@@ -47,6 +42,17 @@ describe(`PATCH ${URL} E2E Test`, () => {
     comment = await commentRepository.save(
       CommentFixture.createCommentFixture(feedInformation, user),
     );
+
+    createAccessToken = (notFoundId?: number) =>
+      userService.createToken(
+        {
+          id: notFoundId ?? user.id,
+          email: user.email,
+          userName: user.userName,
+          role: 'user',
+        },
+        'access',
+      );
   });
 
   it('[401] 로그인이 되어있지 않을 경우 댓글 수정을 실패한다.', async () => {
@@ -71,15 +77,7 @@ describe(`PATCH ${URL} E2E Test`, () => {
       commentId: Number.MAX_SAFE_INTEGER,
       newComment: 'newComment',
     });
-    const accessToken = userService.createToken(
-      {
-        id: user.id,
-        email: user.email,
-        userName: user.userName,
-        role: 'user',
-      },
-      'access',
-    );
+    const accessToken = createAccessToken();
 
     // when
     const response = await agent
@@ -99,15 +97,7 @@ describe(`PATCH ${URL} E2E Test`, () => {
       commentId: comment.id,
       newComment: 'newComment',
     });
-    const accessToken = userService.createToken(
-      {
-        id: Number.MAX_SAFE_INTEGER,
-        email: user.email,
-        userName: user.userName,
-        role: 'user',
-      },
-      'access',
-    );
+    const accessToken = createAccessToken(Number.MAX_SAFE_INTEGER);
 
     // when
     const response = await agent
@@ -127,15 +117,7 @@ describe(`PATCH ${URL} E2E Test`, () => {
       commentId: comment.id,
       newComment: 'newComment',
     });
-    const accessToken = userService.createToken(
-      {
-        id: user.id,
-        email: user.email,
-        userName: user.userName,
-        role: 'user',
-      },
-      'access',
-    );
+    const accessToken = createAccessToken();
 
     // when
     const response = await agent

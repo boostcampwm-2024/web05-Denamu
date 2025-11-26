@@ -1,4 +1,3 @@
-import { AdminFixture } from './../../fixture/admin.fixture';
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { UserService } from '../../../src/user/service/user.service';
 import { UserRepository } from '../../../src/user/repository/user.repository';
@@ -7,7 +6,6 @@ import { FeedRepository } from '../../../src/feed/repository/feed.repository';
 import { UserFixture } from '../../fixture/user.fixture';
 import { RssAcceptFixture } from '../../fixture/rss-accept.fixture';
 import { FeedFixture } from '../../fixture/feed.fixture';
-import { RssAccept } from '../../../src/rss/entity/rss.entity';
 import { User } from '../../../src/user/entity/user.entity';
 import { Feed } from '../../../src/feed/entity/feed.entity';
 import { ManageLikeRequestDto } from '../../../src/like/dto/request/manageLike.dto';
@@ -19,29 +17,37 @@ const URL = '/api/like';
 
 describe(`POST ${URL} E2E Test`, () => {
   let app: INestApplication;
-  let userService: UserService;
-  let rssAccept: RssAccept;
   let user: User;
   let feed: Feed;
   let agent: TestAgent;
   let likeRepository: LikeRepository;
+  let createAccessToken: (arg0?: number) => string;
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
-    userService = app.get(UserService);
+    const userService = app.get(UserService);
     const userRepository = app.get(UserRepository);
     const rssAcceptRepository = app.get(RssAcceptRepository);
     const feedRepository = app.get(FeedRepository);
-    likeRepository = app.get(LikeRepository);
-
-    user = await userRepository.save(
-      await UserFixture.createUserCryptFixture(),
-    );
-    rssAccept = await rssAcceptRepository.save(
+    const rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
-    feed = await feedRepository.save(FeedFixture.createFeedFixture(rssAccept));
+    likeRepository = app.get(LikeRepository);
+    [user, feed] = await Promise.all([
+      userRepository.save(await UserFixture.createUserCryptFixture()),
+      feedRepository.save(FeedFixture.createFeedFixture(rssAccept)),
+    ]);
+    createAccessToken = (notFoundId?: number) =>
+      userService.createToken(
+        {
+          id: notFoundId ?? user.id,
+          email: user.email,
+          userName: user.userName,
+          role: 'user',
+        },
+        'access',
+      );
   });
 
   it('[401] 로그인이 되어 있지 않을 경우 좋아요 등록을 실패한다.', async () => {
@@ -64,15 +70,7 @@ describe(`POST ${URL} E2E Test`, () => {
     const requestDto = new ManageLikeRequestDto({
       feedId: Number.MAX_SAFE_INTEGER,
     });
-    const accessToken = userService.createToken(
-      {
-        id: user.id,
-        email: user.email,
-        userName: user.userName,
-        role: 'user',
-      },
-      'access',
-    );
+    const accessToken = createAccessToken();
 
     // when
     const response = await agent
@@ -95,15 +93,7 @@ describe(`POST ${URL} E2E Test`, () => {
     const requestDto = new ManageLikeRequestDto({
       feedId: feed.id,
     });
-    const accessToken = userService.createToken(
-      {
-        id: user.id,
-        email: user.email,
-        userName: user.userName,
-        role: 'user',
-      },
-      'access',
-    );
+    const accessToken = createAccessToken();
 
     // when
     const response = await agent
@@ -125,15 +115,7 @@ describe(`POST ${URL} E2E Test`, () => {
     const requestDto = new ManageLikeRequestDto({
       feedId: feed.id,
     });
-    const accessToken = userService.createToken(
-      {
-        id: user.id,
-        email: user.email,
-        userName: user.userName,
-        role: 'user',
-      },
-      'access',
-    );
+    const accessToken = createAccessToken();
 
     // when
     const response = await agent

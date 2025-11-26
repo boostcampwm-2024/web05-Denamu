@@ -18,29 +18,37 @@ const URL = '/api/comment';
 describe(`POST ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
-  let userService: UserService;
   let user: User;
   let feed: Feed;
   let commentRepository: CommentRepository;
+  let createAccessToken: (arg0?: number) => string;
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
-    userService = app.get(UserService);
+    commentRepository = app.get(CommentRepository);
+    const userService = app.get(UserService);
     const userRepository = app.get(UserRepository);
     const rssAcceptRepository = app.get(RssAcceptRepository);
     const feedRepository = app.get(FeedRepository);
-
-    user = await userRepository.save(
-      await UserFixture.createUserCryptFixture(),
-    );
     const rssAcceptInformation = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
-    feed = await feedRepository.save(
-      FeedFixture.createFeedFixture(rssAcceptInformation),
-    );
-    commentRepository = app.get(CommentRepository);
+    [user, feed] = await Promise.all([
+      userRepository.save(await UserFixture.createUserCryptFixture()),
+      feedRepository.save(FeedFixture.createFeedFixture(rssAcceptInformation)),
+    ]);
+
+    createAccessToken = (notFoundId?: number) =>
+      userService.createToken(
+        {
+          id: notFoundId ?? user.id,
+          email: user.email,
+          userName: user.userName,
+          role: 'user',
+        },
+        'access',
+      );
   });
 
   it('[401] 로그인이 되어 있지 않을 경우 댓글 등록을 실패한다.', async () => {
@@ -61,19 +69,11 @@ describe(`POST ${URL} E2E Test`, () => {
 
   it('[404] 게시글이 존재하지 않을 경우 댓글 등록을 실패한다.', async () => {
     // given
+    const accessToken = createAccessToken();
     const requestDto = new CreateCommentRequestDto({
       comment: 'test',
       feedId: Number.MAX_SAFE_INTEGER,
     });
-    const accessToken = userService.createToken(
-      {
-        id: user.id,
-        email: user.email,
-        userName: user.userName,
-        role: 'user',
-      },
-      'access',
-    );
 
     // when
     const response = await agent
@@ -89,19 +89,11 @@ describe(`POST ${URL} E2E Test`, () => {
 
   it('[404] 회원 정보가 없을 경우 댓글 등록을 실패한다.', async () => {
     // given
+    const accessToken = createAccessToken(Number.MAX_SAFE_INTEGER);
     const requestDto = new CreateCommentRequestDto({
       comment: 'test',
       feedId: feed.id,
     });
-    const accessToken = userService.createToken(
-      {
-        id: Number.MAX_SAFE_INTEGER,
-        email: user.email,
-        userName: user.userName,
-        role: 'user',
-      },
-      'access',
-    );
 
     // when
     const response = await agent
@@ -117,15 +109,7 @@ describe(`POST ${URL} E2E Test`, () => {
 
   it('[201] 로그인이 되어 있을 경우 댓글 등록을 성공한다.', async () => {
     // given
-    const accessToken = userService.createToken(
-      {
-        id: user.id,
-        email: user.email,
-        userName: user.userName,
-        role: 'user',
-      },
-      'access',
-    );
+    const accessToken = createAccessToken();
     const requestDto = new CreateCommentRequestDto({
       comment: 'test',
       feedId: feed.id,

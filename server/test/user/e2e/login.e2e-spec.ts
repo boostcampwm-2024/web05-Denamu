@@ -5,25 +5,33 @@ import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../fixture/user.fixture';
 import TestAgent from 'supertest/lib/agent';
 import { UserService } from '../../../src/user/service/user.service';
-import { User } from '../../../src/user/entity/user.entity';
 
 const URL = '/api/user/login';
 
 describe(`POST ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
-  let userService: UserService;
-  let user: User;
+  let createAccessToken: (arg0?:number) => string;
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
-    userService = app.get(UserService);
+    const userService = app.get(UserService);
     const userRepository = app.get(UserRepository);
-
-    user = await userRepository.save(
+    const user = await userRepository.save(
       await UserFixture.createUserCryptFixture(),
     );
+
+    createAccessToken = (notFoundId?: number) =>
+      userService.createToken(
+        {
+          id: notFoundId ?? user.id,
+          email: user.email,
+          userName: user.userName,
+          role: 'user',
+        },
+        'access',
+      );
   });
 
   it('[401] 아이디가 틀렸을 경우 로그인을 실패한다.', async () => {
@@ -64,15 +72,7 @@ describe(`POST ${URL} E2E Test`, () => {
       email: UserFixture.GENERAL_USER.email,
       password: UserFixture.GENERAL_USER.password,
     });
-    const accessToken = userService.createToken(
-      {
-        id: user.id,
-        email: user.email,
-        userName: user.userName,
-        role: 'user',
-      },
-      'access',
-    );
+    const accessToken = createAccessToken();
 
     // when
     const response = await agent.post(URL).send(requestDto);

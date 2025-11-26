@@ -3,7 +3,6 @@ import { UserService } from '../../../src/user/service/user.service';
 import * as supertest from 'supertest';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../fixture/user.fixture';
-import { User } from '../../../src/user/entity/user.entity';
 import TestAgent from 'supertest/lib/agent';
 
 const URL = '/api/user/refresh-token';
@@ -11,19 +10,39 @@ const URL = '/api/user/refresh-token';
 describe(`POST ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
-  let userService: UserService;
-  let user: User;
+  let createAccessToken: (arg0?: number) => string;
+  let createRefreshToken: (arg0?: number) => string;
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
-    userService = app.get(UserService);
-
+    const userService = app.get(UserService);
     const userRepository = app.get(UserRepository);
-
-    user = await userRepository.save(
+    const user = await userRepository.save(
       await UserFixture.createUserCryptFixture(),
     );
+
+    createAccessToken = (notFoundId?: number) =>
+      userService.createToken(
+        {
+          id: notFoundId ?? user.id,
+          email: user.email,
+          userName: user.userName,
+          role: 'user',
+        },
+        'access',
+      );
+
+    createRefreshToken = (notFoundId?: number) =>
+      userService.createToken(
+        {
+          id: notFoundId ?? user.id,
+          email: user.email,
+          userName: user.userName,
+          role: 'user',
+        },
+        'refresh',
+      );
   });
 
   it('[401] Refresh Token이 없을 경우 Access Token 발급을 실패한다.', async () => {
@@ -38,24 +57,8 @@ describe(`POST ${URL} E2E Test`, () => {
 
   it('[200] Refresh Token이 있을 경우 Access Token 발급을 성공한다.', async () => {
     // given
-    const refreshToken = userService.createToken(
-      {
-        id: user.id,
-        email: user.email,
-        userName: user.userName,
-        role: 'user',
-      },
-      'refresh',
-    );
-    const accessToken = userService.createToken(
-      {
-        id: user.id,
-        email: user.email,
-        userName: user.userName,
-        role: 'user',
-      },
-      'access',
-    );
+    const refreshToken = createRefreshToken();
+    const accessToken = createAccessToken();
 
     // when
     const response = await agent

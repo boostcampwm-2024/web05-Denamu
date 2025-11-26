@@ -15,14 +15,23 @@ const URL = '/api/oauth/callback';
 describe(`GET ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
-  let oauthService: OAuthService;
-  let userService: UserService;
+  let createAccessToken: (arg0?: number) => string;
 
   beforeAll(() => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
-    oauthService = app.get(OAuthService);
-    userService = app.get(UserService);
+    const userService = app.get(UserService);
+
+    createAccessToken = () =>
+      userService.createToken(
+        {
+          id: 1,
+          email: 'test@test.com',
+          userName: 'test',
+          role: 'user',
+        },
+        'access',
+      );
   });
 
   it('[302] Github OAuth 로그인 콜백으로 인증 서버에서 데이터를 받을 경우 리다이렉트를 성공한다.', async () => {
@@ -51,15 +60,7 @@ describe(`GET ${URL} E2E Test`, () => {
       },
     });
 
-    const accessToken = userService.createToken(
-      {
-        id: 1,
-        email: 'test@test.com',
-        userName: 'test',
-        role: 'user',
-      },
-      'access',
-    );
+    const accessToken = createAccessToken();
 
     // when
     const response = await agent.get(URL).query(requestDto);
@@ -100,15 +101,7 @@ describe(`GET ${URL} E2E Test`, () => {
       },
     });
 
-    const accessToken = userService.createToken(
-      {
-        id: 1,
-        email: 'test@test.com',
-        userName: 'test',
-        role: 'user',
-      },
-      'access',
-    );
+    const accessToken = createAccessToken();
 
     // when
     const response = await agent.get(URL).query(requestDto);

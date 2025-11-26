@@ -15,19 +15,30 @@ describe(`DELETE ${URL}/{fileId} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let user: User;
-  let userService: UserService;
   let fileRepository: FileRepository;
   let file: File;
+  let createAccessToken: (arg0?: number) => string;
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
-    const userRepository = app.get(UserRepository);
-    userService = app.get(UserService);
     fileRepository = app.get(FileRepository);
+    const userRepository = app.get(UserRepository);
+    const userService = app.get(UserService);
     user = await userRepository.save(
       await UserFixture.createUserCryptFixture(),
     );
+
+    createAccessToken = (notFoundId?: number) =>
+      userService.createToken(
+        {
+          id: notFoundId ?? user.id,
+          email: user.email,
+          userName: user.userName,
+          role: 'user',
+        },
+        'access',
+      );
   });
 
   it('[401] 파일에 삭제 권한이 없을 경우 파일 삭제를 실패한다.', async () => {
@@ -42,19 +53,10 @@ describe(`DELETE ${URL}/{fileId} E2E Test`, () => {
 
   it('[404] 파일이 서비스에 존재하지 않을 경우 파일 삭제를 실패한다.', async () => {
     // given
-    jest.mock('fs/promises', () => ({
-      access: jest.fn().mockResolvedValue(null),
-      unlink: jest.fn().mockResolvedValue(null),
-    }));
-    const accessToken = userService.createToken(
-      {
-        id: user.id,
-        email: user.email,
-        userName: user.userName,
-        role: 'user',
-      },
-      'access',
-    );
+    const fs = await import('fs/promises');
+    jest.spyOn(fs, 'access').mockResolvedValue(undefined);
+    jest.spyOn(fs, 'unlink').mockResolvedValue(undefined);
+    const accessToken = createAccessToken();
 
     // when
     const response = await agent
@@ -67,24 +69,15 @@ describe(`DELETE ${URL}/{fileId} E2E Test`, () => {
     expect(data).toBeUndefined();
   });
 
-  it('[200] DB에서 파일을 삭제했지만 FS 라이브러리릍 통해서 실패했을 경우에 서비스에서 파일 삭제를 성공한다.', async () => {
+  it('[200] DB에서 파일을 삭제했지만 FS 라이브러리를 통해서 실패했을 경우에 서비스에서 파일 삭제를 성공한다.', async () => {
     // given
     file = await fileRepository.save(
       FileFixture.createFileFixture({ user: user }),
     );
-    jest.mock('fs/promises', () => ({
-      access: jest.fn().mockResolvedValue(null),
-    }));
+    const fs = await import('fs/promises');
+    jest.spyOn(fs, 'access').mockResolvedValue(undefined);
 
-    const accessToken = userService.createToken(
-      {
-        id: user.id,
-        email: user.email,
-        userName: user.userName,
-        role: 'user',
-      },
-      'access',
-    );
+    const accessToken = createAccessToken();
 
     // when
     const response = await agent
@@ -102,18 +95,9 @@ describe(`DELETE ${URL}/{fileId} E2E Test`, () => {
     file = await fileRepository.save(
       FileFixture.createFileFixture({ user: user }),
     );
-    jest.mock('fs/promises', () => ({
-      unlink: jest.fn().mockResolvedValue(null),
-    }));
-    const accessToken = userService.createToken(
-      {
-        id: user.id,
-        email: user.email,
-        userName: user.userName,
-        role: 'user',
-      },
-      'access',
-    );
+    const fs = await import('fs/promises');
+    jest.spyOn(fs, 'unlink').mockResolvedValue(undefined);
+    const accessToken = createAccessToken();
 
     // when
     const response = await agent
@@ -131,20 +115,11 @@ describe(`DELETE ${URL}/{fileId} E2E Test`, () => {
     file = await fileRepository.save(
       FileFixture.createFileFixture({ user: user }),
     );
-    jest.mock('fs/promises', () => ({
-      access: jest.fn().mockResolvedValue(null),
-      unlink: jest.fn().mockResolvedValue(null),
-    }));
+    const fs = await import('fs/promises');
+    jest.spyOn(fs, 'access').mockResolvedValue(undefined);
+    jest.spyOn(fs, 'unlink').mockResolvedValue(undefined);
 
-    const accessToken = userService.createToken(
-      {
-        id: user.id,
-        email: user.email,
-        userName: user.userName,
-        role: 'user',
-      },
-      'access',
-    );
+    const accessToken = createAccessToken();
 
     // when
     const response = await agent
