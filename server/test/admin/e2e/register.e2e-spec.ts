@@ -65,7 +65,10 @@ describe(`POST ${URL} E2E Test`, () => {
 
   it('[409] 중복된 ID로 회원가입을 할 경우 다른 관리자 계정 회원가입을 실패한다.', async () => {
     // given
-    const newAdminDto = new RegisterAdminRequestDto(AdminFixture.GENERAL_ADMIN);
+    const newAdminDto = new RegisterAdminRequestDto({
+      loginId: AdminFixture.GENERAL_ADMIN.loginId,
+      password: AdminFixture.GENERAL_ADMIN.password,
+    });
 
     // when
     const response = await agent

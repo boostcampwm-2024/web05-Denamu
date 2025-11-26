@@ -22,7 +22,7 @@ describe(`POST ${URL} E2E Test`, () => {
     // given
     const requestDto = new LoginAdminRequestDto({
       loginId: 'testWrongAdminId',
-      password: 'test1234!',
+      password: AdminFixture.GENERAL_ADMIN.password,
     });
 
     // when
@@ -37,7 +37,7 @@ describe(`POST ${URL} E2E Test`, () => {
   it('[401] 비밀번호가 다를 경우 로그인을 실패한다.', async () => {
     // given
     const requestDto = new LoginAdminRequestDto({
-      loginId: 'test1234',
+      loginId: AdminFixture.GENERAL_ADMIN.loginId,
       password: 'testWrongAdminPassword!',
     });
 
@@ -53,8 +53,8 @@ describe(`POST ${URL} E2E Test`, () => {
   it('[200] 존재하는 사용자의 정보로 로그인할 경우 로그인을 성공한다.', async () => {
     // given
     const requestDto = new LoginAdminRequestDto({
-      loginId: 'test1234',
-      password: 'test1234!',
+      loginId: AdminFixture.GENERAL_ADMIN.loginId,
+      password: AdminFixture.GENERAL_ADMIN.password,
     });
 
     // when

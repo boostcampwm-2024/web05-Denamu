@@ -12,6 +12,7 @@ import { RssAcceptFixture } from '../../fixture/rss-accept.fixture';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
 import TestAgent from 'supertest/lib/agent';
 import { CommentRepository } from '../../../src/comment/repository/comment.repository';
+import { CommentFixture } from '../../fixture/comment.fixture';
 
 const URL = '/api/comment';
 
@@ -54,7 +55,7 @@ describe(`POST ${URL} E2E Test`, () => {
   it('[401] 로그인이 되어 있지 않을 경우 댓글 등록을 실패한다.', async () => {
     // given
     const requestDto = new CreateCommentRequestDto({
-      comment: 'test',
+      comment: CommentFixture.GENERAL_COMMENT.comment,
       feedId: feed.id,
     });
 
@@ -71,7 +72,7 @@ describe(`POST ${URL} E2E Test`, () => {
     // given
     const accessToken = createAccessToken();
     const requestDto = new CreateCommentRequestDto({
-      comment: 'test',
+      comment: CommentFixture.GENERAL_COMMENT.comment,
       feedId: Number.MAX_SAFE_INTEGER,
     });
 
@@ -91,7 +92,7 @@ describe(`POST ${URL} E2E Test`, () => {
     // given
     const accessToken = createAccessToken(Number.MAX_SAFE_INTEGER);
     const requestDto = new CreateCommentRequestDto({
-      comment: 'test',
+      comment: CommentFixture.GENERAL_COMMENT.comment,
       feedId: feed.id,
     });
 
@@ -111,7 +112,7 @@ describe(`POST ${URL} E2E Test`, () => {
     // given
     const accessToken = createAccessToken();
     const requestDto = new CreateCommentRequestDto({
-      comment: 'test',
+      comment: CommentFixture.GENERAL_COMMENT.comment,
       feedId: feed.id,
     });
 
