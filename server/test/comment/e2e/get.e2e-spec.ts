@@ -35,10 +35,10 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
   });
 
   it('[404] 게시글이 존재하지 않을 경우 댓글 조회를 실패한다.', async () => {
-    // when
+    // Http when
     const response = await agent.get(`${URL}/${Number.MAX_SAFE_INTEGER}`);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
     expect(data).toBeUndefined();
@@ -54,10 +54,10 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
       feedId: feed.id,
     });
 
-    // when
+    // Http when
     const response = await agent.get(`${URL}/${requestDto.feedId}`);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual([
