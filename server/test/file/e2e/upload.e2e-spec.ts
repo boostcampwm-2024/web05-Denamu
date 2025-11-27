@@ -53,10 +53,10 @@ describe(`POST ${URL} E2E Test`, () => {
       uploadType: FileUploadType.PROFILE_IMAGE,
     });
 
-    // when
+    // Http when
     const response = await agent.post(URL).query(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     expect(data).toBeUndefined();
@@ -69,13 +69,13 @@ describe(`POST ${URL} E2E Test`, () => {
     });
     const accessToken = createAccessToken();
 
-    // when
+    // Http when
     const response = await agent
       .post(URL)
       .query(requestDto)
       .set('Authorization', `Bearer ${accessToken}`);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.BAD_REQUEST);
     expect(data).toBeUndefined();
@@ -90,14 +90,14 @@ describe(`POST ${URL} E2E Test`, () => {
     const filePath = path.resolve(__dirname, '../../fixture/test.png');
     const accessToken = createAccessToken();
 
-    // when
+    // Http when
     const response = await agent
       .post(URL)
       .query(requestDto)
       .set('Authorization', `Bearer ${accessToken}`)
       .attach('file', filePath);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.CREATED);
     expect(data).toStrictEqual({
@@ -109,6 +109,15 @@ describe(`POST ${URL} E2E Test`, () => {
       userId: user.id,
       createdAt: expect.any(String),
     });
+
+    // DB, Redis when
+    const savedFile = await fileRepository.findOneBy({
+      originalName: 'test.png',
+      mimetype: 'image/png',
+    });
+
+    // DB, Redis then
+    expect(savedFile).not.toBeUndefined();
 
     // cleanup
     await fileRepository.delete({ user });
