@@ -4,16 +4,20 @@ import { LoginAdminRequestDto } from '../../../src/admin/dto/request/loginAdmin.
 import * as supertest from 'supertest';
 import { AdminRepository } from '../../../src/admin/repository/admin.repository';
 import TestAgent from 'supertest/lib/agent';
+import { RedisService } from '../../../src/common/redis/redis.service';
+import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 
 const URL = '/api/admin/login';
 
 describe(`POST ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
+  let redisService: RedisService;
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
+    redisService = app.get(RedisService);
     const adminRepository = app.get(AdminRepository);
     await adminRepository.insert(await AdminFixture.createAdminCryptFixture());
   });
@@ -25,10 +29,10 @@ describe(`POST ${URL} E2E Test`, () => {
       password: AdminFixture.GENERAL_ADMIN.password,
     });
 
-    // when
+    // Http when
     const response = await agent.post(URL).send(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     expect(data).toBeUndefined();
@@ -41,10 +45,10 @@ describe(`POST ${URL} E2E Test`, () => {
       password: 'testWrongAdminPassword!',
     });
 
-    // when
+    // Http when
     const response = await agent.post(URL).send(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     expect(data).toBeUndefined();
@@ -57,13 +61,21 @@ describe(`POST ${URL} E2E Test`, () => {
       password: AdminFixture.GENERAL_ADMIN.password,
     });
 
-    // when
+    // Http when
     const response = await agent.post(URL).send(requestDto);
 
-    //then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(response.headers['set-cookie'][0]).toContain('sessionId=');
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedSessionId = await redisService.get(
+      `${REDIS_KEYS.ADMIN_AUTH_KEY}:${response.headers['set-cookie'][0].match(/sessionId=([^;]+);?/)[1]}`,
+    );
+
+    // DB, Redis then
+    expect(savedSessionId).toBe(AdminFixture.GENERAL_ADMIN.loginId);
   });
 });
