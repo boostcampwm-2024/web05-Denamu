@@ -1,3 +1,4 @@
+import { RssRejectRepository } from './../../../src/rss/repository/rss.repository';
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as supertest from 'supertest';
 import { RssFixture } from '../../fixture/rss.fixture';
@@ -13,12 +14,14 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let rssRepository: RssRepository;
+  let rssRejectRepository: RssRejectRepository;
   let redisService: RedisService;
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
     rssRepository = app.get(RssRepository);
+    rssRejectRepository = app.get(RssRejectRepository);
     redisService = app.get(RedisService);
   });
 
@@ -33,22 +36,22 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
   });
 
   it('[401] 관리자 로그인 쿠키가 없을 경우 RSS 거부를 실패한다.', async () => {
-    // when
+    // Http when
     const response = await agent.post(`${URL}/${Number.MAX_SAFE_INTEGER}`);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     expect(data).toBeUndefined();
   });
 
   it('[401] 관리자 로그인 쿠키가 만료됐을 경우 RSS 거부를 실패한다.', async () => {
-    // when
+    // Http when
     const response = await agent
       .post(`${URL}/${Number.MAX_SAFE_INTEGER}`)
       .set('Cookie', 'sessionId=invalid');
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     expect(data).toBeUndefined();
@@ -61,13 +64,13 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
       description: REJECT_REASON,
     });
 
-    // when
+    // Http when
     const response = await agent
       .post(`${URL}/${Number.MAX_SAFE_INTEGER}`)
       .set('Cookie', 'sessionId=testSessionId')
       .send(requestDTO);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
     expect(data).toBeUndefined();
@@ -81,15 +84,26 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
       description: REJECT_REASON,
     });
 
-    // when
+    // Http when
     const response = await agent
       .post(`${URL}/${rss.id}`)
       .set('Cookie', 'sessionId=testSessionId')
       .send(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.CREATED);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedRssReject = await rssRejectRepository.findOneBy({
+      ...rss,
+      description: REJECT_REASON,
+    });
+    const savedRss = await rssRepository.findOneBy({ ...rss });
+
+    // DB, Redis then
+    expect(savedRssReject).not.toBeUndefined();
+    expect(savedRss).not.toBeUndefined();
   });
 });
