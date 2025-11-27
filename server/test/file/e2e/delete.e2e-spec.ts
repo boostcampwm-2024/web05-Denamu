@@ -42,10 +42,10 @@ describe(`DELETE ${URL}/{fileId} E2E Test`, () => {
   });
 
   it('[401] 파일에 삭제 권한이 없을 경우 파일 삭제를 실패한다.', async () => {
-    // when
+    // Http when
     const response = await agent.delete(`${URL}/${Number.MAX_SAFE_INTEGER}`);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     expect(data).toBeUndefined();
@@ -58,12 +58,12 @@ describe(`DELETE ${URL}/{fileId} E2E Test`, () => {
     jest.spyOn(fs, 'unlink').mockResolvedValue(undefined);
     const accessToken = createAccessToken();
 
-    // when
+    // Http when
     const response = await agent
       .delete(`${URL}/${Number.MAX_SAFE_INTEGER}`)
       .set('Authorization', `Bearer ${accessToken}`);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
     expect(data).toBeUndefined();
@@ -79,15 +79,23 @@ describe(`DELETE ${URL}/{fileId} E2E Test`, () => {
 
     const accessToken = createAccessToken();
 
-    // when
+    // Http when
     const response = await agent
       .delete(`${URL}/${file.id}`)
       .set('Authorization', `Bearer ${accessToken}`);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedFile = await fileRepository.findOneBy({
+      id: file.id,
+    });
+
+    // DB, Redis then
+    expect(savedFile).not.toBeUndefined();
   });
 
   it('[200] DB에서 파일을 삭제했지만 FS 라이브러리에서 권한 문제일 경우 서비스에서 파일 삭제를 성공한다.', async () => {
@@ -99,15 +107,23 @@ describe(`DELETE ${URL}/{fileId} E2E Test`, () => {
     jest.spyOn(fs, 'unlink').mockResolvedValue(undefined);
     const accessToken = createAccessToken();
 
-    // when
+    // Http when
     const response = await agent
       .delete(`${URL}/${file.id}`)
       .set('Authorization', `Bearer ${accessToken}`);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedFile = await fileRepository.findOneBy({
+      id: file.id,
+    });
+
+    // DB, Redis then
+    expect(savedFile).not.toBeUndefined();
   });
 
   it('[200] 파일 삭제 요청을 받을 경우 파일 삭제를 성공한다.', async () => {
@@ -118,17 +134,24 @@ describe(`DELETE ${URL}/{fileId} E2E Test`, () => {
     const fs = await import('fs/promises');
     jest.spyOn(fs, 'access').mockResolvedValue(undefined);
     jest.spyOn(fs, 'unlink').mockResolvedValue(undefined);
-
     const accessToken = createAccessToken();
 
-    // when
+    // Http when
     const response = await agent
       .delete(`${URL}/${file.id}`)
       .set('Authorization', `Bearer ${accessToken}`);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedFile = await fileRepository.findOneBy({
+      id: file.id,
+    });
+
+    // DB, Redis then
+    expect(savedFile).not.toBeUndefined();
   });
 });
