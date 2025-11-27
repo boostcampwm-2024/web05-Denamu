@@ -39,7 +39,6 @@ export class RssService {
     private readonly emailService: EmailService,
     private readonly dataSource: DataSource,
     private readonly redisService: RedisService,
-    private readonly feedRepository: FeedRepository,
   ) {}
 
   async createRss(rssRegisterBodyDto: RegisterRssRequestDto) {
@@ -241,9 +240,8 @@ export class RssService {
   }
 
   async deleteRss(deleteRssDto: DeleteCertificateRssRequestDto) {
-    const rssUrl = await this.redisService.get(
-      `${REDIS_KEYS.RSS_REMOVE_KEY}:${deleteRssDto.code}`,
-    );
+    const redisKey = `${REDIS_KEYS.RSS_REMOVE_KEY}:${deleteRssDto.code}`;
+    const rssUrl = await this.redisService.get(redisKey);
 
     if (!rssUrl) {
       throw new NotFoundException(
@@ -251,23 +249,17 @@ export class RssService {
       );
     }
 
-    const rss = await this.rssAcceptRepository.findOne({
-      where: {
-        rssUrl: rssUrl,
-      },
-    });
+    try {
+      const [rssAccept, rss] = await Promise.all([
+        this.rssAcceptRepository.delete({ rssUrl }),
+        this.rssRepository.delete({ rssUrl }),
+      ]);
 
-    if (!rss) {
-      await this.redisService.del(
-        `${REDIS_KEYS.RSS_REMOVE_KEY}:${deleteRssDto.code}`,
-      );
-      throw new NotFoundException('이미 지워진 RSS 정보입니다.');
+      if (rssAccept.affected === 0 && rss.affected === 0) {
+        throw new NotFoundException('이미 지워진 RSS 정보입니다.');
+      }
+    } finally {
+      await this.redisService.del(redisKey);
     }
-
-    await this.feedRepository.delete({
-      blog: {
-        id: rss.id,
-      },
-    });
   }
 }

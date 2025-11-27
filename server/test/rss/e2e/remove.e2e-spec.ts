@@ -39,7 +39,7 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(data).toBeUndefined();
   });
 
-  it('[200] RSS 등록 요청이 있을 경우 RSS 삭제 신청을 성공한다.', async () => {
+  it('[200] RSS 대기 목록에 있을 경우 RSS 삭제 신청을 성공한다.', async () => {
     // given
     const rss = await rssRepository.save(RssFixture.createRssFixture());
     const requestDto = new DeleteRssRequestDto({
@@ -59,7 +59,7 @@ describe(`POST ${URL} E2E Test`, () => {
     await rssRepository.delete({ id: rss.id });
   });
 
-  it('[200] 이미 등록된 RSS가 있을 경우 RSS 삭제 신청을 성공한다.', async () => {
+  it('[200] 등록된 RSS가 있을 경우 RSS 삭제 신청을 성공한다.', async () => {
     // given
     const rss = await rssAcceptRepository.save(RssFixture.createRssFixture());
     const requestDto = new DeleteRssRequestDto({
