@@ -75,6 +75,8 @@ describe('User Delete Account E2E Test', () => {
 
       // then
       expect(response.status).toBe(200);
+
+      await redisService.del(redisKey);
     });
 
     it('유효하지 않은 토큰으로 회원탈퇴 확정 시 404 에러가 발생한다.', async () => {
