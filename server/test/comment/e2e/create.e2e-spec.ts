@@ -59,10 +59,10 @@ describe(`POST ${URL} E2E Test`, () => {
       feedId: feed.id,
     });
 
-    // when
+    // Http when
     const response = await agent.post(URL).send(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     expect(data).toBeUndefined();
@@ -76,13 +76,13 @@ describe(`POST ${URL} E2E Test`, () => {
       feedId: Number.MAX_SAFE_INTEGER,
     });
 
-    // when
+    // Http when
     const response = await agent
       .post(URL)
       .set('Authorization', `Bearer ${accessToken}`)
       .send(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
     expect(data).toBeUndefined();
@@ -96,13 +96,13 @@ describe(`POST ${URL} E2E Test`, () => {
       feedId: feed.id,
     });
 
-    // when
+    // Http when
     const response = await agent
       .post(URL)
       .set('Authorization', `Bearer ${accessToken}`)
       .send(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
     expect(data).toBeUndefined();
@@ -116,18 +116,26 @@ describe(`POST ${URL} E2E Test`, () => {
       feedId: feed.id,
     });
 
-    // when
+    // Http when
     const response = await agent
       .post(URL)
       .set('Authorization', `Bearer ${accessToken}`)
       .send(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.CREATED);
     expect(data).toBeUndefined();
 
+    // DB, Redis when
+    const savedComment = await commentRepository.findOneBy({
+      feed,
+    });
+
+    // DB, Redis then
+    expect(savedComment).not.toBeUndefined();
+
     // cleanup
-    await commentRepository.delete({ user: user, feed: feed });
+    await commentRepository.delete({ user, feed });
   });
 });
