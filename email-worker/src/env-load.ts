@@ -8,8 +8,6 @@ if (process.env.NODE_ENV !== 'PROD') {
     DEV: path.join(process.cwd(), 'env/.env.local'),
   } as const;
 
-  console.log('LOCAL: ' + envMap.LOCAL);
-
   const chosen = envMap[process.env.NODE_ENV as keyof typeof envMap];
 
   if (!chosen) {
