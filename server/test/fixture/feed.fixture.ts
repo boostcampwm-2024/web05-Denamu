@@ -18,8 +18,8 @@ export class FeedFixture {
         path: `https://test.com/test${index}`,
         thumbnail: `https://test.com/test${index}.png`,
         summary: `test summary ${index}`,
-        likes: 0,
-        comments: 0,
+        likeCount: 0,
+        commentCount: 0,
       },
       blog: rssAccept,
     });
