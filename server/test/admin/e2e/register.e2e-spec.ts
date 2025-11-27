@@ -6,6 +6,7 @@ import { AdminRepository } from '../../../src/admin/repository/admin.repository'
 import TestAgent from 'supertest/lib/agent';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
+import * as bcrypt from 'bcrypt';
 
 const URL = '/api/admin/register';
 
@@ -35,10 +36,10 @@ describe(`POST ${URL} E2E Test`, () => {
       password: 'testNewAdminPassword!',
     });
 
-    // when
+    // Http when
     const response = await agent.post(URL).send(newAdminDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     expect(data).toBeUndefined();
@@ -51,13 +52,13 @@ describe(`POST ${URL} E2E Test`, () => {
       password: 'testNewAdminPassword!',
     });
 
-    // when
+    // Http when
     const response = await agent
       .post(URL)
       .send(newAdminDto)
       .set('Cookie', 'sessionId=wrongTestSessionId');
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     expect(data).toBeUndefined();
@@ -70,13 +71,13 @@ describe(`POST ${URL} E2E Test`, () => {
       password: AdminFixture.GENERAL_ADMIN.password,
     });
 
-    // when
+    // Http when
     const response = await agent
       .post(URL)
       .send(newAdminDto)
       .set('Cookie', 'sessionId=testSessionId');
 
-    //then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.CONFLICT);
     expect(data).toBeUndefined();
@@ -89,16 +90,27 @@ describe(`POST ${URL} E2E Test`, () => {
       password: 'testNewAdminPassword!',
     });
 
-    // when
+    // Http when
     const response = await agent
       .post(URL)
       .send(newAdminDto)
       .set('Cookie', 'sessionId=testSessionId');
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.CREATED);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedAdmin = await adminRepository.findOneBy({
+      loginId: 'testNewAdminId',
+    });
+
+    // DB, Redis then
+    expect(savedAdmin).not.toBeUndefined();
+    expect(
+      await bcrypt.compare(newAdminDto.password, savedAdmin.password),
+    ).toBeTruthy();
 
     // cleanup
     await adminRepository.delete({ loginId: newAdminDto.loginId });
