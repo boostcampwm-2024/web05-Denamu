@@ -27,10 +27,10 @@ describe(`POST ${URL} E2E Test`, () => {
       userName: user.userName,
     });
 
-    // when
+    // Http when
     const response = await agent.post(URL).send(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.CONFLICT);
     expect(data).toBeUndefined();
@@ -47,10 +47,10 @@ describe(`POST ${URL} E2E Test`, () => {
       userName: 'test1234',
     });
 
-    // when
+    // Http when
     const response = await agent.post(URL).send(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.CREATED);
     expect(data).toBeUndefined();

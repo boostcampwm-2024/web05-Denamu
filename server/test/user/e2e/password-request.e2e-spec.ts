@@ -26,10 +26,10 @@ describe(`POST ${URL} E2E Test`, () => {
       email: 'invalid@test.com',
     });
 
-    // when
+    // Http when
     const response = await agent.post(URL).send(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toBeUndefined();
@@ -41,10 +41,10 @@ describe(`POST ${URL} E2E Test`, () => {
       email: user.email,
     });
 
-    // when
+    // Http when
     const response = await agent.post(URL).send(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toBeUndefined();

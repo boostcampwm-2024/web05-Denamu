@@ -49,20 +49,20 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
   });
 
   it('[404] 게시글이 존재하지 않을 경우 좋아요 정보 제공을 실패한다.', async () => {
-    // when
+    // Http when
     const response = await agent.get(`${URL}/${Number.MAX_SAFE_INTEGER}`);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
     expect(data).toBeUndefined();
   });
 
   it('[200] 로그인하지 않은 상황에서 게시글에 대한 좋아요 조회 요청을 받을 경우 좋아요 정보 제공을 성공한다.', async () => {
-    // when
+    // Http when
     const response = await agent.get(`${URL}/${feed.id}`);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual({
@@ -74,12 +74,12 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
     // given
     const accessToken = createAccessToken();
 
-    // when
+    // Http when
     const response = await agent
       .get(`${URL}/${feed.id}`)
       .set('Authorization', `Bearer ${accessToken}`);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual({

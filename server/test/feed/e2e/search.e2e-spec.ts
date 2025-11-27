@@ -40,10 +40,10 @@ describe(`GET ${URL}?type={}&find={} E2E Test`, () => {
       find: 'test',
     });
 
-    // when
+    // Http when
     const response = await agent.get(URL).query(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual({
@@ -72,10 +72,10 @@ describe(`GET ${URL}?type={}&find={} E2E Test`, () => {
       find: 'null',
     });
 
-    // when
+    // Http when
     const response = await agent.get(URL).query(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual({

@@ -4,7 +4,6 @@ import { LoginUserRequestDto } from '../../../src/user/dto/request/loginUser.dto
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../fixture/user.fixture';
 import TestAgent from 'supertest/lib/agent';
-import { UserService } from '../../../src/user/service/user.service';
 
 const URL = '/api/user/login';
 
@@ -26,10 +25,10 @@ describe(`POST ${URL} E2E Test`, () => {
       password: UserFixture.GENERAL_USER.password,
     });
 
-    // when
+    // Http when
     const response = await agent.post(URL).send(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     expect(data).toBeUndefined();
@@ -42,10 +41,10 @@ describe(`POST ${URL} E2E Test`, () => {
       password: 'testWrongPassword!',
     });
 
-    // when
+    // Http when
     const response = await agent.post(URL).send(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     expect(data).toBeUndefined();
@@ -58,10 +57,10 @@ describe(`POST ${URL} E2E Test`, () => {
       password: UserFixture.GENERAL_USER.password,
     });
 
-    // when
+    // Http when
     const response = await agent.post(URL).send(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(response.headers['set-cookie'][0]).toContain('refresh_token=');

@@ -42,10 +42,10 @@ describe(`GET ${URL} E2E Test`, () => {
       },
     });
 
-    // when
+    // Http when
     const response = await agent.get(URL).query(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.FOUND);
     expect(response.headers['set-cookie'][0]).toContain('refresh_token=');
@@ -79,10 +79,10 @@ describe(`GET ${URL} E2E Test`, () => {
       },
     });
 
-    // when
+    // Http when
     const response = await agent.get(URL).query(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.FOUND);
     expect(response.headers['set-cookie'][0]).toContain('refresh_token=');

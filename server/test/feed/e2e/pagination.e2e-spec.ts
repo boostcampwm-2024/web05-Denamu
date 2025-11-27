@@ -37,10 +37,10 @@ describe(`GET ${URL}?limit={}&lastId={} E2E Test`, () => {
       limit: 5,
     });
 
-    // when
+    // Http when
     const response = await agent.get(URL).query(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual({
@@ -75,10 +75,10 @@ describe(`GET ${URL}?limit={}&lastId={} E2E Test`, () => {
       lastId: feedList[3].id,
     });
 
-    // when
+    // Http when
     const response = await agent.get(URL).query(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual({
@@ -113,10 +113,10 @@ describe(`GET ${URL}?limit={}&lastId={} E2E Test`, () => {
       lastId: feedList[5].id,
     });
 
-    // when
+    // Http when
     const response = await agent.get(URL).query(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual({
@@ -155,10 +155,10 @@ describe(`GET ${URL}?limit={}&lastId={} E2E Test`, () => {
       lastId: feedList[feedList.length - 1].id,
     });
 
-    // when
+    // Http when
     const response = await agent.get(URL).query(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual({

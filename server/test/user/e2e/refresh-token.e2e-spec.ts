@@ -34,10 +34,10 @@ describe(`POST ${URL} E2E Test`, () => {
   });
 
   it('[401] Refresh Token이 없을 경우 Access Token 발급을 실패한다.', async () => {
-    // when
+    // Http when
     const response = await agent.post(URL);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     expect(data).toBeUndefined();
@@ -47,12 +47,12 @@ describe(`POST ${URL} E2E Test`, () => {
     // given
     const refreshToken = createRefreshToken();
 
-    // when
+    // Http when
     const response = await agent
       .post(URL)
       .set('Cookie', `refresh_token=${refreshToken}`);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual({

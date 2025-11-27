@@ -26,10 +26,10 @@ describe(`GET ${URL} E2E Test`, () => {
       email: user.email + 'invalid',
     });
 
-    // when
+    // Http when
     const response = await agent.get(URL).query(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual({
@@ -43,10 +43,10 @@ describe(`GET ${URL} E2E Test`, () => {
       email: user.email,
     });
 
-    // when
+    // Http when
     const response = await agent.get(URL).query(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual({

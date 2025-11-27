@@ -53,10 +53,10 @@ describe(`GET ${URL} E2E Test`, () => {
       });
     });
 
-    // when
+    // Http when
     const response = await agent.get(URL);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual(
@@ -90,10 +90,10 @@ describe(`GET ${URL} E2E Test`, () => {
   });
 
   it('[200] 최신 피드가 없을 경우 빈 배열 제공을 성공한다.', async () => {
-    // when
+    // Http when
     const response = await agent.get(URL);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual([]);

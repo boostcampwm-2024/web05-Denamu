@@ -33,10 +33,10 @@ describe(`POST ${URL} E2E Test`, () => {
   });
 
   it('[401] Access Token이 존재하지 않을 경우 로그아웃을 실패한다.', async () => {
-    // when
+    // Http when
     const response = await agent.post(URL);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     expect(data).toBeUndefined();
@@ -46,12 +46,12 @@ describe(`POST ${URL} E2E Test`, () => {
     // given
     const accessToken = createAccessToken();
 
-    // when
+    // Http when
     const response = await agent
       .post(URL)
       .set('Authorization', `Bearer ${accessToken}`);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(response.headers['set-cookie'][0]).toContain('refresh_token=');

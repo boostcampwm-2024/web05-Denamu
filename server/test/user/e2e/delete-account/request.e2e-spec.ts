@@ -34,10 +34,10 @@ describe(`POST ${URL} E2E Test`, () => {
   });
 
   it('[401] 로그인 되지 않은 유저가 회원 탈퇴를 신청할 경우 회원 탈퇴 신청을 실패한다.', async () => {
-    // when
+    // Http when
     const response = await agent.post(URL);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     expect(data).toBeUndefined();
@@ -47,12 +47,12 @@ describe(`POST ${URL} E2E Test`, () => {
     // given
     const accessToken = createAccessToken();
 
-    // when
+    // Http when
     const response = await agent
       .post(URL)
       .set('Authorization', `Bearer ${accessToken}`);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toBeUndefined();

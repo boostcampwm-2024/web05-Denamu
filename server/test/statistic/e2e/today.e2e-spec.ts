@@ -41,10 +41,10 @@ describe(`GET ${URL}?limit={} E2E Test`, () => {
   });
 
   it('[200] 금일 조회수 통계 요청을 받은 경우 금일 조회수 통계 조회를 성공한다. ', async () => {
-    // when
+    // Http when
     const response = await agent.get(URL);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual(
@@ -70,10 +70,10 @@ describe(`GET ${URL}?limit={} E2E Test`, () => {
     // given
     const requestDto = new ReadStatisticRequestDto({ limit: 1 });
 
-    // when
+    // Http when
     const response = await agent.get(URL).query(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual(
