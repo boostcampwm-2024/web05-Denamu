@@ -33,10 +33,10 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
   });
 
   it('[404] 존재하지 않는 게시글 ID에 요청을 보낼 경우 404를 응답한다.', async () => {
-    // when
+    // Http when
     const response = await agent.delete(`${URL}/${Number.MAX_SAFE_INTEGER}`);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
     expect(data).toBeUndefined();
@@ -49,13 +49,19 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
       .fn()
       .mockResolvedValue({ ok: false, status: HttpStatus.NOT_FOUND });
 
-    // when
+    // Http then
     const response = await agent.delete(`${URL}/${feed.id}`);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedFeed = await feedRepository.findOneBy({ id: feed.id });
+
+    // DB, Redis then
+    expect(savedFeed).not.toBeUndefined();
   });
 
   it('[200] 원본 게시글이 존재할 경우 조회를 성공한다.', async () => {
@@ -65,10 +71,10 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
       .fn()
       .mockResolvedValue({ ok: true, status: HttpStatus.OK });
 
-    // when
+    // Http when
     const response = await agent.delete(`${URL}/${feed.id}`);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toBeUndefined();
