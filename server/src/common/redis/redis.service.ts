@@ -136,19 +136,11 @@ export class RedisService {
     return this.redisClient.zincrby(key, increment, member);
   }
 
-  async hset(
+  async setex(
     key: string,
-    field: string,
+    seconds: number,
     value: string | number,
-  ): Promise<number> {
-    return this.redisClient.hset(key, field, value);
-  }
-
-  async hget(key: string, field: string): Promise<string | null> {
-    return this.redisClient.hget(key, field);
-  }
-
-  async hdel(key: string, ...fields: string[]): Promise<number> {
-    return this.redisClient.hdel(key, ...fields);
+  ): Promise<'OK' | null> {
+    return this.redisClient.setex(key, seconds, value);
   }
 }

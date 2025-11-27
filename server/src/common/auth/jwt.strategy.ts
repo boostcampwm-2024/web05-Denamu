@@ -22,21 +22,11 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   async validate(req: Request, payload: Payload) {
     const token = req.headers.authorization?.replace('Bearer ', '');
     if (token) {
-      const expirationTime = await this.redisService.hget(
-        REDIS_KEYS.USER_BLACKLIST_JWT_KEY,
-        token,
-      );
+      const blacklistKey = `${REDIS_KEYS.USER_BLACKLIST_JWT_PREFIX}:${token}`;
+      const isBlacklisted = await this.redisService.get(blacklistKey);
 
-      if (expirationTime) {
-        const currentTime = Date.now();
-        if (currentTime > parseInt(expirationTime, 10)) {
-          await this.redisService.hdel(
-            REDIS_KEYS.USER_BLACKLIST_JWT_KEY,
-            token,
-          );
-        } else {
-          throw new UnauthorizedException('인증되지 않은 요청입니다.');
-        }
+      if (isBlacklisted) {
+        throw new UnauthorizedException('인증되지 않은 요청입니다.');
       }
     }
     return payload;

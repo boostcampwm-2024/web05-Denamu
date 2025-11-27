@@ -308,12 +308,11 @@ export class UserService {
     return value * multipliers[unit];
   }
 
-  private async addToJwtBlacklist(token: string, ttl: number): Promise<number> {
-    const expirationTime = Date.now() + ttl * 1000;
-    return this.redisService.hset(
-      REDIS_KEYS.USER_BLACKLIST_JWT_KEY,
-      token,
-      expirationTime.toString(),
-    );
+  private async addToJwtBlacklist(
+    token: string,
+    ttl: number,
+  ): Promise<'OK' | null> {
+    const blacklistKey = `${REDIS_KEYS.USER_BLACKLIST_JWT_PREFIX}:${token}`;
+    return this.redisService.setex(blacklistKey, ttl, '1');
   }
 }

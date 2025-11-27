@@ -13,5 +13,5 @@ export const REDIS_KEYS = {
   FULL_FEED_CRAWL_QUEUE: `feed:full-crawl:queue`,
   USER_DELETE_ACCOUNT_KEY: 'user:delete-account',
   USER_RESET_PASSWORD_KEY: 'user:password_reset',
-  USER_BLACKLIST_JWT_KEY: 'user:blacklist-jwt',
+  USER_BLACKLIST_JWT_PREFIX: 'blacklist',
 };
