@@ -23,6 +23,13 @@ export class EmailService {
   constructor() {
     this.emailUser = process.env.EMAIL_USER;
     const emailPassword = process.env.EMAIL_PASSWORD;
+    if (!this.emailUser) {
+      throw new Error('EMAIL_USER 환경 변수가 설정되지 않았습니다.');
+    }
+
+    if (!emailPassword) {
+      throw new Error('EMAIL_PASSWORD 환경 변수가 설정되지 않았습니다.');
+    }
     this.transporter = nodemailer.createTransport({
       host: 'smtp.gmail.com',
       port: 587,
