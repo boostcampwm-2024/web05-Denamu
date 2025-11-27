@@ -242,17 +242,10 @@ export class UserService {
     const user = await this.getUser(userId);
 
     const token = uuidv4();
-    await this.redisService.set(
-      `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${token}`,
-      user.id.toString(),
-      'EX',
-      600,
-    );
-
     if (accessToken) {
       await this.redisService.set(
-        `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${token}:access-token`,
-        accessToken,
+        `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${token}`,
+        user.id.toString() + ':' + accessToken,
         'EX',
         600,
       );
@@ -262,14 +255,15 @@ export class UserService {
   }
 
   async confirmDeleteAccount(token: string): Promise<void> {
-    const userIdString = await this.redisService.get(
-      `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${token}`,
-    );
+    const redisKey = `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${token}`;
 
-    if (!userIdString) {
+    const data = await this.redisService.get(redisKey);
+
+    if (!data) {
       throw new NotFoundException('유효하지 않거나 만료된 토큰입니다.');
     }
 
+    const [userIdString, accessToken] = data.split(':');
     const userId = parseInt(userIdString, 10);
 
     const user = await this.getUser(userId);
@@ -277,10 +271,6 @@ export class UserService {
     if (user.profileImage) {
       await this.fileService.deleteByPath(user.profileImage);
     }
-
-    const accessToken = await this.redisService.get(
-      `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${token}:access-token`,
-    );
 
     if (accessToken) {
       const accessTokenExpire = this.configService.get('ACCESS_TOKEN_EXPIRE');
@@ -290,10 +280,7 @@ export class UserService {
 
     await this.userRepository.remove(user);
 
-    await this.redisService.del(
-      `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${token}`,
-      `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${token}:access-token`,
-    );
+    await this.redisService.del(redisKey);
   }
 
   private parseTimeToSeconds(time: string): number {
@@ -321,10 +308,7 @@ export class UserService {
     return value * multipliers[unit];
   }
 
-  private async addToJwtBlacklist(
-    token: string,
-    ttl: number,
-  ): Promise<number> {
+  private async addToJwtBlacklist(token: string, ttl: number): Promise<number> {
     const expirationTime = Date.now() + ttl * 1000;
     return this.redisService.hset(
       REDIS_KEYS.USER_BLACKLIST_JWT_KEY,
