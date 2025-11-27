@@ -39,12 +39,12 @@ describe(`GET ${URL}/{userId} E2E Test`, () => {
       year: activities[0].activityDate.getFullYear(),
     });
 
-    // when
+    // Http when
     const response = await agent
       .get(`${URL}/${Number.MAX_SAFE_INTEGER}`)
       .query(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
     expect(data).toBeUndefined();
@@ -57,10 +57,10 @@ describe(`GET ${URL}/{userId} E2E Test`, () => {
       year: activities[0].activityDate.getFullYear(),
     });
 
-    // when
+    // Http when
     const response = await agent.get(`${URL}/${userId}`).query(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     const expectedDailyActivities = activities.map((activity) => ({
       date: activity.activityDate.toISOString().split('T')[0],
@@ -74,6 +74,7 @@ describe(`GET ${URL}/{userId} E2E Test`, () => {
       totalViews: user.totalViews,
     });
   });
+
   it('[200] 다른 연도를 요청할 경우 해당 연도의 활동 데이터 조회를 성공한다.', async () => {
     // given
     const userId = user.id;
@@ -81,10 +82,10 @@ describe(`GET ${URL}/{userId} E2E Test`, () => {
       year: activities[0].activityDate.getFullYear() - 1,
     });
 
-    // when
+    // Http when
     const response = await agent.get(`${URL}/${userId}`).query(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual({
