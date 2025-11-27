@@ -35,7 +35,7 @@ export class OAuthService {
     return oauth.getAuthUrl();
   }
 
-  async callback(req: Request, res: Response) {
+  async callback(req: Request, res: Response): Promise<void> {
     const { code, state } = req.query;
     const stateData = this.parseStateData(state.toString());
     const { provider: providerType } = stateData;
@@ -58,10 +58,6 @@ export class OAuthService {
       role: 'user',
     };
 
-    const serviceAccessToken = this.userService.createToken(
-      jwtPayload,
-      'access',
-    );
     const serviceRefreshToken = this.userService.createToken(
       jwtPayload,
       'refresh',
@@ -71,8 +67,6 @@ export class OAuthService {
       ...cookieConfig[process.env.NODE_ENV],
       maxAge: REFRESH_TOKEN_TTL,
     });
-
-    return serviceAccessToken;
   }
 
   private parseStateData(stateString: string): StateData {
