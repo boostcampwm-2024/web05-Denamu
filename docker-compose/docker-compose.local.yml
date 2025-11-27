@@ -85,3 +85,4 @@ services:
     environment:
       NODE_ENV: "LOCAL"
       TZ: "Asia/Seoul"
+    stop_grace_period: 30s

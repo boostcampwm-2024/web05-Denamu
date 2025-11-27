@@ -67,3 +67,4 @@ services:
     environment:
       NODE_ENV: "PROD"
       TZ: "Asia/Seoul"
+    stop_grace_period: 30s

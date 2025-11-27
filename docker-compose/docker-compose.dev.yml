@@ -24,7 +24,7 @@ services:
     develop:
       watch:
         - path: ../nginx/nginx.conf
-          action: restart
+          action: sync+restart
         - path: ../nginx/scripts/generate_cert.sh
           action: rebuild
     environment:
@@ -132,6 +132,7 @@ services:
     environment:
       NODE_ENV: "DEV"
       TZ: "Asia/Seoul"
+    stop_grace_period: 30s
     develop:
       watch:
         - path: ../email-worker/package.json
