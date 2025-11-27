@@ -6,6 +6,7 @@ import { UserFixture } from '../../fixture/user.fixture';
 import { FileService } from '../../../src/file/service/file.service';
 import { UpdateUserRequestDto } from '../../../src/user/dto/request/updateUser.dto';
 import TestAgent from 'supertest/lib/agent';
+import { User } from '../../../src/user/entity/user.entity';
 
 const URL = '/api/user/profile';
 
@@ -13,15 +14,17 @@ describe(`PATCH ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let fileService: FileService;
+  let userRepository: UserRepository;
+  let user: User;
   let createAccessToken: (arg0?: number) => string;
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
     fileService = app.get(FileService);
+    userRepository = app.get(UserRepository);
     const userService = app.get(UserService);
-    const userRepository = app.get(UserRepository);
-    const user = await userRepository.save(
+    user = await userRepository.save(
       await UserFixture.createUserCryptFixture({
         userName: '기존이름',
         profileImage:
@@ -55,10 +58,10 @@ describe(`PATCH ${URL} E2E Test`, () => {
       introduction: '변경된 소개글입니다.',
     });
 
-    // when
+    // Http when
     const response = await agent.patch(URL).send(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     expect(data).toBeUndefined();
@@ -74,19 +77,19 @@ describe(`PATCH ${URL} E2E Test`, () => {
     });
     const accessToken = createAccessToken(Number.MAX_SAFE_INTEGER);
 
-    // when
+    // Http when
     const response = await agent
       .patch(URL)
       .set('Authorization', `Bearer ${accessToken}`)
       .send(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
     expect(data).toBeUndefined();
   });
 
-  it('[200] 사용자가 로그인한 경우 회원 정보 수정을 성공한다.', async () => {
+  it('[200] 사용자가 모든 필드 수정 요청을 할 경우 회원 정보 수정을 성공한다.', async () => {
     // given
     const accessToken = createAccessToken();
     const requestDto = new UpdateUserRequestDto({
@@ -96,16 +99,24 @@ describe(`PATCH ${URL} E2E Test`, () => {
       introduction: '변경된 소개글입니다.',
     });
 
-    // when
+    // Http when
     const response = await agent
       .patch(URL)
       .set('Authorization', `Bearer ${accessToken}`)
       .send(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedUser = await userRepository.findOneBy({ id: user.id });
+
+    // DB, Redis then
+    expect(savedUser.userName).toBe(requestDto.userName);
+    expect(savedUser.profileImage).toBe(requestDto.profileImage);
+    expect(savedUser.introduction).toBe(requestDto.introduction);
   });
 
   it('[200] 사용자가 일부 필드만 수정 요청을 할 경우 회원 정보 수정을 성공한다.', async () => {
@@ -115,15 +126,23 @@ describe(`PATCH ${URL} E2E Test`, () => {
       userName: '부분수정이름',
     });
 
-    // when
+    // Http when
     const response = await agent
       .patch(URL)
       .set('Authorization', `Bearer ${accessToken}`)
       .send(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedUser = await userRepository.findOneBy({ id: user.id });
+
+    // DB, Redis then
+    expect(savedUser.userName).toBe(requestDto.userName);
+    expect(user.profileImage).toBe(user.profileImage);
+    expect(user.introduction).toBe(user.introduction);
   });
 });
