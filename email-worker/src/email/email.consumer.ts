@@ -62,7 +62,7 @@ export class EmailConsumer {
     if (!this.shuttingDownFlag && this.consumerTag) {
       await this.stopConsuming();
     }
-    logger.info('[EmailConsumer] 종료 완료');
+    logger.info('[EmailConsumer] 종료');
   }
 
   async handleEmailByType(payload: EmailPayload) {
