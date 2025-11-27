@@ -30,42 +30,6 @@ describe('Socket.IO Anonymous Chat E2E Test', () => {
     await redisService.del(REDIS_KEYS.CHAT_HISTORY_KEY);
   });
 
-  it('[Connect] 클라이언트가 메시지를 보낼 경우 다른 클라이언트에 메시지가 브로드캐스트된다.', async () => {
-    // given
-    const messagePayload = {
-      messageId: '123',
-      userId: 'random-uuid',
-      message: 'Hello, World!',
-    };
-
-    clientSocket = io(serverUrl, {
-      forceNew: true,
-      reconnection: false,
-      path: URL,
-    });
-    clientSocket.emit('message', messagePayload);
-
-    // when
-    const data = await new Promise((resolve, reject) => {
-      clientSocket.on('message', (message) => {
-        try {
-          clientSocket.close();
-          resolve(message);
-        } catch (error) {
-          clientSocket.close();
-          reject(error);
-        }
-      });
-    });
-
-    // then
-    expect(data).toMatchObject({
-      message: 'Hello, World!',
-      username: expect.any(String),
-      timestamp: expect.any(String),
-    });
-  });
-
   it('[Disconnect] 최대 인원을 초과할 경우 연결을 실패한다.', async () => {
     // given
     jest.spyOn(chatService, 'isMaxClientExceeded').mockReturnValue(true);
@@ -76,7 +40,7 @@ describe('Socket.IO Anonymous Chat E2E Test', () => {
       path: URL,
     });
 
-    // when
+    // Socket.IO when
     const data = await new Promise((resolve, reject) => {
       clientSocket.on('maximum_exceeded', (message) => {
         try {
@@ -89,37 +53,9 @@ describe('Socket.IO Anonymous Chat E2E Test', () => {
       });
     });
 
-    // then
+    // Socket.IO then
     expect(data).toEqual({
       message: '채팅 서버의 한계에 도달했습니다. 잠시후 재시도 해주세요.',
-    });
-  });
-
-  it('[Connect] 클라이언트가 연결될 경우 닉네임과 현재 접속중인 유저 수 정보를 받는다.', async () => {
-    // given
-    clientSocket = io(serverUrl, {
-      forceNew: true,
-      reconnection: false,
-      path: URL,
-    });
-
-    // when
-    const data: any = await new Promise((resolve, reject) => {
-      clientSocket.on('updateUserCount', (data) => {
-        try {
-          clientSocket.close();
-          resolve(data);
-        } catch (error) {
-          clientSocket.close();
-          reject(error);
-        }
-      });
-    });
-
-    // then
-    expect(data).toStrictEqual({
-      userCount: expect.any(Number),
-      name: expect.any(String),
     });
   });
 
@@ -150,7 +86,7 @@ describe('Socket.IO Anonymous Chat E2E Test', () => {
       path: URL,
     });
 
-    // when
+    // Socket.IO when
     const data = await new Promise((resolve, reject) => {
       clientSocket.on('chatHistory', (chatHistory) => {
         try {
@@ -163,7 +99,71 @@ describe('Socket.IO Anonymous Chat E2E Test', () => {
       });
     });
 
-    // then
+    // Socket.IO then
     expect(data).toStrictEqual(mockChatHistory.reverse());
+  });
+
+  it('[Connect] 클라이언트가 연결될 경우 닉네임과 현재 접속중인 유저 수 정보를 받는다.', async () => {
+    // given
+    clientSocket = io(serverUrl, {
+      forceNew: true,
+      reconnection: false,
+      path: URL,
+    });
+
+    // Socket.IO when
+    const data = await new Promise((resolve, reject) => {
+      clientSocket.on('updateUserCount', (data) => {
+        try {
+          clientSocket.close();
+          resolve(data);
+        } catch (error) {
+          clientSocket.close();
+          reject(error);
+        }
+      });
+    });
+
+    // Socket.IO then
+    expect(data).toStrictEqual({
+      userCount: expect.any(Number),
+      name: expect.any(String),
+    });
+  });
+
+  it('[Connect] 클라이언트가 메시지를 보낼 경우 다른 클라이언트에 메시지가 브로드캐스트된다.', async () => {
+    // given
+    const messagePayload = {
+      messageId: '123',
+      userId: 'random-uuid',
+      message: 'Hello, World!',
+    };
+
+    clientSocket = io(serverUrl, {
+      forceNew: true,
+      reconnection: false,
+      path: URL,
+    });
+    clientSocket.emit('message', messagePayload);
+
+    // Socket.IO when
+    const data = await new Promise((resolve, reject) => {
+      clientSocket.on('message', (message) => {
+        try {
+          clientSocket.close();
+          resolve(message);
+        } catch (error) {
+          clientSocket.close();
+          reject(error);
+        }
+      });
+    });
+
+    // Socket.IO then
+    expect(data).toMatchObject({
+      message: 'Hello, World!',
+      username: expect.any(String),
+      timestamp: expect.any(String),
+    });
   });
 });
