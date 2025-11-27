@@ -35,67 +35,98 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
   });
 
   it('[404] 피드가 서비스에 존재하지 않을 경우 조회수 상승을 실패한다.', async () => {
-    // when
+    // Http when
     const response = await agent.post(`${URL}/${Number.MAX_SAFE_INTEGER}`);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
     expect(data).toBeUndefined();
   });
 
-  it('[200] 피드를 읽은 기록이 없을 경우 조회수 상승을 성공한다.', async () => {
-    // given
-    const testNewIp = '123.234.123.234';
-
-    try {
-      // when
-      const response = await agent
-        .post(`${URL}/${feed.id}`)
-        .set('X-Forwarded-For', testNewIp);
-
-      // then
-      const { data } = response.body;
-      expect(response.status).toBe(HttpStatus.OK);
-      expect(response.headers['set-cookie'][0]).toContain(
-        `View_count_${feed.id}`,
-      );
-      expect(data).toBeUndefined();
-    } finally {
-      // cleanup
-      await Promise.all([
-        redisService.zrem(REDIS_KEYS.FEED_TREND_KEY, feed.id.toString()),
-        redisService.srem(`feed:${feed.id}:ip`, testNewIp),
-      ]);
-      await feedRepository.update(feed.id, { viewCount: 0 });
-    }
-  });
-
   it('[200] 읽은 기록 쿠키가 존재할 경우 조회수 상승을 하지 않는 행위를 성공한다.', async () => {
-    // when
+    // Http when
     const response = await agent
       .post(`${URL}/${feed.id}`)
       .set('Cookie', `View_count_${feed.id}=${feed.id}`)
       .set('X-Forwarded-For', testIp);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedFeed = await feedRepository.findOneBy({
+      id: feed.id,
+    });
+
+    // DB, Redis then
+    expect(savedFeed.viewCount).toBe(feed.viewCount);
   });
 
   it('[200] 읽은 기록 쿠키가 없지만 읽은 기록 IP가 있을 경우 조회수 상승을 하지 않는 행위를 성공한다.', async () => {
-    // when
+    // given
+    await redisService.sismember(`feed:${feed.id}:ip`, testIp);
+
+    // Http when
     const response = await agent
       .post(`${URL}/${feed.id}`)
       .set('X-Forwarded-For', testIp);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(response.headers['set-cookie'][0]).toContain(
       `View_count_${feed.id}`,
     );
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedFeed = await feedRepository.findOneBy({
+      id: feed.id,
+    });
+
+    // DB, Redis then
+    expect(savedFeed.viewCount).toBe(feed.viewCount);
+
+    // cleanup
+    await Promise.all([
+      redisService.zrem(REDIS_KEYS.FEED_TREND_KEY, feed.id.toString()),
+      redisService.srem(`feed:${feed.id}:ip`, testIp),
+    ]);
+  });
+
+  it('[200] 피드를 읽은 기록이 없을 경우 조회수 상승을 성공한다.', async () => {
+    // given
+    const testNewIp = '123.234.123.234';
+
+    // Http when
+    const response = await agent
+      .post(`${URL}/${feed.id}`)
+      .set('X-Forwarded-For', testNewIp);
+
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.OK);
+    expect(response.headers['set-cookie'][0]).toContain(
+      `View_count_${feed.id}`,
+    );
+    expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedFeed = await feedRepository.findOneBy({
+      id: feed.id,
+    });
+
+    // DB, Redis then
+    expect(savedFeed.viewCount).toBe(feed.viewCount + 1);
+
+    // cleanup
+    await Promise.all([
+      redisService.zrem(REDIS_KEYS.FEED_TREND_KEY, feed.id.toString()),
+      redisService.srem(`feed:${feed.id}:ip`, testNewIp),
+    ]);
+    await feedRepository.update(feed.id, { viewCount: feed.viewCount });
   });
 });
