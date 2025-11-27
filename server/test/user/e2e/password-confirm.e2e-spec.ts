@@ -6,6 +6,7 @@ import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import { ResetPasswordRequestDto } from '../../../src/user/dto/request/resetPassword.dto';
 import TestAgent from 'supertest/lib/agent';
+import * as bcrypt from 'bcrypt';
 
 const URL = '/api/user/password';
 
@@ -29,10 +30,10 @@ describe(`PATCH ${URL} E2E Test`, () => {
       password: 'test1234@',
     });
 
-    // when
+    // Http when
     const response = await agent.patch(URL).send(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
     expect(data).toBeUndefined();
@@ -41,23 +42,31 @@ describe(`PATCH ${URL} E2E Test`, () => {
   it('[200] 존재하는 비밀번호 세션 ID를 통해 비밀번호 변경 요청을 할 경우 비밀번호 변경을 성공한다.', async () => {
     // given
     const uuid = 'test-reset-password-uuid';
+    const redisKey = `${REDIS_KEYS.USER_RESET_PASSWORD_KEY}:${uuid}`;
     const user = await userRepository.save(UserFixture.createUserFixture());
     const updatedPassword = 'test1234@';
     const requestDto = new ResetPasswordRequestDto({
       uuid,
       password: updatedPassword,
     });
-    await redisService.set(
-      `${REDIS_KEYS.USER_RESET_PASSWORD_KEY}:${uuid}`,
-      JSON.stringify(user.id),
-    );
+    await redisService.set(redisKey, JSON.stringify(user.id));
 
-    // when
+    // Http when
     const response = await agent.patch(URL).send(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedUser = await userRepository.findOneBy({ id: user.id });
+    const savedUUID = await redisService.get(redisKey);
+
+    // DB, Redis then
+    expect(
+      await bcrypt.compare(updatedPassword, savedUser.password),
+    ).toBeTruthy();
+    expect(savedUUID).toBeNull();
   });
 });
