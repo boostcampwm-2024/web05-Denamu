@@ -42,10 +42,10 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
       feedId: Number.MAX_SAFE_INTEGER,
     });
 
-    // when
+    // Http when
     const response = await agent.get(`${URL}/${feedDetailRequestDto.feedId}`);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
     expect(data).toBeUndefined();
@@ -57,10 +57,10 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
       feedId: feedList[0].id,
     });
 
-    // when
+    // Http when
     const response = await agent.get(`${URL}/${feedDetailRequestDto.feedId}`);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual({
@@ -84,10 +84,10 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
     const feedDetailRequestDto = new ManageFeedRequestDto({
       feedId: feedList[1].id,
     });
-    // when
+    // Http when
     const response = await agent.get(`${URL}/${feedDetailRequestDto.feedId}`);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual({
