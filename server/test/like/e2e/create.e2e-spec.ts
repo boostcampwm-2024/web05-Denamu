@@ -56,10 +56,10 @@ describe(`POST ${URL} E2E Test`, () => {
       feedId: feed.id,
     });
 
-    // when
+    // Http when
     const response = await agent.post(URL).send(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     expect(data).toBeUndefined();
@@ -72,13 +72,13 @@ describe(`POST ${URL} E2E Test`, () => {
     });
     const accessToken = createAccessToken();
 
-    // when
+    // Http when
     const response = await agent
       .post(URL)
       .set('Authorization', `Bearer ${accessToken}`)
       .send(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
     expect(data).toBeUndefined();
@@ -87,21 +87,21 @@ describe(`POST ${URL} E2E Test`, () => {
   it('[409] 이미 좋아요를 한 게시글일 경우 좋아요 등록을 실패한다.', async () => {
     // given
     const like = await likeRepository.save({
-      user: user,
-      feed: feed,
+      user,
+      feed,
     });
     const requestDto = new ManageLikeRequestDto({
       feedId: feed.id,
     });
     const accessToken = createAccessToken();
 
-    // when
+    // Http when
     const response = await agent
       .post(URL)
       .set('Authorization', `Bearer ${accessToken}`)
       .send(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.CONFLICT);
     expect(data).toBeUndefined();
@@ -117,18 +117,27 @@ describe(`POST ${URL} E2E Test`, () => {
     });
     const accessToken = createAccessToken();
 
-    // when
+    // Http when
     const response = await agent
       .post(URL)
       .set('Authorization', `Bearer ${accessToken}`)
       .send(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.CREATED);
     expect(data).toBeUndefined();
 
+    // DB, Redis when
+    const savedLike = await likeRepository.findOneBy({
+      feed,
+      user,
+    });
+
+    // DB, Redis then
+    expect(savedLike).not.toBeUndefined();
+
     // cleanup
-    await likeRepository.delete({ user: user, feed: feed });
+    await likeRepository.delete({ user, feed });
   });
 });
