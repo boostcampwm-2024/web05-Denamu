@@ -6,6 +6,10 @@ import { UserFixture } from '../../../fixture/user.fixture';
 import { REDIS_KEYS } from '../../../../src/common/redis/redis.constant';
 import { ConfirmDeleteAccountDto } from '../../../../src/user/dto/request/confirmDeleteAccount.dto';
 import TestAgent from 'supertest/lib/agent';
+import { CommentRepository } from '../../../../src/comment/repository/comment.repository';
+import { LikeRepository } from '../../../../src/like/repository/like.repository';
+import { ActivityRepository } from '../../../../src/activity/repository/activity.repository';
+import { FileRepository } from '../../../../src/file/repository/file.repository';
 
 const URL = '/api/user/delete-account/confirm';
 
@@ -14,22 +18,30 @@ describe(`POST ${URL} E2E Test`, () => {
   let agent: TestAgent;
   let redisService: RedisService;
   let userRepository: UserRepository;
+  let commentRepository: CommentRepository;
+  let likeRepository: LikeRepository;
+  let activityRepository: ActivityRepository;
+  let fileRepository: FileRepository;
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
     redisService = app.get(RedisService);
     userRepository = app.get(UserRepository);
+    commentRepository = app.get(CommentRepository);
+    likeRepository = app.get(LikeRepository);
+    activityRepository = app.get(ActivityRepository);
+    fileRepository = app.get(FileRepository);
   });
 
   it('[404] 회원 탈퇴 인증 코드가 만료되었거나 잘 못된 경우 회원 탈퇴를 실패한다.', async () => {
     // given
     const requestDto = new ConfirmDeleteAccountDto({ token: 'invalid-token' });
 
-    // when
+    // Http when
     const response = await agent.post(URL).send(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
     expect(data).toBeUndefined();
@@ -38,24 +50,36 @@ describe(`POST ${URL} E2E Test`, () => {
   it('[200] 회원 탈퇴 인증 코드가 있을 경우 회원 탈퇴를 성공한다.', async () => {
     // given
     const token = 'test-delete-account-token';
+    const redisKey = `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${token}`;
     const requestDto = new ConfirmDeleteAccountDto({ token });
     const user = await userRepository.save(
       await UserFixture.createUserCryptFixture(),
     );
 
-    await redisService.set(
-      `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${token}`,
-      user.id.toString(),
-      'EX',
-      600,
-    );
+    await redisService.set(redisKey, user.id, 'EX', 600);
 
-    // when
+    // Http when
     const response = await agent.post(URL).send(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedComment = await commentRepository.findBy({
+      user,
+    });
+    const savedLike = await likeRepository.findBy({ user });
+    const savedActivity = await activityRepository.findBy({ user });
+    const savedFile = await fileRepository.findBy({ user });
+    const savedUUID = await redisService.get(redisKey);
+
+    // DB, Redis then
+    expect(savedComment).toStrictEqual([]);
+    expect(savedLike).toStrictEqual([]);
+    expect(savedActivity).toStrictEqual([]);
+    expect(savedFile).toStrictEqual([]);
+    expect(savedUUID).toBeNull();
   });
 });
