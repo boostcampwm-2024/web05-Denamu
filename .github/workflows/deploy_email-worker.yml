@@ -2,8 +2,8 @@ name: Email-Worker Deployment
 
 on:
   push:
-    branches: [main]
-    paths: ["email-worker/**"]
+    branches: [ main ]
+    paths: [ "email-worker/**" ]
   workflow_dispatch:
 
 permissions:
@@ -17,6 +17,7 @@ env:
   ENV_DIR: /var/prod_config/email-worker
   ENV_FILE: /var/prod_config/email-worker/.env.prod
   COMPOSE_FILE: docker-compose/docker-compose.prod.yml
+  STOP_GRACE_PERIOD: 30
 
 jobs:
   build-and-push:
@@ -51,7 +52,7 @@ jobs:
           cache-to: type=gha,mode=max
 
   deploy:
-    runs-on: [self-hosted, prod]
+    runs-on: [ self-hosted, prod ]
     needs: build-and-push # Build 및 Push가 끝나면 시작
     steps:
       - name: 코드 체크아웃
@@ -94,10 +95,14 @@ jobs:
             echo "RABBITMQ_MANAGEMENT_PORT=${{ secrets.PRODUCT_RABBITMQ_MANAGEMENT_PORT }}"  
           } | sudo tee /var/prod_config/infra/.env.prod >/dev/null
 
-      - name: Docker 이미지 Pull & 서비스 재시작
+      - name: Docker 이미지 Pull
         run: |
           docker pull "${IMAGE_NAME}:${IMAGE_TAG}" || true
           docker pull "${IMAGE_NAME}:latest" || true
           docker compose -f "$COMPOSE_FILE" pull "$SERVICE"
+
+      - name: Graceful Shutdown & 서비스 재시작
+        run: |
+          docker compose -f "$COMPOSE_FILE" stop -t $STOP_GRACE_PERIOD "$SERVICE" || true
           docker compose -f "$COMPOSE_FILE" up -d --no-deps --force-recreate "$SERVICE"
           docker image prune -f || true
