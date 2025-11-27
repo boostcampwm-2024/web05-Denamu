@@ -38,10 +38,10 @@ describe(`POST ${URL} E2E Test`, () => {
       rssUrl: rss.rssUrl,
     });
 
-    // when
+    // Http when
     const response = await agent.post(URL).send(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.CONFLICT);
     expect(data).toBeUndefined();
@@ -62,10 +62,10 @@ describe(`POST ${URL} E2E Test`, () => {
       rssUrl: acceptedRss.rssUrl,
     });
 
-    // when
+    // Http when
     const response = await agent.post(URL).send(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.CONFLICT);
     expect(data).toBeUndefined();
@@ -83,12 +83,23 @@ describe(`POST ${URL} E2E Test`, () => {
       rssUrl: 'https://test.com/rss',
     });
 
-    // when
+    // Http when
     const response = await agent.post(URL).send(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.CREATED);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedRss = await rssRepository.findOneBy({
+      name: requestDto.blog,
+      userName: requestDto.name,
+      email: requestDto.email,
+      rssUrl: requestDto.rssUrl,
+    });
+
+    // DB, Redis then
+    expect(savedRss).not.toBeUndefined();
   });
 });
