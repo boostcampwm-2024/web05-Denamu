@@ -27,7 +27,7 @@ export class EmailConsumer {
       RMQ_QUEUES.EMAIL_SEND,
       async (payload: EmailPayload) => {
         if (this.shuttingDownFlag) {
-          logger.warn('[EmailConsumer] Shutdown 중 - 메시지 처리 건너뜀');
+          logger.warn('[EmailConsumer] Shutdown 중, 메시지 처리 건너뜀');
           throw new Error('SHUTDOWN_IN_PROGRESS');
         }
 
