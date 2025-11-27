@@ -37,34 +37,34 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
   });
 
   it('[401] 관리자 로그인 쿠키가 없을 경우 RSS 승인을 실패한다.', async () => {
-    // when
+    // Http when
     const response = await agent.post(`${URL}/${Number.MAX_SAFE_INTEGER}`);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     expect(data).toBeUndefined();
   });
 
   it('[401] 관리자 로그인 쿠키가 만료됐을 경우 RSS 승인을 실패한다.', async () => {
-    // when
+    // Http when
     const response = await agent
       .post(`${URL}/${Number.MAX_SAFE_INTEGER}`)
       .set('Cookie', 'sessionId=invalid');
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     expect(data).toBeUndefined();
   });
 
   it('[404] 대기 목록에 없는 RSS를 승인할 경우 RSS 승인을 실패한다.', async () => {
-    // when
+    // Http when
     const response = await agent
       .post(`${URL}/${Number.MAX_SAFE_INTEGER}`)
       .set('Cookie', 'sessionId=testSessionId');
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
     expect(data).toBeUndefined();
@@ -78,12 +78,12 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
       status: HttpStatus.BAD_REQUEST,
     });
 
-    // when
+    // Http when
     const response = await agent
       .post(`${URL}/${rss.id}`)
       .set('Cookie', 'sessionId=testSessionId');
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.BAD_REQUEST);
     expect(data).toBeUndefined();
@@ -97,15 +97,27 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
       status: HttpStatus.OK,
     });
 
-    // when
+    // Http when
     const response = await agent
       .post(`${URL}/${rss.id}`)
       .set('Cookie', 'sessionId=testSessionId');
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.CREATED);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedRssAccept = await rssAcceptRepository.findOneBy({
+      ...rss,
+    });
+    const savedRss = await rssRepository.findOneBy({
+      ...rss,
+    });
+
+    // DB, Redis then
+    expect(savedRssAccept).not.toBeUndefined();
+    expect(savedRss).not.toBeUndefined();
 
     // cleanup
     await rssAcceptRepository.delete({ rssUrl: rss.rssUrl });
