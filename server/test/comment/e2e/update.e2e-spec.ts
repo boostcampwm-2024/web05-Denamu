@@ -19,16 +19,17 @@ describe(`PATCH ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let comment: Comment;
+  let commentRepository: CommentRepository;
   let createAccessToken: (arg0?: number) => string;
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
+    commentRepository = app.get(CommentRepository);
     const userService = app.get(UserService);
     const userRepository = app.get(UserRepository);
     const rssAcceptRepository = app.get(RssAcceptRepository);
     const feedRepository = app.get(FeedRepository);
-    const commentRepository = app.get(CommentRepository);
     const user = await userRepository.save(
       await UserFixture.createUserCryptFixture(),
     );
@@ -62,10 +63,10 @@ describe(`PATCH ${URL} E2E Test`, () => {
       newComment: 'newComment',
     });
 
-    // when
+    // Http when
     const response = await agent.patch(URL).send(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     expect(data).toBeUndefined();
@@ -79,13 +80,13 @@ describe(`PATCH ${URL} E2E Test`, () => {
     });
     const accessToken = createAccessToken();
 
-    // when
+    // Http when
     const response = await agent
       .patch(URL)
       .set('Authorization', `Bearer ${accessToken}`)
       .send(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
     expect(data).toBeUndefined();
@@ -99,13 +100,13 @@ describe(`PATCH ${URL} E2E Test`, () => {
     });
     const accessToken = createAccessToken(Number.MAX_SAFE_INTEGER);
 
-    // when
+    // Http when
     const response = await agent
       .patch(URL)
       .set('Authorization', `Bearer ${accessToken}`)
       .send(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     expect(data).toBeUndefined();
@@ -119,15 +120,23 @@ describe(`PATCH ${URL} E2E Test`, () => {
     });
     const accessToken = createAccessToken();
 
-    // when
+    // Http when
     const response = await agent
       .patch(URL)
       .set('Authorization', `Bearer ${accessToken}`)
       .send(requestDto);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedComment = await commentRepository.findOneBy({
+      id: comment.id,
+    });
+
+    // DB, Redis then
+    expect(savedComment.comment).toBe('newComment');
   });
 });
