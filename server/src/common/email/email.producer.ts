@@ -19,6 +19,14 @@ export class EmailProducer {
       RMQ_ROUTING_KEYS.EMAIL_SEND,
       payload,
     );
+
+    const email =
+      payload.type === ('rssRegistration' as const)
+        ? payload.data.rss.email
+        : payload.data.email;
+    this.logger.log(
+      `이메일 메시지가 발행되었습니다.: type=${payload.type}, email=${email}`,
+    );
   }
 
   async produceUserCertification(user: User, uuid: string) {
@@ -31,9 +39,6 @@ export class EmailProducer {
       },
     };
     await this.produceMessage(payload);
-    this.logger.log(
-      `이메일 메시지가 발행되었습니다.: type=${payload.type}, email=${user.email}`,
-    );
   }
 
   async produceRssRegistration(
@@ -51,9 +56,6 @@ export class EmailProducer {
     };
 
     await this.produceMessage(payload);
-    this.logger.log(
-      `이메일 메시지가 발행되었습니다.: type=${payload.type}, email=${rss.email}`,
-    );
   }
 
   async producePasswordReset(user: User, uuid: string) {
@@ -66,9 +68,6 @@ export class EmailProducer {
       },
     };
     await this.produceMessage(payload);
-    this.logger.log(
-      `이메일 메시지가 발행되었습니다.: type=${payload.type}, email=${user.email}`,
-    );
   }
 
   async produceAccountDeletion(user: User, uuid: string) {
@@ -81,9 +80,6 @@ export class EmailProducer {
       },
     };
     await this.produceMessage(payload);
-    this.logger.log(
-      `이메일 메시지가 발행되었습니다.: type=${payload.type}, email=${user.email}`,
-    );
   }
 
   async produceRssRemoval(
@@ -102,8 +98,5 @@ export class EmailProducer {
       },
     };
     await this.produceMessage(payload);
-    this.logger.log(
-      `이메일 메시지가 발행되었습니다.: type=${payload.type}, email=${email}`,
-    );
   }
 }
