@@ -84,6 +84,7 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
     const feedDetailRequestDto = new ManageFeedRequestDto({
       feedId: feedList[1].id,
     });
+
     // Http when
     const response = await agent.get(`${URL}/${feedDetailRequestDto.feedId}`);
 
