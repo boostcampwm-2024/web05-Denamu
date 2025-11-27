@@ -32,12 +32,25 @@ async function handleShutdown(
   signal: string,
 ) {
   logger.info(`${signal} 신호 수신, email-worker 종료 중...`);
+  try {
+    logger.info('새로운 메시지 수신 중지...');
+    await dependencies.emailConsumer.stopConsuming();
 
-  await dependencies.emailConsumer.close();
-  await dependencies.rabbitMQManager.disconnect();
+    logger.info('진행 중인 이메일 전송 작업 완료 대기...');
+    await dependencies.emailConsumer.waitForPendingTasks();
 
-  logger.info('RabbitMQ 연결 종료');
-  process.exit(0);
+    logger.info('Consumer 정리 중...');
+    await dependencies.emailConsumer.close();
+
+    logger.info('RabbitMQ 연결 종료 중...');
+    await dependencies.rabbitMQManager.disconnect();
+
+    logger.info('Email Worker 정상 종료');
+    process.exit(0);
+  } catch (error) {
+    logger.error(`Email Worker 종료 중 에러 발생: ${error}`);
+    process.exit(1);
+  }
 }
 
 async function initializeRabbitMQ(

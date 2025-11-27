@@ -34,6 +34,12 @@ export class RabbitmqService {
 
         channel.ack(message);
       } catch (error) {
+        if (error.message === 'SHUTDOWN_IN_PROGRESS') {
+          logger.info(`${this.nameTag} Shutdown 중, 메시지를 큐에 반환`);
+          channel.nack(message, false, true);
+          return;
+        }
+
         logger.error(
           `${this.nameTag} 메시지 처리 중 오류 발생
           오류 메시지: ${error.message}
