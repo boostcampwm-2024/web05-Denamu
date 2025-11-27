@@ -57,10 +57,10 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
       feedId: feed.id,
     });
 
-    // when
+    // Http when
     const response = await agent.delete(`${URL}/${requestDto.feedId}`);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     expect(data).toBeUndefined();
@@ -73,12 +73,12 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
     });
     const accessToken = createAccessToken();
 
-    // when
+    // Http when
     const response = await agent
       .delete(`${URL}/${requestDto.feedId}`)
       .set('Authorization', `Bearer ${accessToken}`);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
     expect(data).toBeUndefined();
@@ -91,12 +91,12 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
     });
     const accessToken = createAccessToken();
 
-    // when
+    // Http when
     const response = await agent
       .delete(`${URL}/${requestDto.feedId}`)
       .set('Authorization', `Bearer ${accessToken}`);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
     expect(data).toBeUndefined();
@@ -115,14 +115,23 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
     });
     const accessToken = createAccessToken();
 
-    // when
+    // Http when
     const response = await agent
       .delete(`${URL}/${requestDto.feedId}`)
       .set('Authorization', `Bearer ${accessToken}`);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedLike = await likeRepository.findOneBy({
+      feed,
+      user,
+    });
+
+    // DB, Redis then
+    expect(savedLike).not.toBeUndefined();
   });
 });
