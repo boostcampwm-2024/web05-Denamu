@@ -27,34 +27,34 @@ describe(`GET ${URL} E2E Test`, () => {
   });
 
   it('[401] 관리자 로그인 쿠키가 없을 경우 관리자 자동 로그인을 실패한다.', async () => {
-    // when
+    // Http when
     const response = await agent.get(URL);
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     expect(data).toBeUndefined();
   });
 
   it('[401] 관리자 로그인 쿠키가 만료됐을 경우 관리자 자동 로그인을 실패한다.', async () => {
-    // when
+    // Http when
     const response = await agent
       .get(URL)
       .set('Cookie', 'sessionId=WrongSessionId');
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     expect(data).toBeUndefined();
   });
 
   it('[200] 관리자 로그인 쿠키가 존재할 경우 관리자 자동 로그인을 성공한다.', async () => {
-    // when
+    // Http when
     const response = await agent
       .get(URL)
       .set('Cookie', 'sessionId=testSessionId');
 
-    // then
+    // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toBeUndefined();
