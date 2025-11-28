@@ -11,7 +11,6 @@ const logDir = `${process.cwd()}/logs`;
 
 function getLogTransport() {
   const transports = [];
-  transports.push(new winston.transports.Console());
 
   if (process.env.NODE_ENV === 'LOCAL' || process.env.NODE_ENV === 'PROD') {
     transports.push(
