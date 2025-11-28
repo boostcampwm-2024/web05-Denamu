@@ -30,6 +30,14 @@ function getLogTransport() {
         maxFiles: 30,
         zippedArchive: true,
       }),
+      new DailyRotateFile({
+        level: 'warn',
+        datePattern: 'YYYY-MM-DD',
+        dirname: `${logDir}/warn`,
+        filename: `%DATE%.email-worker.warn.log`,
+        maxFiles: 30,
+        zippedArchive: true,
+      }),
     ]);
   }
 
