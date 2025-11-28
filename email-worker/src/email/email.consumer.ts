@@ -4,7 +4,7 @@ import { DEPENDENCY_SYMBOLS } from '../types/dependency-symbols';
 import { EmailService } from './email.service';
 import logger from '../logger';
 import { RMQ_QUEUES } from '../rabbitmq/rabbitmq.constant';
-import { EmailPayload } from '../types/types';
+import { EmailPayload, EmailPayloadConstant } from '../types/types';
 
 @injectable()
 export class EmailConsumer {
@@ -67,23 +67,23 @@ export class EmailConsumer {
 
   async handleEmailByType(payload: EmailPayload) {
     switch (payload.type) {
-      case 'userCertification':
+      case EmailPayloadConstant.USER_CERTIFICATION:
         await this.emailService.sendUserCertificationMail(payload.data);
         break;
 
-      case 'rssRegistration':
+      case EmailPayloadConstant.RSS_REGISTRATION:
         await this.emailService.sendRssMail(payload.data);
         break;
 
-      case 'rssRemove':
+      case EmailPayloadConstant.RSS_REMOVAL:
         await this.emailService.sendRssRemoveCertificationMail(payload.data);
         break;
 
-      case 'resetPassword':
+      case EmailPayloadConstant.PASSWORD_RESET:
         await this.emailService.sendPasswordResetEmail(payload.data);
         break;
 
-      case 'deleteAccount':
+      case EmailPayloadConstant.ACCOUNT_DELETION:
         await this.emailService.sendDeleteAccountMail(payload.data);
         break;
 
