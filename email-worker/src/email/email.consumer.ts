@@ -114,9 +114,7 @@ export class EmailConsumer {
 
       setTimeout(() => {
         logger.warn(
-          '[EmailConsumer] 대기 시간 초과 - 강제 종료 (남은 작업: ' +
-            this.pendingTasks +
-            ')',
+          `[EmailConsumer] 대기 시간 초과 - 강제 종료 (남은 작업: ${this.pendingTasks})`,
         );
         resolve();
       }, 10000);
