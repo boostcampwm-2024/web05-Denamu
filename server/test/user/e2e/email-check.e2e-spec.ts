@@ -23,7 +23,7 @@ describe(`GET ${URL} E2E Test`, () => {
   it('[200] 중복 이메일이 존재하지 않을 경우 이메일 중복 검사를 성공한다.', async () => {
     // given
     const requestDto = new CheckEmailDuplicationRequestDto({
-      email: user.email + 'invalid',
+      email: `${user.email}invalid`,
     });
 
     // Http when
