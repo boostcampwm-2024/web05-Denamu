@@ -10,15 +10,14 @@ describe(`POST ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let redisService: RedisService;
+  const redisKeyMake = (data: string) => `${REDIS_KEYS.ADMIN_AUTH_KEY}:${data}`;
+  const sessionId = 'testSessionId';
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
     redisService = app.get(RedisService);
-    await redisService.set(
-      `${REDIS_KEYS.ADMIN_AUTH_KEY}:testSessionId`,
-      'test1234',
-    );
+    await redisService.set(redisKeyMake(sessionId), 'test1234');
   });
 
   it('[401] 관리자 로그인 쿠키가 없을 경우 로그아웃을 실패한다.', async () => {
@@ -35,7 +34,7 @@ describe(`POST ${URL} E2E Test`, () => {
     // Http when
     const response = await agent
       .post(URL)
-      .set('Cookie', 'sessionId=nonExistentSessionId');
+      .set('Cookie', `sessionId=Wrong${sessionId}`);
 
     // Http then
     const { data } = response.body;
@@ -47,7 +46,7 @@ describe(`POST ${URL} E2E Test`, () => {
     // Http when
     const response = await agent
       .post(URL)
-      .set('Cookie', 'sessionId=testSessionId');
+      .set('Cookie', `sessionId=${sessionId}`);
 
     // Http then
     const { data } = response.body;
@@ -58,9 +57,7 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(data).toBeUndefined();
 
     // DB, Redis when
-    const savedSessionId = await redisService.get(
-      `${REDIS_KEYS.ADMIN_AUTH_KEY}:testSessionId`,
-    );
+    const savedSessionId = await redisService.get(redisKeyMake(sessionId));
 
     // DB, Redis then
     expect(savedSessionId).toBeNull();

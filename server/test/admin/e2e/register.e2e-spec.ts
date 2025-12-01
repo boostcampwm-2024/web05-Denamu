@@ -14,6 +14,8 @@ describe(`POST ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let adminRepository: AdminRepository;
+  const sessionId = 'testSessionId';
+  const redisKeyMake = (data: string) => `${REDIS_KEYS.ADMIN_AUTH_KEY}:${data}`;
 
   beforeAll(async () => {
     app = global.testApp;
@@ -22,10 +24,7 @@ describe(`POST ${URL} E2E Test`, () => {
     const redisService = app.get(RedisService);
     await Promise.all([
       adminRepository.insert(await AdminFixture.createAdminCryptFixture()),
-      redisService.set(
-        `${REDIS_KEYS.ADMIN_AUTH_KEY}:testSessionId`,
-        'test1234',
-      ),
+      redisService.set(redisKeyMake(sessionId), 'test1234'),
     ]);
   });
 
@@ -56,7 +55,7 @@ describe(`POST ${URL} E2E Test`, () => {
     const response = await agent
       .post(URL)
       .send(newAdminDto)
-      .set('Cookie', 'sessionId=wrongTestSessionId');
+      .set('Cookie', `sessionId=Wrong${sessionId}`);
 
     // Http then
     const { data } = response.body;
@@ -75,7 +74,7 @@ describe(`POST ${URL} E2E Test`, () => {
     const response = await agent
       .post(URL)
       .send(newAdminDto)
-      .set('Cookie', 'sessionId=testSessionId');
+      .set('Cookie', `sessionId=${sessionId}`);
 
     // Http then
     const { data } = response.body;
@@ -94,7 +93,7 @@ describe(`POST ${URL} E2E Test`, () => {
     const response = await agent
       .post(URL)
       .send(newAdminDto)
-      .set('Cookie', 'sessionId=testSessionId');
+      .set('Cookie', `sessionId=${sessionId}`);
 
     // Http then
     const { data } = response.body;

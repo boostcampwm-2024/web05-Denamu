@@ -11,6 +11,8 @@ const URL = '/api/admin/sessionId';
 describe(`GET ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
+  const sessionId = 'testSessionId';
+  const redisKeyMake = (data: string) => `${REDIS_KEYS.ADMIN_AUTH_KEY}:${data}`;
 
   beforeAll(async () => {
     app = global.testApp;
@@ -19,10 +21,7 @@ describe(`GET ${URL} E2E Test`, () => {
     const redisService = app.get(RedisService);
     await Promise.all([
       adminRepository.insert(await AdminFixture.createAdminCryptFixture()),
-      redisService.set(
-        `${REDIS_KEYS.ADMIN_AUTH_KEY}:testSessionId`,
-        'test1234',
-      ),
+      redisService.set(redisKeyMake(sessionId), 'test1234'),
     ]);
   });
 
@@ -40,7 +39,7 @@ describe(`GET ${URL} E2E Test`, () => {
     // Http when
     const response = await agent
       .get(URL)
-      .set('Cookie', 'sessionId=WrongSessionId');
+      .set('Cookie', `sessionId=Wrong${sessionId}`);
 
     // Http then
     const { data } = response.body;
@@ -52,7 +51,7 @@ describe(`GET ${URL} E2E Test`, () => {
     // Http when
     const response = await agent
       .get(URL)
-      .set('Cookie', 'sessionId=testSessionId');
+      .set('Cookie', `sessionId=${sessionId}`);
 
     // Http then
     const { data } = response.body;

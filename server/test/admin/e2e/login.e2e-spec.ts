@@ -13,6 +13,7 @@ describe(`POST ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let redisService: RedisService;
+  const redisKeyMake = (data: string) => `${REDIS_KEYS.ADMIN_AUTH_KEY}:${data}`;
 
   beforeAll(async () => {
     app = global.testApp;
@@ -72,7 +73,9 @@ describe(`POST ${URL} E2E Test`, () => {
 
     // DB, Redis when
     const savedSessionId = await redisService.get(
-      `${REDIS_KEYS.ADMIN_AUTH_KEY}:${response.headers['set-cookie'][0].match(/sessionId=([^;]+);?/)[1]}`,
+      redisKeyMake(
+        response.headers['set-cookie'][0].match(/sessionId=([^;]+);?/)[1],
+      ),
     );
 
     // DB, Redis then
