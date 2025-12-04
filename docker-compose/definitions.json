@@ -50,11 +50,11 @@
       }
     },
     {
-      "name": "email.send.wait.30s",
+      "name": "email.send.wait.20s",
       "vhost": "/",
       "durable": true,
       "arguments": {
-        "x-message-ttl": 30000,
+        "x-message-ttl": 20000,
         "x-dead-letter-exchange": "",
         "x-dead-letter-routing-key": "email.send.queue"
       }
