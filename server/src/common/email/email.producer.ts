@@ -14,10 +14,11 @@ export class EmailProducer {
   ) {}
 
   private async produceMessage(payload: EmailPayload): Promise<void> {
+    const stringifiedMessage = JSON.stringify(payload);
     await this.rabbitmqService.sendMessage(
       RMQ_EXCHANGES.EMAIL,
       RMQ_ROUTING_KEYS.EMAIL_SEND,
-      payload,
+      stringifiedMessage,
     );
 
     const email =
