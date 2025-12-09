@@ -170,7 +170,6 @@ export class EmailConsumer {
     // SMTP 레벨의 에러
     if (error.responseCode) {
       if (error.responseCode >= 500) {
-        // DLQ로 보내기
         await this.rabbitmqService.sendMessageToQueue(
           RMQ_QUEUES.EMAIL_DEAD_LETTER,
           stringifiedMessage,
@@ -190,7 +189,6 @@ export class EmailConsumer {
 
       if (error.responseCode >= 400) {
         if (retryCount >= RETRY_CONFIG.MAX_RETRY) {
-          // DLQ로 보내기
           await this.rabbitmqService.sendMessageToQueue(
             RMQ_QUEUES.EMAIL_DEAD_LETTER,
             stringifiedMessage,
@@ -217,11 +215,12 @@ export class EmailConsumer {
     }
 
     logger.error(
-      `[EmailConsumer] 알 수 없는 에러로 DLQ 전송 
+      `[EmailConsumer] 알 수 없는 에러로 DLQ 메시지 발행
       오류 메시지: ${error.message} 
       스택 트레이스: ${error.stack}`,
     );
-    // 즉시 DLQ로
+    // 즉시 DLQ로 메시지 발행
+    // todo: Slack 이나 Discord 연동을 통한 새로운 에러에 대한 알림 구현
     await this.rabbitmqService.sendMessageToQueue(
       RMQ_QUEUES.EMAIL_DEAD_LETTER,
       stringifiedMessage,
