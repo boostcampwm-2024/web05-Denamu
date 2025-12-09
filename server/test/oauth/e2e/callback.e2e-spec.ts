@@ -4,16 +4,19 @@ import { OAuthCallbackRequestDto } from '../../../src/user/dto/request/oAuthCall
 import { OAuthType } from '../../../src/user/constant/oauth.constant';
 import TestAgent from 'supertest/lib/agent';
 import axios from 'axios';
+import { ProviderRepository } from '../../../src/user/repository/provider.repository';
 
 const URL = '/api/oauth/callback';
 
 describe(`GET ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
+  let providerRepository: ProviderRepository;
 
   beforeAll(() => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
+    providerRepository = app.get(ProviderRepository);
   });
 
   it('[302] Github OAuth 로그인 콜백으로 인증 서버에서 데이터를 받을 경우 리다이렉트를 성공한다.', async () => {
@@ -51,6 +54,15 @@ describe(`GET ${URL} E2E Test`, () => {
     expect(response.headers['set-cookie'][0]).toContain('refresh_token=');
     expect(response.headers['location']).toContain('/oauth-success?token=');
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedProvider = await providerRepository.findOneBy({
+      providerUserId: '1',
+      providerType: 'github',
+    });
+
+    // DB, Redis then
+    expect(savedProvider).not.toBeNull();
   });
 
   it('[302] Google OAuth 로그인 콜백으로 인증 서버에서 데이터를 받을 경우 리다이렉트를 성공한다.', async () => {
@@ -88,5 +100,14 @@ describe(`GET ${URL} E2E Test`, () => {
     expect(response.headers['set-cookie'][0]).toContain('refresh_token=');
     expect(response.headers['location']).toContain('/oauth-success?token=');
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedProvider = await providerRepository.findOneBy({
+      providerUserId: '1',
+      providerType: 'google',
+    });
+
+    // DB, Redis then
+    expect(savedProvider).not.toBeNull();
   });
 });

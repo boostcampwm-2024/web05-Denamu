@@ -63,6 +63,15 @@ describe(`POST ${URL} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedLike = await likeRepository.findOneBy({
+      feed: { id: requestDto.feedId },
+      user: { id: user.id },
+    });
+
+    // DB, Redis then
+    expect(savedLike).toBeNull();
   });
 
   it('[404] 게시글이 서비스에 존재하지 않을 경우 좋아요 등록을 실패한다.', async () => {
@@ -82,6 +91,15 @@ describe(`POST ${URL} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedLike = await likeRepository.findOneBy({
+      feed: { id: requestDto.feedId },
+      user: { id: user.id },
+    });
+
+    // DB, Redis then
+    expect(savedLike).toBeNull();
   });
 
   it('[409] 이미 좋아요를 한 게시글일 경우 좋아요 등록을 실패한다.', async () => {
@@ -106,8 +124,17 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(response.status).toBe(HttpStatus.CONFLICT);
     expect(data).toBeUndefined();
 
+    // DB, Redis when
+    const savedLike = await likeRepository.findBy({
+      feed: { id: requestDto.feedId },
+      user: { id: user.id },
+    });
+
+    // DB, Redis then
+    expect(savedLike.length).toBe(1);
+
     // cleanup
-    await likeRepository.delete(like.id);
+    await likeRepository.delete({ id: like.id });
   });
 
   it('[201] 로그인이 되어 있으며 좋아요를 한 적이 없을 경우 좋아요 등록을 성공한다.', async () => {
@@ -130,14 +157,17 @@ describe(`POST ${URL} E2E Test`, () => {
 
     // DB, Redis when
     const savedLike = await likeRepository.findOneBy({
-      feed,
-      user,
+      feed: { id: requestDto.feedId },
+      user: { id: user.id },
     });
 
     // DB, Redis then
-    expect(savedLike).not.toBeUndefined();
+    expect(savedLike).not.toBeNull();
 
     // cleanup
-    await likeRepository.delete({ user, feed });
+    await likeRepository.delete({
+      user: { id: user.id },
+      feed: { id: feed.id },
+    });
   });
 });

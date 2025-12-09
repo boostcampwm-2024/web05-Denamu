@@ -4,8 +4,6 @@ import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository'
 import { FeedFixture } from '../../fixture/feed.fixture';
 import { RssAcceptFixture } from '../../fixture/rss-accept.fixture';
 import { Feed } from '../../../src/feed/entity/feed.entity';
-import { UserRepository } from '../../../src/user/repository/user.repository';
-import { UserFixture } from '../../fixture/user.fixture';
 import * as supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 import { RssAccept } from '../../../src/rss/entity/rss.entity';
@@ -23,10 +21,8 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
     feedRepository = app.get(FeedRepository);
-    const userRepository = app.get(UserRepository);
     const rssAcceptRepository = app.get(RssAcceptRepository);
 
-    await userRepository.save(await UserFixture.createUserCryptFixture());
     rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
@@ -49,19 +45,13 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
       .fn()
       .mockResolvedValue({ ok: false, status: HttpStatus.NOT_FOUND });
 
-    // Http then
+    // Http when
     const response = await agent.delete(`${URL}/${feed.id}`);
 
     // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
     expect(data).toBeUndefined();
-
-    // DB, Redis when
-    const savedFeed = await feedRepository.findOneBy({ id: feed.id });
-
-    // DB, Redis then
-    expect(savedFeed).not.toBeUndefined();
   });
 
   it('[200] 원본 게시글이 존재할 경우 조회를 성공한다.', async () => {
@@ -78,6 +68,12 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedFeed = await feedRepository.findOneBy({ id: feed.id });
+
+    // DB, Redis then
+    expect(savedFeed).not.toBeNull();
 
     // cleanup
     await feedRepository.delete(feed.id);

@@ -46,6 +46,18 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(response.status).toBe(HttpStatus.CONFLICT);
     expect(data).toBeUndefined();
 
+    // DB, Redis when
+    const savedRss = await rssRepository.findBy({
+      rssUrl: rss.rssUrl,
+    });
+    const savedRssAccept = await rssAcceptRepository.findBy({
+      rssUrl: rss.rssUrl,
+    });
+
+    // DB, Redis then
+    expect(savedRss.length).toBe(1);
+    expect(savedRssAccept.length).toBe(0);
+
     // cleanup
     await rssRepository.delete({ id: rss.id });
   });
@@ -69,6 +81,18 @@ describe(`POST ${URL} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.CONFLICT);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedRss = await rssRepository.findBy({
+      rssUrl: acceptedRss.rssUrl,
+    });
+    const savedRssAccept = await rssAcceptRepository.findBy({
+      rssUrl: acceptedRss.rssUrl,
+    });
+
+    // DB, Redis then
+    expect(savedRss.length).toBe(0);
+    expect(savedRssAccept.length).toBe(1);
 
     // cleanup
     await rssAcceptRepository.delete({ id: acceptedRss.id });
@@ -100,6 +124,6 @@ describe(`POST ${URL} E2E Test`, () => {
     });
 
     // DB, Redis then
-    expect(savedRss).not.toBeUndefined();
+    expect(savedRss).not.toBeNull();
   });
 });

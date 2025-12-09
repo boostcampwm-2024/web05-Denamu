@@ -42,13 +42,23 @@ describe(`DELETE ${URL}/{code} E2E Test`, () => {
   });
 
   it('[404] RSS 삭제 요청이 만료되었거나 없을 경우 RSS 삭제 인증을 실패한다.', async () => {
+    // given
+    const certificateCode = 'test';
+    const redisKey = `${REDIS_KEYS.RSS_REMOVE_KEY}:${certificateCode}`;
+
     // Http when
-    const response = await agent.delete(`${URL}/${Number.MAX_SAFE_INTEGER}`);
+    const response = await agent.delete(`${URL}/${certificateCode}`);
 
     // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedRssRemoveURL = await redisService.get(redisKey);
+
+    // DB, Redis then
+    expect(savedRssRemoveURL).toBeNull();
   });
 
   it('[200] 삭제 신청된 RSS가 승인된 RSS에 있을 경우 승인된 RSS와 관련된 모든 데이터들의 삭제를 성공한다.', async () => {
@@ -84,14 +94,14 @@ describe(`DELETE ${URL}/{code} E2E Test`, () => {
     const savedFeed = await feedRepository.findBy({ blog: rssAccept });
     const savedComment = await commentRepository.findBy({ feed });
     const savedLike = await likeRepository.findBy({ feed });
-    const savedUUID = await redisService.get(redisKey);
+    const savedRssRemoveURL = await redisService.get(redisKey);
 
     // DB, Redis then
     expect(savedRssAccept).toBeNull();
-    expect(savedFeed).toStrictEqual([]);
-    expect(savedComment).toStrictEqual([]);
-    expect(savedLike).toStrictEqual([]);
-    expect(savedUUID).toBeNull();
+    expect(savedFeed.length).toBe(0);
+    expect(savedComment.length).toBe(0);
+    expect(savedLike.length).toBe(0);
+    expect(savedRssRemoveURL).toBeNull();
   });
 
   it('[200] 삭제 신청된 RSS가 대기중인 RSS에 있을 경우 대기중인 RSS 데이터 삭제를 성공한다.', async () => {
@@ -113,10 +123,10 @@ describe(`DELETE ${URL}/{code} E2E Test`, () => {
     const savedRss = await rssRepository.findOneBy({
       rssUrl: rss.rssUrl,
     });
-    const savedUUID = await redisService.get(redisKey);
+    const savedRssRemoveURL = await redisService.get(redisKey);
 
     // DB, Redis then
     expect(savedRss).toBeNull();
-    expect(savedUUID).toBeNull();
+    expect(savedRssRemoveURL).toBeNull();
   });
 });

@@ -70,6 +70,14 @@ describe(`PATCH ${URL} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedComment = await commentRepository.findOneBy({
+      id: requestDto.commentId,
+    });
+
+    // DB, Redis then
+    expect(savedComment.comment).toBe(comment.comment);
   });
 
   it('[404] 댓글이 존재하지 않을 경우 댓글 수정을 실패한다.', async () => {
@@ -90,6 +98,14 @@ describe(`PATCH ${URL} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedComment = await commentRepository.findOneBy({
+      id: requestDto.commentId,
+    });
+
+    // DB, Redis then
+    expect(savedComment).toBeNull();
   });
 
   it('[401] 본인이 작성한 댓글이 아닐 경우 댓글 수정을 실패한다.', async () => {
@@ -110,6 +126,14 @@ describe(`PATCH ${URL} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedComment = await commentRepository.findOneBy({
+      id: requestDto.commentId,
+    });
+
+    // DB, Redis then
+    expect(savedComment.comment).toBe(comment.comment);
   });
 
   it('[200] 본인이 작성한 댓글일 경우 댓글 수정을 성공한다.', async () => {
@@ -133,10 +157,10 @@ describe(`PATCH ${URL} E2E Test`, () => {
 
     // DB, Redis when
     const savedComment = await commentRepository.findOneBy({
-      id: comment.id,
+      id: requestDto.commentId,
     });
 
     // DB, Redis then
-    expect(savedComment.comment).toBe('newComment');
+    expect(savedComment.comment).toBe(requestDto.newComment);
   });
 });

@@ -42,6 +42,14 @@ describe(`POST ${URL} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedAdmin = await adminRepository.findOneBy({
+      loginId: newAdminDto.loginId,
+    });
+
+    // DB, Redis then
+    expect(savedAdmin).toBeNull();
   });
 
   it('[401] 관리자 로그인 쿠키가 만료됐을 경우 회원가입을 실패한다.', async () => {
@@ -61,6 +69,14 @@ describe(`POST ${URL} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedAdmin = await adminRepository.findOneBy({
+      loginId: newAdminDto.loginId,
+    });
+
+    // DB, Redis then
+    expect(savedAdmin).toBeNull();
   });
 
   it('[409] 중복된 ID로 회원가입을 할 경우 다른 관리자 계정 회원가입을 실패한다.', async () => {
@@ -80,6 +96,14 @@ describe(`POST ${URL} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.CONFLICT);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedAdmin = await adminRepository.findBy({
+      loginId: newAdminDto.loginId,
+    });
+
+    // DB, Redis then
+    expect(savedAdmin.length).toBe(1);
   });
 
   it('[201] 관리자 로그인이 되어 있을 경우 다른 관리자 계정 회원가입을 성공한다.', async () => {
@@ -106,7 +130,7 @@ describe(`POST ${URL} E2E Test`, () => {
     });
 
     // DB, Redis then
-    expect(savedAdmin).not.toBeUndefined();
+    expect(savedAdmin).not.toBeNull();
     expect(
       await bcrypt.compare(newAdminDto.password, savedAdmin.password),
     ).toBeTruthy();

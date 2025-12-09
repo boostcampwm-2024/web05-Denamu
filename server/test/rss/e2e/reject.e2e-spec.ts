@@ -16,6 +16,7 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
   let rssRepository: RssRepository;
   let rssRejectRepository: RssRejectRepository;
   let redisService: RedisService;
+  const adminSessionId = 'testSessionId';
 
   beforeAll(async () => {
     app = global.testApp;
@@ -29,7 +30,7 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
     await Promise.all([
       rssRepository.delete({}),
       redisService.set(
-        `${REDIS_KEYS.ADMIN_AUTH_KEY}:testSessionId`,
+        `${REDIS_KEYS.ADMIN_AUTH_KEY}:${adminSessionId}`,
         'test_admin',
       ),
     ]);
@@ -67,7 +68,7 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
     // Http when
     const response = await agent
       .post(`${URL}/${Number.MAX_SAFE_INTEGER}`)
-      .set('Cookie', 'sessionId=testSessionId')
+      .set('Cookie', `sessionId=${adminSessionId}`)
       .send(requestDTO);
 
     // Http then
@@ -87,7 +88,7 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
     // Http when
     const response = await agent
       .post(`${URL}/${rss.id}`)
-      .set('Cookie', 'sessionId=testSessionId')
+      .set('Cookie', `sessionId=${adminSessionId}`)
       .send(requestDto);
 
     // Http then
@@ -97,13 +98,16 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
 
     // DB, Redis when
     const savedRssReject = await rssRejectRepository.findOneBy({
-      ...rss,
+      rssUrl: rss.rssUrl,
+      userName: rss.userName,
+      name: rss.name,
+      email: rss.email,
       description: REJECT_REASON,
     });
-    const savedRss = await rssRepository.findOneBy({ ...rss });
+    const savedRss = await rssRepository.findOneBy({ id: rss.id });
 
     // DB, Redis then
-    expect(savedRssReject).not.toBeUndefined();
-    expect(savedRss).not.toBeUndefined();
+    expect(savedRssReject).not.toBeNull();
+    expect(savedRss).toBeNull();
   });
 });

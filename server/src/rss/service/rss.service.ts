@@ -21,7 +21,6 @@ import { RejectRssRequestDto } from '../dto/request/rejectRss';
 import { DeleteRssRequestDto } from '../dto/request/deleteRss.dto';
 import { RedisService } from '../../common/redis/redis.service';
 import { DeleteCertificateRssRequestDto } from '../dto/request/deleteCertificateRss.dto';
-import { FeedRepository } from '../../feed/repository/feed.repository';
 import { REDIS_KEYS } from '../../common/redis/redis.constant';
 
 type FullFeedCrawlMessage = {
@@ -91,7 +90,7 @@ export class RssService {
       throw new BadRequestException(`${rss.rssUrl}이 올바른 RSS가 아닙니다.`);
     }
 
-    this.acceptRssBackProcess(rss);
+    await this.acceptRssBackProcess(rss);
   }
 
   async rejectRss(

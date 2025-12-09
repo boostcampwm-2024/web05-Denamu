@@ -17,6 +17,7 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
   let rssRepository: RssRepository;
   let rssAcceptRepository: RssAcceptRepository;
   let redisService: RedisService;
+  const adminSessionId = 'testSessionId';
 
   beforeAll(async () => {
     app = global.testApp;
@@ -30,7 +31,7 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
     await Promise.all([
       rssRepository.delete({}),
       redisService.set(
-        `${REDIS_KEYS.ADMIN_AUTH_KEY}:testSessionId`,
+        `${REDIS_KEYS.ADMIN_AUTH_KEY}:${adminSessionId}`,
         'test_admin',
       ),
     ]);
@@ -62,7 +63,7 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
     // Http when
     const response = await agent
       .post(`${URL}/${Number.MAX_SAFE_INTEGER}`)
-      .set('Cookie', 'sessionId=testSessionId');
+      .set('Cookie', `sessionId=${adminSessionId}`);
 
     // Http then
     const { data } = response.body;
@@ -81,12 +82,27 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
     // Http when
     const response = await agent
       .post(`${URL}/${rss.id}`)
-      .set('Cookie', 'sessionId=testSessionId');
+      .set('Cookie', `sessionId=${adminSessionId}`);
 
     // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.BAD_REQUEST);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedRssAccept = await rssAcceptRepository.findOneBy({
+      rssUrl: rss.rssUrl,
+      name: rss.name,
+      userName: rss.userName,
+      email: rss.email,
+    });
+    const savedRss = await rssRepository.findOneBy({
+      id: rss.id,
+    });
+
+    // DB, Redis then
+    expect(savedRssAccept).toBeNull();
+    expect(savedRss).not.toBeNull();
   });
 
   it('[201] 관리자 로그인이 되어 있을 경우 RSS 승인을 성공한다.', async () => {
@@ -100,7 +116,7 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
     // Http when
     const response = await agent
       .post(`${URL}/${rss.id}`)
-      .set('Cookie', 'sessionId=testSessionId');
+      .set('Cookie', `sessionId=${adminSessionId}`);
 
     // Http then
     const { data } = response.body;
@@ -109,15 +125,15 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
 
     // DB, Redis when
     const savedRssAccept = await rssAcceptRepository.findOneBy({
-      ...rss,
+      rssUrl: rss.rssUrl,
     });
     const savedRss = await rssRepository.findOneBy({
-      ...rss,
+      id: rss.id,
     });
 
     // DB, Redis then
-    expect(savedRssAccept).not.toBeUndefined();
-    expect(savedRss).not.toBeUndefined();
+    expect(savedRssAccept).not.toBeNull();
+    expect(savedRss).toBeNull();
 
     // cleanup
     await rssAcceptRepository.delete({ rssUrl: rss.rssUrl });

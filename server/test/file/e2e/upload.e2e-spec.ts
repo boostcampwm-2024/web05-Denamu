@@ -117,7 +117,7 @@ describe(`POST ${URL} E2E Test`, () => {
     });
 
     // DB, Redis then
-    expect(savedFile).not.toBeUndefined();
+    expect(savedFile).not.toBeNull();
 
     // cleanup
     await fileRepository.delete({ user });

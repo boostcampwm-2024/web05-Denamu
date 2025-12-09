@@ -60,14 +60,19 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
     const savedFeed = await feedRepository.findOneBy({
       id: feed.id,
     });
+    const savedFeedReadRedis = await redisService.sismember(
+      `feed:${feed.id}:ip`,
+      testIp,
+    );
 
     // DB, Redis then
     expect(savedFeed.viewCount).toBe(feed.viewCount);
+    expect(savedFeedReadRedis).not.toBeNull();
   });
 
   it('[200] 읽은 기록 쿠키가 없지만 읽은 기록 IP가 있을 경우 조회수 상승을 하지 않는 행위를 성공한다.', async () => {
     // given
-    await redisService.sismember(`feed:${feed.id}:ip`, testIp);
+    await redisService.sadd(`feed:${feed.id}:ip`, testIp);
 
     // Http when
     const response = await agent
@@ -86,9 +91,14 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
     const savedFeed = await feedRepository.findOneBy({
       id: feed.id,
     });
+    const savedFeedReadRedis = await redisService.sismember(
+      `feed:${feed.id}:ip`,
+      testIp,
+    );
 
     // DB, Redis then
     expect(savedFeed.viewCount).toBe(feed.viewCount);
+    expect(savedFeedReadRedis).not.toBeNull();
 
     // cleanup
     await Promise.all([
@@ -118,9 +128,14 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
     const savedFeed = await feedRepository.findOneBy({
       id: feed.id,
     });
+    const savedFeedReadRedis = await redisService.sismember(
+      `feed:${feed.id}:ip`,
+      testIp,
+    );
 
     // DB, Redis then
     expect(savedFeed.viewCount).toBe(feed.viewCount + 1);
+    expect(savedFeedReadRedis).not.toBeNull();
 
     // cleanup
     await Promise.all([

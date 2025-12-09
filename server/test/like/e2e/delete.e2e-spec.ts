@@ -22,11 +22,13 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
   let user: User;
   let feed: Feed;
   let agent: TestAgent;
+  let likeRepository: LikeRepository;
   let createAccessToken: (arg0?: number) => string;
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
+    likeRepository = app.get(LikeRepository);
     const userService = app.get(UserService);
     const userRepository = app.get(UserRepository);
     const rssAcceptRepository = app.get(RssAcceptRepository);
@@ -104,10 +106,9 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
 
   it('[200] 로그인이 되어 있고 좋아요를 한 경우 좋아요 삭제를 성공한다.', async () => {
     // given
-    const likeRepository = app.get(LikeRepository);
     await likeRepository.save({
       feed,
-      user: user,
+      user,
       likeDate: new Date(),
     });
     const requestDto = new ManageLikeRequestDto({
@@ -127,11 +128,11 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
 
     // DB, Redis when
     const savedLike = await likeRepository.findOneBy({
-      feed,
+      feed: { id: requestDto.feedId },
       user,
     });
 
     // DB, Redis then
-    expect(savedLike).not.toBeUndefined();
+    expect(savedLike).toBeNull();
   });
 });

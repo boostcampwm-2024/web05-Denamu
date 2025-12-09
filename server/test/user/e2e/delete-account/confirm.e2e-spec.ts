@@ -76,10 +76,10 @@ describe(`POST ${URL} E2E Test`, () => {
     const savedUUID = await redisService.get(redisKey);
 
     // DB, Redis then
-    expect(savedComment).toStrictEqual([]);
-    expect(savedLike).toStrictEqual([]);
-    expect(savedActivity).toStrictEqual([]);
-    expect(savedFile).toStrictEqual([]);
-    expect(savedUUID).toBeNull();
+    expect(savedComment.length).toBe(0);
+    expect(savedLike.length).toBe(0);
+    expect(savedActivity.length).toBe(0);
+    expect(savedFile.length).toBe(0);
+    expect(savedUUID).toBeNull;
   });
 });

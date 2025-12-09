@@ -69,6 +69,14 @@ describe(`DELETE ${URL} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedComment = await commentRepository.findOneBy({
+      id: requestDto.commentId,
+    });
+
+    // DB, Redis then
+    expect(savedComment).not.toBeNull();
   });
 
   it('[404] 삭제하고자 하는 댓글이 존재하지 않을 경우 댓글 삭제를 실패한다.', async () => {
@@ -88,6 +96,14 @@ describe(`DELETE ${URL} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedComment = await commentRepository.findOneBy({
+      id: requestDto.commentId,
+    });
+
+    // DB, Redis then
+    expect(savedComment).toBeNull();
   });
 
   it('[401] 본인이 작성한 댓글이 아닐 경우 댓글 삭제를 실패한다.', async () => {
@@ -107,6 +123,14 @@ describe(`DELETE ${URL} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedComment = await commentRepository.findOneBy({
+      id: requestDto.commentId,
+    });
+
+    // DB, Redis then
+    expect(savedComment).not.toBeNull();
   });
 
   it('[200] 본인이 작성한 댓글일 경우 댓글 삭제를 성공한다.', async () => {
