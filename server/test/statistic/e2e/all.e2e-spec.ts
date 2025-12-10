@@ -50,7 +50,8 @@ describe(`GET ${URL}?limit={} E2E Test`, () => {
 
   it('[200] 전체 조회수 통계에서 개수 제한을 걸 경우 특정 개수만큼의 전체 조회수 통계 조회를 성공한다.', async () => {
     // given
-    const requestDto = new ReadStatisticRequestDto({ limit: 1 });
+    const limit = 1;
+    const requestDto = new ReadStatisticRequestDto({ limit });
 
     // Http when
     const response = await agent.get(URL).query(requestDto);
@@ -59,7 +60,7 @@ describe(`GET ${URL}?limit={} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual(
-      Array.from({ length: 1 }).map((_, i) => {
+      Array.from({ length: limit }).map((_, i) => {
         const feed = feedList[i];
         return {
           id: feed.id,
