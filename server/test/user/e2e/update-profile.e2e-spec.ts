@@ -17,7 +17,7 @@ describe('PATCH /api/user/profile E2E Test', () => {
     complete: {
       userName: '변경된이름',
       profileImage:
-        'https://denamu.site/objects/PROFILE_IMAGE/20000902/uuid.png',
+        'https://denamu.dev/objects/PROFILE_IMAGE/20000902/uuid.png',
       introduction: '변경된 소개글입니다.',
     },
     partial: {
@@ -37,7 +37,7 @@ describe('PATCH /api/user/profile E2E Test', () => {
       await UserFixture.createUserCryptFixture({
         userName: '기존이름',
         profileImage:
-          'https://denamu.site/objects/PROFILE_IMAGE/20000902/uuid_old.png',
+          'https://denamu.dev/objects/PROFILE_IMAGE/20000902/uuid_old.png',
         introduction: '기존 소개글입니다.',
       }),
     );
