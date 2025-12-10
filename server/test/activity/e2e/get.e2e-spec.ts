@@ -52,13 +52,12 @@ describe(`GET ${URL}/{userId} E2E Test`, () => {
 
   it('[200] 존재하는 사용자의 아이디로 요청할 경우 활동 데이터 조회를 성공한다.', async () => {
     // given
-    const userId = user.id;
     const requestDto = new ReadActivityQueryRequestDto({
       year: activities[0].activityDate.getFullYear(),
     });
 
     // Http when
-    const response = await agent.get(`${URL}/${userId}`).query(requestDto);
+    const response = await agent.get(`${URL}/${user.id}`).query(requestDto);
 
     // Http then
     const { data } = response.body;
@@ -77,13 +76,12 @@ describe(`GET ${URL}/{userId} E2E Test`, () => {
 
   it('[200] 다른 연도를 요청할 경우 해당 연도의 활동 데이터 조회를 성공한다.', async () => {
     // given
-    const userId = user.id;
     const requestDto = new ReadActivityQueryRequestDto({
       year: activities[0].activityDate.getFullYear() - 1,
     });
 
     // Http when
-    const response = await agent.get(`${URL}/${userId}`).query(requestDto);
+    const response = await agent.get(`${URL}/${user.id}`).query(requestDto);
 
     // Http then
     const { data } = response.body;
