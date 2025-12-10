@@ -7,6 +7,7 @@ import TestAgent from 'supertest/lib/agent';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 import * as bcrypt from 'bcrypt';
+import { Admin } from '../../../src/admin/entity/admin.entity';
 
 const URL = '/api/admin/register';
 
@@ -14,7 +15,8 @@ describe(`POST ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let adminRepository: AdminRepository;
-  const sessionId = 'testSessionId';
+  let admin: Admin;
+  const sessionKey = 'admin-register-session-key';
   const redisKeyMake = (data: string) => `${REDIS_KEYS.ADMIN_AUTH_KEY}:${data}`;
 
   beforeAll(async () => {
@@ -22,10 +24,10 @@ describe(`POST ${URL} E2E Test`, () => {
     agent = supertest(app.getHttpServer());
     adminRepository = app.get(AdminRepository);
     const redisService = app.get(RedisService);
-    await Promise.all([
-      adminRepository.insert(await AdminFixture.createAdminCryptFixture()),
-      redisService.set(redisKeyMake(sessionId), 'test1234'),
-    ]);
+    admin = await adminRepository.save(
+      await AdminFixture.createAdminCryptFixture(),
+    );
+    await redisService.set(redisKeyMake(sessionKey), admin.loginId);
   });
 
   it('[401] 관리자 로그인 쿠키가 없을 경우 회원가입을 실패한다.', async () => {
@@ -63,7 +65,7 @@ describe(`POST ${URL} E2E Test`, () => {
     const response = await agent
       .post(URL)
       .send(newAdminDto)
-      .set('Cookie', `sessionId=Wrong${sessionId}`);
+      .set('Cookie', `sessionId=Wrong${sessionKey}`);
 
     // Http then
     const { data } = response.body;
@@ -90,7 +92,7 @@ describe(`POST ${URL} E2E Test`, () => {
     const response = await agent
       .post(URL)
       .send(newAdminDto)
-      .set('Cookie', `sessionId=${sessionId}`);
+      .set('Cookie', `sessionId=${sessionKey}`);
 
     // Http then
     const { data } = response.body;
@@ -117,7 +119,7 @@ describe(`POST ${URL} E2E Test`, () => {
     const response = await agent
       .post(URL)
       .send(newAdminDto)
-      .set('Cookie', `sessionId=${sessionId}`);
+      .set('Cookie', `sessionId=${sessionKey}`);
 
     // Http then
     const { data } = response.body;

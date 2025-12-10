@@ -12,7 +12,7 @@ import { UserService } from '../src/user/service/user.service';
 
 const globalAny: any = global;
 
-beforeEach(() => {
+afterEach(() => {
   jest.resetAllMocks();
 });
 
