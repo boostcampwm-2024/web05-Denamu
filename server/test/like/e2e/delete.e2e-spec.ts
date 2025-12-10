@@ -117,7 +117,7 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
     // DB, Redis when
     const savedLike = await likeRepository.findOneBy({
       feed: { id: requestDto.feedId },
-      user,
+      user: { id: user.id },
     });
 
     // DB, Redis then
