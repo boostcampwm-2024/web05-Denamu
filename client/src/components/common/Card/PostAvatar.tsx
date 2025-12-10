@@ -16,7 +16,7 @@ export default function PostAvatar({ author, className, blogPlatform }: AvatarTy
   return (
     <Avatar className="h-8 w-8 ring-2 ring-background cursor-pointer">
       {isValidPlatform(blogPlatform) ? (
-        <img src={`https://denamu.site/files/${blogPlatform}-icon.svg`} alt={author} className={className} />
+        <img src={`https://denamu.dev/files/${blogPlatform}-icon.svg`} alt={author} className={className} />
       ) : (
         <AvatarFallback className="text-xs bg-slate-200">{authorInitial}</AvatarFallback>
       )}

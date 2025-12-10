@@ -17,7 +17,7 @@ export const HeroSection = () => {
         <div className="text-center max-w-4xl">
           <div className="flex items-center justify-center space-x-2 mb-6">
             <img
-              src="https://denamu.site/files/Denamu_Logo_ENG.svg"
+              src="https://denamu.dev/files/Denamu_Logo_ENG.svg"
               alt="Denamu English Logo"
               className="w-32 md:w-52"
             />
@@ -36,7 +36,7 @@ export const HeroSection = () => {
 
       <div className="flex-grow flex items-start justify-center p-4 md:p-8">
         <img
-          src="https://denamu.site/files/about-first.png"
+          src="https://denamu.dev/files/about-first.png"
           alt="Service Preview"
           className="max-w-[90%] md:max-w-[80%] h-auto object-contain"
         />

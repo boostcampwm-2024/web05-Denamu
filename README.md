@@ -15,7 +15,7 @@
 </div>
 
 <div align="center">
-  <a href="https://denamu.site">
+  <a href="https://denamu.dev">
     <img src="https://img.shields.io/badge/Denamu_바로가기-318B4C?style=for-the-badge&logoColor=white" alt="Denamu Service"/>
   </a>
 </div>
