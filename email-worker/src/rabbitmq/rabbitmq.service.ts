@@ -1,6 +1,6 @@
 import { inject, injectable } from 'tsyringe';
 import { RabbitMQManager } from './rabbitmq.manager';
-import { ConsumeMessage } from 'amqplib/properties';
+import { Options } from 'amqplib/properties';
 import { DEPENDENCY_SYMBOLS } from '../types/dependency-symbols';
 import logger from '../logger';
 
@@ -20,9 +20,18 @@ export class RabbitmqService {
     channel.publish(exchange, routingKey, Buffer.from(message));
   }
 
+  async sendMessageToQueue(
+    queue: string,
+    message: string,
+    options?: Options.Publish,
+  ) {
+    const channel = await this.rabbitMQManager.getChannel();
+    channel.sendToQueue(queue, Buffer.from(message), options);
+  }
+
   async consumeMessage<T>(
     queue: string,
-    onMessage: (payload: T) => void | Promise<void>,
+    onMessage: (payload: T, retryCount: number) => void | Promise<void>,
   ) {
     const channel = await this.rabbitMQManager.getChannel();
     const { consumerTag } = await channel.consume(queue, async (message) => {
@@ -30,7 +39,8 @@ export class RabbitmqService {
         if (!message) return;
 
         const parsedMessage = JSON.parse(message.content.toString()) as T;
-        await onMessage(parsedMessage);
+        const retryCount = message.properties.headers?.['x-retry-count'] || 0;
+        await onMessage(parsedMessage, retryCount);
 
         channel.ack(message);
       } catch (error) {
