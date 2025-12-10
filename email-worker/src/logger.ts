@@ -13,32 +13,34 @@ function getLogTransport() {
   const transports = [];
 
   if (process.env.NODE_ENV === 'LOCAL' || process.env.NODE_ENV === 'PROD') {
-    transports.push([
-      new DailyRotateFile({
-        level: 'info',
-        datePattern: 'YYYY-MM-DD',
-        dirname: logDir,
-        filename: `%DATE%.email-worker.log`,
-        maxFiles: 30,
-        zippedArchive: true,
-      }),
-      new DailyRotateFile({
-        level: 'error',
-        datePattern: 'YYYY-MM-DD',
-        dirname: `${logDir}/error`,
-        filename: `%DATE%.email-worker.error.log`,
-        maxFiles: 30,
-        zippedArchive: true,
-      }),
-      new DailyRotateFile({
-        level: 'warn',
-        datePattern: 'YYYY-MM-DD',
-        dirname: `${logDir}/warn`,
-        filename: `%DATE%.email-worker.warn.log`,
-        maxFiles: 30,
-        zippedArchive: true,
-      }),
-    ]);
+    transports.push(
+      ...[
+        new DailyRotateFile({
+          level: 'info',
+          datePattern: 'YYYY-MM-DD',
+          dirname: logDir,
+          filename: `%DATE%.email-worker.log`,
+          maxFiles: 30,
+          zippedArchive: true,
+        }),
+        new DailyRotateFile({
+          level: 'error',
+          datePattern: 'YYYY-MM-DD',
+          dirname: `${logDir}/error`,
+          filename: `%DATE%.email-worker.error.log`,
+          maxFiles: 30,
+          zippedArchive: true,
+        }),
+        new DailyRotateFile({
+          level: 'warn',
+          datePattern: 'YYYY-MM-DD',
+          dirname: `${logDir}/warn`,
+          filename: `%DATE%.email-worker.warn.log`,
+          maxFiles: 30,
+          zippedArchive: true,
+        }),
+      ],
+    );
   }
 
   if (process.env.NODE_ENV === 'LOCAL' || process.env.NODE_ENV === 'DEV') {
