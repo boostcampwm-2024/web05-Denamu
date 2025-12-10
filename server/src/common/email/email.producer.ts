@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { RabbitMQService } from '../rabbitmq/rabbitmq.service';
 import { WinstonLoggerService } from '../logger/logger.service';
 import { RMQ_EXCHANGES, RMQ_ROUTING_KEYS } from '../rabbitmq/rabbitmq.constant';
-import { EmailPayload } from './email.type';
+import { EmailPayload, EmailPayloadConstant } from './email.type';
 import { User } from '../../user/entity/user.entity';
 import { Rss } from '../../rss/entity/rss.entity';
 
@@ -14,14 +14,15 @@ export class EmailProducer {
   ) {}
 
   private async produceMessage(payload: EmailPayload): Promise<void> {
+    const stringifiedMessage = JSON.stringify(payload);
     await this.rabbitmqService.sendMessage(
       RMQ_EXCHANGES.EMAIL,
       RMQ_ROUTING_KEYS.EMAIL_SEND,
-      payload,
+      stringifiedMessage,
     );
 
     const email =
-      payload.type === ('rssRegistration' as const)
+      payload.type === EmailPayloadConstant.RSS_REGISTRATION
         ? payload.data.rss.email
         : payload.data.email;
     this.logger.log(
@@ -31,13 +32,14 @@ export class EmailProducer {
 
   async produceUserCertification(user: User, uuid: string) {
     const payload = {
-      type: 'userCertification' as const,
+      type: EmailPayloadConstant.USER_CERTIFICATION,
       data: {
         email: user.email,
         userName: user.userName,
         uuid: uuid,
       },
     };
+
     await this.produceMessage(payload);
   }
 
@@ -47,7 +49,7 @@ export class EmailProducer {
     description?: string,
   ) {
     const payload = {
-      type: 'rssRegistration' as const,
+      type: EmailPayloadConstant.RSS_REGISTRATION,
       data: {
         rss: rss,
         approveFlag: approveFlag,
@@ -60,7 +62,7 @@ export class EmailProducer {
 
   async producePasswordReset(user: User, uuid: string) {
     const payload = {
-      type: 'resetPassword' as const,
+      type: EmailPayloadConstant.PASSWORD_RESET,
       data: {
         email: user.email,
         userName: user.userName,
@@ -72,7 +74,7 @@ export class EmailProducer {
 
   async produceAccountDeletion(user: User, uuid: string) {
     const payload = {
-      type: 'deleteAccount' as const,
+      type: EmailPayloadConstant.ACCOUNT_DELETION,
       data: {
         email: user.email,
         userName: user.userName,
@@ -89,7 +91,7 @@ export class EmailProducer {
     certificateCode: string,
   ) {
     const payload = {
-      type: 'rssRemove' as const,
+      type: EmailPayloadConstant.RSS_REMOVAL,
       data: {
         userName,
         email,

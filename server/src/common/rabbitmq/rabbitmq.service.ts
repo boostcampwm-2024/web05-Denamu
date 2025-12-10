@@ -10,10 +10,9 @@ export class RabbitMQService {
     private readonly logger: WinstonLoggerService,
   ) {}
 
-  async sendMessage<T>(exchange: string, routingKey: string, message: T) {
+  async sendMessage(exchange: string, routingKey: string, message: string) {
     const channel = await this.rabbitMQManager.getChannel();
-    const stringifiedMessage = JSON.stringify(message);
-    channel.publish(exchange, routingKey, Buffer.from(stringifiedMessage));
+    channel.publish(exchange, routingKey, Buffer.from(message));
   }
 
   async consumeMessage<T>(
