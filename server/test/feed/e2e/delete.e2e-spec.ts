@@ -26,6 +26,7 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
     rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
+    feed = await feedRepository.save(FeedFixture.createFeedFixture(rssAccept));
   });
 
   it('[404] 존재하지 않는 게시글 ID에 요청을 보낼 경우 404를 응답한다.', async () => {
@@ -36,11 +37,18 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedFeed = await feedRepository.findOneBy({
+      id: feed.id,
+    });
+
+    // DB, Redis then
+    expect(savedFeed).not.toBeNull();
   });
 
   it('[404] 원본 게시글이 존재하지 않을 경우 서비스에서 게시글 정보를 삭제하여 조회를 실패한다.', async () => {
     // given
-    feed = await feedRepository.save(FeedFixture.createFeedFixture(rssAccept));
     global.fetch = jest
       .fn()
       .mockResolvedValue({ ok: false, status: HttpStatus.NOT_FOUND });
@@ -52,6 +60,14 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedFeed = await feedRepository.findOneBy({
+      id: feed.id,
+    });
+
+    // DB, Redis then
+    expect(savedFeed).toBeNull();
   });
 
   it('[200] 원본 게시글이 존재할 경우 조회를 성공한다.', async () => {

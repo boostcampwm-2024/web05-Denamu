@@ -16,6 +16,8 @@ describe(`GET ${URL} E2E Test`, () => {
   let agent: TestAgent;
   let redisService: RedisService;
   let feedList: Feed[];
+  const redisKeyMake = (data: string) =>
+    `${REDIS_KEYS.FEED_RECENT_KEY}:${data}`;
 
   beforeAll(async () => {
     app = global.testApp;
@@ -37,7 +39,7 @@ describe(`GET ${URL} E2E Test`, () => {
     // given
     await redisService.executePipeline((pipeline) => {
       feedList.forEach((feed) => {
-        pipeline.hset(`${REDIS_KEYS.FEED_RECENT_KEY}:${feed.id}`, {
+        pipeline.hset(redisKeyMake(feed.id.toString()), {
           id: feed.id,
           blogPlatform: feed.blog.blogPlatform,
           createdAt: feed.createdAt.toISOString(),
@@ -84,7 +86,7 @@ describe(`GET ${URL} E2E Test`, () => {
     // cleanup
     await redisService.executePipeline((pipeline) => {
       feedList.forEach((feed) => {
-        pipeline.del(`${REDIS_KEYS.FEED_RECENT_KEY}:${feed.id}`);
+        pipeline.del(redisKeyMake(feed.id.toString()));
       });
     });
   });

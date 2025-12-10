@@ -18,6 +18,7 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
   let feed: Feed;
   let feedRepository: FeedRepository;
   const testIp = '1.1.1.1';
+  const redisKeyMake = (data: string) => `feed:${data}:ip`;
 
   beforeAll(async () => {
     app = global.testApp;
@@ -31,7 +32,7 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
     feed = await feedRepository.save(
       FeedFixture.createFeedFixture(rssAccept, {}, 1),
     );
-    await redisService.sadd(`feed:${feed.id}:ip`, testIp);
+    await redisService.sadd(redisKeyMake(feed.id.toString()), testIp);
   });
 
   it('[404] 피드가 서비스에 존재하지 않을 경우 조회수 상승을 실패한다.', async () => {
@@ -61,7 +62,7 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
       id: feed.id,
     });
     const savedFeedReadRedis = await redisService.sismember(
-      `feed:${feed.id}:ip`,
+      redisKeyMake(feed.id.toString()),
       testIp,
     );
 
@@ -72,7 +73,7 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
 
   it('[200] 읽은 기록 쿠키가 없지만 읽은 기록 IP가 있을 경우 조회수 상승을 하지 않는 행위를 성공한다.', async () => {
     // given
-    await redisService.sadd(`feed:${feed.id}:ip`, testIp);
+    await redisService.sadd(redisKeyMake(feed.id.toString()), testIp);
 
     // Http when
     const response = await agent
@@ -92,7 +93,7 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
       id: feed.id,
     });
     const savedFeedReadRedis = await redisService.sismember(
-      `feed:${feed.id}:ip`,
+      redisKeyMake(feed.id.toString()),
       testIp,
     );
 
@@ -103,7 +104,7 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
     // cleanup
     await Promise.all([
       redisService.zrem(REDIS_KEYS.FEED_TREND_KEY, feed.id.toString()),
-      redisService.srem(`feed:${feed.id}:ip`, testIp),
+      redisService.srem(redisKeyMake(feed.id.toString()), testIp),
     ]);
   });
 
@@ -129,7 +130,7 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
       id: feed.id,
     });
     const savedFeedReadRedis = await redisService.sismember(
-      `feed:${feed.id}:ip`,
+      redisKeyMake(feed.id.toString()),
       testIp,
     );
 
@@ -140,7 +141,7 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
     // cleanup
     await Promise.all([
       redisService.zrem(REDIS_KEYS.FEED_TREND_KEY, feed.id.toString()),
-      redisService.srem(`feed:${feed.id}:ip`, testNewIp),
+      redisService.srem(redisKeyMake(feed.id.toString()), testNewIp),
     ]);
     await feedRepository.update(feed.id, { viewCount: feed.viewCount });
   });
