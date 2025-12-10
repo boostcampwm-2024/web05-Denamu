@@ -1,4 +1,4 @@
-import { Rss } from '../../rss/entity/rss.entity';
+import { Rss } from '../types/types';
 
 export const PRODUCT_DOMAIN = 'https://denamu.dev';
 
@@ -155,7 +155,7 @@ export function createPasswordResetMailContent(
             <p>이 링크는 10분 동안 유효합니다.</p>
             <p style="color: #dc3545; font-weight: bold;">만약 비밀번호 재설정을 요청하지 않으셨다면, 이 메일을 무시하셔도 됩니다.</p>
           </div>
-        </div>  
+        </div>
       </div>
       <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; border-top: 2px solid #f0f0f0; color: #6c757d; font-size: 14px; height: 100px;">
         <p>본 메일은 발신전용입니다.</p>

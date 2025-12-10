@@ -40,8 +40,6 @@ afterAll(async () => {
   await redisService.flushall();
   redisService.disconnect();
 
-  await cleanupRabbitMQ();
-
   console.log('Closing NestJS application...');
   if (globalAny.testApp) {
     await globalAny.testApp.close();
@@ -49,20 +47,6 @@ afterAll(async () => {
   }
   console.log('NestJS application closed.');
 });
-
-async function cleanupRabbitMQ() {
-  try {
-    const rabbitMQManager: RabbitMQManager =
-      globalAny.testApp.get(RabbitMQManager);
-
-    if (rabbitMQManager.connection) {
-      await rabbitMQManager.connection.close();
-      console.log('RabbitMQ connection closed.');
-    }
-  } catch (error) {
-    console.error('Error cleaning up RabbitMQ:', error);
-  }
-}
 
 beforeEach(() => {
   jest.resetAllMocks();
