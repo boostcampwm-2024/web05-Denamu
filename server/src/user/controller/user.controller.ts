@@ -136,8 +136,13 @@ export class UserController {
     @CurrentUser() user: Payload,
     @Req() req: Request,
   ) {
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    await this.userService.requestDeleteAccount(user.id, token);
+    const accessToken = req.headers.authorization?.replace('Bearer ', '');
+    const refreshToken = req.cookies['refresh_token'];
+    await this.userService.requestDeleteAccount(
+      user.id,
+      accessToken,
+      refreshToken,
+    );
     return ApiResponse.responseWithNoContent(
       '회원탈퇴 신청이 성공적으로 처리되었습니다. 이메일을 확인해주세요.',
     );

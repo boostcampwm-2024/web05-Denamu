@@ -238,14 +238,15 @@ export class UserService {
   async requestDeleteAccount(
     userId: number,
     accessToken?: string,
+    refreshToken?: string,
   ): Promise<void> {
     const user = await this.getUser(userId);
 
     const token = uuidv4();
-    if (accessToken) {
+    if (accessToken || refreshToken) {
       await this.redisService.set(
         `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${token}`,
-        user.id.toString() + ':' + accessToken,
+        `${user.id.toString()}:${accessToken || ''}:${refreshToken || ''}`,
         'EX',
         600,
       );
@@ -263,7 +264,7 @@ export class UserService {
       throw new NotFoundException('유효하지 않거나 만료된 토큰입니다.');
     }
 
-    const [userIdString, accessToken] = data.split(':');
+    const [userIdString, accessToken, refreshToken] = data.split(':');
     const userId = parseInt(userIdString, 10);
 
     const user = await this.getUser(userId);
@@ -276,6 +277,12 @@ export class UserService {
       const accessTokenExpire = this.configService.get('ACCESS_TOKEN_EXPIRE');
       const ttlInSeconds = this.parseTimeToSeconds(accessTokenExpire);
       await this.addToJwtBlacklist(accessToken, ttlInSeconds);
+    }
+
+    if (refreshToken) {
+      const refreshTokenExpire = this.configService.get('REFRESH_TOKEN_EXPIRE');
+      const ttlInSeconds = this.parseTimeToSeconds(refreshTokenExpire);
+      await this.addToJwtBlacklist(refreshToken, ttlInSeconds);
     }
 
     await this.userRepository.remove(user);

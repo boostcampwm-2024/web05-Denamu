@@ -39,7 +39,10 @@ export class JwtRefreshStrategy extends PassportStrategy(
   Strategy,
   'jwt-refresh',
 ) {
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly redisService: RedisService,
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         (req: Request) => {
@@ -47,10 +50,20 @@ export class JwtRefreshStrategy extends PassportStrategy(
         },
       ]),
       secretOrKey: configService.get('JWT_REFRESH_SECRET'),
+      passReqToCallback: true,
     });
   }
 
-  validate(payload: Payload) {
+  async validate(req: Request, payload: Payload) {
+    const token = req.cookies['refresh_token'];
+    if (token) {
+      const blacklistKey = `${REDIS_KEYS.USER_BLACKLIST_JWT_PREFIX}:${token}`;
+      const isBlacklisted = await this.redisService.get(blacklistKey);
+
+      if (isBlacklisted) {
+        throw new UnauthorizedException('인증되지 않은 요청입니다.');
+      }
+    }
     return payload;
   }
 }
