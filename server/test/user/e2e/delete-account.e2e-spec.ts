@@ -59,7 +59,13 @@ describe('User Delete Account E2E Test', () => {
       const savedUser = await userRepository.save(userEntity);
 
       const redisKey = `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${token}`;
-      await redisService.set(redisKey, savedUser.id.toString(), 'EX', 600);
+      const accessToken = 'test-access-token';
+      await redisService.set(
+        redisKey,
+        `${savedUser.id}:${accessToken}`,
+        'EX',
+        600,
+      );
 
       // when
       const agent = request.agent(app.getHttpServer());
@@ -69,6 +75,8 @@ describe('User Delete Account E2E Test', () => {
 
       // then
       expect(response.status).toBe(200);
+
+      await redisService.del(redisKey);
     });
 
     it('유효하지 않은 토큰으로 회원탈퇴 확정 시 404 에러가 발생한다.', async () => {
@@ -88,16 +96,6 @@ describe('User Delete Account E2E Test', () => {
     it('만료된 토큰으로 회원탈퇴 확정 시 404 에러가 발생한다.', async () => {
       // given
       const token = 'expired-token';
-      const redisKey = `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${token}`;
-
-      // Redis에 저장했다가 삭제하여 만료 상태 시뮬레이션
-      await redisService.set(
-        redisKey,
-        JSON.stringify({ userId: 999, email: 'test@test.com' }),
-        'EX',
-        1,
-      );
-      await new Promise((resolve) => setTimeout(resolve, 1100));
 
       // when
       const agent = request.agent(app.getHttpServer());

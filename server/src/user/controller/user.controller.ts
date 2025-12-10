@@ -8,6 +8,7 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   Res,
   UseGuards,
 } from '@nestjs/common';
@@ -20,7 +21,7 @@ import { ApiCertificateUser } from '../api-docs/certificateUser.api-docs';
 import { CertificateUserRequestDto } from '../dto/request/certificateUser.dto';
 import { CheckEmailDuplicationRequestDto } from '../dto/request/checkEmailDuplication.dto';
 import { LoginUserRequestDto } from '../dto/request/loginUser.dto';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { ApiLoginUser } from '../api-docs/loginUser.api-docs';
 import {
   JwtGuard,
@@ -131,8 +132,17 @@ export class UserController {
   @Post('/delete-account/request')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtGuard)
-  async requestDeleteAccount(@CurrentUser() user: Payload) {
-    await this.userService.requestDeleteAccount(user.id);
+  async requestDeleteAccount(
+    @CurrentUser() user: Payload,
+    @Req() req: Request,
+  ) {
+    const accessToken = req.headers.authorization?.replace('Bearer ', '');
+    const refreshToken = req.cookies['refresh_token'];
+    await this.userService.requestDeleteAccount(
+      user.id,
+      accessToken,
+      refreshToken,
+    );
     return ApiResponse.responseWithNoContent(
       '회원탈퇴 신청이 성공적으로 처리되었습니다. 이메일을 확인해주세요.',
     );
