@@ -57,7 +57,7 @@ describe(`POST ${URL} E2E Test`, () => {
     // DB, Redis when
     const savedComment = await commentRepository.findOneBy({
       comment: requestDto.comment,
-      feed: feed,
+      feed: { id: feed.id },
     });
 
     // DB, Redis then
@@ -115,7 +115,7 @@ describe(`POST ${URL} E2E Test`, () => {
     // DB, Redis when
     const savedComment = await commentRepository.findOneBy({
       comment: requestDto.comment,
-      feed,
+      feed: { id: feed.id },
     });
 
     // DB, Redis then
