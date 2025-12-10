@@ -2,13 +2,13 @@ import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as supertest from 'supertest';
 import { UploadFileQueryRequestDto } from '../../../src/file/dto/request/uploadFile.dto';
 import { FileUploadType } from '../../../src/common/disk/fileValidator';
-import { UserService } from '../../../src/user/service/user.service';
 import { User } from '../../../src/user/entity/user.entity';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../fixture/user.fixture';
 import * as path from 'path';
 import TestAgent from 'supertest/lib/agent';
 import { FileRepository } from '../../../src/file/repository/file.repository';
+import { createAccessToken } from '../../jest.setup';
 
 jest.mock('../../../src/common/disk/fileUtils', () => ({
   ...jest.requireActual('../../../src/common/disk/fileUtils'),
@@ -23,28 +23,15 @@ describe(`POST ${URL} E2E Test`, () => {
   let agent: TestAgent;
   let user: User;
   let fileRepository: FileRepository;
-  let createAccessToken: (arg0?: number) => string;
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
     fileRepository = app.get(FileRepository);
     const userRepository = app.get(UserRepository);
-    const userService = app.get(UserService);
     user = await userRepository.save(
       await UserFixture.createUserCryptFixture(),
     );
-
-    createAccessToken = (notFoundId?: number) =>
-      userService.createToken(
-        {
-          id: notFoundId ?? user.id,
-          email: user.email,
-          userName: user.userName,
-          role: 'user',
-        },
-        'access',
-      );
   });
 
   it('[401] 인증되지 않은 사용자가 요청할 경우 파일 업로드를 실패한다.', async () => {
@@ -67,7 +54,7 @@ describe(`POST ${URL} E2E Test`, () => {
     const requestDto = new UploadFileQueryRequestDto({
       uploadType: FileUploadType.PROFILE_IMAGE,
     });
-    const accessToken = createAccessToken();
+    const accessToken = createAccessToken(user);
 
     // Http when
     const response = await agent
@@ -88,7 +75,7 @@ describe(`POST ${URL} E2E Test`, () => {
     });
 
     const filePath = path.resolve(__dirname, '../../fixture/test.png');
-    const accessToken = createAccessToken();
+    const accessToken = createAccessToken(user);
 
     // Http when
     const response = await agent

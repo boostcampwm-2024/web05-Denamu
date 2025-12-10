@@ -119,7 +119,7 @@ export class UserService {
     return CreateAccessTokenResponseDto.toResponseDto(accessToken);
   }
 
-  createToken(userInformation: Payload, mode: string) {
+  createToken(userInformation: Payload, mode: 'refresh' | 'access') {
     const payload = {
       id: userInformation.id,
       email: userInformation.email,

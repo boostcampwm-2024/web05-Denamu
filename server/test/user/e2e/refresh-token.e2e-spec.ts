@@ -4,33 +4,23 @@ import * as supertest from 'supertest';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../fixture/user.fixture';
 import TestAgent from 'supertest/lib/agent';
+import { User } from '../../../src/user/entity/user.entity';
+import { createRefreshToken } from '../../jest.setup';
 
 const URL = '/api/user/refresh-token';
 
 describe(`POST ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
-  let createRefreshToken: (arg0?: number) => string;
+  let user: User;
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
-    const userService = app.get(UserService);
     const userRepository = app.get(UserRepository);
-    const user = await userRepository.save(
+    user = await userRepository.save(
       await UserFixture.createUserCryptFixture(),
     );
-
-    createRefreshToken = (notFoundId?: number) =>
-      userService.createToken(
-        {
-          id: notFoundId ?? user.id,
-          email: user.email,
-          userName: user.userName,
-          role: 'user',
-        },
-        'refresh',
-      );
   });
 
   it('[401] Refresh Token이 없을 경우 Access Token 발급을 실패한다.', async () => {
@@ -45,7 +35,7 @@ describe(`POST ${URL} E2E Test`, () => {
 
   it('[200] Refresh Token이 있을 경우 Access Token 발급을 성공한다.', async () => {
     // given
-    const refreshToken = createRefreshToken();
+    const refreshToken = createRefreshToken(user);
 
     // Http when
     const response = await agent

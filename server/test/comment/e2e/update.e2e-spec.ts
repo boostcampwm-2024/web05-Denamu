@@ -1,6 +1,5 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as supertest from 'supertest';
-import { UserService } from '../../../src/user/service/user.service';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../fixture/user.fixture';
 import { Comment } from '../../../src/comment/entity/comment.entity';
@@ -12,6 +11,8 @@ import { CommentFixture } from '../../fixture/comment.fixture';
 import { UpdateCommentRequestDto } from '../../../src/comment/dto/request/updateComment.dto';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
 import TestAgent from 'supertest/lib/agent';
+import { createAccessToken } from '../../jest.setup';
+import { User } from '../../../src/user/entity/user.entity';
 
 const URL = '/api/comment';
 
@@ -19,20 +20,16 @@ describe(`PATCH ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let comment: Comment;
+  let user: User;
   let commentRepository: CommentRepository;
-  let createAccessToken: (arg0?: number) => string;
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
     commentRepository = app.get(CommentRepository);
-    const userService = app.get(UserService);
     const userRepository = app.get(UserRepository);
     const rssAcceptRepository = app.get(RssAcceptRepository);
     const feedRepository = app.get(FeedRepository);
-    const user = await userRepository.save(
-      await UserFixture.createUserCryptFixture(),
-    );
     const rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
@@ -40,20 +37,13 @@ describe(`PATCH ${URL} E2E Test`, () => {
       FeedFixture.createFeedFixture(rssAccept),
     );
 
+    user = await userRepository.save(
+      await UserFixture.createUserCryptFixture(),
+    );
+
     comment = await commentRepository.save(
       CommentFixture.createCommentFixture(feed, user),
     );
-
-    createAccessToken = (notFoundId?: number) =>
-      userService.createToken(
-        {
-          id: notFoundId ?? user.id,
-          email: user.email,
-          userName: user.userName,
-          role: 'user',
-        },
-        'access',
-      );
   });
 
   it('[401] 로그인이 되어있지 않을 경우 댓글 수정을 실패한다.', async () => {
@@ -86,7 +76,7 @@ describe(`PATCH ${URL} E2E Test`, () => {
       commentId: Number.MAX_SAFE_INTEGER,
       newComment: 'newComment',
     });
-    const accessToken = createAccessToken();
+    const accessToken = createAccessToken(user);
 
     // Http when
     const response = await agent
@@ -114,7 +104,7 @@ describe(`PATCH ${URL} E2E Test`, () => {
       commentId: comment.id,
       newComment: 'newComment',
     });
-    const accessToken = createAccessToken(Number.MAX_SAFE_INTEGER);
+    const accessToken = createAccessToken({ id: Number.MAX_SAFE_INTEGER });
 
     // Http when
     const response = await agent
@@ -142,7 +132,7 @@ describe(`PATCH ${URL} E2E Test`, () => {
       commentId: comment.id,
       newComment: 'newComment',
     });
-    const accessToken = createAccessToken();
+    const accessToken = createAccessToken(user);
 
     // Http when
     const response = await agent

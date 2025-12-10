@@ -1,5 +1,4 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
-import { UserService } from '../../../src/user/service/user.service';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
@@ -13,6 +12,7 @@ import { ManageLikeRequestDto } from '../../../src/like/dto/request/manageLike.d
 import * as supertest from 'supertest';
 import { LikeRepository } from '../../../src/like/repository/like.repository';
 import TestAgent from 'supertest/lib/agent';
+import { createAccessToken } from '../../jest.setup';
 
 const URL = '/api/like';
 
@@ -23,13 +23,11 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
   let feed: Feed;
   let agent: TestAgent;
   let likeRepository: LikeRepository;
-  let createAccessToken: (arg0?: number) => string;
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
     likeRepository = app.get(LikeRepository);
-    const userService = app.get(UserService);
     const userRepository = app.get(UserRepository);
     const rssAcceptRepository = app.get(RssAcceptRepository);
     const feedRepository = app.get(FeedRepository);
@@ -41,16 +39,6 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
       RssAcceptFixture.createRssAcceptFixture(),
     );
     feed = await feedRepository.save(FeedFixture.createFeedFixture(rssAccept));
-    createAccessToken = (notFoundId?: number) =>
-      userService.createToken(
-        {
-          id: notFoundId ?? user.id,
-          email: user.email,
-          userName: user.userName,
-          role: 'user',
-        },
-        'access',
-      );
   });
 
   it('[401] 로그인이 되어 있지 않을 경우 좋아요 삭제를 실패한다.', async () => {
@@ -73,7 +61,7 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
     const requestDto = new ManageLikeRequestDto({
       feedId: Number.MAX_SAFE_INTEGER,
     });
-    const accessToken = createAccessToken();
+    const accessToken = createAccessToken(user);
 
     // Http when
     const response = await agent
@@ -91,7 +79,7 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
     const requestDto = new ManageLikeRequestDto({
       feedId: feed.id,
     });
-    const accessToken = createAccessToken();
+    const accessToken = createAccessToken(user);
 
     // Http when
     const response = await agent
@@ -114,7 +102,7 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
     const requestDto = new ManageLikeRequestDto({
       feedId: feed.id,
     });
-    const accessToken = createAccessToken();
+    const accessToken = createAccessToken(user);
 
     // Http when
     const response = await agent

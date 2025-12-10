@@ -1,6 +1,5 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as supertest from 'supertest';
-import { UserService } from '../../../src/user/service/user.service';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { User } from '../../../src/user/entity/user.entity';
 import { UserFixture } from '../../fixture/user.fixture';
@@ -8,6 +7,7 @@ import { FileRepository } from '../../../src/file/repository/file.repository';
 import { File } from '../../../src/file/entity/file.entity';
 import { FileFixture } from '../../fixture/file.fixture';
 import TestAgent from 'supertest/lib/agent';
+import { createAccessToken } from '../../jest.setup';
 
 const URL = '/api/file';
 
@@ -17,28 +17,15 @@ describe(`DELETE ${URL}/{fileId} E2E Test`, () => {
   let user: User;
   let fileRepository: FileRepository;
   let file: File;
-  let createAccessToken: (arg0?: number) => string;
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
     fileRepository = app.get(FileRepository);
     const userRepository = app.get(UserRepository);
-    const userService = app.get(UserService);
     user = await userRepository.save(
       await UserFixture.createUserCryptFixture(),
     );
-
-    createAccessToken = (notFoundId?: number) =>
-      userService.createToken(
-        {
-          id: notFoundId ?? user.id,
-          email: user.email,
-          userName: user.userName,
-          role: 'user',
-        },
-        'access',
-      );
   });
 
   it('[401] 파일에 삭제 권한이 없을 경우 파일 삭제를 실패한다.', async () => {
@@ -56,7 +43,7 @@ describe(`DELETE ${URL}/{fileId} E2E Test`, () => {
     const fs = await import('fs/promises');
     jest.spyOn(fs, 'access').mockResolvedValue(undefined);
     jest.spyOn(fs, 'unlink').mockResolvedValue(undefined);
-    const accessToken = createAccessToken();
+    const accessToken = createAccessToken(user);
 
     // Http when
     const response = await agent
@@ -75,7 +62,7 @@ describe(`DELETE ${URL}/{fileId} E2E Test`, () => {
     const fs = await import('fs/promises');
     jest.spyOn(fs, 'access').mockResolvedValue(undefined);
 
-    const accessToken = createAccessToken();
+    const accessToken = createAccessToken(user);
 
     // Http when
     const response = await agent
@@ -101,7 +88,7 @@ describe(`DELETE ${URL}/{fileId} E2E Test`, () => {
     file = await fileRepository.save(FileFixture.createFileFixture({ user }));
     const fs = await import('fs/promises');
     jest.spyOn(fs, 'unlink').mockResolvedValue(undefined);
-    const accessToken = createAccessToken();
+    const accessToken = createAccessToken(user);
 
     // Http when
     const response = await agent
@@ -128,7 +115,7 @@ describe(`DELETE ${URL}/{fileId} E2E Test`, () => {
     const fs = await import('fs/promises');
     jest.spyOn(fs, 'access').mockResolvedValue(undefined);
     jest.spyOn(fs, 'unlink').mockResolvedValue(undefined);
-    const accessToken = createAccessToken();
+    const accessToken = createAccessToken(user);
 
     // Http when
     const response = await agent
