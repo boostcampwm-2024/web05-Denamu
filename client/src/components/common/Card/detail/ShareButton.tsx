@@ -21,13 +21,13 @@ type ButtonType = {
   shareKakao: () => void;
 };
 export default function ShareButton({ post }: { post: Post }) {
-  const postUrl = `https://denamu.site/${post.id}`;
+  const postUrl = `https://denamu.dev/${post.id}`;
   const { toast } = useCustomToast();
   const isMobile = useMediaStore((state) => state.isMobile);
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(`https://denamu.site/${post.id}`);
+      await navigator.clipboard.writeText(`https://denamu.dev/${post.id}`);
       toast(TOAST_MESSAGES.COPY_COMPLETE);
     } catch (error) {
       console.error(error);

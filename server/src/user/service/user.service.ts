@@ -9,7 +9,6 @@ import { RegisterUserRequestDto } from '../dto/request/registerUser.dto';
 import * as uuid from 'uuid';
 import { RedisService } from '../../common/redis/redis.service';
 import { REFRESH_TOKEN_TTL, SALT_ROUNDS } from '../constant/user.constants';
-import { EmailService } from '../../common/email/email.service';
 import { LoginUserRequestDto } from '../dto/request/loginUser.dto';
 import { Response } from 'express';
 import * as bcrypt from 'bcrypt';
@@ -22,13 +21,14 @@ import { FileService } from '../../file/service/file.service';
 import { CheckEmailDuplicationResponseDto } from '../dto/response/checkEmailDuplication.dto';
 import { REDIS_KEYS } from '../../common/redis/redis.constant';
 import { CreateAccessTokenResponseDto } from '../dto/response/createAccessToken.dto';
+import { EmailProducer } from '../../common/email/email.producer';
 
 @Injectable()
 export class UserService {
   constructor(
     private readonly userRepository: UserRepository,
     private readonly redisService: RedisService,
-    private readonly emailService: EmailService,
+    private readonly emailProducer: EmailProducer,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly fileService: FileService,
@@ -64,15 +64,17 @@ export class UserService {
     const newUser = registerDto.toEntity();
     newUser.password = await this.createHashedPassword(registerDto.password);
 
-    const registerCode = uuid.v4();
+    const userRegisterCode = uuid.v4();
     await this.redisService.set(
-      `${REDIS_KEYS.USER_AUTH_KEY}:${registerCode}`,
+      `${REDIS_KEYS.USER_AUTH_KEY}:${userRegisterCode}`,
       JSON.stringify(newUser),
       'EX',
       600,
     );
-
-    this.emailService.sendUserCertificationMail(newUser, registerCode);
+    await this.emailProducer.produceUserCertification(
+      newUser,
+      userRegisterCode,
+    );
   }
 
   async certificateUser(uuid: string): Promise<void> {
@@ -202,15 +204,14 @@ export class UserService {
       return;
     }
 
-    const forgotPasswordUUID = uuid.v4();
+    const forgotPasswordCode = uuid.v4();
     await this.redisService.set(
-      `${REDIS_KEYS.USER_RESET_PASSWORD_KEY}:${forgotPasswordUUID}`,
+      `${REDIS_KEYS.USER_RESET_PASSWORD_KEY}:${forgotPasswordCode}`,
       JSON.stringify(user.id),
       'EX',
       600,
     );
-
-    this.emailService.sendPasswordResetEmail(user, forgotPasswordUUID);
+    await this.emailProducer.producePasswordReset(user, forgotPasswordCode);
   }
 
   async resetPassword(uuid: string, password: string): Promise<void> {
@@ -238,15 +239,14 @@ export class UserService {
   async requestDeleteAccount(userId: number): Promise<void> {
     const user = await this.getUser(userId);
 
-    const token = uuid.v4();
+    const userDeleteCode = uuid.v4();
     await this.redisService.set(
-      `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${token}`,
+      `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${userDeleteCode}`,
       user.id.toString(),
       'EX',
       600,
     );
-
-    this.emailService.sendDeleteAccountMail(user, token);
+    await this.emailProducer.produceAccountDeletion(user, userDeleteCode);
   }
 
   async confirmDeleteAccount(token: string): Promise<void> {

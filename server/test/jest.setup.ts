@@ -1,4 +1,4 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { AppModule } from '../src/app.module';
 import { WinstonLoggerService } from '../src/common/logger/logger.service';
@@ -7,7 +7,6 @@ import { HttpExceptionsFilter } from '../src/common/filters/http.exception.filte
 import * as cookieParser from 'cookie-parser';
 import { TestService } from '../src/common/test/test.service';
 import { RedisService } from '../src/common/redis/redis.service';
-import { RabbitMQManager } from '../src/common/rabbitmq/rabbitmq.manager';
 import { UserService } from '../src/user/service/user.service';
 
 const globalAny: any = global;
@@ -45,8 +44,6 @@ afterAll(async () => {
   await redisService.flushall();
   redisService.disconnect();
 
-  await cleanupRabbitMQ();
-
   console.log('Closing NestJS application...');
   if (globalAny.testApp) {
     await globalAny.testApp.close();
@@ -55,22 +52,8 @@ afterAll(async () => {
   console.log('NestJS application closed.');
 });
 
-async function cleanupRabbitMQ() {
-  try {
-    const rabbitMQManager: RabbitMQManager =
-      globalAny.testApp.get(RabbitMQManager);
-
-    if (rabbitMQManager.connection) {
-      await rabbitMQManager.connection.close();
-      console.log('RabbitMQ connection closed.');
-    }
-  } catch (error) {
-    console.error('Error cleaning up RabbitMQ:', error);
-  }
-}
-
 export const createAccessToken = (payload?: {
-  id?: number;
+  id: number;
   email?: string;
   userName?: string;
   role?: string;
@@ -89,7 +72,7 @@ export const createAccessToken = (payload?: {
 };
 
 export const createRefreshToken = (payload?: {
-  id?: number;
+  id: number;
   email?: string;
   userName?: string;
   role?: string;

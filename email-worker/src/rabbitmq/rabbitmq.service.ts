@@ -2,10 +2,10 @@ import { inject, injectable } from 'tsyringe';
 import { RabbitMQManager } from './rabbitmq.manager';
 import { ConsumeMessage } from 'amqplib/properties';
 import { DEPENDENCY_SYMBOLS } from '../types/dependency-symbols';
-import logger from './logger';
+import logger from '../logger';
 
 @injectable()
-export class RabbitMQConnection {
+export class RabbitmqService {
   private nameTag: string;
 
   constructor(
@@ -15,10 +15,9 @@ export class RabbitMQConnection {
     this.nameTag = '[RabbitMQ]';
   }
 
-  async sendMessage<T>(exchange: string, routingKey: string, message: T) {
+  async sendMessage(exchange: string, routingKey: string, message: string) {
     const channel = await this.rabbitMQManager.getChannel();
-    const stringifiedMessage = JSON.stringify(message);
-    channel.publish(exchange, routingKey, Buffer.from(stringifiedMessage));
+    channel.publish(exchange, routingKey, Buffer.from(message));
   }
 
   async consumeMessage<T>(
@@ -35,6 +34,12 @@ export class RabbitMQConnection {
 
         channel.ack(message);
       } catch (error) {
+        if (error.message === 'SHUTDOWN_IN_PROGRESS') {
+          logger.info(`${this.nameTag} Shutdown 중, 메시지를 큐에 반환`);
+          channel.nack(message, false, true);
+          return;
+        }
+
         logger.error(
           `${this.nameTag} 메시지 처리 중 오류 발생
           오류 메시지: ${error.message}

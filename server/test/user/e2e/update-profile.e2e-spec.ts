@@ -13,8 +13,8 @@ const URL = '/api/user/profile';
 describe(`PATCH ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
-  let fileService: FileService;
   let userRepository: UserRepository;
+  let fileService: FileService;
   let user: User;
 
   beforeAll(async () => {
@@ -25,8 +25,7 @@ describe(`PATCH ${URL} E2E Test`, () => {
     user = await userRepository.save(
       await UserFixture.createUserCryptFixture({
         userName: '기존이름',
-        profileImage:
-          'https://denamu.site/objects/PROFILE_IMAGE/20000902/uuid_old.png',
+        profileImage: 'https://url/objects/PROFILE_IMAGE/20000902/uuid_old.png',
         introduction: '기존 소개글입니다.',
       }),
     );
@@ -40,8 +39,7 @@ describe(`PATCH ${URL} E2E Test`, () => {
     // given
     const requestDto = new UpdateUserRequestDto({
       userName: '변경된이름',
-      profileImage:
-        'https://denamu.site/objects/PROFILE_IMAGE/20000902/uuid.png',
+      profileImage: 'https://url/objects/PROFILE_IMAGE/20000902/uuid.png',
       introduction: '변경된 소개글입니다.',
     });
 
@@ -58,8 +56,7 @@ describe(`PATCH ${URL} E2E Test`, () => {
     // given
     const requestDto = new UpdateUserRequestDto({
       userName: '변경된이름',
-      profileImage:
-        'https://denamu.site/objects/PROFILE_IMAGE/20000902/uuid.png',
+      profileImage: 'https://url/objects/PROFILE_IMAGE/20000902/uuid.png',
       introduction: '변경된 소개글입니다.',
     });
     const accessToken = createAccessToken({ id: Number.MAX_SAFE_INTEGER });
@@ -81,8 +78,7 @@ describe(`PATCH ${URL} E2E Test`, () => {
     const accessToken = createAccessToken(user);
     const requestDto = new UpdateUserRequestDto({
       userName: '변경된이름',
-      profileImage:
-        'https://denamu.site/objects/PROFILE_IMAGE/20000902/uuid.png',
+      profileImage: 'https://url/objects/PROFILE_IMAGE/20000902/uuid.png',
       introduction: '변경된 소개글입니다.',
     });
 
