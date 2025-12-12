@@ -15,6 +15,9 @@ describe(`PATCH ${URL} E2E Test`, () => {
   let agent: TestAgent;
   let redisService: RedisService;
   let userRepository: UserRepository;
+  const passwordPatchCode = 'user-password-confirm';
+  const redisKeyMake = (data: string) =>
+    `${REDIS_KEYS.USER_RESET_PASSWORD_KEY}:${data}`;
 
   beforeAll(async () => {
     app = global.testApp;
@@ -26,7 +29,7 @@ describe(`PATCH ${URL} E2E Test`, () => {
   it('[404] 존재하지 않는 비밀번호 세션 ID를 통해 비밀번호 변경 요청을 할 경우 비밀번호 변경을 실패한다.', async () => {
     // given
     const requestDto = new ResetPasswordRequestDto({
-      uuid: 'non-existent-or-expired-uuid',
+      uuid: `Wrong${passwordPatchCode}`,
       password: 'test1234@',
     });
 
@@ -37,19 +40,28 @@ describe(`PATCH ${URL} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedPasswordCode = await redisService.get(
+      redisKeyMake(passwordPatchCode),
+    );
+
+    // DB, Redis then
+    expect(savedPasswordCode).toBeNull();
   });
 
   it('[200] 존재하는 비밀번호 세션 ID를 통해 비밀번호 변경 요청을 할 경우 비밀번호 변경을 성공한다.', async () => {
     // given
-    const uuid = 'test-reset-password-uuid';
-    const redisKey = `${REDIS_KEYS.USER_RESET_PASSWORD_KEY}:${uuid}`;
     const user = await userRepository.save(UserFixture.createUserFixture());
     const updatedPassword = 'test1234@';
     const requestDto = new ResetPasswordRequestDto({
-      uuid,
+      uuid: passwordPatchCode,
       password: updatedPassword,
     });
-    await redisService.set(redisKey, JSON.stringify(user.id));
+    await redisService.set(
+      redisKeyMake(passwordPatchCode),
+      JSON.stringify(user.id),
+    );
 
     // Http when
     const response = await agent.patch(URL).send(requestDto);
@@ -61,12 +73,14 @@ describe(`PATCH ${URL} E2E Test`, () => {
 
     // DB, Redis when
     const savedUser = await userRepository.findOneBy({ id: user.id });
-    const savedUUID = await redisService.get(redisKey);
+    const savedPasswordCode = await redisService.get(
+      redisKeyMake(passwordPatchCode),
+    );
 
     // DB, Redis then
     expect(
       await bcrypt.compare(updatedPassword, savedUser.password),
     ).toBeTruthy();
-    expect(savedUUID).toBeNull();
+    expect(savedPasswordCode).toBeNull();
   });
 });

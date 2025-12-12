@@ -15,6 +15,8 @@ describe(`POST ${URL} E2E Test`, () => {
   let agent: TestAgent;
   let redisService: RedisService;
   let userRepository: UserRepository;
+  const userRegisterCode = 'user-register-certificate';
+  const redisKeyMake = (data: string) => `${REDIS_KEYS.USER_AUTH_KEY}:${data}`;
 
   beforeAll(async () => {
     app = global.testApp;
@@ -26,7 +28,7 @@ describe(`POST ${URL} E2E Test`, () => {
   it('[404] 존재하지 않거나 만료된 UUID로 인증을 요청할 경우 회원 가입 인증을 실패한다.', async () => {
     // given
     const requestDto = new CertificateUserRequestDto({
-      uuid: 'non-existent-or-expired-uuid',
+      uuid: `Wrong${userRegisterCode}`,
     });
 
     // Http when
@@ -38,13 +40,16 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(data).toBeUndefined();
   });
 
-  it('[200] 올바른 UUID로 인증을 요청할 경우 회원 가입 인증을 성공한다.', async () => {
+  it('[200] 올바른 인증 코드로 인증을 요청할 경우 회원 가입 인증을 성공한다.', async () => {
     // given
-    const uuid = 'test-certificate-uuid';
     const userEntity = await UserFixture.createUserCryptFixture();
-    const redisKey = `${REDIS_KEYS.USER_AUTH_KEY}:${uuid}`;
-    const requestDto = new CertificateUserRequestDto({ uuid });
-    await redisService.set(redisKey, JSON.stringify(userEntity));
+    const requestDto = new CertificateUserRequestDto({
+      uuid: userRegisterCode,
+    });
+    await redisService.set(
+      redisKeyMake(userRegisterCode),
+      JSON.stringify(userEntity),
+    );
 
     // Http when
     const response = await agent.post(URL).send(requestDto);
@@ -59,10 +64,12 @@ describe(`POST ${URL} E2E Test`, () => {
       email: userEntity.email,
       userName: userEntity.userName,
     });
-    const savedUUID = await redisService.get(redisKey);
+    const savedRegisterCode = await redisService.get(
+      redisKeyMake(userRegisterCode),
+    );
 
     // DB, Redis then
-    expect(savedUUID).toBeNull();
+    expect(savedRegisterCode).toBeNull();
     expect(savedUser).not.toBeUndefined();
     expect(
       await bcrypt.compare(

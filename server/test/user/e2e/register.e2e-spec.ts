@@ -4,6 +4,11 @@ import * as supertest from 'supertest';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../fixture/user.fixture';
 import TestAgent from 'supertest/lib/agent';
+import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
+import { RedisService } from '../../../src/common/redis/redis.service';
+import * as uuid from 'uuid';
+import * as bcrypt from 'bcrypt';
+import { SALT_ROUNDS } from '../../../src/user/constant/user.constants';
 
 const URL = '/api/user/register';
 
@@ -11,11 +16,19 @@ describe(`POST ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let userRepository: UserRepository;
+  let redisService: RedisService;
+  const userRegisterCode = 'user-register-request';
+  const redisKeyMake = (data: string) => `${REDIS_KEYS.USER_AUTH_KEY}:${data}`;
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
     userRepository = app.get(UserRepository);
+    redisService = app.get(RedisService);
+  });
+
+  beforeEach(() => {
+    jest.spyOn(uuid, 'v4').mockReturnValue(userRegisterCode as any);
   });
 
   it('[409] 이미 가입된 이메일을 입력할 경우 회원가입을 실패한다.', async () => {
@@ -34,6 +47,14 @@ describe(`POST ${URL} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.CONFLICT);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedRegisterCode = await redisService.get(
+      redisKeyMake(userRegisterCode),
+    );
+
+    // DB, Redis then
+    expect(savedRegisterCode).toBeNull();
 
     // cleanup
     await userRepository.delete(user.id);
@@ -54,6 +75,20 @@ describe(`POST ${URL} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.CREATED);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedRegisterCode = JSON.parse(
+      await redisService.get(redisKeyMake(userRegisterCode)),
+    );
+
+    // DB, Redis then
+    expect(
+      await bcrypt.compare(requestDto.password, savedRegisterCode.password),
+    ).toBeTruthy();
+    expect(savedRegisterCode).toMatchObject({
+      email: requestDto.email,
+      userName: requestDto.userName,
+    });
 
     // cleanup
     await userRepository.delete({ email: requestDto.email });

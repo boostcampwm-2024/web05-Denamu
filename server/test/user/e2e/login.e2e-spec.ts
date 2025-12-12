@@ -15,7 +15,7 @@ describe(`POST ${URL} E2E Test`, () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
     const userRepository = app.get(UserRepository);
-    await userRepository.save(await UserFixture.createUserCryptFixture());
+    await userRepository.insert(await UserFixture.createUserCryptFixture());
   });
 
   it('[401] 아이디가 틀렸을 경우 로그인을 실패한다.', async () => {

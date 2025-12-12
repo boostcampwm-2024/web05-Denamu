@@ -6,7 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { RegisterUserRequestDto } from '../dto/request/registerUser.dto';
-import { v4 as uuidv4 } from 'uuid';
+import * as uuid from 'uuid';
 import { RedisService } from '../../common/redis/redis.service';
 import { REFRESH_TOKEN_TTL, SALT_ROUNDS } from '../constant/user.constants';
 import { EmailService } from '../../common/email/email.service';
@@ -64,15 +64,15 @@ export class UserService {
     const newUser = registerDto.toEntity();
     newUser.password = await this.createHashedPassword(registerDto.password);
 
-    const uuid = uuidv4();
+    const registerCode = uuid.v4();
     await this.redisService.set(
-      `${REDIS_KEYS.USER_AUTH_KEY}:${uuid}`,
+      `${REDIS_KEYS.USER_AUTH_KEY}:${registerCode}`,
       JSON.stringify(newUser),
       'EX',
       600,
     );
 
-    this.emailService.sendUserCertificationMail(newUser, uuid);
+    this.emailService.sendUserCertificationMail(newUser, registerCode);
   }
 
   async certificateUser(uuid: string): Promise<void> {
@@ -202,15 +202,15 @@ export class UserService {
       return;
     }
 
-    const uuid = uuidv4();
+    const forgotPasswordUUID = uuid.v4();
     await this.redisService.set(
-      `${REDIS_KEYS.USER_RESET_PASSWORD_KEY}:${uuid}`,
+      `${REDIS_KEYS.USER_RESET_PASSWORD_KEY}:${forgotPasswordUUID}`,
       JSON.stringify(user.id),
       'EX',
       600,
     );
 
-    this.emailService.sendPasswordResetEmail(user, uuid);
+    this.emailService.sendPasswordResetEmail(user, forgotPasswordUUID);
   }
 
   async resetPassword(uuid: string, password: string): Promise<void> {
@@ -238,7 +238,7 @@ export class UserService {
   async requestDeleteAccount(userId: number): Promise<void> {
     const user = await this.getUser(userId);
 
-    const token = uuidv4();
+    const token = uuid.v4();
     await this.redisService.set(
       `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${token}`,
       user.id.toString(),
