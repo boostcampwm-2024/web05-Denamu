@@ -2,7 +2,7 @@ import { join } from 'path';
 import { ensureDirSync } from 'fs-extra';
 import { promises as fs } from 'fs';
 import { existsSync } from 'fs';
-import { v4 as uuidv4 } from 'uuid';
+import * as uuid from 'uuid';
 import { BadRequestException } from '@nestjs/common';
 import { FileUploadType } from './fileValidator';
 
@@ -16,7 +16,7 @@ export const generateFilePath = (originalPath: string): string => {
 
 export const getFileName = (file: any): string => {
   const ext = file.originalname.split('.').pop()?.toLowerCase() || '';
-  return `${uuidv4()}.${ext}`;
+  return `${uuid.v4()}.${ext}`;
 };
 
 export const createDirectoryIfNotExists = (uploadType: string): string => {
