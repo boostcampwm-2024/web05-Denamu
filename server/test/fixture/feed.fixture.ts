@@ -8,18 +8,18 @@ export class FeedFixture {
     index: number = 1,
   ): Feed {
     const feed = new Feed();
-    const indexTime = new Date(Date.now() + index * 10000);
+    const indexTime = new Date('2025-11-21');
 
     Object.assign(feed, {
       ...{
-        createdAt: indexTime,
+        createdAt: new Date(indexTime.getTime() + index * 60 * 60 * 1000),
         title: `test${index}`,
         viewCount: 1,
         path: `https://test.com/test${index}`,
         thumbnail: `https://test.com/test${index}.png`,
         summary: `test summary ${index}`,
-        likes: 0,
-        comments: 0,
+        likeCount: 0,
+        commentCount: 0,
       },
       blog: rssAccept,
     });

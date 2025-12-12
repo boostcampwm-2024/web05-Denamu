@@ -1,60 +1,143 @@
-import { INestApplication } from '@nestjs/common';
-import { LoginAdminRequestDto } from '../../../src/admin/dto/request/loginAdmin.dto';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import { RegisterAdminRequestDto } from '../../../src/admin/dto/request/registerAdmin.dto';
-import * as request from 'supertest';
+import * as supertest from 'supertest';
 import { AdminFixture } from '../../fixture/admin.fixture';
 import { AdminRepository } from '../../../src/admin/repository/admin.repository';
+import TestAgent from 'supertest/lib/agent';
+import { RedisService } from '../../../src/common/redis/redis.service';
+import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
+import * as bcrypt from 'bcrypt';
+import { Admin } from '../../../src/admin/entity/admin.entity';
 
-describe('POST api/admin/register E2E Test', () => {
+const URL = '/api/admin/register';
+
+describe(`POST ${URL} E2E Test`, () => {
   let app: INestApplication;
-
-  const loginAdminDto = new LoginAdminRequestDto({
-    loginId: 'test1234',
-    password: 'test1234!',
-  });
-
-  const newAdminDto = new RegisterAdminRequestDto({
-    loginId: 'testNewAdminId',
-    password: 'testNewAdminPassword!',
-  });
+  let agent: TestAgent;
+  let adminRepository: AdminRepository;
+  let admin: Admin;
+  const sessionKey = 'admin-register-session-key';
+  const redisKeyMake = (data: string) => `${REDIS_KEYS.ADMIN_AUTH_KEY}:${data}`;
 
   beforeAll(async () => {
     app = global.testApp;
-    const adminRepository = app.get(AdminRepository);
-    await adminRepository.insert(await AdminFixture.createAdminCryptFixture());
+    agent = supertest(app.getHttpServer());
+    adminRepository = app.get(AdminRepository);
+    const redisService = app.get(RedisService);
+    admin = await adminRepository.save(
+      await AdminFixture.createAdminCryptFixture(),
+    );
+    await redisService.set(redisKeyMake(sessionKey), admin.loginId);
   });
 
-  it('관리자가 로그인되어 있으면 다른 관리자 계정 회원가입을 할 수 있다.', async () => {
-    //given
-    const agent = request.agent(app.getHttpServer());
+  it('[401] 관리자 로그인 쿠키가 없을 경우 회원가입을 실패한다.', async () => {
+    // given
+    const newAdminDto = new RegisterAdminRequestDto({
+      loginId: 'testNewAdminId',
+      password: 'testNewAdminPassword!',
+    });
 
-    //when
-    await agent.post('/api/admin/login').send(loginAdminDto);
-    const response = await agent.post('/api/admin/register').send(newAdminDto);
+    // Http when
+    const response = await agent.post(URL).send(newAdminDto);
 
-    //then
-    expect(response.status).toBe(201);
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedAdmin = await adminRepository.findOneBy({
+      loginId: newAdminDto.loginId,
+    });
+
+    // DB, Redis then
+    expect(savedAdmin).toBeNull();
   });
 
-  it('이미 가입한 ID를 입력하면 관리자 계정을 생성할 수 없다.', async () => {
-    //given
-    const agent = request.agent(app.getHttpServer());
+  it('[401] 관리자 로그인 쿠키가 만료됐을 경우 회원가입을 실패한다.', async () => {
+    // given
+    const newAdminDto = new RegisterAdminRequestDto({
+      loginId: 'testNewAdminId',
+      password: 'testNewAdminPassword!',
+    });
 
-    //when
-    await agent.post('/api/admin/login').send(loginAdminDto);
-    const response = await agent.post('/api/admin/register').send(newAdminDto);
+    // Http when
+    const response = await agent
+      .post(URL)
+      .send(newAdminDto)
+      .set('Cookie', `sessionId=Wrong${sessionKey}`);
 
-    //then
-    expect(response.status).toBe(409);
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedAdmin = await adminRepository.findOneBy({
+      loginId: newAdminDto.loginId,
+    });
+
+    // DB, Redis then
+    expect(savedAdmin).toBeNull();
   });
 
-  it('관리자가 로그아웃 상태면 401 UnAuthorized 예외가 발생한다.', async () => {
-    const agent = request.agent(app.getHttpServer());
+  it('[409] 중복된 ID로 회원가입을 할 경우 다른 관리자 계정 회원가입을 실패한다.', async () => {
+    // given
+    const newAdminDto = new RegisterAdminRequestDto({
+      loginId: AdminFixture.GENERAL_ADMIN.loginId,
+      password: AdminFixture.GENERAL_ADMIN.password,
+    });
 
-    //when
-    const response = await agent.post('/api/admin/register').send(newAdminDto);
+    // Http when
+    const response = await agent
+      .post(URL)
+      .send(newAdminDto)
+      .set('Cookie', `sessionId=${sessionKey}`);
 
-    //then
-    expect(response.status).toBe(401);
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.CONFLICT);
+    expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedAdmin = await adminRepository.findBy({
+      loginId: newAdminDto.loginId,
+    });
+
+    // DB, Redis then
+    expect(savedAdmin.length).toBe(1);
+  });
+
+  it('[201] 관리자 로그인이 되어 있을 경우 다른 관리자 계정 회원가입을 성공한다.', async () => {
+    // given
+    const newAdminDto = new RegisterAdminRequestDto({
+      loginId: 'testNewAdminId',
+      password: 'testNewAdminPassword!',
+    });
+
+    // Http when
+    const response = await agent
+      .post(URL)
+      .send(newAdminDto)
+      .set('Cookie', `sessionId=${sessionKey}`);
+
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.CREATED);
+    expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedAdmin = await adminRepository.findOneBy({
+      loginId: 'testNewAdminId',
+    });
+
+    // DB, Redis then
+    expect(savedAdmin).not.toBeNull();
+    expect(
+      await bcrypt.compare(newAdminDto.password, savedAdmin.password),
+    ).toBeTruthy();
+
+    // cleanup
+    await adminRepository.delete({ loginId: newAdminDto.loginId });
   });
 });

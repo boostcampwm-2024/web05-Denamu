@@ -1,140 +1,112 @@
-import { REDIS_KEYS } from './../../../src/common/redis/redis.constant';
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import {
   RssAcceptRepository,
   RssRepository,
 } from '../../../src/rss/repository/rss.repository';
 import { RssFixture } from '../../fixture/rss.fixture';
-import * as request from 'supertest';
+import * as supertest from 'supertest';
+import { DeleteRssRequestDto } from '../../../src/rss/dto/request/deleteRss.dto';
+import TestAgent from 'supertest/lib/agent';
+import * as uuid from 'uuid';
 import { RedisService } from '../../../src/common/redis/redis.service';
-import { FeedRepository } from '../../../src/feed/repository/feed.repository';
-import { FeedFixture } from '../../fixture/feed.fixture';
-import { CommentRepository } from '../../../src/comment/repository/comment.repository';
-import { CommentFixture } from '../../fixture/comment.fixture';
-import { UserRepository } from '../../../src/user/repository/user.repository';
-import { UserFixture } from '../../fixture/user.fixture';
+import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 
-describe('/api/rss/remove E2E Test', () => {
+const URL = '/api/rss/remove';
+
+describe(`POST ${URL} E2E Test`, () => {
   let app: INestApplication;
+  let agent: TestAgent;
   let rssRepository: RssRepository;
-  let feedRepository: FeedRepository;
   let rssAcceptRepository: RssAcceptRepository;
   let redisService: RedisService;
-  let commentRepository: CommentRepository;
-  let userRepository: UserRepository;
+  const rssDeleteCode = 'rss-remove-request';
+  const redisKeyMake = (data: string) => `${REDIS_KEYS.RSS_REMOVE_KEY}:${data}`;
 
   beforeAll(() => {
     app = global.testApp;
+    agent = supertest(app.getHttpServer());
     rssRepository = app.get(RssRepository);
     rssAcceptRepository = app.get(RssAcceptRepository);
     redisService = app.get(RedisService);
-    feedRepository = app.get(FeedRepository);
-    commentRepository = app.get(CommentRepository);
-    userRepository = app.get(UserRepository);
   });
 
-  describe('POST /api/rss/remove E2E Test', () => {
-    it('[404] RSS가 없을 경우 신청할 수 없다.', async () => {
-      // given
-      // when
-      const response = await request(app.getHttpServer())
-        .post('/api/rss/remove')
-        .send({
-          blogUrl: 'https://test.com',
-          userName: 'test',
-          email: 'test@test.com',
-        });
-      // then
-      expect(response.status).toBe(404);
-    });
-
-    it('[200] 대기 RSS가 있을 경우 신청할 수 있다.', async () => {
-      // given
-      const rss = await rssRepository.save(RssFixture.createRssFixture());
-
-      // when
-      const response = await request(app.getHttpServer())
-        .post('/api/rss/remove')
-        .send({
-          blogUrl: rss.rssUrl,
-          userName: rss.userName,
-          email: rss.email,
-        });
-
-      // then
-      expect(response.status).toBe(200);
-    });
-
-    it('[200] 승인된 RSS가 있을 경우 신청할 수 있다.', async () => {
-      // given
-      const rss = await rssAcceptRepository.save(RssFixture.createRssFixture());
-
-      // when
-      const response = await request(app.getHttpServer())
-        .post('/api/rss/remove')
-        .send({
-          blogUrl: rss.rssUrl,
-          userName: rss.userName,
-          email: rss.email,
-        });
-
-      // then
-      expect(response.status).toBe(200);
-    });
+  beforeEach(() => {
+    jest.spyOn(uuid, 'v4').mockReturnValue(rssDeleteCode as any);
   });
 
-  describe('DELETE /api/rss/remove/:code', () => {
-    it('[404] 삭제 신청된 RSS가 없으면 인증할 수 없다.', async () => {
-      // when
-      const response = await request(app.getHttpServer())
-        .delete(`/api/rss/remove/testfail`)
-        .send();
-
-      // then
-      expect(response.status).toBe(404);
+  it('[404] RSS가 없을 경우 RSS 삭제 신청을 실패한다.', async () => {
+    // given
+    const requestDto = new DeleteRssRequestDto({
+      blogUrl: 'https://notfound.com',
+      email: 'test@test.com',
     });
 
-    it('[404] 이미 지워진 RSS라면 지울 수 없다.', async () => {
-      // given
-      await redisService.set(
-        `${REDIS_KEYS.RSS_REMOVE_KEY}:rssNotFound`,
-        'test',
-      );
+    // Http when
+    const response = await agent.post(URL).send(requestDto);
 
-      // when
-      const response = await request(app.getHttpServer())
-        .delete(`/api/rss/remove/rssNotFound`)
-        .send();
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    expect(data).toBeUndefined();
 
-      // then
-      expect(response.status).toBe(404);
+    // DB, Redis when
+    const savedUUID = await redisService.get(redisKeyMake(rssDeleteCode));
+
+    // DB, Redis then
+    expect(savedUUID).toBeNull();
+  });
+
+  it('[200] RSS 대기 목록에 있을 경우 RSS 삭제 신청을 성공한다.', async () => {
+    // given
+    const rss = await rssRepository.save(RssFixture.createRssFixture());
+    const requestDto = new DeleteRssRequestDto({
+      blogUrl: rss.rssUrl,
+      email: rss.email,
     });
 
-    it('[200] 삭제 신청된 RSS가 있을 경우 좋아요, 댓글, 게시글, RSS가 한 번에 삭제된다.', async () => {
-      // given
-      const certificateCode = 'test';
-      const rss = await rssAcceptRepository.save(RssFixture.createRssFixture());
-      const feed = await feedRepository.save(
-        FeedFixture.createFeedFixture(rss),
-      );
-      const user = await userRepository.save(
-        await UserFixture.createUserCryptFixture(),
-      );
-      await commentRepository.save(
-        CommentFixture.createCommentFixture(feed, user),
-      );
-      await redisService.set(
-        `${REDIS_KEYS.RSS_REMOVE_KEY}:${certificateCode}`,
-        rss.rssUrl,
-      );
+    // Http when
+    const response = await agent.post(URL).send(requestDto);
 
-      // when
-      const response = await request(app.getHttpServer())
-        .delete(`/api/rss/remove/${certificateCode}`)
-        .send();
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.OK);
+    expect(data).toBeUndefined();
 
-      // then
-      expect(response.status).toBe(200);
+    // DB, Redis when
+    const savedUUID = await redisService.get(redisKeyMake(rssDeleteCode));
+
+    // DB, Redis then
+    expect(savedUUID).toBe(rss.rssUrl);
+
+    // cleanup
+    await rssRepository.delete({ id: rss.id });
+    await redisService.del(redisKeyMake(rssDeleteCode));
+  });
+
+  it('[200] 등록된 RSS가 있을 경우 RSS 삭제 신청을 성공한다.', async () => {
+    // given
+    const rss = await rssAcceptRepository.save(RssFixture.createRssFixture());
+    const requestDto = new DeleteRssRequestDto({
+      blogUrl: rss.rssUrl,
+      email: rss.email,
     });
+
+    // Http when
+    const response = await agent.post(URL).send(requestDto);
+
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.OK);
+    expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedUUID = await redisService.get(redisKeyMake(rssDeleteCode));
+
+    // DB, Redis then
+    expect(savedUUID).toBe(rss.rssUrl);
+
+    // cleanup
+    await rssRepository.delete({ id: rss.id });
+    await redisService.del(redisKeyMake(rssDeleteCode));
   });
 });

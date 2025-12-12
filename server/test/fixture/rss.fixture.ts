@@ -10,7 +10,7 @@ export class RssFixture {
       name: `blog${index}`,
       userName: `name${index}`,
       email: `test${index}@test.com`,
-      rssUrl: `https://example${index}.com/rss`,
+      rssUrl: `https://test${index}.com/rss`,
     });
     return Object.assign(rss, overwrites);
   }

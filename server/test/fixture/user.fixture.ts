@@ -8,7 +8,7 @@ export class UserFixture {
     userName: 'test1234',
     maxStreak: 15,
     currentStreak: 7,
-    totalViewss: 120,
+    totalViews: 120,
   };
 
   static async createUserCryptFixture(overwrites: Partial<User> = {}) {

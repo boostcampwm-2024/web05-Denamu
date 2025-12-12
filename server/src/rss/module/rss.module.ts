@@ -7,10 +7,9 @@ import {
   RssAcceptRepository,
 } from '../repository/rss.repository';
 import { EmailModule } from '../../common/email/email.module';
-import { FeedModule } from '../../feed/module/feed.module';
 
 @Module({
-  imports: [EmailModule, FeedModule],
+  imports: [EmailModule],
   controllers: [RssController],
   providers: [
     RssService,

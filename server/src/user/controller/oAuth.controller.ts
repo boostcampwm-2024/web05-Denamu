@@ -9,11 +9,12 @@ import {
 } from '@nestjs/common';
 import { OAuthService } from '../service/oauth.service';
 import { ApiTags } from '@nestjs/swagger';
-import { Response, Request } from 'express';
+import { Response } from 'express';
 import { ApiOAuth } from '../api-docs/oAuth.api-docs';
 import { ApiOAuthCallback } from '../api-docs/oAuthCallback.api-docs';
 import { OAuthTypeRequestDto } from '../dto/request/oAuthType.dto';
 import { OAUTH_URL_PATH } from '../constant/oauth.constant';
+import { OAuthCallbackRequestDto } from '../dto/request/oAuthCallbackDto';
 
 @ApiTags('OAuth')
 @Controller('oauth')
@@ -33,8 +34,11 @@ export class OAuthController {
   @Get('callback')
   @ApiOAuthCallback()
   @HttpCode(HttpStatus.FOUND)
-  async callback(@Req() req: Request, @Res() res: Response) {
-    const accessToken = await this.oauthService.callback(req, res);
+  async callback(
+    @Query() callbackDto: OAuthCallbackRequestDto,
+    @Res() res: Response,
+  ) {
+    const accessToken = await this.oauthService.callback(callbackDto, res);
 
     return res.redirect(
       `${OAUTH_URL_PATH.BASE_URL}/oauth-success?token=${accessToken}`,
