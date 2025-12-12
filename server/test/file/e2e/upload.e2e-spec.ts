@@ -10,12 +10,6 @@ import TestAgent from 'supertest/lib/agent';
 import { FileRepository } from '../../../src/file/repository/file.repository';
 import { createAccessToken } from '../../jest.setup';
 
-jest.mock('../../../src/common/disk/fileUtils', () => ({
-  ...jest.requireActual('../../../src/common/disk/fileUtils'),
-  createDirectoryIfNotExists: jest.fn().mockReturnValue('/test/20251002/'),
-  getFileName: jest.fn().mockReturnValue('test-uuidv4-code.png'),
-}));
-
 const URL = '/api/file';
 
 describe(`POST ${URL} E2E Test`, () => {
