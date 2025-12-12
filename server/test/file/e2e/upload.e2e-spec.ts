@@ -1,7 +1,10 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as supertest from 'supertest';
 import { UploadFileQueryRequestDto } from '../../../src/file/dto/request/uploadFile.dto';
-import { FileUploadType } from '../../../src/common/disk/fileValidator';
+import {
+  FILE_SIZE_LIMITS,
+  FileUploadType,
+} from '../../../src/common/disk/file-type';
 import { User } from '../../../src/user/entity/user.entity';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../fixture/user.fixture';
@@ -9,6 +12,7 @@ import * as path from 'path';
 import TestAgent from 'supertest/lib/agent';
 import { FileRepository } from '../../../src/file/repository/file.repository';
 import { createAccessToken } from '../../jest.setup';
+import * as fs from 'fs/promises';
 
 const URL = '/api/file';
 
@@ -26,6 +30,11 @@ describe(`POST ${URL} E2E Test`, () => {
     user = await userRepository.save(
       await UserFixture.createUserCryptFixture(),
     );
+  });
+
+  beforeEach(() => {
+    jest.spyOn(fs, 'writeFile').mockResolvedValue(undefined);
+    jest.spyOn(fs, 'mkdir').mockResolvedValue(undefined);
   });
 
   it('[401] 인증되지 않은 사용자가 요청할 경우 파일 업로드를 실패한다.', async () => {
@@ -62,13 +71,12 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(data).toBeUndefined();
   });
 
-  it('[201] 파일을 포함할 경우 파일 업로드를 성공한다.', async () => {
+  it('[400] 파일 타입이 일치하지 않을 경우 파일 업로드를 실패한다. ', async () => {
     // given
     const requestDto = new UploadFileQueryRequestDto({
       uploadType: FileUploadType.PROFILE_IMAGE,
     });
 
-    const filePath = path.resolve(__dirname, '../../fixture/test.png');
     const accessToken = createAccessToken(user);
 
     // Http when
@@ -76,7 +84,49 @@ describe(`POST ${URL} E2E Test`, () => {
       .post(URL)
       .query(requestDto)
       .set('Authorization', `Bearer ${accessToken}`)
-      .attach('file', filePath);
+      .attach('file', Buffer.alloc(1024, 0), 'test.txt');
+
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.BAD_REQUEST);
+    expect(data).toBeUndefined();
+  });
+
+  it('[400] 파일 크기가 일치하지 않을 경우 파일 업로드를 실패한다. ', async () => {
+    // given
+    const requestDto = new UploadFileQueryRequestDto({
+      uploadType: FileUploadType.PROFILE_IMAGE,
+    });
+
+    const accessToken = createAccessToken(user);
+
+    // Http when
+    const response = await agent
+      .post(URL)
+      .query(requestDto)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .attach('file', Buffer.alloc(FILE_SIZE_LIMITS.IMAGE + 1, 0), 'test.png');
+
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.BAD_REQUEST);
+    expect(data).toBeUndefined();
+  });
+
+  it('[201] 파일을 포함할 경우 파일 업로드를 성공한다.', async () => {
+    // given
+    const requestDto = new UploadFileQueryRequestDto({
+      uploadType: FileUploadType.PROFILE_IMAGE,
+    });
+
+    const accessToken = createAccessToken(user);
+
+    // Http when
+    const response = await agent
+      .post(URL)
+      .query(requestDto)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .attach('file', Buffer.alloc(1024, 0), 'test.png');
 
     // Http then
     const { data } = response.body;

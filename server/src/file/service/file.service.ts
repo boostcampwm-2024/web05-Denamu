@@ -2,35 +2,65 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { File } from '../entity/file.entity';
 import { unlink, access } from 'fs/promises';
 import { FileRepository } from '../repository/file.repository';
-import { User } from '../../user/entity/user.entity';
 import { UploadFileResponseDto } from '../dto/response/uploadFile.dto';
 import { WinstonLoggerService } from '../../common/logger/logger.service';
+import * as fs from 'fs/promises';
+import * as path from 'path';
+import { FileUploadType } from '../../common/disk/file-type';
 
 @Injectable()
 export class FileService {
+  private readonly basePath = '/app/objects';
+
   constructor(
     private readonly fileRepository: FileRepository,
     private readonly logger: WinstonLoggerService,
   ) {}
 
-  async create(file: any, userId: number): Promise<UploadFileResponseDto> {
+  async handleUpload(file: Express.Multer.File, uploadType: FileUploadType) {
+    const today = this.getDateString();
+    const targetDir = path.join(this.basePath, uploadType, today);
+
+    await this.ensureDirectory(targetDir);
+
+    const filePath = path.join(targetDir, file.originalname);
+    await fs.writeFile(filePath, file.buffer);
+
+    return {
+      success: true,
+      uploadType,
+      savedPath: filePath,
+    };
+  }
+
+  private async ensureDirectory(dir: string) {
+    await fs.mkdir(dir, { recursive: true });
+  }
+
+  private getDateString(): string {
+    const now = new Date();
+    return now.toISOString().split('T')[0];
+  }
+
+  async create(
+    file: Express.Multer.File,
+    userId: number,
+  ): Promise<UploadFileResponseDto> {
     const { originalname, mimetype, size, path } = file;
     const savedFile = await this.fileRepository.save({
       originalName: originalname,
       mimetype,
       size,
       path,
-      user: { id: userId } as User,
-    } as File);
+      user: { id: userId },
+    });
     const accessUrl = this.generateAccessUrl(path);
 
     return UploadFileResponseDto.toResponseDto(savedFile, accessUrl);
   }
 
   private generateAccessUrl(filePath: string): string {
-    const baseUploadPath = '/app/objects';
-    const relativePath = filePath.replace(baseUploadPath, '');
-    return `/objects${relativePath}`;
+    return filePath.replace(this.basePath, '/objects');
   }
 
   async findById(id: number): Promise<File> {

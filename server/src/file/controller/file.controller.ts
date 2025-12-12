@@ -6,22 +6,24 @@ import {
   UploadedFile,
   Param,
   UseGuards,
-  BadRequestException,
   Query,
   HttpStatus,
   HttpCode,
+  FileTypeValidator,
+  MaxFileSizeValidator,
+  ParseFilePipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FileService } from '../service/file.service';
 import { ApiTags } from '@nestjs/swagger';
 import { JwtGuard, Payload } from '../../common/guard/jwt.guard';
-import { createDynamicStorage } from '../../common/disk/diskStorage';
 import { ApiResponse } from '../../common/response/common.response';
 import { ApiUploadProfileFile } from '../api-docs/uploadProfileFile.api-docs';
 import { ApiDeleteFile } from '../api-docs/deleteFile.api-docs';
 import { DeleteFileParamRequestDto } from '../dto/request/deleteFile.dto';
 import { UploadFileQueryRequestDto } from '../dto/request/uploadFile.dto';
 import { CurrentUser } from '../../common/decorator';
+import { FILE_SIZE_LIMITS } from '../../common/disk/file-type';
 
 @ApiTags('File')
 @Controller('file')
@@ -32,15 +34,29 @@ export class FileController {
   @Post('')
   @ApiUploadProfileFile()
   @HttpCode(HttpStatus.CREATED)
-  @UseInterceptors(FileInterceptor('file', createDynamicStorage()))
+  @UseInterceptors(FileInterceptor('file'))
   async upload(
-    @UploadedFile() file: any,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({
+            maxSize: FILE_SIZE_LIMITS.IMAGE,
+            message: 'file size limit',
+          }),
+          new FileTypeValidator({
+            fileType: /image\/(png|jpg|jpeg|webp)/,
+            skipMagicNumbersValidation: true,
+          }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
     @Query() query: UploadFileQueryRequestDto,
     @CurrentUser() user: Payload,
   ) {
-    if (!file) {
-      throw new BadRequestException('파일이 선택되지 않았습니다.');
-    }
+    file.path = (
+      await this.fileService.handleUpload(file, query.uploadType)
+    ).savedPath;
 
     return ApiResponse.responseWithData(
       '파일 업로드에 성공했습니다.',
