@@ -8,11 +8,11 @@ import {
 import { User } from '../../../src/user/entity/user.entity';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../fixture/user.fixture';
-import * as path from 'path';
 import TestAgent from 'supertest/lib/agent';
 import { FileRepository } from '../../../src/file/repository/file.repository';
 import { createAccessToken } from '../../jest.setup';
 import * as fs from 'fs/promises';
+import * as uuid from 'uuid';
 
 const URL = '/api/file';
 
@@ -21,6 +21,7 @@ describe(`POST ${URL} E2E Test`, () => {
   let agent: TestAgent;
   let user: User;
   let fileRepository: FileRepository;
+  const fileRandomName = 'test-random-uuid-file-name';
 
   beforeAll(async () => {
     app = global.testApp;
@@ -35,6 +36,7 @@ describe(`POST ${URL} E2E Test`, () => {
   beforeEach(() => {
     jest.spyOn(fs, 'writeFile').mockResolvedValue(undefined);
     jest.spyOn(fs, 'mkdir').mockResolvedValue(undefined);
+    jest.spyOn(uuid, 'v4').mockReturnValue(fileRandomName as any);
   });
 
   it('[401] 인증되지 않은 사용자가 요청할 경우 파일 업로드를 실패한다.', async () => {
@@ -69,6 +71,15 @@ describe(`POST ${URL} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.BAD_REQUEST);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedFile = await fileRepository.findOneBy({
+      originalName: 'test.png',
+      mimetype: 'image/png',
+    });
+
+    // DB, Redis then
+    expect(savedFile).toBeNull();
   });
 
   it('[400] 파일 타입이 일치하지 않을 경우 파일 업로드를 실패한다. ', async () => {
@@ -90,6 +101,15 @@ describe(`POST ${URL} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.BAD_REQUEST);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedFile = await fileRepository.findOneBy({
+      originalName: 'test.png',
+      mimetype: 'image/png',
+    });
+
+    // DB, Redis then
+    expect(savedFile).toBeNull();
   });
 
   it('[400] 파일 크기가 일치하지 않을 경우 파일 업로드를 실패한다. ', async () => {
@@ -111,6 +131,15 @@ describe(`POST ${URL} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.BAD_REQUEST);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedFile = await fileRepository.findOneBy({
+      originalName: 'test.png',
+      mimetype: 'image/png',
+    });
+
+    // DB, Redis then
+    expect(savedFile).toBeNull();
   });
 
   it('[201] 파일을 포함할 경우 파일 업로드를 성공한다.', async () => {
@@ -135,8 +164,8 @@ describe(`POST ${URL} E2E Test`, () => {
       id: expect.any(Number),
       originalName: 'test.png',
       mimetype: 'image/png',
-      size: expect.any(Number),
-      url: expect.any(String),
+      size: 1024,
+      url: expect.stringContaining(fileRandomName),
       userId: user.id,
       createdAt: expect.any(String),
     });

@@ -44,7 +44,7 @@ export class FileController {
             message: 'file size limit',
           }),
           new FileTypeValidator({
-            fileType: /image\/(png|jpg|jpeg|webp)/,
+            fileType: /image\/(png|jpg|jpeg|webp|gif)/,
             skipMagicNumbersValidation: true,
           }),
         ],
@@ -54,9 +54,7 @@ export class FileController {
     @Query() query: UploadFileQueryRequestDto,
     @CurrentUser() user: Payload,
   ) {
-    file.path = (
-      await this.fileService.handleUpload(file, query.uploadType)
-    ).savedPath;
+    file.path = await this.fileService.handleUpload(file, query.uploadType);
 
     return ApiResponse.responseWithData(
       '파일 업로드에 성공했습니다.',

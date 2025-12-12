@@ -7,6 +7,7 @@ import { WinstonLoggerService } from '../../common/logger/logger.service';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { FileUploadType } from '../../common/disk/file-type';
+import * as uuid from 'uuid';
 
 @Injectable()
 export class FileService {
@@ -23,14 +24,13 @@ export class FileService {
 
     await this.ensureDirectory(targetDir);
 
-    const filePath = path.join(targetDir, file.originalname);
+    const ext = path.extname(file.originalname);
+    const fileName = `${uuid.v4()}${ext}`;
+    const filePath = path.join(targetDir, fileName);
+
     await fs.writeFile(filePath, file.buffer);
 
-    return {
-      success: true,
-      uploadType,
-      savedPath: filePath,
-    };
+    return filePath;
   }
 
   private async ensureDirectory(dir: string) {
