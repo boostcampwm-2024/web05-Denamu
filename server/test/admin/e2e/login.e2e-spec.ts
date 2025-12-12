@@ -90,9 +90,9 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(data).toBeUndefined();
 
     // DB, Redis when
-    const savedSessionId = await redisService.get(redisKeyMake(sessionKey));
+    const savedSession = await redisService.get(redisKeyMake(sessionKey));
 
     // DB, Redis then
-    expect(savedSessionId).toBe(AdminFixture.GENERAL_ADMIN.loginId);
+    expect(savedSession).toBe(AdminFixture.GENERAL_ADMIN.loginId);
   });
 });
