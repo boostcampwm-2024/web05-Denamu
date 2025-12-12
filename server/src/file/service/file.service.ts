@@ -18,7 +18,11 @@ export class FileService {
     private readonly logger: WinstonLoggerService,
   ) {}
 
-  async handleUpload(file: Express.Multer.File, uploadType: FileUploadType) {
+  async handleUpload(
+    file: Express.Multer.File,
+    uploadType: FileUploadType,
+    userId: number,
+  ) {
     const today = this.getDateString();
     const targetDir = path.join(this.basePath, uploadType, today);
 
@@ -30,7 +34,17 @@ export class FileService {
 
     await fs.writeFile(filePath, file.buffer);
 
-    return filePath;
+    const { originalname, mimetype, size } = file;
+    const savedFile = await this.fileRepository.save({
+      originalName: originalname,
+      mimetype,
+      size,
+      path: filePath,
+      user: { id: userId },
+    });
+    const accessUrl = this.generateAccessUrl(filePath);
+
+    return UploadFileResponseDto.toResponseDto(savedFile, accessUrl);
   }
 
   private async ensureDirectory(dir: string) {
@@ -40,23 +54,6 @@ export class FileService {
   private getDateString(): string {
     const now = new Date();
     return now.toISOString().split('T')[0];
-  }
-
-  async create(
-    file: Express.Multer.File,
-    userId: number,
-  ): Promise<UploadFileResponseDto> {
-    const { originalname, mimetype, size, path } = file;
-    const savedFile = await this.fileRepository.save({
-      originalName: originalname,
-      mimetype,
-      size,
-      path,
-      user: { id: userId },
-    });
-    const accessUrl = this.generateAccessUrl(path);
-
-    return UploadFileResponseDto.toResponseDto(savedFile, accessUrl);
   }
 
   private generateAccessUrl(filePath: string): string {

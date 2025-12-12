@@ -70,7 +70,7 @@ describe(`POST ${URL} E2E Test`, () => {
 
     // DB, Redis then
     expect(savedRegisterCode).toBeNull();
-    expect(savedUser).not.toBeUndefined();
+    expect(savedUser).not.toBeNull();
     expect(
       await bcrypt.compare(
         UserFixture.GENERAL_USER.password,

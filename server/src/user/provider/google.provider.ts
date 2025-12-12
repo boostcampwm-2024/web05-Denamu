@@ -8,9 +8,12 @@ import {
   UserInfo,
 } from '../constant/oauth.constant';
 import axios from 'axios';
+import { WinstonLoggerService } from '../../common/logger/logger.service';
 
 @Injectable()
 export class GoogleOAuthProvider implements OAuthProvider {
+  constructor(private readonly logger: WinstonLoggerService) {}
+
   getAuthUrl() {
     const googleOAuthUrl = OAUTH_URL_PATH.GOOGLE.AUTH_URL;
 
@@ -66,6 +69,7 @@ export class GoogleOAuthProvider implements OAuthProvider {
         expires_in,
       };
     } catch (error) {
+      this.logger.error(`Failed to fetch token info from Google: ${error}`);
       throw new BadGatewayException(
         '현재 외부 서비스와의 연결에 실패했습니다.',
       );
@@ -93,6 +97,7 @@ export class GoogleOAuthProvider implements OAuthProvider {
         picture,
       } as UserInfo;
     } catch (error) {
+      this.logger.error(`Failed to fetch user info from Google: ${error}`);
       throw new BadGatewayException(
         '현재 외부 서비스와의 연결에 실패했습니다.',
       );

@@ -78,7 +78,7 @@ describe(`POST ${URL} E2E Test`, () => {
       user: { id: user.id },
     });
     const savedFile = await fileRepository.findBy({ user: { id: user.id } });
-    const savedRssDeleteCode = await redisService.get(
+    const savedUserDeleteCode = await redisService.get(
       redisKeyMake(userDeleteCode),
     );
 
@@ -87,6 +87,6 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(savedLike.length).toBe(0);
     expect(savedActivity.length).toBe(0);
     expect(savedFile.length).toBe(0);
-    expect(savedRssDeleteCode).toBeNull;
+    expect(savedUserDeleteCode).toBeNull();
   });
 });

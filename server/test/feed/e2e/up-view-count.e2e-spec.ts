@@ -131,7 +131,7 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
     });
     const savedFeedReadRedis = await redisService.sismember(
       redisKeyMake(feed.id.toString()),
-      testIp,
+      testNewIp,
     );
 
     // DB, Redis then

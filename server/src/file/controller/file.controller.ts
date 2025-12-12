@@ -41,7 +41,7 @@ export class FileController {
         validators: [
           new MaxFileSizeValidator({
             maxSize: FILE_SIZE_LIMITS.IMAGE,
-            message: 'file size limit',
+            message: `File size must not exceed ${FILE_SIZE_LIMITS.IMAGE / (1024 * 1024)}MB`,
           }),
           new FileTypeValidator({
             fileType: /image\/(png|jpg|jpeg|webp|gif)/,
@@ -54,11 +54,9 @@ export class FileController {
     @Query() query: UploadFileQueryRequestDto,
     @CurrentUser() user: Payload,
   ) {
-    file.path = await this.fileService.handleUpload(file, query.uploadType);
-
     return ApiResponse.responseWithData(
       '파일 업로드에 성공했습니다.',
-      await this.fileService.create(file, user.id),
+      await this.fileService.handleUpload(file, query.uploadType, user.id),
     );
   }
 

@@ -78,6 +78,7 @@ describe(`PATCH ${URL} E2E Test`, () => {
     );
 
     // DB, Redis then
+    expect(savedUser).not.toBeNull();
     expect(
       await bcrypt.compare(updatedPassword, savedUser.password),
     ).toBeTruthy();

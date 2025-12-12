@@ -58,7 +58,7 @@ describe(`GET ${URL} E2E Test`, () => {
     // DB, Redis when
     const savedProvider = await providerRepository.findOneBy({
       providerUserId: '1',
-      providerType: 'github',
+      providerType: OAuthType.Github,
     });
 
     // DB, Redis then
@@ -104,7 +104,7 @@ describe(`GET ${URL} E2E Test`, () => {
     // DB, Redis when
     const savedProvider = await providerRepository.findOneBy({
       providerUserId: '1',
-      providerType: 'google',
+      providerType: OAuthType.Google,
     });
 
     // DB, Redis then

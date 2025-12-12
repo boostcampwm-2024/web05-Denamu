@@ -104,14 +104,13 @@ describe(`POST ${URL} E2E Test`, () => {
 
     // DB, Redis when
     const savedFile = await fileRepository.findOneBy({
-      originalName: 'test.png',
-      mimetype: 'image/png',
+      originalName: 'test.txt',
+      mimetype: 'text/plain',
     });
 
     // DB, Redis then
     expect(savedFile).toBeNull();
   });
-
   it('[400] 파일 크기가 일치하지 않을 경우 파일 업로드를 실패한다. ', async () => {
     // given
     const requestDto = new UploadFileQueryRequestDto({

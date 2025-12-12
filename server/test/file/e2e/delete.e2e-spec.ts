@@ -56,11 +56,13 @@ describe(`DELETE ${URL}/{fileId} E2E Test`, () => {
     expect(data).toBeUndefined();
   });
 
-  it('[200] DB에서 파일을 삭제했지만 FS 라이브러리를 통해서 실패했을 경우에 서비스에서 파일 삭제를 성공한다.', async () => {
+  it('[200] DB에서 파일을 삭제했지만 FS 라이브러리의 삭제 문제일 경우에 서비스에서 파일 삭제를 성공한다.', async () => {
     // given
     file = await fileRepository.save(FileFixture.createFileFixture({ user }));
     const fs = await import('fs/promises');
-    jest.spyOn(fs, 'access').mockResolvedValue(undefined);
+    jest
+      .spyOn(fs, 'unlink')
+      .mockRejectedValue(new Error('EACCES: permission denied'));
 
     const accessToken = createAccessToken(user);
 
@@ -82,12 +84,14 @@ describe(`DELETE ${URL}/{fileId} E2E Test`, () => {
     // DB, Redis then
     expect(savedFile).toBeNull();
   });
-
-  it('[200] DB에서 파일을 삭제했지만 FS 라이브러리에서 권한 문제일 경우 서비스에서 파일 삭제를 성공한다.', async () => {
+  it('[200] DB에서 파일을 삭제했지만 FS 라이브러리의 접근 문제일 경우 서비스에서 파일 삭제를 성공한다.', async () => {
     // given
     file = await fileRepository.save(FileFixture.createFileFixture({ user }));
     const fs = await import('fs/promises');
-    jest.spyOn(fs, 'unlink').mockResolvedValue(undefined);
+    jest
+      .spyOn(fs, 'access')
+      .mockRejectedValue(new Error('EACCES: permission denied'));
+
     const accessToken = createAccessToken(user);
 
     // Http when
