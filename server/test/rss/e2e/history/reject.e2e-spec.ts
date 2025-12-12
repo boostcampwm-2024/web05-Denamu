@@ -5,6 +5,7 @@ import { RssRejectRepository } from '../../../../src/rss/repository/rss.reposito
 import { RssReject } from '../../../../src/rss/entity/rss.entity';
 import { RssRejectFixture } from '../../../fixture/rss-reject.fixture';
 import TestAgent from 'supertest/lib/agent';
+import { REDIS_KEYS } from '../../../../src/common/redis/redis.constant';
 
 const URL = '/api/rss/history/reject';
 
@@ -12,6 +13,8 @@ describe(`GET ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let rssRejectList: RssReject[];
+  const redisKeyMake = (data: string) => `${REDIS_KEYS.ADMIN_AUTH_KEY}:${data}`;
+  const sessionKey = 'admin-rss-history-reject';
 
   beforeAll(async () => {
     app = global.testApp;
@@ -23,7 +26,7 @@ describe(`GET ${URL} E2E Test`, () => {
     );
     [rssRejectList] = await Promise.all([
       rssRejectRepository.save(rssAccepts),
-      redisService.set('auth:testSessionId', 'test1234'),
+      redisService.set(redisKeyMake(sessionKey), 'test1234'),
     ]);
     rssRejectList.reverse();
   });
@@ -40,7 +43,9 @@ describe(`GET ${URL} E2E Test`, () => {
 
   it('[401] 관리자 로그인 쿠키가 만료됐을 경우 RSS 거절 기록 조회를 실패한다.', async () => {
     // Http when
-    const response = await agent.get(URL).set('Cookie', 'sessionId=invalid');
+    const response = await agent
+      .get(URL)
+      .set('Cookie', `sessionId=Wrong${sessionKey}`);
 
     // Http then
     const { data } = response.body;
@@ -52,7 +57,7 @@ describe(`GET ${URL} E2E Test`, () => {
     // Http when
     const response = await agent
       .get(URL)
-      .set('Cookie', 'sessionId=testSessionId');
+      .set('Cookie', `sessionId=${sessionKey}`);
 
     // Http then
     const { data } = response.body;

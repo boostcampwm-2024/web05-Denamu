@@ -16,7 +16,8 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
   let rssRepository: RssRepository;
   let rssRejectRepository: RssRejectRepository;
   let redisService: RedisService;
-  const adminSessionId = 'testSessionId';
+  const redisKeyMake = (data: string) => `${REDIS_KEYS.ADMIN_AUTH_KEY}:${data}`;
+  const sessionKey = 'admin-rss-reject';
 
   beforeAll(async () => {
     app = global.testApp;
@@ -29,10 +30,7 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
   beforeEach(async () => {
     await Promise.all([
       rssRepository.delete({}),
-      redisService.set(
-        `${REDIS_KEYS.ADMIN_AUTH_KEY}:${adminSessionId}`,
-        'test_admin',
-      ),
+      redisService.set(redisKeyMake(sessionKey), 'test1234'),
     ]);
   });
 
@@ -50,7 +48,7 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
     // Http when
     const response = await agent
       .post(`${URL}/${Number.MAX_SAFE_INTEGER}`)
-      .set('Cookie', 'sessionId=invalid');
+      .set('Cookie', `sessionId=Wrong${sessionKey}`);
 
     // Http then
     const { data } = response.body;
@@ -68,7 +66,7 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
     // Http when
     const response = await agent
       .post(`${URL}/${Number.MAX_SAFE_INTEGER}`)
-      .set('Cookie', `sessionId=${adminSessionId}`)
+      .set('Cookie', `sessionId=${sessionKey}`)
       .send(requestDTO);
 
     // Http then
@@ -88,7 +86,7 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
     // Http when
     const response = await agent
       .post(`${URL}/${rss.id}`)
-      .set('Cookie', `sessionId=${adminSessionId}`)
+      .set('Cookie', `sessionId=${sessionKey}`)
       .send(requestDto);
 
     // Http then

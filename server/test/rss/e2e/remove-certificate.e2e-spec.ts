@@ -28,6 +28,8 @@ describe(`DELETE ${URL}/{code} E2E Test`, () => {
   let userRepository: UserRepository;
   let likeRepository: LikeRepository;
   let rssRepository: RssRepository;
+  const redisKeyMake = (data: string) => `${REDIS_KEYS.RSS_REMOVE_KEY}:${data}`;
+  const rssDeleteCode = 'rss-remove-certificate';
 
   beforeAll(() => {
     app = global.testApp;
@@ -42,12 +44,8 @@ describe(`DELETE ${URL}/{code} E2E Test`, () => {
   });
 
   it('[404] RSS 삭제 요청이 만료되었거나 없을 경우 RSS 삭제 인증을 실패한다.', async () => {
-    // given
-    const certificateCode = 'test';
-    const redisKey = `${REDIS_KEYS.RSS_REMOVE_KEY}:${certificateCode}`;
-
     // Http when
-    const response = await agent.delete(`${URL}/${certificateCode}`);
+    const response = await agent.delete(`${URL}/Wrong${rssDeleteCode}`);
 
     // Http then
     const { data } = response.body;
@@ -55,7 +53,9 @@ describe(`DELETE ${URL}/{code} E2E Test`, () => {
     expect(data).toBeUndefined();
 
     // DB, Redis when
-    const savedRssRemoveURL = await redisService.get(redisKey);
+    const savedRssRemoveURL = await redisService.get(
+      redisKeyMake(rssDeleteCode),
+    );
 
     // DB, Redis then
     expect(savedRssRemoveURL).toBeNull();
@@ -63,8 +63,6 @@ describe(`DELETE ${URL}/{code} E2E Test`, () => {
 
   it('[200] 삭제 신청된 RSS가 승인된 RSS에 있을 경우 승인된 RSS와 관련된 모든 데이터들의 삭제를 성공한다.', async () => {
     // given
-    const certificateCode = 'test';
-    const redisKey = `${REDIS_KEYS.RSS_REMOVE_KEY}:${certificateCode}`;
     const rssAccept = await rssAcceptRepository.save(
       RssFixture.createRssFixture(),
     );
@@ -77,10 +75,10 @@ describe(`DELETE ${URL}/{code} E2E Test`, () => {
     await commentRepository.save(
       CommentFixture.createCommentFixture(feed, user),
     );
-    await redisService.set(redisKey, rssAccept.rssUrl);
+    await redisService.set(redisKeyMake(rssDeleteCode), rssAccept.rssUrl);
 
     // Http when
-    const response = await agent.delete(`${URL}/${certificateCode}`);
+    const response = await agent.delete(`${URL}/${rssDeleteCode}`);
 
     // Http then
     const { data } = response.body;
@@ -94,7 +92,9 @@ describe(`DELETE ${URL}/{code} E2E Test`, () => {
     const savedFeed = await feedRepository.findBy({ blog: rssAccept });
     const savedComment = await commentRepository.findBy({ feed });
     const savedLike = await likeRepository.findBy({ feed });
-    const savedRssRemoveURL = await redisService.get(redisKey);
+    const savedRssRemoveURL = await redisService.get(
+      redisKeyMake(rssDeleteCode),
+    );
 
     // DB, Redis then
     expect(savedRssAccept).toBeNull();
@@ -106,13 +106,11 @@ describe(`DELETE ${URL}/{code} E2E Test`, () => {
 
   it('[200] 삭제 신청된 RSS가 대기중인 RSS에 있을 경우 대기중인 RSS 데이터 삭제를 성공한다.', async () => {
     // given
-    const certificateCode = 'test';
-    const redisKey = `${REDIS_KEYS.RSS_REMOVE_KEY}:${certificateCode}`;
     const rss = await rssRepository.save(RssFixture.createRssFixture());
-    await redisService.set(redisKey, rss.rssUrl);
+    await redisService.set(redisKeyMake(rssDeleteCode), rss.rssUrl);
 
     // Http when
-    const response = await agent.delete(`${URL}/${certificateCode}`);
+    const response = await agent.delete(`${URL}/${rssDeleteCode}`);
 
     // Http then
     const { data } = response.body;
@@ -123,7 +121,9 @@ describe(`DELETE ${URL}/{code} E2E Test`, () => {
     const savedRss = await rssRepository.findOneBy({
       rssUrl: rss.rssUrl,
     });
-    const savedRssRemoveURL = await redisService.get(redisKey);
+    const savedRssRemoveURL = await redisService.get(
+      redisKeyMake(rssDeleteCode),
+    );
 
     // DB, Redis then
     expect(savedRss).toBeNull();

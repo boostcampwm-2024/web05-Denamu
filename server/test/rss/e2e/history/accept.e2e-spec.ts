@@ -13,6 +13,8 @@ describe(`GET ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let rssAcceptList: RssAccept[];
+  const redisKeyMake = (data: string) => `${REDIS_KEYS.ADMIN_AUTH_KEY}:${data}`;
+  const sessionKey = 'admin-rss-history-accept';
 
   beforeAll(async () => {
     app = global.testApp;
@@ -24,10 +26,7 @@ describe(`GET ${URL} E2E Test`, () => {
     );
     [rssAcceptList] = await Promise.all([
       rssAcceptRepository.save(rssAccepts),
-      redisService.set(
-        `${REDIS_KEYS.ADMIN_AUTH_KEY}:testSessionId`,
-        'test1234',
-      ),
+      redisService.set(redisKeyMake(sessionKey), 'test1234'),
     ]);
     rssAcceptList.reverse();
   });
@@ -44,7 +43,9 @@ describe(`GET ${URL} E2E Test`, () => {
 
   it('[401] 관리자 로그인 쿠키가 만료됐을 경우 RSS 승인 기록 조회를 실패한다.', async () => {
     // Http when
-    const response = await agent.get(URL).set('Cookie', 'sessionId=invalid');
+    const response = await agent
+      .get(URL)
+      .set('Cookie', `sessionId=Wrong${sessionKey}`);
 
     // Http then
     const { data } = response.body;
@@ -56,7 +57,7 @@ describe(`GET ${URL} E2E Test`, () => {
     // Http when
     const response = await agent
       .get(URL)
-      .set('Cookie', 'sessionId=testSessionId');
+      .set('Cookie', `sessionId=${sessionKey}`);
 
     // Http then
     const { data } = response.body;

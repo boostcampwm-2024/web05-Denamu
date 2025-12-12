@@ -17,6 +17,8 @@ describe(`GET ${URL} E2E Test`, () => {
   let rssRepository: RssRepository;
   let rssAcceptRepository: RssAcceptRepository;
   let redisService: RedisService;
+  const redisKeyMake = (data: string) => `${REDIS_KEYS.ADMIN_AUTH_KEY}:${data}`;
+  const sessionKey = 'admin-rss-get';
 
   beforeAll(() => {
     app = global.testApp;
@@ -29,10 +31,7 @@ describe(`GET ${URL} E2E Test`, () => {
   beforeEach(async () => {
     await Promise.all([
       rssRepository.delete({}),
-      redisService.set(
-        `${REDIS_KEYS.ADMIN_AUTH_KEY}:testSessionId`,
-        'test_admin',
-      ),
+      redisService.set(redisKeyMake(sessionKey), 'test1234'),
     ]);
   });
 
@@ -48,7 +47,9 @@ describe(`GET ${URL} E2E Test`, () => {
 
   it('[401] 관리자 로그인 쿠키가 만료됐을 경우 RSS 조회를 실패한다.', async () => {
     // Http when
-    const response = await agent.get(URL).set('Cookie', 'sessionId=invalid');
+    const response = await agent
+      .get(URL)
+      .set('Cookie', `sessionId=Wrong${sessionKey}`);
 
     // Http then
     const { data } = response.body;
@@ -60,7 +61,7 @@ describe(`GET ${URL} E2E Test`, () => {
     // Http when
     const response = await agent
       .get(URL)
-      .set('Cookie', 'sessionId=testSessionId');
+      .set('Cookie', `sessionId=${sessionKey}`);
 
     // Http then
     const { data } = response.body;
@@ -75,7 +76,7 @@ describe(`GET ${URL} E2E Test`, () => {
     // Http when
     const response = await agent
       .get(URL)
-      .set('Cookie', 'sessionId=testSessionId');
+      .set('Cookie', `sessionId=${sessionKey}`);
 
     // Http then
     const { data } = response.body;

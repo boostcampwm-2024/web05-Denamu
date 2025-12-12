@@ -22,6 +22,7 @@ import { DeleteRssRequestDto } from '../dto/request/deleteRss.dto';
 import { RedisService } from '../../common/redis/redis.service';
 import { DeleteCertificateRssRequestDto } from '../dto/request/deleteCertificateRss.dto';
 import { REDIS_KEYS } from '../../common/redis/redis.constant';
+import * as uuid from 'uuid';
 
 type FullFeedCrawlMessage = {
   rssId: number;
@@ -208,7 +209,7 @@ export class RssService {
       throw new NotFoundException('RSS 데이터를 찾을 수 없습니다.');
     }
 
-    const certificateCode = this.generateRandomAlphaNumeric();
+    const certificateCode = uuid.v4();
 
     await this.redisService.set(
       `${REDIS_KEYS.RSS_REMOVE_KEY}:${certificateCode}`,
@@ -223,19 +224,6 @@ export class RssService {
       requestDeleteRssDto.blogUrl,
       certificateCode,
     );
-  }
-
-  private generateRandomAlphaNumeric(length = 6): string {
-    const charset =
-      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-
-    for (let i = 0; i < length; i++) {
-      const index = Math.floor(Math.random() * charset.length);
-      result += charset[index];
-    }
-
-    return result;
   }
 
   async deleteRss(deleteRssDto: DeleteCertificateRssRequestDto) {
