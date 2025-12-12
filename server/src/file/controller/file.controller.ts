@@ -23,7 +23,7 @@ import { ApiDeleteFile } from '../api-docs/deleteFile.api-docs';
 import { DeleteFileParamRequestDto } from '../dto/request/deleteFile.dto';
 import { UploadFileQueryRequestDto } from '../dto/request/uploadFile.dto';
 import { CurrentUser } from '../../common/decorator';
-import { FILE_SIZE_LIMITS } from '../../common/disk/file-type';
+import { FILE_SIZE_LIMITS } from '../constant/file.constant';
 
 @ApiTags('File')
 @Controller('file')

@@ -6,7 +6,7 @@ import { UploadFileResponseDto } from '../dto/response/uploadFile.dto';
 import { WinstonLoggerService } from '../../common/logger/logger.service';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { FileUploadType } from '../../common/disk/file-type';
+import { FileUploadType } from '../constant/file.constant';
 import * as uuid from 'uuid';
 
 @Injectable()

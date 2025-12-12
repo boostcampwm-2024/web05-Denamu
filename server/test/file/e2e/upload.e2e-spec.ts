@@ -4,7 +4,7 @@ import { UploadFileQueryRequestDto } from '../../../src/file/dto/request/uploadF
 import {
   FILE_SIZE_LIMITS,
   FileUploadType,
-} from '../../../src/common/disk/file-type';
+} from '../../../src/file/constant/file.constant';
 import { User } from '../../../src/user/entity/user.entity';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../fixture/user.fixture';
