@@ -1,15 +1,15 @@
 {
   "moduleFileExtensions": ["js", "json", "ts"],
   "testEnvironment": "node",
-  "rootDir": "..",
+  "rootDir": "../../../",
   "testRegex": "test/.*\\.(e2e-spec|spec).ts$",
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
   },
   "coverageDirectory": "test/coverage",
-  "setupFilesAfterEnv": ["./test/jest.setup.ts"],
-  "globalSetup": "./test/integration-test-global-setup.ts",
-  "globalTeardown": "./test/integration-test-global-teardown.ts",
+  "setupFilesAfterEnv": ["./config/e2e/env/jest.setup.ts"],
+  "globalSetup": "./config/e2e/global/e2e-test-global-setup.ts",
+  "globalTeardown": "./config/e2e/global/e2e-test-global-teardown.ts",
   "maxWorkers": 1,
   "testTimeout": 20000
 }

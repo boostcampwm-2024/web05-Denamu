@@ -6,7 +6,7 @@ import { FileService } from '../../../src/file/service/file.service';
 import { UpdateUserRequestDto } from '../../../src/user/dto/request/updateUser.dto';
 import TestAgent from 'supertest/lib/agent';
 import { User } from '../../../src/user/entity/user.entity';
-import { createAccessToken } from '../../jest.setup';
+import { createAccessToken } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/user/profile';
 
