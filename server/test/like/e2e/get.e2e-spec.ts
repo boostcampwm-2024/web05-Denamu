@@ -9,7 +9,7 @@ import { Feed } from '../../../src/feed/entity/feed.entity';
 import * as supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 import { LikeRepository } from '../../../src/like/repository/like.repository';
-import { createAccessToken } from '../../jest.setup';
+import { createAccessToken } from '../../config/e2e/env/jest.setup';
 import { User } from '../../../src/user/entity/user.entity';
 
 const URL = '/api/like';

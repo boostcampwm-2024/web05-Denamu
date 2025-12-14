@@ -12,7 +12,7 @@ import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository'
 import TestAgent from 'supertest/lib/agent';
 import { CommentRepository } from '../../../src/comment/repository/comment.repository';
 import { CommentFixture } from '../../fixture/comment.fixture';
-import { createAccessToken } from '../../jest.setup';
+import { createAccessToken } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/comment';
 
