@@ -1,12 +1,12 @@
 {
   "moduleFileExtensions": ["js", "json", "ts"],
   "testEnvironment": "node",
-  "rootDir": "../../../",
+  "rootDir": "../../../../",
   "testRegex": "test/.*\\.dto.spec.ts$",
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
   },
-  "coverageDirectory": "test/coverage",
+  "coverageDirectory": "./coverage/dto",
   "maxWorkers": "50%",
   "testTimeout": 10000
 }
