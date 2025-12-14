@@ -1,8 +1,8 @@
 import * as supertest from 'supertest';
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
-import { RssAcceptFixture } from '../../fixture/rss-accept.fixture';
-import { FeedFixture } from '../../fixture/feed.fixture';
+import { RssAcceptFixture } from '../../config/fixture/rss-accept.fixture';
+import { FeedFixture } from '../../config/fixture/feed.fixture';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
