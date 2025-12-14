@@ -11,7 +11,7 @@ import { CommentFixture } from '../../fixture/comment.fixture';
 import { UpdateCommentRequestDto } from '../../../src/comment/dto/request/updateComment.dto';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
 import TestAgent from 'supertest/lib/agent';
-import { createAccessToken } from '../../jest.setup';
+import { createAccessToken } from '../../config/e2e/env/jest.setup';
 import { User } from '../../../src/user/entity/user.entity';
 
 const URL = '/api/comment';

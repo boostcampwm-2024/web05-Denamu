@@ -11,7 +11,7 @@ import { ManageLikeRequestDto } from '../../../src/like/dto/request/manageLike.d
 import * as supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 import { LikeRepository } from '../../../src/like/repository/like.repository';
-import { createAccessToken } from '../../jest.setup';
+import { createAccessToken } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/like';
 

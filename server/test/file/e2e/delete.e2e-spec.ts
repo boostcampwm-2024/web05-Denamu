@@ -7,7 +7,7 @@ import { FileRepository } from '../../../src/file/repository/file.repository';
 import { File } from '../../../src/file/entity/file.entity';
 import { FileFixture } from '../../fixture/file.fixture';
 import TestAgent from 'supertest/lib/agent';
-import { createAccessToken } from '../../jest.setup';
+import { createAccessToken } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/file';
 
