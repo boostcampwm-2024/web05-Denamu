@@ -1,7 +1,7 @@
 import { RssRejectRepository } from './../../../src/rss/repository/rss.repository';
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as supertest from 'supertest';
-import { RssFixture } from '../../fixture/rss.fixture';
+import { RssFixture } from '../../config/fixture/rss.fixture';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import { RejectRssRequestDto } from '../../../src/rss/dto/request/rejectRss';
 import { RssRepository } from '../../../src/rss/repository/rss.repository';
