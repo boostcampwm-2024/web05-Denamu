@@ -3,14 +3,14 @@ import * as supertest from 'supertest';
 import { Feed } from '../../../src/feed/entity/feed.entity';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
-import { RssAcceptFixture } from '../../fixture/rss-accept.fixture';
-import { FeedFixture } from '../../fixture/feed.fixture';
+import { RssAcceptFixture } from '../../config/fixture/rss-accept.fixture';
+import { FeedFixture } from '../../config/fixture/feed.fixture';
 import { GetCommentRequestDto } from '../../../src/comment/dto/request/getComment.dto';
 import TestAgent from 'supertest/lib/agent';
 import { CommentRepository } from '../../../src/comment/repository/comment.repository';
 import { UserRepository } from '../../../src/user/repository/user.repository';
-import { UserFixture } from '../../fixture/user.fixture';
-import { CommentFixture } from '../../fixture/comment.fixture';
+import { UserFixture } from '../../config/fixture/user.fixture';
+import { CommentFixture } from '../../config/fixture/comment.fixture';
 
 const URL = '/api/comment';
 

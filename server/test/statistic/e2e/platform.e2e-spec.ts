@@ -1,7 +1,7 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as supertest from 'supertest';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
-import { RssAcceptFixture } from '../../fixture/rss-accept.fixture';
+import { RssAcceptFixture } from '../../config/fixture/rss-accept.fixture';
 import TestAgent from 'supertest/lib/agent';
 
 const URL = '/api/statistic/platform';

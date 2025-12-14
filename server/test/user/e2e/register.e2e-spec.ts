@@ -2,13 +2,12 @@ import { HttpStatus, INestApplication } from '@nestjs/common';
 import { RegisterUserRequestDto } from '../../../src/user/dto/request/registerUser.dto';
 import * as supertest from 'supertest';
 import { UserRepository } from '../../../src/user/repository/user.repository';
-import { UserFixture } from '../../fixture/user.fixture';
+import { UserFixture } from '../../config/fixture/user.fixture';
 import TestAgent from 'supertest/lib/agent';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import * as uuid from 'uuid';
 import * as bcrypt from 'bcrypt';
-import { SALT_ROUNDS } from '../../../src/user/constant/user.constants';
 
 const URL = '/api/user/register';
 
