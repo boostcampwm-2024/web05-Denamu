@@ -10,5 +10,5 @@
   "maxWorkers": "50%",
   "testTimeout": 10000,
   "testPathIgnorePatterns": ["test/sample/"],
-  "coveragePathIgnorePatterns": ["test/config/"]
+  "coveragePathIgnorePatterns": ["test", "src/common/database/migration"]
 }
