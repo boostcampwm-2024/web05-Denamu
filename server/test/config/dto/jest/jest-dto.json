@@ -8,5 +8,7 @@
   },
   "coverageDirectory": "./coverage/dto",
   "maxWorkers": "50%",
-  "testTimeout": 10000
+  "testTimeout": 10000,
+  "testPathIgnorePatterns": ["test/sample/"],
+  "coveragePathIgnorePatterns": ["test/config/"]
 }
