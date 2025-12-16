@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:server/test/config/common/fixture/user.fixture.ts
 import { User } from '../../../../src/user/entity/user.entity';
-========
-import { User } from '../../../src/user/entity/user.entity';
->>>>>>>> 69c12e59 (♻️ refactor: test/fixture -\> test/config/fixture):server/test/config/fixture/user.fixture.ts
 import * as bcrypt from 'bcrypt';
 
 export class UserFixture {

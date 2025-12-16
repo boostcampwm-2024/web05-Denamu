@@ -1,12 +1,6 @@
-<<<<<<<< HEAD:server/test/config/common/fixture/comment.fixture.ts
 import { Comment } from '../../../../src/comment/entity/comment.entity';
 import { Feed } from '../../../../src/feed/entity/feed.entity';
 import { User } from '../../../../src/user/entity/user.entity';
-========
-import { Comment } from '../../../src/comment/entity/comment.entity';
-import { Feed } from '../../../src/feed/entity/feed.entity';
-import { User } from '../../../src/user/entity/user.entity';
->>>>>>>> 69c12e59 (♻️ refactor: test/fixture -\> test/config/fixture):server/test/config/fixture/comment.fixture.ts
 
 export class CommentFixture {
   static readonly GENERAL_COMMENT = {

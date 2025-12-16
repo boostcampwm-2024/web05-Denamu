@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:server/test/config/common/fixture/admin.fixture.ts
 import { Admin } from '../../../../src/admin/entity/admin.entity';
-========
-import { Admin } from '../../../src/admin/entity/admin.entity';
->>>>>>>> 69c12e59 (♻️ refactor: test/fixture -\> test/config/fixture):server/test/config/fixture/admin.fixture.ts
 import * as bcrypt from 'bcrypt';
 
 export class AdminFixture {

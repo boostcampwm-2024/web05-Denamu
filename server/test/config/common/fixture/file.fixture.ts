@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:server/test/config/common/fixture/file.fixture.ts
 import { File } from '../../../../src/file/entity/file.entity';
-========
-import { File } from '../../../src/file/entity/file.entity';
->>>>>>>> 69c12e59 (♻️ refactor: test/fixture -\> test/config/fixture):server/test/config/fixture/file.fixture.ts
 
 export class FileFixture {
   static readonly GENERAL_FILE = {

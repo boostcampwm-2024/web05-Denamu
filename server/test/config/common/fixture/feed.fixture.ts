@@ -1,10 +1,5 @@
-<<<<<<<< HEAD:server/test/config/common/fixture/feed.fixture.ts
 import { Feed } from '../../../../src/feed/entity/feed.entity';
 import { RssAccept } from '../../../../src/rss/entity/rss.entity';
-========
-import { Feed } from '../../../src/feed/entity/feed.entity';
-import { RssAccept } from '../../../src/rss/entity/rss.entity';
->>>>>>>> 69c12e59 (♻️ refactor: test/fixture -\> test/config/fixture):server/test/config/fixture/feed.fixture.ts
 
 export class FeedFixture {
   static createFeedFixture(
