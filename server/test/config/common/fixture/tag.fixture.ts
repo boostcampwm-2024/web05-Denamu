@@ -1,4 +1,4 @@
-import { Tag } from '../../../src/tag/entity/tag.entity';
+import { Tag } from '../../../../src/tag/entity/tag.entity';
 
 export class TagFixture {
   static readonly GENERAL_TAG = {

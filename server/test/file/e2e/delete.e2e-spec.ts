@@ -2,10 +2,10 @@ import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as supertest from 'supertest';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { User } from '../../../src/user/entity/user.entity';
-import { UserFixture } from '../../config/fixture/user.fixture';
+import { UserFixture } from '../../config/common/fixture/user.fixture';
 import { FileRepository } from '../../../src/file/repository/file.repository';
 import { File } from '../../../src/file/entity/file.entity';
-import { FileFixture } from '../../config/fixture/file.fixture';
+import { FileFixture } from '../../config/common/fixture/file.fixture';
 import TestAgent from 'supertest/lib/agent';
 import { createAccessToken } from '../../config/e2e/env/jest.setup';
 

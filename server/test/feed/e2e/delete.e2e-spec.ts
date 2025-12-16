@@ -1,8 +1,8 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
-import { FeedFixture } from '../../config/fixture/feed.fixture';
-import { RssAcceptFixture } from '../../config/fixture/rss-accept.fixture';
+import { FeedFixture } from '../../config/common/fixture/feed.fixture';
+import { RssAcceptFixture } from '../../config/common/fixture/rss-accept.fixture';
 import { Feed } from '../../../src/feed/entity/feed.entity';
 import * as supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';

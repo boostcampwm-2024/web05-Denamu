@@ -1,5 +1,5 @@
-import { Activity } from '../../../src/activity/entity/activity.entity';
-import { User } from '../../../src/user/entity/user.entity';
+import { Activity } from '../../../../src/activity/entity/activity.entity';
+import { User } from '../../../../src/user/entity/user.entity';
 
 export class ActivityFixture {
   static readonly DEFAULT_ACTIVITY = {

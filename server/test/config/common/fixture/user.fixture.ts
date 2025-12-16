@@ -1,4 +1,4 @@
-import { User } from '../../../src/user/entity/user.entity';
+import { User } from '../../../../src/user/entity/user.entity';
 import * as bcrypt from 'bcrypt';
 
 export class UserFixture {

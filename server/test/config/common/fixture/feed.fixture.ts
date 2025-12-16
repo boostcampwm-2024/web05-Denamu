@@ -1,5 +1,5 @@
-import { Feed } from '../../../src/feed/entity/feed.entity';
-import { RssAccept } from '../../../src/rss/entity/rss.entity';
+import { Feed } from '../../../../src/feed/entity/feed.entity';
+import { RssAccept } from '../../../../src/rss/entity/rss.entity';
 
 export class FeedFixture {
   static createFeedFixture(
