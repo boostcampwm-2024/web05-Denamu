@@ -4,6 +4,7 @@ import { io } from 'socket.io-client';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 import { ChatService } from '../../../src/chat/service/chat.service';
+import { ChatFixture } from '../../fixture/chat.fixture';
 
 const URL = '/chat';
 
@@ -61,23 +62,11 @@ describe('Socket.IO Anonymous Chat E2E Test', () => {
 
   it('[Connect] 클라이언트가 연결될 경우 이전 채팅 기록을 정상적으로 받는다.', async () => {
     // given
-    const mockChatHistory = [
-      {
-        username: 'test name',
-        message: 'Hello',
-        timestamp: new Date().toISOString(),
-      },
-      {
-        username: 'test name2',
-        message: 'Hi',
-        timestamp: new Date().toISOString(),
-      },
-    ];
+    const mockChatHistory = ChatFixture.createChatHistory(2);
 
     await redisService.lpush(
       REDIS_KEYS.CHAT_HISTORY_KEY,
-      JSON.stringify(mockChatHistory[1]),
-      JSON.stringify(mockChatHistory[0]),
+      ...mockChatHistory.map((chat) => JSON.stringify(chat)).reverse(),
     );
 
     clientSocket = io(serverUrl, {
@@ -133,18 +122,14 @@ describe('Socket.IO Anonymous Chat E2E Test', () => {
 
   it('[Connect] 클라이언트가 메시지를 보낼 경우 다른 클라이언트에 메시지가 브로드캐스트된다.', async () => {
     // given
-    const messagePayload = {
-      messageId: '123',
-      userId: 'random-uuid',
-      message: 'Hello, World!',
-    };
+    const chat = ChatFixture.createChat();
 
     clientSocket = io(serverUrl, {
       forceNew: true,
       reconnection: false,
       path: URL,
     });
-    clientSocket.emit('message', messagePayload);
+    clientSocket.emit('message', chat);
 
     // Socket.IO when
     const data = await new Promise((resolve, reject) => {
@@ -161,7 +146,7 @@ describe('Socket.IO Anonymous Chat E2E Test', () => {
 
     // Socket.IO then
     expect(data).toMatchObject({
-      message: 'Hello, World!',
+      message: chat.message,
       username: expect.any(String),
       timestamp: expect.any(String),
     });
