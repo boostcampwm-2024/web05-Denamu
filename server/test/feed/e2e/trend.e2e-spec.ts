@@ -59,8 +59,7 @@ describe(`SSE ${URL} E2E Test`, () => {
 
     // SSE then
     expect(data).toStrictEqual(
-      Array.from({ length: 2 }).map((_, i) => {
-        const feed = feedList[i];
+      feedList.map((feed) => {
         return {
           id: feed.id,
           author: feed.blog.name,
