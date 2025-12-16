@@ -1,4 +1,4 @@
-import { Admin } from '../../../src/admin/entity/admin.entity';
+import { Admin } from '../../../../src/admin/entity/admin.entity';
 import * as bcrypt from 'bcrypt';
 
 export class AdminFixture {

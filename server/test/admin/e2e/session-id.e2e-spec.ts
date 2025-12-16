@@ -1,7 +1,7 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as supertest from 'supertest';
 import { AdminRepository } from '../../../src/admin/repository/admin.repository';
-import { AdminFixture } from '../../config/fixture/admin.fixture';
+import { AdminFixture } from '../../config/common/fixture/admin.fixture';
 import TestAgent from 'supertest/lib/agent';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';

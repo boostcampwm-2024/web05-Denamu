@@ -1,9 +1,9 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as supertest from 'supertest';
-import { FeedFixture } from '../../config/fixture/feed.fixture';
+import { FeedFixture } from '../../config/common/fixture/feed.fixture';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
-import { RssAcceptFixture } from '../../config/fixture/rss-accept.fixture';
+import { RssAcceptFixture } from '../../config/common/fixture/rss-accept.fixture';
 import { ReadFeedPaginationRequestDto } from '../../../src/feed/dto/request/readFeedPagination.dto';
 import TestAgent from 'supertest/lib/agent';
 import { Feed } from '../../../src/feed/entity/feed.entity';

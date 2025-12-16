@@ -1,6 +1,6 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as supertest from 'supertest';
-import { RssFixture } from '../../config/fixture/rss.fixture';
+import { RssFixture } from '../../config/common/fixture/rss.fixture';
 import {
   RssAcceptRepository,
   RssRepository,
