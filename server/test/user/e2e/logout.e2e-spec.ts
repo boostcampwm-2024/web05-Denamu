@@ -1,7 +1,7 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as supertest from 'supertest';
 import { UserRepository } from '../../../src/user/repository/user.repository';
-import { UserFixture } from '../../config/fixture/user.fixture';
+import { UserFixture } from '../../config/common/fixture/user.fixture';
 import TestAgent from 'supertest/lib/agent';
 import { User } from '../../../src/user/entity/user.entity';
 import { createAccessToken } from '../../config/e2e/env/jest.setup';

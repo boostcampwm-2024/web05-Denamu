@@ -1,6 +1,6 @@
-import { Comment } from '../../../src/comment/entity/comment.entity';
-import { Feed } from '../../../src/feed/entity/feed.entity';
-import { User } from '../../../src/user/entity/user.entity';
+import { Comment } from '../../../../src/comment/entity/comment.entity';
+import { Feed } from '../../../../src/feed/entity/feed.entity';
+import { User } from '../../../../src/user/entity/user.entity';
 
 export class CommentFixture {
   static readonly GENERAL_COMMENT = {

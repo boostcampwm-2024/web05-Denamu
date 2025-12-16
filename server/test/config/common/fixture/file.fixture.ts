@@ -1,4 +1,4 @@
-import { File } from '../../../src/file/entity/file.entity';
+import { File } from '../../../../src/file/entity/file.entity';
 
 export class FileFixture {
   static readonly GENERAL_FILE = {

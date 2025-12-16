@@ -1,6 +1,6 @@
-import { UserFixture } from '../../config/fixture/user.fixture';
-import { CommentFixture } from '../../config/fixture/comment.fixture';
-import { FeedFixture } from '../../config/fixture/feed.fixture';
+import { UserFixture } from '../../config/common/fixture/user.fixture';
+import { CommentFixture } from '../../config/common/fixture/comment.fixture';
+import { FeedFixture } from '../../config/common/fixture/feed.fixture';
 import { REDIS_KEYS } from './../../../src/common/redis/redis.constant';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
 import { HttpStatus, INestApplication } from '@nestjs/common';
@@ -12,7 +12,7 @@ import { RedisService } from '../../../src/common/redis/redis.service';
 import { CommentRepository } from '../../../src/comment/repository/comment.repository';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import * as supertest from 'supertest';
-import { RssFixture } from '../../config/fixture/rss.fixture';
+import { RssFixture } from '../../config/common/fixture/rss.fixture';
 import TestAgent from 'supertest/lib/agent';
 import { LikeRepository } from '../../../src/like/repository/like.repository';
 
