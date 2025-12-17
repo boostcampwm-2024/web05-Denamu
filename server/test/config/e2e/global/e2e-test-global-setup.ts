@@ -5,6 +5,11 @@ import {
   StartedRabbitMQContainer,
 } from '@testcontainers/rabbitmq';
 import * as path from 'path';
+import * as mysql from 'mysql2/promise';
+import * as os from 'os';
+
+const CPU_COUNT = os.cpus().length;
+const MAX_WORKERS = Math.max(1, Math.floor(CPU_COUNT * 0.5));
 
 const globalAny: any = global;
 
@@ -21,9 +26,7 @@ const createMysqlContainer = async () => {
   console.log('Starting MySQL container...');
   const mysqlContainer: StartedMySqlContainer = await new MySqlContainer(
     'mysql:8.0.39',
-  )
-    .withDatabase('denamu')
-    .start();
+  ).start();
   globalAny.__MYSQL_CONTAINER__ = mysqlContainer;
 
   process.env.DB_TYPE = 'mysql';
@@ -31,7 +34,35 @@ const createMysqlContainer = async () => {
   process.env.DB_PORT = mysqlContainer.getPort().toString();
   process.env.DB_USERNAME = mysqlContainer.getUsername();
   process.env.DB_PASSWORD = mysqlContainer.getUserPassword();
-  process.env.DB_DATABASE = mysqlContainer.getDatabase();
+
+  await createTestDatabases(mysqlContainer);
+};
+
+const createTestDatabases = async (container: StartedMySqlContainer) => {
+  if (!MAX_WORKERS) {
+    return;
+  }
+  console.log('Starting Creating Test Databases...');
+  const user = 'root';
+  const password = container.getRootPassword();
+
+  const conn = await mysql.createConnection({
+    host: container.getHost(),
+    port: container.getPort(),
+    user,
+    password,
+    database: 'mysql',
+  });
+
+  for (let i = 1; i <= MAX_WORKERS; i++) {
+    await conn.query(`CREATE DATABASE IF NOT EXISTS denamu_test_${i}`);
+    await conn.query(
+      `GRANT ALL PRIVILEGES ON denamu_test_${i}.* TO '${container.getUsername()}'@'%'`,
+    );
+  }
+
+  await conn.query(`FLUSH PRIVILEGES`);
+  await conn.end();
 };
 
 const createRedisContainer = async () => {
