@@ -5,7 +5,6 @@ import { WinstonLoggerService } from '../../../../src/common/logger/logger.servi
 import { InternalExceptionsFilter } from '../../../../src/common/filters/internal.exceptions.filter';
 import { HttpExceptionsFilter } from '../../../../src/common/filters/http.exception.filter';
 import * as cookieParser from 'cookie-parser';
-import { TestService } from '../../../../src/common/test/test.service';
 import { RedisService } from '../../../../src/common/redis/redis.service';
 import { UserService } from '../../../../src/user/service/user.service';
 
@@ -16,7 +15,6 @@ afterEach(() => {
 });
 
 beforeAll(async () => {
-  console.log('Initializing NestJS application...');
   const moduleFixture = await Test.createTestingModule({
     imports: [AppModule],
   }).compile();
@@ -32,24 +30,16 @@ beforeAll(async () => {
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
   await app.init();
   globalAny.testApp = app;
-
-  console.log('NestJS application initialized.');
 });
 
 afterAll(async () => {
-  const testService = globalAny.testApp.get(TestService);
-  await testService.cleanDatabase();
-
   const redisService: RedisService = globalAny.testApp.get(RedisService);
-  await redisService.flushall();
   redisService.disconnect();
 
-  console.log('Closing NestJS application...');
   if (globalAny.testApp) {
     await globalAny.testApp.close();
     delete globalAny.testApp;
   }
-  console.log('NestJS application closed.');
 });
 
 export const createAccessToken = (payload?: {
