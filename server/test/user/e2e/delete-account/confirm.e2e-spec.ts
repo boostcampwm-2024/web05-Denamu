@@ -60,29 +60,33 @@ describe(`POST ${URL} E2E Test`, () => {
   });
 
   beforeEach(async () => {
-    user = await userRepository.save(
-      await UserFixture.createUserCryptFixture(),
-    );
     rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
-    feed = await feedRepository.save(FeedFixture.createFeedFixture(rssAccept));
-    comment = await commentRepository.save(
-      CommentFixture.createCommentFixture(feed, user),
-    );
-    like = await likeRepository.save({ feed, user });
-    file = await fileRepository.save(FileFixture.createFileFixture(user));
-    await redisService.set(redisKeyMake(userDeleteCode), user.id);
+    [user, feed] = await Promise.all([
+      userRepository.save(await UserFixture.createUserCryptFixture()),
+      feedRepository.save(FeedFixture.createFeedFixture(rssAccept)),
+    ]);
+    [comment, like, file] = await Promise.all([
+      commentRepository.save(CommentFixture.createCommentFixture(feed, user)),
+      likeRepository.save({ feed, user }),
+      fileRepository.save(FileFixture.createFileFixture(user)),
+      redisService.set(redisKeyMake(userDeleteCode), user.id),
+    ]);
   });
 
   afterEach(async () => {
-    await fileRepository.delete(file.id);
-    await likeRepository.delete(like.id);
-    await commentRepository.delete(comment.id);
-    await feedRepository.delete(feed.id);
+    await Promise.all([
+      fileRepository.delete(file.id),
+      likeRepository.delete(like.id),
+      commentRepository.delete(comment.id),
+      redisService.del(redisKeyMake(userDeleteCode)),
+    ]);
+    await Promise.all([
+      feedRepository.delete(feed.id),
+      userRepository.delete(user.id),
+    ]);
     await rssAcceptRepository.delete(rssAccept.id);
-    await userRepository.delete(user.id);
-    await redisService.del(redisKeyMake(userDeleteCode));
   });
 
   it('[404] 회원 탈퇴 인증 코드가 만료되었거나 잘 못된 경우 회원 탈퇴를 실패한다.', async () => {
@@ -100,10 +104,10 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(data).toBeUndefined();
 
     // DB, Redis when
-    const savedUser = await userRepository.findOneBy({ id: user.id });
-    const savedDeleteCode = await redisService.get(
-      redisKeyMake(userDeleteCode),
-    );
+    const [savedUser, savedDeleteCode] = await Promise.all([
+      userRepository.findOneBy({ id: user.id }),
+      redisService.get(redisKeyMake(userDeleteCode)),
+    ]);
 
     // DB, Redis then
     expect(savedUser).not.toBeNull();
@@ -123,18 +127,25 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(data).toBeUndefined();
 
     // DB, Redis when
-    const savedUser = await userRepository.findOneBy({ id: user.id });
-    const savedUserDeleteCode = await redisService.get(
-      redisKeyMake(userDeleteCode),
-    );
-    const savedLikes = await likeRepository.findBy({ user: { id: user.id } });
-    const savedComments = await commentRepository.findBy({
-      user: { id: user.id },
-    });
-    const savedActivities = await activityRepository.findBy({
-      user: { id: user.id },
-    });
-    const savedFiles = await fileRepository.findBy({ user: { id: user.id } });
+    const [
+      savedUser,
+      savedUserDeleteCode,
+      savedLikes,
+      savedComments,
+      savedActivities,
+      savedFiles,
+    ] = await Promise.all([
+      userRepository.findOneBy({ id: user.id }),
+      redisService.get(redisKeyMake(userDeleteCode)),
+      likeRepository.findBy({ user: { id: user.id } }),
+      commentRepository.findBy({
+        user: { id: user.id },
+      }),
+      activityRepository.findBy({
+        user: { id: user.id },
+      }),
+      fileRepository.findBy({ user: { id: user.id } }),
+    ]);
 
     // DB, Redis then
     expect(savedUser).toBeNull();

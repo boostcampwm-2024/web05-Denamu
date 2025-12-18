@@ -37,10 +37,12 @@ describe(`GET ${URL} E2E Test`, () => {
   });
 
   afterEach(async () => {
-    await rssRejectRepository.delete(
-      rssRejectList.map((rssReject) => rssReject.id),
-    );
-    await redisService.del(redisKeyMake(sessionKey));
+    await Promise.all([
+      rssRejectRepository.delete(
+        rssRejectList.map((rssReject) => rssReject.id),
+      ),
+      redisService.del(redisKeyMake(sessionKey)),
+    ]);
   });
 
   it('[401] 관리자 로그인 쿠키가 없을 경우 RSS 거절 기록 조회를 실패한다.', async () => {

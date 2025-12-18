@@ -38,8 +38,10 @@ describe(`POST ${URL} E2E Test`, () => {
   });
 
   afterEach(async () => {
-    await userRepository.delete(user.id);
-    await redisService.del(redisKeyMake(userDeleteCode));
+    await Promise.all([
+      userRepository.delete(user.id),
+      redisService.del(redisKeyMake(userDeleteCode)),
+    ]);
   });
 
   it('[401] 로그인 되지 않은 유저가 회원 탈퇴를 신청할 경우 회원 탈퇴 신청을 실패한다.', async () => {

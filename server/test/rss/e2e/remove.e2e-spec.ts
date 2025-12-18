@@ -38,8 +38,10 @@ describe(`POST ${URL} E2E Test`, () => {
   });
 
   afterEach(async () => {
-    await rssRepository.delete(rss.id);
-    await redisService.del(redisKeyMake(rssDeleteCode));
+    await Promise.all([
+      rssRepository.delete(rss.id),
+      redisService.del(redisKeyMake(rssDeleteCode)),
+    ]);
   });
 
   it('[404] RSS가 없을 경우 RSS 삭제 신청을 실패한다.', async () => {

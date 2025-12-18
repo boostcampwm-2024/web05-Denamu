@@ -19,6 +19,7 @@ import { Rss, RssAccept } from '../../../src/rss/entity/rss.entity';
 import { Feed } from '../../../src/feed/entity/feed.entity';
 import { User } from '../../../src/user/entity/user.entity';
 import { Comment } from '../../../src/comment/entity/comment.entity';
+import { RssAcceptFixture } from '../../config/common/fixture/rss-accept.fixture';
 
 const URL = '/api/rss/remove';
 
@@ -53,12 +54,14 @@ describe(`DELETE ${URL}/{code} E2E Test`, () => {
   });
 
   beforeEach(async () => {
-    rss = await rssRepository.save(RssFixture.createRssFixture());
-    rssAccept = await rssAcceptRepository.save(RssFixture.createRssFixture());
-    feed = await feedRepository.save(FeedFixture.createFeedFixture(rssAccept));
-    user = await userRepository.save(
-      await UserFixture.createUserCryptFixture(),
-    );
+    [rss, rssAccept] = await Promise.all([
+      rssRepository.save(RssFixture.createRssFixture()),
+      rssAcceptRepository.save(RssAcceptFixture.createRssAcceptFixture()),
+    ]);
+    [user, feed] = await Promise.all([
+      userRepository.save(await UserFixture.createUserCryptFixture()),
+      feedRepository.save(FeedFixture.createFeedFixture(rssAccept)),
+    ]);
     comment = await commentRepository.save(
       CommentFixture.createCommentFixture(feed, user),
     );
@@ -66,11 +69,15 @@ describe(`DELETE ${URL}/{code} E2E Test`, () => {
 
   afterEach(async () => {
     await commentRepository.delete(comment.id);
-    await userRepository.delete(user.id);
-    await feedRepository.delete(feed.id);
-    await rssAcceptRepository.delete(rssAccept.id);
-    await rssRepository.delete(rss.id);
-    await redisService.del(redisKeyMake(rssDeleteCode));
+    await Promise.all([
+      feedRepository.delete(feed.id),
+      userRepository.delete(user.id),
+    ]);
+    await Promise.all([
+      rssAcceptRepository.delete(rssAccept.id),
+      rssRepository.delete(rss.id),
+      redisService.del(redisKeyMake(rssDeleteCode)),
+    ]);
   });
 
   it('[404] RSS 삭제 요청이 만료되었거나 없을 경우 RSS 삭제 인증을 실패한다.', async () => {
@@ -104,17 +111,23 @@ describe(`DELETE ${URL}/{code} E2E Test`, () => {
     expect(data).toBeUndefined();
 
     // DB, Redis when
-    const savedRssAccept = await rssAcceptRepository.findOneBy({
-      rssUrl: rssAccept.rssUrl,
-    });
-    const savedFeed = await feedRepository.findBy({ blog: rssAccept });
-    const savedComment = await commentRepository.findBy({
-      feed: { id: feed.id },
-    });
-    const savedLike = await likeRepository.findBy({ feed: { id: feed.id } });
-    const savedRssRemoveURL = await redisService.get(
-      redisKeyMake(rssDeleteCode),
-    );
+    const [
+      savedRssAccept,
+      savedFeed,
+      savedComment,
+      savedLike,
+      savedRssRemoveURL,
+    ] = await Promise.all([
+      rssAcceptRepository.findOneBy({
+        rssUrl: rssAccept.rssUrl,
+      }),
+      feedRepository.findBy({ blog: rssAccept }),
+      commentRepository.findBy({
+        feed: { id: feed.id },
+      }),
+      likeRepository.findBy({ feed: { id: feed.id } }),
+      redisService.get(redisKeyMake(rssDeleteCode)),
+    ]);
 
     // DB, Redis then
     expect(savedRssAccept).toBeNull();
@@ -137,12 +150,12 @@ describe(`DELETE ${URL}/{code} E2E Test`, () => {
     expect(data).toBeUndefined();
 
     // DB, Redis when
-    const savedRss = await rssRepository.findOneBy({
-      rssUrl: rss.rssUrl,
-    });
-    const savedRssRemoveURL = await redisService.get(
-      redisKeyMake(rssDeleteCode),
-    );
+    const [savedRss, savedRssRemoveURL] = await Promise.all([
+      rssRepository.findOneBy({
+        rssUrl: rss.rssUrl,
+      }),
+      redisService.get(redisKeyMake(rssDeleteCode)),
+    ]);
 
     // DB, Redis then
     expect(savedRss).toBeNull();

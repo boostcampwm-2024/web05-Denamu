@@ -38,20 +38,22 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
   });
 
   beforeEach(async () => {
-    user = await userRepository.save(
-      await UserFixture.createUserCryptFixture(),
-    );
     rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
-    feed = await feedRepository.save(FeedFixture.createFeedFixture(rssAccept));
+    [user, feed] = await Promise.all([
+      userRepository.save(await UserFixture.createUserCryptFixture()),
+      feedRepository.save(FeedFixture.createFeedFixture(rssAccept)),
+    ]);
     accessToken = createAccessToken(user);
   });
 
   afterEach(async () => {
-    await feedRepository.delete(feed.id);
+    await Promise.all([
+      feedRepository.delete(feed.id),
+      userRepository.delete(user.id),
+    ]);
     await rssAcceptRepository.delete(rssAccept.id);
-    await userRepository.delete(user.id);
   });
 
   it('[401] 로그인이 되어 있지 않을 경우 좋아요 삭제를 실패한다.', async () => {
