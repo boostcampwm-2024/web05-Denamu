@@ -43,12 +43,14 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(data).toBeUndefined();
 
     // DB, Redis when
-    const savedRss = await rssRepository.findBy({
-      rssUrl: rss.rssUrl,
-    });
-    const savedRssAccept = await rssAcceptRepository.findBy({
-      rssUrl: rss.rssUrl,
-    });
+    const [savedRss, savedRssAccept] = await Promise.all([
+      rssRepository.findBy({
+        rssUrl: rss.rssUrl,
+      }),
+      rssAcceptRepository.findBy({
+        rssUrl: rss.rssUrl,
+      }),
+    ]);
 
     // DB, Redis then
     expect(savedRss.length).toBe(1);
@@ -79,12 +81,14 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(data).toBeUndefined();
 
     // DB, Redis when
-    const savedRss = await rssRepository.findBy({
-      rssUrl: acceptedRss.rssUrl,
-    });
-    const savedRssAccept = await rssAcceptRepository.findBy({
-      rssUrl: acceptedRss.rssUrl,
-    });
+    const [savedRss, savedRssAccept] = await Promise.all([
+      rssRepository.findBy({
+        rssUrl: acceptedRss.rssUrl,
+      }),
+      rssAcceptRepository.findBy({
+        rssUrl: acceptedRss.rssUrl,
+      }),
+    ]);
 
     // DB, Redis then
     expect(savedRss.length).toBe(0);

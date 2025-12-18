@@ -30,13 +30,17 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
   });
 
   beforeEach(async () => {
-    await redisService.set(redisKeyMake(sessionKey), 'test1234');
-    rss = await rssRepository.save(RssFixture.createRssFixture());
+    [rss] = await Promise.all([
+      rssRepository.save(RssFixture.createRssFixture()),
+      redisService.set(redisKeyMake(sessionKey), 'test1234'),
+    ]);
   });
 
   afterEach(async () => {
-    await redisService.del(redisKeyMake(sessionKey));
-    await rssRepository.delete(rss.id);
+    await Promise.all([
+      redisService.del(redisKeyMake(sessionKey)),
+      rssRepository.delete(rss.id),
+    ]);
   });
 
   it('[401] 관리자 로그인 쿠키가 없을 경우 RSS 거부를 실패한다.', async () => {
@@ -49,11 +53,13 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
     expect(data).toBeUndefined();
 
     // DB, Redis when
-    const savedRss = await rssRepository.findOneBy({ id: rss.id });
-    const savedRssReject = await rssRejectRepository.findOneBy({
-      rssUrl: rss.rssUrl,
-      userName: rss.userName,
-    });
+    const [savedRss, savedRssReject] = await Promise.all([
+      rssRepository.findOneBy({ id: rss.id }),
+      rssRejectRepository.findOneBy({
+        rssUrl: rss.rssUrl,
+        userName: rss.userName,
+      }),
+    ]);
 
     // DB, Redis then
     expect(savedRss).not.toBeNull();
@@ -72,11 +78,13 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
     expect(data).toBeUndefined();
 
     // DB, Redis when
-    const savedRss = await rssRepository.findOneBy({ id: rss.id });
-    const savedRssReject = await rssRejectRepository.findOneBy({
-      rssUrl: rss.rssUrl,
-      userName: rss.userName,
-    });
+    const [savedRss, savedRssReject] = await Promise.all([
+      rssRepository.findOneBy({ id: rss.id }),
+      rssRejectRepository.findOneBy({
+        rssUrl: rss.rssUrl,
+        userName: rss.userName,
+      }),
+    ]);
 
     // DB, Redis then
     expect(savedRss).not.toBeNull();
@@ -102,11 +110,13 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
     expect(data).toBeUndefined();
 
     // DB, Redis when
-    const savedRss = await rssRepository.findOneBy({ id: rss.id });
-    const savedRssReject = await rssRejectRepository.findOneBy({
-      rssUrl: rss.rssUrl,
-      userName: rss.userName,
-    });
+    const [savedRss, savedRssReject] = await Promise.all([
+      rssRepository.findOneBy({ id: rss.id }),
+      rssRejectRepository.findOneBy({
+        rssUrl: rss.rssUrl,
+        userName: rss.userName,
+      }),
+    ]);
 
     // DB, Redis then
     expect(savedRss).not.toBeNull();
@@ -132,14 +142,16 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
     expect(data).toBeUndefined();
 
     // DB, Redis when
-    const savedRssReject = await rssRejectRepository.findOneBy({
-      rssUrl: rss.rssUrl,
-      userName: rss.userName,
-      name: rss.name,
-      email: rss.email,
-      description: REJECT_REASON,
-    });
-    const savedRss = await rssRepository.findOneBy({ id: rss.id });
+    const [savedRssReject, savedRss] = await Promise.all([
+      rssRejectRepository.findOneBy({
+        rssUrl: rss.rssUrl,
+        userName: rss.userName,
+        name: rss.name,
+        email: rss.email,
+        description: REJECT_REASON,
+      }),
+      rssRepository.findOneBy({ id: rss.id }),
+    ]);
 
     // DB, Redis then
     expect(savedRssReject).not.toBeNull();

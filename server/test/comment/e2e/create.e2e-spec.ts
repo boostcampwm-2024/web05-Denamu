@@ -50,8 +50,10 @@ describe(`POST ${URL} E2E Test`, () => {
   });
 
   afterEach(async () => {
-    await feedRepository.delete(feed.id);
-    await userRepository.delete(user.id);
+    await Promise.all([
+      feedRepository.delete(feed.id),
+      userRepository.delete(user.id),
+    ]);
     await rssAcceptRepository.delete(rssAccept.id);
   });
 

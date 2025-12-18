@@ -41,17 +41,19 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
     rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
-    user = await userRepository.save(
-      await UserFixture.createUserCryptFixture(),
-    );
-    feed = await feedRepository.save(FeedFixture.createFeedFixture(rssAccept));
+    [user, feed] = await Promise.all([
+      userRepository.save(await UserFixture.createUserCryptFixture()),
+      feedRepository.save(FeedFixture.createFeedFixture(rssAccept)),
+    ]);
     like = await likeRepository.save({ user, feed });
   });
 
   afterEach(async () => {
     await likeRepository.delete(like.id);
-    await feedRepository.delete(feed.id);
-    await userRepository.delete(user.id);
+    await Promise.all([
+      feedRepository.delete(feed.id),
+      userRepository.delete(user.id),
+    ]);
     await rssAcceptRepository.delete(rssAccept.id);
   });
 

@@ -44,10 +44,10 @@ describe(`PATCH ${URL} E2E Test`, () => {
     rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
-    feed = await feedRepository.save(FeedFixture.createFeedFixture(rssAccept));
-    user = await userRepository.save(
-      await UserFixture.createUserCryptFixture(),
-    );
+    [user, feed] = await Promise.all([
+      userRepository.save(await UserFixture.createUserCryptFixture()),
+      feedRepository.save(FeedFixture.createFeedFixture(rssAccept)),
+    ]);
     comment = await commentRepository.save(
       CommentFixture.createCommentFixture(feed, user),
     );
@@ -56,8 +56,10 @@ describe(`PATCH ${URL} E2E Test`, () => {
 
   afterEach(async () => {
     await commentRepository.delete(comment.id);
-    await userRepository.delete(user.id);
-    await feedRepository.delete(feed.id);
+    await Promise.all([
+      userRepository.delete(user.id),
+      feedRepository.delete(feed.id),
+    ]);
     await rssAcceptRepository.delete(rssAccept.id);
   });
 

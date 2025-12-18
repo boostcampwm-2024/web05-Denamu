@@ -77,13 +77,13 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(data).toBeUndefined();
 
     // DB, Redis when
-    const savedUser = await userRepository.findOneBy({
-      email: user.email,
-      userName: user.userName,
-    });
-    const savedRegisterCode = await redisService.get(
-      redisKeyMake(userRegisterCode),
-    );
+    const [savedUser, savedRegisterCode] = await Promise.all([
+      userRepository.findOneBy({
+        email: user.email,
+        userName: user.userName,
+      }),
+      redisService.get(redisKeyMake(userRegisterCode)),
+    ]);
 
     // DB, Redis then
     expect(savedRegisterCode).toBeNull();

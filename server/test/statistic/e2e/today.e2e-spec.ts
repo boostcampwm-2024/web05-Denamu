@@ -49,8 +49,10 @@ describe(`GET ${URL}?limit={} E2E Test`, () => {
 
   afterEach(async () => {
     await rssAcceptRepository.delete(rssAccept.id);
-    await feedRepository.delete(feedList.map((feed) => feed.id));
-    await redisService.del(REDIS_KEYS.FEED_TREND_KEY);
+    await Promise.all([
+      feedRepository.delete(feedList.map((feed) => feed.id)),
+      redisService.del(REDIS_KEYS.FEED_TREND_KEY),
+    ]);
   });
 
   it('[200] 금일 조회수 통계 요청을 받은 경우 금일 조회수 통계 조회를 성공한다. ', async () => {
