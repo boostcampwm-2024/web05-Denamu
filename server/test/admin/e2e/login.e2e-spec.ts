@@ -1,4 +1,7 @@
-import { AdminFixture } from './../../config/common/fixture/admin.fixture';
+import {
+  ADMIN_DEFAULT_PASSWORD,
+  AdminFixture,
+} from './../../config/common/fixture/admin.fixture';
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { LoginAdminRequestDto } from '../../../src/admin/dto/request/loginAdmin.dto';
 import * as supertest from 'supertest';
@@ -7,6 +10,7 @@ import TestAgent from 'supertest/lib/agent';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 import * as uuid from 'uuid';
+import { Admin } from '../../../src/admin/entity/admin.entity';
 
 const URL = '/api/admin/login';
 
@@ -14,6 +18,8 @@ describe(`POST ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let redisService: RedisService;
+  let admin: Admin;
+  let adminRepository: AdminRepository;
   const redisKeyMake = (data: string) => `${REDIS_KEYS.ADMIN_AUTH_KEY}:${data}`;
   const sessionKey = 'admin-login-sessionKey';
 
@@ -21,19 +27,26 @@ describe(`POST ${URL} E2E Test`, () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
     redisService = app.get(RedisService);
-    const adminRepository = app.get(AdminRepository);
-    await adminRepository.insert(await AdminFixture.createAdminCryptFixture());
+    adminRepository = app.get(AdminRepository);
   });
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.spyOn(uuid, 'v4').mockReturnValue(sessionKey as any);
+    admin = await adminRepository.save(
+      await AdminFixture.createAdminCryptFixture(),
+    );
+  });
+
+  afterEach(async () => {
+    await adminRepository.delete(admin.id);
+    await redisService.del(redisKeyMake(sessionKey));
   });
 
   it('[401] 등록되지 않은 ID로 로그인할 경우 로그인을 실패한다.', async () => {
     // given
     const requestDto = new LoginAdminRequestDto({
       loginId: 'testWrongAdminId',
-      password: AdminFixture.GENERAL_ADMIN.password,
+      password: ADMIN_DEFAULT_PASSWORD,
     });
 
     // Http when
@@ -54,7 +67,7 @@ describe(`POST ${URL} E2E Test`, () => {
   it('[401] 비밀번호가 다를 경우 로그인을 실패한다.', async () => {
     // given
     const requestDto = new LoginAdminRequestDto({
-      loginId: AdminFixture.GENERAL_ADMIN.loginId,
+      loginId: admin.loginId,
       password: 'testWrongAdminPassword!',
     });
 
@@ -76,8 +89,8 @@ describe(`POST ${URL} E2E Test`, () => {
   it('[200] 존재하는 사용자의 정보로 로그인할 경우 로그인을 성공한다.', async () => {
     // given
     const requestDto = new LoginAdminRequestDto({
-      loginId: AdminFixture.GENERAL_ADMIN.loginId,
-      password: AdminFixture.GENERAL_ADMIN.password,
+      loginId: admin.loginId,
+      password: ADMIN_DEFAULT_PASSWORD,
     });
 
     // Http when
@@ -93,6 +106,6 @@ describe(`POST ${URL} E2E Test`, () => {
     const savedSession = await redisService.get(redisKeyMake(sessionKey));
 
     // DB, Redis then
-    expect(savedSession).toBe(AdminFixture.GENERAL_ADMIN.loginId);
+    expect(savedSession).toBe(admin.loginId);
   });
 });

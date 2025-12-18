@@ -1,3 +1,4 @@
+import { RssAccept } from './../../../src/rss/entity/rss.entity';
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import * as supertest from 'supertest';
@@ -17,18 +18,24 @@ describe(`GET ${URL}?limit={} E2E Test`, () => {
   let agent: TestAgent;
   let redisService: RedisService;
   let feedList: Feed[];
+  let feedRepository: FeedRepository;
+  let rssAcceptRepository: RssAcceptRepository;
+  let rssAccept: RssAccept;
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
-    const feedRepository = app.get(FeedRepository);
-    const rssAcceptRepository = app.get(RssAcceptRepository);
+    feedRepository = app.get(FeedRepository);
+    rssAcceptRepository = app.get(RssAcceptRepository);
     redisService = app.get(RedisService);
-    const rssAccept = await rssAcceptRepository.save(
+  });
+
+  beforeEach(async () => {
+    rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
     const feeds = Array.from({ length: 2 }).map((_, i) =>
-      FeedFixture.createFeedFixture(rssAccept, {}, i + 1),
+      FeedFixture.createFeedFixture(rssAccept),
     );
     feedList = await feedRepository.save(feeds);
     await redisService.zadd(
@@ -38,6 +45,12 @@ describe(`GET ${URL}?limit={} E2E Test`, () => {
       4,
       feedList[1].id,
     );
+  });
+
+  afterEach(async () => {
+    await rssAcceptRepository.delete(rssAccept.id);
+    await feedRepository.delete(feedList.map((feed) => feed.id));
+    await redisService.del(REDIS_KEYS.FEED_TREND_KEY);
   });
 
   it('[200] 금일 조회수 통계 요청을 받은 경우 금일 조회수 통계 조회를 성공한다. ', async () => {

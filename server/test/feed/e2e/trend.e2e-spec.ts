@@ -6,30 +6,38 @@ import { FeedRepository } from '../../../src/feed/repository/feed.repository';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
 import { FeedFixture } from '../../config/common/fixture/feed.fixture';
 import * as EventSource from 'eventsource';
+import { RssAccept } from '../../../src/rss/entity/rss.entity';
 
 const URL = '/api/feed/trend/sse';
 
 describe(`SSE ${URL} E2E Test`, () => {
   let app: INestApplication;
   let serverUrl: string;
+  let feedRepository: FeedRepository;
+  let rssAcceptRepository: RssAcceptRepository;
+  let redisService: RedisService;
+  let rssAccept: RssAccept;
 
   beforeAll(async () => {
     app = global.testApp;
     const httpServer = await app.listen(0);
     const port = httpServer.address().port;
     serverUrl = `http://localhost:${port}${URL}`;
+    feedRepository = app.get(FeedRepository);
+    rssAcceptRepository = app.get(RssAcceptRepository);
+    redisService = app.get(RedisService);
+  });
+
+  beforeEach(async () => {
+    rssAccept = await rssAcceptRepository.save(
+      RssAcceptFixture.createRssAcceptFixture(),
+    );
   });
 
   it('[SSE] 최초 연결을 할 경우 트랜드 데이터 최대 4개 제공 수신을 성공한다.', async () => {
     // given
-    const feedRepository = app.get(FeedRepository);
-    const rssAcceptRepository = app.get(RssAcceptRepository);
-    const redisService = app.get(RedisService);
-    const rssAccept = await rssAcceptRepository.save(
-      RssAcceptFixture.createRssAcceptFixture(),
-    );
     const feeds = Array.from({ length: 2 }).map((_, i) =>
-      FeedFixture.createFeedFixture(rssAccept, _, i + 1),
+      FeedFixture.createFeedFixture(rssAccept),
     );
     const feedList = await feedRepository.save(feeds);
     await redisService.rpush(
@@ -59,28 +67,30 @@ describe(`SSE ${URL} E2E Test`, () => {
 
     // SSE then
     expect(data).toStrictEqual(
-      feedList.map((feed) => {
-        return {
-          id: feed.id,
-          author: feed.blog.name,
-          blogPlatform: feed.blog.blogPlatform,
-          title: feed.title,
-          path: feed.path,
-          createdAt: feed.createdAt.toISOString(),
-          thumbnail: feed.thumbnail,
-          viewCount: feed.viewCount,
-          likes: feed.likeCount,
-          comments: feed.commentCount,
-          tag: [],
-        };
-      }),
+      feedList.map((feed) => ({
+        id: feed.id,
+        author: feed.blog.name,
+        blogPlatform: feed.blog.blogPlatform,
+        title: feed.title,
+        path: feed.path,
+        createdAt: feed.createdAt.toISOString(),
+        thumbnail: feed.thumbnail,
+        viewCount: feed.viewCount,
+        likes: feed.likeCount,
+        comments: feed.commentCount,
+        tag: [],
+      })),
     );
 
     // cleanup
     await feedRepository.delete(feedList.map((_, i) => feedList[i].id));
+    await redisService.del(REDIS_KEYS.FEED_ORIGIN_TREND_KEY);
   });
 
   it('[SSE] 서버로부터 데이터를 받을 때 게시글이 데나무에서 지워진 경우 빈 피드 정보 수신을 성공한다.', async () => {
+    // given
+    await redisService.rpush(REDIS_KEYS.FEED_ORIGIN_TREND_KEY, '0');
+
     // SSE when
     const es = new EventSource(serverUrl);
     const data = await new Promise((resolve, reject) => {

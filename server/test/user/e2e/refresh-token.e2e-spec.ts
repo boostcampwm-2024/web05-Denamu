@@ -12,14 +12,24 @@ describe(`POST ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let user: User;
+  let userRepository: UserRepository;
+  let refreshToken: string;
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
-    const userRepository = app.get(UserRepository);
+    userRepository = app.get(UserRepository);
+  });
+
+  beforeEach(async () => {
     user = await userRepository.save(
       await UserFixture.createUserCryptFixture(),
     );
+    refreshToken = createRefreshToken(user);
+  });
+
+  afterEach(async () => {
+    await userRepository.delete(user.id);
   });
 
   it('[401] Refresh Token이 없을 경우 Access Token 발급을 실패한다.', async () => {
@@ -33,9 +43,6 @@ describe(`POST ${URL} E2E Test`, () => {
   });
 
   it('[200] Refresh Token이 있을 경우 Access Token 발급을 성공한다.', async () => {
-    // given
-    const refreshToken = createRefreshToken(user);
-
     // Http when
     const response = await agent
       .post(URL)

@@ -1,12 +1,16 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as supertest from 'supertest';
 import { RedisService } from '../../../src/common/redis/redis.service';
-import { UserFixture } from '../../config/common/fixture/user.fixture';
+import {
+  USER_DEFAULT_PASSWORD,
+  UserFixture,
+} from '../../config/common/fixture/user.fixture';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 import { CertificateUserRequestDto } from '../../../src/user/dto/request/certificateUser.dto';
 import TestAgent from 'supertest/lib/agent';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import * as bcrypt from 'bcrypt';
+import { User } from '../../../src/user/entity/user.entity';
 
 const URL = '/api/user/certificate';
 
@@ -15,6 +19,7 @@ describe(`POST ${URL} E2E Test`, () => {
   let agent: TestAgent;
   let redisService: RedisService;
   let userRepository: UserRepository;
+  let user: User;
   const userRegisterCode = 'user-register-certificate';
   const redisKeyMake = (data: string) => `${REDIS_KEYS.USER_AUTH_KEY}:${data}`;
 
@@ -23,6 +28,14 @@ describe(`POST ${URL} E2E Test`, () => {
     agent = supertest(app.getHttpServer());
     redisService = app.get(RedisService);
     userRepository = app.get(UserRepository);
+  });
+
+  beforeEach(async () => {
+    user = await UserFixture.createUserCryptFixture();
+    await redisService.set(
+      redisKeyMake(userRegisterCode),
+      JSON.stringify(user),
+    );
   });
 
   it('[404] 존재하지 않거나 만료된 UUID로 인증을 요청할 경우 회원 가입 인증을 실패한다.', async () => {
@@ -38,18 +51,22 @@ describe(`POST ${URL} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedUser = await userRepository.findOneBy({
+      userName: user.userName,
+      email: user.email,
+    });
+
+    // DB, Redis then
+    expect(savedUser).toBeNull();
   });
 
   it('[200] 올바른 인증 코드로 인증을 요청할 경우 회원 가입 인증을 성공한다.', async () => {
     // given
-    const userEntity = await UserFixture.createUserCryptFixture();
     const requestDto = new CertificateUserRequestDto({
       uuid: userRegisterCode,
     });
-    await redisService.set(
-      redisKeyMake(userRegisterCode),
-      JSON.stringify(userEntity),
-    );
 
     // Http when
     const response = await agent.post(URL).send(requestDto);
@@ -61,8 +78,8 @@ describe(`POST ${URL} E2E Test`, () => {
 
     // DB, Redis when
     const savedUser = await userRepository.findOneBy({
-      email: userEntity.email,
-      userName: userEntity.userName,
+      email: user.email,
+      userName: user.userName,
     });
     const savedRegisterCode = await redisService.get(
       redisKeyMake(userRegisterCode),
@@ -72,10 +89,7 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(savedRegisterCode).toBeNull();
     expect(savedUser).not.toBeNull();
     expect(
-      await bcrypt.compare(
-        UserFixture.GENERAL_USER.password,
-        savedUser.password,
-      ),
+      await bcrypt.compare(USER_DEFAULT_PASSWORD, savedUser.password),
     ).toBeTruthy();
   });
 });

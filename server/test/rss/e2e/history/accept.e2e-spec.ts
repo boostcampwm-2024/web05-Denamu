@@ -13,22 +13,34 @@ describe(`GET ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let rssAcceptList: RssAccept[];
+  let rssAcceptRepository: RssAcceptRepository;
+  let redisService: RedisService;
   const redisKeyMake = (data: string) => `${REDIS_KEYS.ADMIN_AUTH_KEY}:${data}`;
   const sessionKey = 'admin-rss-history-accept';
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
-    const rssAcceptRepository = app.get(RssAcceptRepository);
-    const redisService = app.get(RedisService);
+    rssAcceptRepository = app.get(RssAcceptRepository);
+    redisService = app.get(RedisService);
+  });
+
+  beforeEach(async () => {
     const rssAccepts = Array.from({ length: 2 }).map((_, i) =>
-      RssAcceptFixture.createRssAcceptFixture({}, i + 1),
+      RssAcceptFixture.createRssAcceptFixture(),
     );
     [rssAcceptList] = await Promise.all([
       rssAcceptRepository.save(rssAccepts),
       redisService.set(redisKeyMake(sessionKey), 'test1234'),
     ]);
     rssAcceptList.reverse();
+  });
+
+  afterEach(async () => {
+    await rssAcceptRepository.delete(
+      rssAcceptList.map((rssAccept) => rssAccept.id),
+    );
+    await redisService.del(redisKeyMake(sessionKey));
   });
 
   it('[401] 관리자 로그인 쿠키가 없을 경우 RSS 승인 기록 조회를 실패한다.', async () => {
@@ -63,17 +75,14 @@ describe(`GET ${URL} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual(
-      Array.from({ length: 2 }).map((_, i) => {
-        const rssAccept = rssAcceptList[i];
-        return {
-          id: rssAccept.id,
-          name: rssAccept.name,
-          userName: rssAccept.userName,
-          email: rssAccept.email,
-          rssUrl: rssAccept.rssUrl,
-          blogPlatform: rssAccept.blogPlatform,
-        };
-      }),
+      rssAcceptList.map((rssAccept) => ({
+        blogPlatform: rssAccept.blogPlatform,
+        email: rssAccept.email,
+        id: rssAccept.id,
+        name: rssAccept.name,
+        rssUrl: rssAccept.rssUrl,
+        userName: rssAccept.userName,
+      })),
     );
   });
 });

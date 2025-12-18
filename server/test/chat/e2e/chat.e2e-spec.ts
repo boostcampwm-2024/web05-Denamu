@@ -28,7 +28,6 @@ describe('Socket.IO Anonymous Chat E2E Test', () => {
     if (clientSocket && clientSocket.connected) {
       clientSocket.disconnect();
     }
-    await redisService.del(REDIS_KEYS.CHAT_HISTORY_KEY);
   });
 
   it('[Disconnect] 최대 인원을 초과할 경우 연결을 실패한다.', async () => {
@@ -55,7 +54,7 @@ describe('Socket.IO Anonymous Chat E2E Test', () => {
     });
 
     // Socket.IO then
-    expect(data).toEqual({
+    expect(data).toStrictEqual({
       message: '채팅 서버의 한계에 도달했습니다. 잠시후 재시도 해주세요.',
     });
   });
@@ -92,6 +91,9 @@ describe('Socket.IO Anonymous Chat E2E Test', () => {
 
     // Socket.IO then
     expect(data).toStrictEqual(mockChatHistory.reverse());
+
+    // cleanup
+    await redisService.del(REDIS_KEYS.CHAT_HISTORY_KEY);
   });
 
   it('[Connect] 클라이언트가 연결될 경우 닉네임과 현재 접속중인 유저 수 정보를 받는다.', async () => {
@@ -117,7 +119,7 @@ describe('Socket.IO Anonymous Chat E2E Test', () => {
 
     // Socket.IO then
     expect(data).toStrictEqual({
-      userCount: expect.any(Number),
+      userCount: 1,
       name: expect.any(String),
     });
   });
@@ -147,7 +149,9 @@ describe('Socket.IO Anonymous Chat E2E Test', () => {
     });
 
     // Socket.IO then
-    expect(data).toMatchObject({
+    expect(data).toStrictEqual({
+      userId: chat.userId,
+      messageId: chat.messageId,
       message: chat.message,
       username: expect.any(String),
       timestamp: expect.any(String),

@@ -7,6 +7,7 @@ import { RedisService } from '../../../src/common/redis/redis.service';
 import { ResetPasswordRequestDto } from '../../../src/user/dto/request/resetPassword.dto';
 import TestAgent from 'supertest/lib/agent';
 import * as bcrypt from 'bcrypt';
+import { User } from '../../../src/user/entity/user.entity';
 
 const URL = '/api/user/password';
 
@@ -15,6 +16,7 @@ describe(`PATCH ${URL} E2E Test`, () => {
   let agent: TestAgent;
   let redisService: RedisService;
   let userRepository: UserRepository;
+  let user: User;
   const passwordPatchCode = 'user-password-confirm';
   const redisKeyMake = (data: string) =>
     `${REDIS_KEYS.USER_RESET_PASSWORD_KEY}:${data}`;
@@ -24,6 +26,15 @@ describe(`PATCH ${URL} E2E Test`, () => {
     agent = supertest(app.getHttpServer());
     redisService = app.get(RedisService);
     userRepository = app.get(UserRepository);
+  });
+
+  beforeEach(async () => {
+    user = await userRepository.save(UserFixture.createUserFixture());
+  });
+
+  afterEach(async () => {
+    await userRepository.delete(user.id);
+    await redisService.del(redisKeyMake(passwordPatchCode));
   });
 
   it('[404] 존재하지 않는 비밀번호 세션 ID를 통해 비밀번호 변경 요청을 할 경우 비밀번호 변경을 실패한다.', async () => {
@@ -52,7 +63,6 @@ describe(`PATCH ${URL} E2E Test`, () => {
 
   it('[200] 존재하는 비밀번호 세션 ID를 통해 비밀번호 변경 요청을 할 경우 비밀번호 변경을 성공한다.', async () => {
     // given
-    const user = await userRepository.save(UserFixture.createUserFixture());
     const updatedPassword = 'test1234@';
     const requestDto = new ResetPasswordRequestDto({
       uuid: passwordPatchCode,
