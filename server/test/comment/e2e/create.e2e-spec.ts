@@ -11,8 +11,9 @@ import { RssAcceptFixture } from '../../config/common/fixture/rss-accept.fixture
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
 import TestAgent from 'supertest/lib/agent';
 import { CommentRepository } from '../../../src/comment/repository/comment.repository';
-import { CommentFixture } from '../../config/common/fixture/comment.fixture';
+import { COMMENT_DEFAULT_TEXT } from '../../config/common/fixture/comment.fixture';
 import { createAccessToken } from '../../config/e2e/env/jest.setup';
+import { RssAccept } from '../../../src/rss/entity/rss.entity';
 
 const URL = '/api/comment';
 
@@ -21,28 +22,43 @@ describe(`POST ${URL} E2E Test`, () => {
   let agent: TestAgent;
   let user: User;
   let feed: Feed;
+  let rssAccept: RssAccept;
   let commentRepository: CommentRepository;
+  let rssAcceptRepository: RssAcceptRepository;
+  let userRepository: UserRepository;
+  let feedRepository: FeedRepository;
+  let accessToken: string;
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
     commentRepository = app.get(CommentRepository);
-    const userRepository = app.get(UserRepository);
-    const rssAcceptRepository = app.get(RssAcceptRepository);
-    const feedRepository = app.get(FeedRepository);
-    const rssAccept = await rssAcceptRepository.save(
+    userRepository = app.get(UserRepository);
+    rssAcceptRepository = app.get(RssAcceptRepository);
+    feedRepository = app.get(FeedRepository);
+  });
+
+  beforeEach(async () => {
+    rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
     [user, feed] = await Promise.all([
       userRepository.save(await UserFixture.createUserCryptFixture()),
       feedRepository.save(FeedFixture.createFeedFixture(rssAccept)),
     ]);
+    accessToken = createAccessToken(user);
+  });
+
+  afterEach(async () => {
+    await feedRepository.delete(feed.id);
+    await userRepository.delete(user.id);
+    await rssAcceptRepository.delete(rssAccept.id);
   });
 
   it('[401] 로그인이 되어 있지 않을 경우 댓글 등록을 실패한다.', async () => {
     // given
     const requestDto = new CreateCommentRequestDto({
-      comment: CommentFixture.GENERAL_COMMENT.comment,
+      comment: COMMENT_DEFAULT_TEXT,
       feedId: feed.id,
     });
 
@@ -66,9 +82,8 @@ describe(`POST ${URL} E2E Test`, () => {
 
   it('[404] 게시글이 존재하지 않을 경우 댓글 등록을 실패한다.', async () => {
     // given
-    const accessToken = createAccessToken(user);
     const requestDto = new CreateCommentRequestDto({
-      comment: CommentFixture.GENERAL_COMMENT.comment,
+      comment: COMMENT_DEFAULT_TEXT,
       feedId: Number.MAX_SAFE_INTEGER,
     });
 
@@ -95,9 +110,9 @@ describe(`POST ${URL} E2E Test`, () => {
 
   it('[404] 회원 정보가 없을 경우 댓글 등록을 실패한다.', async () => {
     // given
-    const accessToken = createAccessToken({ id: Number.MAX_SAFE_INTEGER });
+    accessToken = createAccessToken({ id: Number.MAX_SAFE_INTEGER });
     const requestDto = new CreateCommentRequestDto({
-      comment: CommentFixture.GENERAL_COMMENT.comment,
+      comment: COMMENT_DEFAULT_TEXT,
       feedId: feed.id,
     });
 
@@ -124,9 +139,8 @@ describe(`POST ${URL} E2E Test`, () => {
 
   it('[201] 로그인이 되어 있을 경우 댓글 등록을 성공한다.', async () => {
     // given
-    const accessToken = createAccessToken(user);
     const requestDto = new CreateCommentRequestDto({
-      comment: CommentFixture.GENERAL_COMMENT.comment,
+      comment: COMMENT_DEFAULT_TEXT,
       feedId: feed.id,
     });
 
@@ -151,6 +165,6 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(savedComment).not.toBeNull();
 
     // cleanup
-    await commentRepository.delete({ user, feed });
+    await commentRepository.delete(savedComment.id);
   });
 });

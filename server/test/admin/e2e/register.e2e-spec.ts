@@ -7,7 +7,6 @@ import TestAgent from 'supertest/lib/agent';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 import * as bcrypt from 'bcrypt';
-import { Admin } from '../../../src/admin/entity/admin.entity';
 
 const URL = '/api/admin/register';
 
@@ -15,7 +14,7 @@ describe(`POST ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let adminRepository: AdminRepository;
-  let admin: Admin;
+  let redisService: RedisService;
   const sessionKey = 'admin-register-session-key';
   const redisKeyMake = (data: string) => `${REDIS_KEYS.ADMIN_AUTH_KEY}:${data}`;
 
@@ -23,11 +22,15 @@ describe(`POST ${URL} E2E Test`, () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
     adminRepository = app.get(AdminRepository);
-    const redisService = app.get(RedisService);
-    admin = await adminRepository.save(
-      await AdminFixture.createAdminCryptFixture(),
-    );
-    await redisService.set(redisKeyMake(sessionKey), admin.loginId);
+    redisService = app.get(RedisService);
+  });
+
+  beforeEach(async () => {
+    await redisService.set(redisKeyMake(sessionKey), 'testAdminId');
+  });
+
+  afterEach(async () => {
+    await redisService.del(redisKeyMake(sessionKey));
   });
 
   it('[401] 관리자 로그인 쿠키가 없을 경우 회원가입을 실패한다.', async () => {
@@ -83,9 +86,12 @@ describe(`POST ${URL} E2E Test`, () => {
 
   it('[409] 중복된 ID로 회원가입을 할 경우 다른 관리자 계정 회원가입을 실패한다.', async () => {
     // given
+    const admin = await adminRepository.save(
+      await AdminFixture.createAdminCryptFixture(),
+    );
     const newAdminDto = new RegisterAdminRequestDto({
-      loginId: AdminFixture.GENERAL_ADMIN.loginId,
-      password: AdminFixture.GENERAL_ADMIN.password,
+      loginId: admin.loginId,
+      password: 'testNewAdminPassword!',
     });
 
     // Http when
@@ -106,6 +112,9 @@ describe(`POST ${URL} E2E Test`, () => {
 
     // DB, Redis then
     expect(savedAdmin.length).toBe(1);
+
+    // cleanup
+    await adminRepository.delete(admin.id);
   });
 
   it('[201] 관리자 로그인이 되어 있을 경우 다른 관리자 계정 회원가입을 성공한다.', async () => {
@@ -138,6 +147,6 @@ describe(`POST ${URL} E2E Test`, () => {
     ).toBeTruthy();
 
     // cleanup
-    await adminRepository.delete({ loginId: newAdminDto.loginId });
+    await adminRepository.delete(savedAdmin.id);
   });
 });

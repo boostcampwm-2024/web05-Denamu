@@ -11,6 +11,8 @@ import TestAgent from 'supertest/lib/agent';
 import { LikeRepository } from '../../../src/like/repository/like.repository';
 import { createAccessToken } from '../../config/e2e/env/jest.setup';
 import { User } from '../../../src/user/entity/user.entity';
+import { RssAccept } from '../../../src/rss/entity/rss.entity';
+import { Like } from '../../../src/like/entity/like.entity';
 
 const URL = '/api/like';
 
@@ -19,22 +21,38 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
   let agent: TestAgent;
   let feed: Feed;
   let user: User;
+  let userRepository: UserRepository;
+  let rssAcceptRepository: RssAcceptRepository;
+  let feedRepository: FeedRepository;
+  let likeRepository: LikeRepository;
+  let rssAccept: RssAccept;
+  let like: Like;
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
-    const userRepository = app.get(UserRepository);
-    const rssAcceptRepository = app.get(RssAcceptRepository);
-    const feedRepository = app.get(FeedRepository);
-    const likeRepository = app.get(LikeRepository);
-    const rssAccept = await rssAcceptRepository.save(
+    userRepository = app.get(UserRepository);
+    rssAcceptRepository = app.get(RssAcceptRepository);
+    feedRepository = app.get(FeedRepository);
+    likeRepository = app.get(LikeRepository);
+  });
+
+  beforeEach(async () => {
+    rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
     user = await userRepository.save(
       await UserFixture.createUserCryptFixture(),
     );
     feed = await feedRepository.save(FeedFixture.createFeedFixture(rssAccept));
-    await likeRepository.insert({ user, feed });
+    like = await likeRepository.save({ user, feed });
+  });
+
+  afterEach(async () => {
+    await likeRepository.delete(like.id);
+    await feedRepository.delete(feed.id);
+    await userRepository.delete(user.id);
+    await rssAcceptRepository.delete(rssAccept.id);
   });
 
   it('[404] 게시글이 존재하지 않을 경우 좋아요 정보 제공을 실패한다.', async () => {

@@ -16,6 +16,8 @@ describe(`POST ${URL} E2E Test`, () => {
   let agent: TestAgent;
   let user: User;
   let redisService: RedisService;
+  let userRepository: UserRepository;
+  let accessToken: string;
   const userDeleteCode = 'user-delete-request';
   const redisKeyMake = (data: string) =>
     `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${data}`;
@@ -24,14 +26,20 @@ describe(`POST ${URL} E2E Test`, () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
     redisService = app.get(RedisService);
-    const userRepository = app.get(UserRepository);
+    userRepository = app.get(UserRepository);
+  });
+
+  beforeEach(async () => {
+    jest.spyOn(uuid, 'v4').mockReturnValue(userDeleteCode as any);
     user = await userRepository.save(
       await UserFixture.createUserCryptFixture(),
     );
+    accessToken = createAccessToken(user);
   });
 
-  beforeEach(() => {
-    jest.spyOn(uuid, 'v4').mockReturnValue(userDeleteCode as any);
+  afterEach(async () => {
+    await userRepository.delete(user.id);
+    await redisService.del(redisKeyMake(userDeleteCode));
   });
 
   it('[401] 로그인 되지 않은 유저가 회원 탈퇴를 신청할 경우 회원 탈퇴 신청을 실패한다.', async () => {
@@ -53,9 +61,6 @@ describe(`POST ${URL} E2E Test`, () => {
   });
 
   it('[200] 회원 탈퇴 신청을 받을 경우 회원 탈퇴 신청을 성공한다.', async () => {
-    // given
-    const accessToken = createAccessToken(user);
-
     // Http when
     const response = await agent
       .post(URL)

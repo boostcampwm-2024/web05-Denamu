@@ -10,6 +10,7 @@ import {
 } from '../../../src/feed/dto/request/searchFeed.dto';
 import TestAgent from 'supertest/lib/agent';
 import { Feed } from '../../../src/feed/entity/feed.entity';
+import { RssAccept } from '../../../src/rss/entity/rss.entity';
 
 const URL = '/api/feed/search';
 
@@ -17,27 +18,38 @@ describe(`GET ${URL}?type={}&find={} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let feedList: Feed[];
+  let rssAccept: RssAccept;
+  let feedRepository: FeedRepository;
+  let rssAcceptRepository: RssAcceptRepository;
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
-    const feedRepository = app.get(FeedRepository);
-    const rssAcceptRepository = app.get(RssAcceptRepository);
-    const rssAccept = await rssAcceptRepository.save(
+    feedRepository = app.get(FeedRepository);
+    rssAcceptRepository = app.get(RssAcceptRepository);
+  });
+
+  beforeEach(async () => {
+    rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
     const feeds = Array.from({ length: 5 }).map((_, i) =>
-      FeedFixture.createFeedFixture(rssAccept, {}, i + 1),
+      FeedFixture.createFeedFixture(rssAccept, { title: `search-data${i}` }),
     );
 
-    feedList = (await feedRepository.save(feeds)).reverse();
+    feedList = await feedRepository.save(feeds);
+  });
+
+  afterEach(async () => {
+    await feedRepository.delete(feedList.map((feed) => feed.id));
+    await rssAcceptRepository.delete(rssAccept.id);
   });
 
   it('[200] 검색 결과에 적합한 게시글이 존재할 경우 검색 결과 제공을 성공한다.', async () => {
     // given
     const requestDto = new SearchFeedRequestDto({
       type: SearchType.TITLE,
-      find: 'test',
+      find: 'search-data',
     });
 
     // Http when

@@ -12,6 +12,7 @@ import * as supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 import { LikeRepository } from '../../../src/like/repository/like.repository';
 import { createAccessToken } from '../../config/e2e/env/jest.setup';
+import { RssAccept } from '../../../src/rss/entity/rss.entity';
 
 const URL = '/api/like';
 
@@ -21,21 +22,38 @@ describe(`POST ${URL} E2E Test`, () => {
   let feed: Feed;
   let agent: TestAgent;
   let likeRepository: LikeRepository;
+  let userRepository: UserRepository;
+  let rssAcceptRepository: RssAcceptRepository;
+  let feedRepository: FeedRepository;
+  let rssAccept: RssAccept;
+  let accessToken: string;
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
-    const userRepository = app.get(UserRepository);
-    const rssAcceptRepository = app.get(RssAcceptRepository);
-    const feedRepository = app.get(FeedRepository);
-    const rssAccept = await rssAcceptRepository.save(
+    userRepository = app.get(UserRepository);
+    rssAcceptRepository = app.get(RssAcceptRepository);
+    feedRepository = app.get(FeedRepository);
+    likeRepository = app.get(LikeRepository);
+  });
+
+  beforeEach(async () => {
+    rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
-    likeRepository = app.get(LikeRepository);
     [user, feed] = await Promise.all([
       userRepository.save(await UserFixture.createUserCryptFixture()),
       feedRepository.save(FeedFixture.createFeedFixture(rssAccept)),
     ]);
+    accessToken = createAccessToken(user);
+  });
+
+  afterEach(async () => {
+    await Promise.all([
+      feedRepository.delete(feed.id),
+      userRepository.delete(user.id),
+    ]);
+    await rssAcceptRepository.delete(rssAccept.id);
   });
 
   it('[401] 로그인이 되어 있지 않을 경우 좋아요 등록을 실패한다.', async () => {
@@ -67,7 +85,6 @@ describe(`POST ${URL} E2E Test`, () => {
     const requestDto = new ManageLikeRequestDto({
       feedId: Number.MAX_SAFE_INTEGER,
     });
-    const accessToken = createAccessToken(user);
 
     // Http when
     const response = await agent
@@ -99,7 +116,6 @@ describe(`POST ${URL} E2E Test`, () => {
     const requestDto = new ManageLikeRequestDto({
       feedId: feed.id,
     });
-    const accessToken = createAccessToken(user);
 
     // Http when
     const response = await agent
@@ -122,7 +138,7 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(savedLike.length).toBe(1);
 
     // cleanup
-    await likeRepository.delete({ id: like.id });
+    await likeRepository.delete(like.id);
   });
 
   it('[201] 로그인이 되어 있으며 좋아요를 한 적이 없을 경우 좋아요 등록을 성공한다.', async () => {
@@ -130,7 +146,6 @@ describe(`POST ${URL} E2E Test`, () => {
     const requestDto = new ManageLikeRequestDto({
       feedId: feed.id,
     });
-    const accessToken = createAccessToken(user);
 
     // Http when
     const response = await agent
@@ -153,9 +168,6 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(savedLike).not.toBeNull();
 
     // cleanup
-    await likeRepository.delete({
-      user: { id: user.id },
-      feed: { id: feed.id },
-    });
+    await likeRepository.delete(savedLike.id);
   });
 });

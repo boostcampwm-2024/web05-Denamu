@@ -7,6 +7,7 @@ import { RssAcceptFixture } from '../../config/common/fixture/rss-accept.fixture
 import { ReadFeedPaginationRequestDto } from '../../../src/feed/dto/request/readFeedPagination.dto';
 import TestAgent from 'supertest/lib/agent';
 import { Feed } from '../../../src/feed/entity/feed.entity';
+import { RssAccept } from '../../../src/rss/entity/rss.entity';
 
 const URL = '/api/feed';
 
@@ -14,21 +15,32 @@ describe(`GET ${URL}?limit={}&lastId={} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let feedList: Feed[];
+  let rssAccept: RssAccept;
+  let feedRepository: FeedRepository;
+  let rssAcceptRepository: RssAcceptRepository;
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
-    const feedRepository = app.get(FeedRepository);
-    const rssAcceptRepository = app.get(RssAcceptRepository);
-    const rssAccept = await rssAcceptRepository.save(
+    feedRepository = app.get(FeedRepository);
+    rssAcceptRepository = app.get(RssAcceptRepository);
+  });
+
+  beforeEach(async () => {
+    rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
     const feeds = Array.from({ length: 10 }).map((_, i) =>
-      FeedFixture.createFeedFixture(rssAccept, _, i + 1),
+      FeedFixture.createFeedFixture(rssAccept),
     );
 
     // 최신 게시글부터 제공하기에 테스트 편의성을 위해 최신 게시글을 앞으로
     feedList = (await feedRepository.save(feeds)).reverse();
+  });
+
+  afterEach(async () => {
+    await feedRepository.delete(feedList.map((feed) => feed.id));
+    await rssAcceptRepository.delete(rssAccept.id);
   });
 
   it('[200] 마지막 수신 피드 ID가 없을 경우 최신 피드부터 피드 목록 제공을 성공한다.', async () => {

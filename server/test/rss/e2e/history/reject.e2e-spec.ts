@@ -13,22 +13,34 @@ describe(`GET ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let rssRejectList: RssReject[];
+  let redisService: RedisService;
+  let rssRejectRepository: RssRejectRepository;
   const redisKeyMake = (data: string) => `${REDIS_KEYS.ADMIN_AUTH_KEY}:${data}`;
   const sessionKey = 'admin-rss-history-reject';
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
-    const rssRejectRepository = app.get(RssRejectRepository);
-    const redisService = app.get(RedisService);
+    rssRejectRepository = app.get(RssRejectRepository);
+    redisService = app.get(RedisService);
+  });
+
+  beforeEach(async () => {
     const rssRejects = Array.from({ length: 2 }).map((_, i) =>
-      RssRejectFixture.createRssRejectFixture({}, i),
+      RssRejectFixture.createRssRejectFixture(),
     );
     [rssRejectList] = await Promise.all([
       rssRejectRepository.save(rssRejects),
       redisService.set(redisKeyMake(sessionKey), 'test1234'),
     ]);
     rssRejectList.reverse();
+  });
+
+  afterEach(async () => {
+    await rssRejectRepository.delete(
+      rssRejectList.map((rssReject) => rssReject.id),
+    );
+    await redisService.del(redisKeyMake(sessionKey));
   });
 
   it('[401] 관리자 로그인 쿠키가 없을 경우 RSS 거절 기록 조회를 실패한다.', async () => {
@@ -63,17 +75,14 @@ describe(`GET ${URL} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual(
-      Array.from({ length: 2 }).map((_, i) => {
-        const rssReject = rssRejectList[i];
-        return {
-          id: rssReject.id,
-          name: rssReject.name,
-          userName: rssReject.userName,
-          email: rssReject.email,
-          rssUrl: rssReject.rssUrl,
-          description: rssReject.description,
-        };
-      }),
+      rssRejectList.map((rssReject) => ({
+        description: rssReject.description,
+        email: rssReject.email,
+        id: rssReject.id,
+        name: rssReject.name,
+        rssUrl: rssReject.rssUrl,
+        userName: rssReject.userName,
+      })),
     );
   });
 });

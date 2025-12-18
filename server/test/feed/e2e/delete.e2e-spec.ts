@@ -16,17 +16,25 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
   let feedRepository: FeedRepository;
   let rssAccept: RssAccept;
   let agent: TestAgent;
+  let rssAcceptRepository: RssAcceptRepository;
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
     feedRepository = app.get(FeedRepository);
-    const rssAcceptRepository = app.get(RssAcceptRepository);
+    rssAcceptRepository = app.get(RssAcceptRepository);
+  });
 
+  beforeEach(async () => {
     rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
     feed = await feedRepository.save(FeedFixture.createFeedFixture(rssAccept));
+  });
+
+  afterEach(async () => {
+    await feedRepository.delete(feed.id);
+    await rssAcceptRepository.delete(rssAccept.id);
   });
 
   it('[404] 존재하지 않는 게시글 ID에 요청을 보낼 경우 404를 응답한다.', async () => {
@@ -72,7 +80,6 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
 
   it('[200] 원본 게시글이 존재할 경우 조회를 성공한다.', async () => {
     // given
-    feed = await feedRepository.save(FeedFixture.createFeedFixture(rssAccept));
     global.fetch = jest
       .fn()
       .mockResolvedValue({ ok: true, status: HttpStatus.OK });
@@ -90,8 +97,5 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
 
     // DB, Redis then
     expect(savedFeed).not.toBeNull();
-
-    // cleanup
-    await feedRepository.delete(feed.id);
   });
 });

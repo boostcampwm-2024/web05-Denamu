@@ -23,15 +23,21 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
   let feed: Feed;
   let agent: TestAgent;
   let likeRepository: LikeRepository;
+  let userRepository: UserRepository;
+  let rssAcceptRepository: RssAcceptRepository;
+  let feedRepository: FeedRepository;
+  let accessToken: string;
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
     likeRepository = app.get(LikeRepository);
-    const userRepository = app.get(UserRepository);
-    const rssAcceptRepository = app.get(RssAcceptRepository);
-    const feedRepository = app.get(FeedRepository);
+    userRepository = app.get(UserRepository);
+    rssAcceptRepository = app.get(RssAcceptRepository);
+    feedRepository = app.get(FeedRepository);
+  });
 
+  beforeEach(async () => {
     user = await userRepository.save(
       await UserFixture.createUserCryptFixture(),
     );
@@ -39,6 +45,13 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
       RssAcceptFixture.createRssAcceptFixture(),
     );
     feed = await feedRepository.save(FeedFixture.createFeedFixture(rssAccept));
+    accessToken = createAccessToken(user);
+  });
+
+  afterEach(async () => {
+    await feedRepository.delete(feed.id);
+    await rssAcceptRepository.delete(rssAccept.id);
+    await userRepository.delete(user.id);
   });
 
   it('[401] 로그인이 되어 있지 않을 경우 좋아요 삭제를 실패한다.', async () => {
@@ -61,7 +74,6 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
     const requestDto = new ManageLikeRequestDto({
       feedId: Number.MAX_SAFE_INTEGER,
     });
-    const accessToken = createAccessToken(user);
 
     // Http when
     const response = await agent
@@ -79,7 +91,6 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
     const requestDto = new ManageLikeRequestDto({
       feedId: feed.id,
     });
-    const accessToken = createAccessToken(user);
 
     // Http when
     const response = await agent
@@ -102,7 +113,6 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
     const requestDto = new ManageLikeRequestDto({
       feedId: feed.id,
     });
-    const accessToken = createAccessToken(user);
 
     // Http when
     const response = await agent
