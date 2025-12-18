@@ -15,11 +15,19 @@ const globalAny: any = global;
 
 export default async () => {
   console.log('Starting global setup...');
-  await createMysqlContainer();
-  await createRedisContainer();
-  await createRabbitMQContainer();
+  const startTime = process.hrtime.bigint();
+  await Promise.all([
+    createMysqlContainer(),
+    createRedisContainer(),
+    createRabbitMQContainer(),
+  ]);
   jwtEnvSetup();
-  console.log('Global setup completed.');
+  const endTime = process.hrtime.bigint();
+  const elapsedMs = Number(endTime - startTime) / 1_000_000;
+
+  console.log(
+    `Global setup completed. Elapsed time: ${elapsedMs.toFixed(2)} ms`,
+  );
 };
 
 const createMysqlContainer = async () => {
@@ -39,9 +47,6 @@ const createMysqlContainer = async () => {
 };
 
 const createTestDatabases = async (container: StartedMySqlContainer) => {
-  if (!MAX_WORKERS) {
-    return;
-  }
   console.log('Starting Creating Test Databases...');
   const user = 'root';
   const password = container.getRootPassword();
