@@ -1,17 +1,18 @@
 import { Rss } from '../../../../src/rss/entity/rss.entity';
+import * as uuid from 'uuid';
 
 export class RssFixture {
-  static createRssFixture(
-    overwrites: Partial<Rss> = {},
-    index: number = 1,
-  ): Rss {
+  static createGeneralRss(): Partial<Rss> {
+    return {
+      name: 'test',
+      userName: 'test',
+      email: `test${uuid.v4()}@test.com`,
+      rssUrl: `https://test${uuid.v4()}.com/rss`,
+    };
+  }
+
+  static createRssFixture(overwrites: Partial<Rss> = {}): Rss {
     const rss = new Rss();
-    Object.assign(rss, {
-      name: `blog${index}`,
-      userName: `name${index}`,
-      email: `test${index}@test.com`,
-      rssUrl: `https://test${index}.com/rss`,
-    });
-    return Object.assign(rss, overwrites);
+    return Object.assign(rss, this.createGeneralRss(), overwrites);
   }
 }
