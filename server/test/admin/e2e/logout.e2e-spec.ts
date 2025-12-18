@@ -18,7 +18,14 @@ describe(`POST ${URL} E2E Test`, () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
     redisService = app.get(RedisService);
+  });
+
+  beforeEach(async () => {
     await redisService.set(redisKeyMake(sessionKey), sessionId);
+  });
+
+  afterEach(async () => {
+    await redisService.del(redisKeyMake(sessionKey));
   });
 
   it('[401] 관리자 로그인 쿠키가 없을 경우 로그아웃을 실패한다.', async () => {
@@ -70,9 +77,9 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(data).toBeUndefined();
 
     // DB, Redis when
-    const savedSessionId = await redisService.get(redisKeyMake(sessionKey));
+    const savedSession = await redisService.get(redisKeyMake(sessionKey));
 
     // DB, Redis then
-    expect(savedSessionId).toBeNull();
+    expect(savedSession).toBeNull();
   });
 });

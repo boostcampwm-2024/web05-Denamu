@@ -8,6 +8,7 @@ import { FeedFixture } from '../../config/common/fixture/feed.fixture';
 import { RssAcceptFixture } from '../../config/common/fixture/rss-accept.fixture';
 import TestAgent from 'supertest/lib/agent';
 import { Feed } from '../../../src/feed/entity/feed.entity';
+import { RssAccept } from '../../../src/rss/entity/rss.entity';
 
 const URL = '/api/feed';
 
@@ -16,7 +17,9 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
   let agent: TestAgent;
   let redisService: RedisService;
   let feed: Feed;
+  let rssAccept: RssAccept;
   let feedRepository: FeedRepository;
+  let rssAcceptRepository: RssAcceptRepository;
   const testIp = '1.1.1.1';
   const redisKeyMake = (data: string) => `feed:${data}:ip`;
 
@@ -25,14 +28,21 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
     agent = supertest(app.getHttpServer());
     redisService = app.get(RedisService);
     feedRepository = app.get(FeedRepository);
-    const rssAcceptRepository = app.get(RssAcceptRepository);
-    const rssAccept = await rssAcceptRepository.save(
+    rssAcceptRepository = app.get(RssAcceptRepository);
+  });
+
+  beforeEach(async () => {
+    rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
-    feed = await feedRepository.save(
-      FeedFixture.createFeedFixture(rssAccept, {}, 1),
-    );
+    feed = await feedRepository.save(FeedFixture.createFeedFixture(rssAccept));
     await redisService.sadd(redisKeyMake(feed.id.toString()), testIp);
+  });
+
+  afterEach(async () => {
+    await feedRepository.delete(feed.id);
+    await rssAcceptRepository.delete(rssAccept.id);
+    await redisService.del(redisKeyMake(feed.id.toString()));
   });
 
   it('[404] 피드가 서비스에 존재하지 않을 경우 조회수 상승을 실패한다.', async () => {

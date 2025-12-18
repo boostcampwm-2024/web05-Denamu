@@ -8,6 +8,7 @@ import {
 } from '../../../src/rss/repository/rss.repository';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 import TestAgent from 'supertest/lib/agent';
+import { Rss } from '../../../src/rss/entity/rss.entity';
 
 const URL = '/api/rss/accept';
 
@@ -17,6 +18,7 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
   let rssRepository: RssRepository;
   let rssAcceptRepository: RssAcceptRepository;
   let redisService: RedisService;
+  let rss: Rss;
   const redisKeyMake = (data: string) => `${REDIS_KEYS.ADMIN_AUTH_KEY}:${data}`;
   const sessionKey = 'admin-rss-accept';
 
@@ -29,10 +31,13 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
   });
 
   beforeEach(async () => {
-    await Promise.all([
-      rssRepository.delete({}),
-      redisService.set(redisKeyMake(sessionKey), 'test1234'),
-    ]);
+    rss = await rssRepository.save(RssFixture.createRssFixture());
+    await redisService.set(redisKeyMake(sessionKey), 'test1234');
+  });
+
+  afterEach(async () => {
+    await rssRepository.delete(rss.id);
+    await redisService.del(redisKeyMake(sessionKey));
   });
 
   it('[401] 관리자 로그인 쿠키가 없을 경우 RSS 승인을 실패한다.', async () => {
@@ -43,6 +48,21 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedRssAccept = await rssAcceptRepository.findOneBy({
+      rssUrl: rss.rssUrl,
+      name: rss.name,
+      userName: rss.userName,
+      email: rss.email,
+    });
+    const savedRss = await rssRepository.findOneBy({
+      id: rss.id,
+    });
+
+    // DB, Redis then
+    expect(savedRssAccept).toBeNull();
+    expect(savedRss).not.toBeNull();
   });
 
   it('[401] 관리자 로그인 쿠키가 만료됐을 경우 RSS 승인을 실패한다.', async () => {
@@ -55,6 +75,21 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedRssAccept = await rssAcceptRepository.findOneBy({
+      rssUrl: rss.rssUrl,
+      name: rss.name,
+      userName: rss.userName,
+      email: rss.email,
+    });
+    const savedRss = await rssRepository.findOneBy({
+      id: rss.id,
+    });
+
+    // DB, Redis then
+    expect(savedRssAccept).toBeNull();
+    expect(savedRss).not.toBeNull();
   });
 
   it('[404] 대기 목록에 없는 RSS를 승인할 경우 RSS 승인을 실패한다.', async () => {
@@ -67,11 +102,25 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedRssAccept = await rssAcceptRepository.findOneBy({
+      rssUrl: rss.rssUrl,
+      name: rss.name,
+      userName: rss.userName,
+      email: rss.email,
+    });
+    const savedRss = await rssRepository.findOneBy({
+      id: rss.id,
+    });
+
+    // DB, Redis then
+    expect(savedRssAccept).toBeNull();
+    expect(savedRss).not.toBeNull();
   });
 
   it('[400] 잘못된 RSS URL을 승인할 경우 RSS 승인을 실패한다.', async () => {
     // given
-    const rss = await rssRepository.save(RssFixture.createRssFixture());
     global.fetch = jest.fn().mockResolvedValue({
       ok: false,
       status: HttpStatus.BAD_REQUEST,
@@ -105,7 +154,6 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
 
   it('[201] 관리자 로그인이 되어 있을 경우 RSS 승인을 성공한다.', async () => {
     // given
-    const rss = await rssRepository.save(RssFixture.createRssFixture());
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
       status: HttpStatus.OK,
@@ -134,6 +182,6 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
     expect(savedRss).toBeNull();
 
     // cleanup
-    await rssAcceptRepository.delete({ rssUrl: rss.rssUrl });
+    await rssAcceptRepository.delete(savedRssAccept.id);
   });
 });

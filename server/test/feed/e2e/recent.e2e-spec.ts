@@ -8,6 +8,7 @@ import { RedisService } from '../../../src/common/redis/redis.service';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 import TestAgent from 'supertest/lib/agent';
 import { Feed } from '../../../src/feed/entity/feed.entity';
+import { RssAccept } from '../../../src/rss/entity/rss.entity';
 
 const URL = '/api/feed/recent';
 
@@ -16,6 +17,9 @@ describe(`GET ${URL} E2E Test`, () => {
   let agent: TestAgent;
   let redisService: RedisService;
   let feedList: Feed[];
+  let rssAccept: RssAccept;
+  let rssAcceptRepository: RssAcceptRepository;
+  let feedRepository: FeedRepository;
   const redisKeyMake = (data: string) =>
     `${REDIS_KEYS.FEED_RECENT_KEY}:${data}`;
 
@@ -23,16 +27,23 @@ describe(`GET ${URL} E2E Test`, () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
     redisService = app.get(RedisService);
-    const rssAcceptRepository = app.get(RssAcceptRepository);
-    const rssAccept = await rssAcceptRepository.save(
+    rssAcceptRepository = app.get(RssAcceptRepository);
+    feedRepository = app.get(FeedRepository);
+  });
+
+  beforeEach(async () => {
+    rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
-    const feedRepository = app.get(FeedRepository);
-    const feeds = Array.from({ length: 2 }).map((_, i) => {
-      return FeedFixture.createFeedFixture(rssAccept, {}, i + 1);
-    });
+    const feeds = FeedFixture.createFeedsFixture(rssAccept, 2);
 
-    feedList = await feedRepository.save(feeds);
+    // 최신 피드가 앞쪽에 오도록 생성
+    feedList = (await feedRepository.save(feeds)).reverse();
+  });
+
+  afterEach(async () => {
+    await feedRepository.delete(feedList.map((feed) => feed.id));
+    await rssAcceptRepository.delete(rssAccept.id);
   });
 
   it('[200] 최신 피드 업데이트 요청이 들어올 경우 최신 피드 제공을 성공한다.', async () => {
@@ -62,25 +73,23 @@ describe(`GET ${URL} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual(
-      feedList
-        .map((_, i) => {
-          const feed = feedList[i];
-          return {
-            id: feed.id,
-            author: feed.blog.name,
-            blogPlatform: feed.blog.blogPlatform,
-            title: feed.title,
-            path: feed.path,
-            tag: [],
-            createdAt: feed.createdAt.toISOString(),
-            thumbnail: feed.thumbnail,
-            viewCount: feed.viewCount,
-            likes: feed.likeCount,
-            isNew: true,
-            comments: feed.commentCount,
-          };
-        })
-        .reverse(),
+      feedList.map((_, i) => {
+        const feed = feedList[i];
+        return {
+          id: feed.id,
+          author: feed.blog.name,
+          blogPlatform: feed.blog.blogPlatform,
+          title: feed.title,
+          path: feed.path,
+          tag: [],
+          createdAt: feed.createdAt.toISOString(),
+          thumbnail: feed.thumbnail,
+          viewCount: feed.viewCount,
+          likes: feed.likeCount,
+          isNew: true,
+          comments: feed.commentCount,
+        };
+      }),
     );
 
     // cleanup

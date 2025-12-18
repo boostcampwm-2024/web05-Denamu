@@ -88,8 +88,5 @@ describe(`POST ${URL} E2E Test`, () => {
       email: requestDto.email,
       userName: requestDto.userName,
     });
-
-    // cleanup
-    await userRepository.delete({ email: requestDto.email });
   });
 });

@@ -16,12 +16,17 @@ describe(`PATCH ${URL} E2E Test`, () => {
   let userRepository: UserRepository;
   let fileService: FileService;
   let user: User;
+  let accessToken: string;
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
     fileService = app.get(FileService);
     userRepository = app.get(UserRepository);
+  });
+
+  beforeEach(async () => {
+    jest.spyOn(fileService, 'deleteByPath').mockResolvedValue(undefined);
     user = await userRepository.save(
       await UserFixture.createUserCryptFixture({
         userName: '기존이름',
@@ -29,10 +34,11 @@ describe(`PATCH ${URL} E2E Test`, () => {
         introduction: '기존 소개글입니다.',
       }),
     );
+    accessToken = createAccessToken(user);
   });
 
-  beforeEach(() => {
-    jest.spyOn(fileService, 'deleteByPath').mockResolvedValue(undefined);
+  afterEach(async () => {
+    await userRepository.delete(user.id);
   });
 
   it('[401] 로그인하지 않은 유저가 회원 정보 수정 요청을 할 경우 회원 정보 수정을 실패한다.', async () => {
@@ -50,6 +56,14 @@ describe(`PATCH ${URL} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedUser = await userRepository.findOneBy({ id: user.id });
+
+    // DB, Redis then
+    expect(savedUser.userName).toBe(user.userName);
+    expect(savedUser.profileImage).toBe(user.profileImage);
+    expect(savedUser.introduction).toBe(user.introduction);
   });
 
   it('[404] 회원 데이터가 서비스에 없을 경우 회원 정보 수정을 실패한다.', async () => {
@@ -59,7 +73,7 @@ describe(`PATCH ${URL} E2E Test`, () => {
       profileImage: 'https://url/objects/PROFILE_IMAGE/20000902/uuid.png',
       introduction: '변경된 소개글입니다.',
     });
-    const accessToken = createAccessToken({ id: Number.MAX_SAFE_INTEGER });
+    accessToken = createAccessToken({ id: Number.MAX_SAFE_INTEGER });
 
     // Http when
     const response = await agent
@@ -71,11 +85,18 @@ describe(`PATCH ${URL} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedUser = await userRepository.findOneBy({ id: user.id });
+
+    // DB, Redis then
+    expect(savedUser.userName).toBe(user.userName);
+    expect(savedUser.profileImage).toBe(user.profileImage);
+    expect(savedUser.introduction).toBe(user.introduction);
   });
 
   it('[200] 사용자가 모든 필드 수정 요청을 할 경우 회원 정보 수정을 성공한다.', async () => {
     // given
-    const accessToken = createAccessToken(user);
     const requestDto = new UpdateUserRequestDto({
       userName: '변경된이름',
       profileImage: 'https://url/objects/PROFILE_IMAGE/20000902/uuid.png',
@@ -104,7 +125,6 @@ describe(`PATCH ${URL} E2E Test`, () => {
 
   it('[200] 사용자가 일부 필드만 수정 요청을 할 경우 회원 정보 수정을 성공한다.', async () => {
     // given
-    const accessToken = createAccessToken(user);
     const requestDto = new UpdateUserRequestDto({
       userName: '부분수정이름',
     });

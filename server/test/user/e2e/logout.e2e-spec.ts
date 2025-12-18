@@ -12,14 +12,24 @@ describe(`POST ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let user: User;
+  let userRepository: UserRepository;
+  let accessToken: string;
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
-    const userRepository = app.get(UserRepository);
+    userRepository = app.get(UserRepository);
+  });
+
+  beforeEach(async () => {
     user = await userRepository.save(
       await UserFixture.createUserCryptFixture(),
     );
+    accessToken = createAccessToken(user);
+  });
+
+  afterEach(async () => {
+    await userRepository.delete(user.id);
   });
 
   it('[401] Access Token이 존재하지 않을 경우 로그아웃을 실패한다.', async () => {
@@ -33,9 +43,6 @@ describe(`POST ${URL} E2E Test`, () => {
   });
 
   it('[200] 로그인된 상태일 경우 로그아웃을 성공한다.', async () => {
-    // given
-    const accessToken = createAccessToken(user);
-
     // Http when
     const response = await agent
       .post(URL)

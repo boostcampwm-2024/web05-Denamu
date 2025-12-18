@@ -16,6 +16,7 @@ describe(`POST ${URL} E2E Test`, () => {
   let agent: TestAgent;
   let user: User;
   let redisService: RedisService;
+  let userRepository: UserRepository;
   const passwordPatchCode = 'user-password-request';
   const redisKeyMake = (data: string) =>
     `${REDIS_KEYS.USER_RESET_PASSWORD_KEY}:${data}`;
@@ -24,12 +25,16 @@ describe(`POST ${URL} E2E Test`, () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
     redisService = app.get(RedisService);
-    const userRepository = app.get(UserRepository);
+    userRepository = app.get(UserRepository);
+  });
+
+  beforeEach(async () => {
+    jest.spyOn(uuid, 'v4').mockReturnValue(passwordPatchCode as any);
     user = await userRepository.save(UserFixture.createUserFixture());
   });
 
-  beforeEach(() => {
-    jest.spyOn(uuid, 'v4').mockReturnValue(passwordPatchCode as any);
+  afterEach(async () => {
+    await userRepository.delete(user.id);
   });
 
   it('[200] 존재하지 않는 이메일로 요청한 경우 비밀번호 재설정 이메일 요청을 성공한다.', async () => {

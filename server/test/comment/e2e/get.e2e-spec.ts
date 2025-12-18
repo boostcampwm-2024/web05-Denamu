@@ -11,6 +11,9 @@ import { CommentRepository } from '../../../src/comment/repository/comment.repos
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../config/common/fixture/user.fixture';
 import { CommentFixture } from '../../config/common/fixture/comment.fixture';
+import { RssAccept } from '../../../src/rss/entity/rss.entity';
+import { User } from '../../../src/user/entity/user.entity';
+import { Comment } from '../../../src/comment/entity/comment.entity';
 
 const URL = '/api/comment';
 
@@ -20,18 +23,37 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
   let feed: Feed;
   let commentRepository: CommentRepository;
   let userRepository: UserRepository;
+  let rssAcceptRepository: RssAcceptRepository;
+  let feedRepository: FeedRepository;
+  let rssAccept: RssAccept;
+  let user: User;
+  let comment: Comment;
 
   beforeAll(async () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
     commentRepository = app.get(CommentRepository);
     userRepository = app.get(UserRepository);
-    const rssAcceptRepository = app.get(RssAcceptRepository);
-    const feedRepository = app.get(FeedRepository);
-    const rssAccept = await rssAcceptRepository.save(
+    rssAcceptRepository = app.get(RssAcceptRepository);
+    feedRepository = app.get(FeedRepository);
+  });
+
+  beforeEach(async () => {
+    user = await userRepository.save(UserFixture.createUserFixture());
+    rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
     feed = await feedRepository.save(FeedFixture.createFeedFixture(rssAccept));
+    comment = await commentRepository.save(
+      CommentFixture.createCommentFixture(feed, user),
+    );
+  });
+
+  afterEach(async () => {
+    await commentRepository.delete(comment.id);
+    await feedRepository.delete(feed.id);
+    await rssAcceptRepository.delete(rssAccept.id);
+    await userRepository.delete(user.id);
   });
 
   it('[404] 게시글이 존재하지 않을 경우 댓글 조회를 실패한다.', async () => {
@@ -46,10 +68,6 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
 
   it('[200] 게시글이 존재할 경우 댓글 조회를 성공한다.', async () => {
     // given
-    const user = await userRepository.save(UserFixture.createUserFixture());
-    const comment = await commentRepository.save(
-      CommentFixture.createCommentFixture(feed, user),
-    );
     const requestDto = new GetCommentRequestDto({
       feedId: feed.id,
     });
@@ -72,8 +90,5 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
         },
       },
     ]);
-
-    // cleanup
-    await commentRepository.delete(comment.id);
   });
 });
