@@ -38,8 +38,10 @@ describe(`POST ${URL} E2E Test`, () => {
   });
 
   afterEach(async () => {
-    await adminRepository.delete(admin.id);
-    await redisService.del(redisKeyMake(sessionKey));
+    await Promise.all([
+      adminRepository.delete(admin.id),
+      redisService.del(redisKeyMake(sessionKey)),
+    ]);
   });
 
   it('[401] 등록되지 않은 ID로 로그인할 경우 로그인을 실패한다.', async () => {

@@ -83,8 +83,10 @@ describe(`SSE ${URL} E2E Test`, () => {
     );
 
     // cleanup
-    await feedRepository.delete(feedList.map((_, i) => feedList[i].id));
-    await redisService.del(REDIS_KEYS.FEED_ORIGIN_TREND_KEY);
+    await Promise.all([
+      feedRepository.delete(feedList.map((_, i) => feedList[i].id)),
+      redisService.del(REDIS_KEYS.FEED_ORIGIN_TREND_KEY),
+    ]);
   });
 
   it('[SSE] 서버로부터 데이터를 받을 때 게시글이 데나무에서 지워진 경우 빈 피드 정보 수신을 성공한다.', async () => {

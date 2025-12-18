@@ -33,8 +33,10 @@ describe(`PATCH ${URL} E2E Test`, () => {
   });
 
   afterEach(async () => {
-    await userRepository.delete(user.id);
-    await redisService.del(redisKeyMake(passwordPatchCode));
+    await Promise.all([
+      userRepository.delete(user.id),
+      redisService.del(redisKeyMake(passwordPatchCode)),
+    ]);
   });
 
   it('[404] 존재하지 않는 비밀번호 세션 ID를 통해 비밀번호 변경 요청을 할 경우 비밀번호 변경을 실패한다.', async () => {
@@ -82,10 +84,10 @@ describe(`PATCH ${URL} E2E Test`, () => {
     expect(data).toBeUndefined();
 
     // DB, Redis when
-    const savedUser = await userRepository.findOneBy({ id: user.id });
-    const savedPasswordCode = await redisService.get(
-      redisKeyMake(passwordPatchCode),
-    );
+    const [savedUser, savedPasswordCode] = await Promise.all([
+      userRepository.findOneBy({ id: user.id }),
+      redisService.get(redisKeyMake(passwordPatchCode)),
+    ]);
 
     // DB, Redis then
     expect(savedUser).not.toBeNull();

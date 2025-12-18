@@ -41,8 +41,10 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
 
   afterEach(async () => {
     await feedRepository.delete(feed.id);
-    await rssAcceptRepository.delete(rssAccept.id);
-    await redisService.del(redisKeyMake(feed.id.toString()));
+    await Promise.all([
+      rssAcceptRepository.delete(rssAccept.id),
+      redisService.del(redisKeyMake(feed.id.toString())),
+    ]);
   });
 
   it('[404] 피드가 서비스에 존재하지 않을 경우 조회수 상승을 실패한다.', async () => {
@@ -68,13 +70,12 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
     expect(data).toBeUndefined();
 
     // DB, Redis when
-    const savedFeed = await feedRepository.findOneBy({
-      id: feed.id,
-    });
-    const savedFeedReadRedis = await redisService.sismember(
-      redisKeyMake(feed.id.toString()),
-      testIp,
-    );
+    const [savedFeed, savedFeedReadRedis] = await Promise.all([
+      feedRepository.findOneBy({
+        id: feed.id,
+      }),
+      redisService.sismember(redisKeyMake(feed.id.toString()), testIp),
+    ]);
 
     // DB, Redis then
     expect(savedFeed.viewCount).toBe(feed.viewCount);
@@ -99,13 +100,12 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
     expect(data).toBeUndefined();
 
     // DB, Redis when
-    const savedFeed = await feedRepository.findOneBy({
-      id: feed.id,
-    });
-    const savedFeedReadRedis = await redisService.sismember(
-      redisKeyMake(feed.id.toString()),
-      testIp,
-    );
+    const [savedFeed, savedFeedReadRedis] = await Promise.all([
+      feedRepository.findOneBy({
+        id: feed.id,
+      }),
+      redisService.sismember(redisKeyMake(feed.id.toString()), testIp),
+    ]);
 
     // DB, Redis then
     expect(savedFeed.viewCount).toBe(feed.viewCount);
@@ -136,13 +136,12 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
     expect(data).toBeUndefined();
 
     // DB, Redis when
-    const savedFeed = await feedRepository.findOneBy({
-      id: feed.id,
-    });
-    const savedFeedReadRedis = await redisService.sismember(
-      redisKeyMake(feed.id.toString()),
-      testNewIp,
-    );
+    const [savedFeed, savedFeedReadRedis] = await Promise.all([
+      feedRepository.findOneBy({
+        id: feed.id,
+      }),
+      redisService.sismember(redisKeyMake(feed.id.toString()), testNewIp),
+    ]);
 
     // DB, Redis then
     expect(savedFeed.viewCount).toBe(feed.viewCount + 1);
@@ -152,7 +151,7 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
     await Promise.all([
       redisService.zrem(REDIS_KEYS.FEED_TREND_KEY, feed.id.toString()),
       redisService.srem(redisKeyMake(feed.id.toString()), testNewIp),
+      feedRepository.update(feed.id, { viewCount: feed.viewCount }),
     ]);
-    await feedRepository.update(feed.id, { viewCount: feed.viewCount });
   });
 });
