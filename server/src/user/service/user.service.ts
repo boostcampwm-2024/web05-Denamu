@@ -6,7 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { RegisterUserRequestDto } from '../dto/request/registerUser.dto';
-import { v4 as uuidv4 } from 'uuid';
+import * as uuid from 'uuid';
 import { RedisService } from '../../common/redis/redis.service';
 import { REFRESH_TOKEN_TTL, SALT_ROUNDS } from '../constant/user.constants';
 import { LoginUserRequestDto } from '../dto/request/loginUser.dto';
@@ -22,7 +22,6 @@ import { CheckEmailDuplicationResponseDto } from '../dto/response/checkEmailDupl
 import { REDIS_KEYS } from '../../common/redis/redis.constant';
 import { CreateAccessTokenResponseDto } from '../dto/response/createAccessToken.dto';
 import { EmailProducer } from '../../common/email/email.producer';
-import { Rss } from '../../rss/entity/rss.entity';
 
 @Injectable()
 export class UserService {
@@ -65,14 +64,17 @@ export class UserService {
     const newUser = registerDto.toEntity();
     newUser.password = await this.createHashedPassword(registerDto.password);
 
-    const uuid = uuidv4();
+    const userRegisterCode = uuid.v4();
     await this.redisService.set(
-      `${REDIS_KEYS.USER_AUTH_KEY}:${uuid}`,
+      `${REDIS_KEYS.USER_AUTH_KEY}:${userRegisterCode}`,
       JSON.stringify(newUser),
       'EX',
       600,
     );
-    await this.emailProducer.produceUserCertification(newUser, uuid);
+    await this.emailProducer.produceUserCertification(
+      newUser,
+      userRegisterCode,
+    );
   }
 
   async certificateUser(uuid: string): Promise<void> {
@@ -119,7 +121,7 @@ export class UserService {
     return CreateAccessTokenResponseDto.toResponseDto(accessToken);
   }
 
-  createToken(userInformation: Payload, mode: string) {
+  createToken(userInformation: Payload, mode: 'refresh' | 'access') {
     const payload = {
       id: userInformation.id,
       email: userInformation.email,
@@ -202,14 +204,14 @@ export class UserService {
       return;
     }
 
-    const uuid = uuidv4();
+    const forgotPasswordCode = uuid.v4();
     await this.redisService.set(
-      `${REDIS_KEYS.USER_RESET_PASSWORD_KEY}:${uuid}`,
+      `${REDIS_KEYS.USER_RESET_PASSWORD_KEY}:${forgotPasswordCode}`,
       JSON.stringify(user.id),
       'EX',
       600,
     );
-    await this.emailProducer.producePasswordReset(user, uuid);
+    await this.emailProducer.producePasswordReset(user, forgotPasswordCode);
   }
 
   async resetPassword(uuid: string, password: string): Promise<void> {
@@ -241,17 +243,17 @@ export class UserService {
   ): Promise<void> {
     const user = await this.getUser(userId);
 
-    const uuid = uuidv4();
+    const userDeleteCode = uuid.v4();
+
     if (accessToken || refreshToken) {
       await this.redisService.set(
-        `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${uuid}`,
+        `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${userDeleteCode}`,
         `${user.id.toString()}:${accessToken || ''}:${refreshToken || ''}`,
         'EX',
         600,
       );
     }
-
-    this.emailService.sendDeleteAccountMail(user, token);
+    await this.emailProducer.produceAccountDeletion(user, userDeleteCode);
   }
 
   async confirmDeleteAccount(token: string): Promise<void> {

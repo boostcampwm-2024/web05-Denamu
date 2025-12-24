@@ -1,14 +1,19 @@
-import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import { HttpStatus, INestApplication } from '@nestjs/common';
+import * as supertest from 'supertest';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
-import { RssAcceptFixture } from '../../fixture/rssAccept.fixture';
+import { RssAcceptFixture } from '../../fixture/rss-accept.fixture';
+import TestAgent from 'supertest/lib/agent';
 
-describe('GET /api/statistic/platform E2E Test', () => {
+const URL = '/api/statistic/platform';
+
+describe(`GET ${URL} E2E Test`, () => {
   let app: INestApplication;
-  let rssAcceptRepository: RssAcceptRepository;
+  let agent: TestAgent;
+
   beforeAll(async () => {
     app = global.testApp;
-    rssAcceptRepository = app.get(RssAcceptRepository);
+    agent = supertest(app.getHttpServer());
+    const rssAcceptRepository = app.get(RssAcceptRepository);
     await Promise.all([
       rssAcceptRepository.insert(RssAcceptFixture.createRssAcceptFixture({})),
       rssAcceptRepository.insert(
@@ -20,15 +25,14 @@ describe('GET /api/statistic/platform E2E Test', () => {
     ]);
   });
 
-  it('요청을 받으면 블로그 플랫폼별 통계 결과를 응답한다.', async () => {
-    // when
-    const response = await request(app.getHttpServer()).get(
-      '/api/statistic/platform',
-    );
+  it('[200] 블로그 플랫폼별 통계 요청을 받은 경우 블로그 플랫폼별 개수 통계 조회를 성공한다.', async () => {
+    // Http when
+    const response = await agent.get(URL);
 
-    // then
-    expect(response.status).toBe(200);
-    expect(response.body.data).toStrictEqual([
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.OK);
+    expect(data).toStrictEqual([
       {
         platform: 'etc',
         count: 2,

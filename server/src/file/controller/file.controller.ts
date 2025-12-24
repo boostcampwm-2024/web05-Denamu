@@ -6,22 +6,24 @@ import {
   UploadedFile,
   Param,
   UseGuards,
-  BadRequestException,
   Query,
   HttpStatus,
   HttpCode,
+  FileTypeValidator,
+  MaxFileSizeValidator,
+  ParseFilePipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FileService } from '../service/file.service';
 import { ApiTags } from '@nestjs/swagger';
 import { JwtGuard, Payload } from '../../common/guard/jwt.guard';
-import { createDynamicStorage } from '../../common/disk/diskStorage';
 import { ApiResponse } from '../../common/response/common.response';
 import { ApiUploadProfileFile } from '../api-docs/uploadProfileFile.api-docs';
 import { ApiDeleteFile } from '../api-docs/deleteFile.api-docs';
-import { DeleteFileRequestDto } from '../dto/request/deleteFile.dto';
-import { UploadFileQueryDto } from '../dto/request/uploadFile.dto';
+import { DeleteFileParamRequestDto } from '../dto/request/deleteFile.dto';
+import { UploadFileQueryRequestDto } from '../dto/request/uploadFile.dto';
 import { CurrentUser } from '../../common/decorator';
+import { FILE_SIZE_LIMITS } from '../constant/file.constant';
 
 @ApiTags('File')
 @Controller('file')
@@ -32,19 +34,29 @@ export class FileController {
   @Post('')
   @ApiUploadProfileFile()
   @HttpCode(HttpStatus.CREATED)
-  @UseInterceptors(FileInterceptor('file', createDynamicStorage()))
+  @UseInterceptors(FileInterceptor('file'))
   async upload(
-    @UploadedFile() file: any,
-    @Query() query: UploadFileQueryDto,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({
+            maxSize: FILE_SIZE_LIMITS.IMAGE,
+            message: `File size must not exceed ${FILE_SIZE_LIMITS.IMAGE / (1024 * 1024)}MB`,
+          }),
+          new FileTypeValidator({
+            fileType: /image\/(png|jpg|jpeg|webp|gif)/,
+            skipMagicNumbersValidation: true,
+          }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+    @Query() query: UploadFileQueryRequestDto,
     @CurrentUser() user: Payload,
   ) {
-    if (!file) {
-      throw new BadRequestException('파일이 선택되지 않았습니다.');
-    }
-
     return ApiResponse.responseWithData(
       '파일 업로드에 성공했습니다.',
-      await this.fileService.create(file, user.id),
+      await this.fileService.handleUpload(file, query.uploadType, user.id),
     );
   }
 
@@ -52,7 +64,7 @@ export class FileController {
   @Delete(':id')
   @ApiDeleteFile()
   @HttpCode(HttpStatus.OK)
-  async deleteFile(@Param() fileDeleteRequestDto: DeleteFileRequestDto) {
+  async deleteFile(@Param() fileDeleteRequestDto: DeleteFileParamRequestDto) {
     await this.fileService.deleteFile(fileDeleteRequestDto.id);
     return ApiResponse.responseWithNoContent(
       '파일이 성공적으로 삭제되었습니다.',

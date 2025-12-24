@@ -2,7 +2,7 @@ import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { UserRepository } from '../repository/user.repository';
 import { ProviderRepository } from '../repository/provider.repository';
 import { WinstonLoggerService } from '../../common/logger/logger.service';
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { User } from '../entity/user.entity';
 import { Provider } from '../entity/provider.entity';
 import {
@@ -16,6 +16,7 @@ import { UserService } from './user.service';
 import { cookieConfig } from '../../common/cookie/cookie.config';
 import { Payload } from '../../common/guard/jwt.guard';
 import { REFRESH_TOKEN_TTL } from '../constant/user.constants';
+import { OAuthCallbackRequestDto } from '../dto/request/oAuthCallbackDto';
 
 @Injectable()
 export class OAuthService {
@@ -35,13 +36,12 @@ export class OAuthService {
     return oauth.getAuthUrl();
   }
 
-  async callback(req: Request, res: Response): Promise<void> {
-    const { code, state } = req.query;
-    const stateData = this.parseStateData(state.toString());
+  async callback(callbackDto: OAuthCallbackRequestDto, res: Response) {
+    const stateData = this.parseStateData(callbackDto.state);
     const { provider: providerType } = stateData;
 
     const tokenData = await this.providers[providerType].getTokens(
-      code as string,
+      callbackDto.code,
     );
 
     const userInfo = await this.providers[providerType].getUserInfo(tokenData);

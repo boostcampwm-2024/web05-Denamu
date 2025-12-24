@@ -7,9 +7,13 @@ import { HttpExceptionsFilter } from '../src/common/filters/http.exception.filte
 import * as cookieParser from 'cookie-parser';
 import { TestService } from '../src/common/test/test.service';
 import { RedisService } from '../src/common/redis/redis.service';
-import { RabbitMQManager } from '../src/common/rabbitmq/rabbitmq.manager';
+import { UserService } from '../src/user/service/user.service';
 
 const globalAny: any = global;
+
+afterEach(() => {
+  jest.resetAllMocks();
+});
 
 beforeAll(async () => {
   console.log('Initializing NestJS application...');
@@ -48,6 +52,40 @@ afterAll(async () => {
   console.log('NestJS application closed.');
 });
 
-beforeEach(() => {
-  jest.resetAllMocks();
-});
+export const createAccessToken = (payload?: {
+  id: number;
+  email?: string;
+  userName?: string;
+  role?: string;
+}) => {
+  const userService = globalAny.testApp.get(UserService);
+
+  return userService.createToken(
+    {
+      id: payload?.id ?? 1,
+      email: payload?.email ?? 'test@test.com',
+      userName: payload?.userName ?? 'testuser',
+      role: payload?.role ?? 'user',
+    },
+    'access',
+  );
+};
+
+export const createRefreshToken = (payload?: {
+  id: number;
+  email?: string;
+  userName?: string;
+  role?: string;
+}) => {
+  const userService = globalAny.testApp.get(UserService);
+
+  return userService.createToken(
+    {
+      id: payload?.id ?? 1,
+      email: payload?.email ?? 'test@test.com',
+      userName: payload?.userName ?? 'testuser',
+      role: payload?.role ?? 'user',
+    },
+    'refresh',
+  );
+};

@@ -35,7 +35,7 @@ export class ReadFeedRecentResponseDto {
     example: '2025-01-01T01:00:00.000Z',
     description: '게시글 작성 일자',
   })
-  createdAt: string;
+  createdAt: Date;
 
   @ApiProperty({
     example: 'https://example.com/thumbnail',
@@ -79,17 +79,17 @@ export class ReadFeedRecentResponseDto {
 
   static toResponseDto(feed: FeedRecentRedis) {
     return new ReadFeedRecentResponseDto({
-      id: feed.id,
+      id: parseInt(feed.id),
       author: feed.blogName,
       blogPlatform: feed.blogPlatform,
       title: feed.title,
       path: feed.path,
-      createdAt: feed.createdAt,
+      createdAt: new Date(feed.createdAt),
       thumbnail: feed.thumbnail,
-      viewCount: feed.viewCount,
+      viewCount: parseInt(feed.viewCount),
       isNew: feed.isNew,
-      likes: feed.likes,
-      comments: feed.comments,
+      likes: parseInt(feed.likes),
+      comments: parseInt(feed.comments),
       tag: feed.tagList,
     });
   }
@@ -100,16 +100,16 @@ export class ReadFeedRecentResponseDto {
 }
 
 export type FeedRecentRedis = {
-  id: number;
+  id: string;
   blogPlatform: string;
   createdAt: string;
-  viewCount: number;
+  viewCount: string;
   blogName: string;
   thumbnail: string;
   path: string;
   title: string;
   isNew?: boolean;
   tagList: string[] | string;
-  likes: number;
-  comments: number;
+  likes: string;
+  comments: string;
 };
