@@ -45,7 +45,7 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
     expect(data).toBeUndefined();
   });
 
-  it('[200] 읽은 기록 쿠키가 존재할 경우 조회수 상승을 하지 않는 행위를 성공한다.', async () => {
+  it('[200] 읽은 기록 쿠키가 존재할 경우 조회수 상승을 방지하는 데 성공한다.', async () => {
     // Http when
     const response = await agent
       .post(`${URL}/${feed.id}`)
@@ -71,7 +71,7 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
     expect(savedFeedReadRedis).not.toBeNull();
   });
 
-  it('[200] 읽은 기록 쿠키가 없지만 읽은 기록 IP가 있을 경우 조회수 상승을 하지 않는 행위를 성공한다.', async () => {
+  it('[200] 읽은 기록 쿠키가 없지만 읽은 기록 IP가 있을 경우 조회수 상승을 방지하는 데 성공한다.', async () => {
     // given
     await redisService.sadd(redisKeyMake(feed.id.toString()), testIp);
 
