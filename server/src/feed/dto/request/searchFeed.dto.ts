@@ -1,4 +1,11 @@
-import { IsNotEmpty, IsEnum, IsInt, IsString, Min } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsEnum,
+  IsInt,
+  IsString,
+  Min,
+  IsOptional,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -37,7 +44,9 @@ export class SearchFeedRequestDto {
   @ApiProperty({
     example: 1,
     description: '페이지 번호 입력',
+    required: false,
   })
+  @IsOptional()
   @IsInt({
     message: '페이지 번호는 정수입니다.',
   })
@@ -48,7 +57,9 @@ export class SearchFeedRequestDto {
   @ApiProperty({
     example: 1,
     description: '받아올 게시글 최대 개수',
+    required: false,
   })
+  @IsOptional()
   @IsInt({
     message: '한 페이지에 보여줄 개수는 정수입니다.',
   })

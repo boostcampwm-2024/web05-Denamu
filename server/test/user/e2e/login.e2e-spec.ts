@@ -1,58 +1,71 @@
-import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import { HttpStatus, INestApplication } from '@nestjs/common';
+import * as supertest from 'supertest';
 import { LoginUserRequestDto } from '../../../src/user/dto/request/loginUser.dto';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../fixture/user.fixture';
+import TestAgent from 'supertest/lib/agent';
 
-describe('POST /api/user/login E2E Test', () => {
+const URL = '/api/user/login';
+
+describe(`POST ${URL} E2E Test`, () => {
   let app: INestApplication;
-
-  const loginDto = new LoginUserRequestDto({
-    email: 'test1234@test.com',
-    password: 'test1234!',
-  });
+  let agent: TestAgent;
 
   beforeAll(async () => {
     app = global.testApp;
+    agent = supertest(app.getHttpServer());
     const userRepository = app.get(UserRepository);
-
-    await userRepository.save(await UserFixture.createUserCryptFixture());
+    await userRepository.insert(await UserFixture.createUserCryptFixture());
   });
 
-  it('로그인을 정상적으로 성공한다.', async () => {
+  it('[401] 아이디가 틀렸을 경우 로그인을 실패한다.', async () => {
     // given
-    const agent = request.agent(app.getHttpServer());
+    const requestDto = new LoginUserRequestDto({
+      email: 'testWrong@test.com',
+      password: UserFixture.GENERAL_USER.password,
+    });
 
-    // when
-    const response = await agent.post('/api/user/login').send(loginDto);
+    // Http when
+    const response = await agent.post(URL).send(requestDto);
 
-    // then
-    expect(response.status).toBe(200);
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(data).toBeUndefined();
+  });
+
+  it('[401] 비밀번호가 틀렸을 경우 로그인을 실패한다.', async () => {
+    // given
+    const requestDto = new LoginUserRequestDto({
+      email: UserFixture.GENERAL_USER.email,
+      password: 'testWrongPassword!',
+    });
+
+    // Http when
+    const response = await agent.post(URL).send(requestDto);
+
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(data).toBeUndefined();
+  });
+
+  it('[200] 아이디와 비밀번호에 해당하는 유저가 존재할 경우 로그인을 성공한다.', async () => {
+    // given
+    const requestDto = new LoginUserRequestDto({
+      email: UserFixture.GENERAL_USER.email,
+      password: UserFixture.GENERAL_USER.password,
+    });
+
+    // Http when
+    const response = await agent.post(URL).send(requestDto);
+
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.OK);
     expect(response.headers['set-cookie'][0]).toContain('refresh_token=');
-  });
-
-  it('아이디를 틀렸을 경우 로그인 실패가 발생한다.', async () => {
-    // given
-    const agent = request.agent(app.getHttpServer());
-    loginDto.email = 'test1235@test.com';
-
-    // when
-    const response = await agent.post('/api/user/login').send(loginDto);
-
-    // then
-    expect(response.status).toBe(401);
-  });
-
-  it('비밀번호를 틀렸을 경우 로그인 실패가 발생한다.', async () => {
-    // given
-    const agent = request.agent(app.getHttpServer());
-    loginDto.email = 'test1234@test.com';
-    loginDto.password = 'test1235!';
-
-    // when
-    const response = await agent.post('/api/user/login').send(loginDto);
-
-    // then
-    expect(response.status).toBe(401);
+    expect(data).toStrictEqual({
+      accessToken: expect.any(String),
+    });
   });
 });

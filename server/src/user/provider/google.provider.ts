@@ -8,9 +8,12 @@ import {
   UserInfo,
 } from '../constant/oauth.constant';
 import axios from 'axios';
+import { WinstonLoggerService } from '../../common/logger/logger.service';
 
 @Injectable()
 export class GoogleOAuthProvider implements OAuthProvider {
+  constructor(private readonly logger: WinstonLoggerService) {}
+
   getAuthUrl() {
     const googleOAuthUrl = OAUTH_URL_PATH.GOOGLE.AUTH_URL;
 
@@ -33,7 +36,7 @@ export class GoogleOAuthProvider implements OAuthProvider {
     return `${googleOAuthUrl}?${querystring.stringify(options)}`;
   }
 
-  async getTokens(code) {
+  async getTokens(code: string) {
     const tokenUrl = OAUTH_URL_PATH.GOOGLE.TOKEN_URL;
     const values = {
       code,
@@ -57,22 +60,22 @@ export class GoogleOAuthProvider implements OAuthProvider {
       const {
         id_token: id_token,
         access_token: access_token,
-        refresh_token: refresh_token,
         expires_in: expires_in,
       } = response.data as OAuthTokenResponse;
 
       return {
         id_token,
         access_token,
-        refresh_token,
         expires_in,
       };
     } catch (error) {
+      this.logger.error(`Failed to fetch token info from Google: ${error}`);
       throw new BadGatewayException(
         '현재 외부 서비스와의 연결에 실패했습니다.',
       );
     }
   }
+
   async getUserInfo(tokenResponse: OAuthTokenResponse) {
     const { id_token: idToken, access_token: accessToken } = tokenResponse;
 
@@ -94,6 +97,7 @@ export class GoogleOAuthProvider implements OAuthProvider {
         picture,
       } as UserInfo;
     } catch (error) {
+      this.logger.error(`Failed to fetch user info from Google: ${error}`);
       throw new BadGatewayException(
         '현재 외부 서비스와의 연결에 실패했습니다.',
       );
