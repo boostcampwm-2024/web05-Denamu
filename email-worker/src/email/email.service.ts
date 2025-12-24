@@ -1,7 +1,4 @@
-import { Injectable } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
-import { ConfigService } from '@nestjs/config';
-import { WinstonLoggerService } from '../logger/logger.service';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
 import {
   createPasswordResetMailContent,
@@ -10,11 +7,12 @@ import {
   createVerificationMailContent,
   createDeleteAccountContent,
   PRODUCT_DOMAIN,
-} from './mailContent';
-import { Rss } from '../../rss/entity/rss.entity';
-import { User } from '../../user/entity/user.entity';
+} from './email.content';
+import { injectable } from 'tsyringe';
+import logger from '../logger';
+import { Rss, RssRegistration, RssRemoval, User } from '../types/types';
 
-@Injectable()
+@injectable()
 export class EmailService {
   private transporter: nodemailer.Transporter<
     SMTPTransport.SentMessageInfo,
@@ -22,12 +20,16 @@ export class EmailService {
   >;
   private emailUser: string;
 
-  constructor(
-    private readonly configService: ConfigService,
-    private readonly logger: WinstonLoggerService,
-  ) {
-    this.emailUser = this.configService.get<string>('EMAIL_USER');
-    const emailPassword = this.configService.get<string>('EMAIL_PASSWORD');
+  constructor() {
+    this.emailUser = process.env.EMAIL_USER;
+    const emailPassword = process.env.EMAIL_PASSWORD;
+    if (!this.emailUser) {
+      throw new Error('EMAIL_USER 환경 변수가 설정되지 않았습니다.');
+    }
+
+    if (!emailPassword) {
+      throw new Error('EMAIL_PASSWORD 환경 변수가 설정되지 않았습니다.');
+    }
     this.transporter = nodemailer.createTransport({
       host: 'smtp.gmail.com',
       port: 587,
@@ -44,37 +46,30 @@ export class EmailService {
   ): Promise<void> {
     try {
       await this.transporter.sendMail(mailOptions);
-      this.logger.log(`${mailOptions.to} 이메일 전송 성공`);
+      logger.info(`${mailOptions.to} 이메일 전송 성공`);
     } catch (error) {
-      this.logger.error(`${mailOptions.to} 이메일 전송 실패: ${error}`);
+      logger.error(`${mailOptions.to} 이메일 전송 실패: ${error}`);
     }
   }
 
-  async sendRssMail(
-    rss: Rss,
-    approveFlag: boolean,
-    description?: string,
-  ): Promise<void> {
+  async sendRssMail(rssRegistrationReuslt: RssRegistration): Promise<void> {
     const mailOptions = this.createRssRegistrationMail(
-      rss,
-      approveFlag,
-      description,
+      rssRegistrationReuslt.rss,
+      rssRegistrationReuslt.approveFlag,
+      rssRegistrationReuslt.description,
     );
 
     await this.sendMail(mailOptions);
   }
 
-  async sendUserCertificationMail(user: User, uuid: string): Promise<void> {
-    const mailOptions = this.createCertificationMail(user, uuid);
+  async sendUserCertificationMail(user: User): Promise<void> {
+    const mailOptions = this.createCertificationMail(user);
 
     await this.sendMail(mailOptions);
   }
 
-  private createCertificationMail(
-    user: User,
-    uuid: string,
-  ): nodemailer.SendMailOptions {
-    const redirectUrl = `${PRODUCT_DOMAIN}/user/certificate?token=${uuid}`;
+  private createCertificationMail(user: User): nodemailer.SendMailOptions {
+    const redirectUrl = `${PRODUCT_DOMAIN}/user/certificate?token=${user.uuid}`;
 
     return {
       from: `Denamu<${this.emailUser}>`,
@@ -107,17 +102,12 @@ export class EmailService {
     };
   }
 
-  async sendRssRemoveCertificationMail(
-    userName: string,
-    email: string,
-    rssUrl: string,
-    certificateCode: string,
-  ) {
+  async sendRssRemoveCertificationMail(rssRemoveCertification: RssRemoval) {
     const mailOption = this.createRssRemoveCertificationMail(
-      userName,
-      email,
-      rssUrl,
-      certificateCode,
+      rssRemoveCertification.userName,
+      rssRemoveCertification.email,
+      rssRemoveCertification.rssUrl,
+      rssRemoveCertification.certificateCode,
     );
     await this.sendMail(mailOption);
   }
@@ -141,17 +131,14 @@ export class EmailService {
     };
   }
 
-  async sendPasswordResetEmail(user: User, uuid: string): Promise<void> {
-    const mailOptions = this.createPasswordResetEmail(user, uuid);
+  async sendPasswordResetEmail(user: User): Promise<void> {
+    const mailOptions = this.createPasswordResetEmail(user);
 
     await this.sendMail(mailOptions);
   }
 
-  private createPasswordResetEmail(
-    user: User,
-    uuid: string,
-  ): nodemailer.SendMailOptions {
-    const redirectUrl = `${PRODUCT_DOMAIN}/user/password?token=${uuid}`;
+  private createPasswordResetEmail(user: User): nodemailer.SendMailOptions {
+    const redirectUrl = `${PRODUCT_DOMAIN}/user/password?token=${user.uuid}`;
     return {
       from: `Denamu<${this.emailUser}>`,
       to: user.email,
@@ -164,17 +151,14 @@ export class EmailService {
     };
   }
 
-  async sendDeleteAccountMail(user: User, token: string): Promise<void> {
-    const mailOptions = this.createDeleteAccountMail(user, token);
+  async sendDeleteAccountMail(user: User): Promise<void> {
+    const mailOptions = this.createDeleteAccountMail(user);
 
     await this.sendMail(mailOptions);
   }
 
-  private createDeleteAccountMail(
-    user: User,
-    token: string,
-  ): nodemailer.SendMailOptions {
-    const redirectUrl = `${PRODUCT_DOMAIN}/user/delete-account?token=${token}`;
+  private createDeleteAccountMail(user: User): nodemailer.SendMailOptions {
+    const redirectUrl = `${PRODUCT_DOMAIN}/user/delete-account?token=${user.uuid}`;
 
     return {
       from: `Denamu<${this.emailUser}>`,

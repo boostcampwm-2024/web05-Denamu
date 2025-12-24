@@ -1,7 +1,7 @@
 import { validate } from 'class-validator';
 import { ResetPasswordRequestDto } from '../../../src/user/dto/request/resetPassword.dto';
 
-describe('ResetPasswordRequestDto Test', () => {
+describe(`${ResetPasswordRequestDto.name} Test`, () => {
   let dto: ResetPasswordRequestDto;
 
   beforeEach(() => {

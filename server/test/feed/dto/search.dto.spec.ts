@@ -4,7 +4,7 @@ import {
 } from '../../../src/feed/dto/request/searchFeed.dto';
 import { validate } from 'class-validator';
 
-describe('SearchFeedRequestDto Test', () => {
+describe(`${SearchFeedRequestDto.name} Test`, () => {
   let dto: SearchFeedRequestDto;
 
   beforeEach(() => {

@@ -1,5 +1,4 @@
 #!/bin/sh
-set -e
 
 # RabbitMQ 서버를 백그라운드로 시작
 docker-entrypoint.sh rabbitmq-server &

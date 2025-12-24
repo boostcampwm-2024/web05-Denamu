@@ -1,5 +1,4 @@
 #!/bin/sh
-set -e
 
 # RabbitMQ가 실행 중인지 확인
 rabbitmq-diagnostics ping > /dev/null 2>&1 || exit 1

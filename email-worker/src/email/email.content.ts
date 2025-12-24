@@ -1,6 +1,6 @@
-import { Rss } from '../../rss/entity/rss.entity';
+import { Rss } from '../types/types';
 
-export const PRODUCT_DOMAIN = 'https://denamu.site';
+export const PRODUCT_DOMAIN = 'https://denamu.dev';
 
 export function createRssRegistrationContent(
   rss: Rss,
@@ -12,7 +12,7 @@ export function createRssRegistrationContent(
   <div style="font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', '맑은 고딕', sans-serif; margin: 0; padding: 1px; background-color: #f4f4f4;">
     <div style="max-width: 600px; margin: 20px auto; background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
       <div style="text-align: center; padding: 20px 0; border-bottom: 2px solid #f0f0f0;">
-        <img src="https://denamu.site/files/Denamu_Logo_KOR.png" alt="Denamu Logo" width="244" height="120">
+        <img src="https://denamu.dev/files/Denamu_Logo_KOR.png" alt="Denamu Logo" width="244" height="120">
       </div>
       <div style="padding: 20px 0;">
         ${
@@ -27,7 +27,7 @@ export function createRssRegistrationContent(
           </div>
           ${approveFlag ? acceptContent() : rejectContent(description)}
           <center>
-            <a href="https://denamu.site" style="display: inline-block; padding: 12px 24px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; margin: 20px 0;">${approveFlag ? '서비스 바로가기' : '다시 신청하러 가기'}</a>
+            <a href="https://denamu.dev" style="display: inline-block; padding: 12px 24px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; margin: 20px 0;">${approveFlag ? '서비스 바로가기' : '다시 신청하러 가기'}</a>
           </center>
         </div>
       </div>
@@ -64,7 +64,7 @@ export function createVerificationMailContent(
   <div style="font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', '맑은 고딕', sans-serif; margin: 0; padding: 1px; background-color: #f4f4f4;">
     <div style="max-width: 600px; margin: 20px auto; background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
       <div style="text-align: center; padding: 20px 0; border-bottom: 2px solid #f0f0f0;">
-        <img src="https://denamu.site/files/Denamu_Logo_KOR.png" alt="Denamu Logo" width="244" height="120">
+        <img src="https://denamu.dev/files/Denamu_Logo_KOR.png" alt="Denamu Logo" width="244" height="120">
       </div>
       <div style="padding: 20px 0;">
         <div style="color: #007bff; font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center;">회원가입 인증을 완료해주세요</div>
@@ -102,7 +102,7 @@ export function createRssRemoveCertificateContent(
         <div style="font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', '맑은 고딕', sans-serif; margin: 0; padding: 1px; background-color: #f4f4f4;">
             <div style="max-width: 600px; margin: 20px auto; background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
               <div style="text-align: center; padding: 20px 0; border-bottom: 2px solid #f0f0f0;">
-                <img src="https://denamu.site/files/Denamu_Logo_KOR.png" alt="Denamu Logo" width="244" height="120">
+                <img src="https://denamu.dev/files/Denamu_Logo_KOR.png" alt="Denamu Logo" width="244" height="120">
               </div>
               <div style="padding: 20px 0;">
                 <div style="color: #ff0015; font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center;">RSS 삭제 신청을 인증해주세요</div>
@@ -137,7 +137,7 @@ export function createPasswordResetMailContent(
   <div style="font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', '맑은 고딕', sans-serif; margin: 0; padding: 1px; background-color: #f4f4f4;">
     <div style="max-width: 600px; margin: 20px auto; background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
       <div style="text-align: center; padding: 20px 0; border-bottom: 2px solid #f0f0f0;">
-        <img src="https://denamu.site/files/Denamu_Logo_KOR.png" alt="Denamu Logo" width="244" height="120">
+        <img src="https://denamu.dev/files/Denamu_Logo_KOR.png" alt="Denamu Logo" width="244" height="120">
       </div>
       <div style="padding: 20px 0;">
         <div style="color: #007bff; font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center;">비밀번호 재설정</div>
@@ -155,7 +155,7 @@ export function createPasswordResetMailContent(
             <p>이 링크는 10분 동안 유효합니다.</p>
             <p style="color: #dc3545; font-weight: bold;">만약 비밀번호 재설정을 요청하지 않으셨다면, 이 메일을 무시하셔도 됩니다.</p>
           </div>
-        </div>  
+        </div>
       </div>
       <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; border-top: 2px solid #f0f0f0; color: #6c757d; font-size: 14px; height: 100px;">
         <p>본 메일은 발신전용입니다.</p>
@@ -175,7 +175,7 @@ export function createDeleteAccountContent(
   <div style="font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', '맑은 고딕', sans-serif; margin: 0; padding: 1px; background-color: #f4f4f4;">
     <div style="max-width: 600px; margin: 20px auto; background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
       <div style="text-align: center; padding: 20px 0; border-bottom: 2px solid #f0f0f0;">
-        <img src="https://denamu.site/files/Denamu_Logo_KOR.png" alt="Denamu Logo" width="244" height="120">
+        <img src="https://denamu.dev/files/Denamu_Logo_KOR.png" alt="Denamu Logo" width="244" height="120">
       </div>
       <div style="padding: 20px 0;">
         <div style="color: #dc3545; font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center;">회원탈퇴 요청을 확인해주세요</div>
