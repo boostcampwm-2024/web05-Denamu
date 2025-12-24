@@ -59,7 +59,7 @@ describe(`GET ${URL} E2E Test`, () => {
    * // Http then: 응답 값 및 데이터 검증
    * // DB, Redis when: 데이터 저장소 요청
    * // DB, Redis then: 데이터 값 검증
-   *
+   * // cleanup: 사전 데이터 정리
    */
 
   /*
