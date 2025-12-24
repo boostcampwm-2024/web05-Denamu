@@ -7,7 +7,7 @@ import {
   Req,
   Res,
 } from '@nestjs/common';
-import { OAuthService } from '../service/oauth.service';
+import { OAuthService } from '../service/oAuth.service';
 import { ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { ApiOAuth } from '../api-docs/oAuth.api-docs';
@@ -38,10 +38,7 @@ export class OAuthController {
     @Query() callbackDto: OAuthCallbackRequestDto,
     @Res() res: Response,
   ) {
-    const accessToken = await this.oauthService.callback(callbackDto, res);
-
-    return res.redirect(
-      `${OAUTH_URL_PATH.BASE_URL}/oauth-success?token=${accessToken}`,
-    );
+    await this.oauthService.callback(callbackDto, res);
+    return res.redirect(`${OAUTH_URL_PATH.BASE_URL}/oauth-success`);
   }
 }

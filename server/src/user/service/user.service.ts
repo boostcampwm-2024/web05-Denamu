@@ -236,28 +236,36 @@ export class UserService {
     await this.userRepository.save(user);
   }
 
-  async requestDeleteAccount(userId: number): Promise<void> {
+  async requestDeleteAccount(
+    userId: number,
+    accessToken?: string,
+    refreshToken?: string,
+  ): Promise<void> {
     const user = await this.getUser(userId);
 
     const userDeleteCode = uuid.v4();
-    await this.redisService.set(
-      `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${userDeleteCode}`,
-      user.id.toString(),
-      'EX',
-      600,
-    );
+
+    if (accessToken || refreshToken) {
+      await this.redisService.set(
+        `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${userDeleteCode}`,
+        `${user.id.toString()}:${accessToken || ''}:${refreshToken || ''}`,
+        'EX',
+        600,
+      );
+    }
     await this.emailProducer.produceAccountDeletion(user, userDeleteCode);
   }
 
   async confirmDeleteAccount(token: string): Promise<void> {
-    const userIdString = await this.redisService.get(
-      `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${token}`,
-    );
+    const redisKey = `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${token}`;
 
-    if (!userIdString) {
+    const data = await this.redisService.get(redisKey);
+
+    if (!data) {
       throw new NotFoundException('유효하지 않거나 만료된 토큰입니다.');
     }
 
+    const [userIdString, accessToken, refreshToken] = data.split(':');
     const userId = parseInt(userIdString, 10);
 
     const user = await this.getUser(userId);
@@ -266,10 +274,53 @@ export class UserService {
       await this.fileService.deleteByPath(user.profileImage);
     }
 
+    if (accessToken) {
+      const accessTokenExpire = this.configService.get('ACCESS_TOKEN_EXPIRE');
+      const ttlInSeconds = this.parseTimeToSeconds(accessTokenExpire);
+      await this.addToJwtBlacklist(accessToken, ttlInSeconds);
+    }
+
+    if (refreshToken) {
+      const refreshTokenExpire = this.configService.get('REFRESH_TOKEN_EXPIRE');
+      const ttlInSeconds = this.parseTimeToSeconds(refreshTokenExpire);
+      await this.addToJwtBlacklist(refreshToken, ttlInSeconds);
+    }
+
     await this.userRepository.remove(user);
 
-    await this.redisService.del(
-      `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${token}`,
-    );
+    await this.redisService.del(redisKey);
+  }
+
+  private parseTimeToSeconds(time: string): number {
+    const regex = /^(\d+)([smhd])$/;
+    const match = time.match(regex);
+
+    if (!match) {
+      const defaultExpire = this.configService.get('ACCESS_TOKEN_EXPIRE');
+      if (defaultExpire && defaultExpire !== time) {
+        return this.parseTimeToSeconds(defaultExpire);
+      }
+      return 3600;
+    }
+
+    const value = parseInt(match[1], 10);
+    const unit = match[2];
+
+    const multipliers: Record<string, number> = {
+      s: 1,
+      m: 60,
+      h: 3600,
+      d: 86400,
+    };
+
+    return value * multipliers[unit];
+  }
+
+  private async addToJwtBlacklist(
+    token: string,
+    ttl: number,
+  ): Promise<'OK' | null> {
+    const blacklistKey = `${REDIS_KEYS.USER_BLACKLIST_JWT_PREFIX}:${token}`;
+    return this.redisService.setex(blacklistKey, ttl, '1');
   }
 }

@@ -2,7 +2,7 @@ import { HttpStatus, INestApplication } from '@nestjs/common';
 import { OAuthTypeRequestDto } from '../../../src/user/dto/request/oAuthType.dto';
 import { OAuthType } from '../../../src/user/constant/oauth.constant';
 import * as supertest from 'supertest';
-import { OAuthService } from '../../../src/user/service/oauth.service';
+import { OAuthService } from '../../../src/user/service/oAuth.service';
 import TestAgent from 'supertest/lib/agent';
 
 const URL = '/api/oauth';

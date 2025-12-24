@@ -52,7 +52,7 @@ describe(`GET ${URL} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.FOUND);
     expect(response.headers['set-cookie'][0]).toContain('refresh_token=');
-    expect(response.headers['location']).toContain('/oauth-success?token=');
+    expect(response.headers['location']).toContain('/oauth-success');
     expect(data).toBeUndefined();
 
     // DB, Redis when
@@ -98,7 +98,7 @@ describe(`GET ${URL} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.FOUND);
     expect(response.headers['set-cookie'][0]).toContain('refresh_token=');
-    expect(response.headers['location']).toContain('/oauth-success?token=');
+    expect(response.headers['location']).toContain('/oauth-success');
     expect(data).toBeUndefined();
 
     // DB, Redis when

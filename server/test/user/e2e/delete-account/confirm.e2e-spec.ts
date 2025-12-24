@@ -10,6 +10,10 @@ import { CommentRepository } from '../../../../src/comment/repository/comment.re
 import { LikeRepository } from '../../../../src/like/repository/like.repository';
 import { ActivityRepository } from '../../../../src/activity/repository/activity.repository';
 import { FileRepository } from '../../../../src/file/repository/file.repository';
+import {
+  createAccessToken,
+  createRefreshToken,
+} from '../../../jest.setup';
 
 const URL = '/api/user/delete-account/confirm';
 
@@ -59,7 +63,13 @@ describe(`POST ${URL} E2E Test`, () => {
       await UserFixture.createUserCryptFixture(),
     );
 
-    await redisService.set(redisKeyMake(userDeleteCode), user.id);
+    const accessToken = createAccessToken(user);
+    const refreshToken = createRefreshToken(user);
+
+    await redisService.set(
+      redisKeyMake(userDeleteCode),
+      `${user.id}:${accessToken}:${refreshToken}`,
+    );
 
     // Http when
     const response = await agent.post(URL).send(requestDto);
@@ -81,6 +91,12 @@ describe(`POST ${URL} E2E Test`, () => {
     const savedUserDeleteCode = await redisService.get(
       redisKeyMake(userDeleteCode),
     );
+    const blacklistedAccessToken = await redisService.get(
+      `${REDIS_KEYS.USER_BLACKLIST_JWT_PREFIX}:${accessToken}`,
+    );
+    const blacklistedRefreshToken = await redisService.get(
+      `${REDIS_KEYS.USER_BLACKLIST_JWT_PREFIX}:${refreshToken}`,
+    );
 
     // DB, Redis then
     expect(savedComment.length).toBe(0);
@@ -88,5 +104,7 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(savedActivity.length).toBe(0);
     expect(savedFile.length).toBe(0);
     expect(savedUserDeleteCode).toBeNull();
+    expect(blacklistedAccessToken).toBe('1');
+    expect(blacklistedRefreshToken).toBe('1');
   });
 });
