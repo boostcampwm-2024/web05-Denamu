@@ -53,7 +53,7 @@ const createRabbitMQContainer = async () => {
     await new RabbitMQContainer('rabbitmq:4.1-management')
       .withCopyFilesToContainer([
         {
-          source: `${path.resolve(__dirname, 'definitions.json')}`,
+          source: `${path.resolve(__dirname, 'rabbitMQ-definitions.json')}`,
           target: '/etc/rabbitmq/definitions.json',
         },
       ])
