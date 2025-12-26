@@ -2,7 +2,7 @@ import { LoginAdminRequestDto } from '../../../src/admin/dto/request/loginAdmin.
 import { validate } from 'class-validator';
 import { AdminFixture } from '../../fixture/admin.fixture';
 
-describe('LoginAdminRequestDto Test', () => {
+describe(`${LoginAdminRequestDto.name} Test`, () => {
   let dto: LoginAdminRequestDto;
 
   beforeEach(() => {

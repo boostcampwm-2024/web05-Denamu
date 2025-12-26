@@ -31,7 +31,6 @@ export class GithubOAuthProvider implements OAuthProvider {
     return `${OAUTH_URL_PATH.GITHUB.AUTH_URL}?${querystring.stringify(options)}`;
   }
 
-  // state의 검증 + code를 사용한 UserResource에 대한 AccessToken 반환
   async getTokens(code: string): Promise<OAuthTokenResponse> {
     const tokenUrl = OAUTH_URL_PATH.GITHUB.TOKEN_URL;
 
@@ -66,7 +65,7 @@ export class GithubOAuthProvider implements OAuthProvider {
         scope,
       };
     } catch (error) {
-      this.logger.error(`Oauth 로그인 중 에러 발생, ${error}`);
+      this.logger.error(`Failed to fetch token info from GitHub: ${error}`);
       throw new BadGatewayException(
         '현재 외부 서비스와의 연결에 실패했습니다.',
       );
@@ -94,6 +93,7 @@ export class GithubOAuthProvider implements OAuthProvider {
         picture: avatar_url,
       } as UserInfo;
     } catch (error) {
+      this.logger.error(`Failed to fetch user info from GitHub: ${error}`);
       throw new BadGatewayException(
         '현재 외부 서비스와의 연결에 실패했습니다.',
       );

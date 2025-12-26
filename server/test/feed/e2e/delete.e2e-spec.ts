@@ -1,78 +1,97 @@
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
 import { FeedFixture } from '../../fixture/feed.fixture';
-import { RssAcceptFixture } from '../../fixture/rssAccept.fixture';
-import { UserService } from '../../../src/user/service/user.service';
-import { RssAccept } from '../../../src/rss/entity/rss.entity';
-import { User } from '../../../src/user/entity/user.entity';
+import { RssAcceptFixture } from '../../fixture/rss-accept.fixture';
 import { Feed } from '../../../src/feed/entity/feed.entity';
-import { UserRepository } from '../../../src/user/repository/user.repository';
-import { UserFixture } from '../../fixture/user.fixture';
-import * as request from 'supertest';
+import * as supertest from 'supertest';
+import TestAgent from 'supertest/lib/agent';
+import { RssAccept } from '../../../src/rss/entity/rss.entity';
 
-describe('DELETE /api/feed/{feedId} E2E Test', () => {
+const URL = '/api/feed';
+
+describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
   let app: INestApplication;
-  let userService: UserService;
-  let rssAcceptInformation: RssAccept;
-  let userInformation: User;
   let feed: Feed;
+  let feedRepository: FeedRepository;
+  let rssAccept: RssAccept;
+  let agent: TestAgent;
 
   beforeAll(async () => {
     app = global.testApp;
-    userService = app.get(UserService);
-    const userRepository = app.get(UserRepository);
+    agent = supertest(app.getHttpServer());
+    feedRepository = app.get(FeedRepository);
     const rssAcceptRepository = app.get(RssAcceptRepository);
-    const feedRepository = app.get(FeedRepository);
 
-    userInformation = await userRepository.save(
-      await UserFixture.createUserCryptFixture(),
-    );
-    rssAcceptInformation = await rssAcceptRepository.save(
+    rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
-    feed = await feedRepository.save(
-      FeedFixture.createFeedFixture(rssAcceptInformation),
-    );
+    feed = await feedRepository.save(FeedFixture.createFeedFixture(rssAccept));
   });
 
-  afterAll(async () => {
-    jest.resetAllMocks();
+  it('[404] 존재하지 않는 게시글 ID에 요청을 보낼 경우 404를 응답한다.', async () => {
+    // Http when
+    const response = await agent.delete(`${URL}/${Number.MAX_SAFE_INTEGER}`);
+
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedFeed = await feedRepository.findOneBy({
+      id: feed.id,
+    });
+
+    // DB, Redis then
+    expect(savedFeed).not.toBeNull();
   });
 
-  it('원본 게시글이 존재할 경우 200을 반환한다.', async () => {
+  it('[404] 원본 게시글이 존재하지 않을 경우 서비스에서 게시글 정보를 삭제하여 조회를 실패한다.', async () => {
     // given
-    global.fetch = jest.fn().mockResolvedValue({ status: 200 });
+    global.fetch = jest
+      .fn()
+      .mockResolvedValue({ ok: false, status: HttpStatus.NOT_FOUND });
 
-    // when
-    const response = await request(app.getHttpServer()).delete(
-      `/api/feed/${feed.id}`,
-    );
+    // Http when
+    const response = await agent.delete(`${URL}/${feed.id}`);
 
-    // then
-    expect(response.status).toBe(200);
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedFeed = await feedRepository.findOneBy({
+      id: feed.id,
+    });
+
+    // DB, Redis then
+    expect(savedFeed).toBeNull();
   });
 
-  it('원본 게시글이 존재하지 않을 경우 데나무 서비스에서 삭제하고 404를 반환한다.', async () => {
+  it('[200] 원본 게시글이 존재할 경우 조회를 성공한다.', async () => {
     // given
-    global.fetch = jest.fn().mockResolvedValue({ status: 404 });
+    feed = await feedRepository.save(FeedFixture.createFeedFixture(rssAccept));
+    global.fetch = jest
+      .fn()
+      .mockResolvedValue({ ok: true, status: HttpStatus.OK });
 
-    // when
-    const response = await request(app.getHttpServer()).delete(
-      `/api/feed/${feed.id}`,
-    );
+    // Http when
+    const response = await agent.delete(`${URL}/${feed.id}`);
 
-    // then
-    expect(response.status).toBe(404);
-  });
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.OK);
+    expect(data).toBeUndefined();
 
-  it('존재하지 않는 게시글 ID에 요청을 보낼 경우 404를 응답한다.', async () => {
-    // when
-    const response = await request(app.getHttpServer()).delete(
-      `/api/feed/${feed.id}`,
-    );
+    // DB, Redis when
+    const savedFeed = await feedRepository.findOneBy({ id: feed.id });
 
-    // then
-    expect(response.status).toBe(404);
+    // DB, Redis then
+    expect(savedFeed).not.toBeNull();
+
+    // cleanup
+    await feedRepository.delete(feed.id);
   });
 });

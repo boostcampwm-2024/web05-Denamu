@@ -1,142 +1,151 @@
-import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
-import { UserService } from '../../../src/user/service/user.service';
+import { HttpStatus, INestApplication } from '@nestjs/common';
+import * as supertest from 'supertest';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../fixture/user.fixture';
-import { User } from '../../../src/user/entity/user.entity';
 import { DeleteCommentRequestDto } from '../../../src/comment/dto/request/deleteComment.dto';
 import { Comment } from '../../../src/comment/entity/comment.entity';
 import { CommentRepository } from '../../../src/comment/repository/comment.repository';
 import { CommentFixture } from '../../fixture/comment.fixture';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
-import { Feed } from '../../../src/feed/entity/feed.entity';
 import { FeedFixture } from '../../fixture/feed.fixture';
-import { RssAcceptFixture } from '../../fixture/rssAccept.fixture';
-import { RssAccept } from '../../../src/rss/entity/rss.entity';
+import { RssAcceptFixture } from '../../fixture/rss-accept.fixture';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
+import TestAgent from 'supertest/lib/agent';
+import { createAccessToken } from '../../jest.setup';
+import { User } from '../../../src/user/entity/user.entity';
 
-describe('POST /api/comment E2E Test', () => {
+const URL = '/api/comment';
+
+describe(`DELETE ${URL} E2E Test`, () => {
   let app: INestApplication;
-  let userService: UserService;
-  let userInformation: User;
-  let rssAcceptInformation: RssAccept;
-  let feedInformation: Feed;
-  let commentInformation: Comment;
+  let agent: TestAgent;
+  let comment: Comment;
+  let commentRepository: CommentRepository;
+  let user: User;
 
   beforeAll(async () => {
     app = global.testApp;
-    userService = app.get(UserService);
+    agent = supertest(app.getHttpServer());
+    commentRepository = app.get(CommentRepository);
     const userRepository = app.get(UserRepository);
     const rssAcceptRepository = app.get(RssAcceptRepository);
     const feedRepository = app.get(FeedRepository);
-    const commentRepository = app.get(CommentRepository);
-
-    userInformation = await userRepository.save(
-      await UserFixture.createUserCryptFixture(),
-    );
-
-    rssAcceptInformation = await rssAcceptRepository.save(
+    const rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
-
-    feedInformation = await feedRepository.save(
-      FeedFixture.createFeedFixture(rssAcceptInformation),
+    const feed = await feedRepository.save(
+      FeedFixture.createFeedFixture(rssAccept),
     );
 
-    commentInformation = await commentRepository.save(
-      CommentFixture.createCommentFixture(feedInformation, userInformation),
+    user = await userRepository.save(
+      await UserFixture.createUserCryptFixture(),
+    );
+    comment = await commentRepository.save(
+      CommentFixture.createCommentFixture(feed, user),
     );
   });
 
-  it('로그인이 되어 있지 않다면 댓글을 삭제할 수 없다.', async () => {
+  it('[401] 로그인이 되어 있지 않을 경우 댓글 삭제를 실패한다.', async () => {
     // given
-    const comment = new DeleteCommentRequestDto({
-      commentId: commentInformation.id,
+    const requestDto = new DeleteCommentRequestDto({
+      commentId: comment.id,
     });
-    const agent = request.agent(app.getHttpServer());
 
-    // when
-    const response = await agent.delete('/api/comment').send(comment);
+    // Http when
+    const response = await agent.delete(URL).send(requestDto);
 
-    // then
-    expect(response.status).toBe(401);
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedComment = await commentRepository.findOneBy({
+      id: requestDto.commentId,
+    });
+
+    // DB, Redis then
+    expect(savedComment).not.toBeNull();
   });
 
-  it('본인이 작성한 댓글이 아니라면 댓글을 삭제할 수 없다.', async () => {
+  it('[404] 삭제하고자 하는 댓글이 존재하지 않을 경우 댓글 삭제를 실패한다.', async () => {
     // given
-    const accessToken = userService.createToken(
-      {
-        id: 400,
-        email: userInformation.email,
-        userName: userInformation.userName,
-        role: 'user',
-      },
-      'access',
-    );
-    const comment = new DeleteCommentRequestDto({
-      commentId: commentInformation.id,
+    const accessToken = createAccessToken(user);
+    const requestDto = new DeleteCommentRequestDto({
+      commentId: Number.MAX_SAFE_INTEGER,
     });
-    const agent = request.agent(app.getHttpServer());
 
-    // when
+    // Http when
     const response = await agent
-      .delete('/api/comment')
+      .delete(URL)
       .set('Authorization', `Bearer ${accessToken}`)
-      .send(comment);
+      .send(requestDto);
 
-    // then
-    expect(response.status).toBe(401);
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedComment = await commentRepository.findOneBy({
+      id: requestDto.commentId,
+    });
+
+    // DB, Redis then
+    expect(savedComment).toBeNull();
   });
 
-  it('존재하지 않는 댓글은 삭제할 수 없다.', async () => {
+  it('[401] 본인이 작성한 댓글이 아닐 경우 댓글 삭제를 실패한다.', async () => {
     // given
-    const accessToken = userService.createToken(
-      {
-        id: userInformation.id,
-        email: userInformation.email,
-        userName: userInformation.userName,
-        role: 'user',
-      },
-      'access',
-    );
-    const comment = new DeleteCommentRequestDto({
-      commentId: 400,
+    const accessToken = createAccessToken({ id: Number.MAX_SAFE_INTEGER });
+    const requestDto = new DeleteCommentRequestDto({
+      commentId: comment.id,
     });
-    const agent = request.agent(app.getHttpServer());
 
-    // when
+    // Http when
     const response = await agent
-      .delete('/api/comment')
+      .delete(URL)
       .set('Authorization', `Bearer ${accessToken}`)
-      .send(comment);
+      .send(requestDto);
 
-    // then
-    expect(response.status).toBe(404);
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedComment = await commentRepository.findOneBy({
+      id: requestDto.commentId,
+    });
+
+    // DB, Redis then
+    expect(savedComment).not.toBeNull();
   });
 
-  it('로그인이 되어 있다면 댓글을 삭제할 수 있다.', async () => {
+  it('[200] 본인이 작성한 댓글일 경우 댓글 삭제를 성공한다.', async () => {
     // given
-    const accessToken = userService.createToken(
-      {
-        id: userInformation.id,
-        email: userInformation.email,
-        userName: userInformation.userName,
-        role: 'user',
-      },
-      'access',
-    );
-    const comment = new DeleteCommentRequestDto({
-      commentId: commentInformation.id,
+    const accessToken = createAccessToken(user);
+    const requestDto = new DeleteCommentRequestDto({
+      commentId: comment.id,
     });
-    const agent = request.agent(app.getHttpServer());
 
-    // when
+    // Http when
     const response = await agent
-      .delete('/api/comment')
+      .delete(URL)
       .set('Authorization', `Bearer ${accessToken}`)
-      .send(comment);
+      .send(requestDto);
 
-    // then
-    expect(response.status).toBe(200);
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.OK);
+    expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedComment = await commentRepository.findOneBy({
+      id: requestDto.commentId,
+    });
+
+    // DB, Redis then
+    expect(savedComment).toBeNull();
   });
 });

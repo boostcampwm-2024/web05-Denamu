@@ -1,7 +1,7 @@
 import { validate } from 'class-validator';
 import { CheckEmailDuplicationRequestDto } from '../../../src/user/dto/request/checkEmailDuplication.dto';
 
-describe('CheckEmailDuplicationRequestDto Test', () => {
+describe(`${CheckEmailDuplicationRequestDto.name} Test`, () => {
   let dto: CheckEmailDuplicationRequestDto;
 
   beforeEach(() => {

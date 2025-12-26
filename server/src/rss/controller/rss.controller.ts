@@ -41,6 +41,7 @@ export class RssController {
   }
 
   @ApiReadAllRss()
+  @UseGuards(AdminAuthGuard)
   @Get()
   @HttpCode(HttpStatus.OK)
   async readAllRss() {

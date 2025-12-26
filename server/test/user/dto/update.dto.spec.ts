@@ -1,7 +1,7 @@
 import { validate } from 'class-validator';
 import { UpdateUserRequestDto } from '../../../src/user/dto/request/updateUser.dto';
 
-describe('UpdateUserRequestDto Test', () => {
+describe(`${UpdateUserRequestDto.name} Test`, () => {
   let dto: UpdateUserRequestDto;
 
   beforeEach(() => {

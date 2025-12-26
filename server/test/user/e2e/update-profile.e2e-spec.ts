@@ -1,117 +1,131 @@
-import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
-import { UserService } from '../../../src/user/service/user.service';
+import { HttpStatus, INestApplication } from '@nestjs/common';
+import * as supertest from 'supertest';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../fixture/user.fixture';
-import { User } from '../../../src/user/entity/user.entity';
 import { FileService } from '../../../src/file/service/file.service';
+import { UpdateUserRequestDto } from '../../../src/user/dto/request/updateUser.dto';
+import TestAgent from 'supertest/lib/agent';
+import { User } from '../../../src/user/entity/user.entity';
+import { createAccessToken } from '../../jest.setup';
 
-describe('PATCH /api/user/profile E2E Test', () => {
+const URL = '/api/user/profile';
+
+describe(`PATCH ${URL} E2E Test`, () => {
   let app: INestApplication;
-  let userService: UserService;
+  let agent: TestAgent;
   let userRepository: UserRepository;
   let fileService: FileService;
-  let testUser: User;
-
-  const testUpdateData = {
-    complete: {
-      userName: '변경된이름',
-      profileImage:
-        'https://denamu.dev/objects/PROFILE_IMAGE/20000902/uuid.png',
-      introduction: '변경된 소개글입니다.',
-    },
-    partial: {
-      userName: '부분수정이름',
-    },
-  };
+  let user: User;
 
   beforeAll(async () => {
     app = global.testApp;
-    userService = app.get(UserService);
-    userRepository = app.get(UserRepository);
+    agent = supertest(app.getHttpServer());
     fileService = app.get(FileService);
-
-    jest.spyOn(fileService, 'deleteByPath').mockResolvedValue(undefined);
-
-    testUser = await userRepository.save(
+    userRepository = app.get(UserRepository);
+    user = await userRepository.save(
       await UserFixture.createUserCryptFixture({
         userName: '기존이름',
-        profileImage:
-          'https://denamu.dev/objects/PROFILE_IMAGE/20000902/uuid_old.png',
+        profileImage: 'https://url/objects/PROFILE_IMAGE/20000902/uuid_old.png',
         introduction: '기존 소개글입니다.',
       }),
     );
   });
 
-  afterAll(async () => {
-    jest.restoreAllMocks();
+  beforeEach(() => {
+    jest.spyOn(fileService, 'deleteByPath').mockResolvedValue(undefined);
   });
 
-  it('로그인한 사용자가 프로필 정보를 성공적으로 수정한다.', async () => {
+  it('[401] 로그인하지 않은 유저가 회원 정보 수정 요청을 할 경우 회원 정보 수정을 실패한다.', async () => {
     // given
-    const accessToken = userService.createToken(
-      {
-        id: testUser.id,
-        email: testUser.email,
-        userName: testUser.userName,
-        role: 'user',
-      },
-      'access',
-    );
+    const requestDto = new UpdateUserRequestDto({
+      userName: '변경된이름',
+      profileImage: 'https://url/objects/PROFILE_IMAGE/20000902/uuid.png',
+      introduction: '변경된 소개글입니다.',
+    });
 
-    // when
-    const response = await request(app.getHttpServer())
-      .patch('/api/user/profile')
-      .set('Authorization', `Bearer ${accessToken}`)
-      .send(testUpdateData.complete);
+    // Http when
+    const response = await agent.patch(URL).send(requestDto);
 
-    // then
-    expect(response.status).toBe(200);
-    expect(response.body.message).toBe(
-      '사용자 프로필 정보가 성공적으로 수정되었습니다.',
-    );
-
-    const updatedUser = await userRepository.findOneBy({ id: testUser.id });
-    expect(updatedUser.userName).toBe(testUpdateData.complete.userName);
-    expect(updatedUser.profileImage).toBe(testUpdateData.complete.profileImage);
-    expect(updatedUser.introduction).toBe(testUpdateData.complete.introduction);
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(data).toBeUndefined();
   });
 
-  it('일부 필드만 수정해도 성공적으로 업데이트된다.', async () => {
+  it('[404] 회원 데이터가 서비스에 없을 경우 회원 정보 수정을 실패한다.', async () => {
     // given
-    const accessToken = userService.createToken(
-      {
-        id: testUser.id,
-        email: testUser.email,
-        userName: testUser.userName,
-        role: 'user',
-      },
-      'access',
-    );
+    const requestDto = new UpdateUserRequestDto({
+      userName: '변경된이름',
+      profileImage: 'https://url/objects/PROFILE_IMAGE/20000902/uuid.png',
+      introduction: '변경된 소개글입니다.',
+    });
+    const accessToken = createAccessToken({ id: Number.MAX_SAFE_INTEGER });
 
-    const originalUser = await userRepository.findOneBy({ id: testUser.id });
-
-    // when
-    const response = await request(app.getHttpServer())
-      .patch('/api/user/profile')
+    // Http when
+    const response = await agent
+      .patch(URL)
       .set('Authorization', `Bearer ${accessToken}`)
-      .send(testUpdateData.partial);
+      .send(requestDto);
 
-    // then
-    expect(response.status).toBe(200);
-
-    const updatedUser = await userRepository.findOneBy({ id: testUser.id });
-    expect(updatedUser.userName).toBe(testUpdateData.partial.userName);
-    expect(updatedUser.profileImage).toBe(originalUser.profileImage);
-    expect(updatedUser.introduction).toBe(originalUser.introduction);
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    expect(data).toBeUndefined();
   });
 
-  it('로그인하지 않은 사용자가 프로필 수정을 시도하면 401 에러가 발생한다.', async () => {
-    // when - then
-    const response = await request(app.getHttpServer())
-      .patch('/api/user/profile')
-      .send(testUpdateData.complete);
+  it('[200] 사용자가 모든 필드 수정 요청을 할 경우 회원 정보 수정을 성공한다.', async () => {
+    // given
+    const accessToken = createAccessToken(user);
+    const requestDto = new UpdateUserRequestDto({
+      userName: '변경된이름',
+      profileImage: 'https://url/objects/PROFILE_IMAGE/20000902/uuid.png',
+      introduction: '변경된 소개글입니다.',
+    });
 
-    expect(response.status).toBe(401);
+    // Http when
+    const response = await agent
+      .patch(URL)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send(requestDto);
+
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.OK);
+    expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedUser = await userRepository.findOneBy({ id: user.id });
+
+    // DB, Redis then
+    expect(savedUser.userName).toBe(requestDto.userName);
+    expect(savedUser.profileImage).toBe(requestDto.profileImage);
+    expect(savedUser.introduction).toBe(requestDto.introduction);
+  });
+
+  it('[200] 사용자가 일부 필드만 수정 요청을 할 경우 회원 정보 수정을 성공한다.', async () => {
+    // given
+    const accessToken = createAccessToken(user);
+    const requestDto = new UpdateUserRequestDto({
+      userName: '부분수정이름',
+    });
+
+    // Http when
+    const response = await agent
+      .patch(URL)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send(requestDto);
+
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.OK);
+    expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedUser = await userRepository.findOneBy({ id: user.id });
+
+    // DB, Redis then
+    expect(savedUser.userName).toBe(requestDto.userName);
+    expect(user.profileImage).toBe(user.profileImage);
+    expect(user.introduction).toBe(user.introduction);
   });
 });

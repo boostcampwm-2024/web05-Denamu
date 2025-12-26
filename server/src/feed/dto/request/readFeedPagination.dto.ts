@@ -23,7 +23,7 @@ export class ReadFeedPaginationRequestDto {
     required: false,
   })
   @IsOptional()
-  @Min(1, { message: 'limit 값은 1 이상이어야 합니다.' })
+  @Min(0, { message: 'limit 값은 0 이상이어야 합니다.' })
   @IsInt({
     message: '정수를 입력해주세요.',
   })

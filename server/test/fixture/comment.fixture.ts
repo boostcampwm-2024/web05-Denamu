@@ -5,7 +5,7 @@ import { User } from '../../src/user/entity/user.entity';
 export class CommentFixture {
   static readonly GENERAL_COMMENT = {
     comment: 'test',
-    date: new Date(Date.now()),
+    date: new Date('2025-11-22'),
   };
 
   static createCommentFixture(

@@ -1,7 +1,7 @@
 import { validate } from 'class-validator';
 import { ReadActivityQueryRequestDto } from '../../../src/activity/dto/request/readActivity.dto';
 
-describe('ReadActivityQueryRequestDto Test', () => {
+describe(`${ReadActivityQueryRequestDto.name} Test`, () => {
   let dto: ReadActivityQueryRequestDto;
 
   beforeEach(() => {

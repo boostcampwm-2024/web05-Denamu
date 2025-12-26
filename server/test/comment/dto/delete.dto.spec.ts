@@ -1,7 +1,7 @@
 import { validate } from 'class-validator';
 import { DeleteCommentRequestDto } from '../../../src/comment/dto/request/deleteComment.dto';
 
-describe('DeleteCommentRequestDto Test', () => {
+describe(`${DeleteCommentRequestDto.name} Test`, () => {
   let dto: DeleteCommentRequestDto;
 
   beforeEach(() => {

@@ -1,7 +1,7 @@
 import { validate } from 'class-validator';
 import { DeleteCertificateRssRequestDto } from '../../../src/rss/dto/request/deleteCertificateRss.dto';
 
-describe('DeleteCertificateRssRequestDto Test', () => {
+describe(`${DeleteCertificateRssRequestDto.name} Test`, () => {
   let dto: DeleteCertificateRssRequestDto;
 
   beforeEach(() => {

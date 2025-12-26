@@ -1,7 +1,7 @@
 import { validate } from 'class-validator';
 import { ConfirmDeleteAccountDto } from '../../../src/user/dto/request/confirmDeleteAccount.dto';
 
-describe('ConfirmDeleteAccountDto Test', () => {
+describe(`${ConfirmDeleteAccountDto.name} Test`, () => {
   let dto: ConfirmDeleteAccountDto;
 
   beforeEach(() => {

@@ -1,56 +1,51 @@
-import { INestApplication } from '@nestjs/common';
-import { UserService } from '../../../src/user/service/user.service';
-import * as request from 'supertest';
+import { HttpStatus, INestApplication } from '@nestjs/common';
+import * as supertest from 'supertest';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../fixture/user.fixture';
+import TestAgent from 'supertest/lib/agent';
 import { User } from '../../../src/user/entity/user.entity';
+import { createRefreshToken } from '../../jest.setup';
 
-describe('POST /api/user/refresh-token E2E Test', () => {
+const URL = '/api/user/refresh-token';
+
+describe(`POST ${URL} E2E Test`, () => {
   let app: INestApplication;
-  let userService: UserService;
-  let userInformation: User;
+  let agent: TestAgent;
+  let user: User;
 
   beforeAll(async () => {
     app = global.testApp;
-    userService = app.get(UserService);
-
+    agent = supertest(app.getHttpServer());
     const userRepository = app.get(UserRepository);
-
-    userInformation = await userRepository.save(
+    user = await userRepository.save(
       await UserFixture.createUserCryptFixture(),
     );
   });
 
-  it('Refresh Token이 없을 때, Access Token을 발급하지 않는다.', async () => {
-    // given
-    const agent = request.agent(app.getHttpServer());
+  it('[401] Refresh Token이 없을 경우 Access Token 발급을 실패한다.', async () => {
+    // Http when
+    const response = await agent.post(URL);
 
-    // when
-    const response = await agent.post('/api/user/refresh-token');
-
-    // then
-    expect(response.status).toBe(401);
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(data).toBeUndefined();
   });
 
-  it('Refresh Token이 있을 때, Access Token을 성공적으로 발급한다.', async () => {
+  it('[200] Refresh Token이 있을 경우 Access Token 발급을 성공한다.', async () => {
     // given
-    const agent = request.agent(app.getHttpServer());
-    const refreshToken = userService.createToken(
-      {
-        id: userInformation.id,
-        email: userInformation.email,
-        userName: userInformation.userName,
-        role: 'user',
-      },
-      'refresh',
-    );
+    const refreshToken = createRefreshToken(user);
 
-    // when
+    // Http when
     const response = await agent
-      .post('/api/user/refresh-token')
+      .post(URL)
       .set('Cookie', `refresh_token=${refreshToken}`);
 
-    // then
-    expect(response.status).toBe(200);
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.OK);
+    expect(data).toStrictEqual({
+      accessToken: expect.any(String),
+    });
   });
 });

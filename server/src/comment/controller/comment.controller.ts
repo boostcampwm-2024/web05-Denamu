@@ -29,16 +29,6 @@ import { CurrentUser } from '../../common/decorator';
 export class CommentController {
   constructor(private readonly commentService: CommentService) {}
 
-  @ApiGetComment()
-  @Get('/:feedId')
-  @HttpCode(HttpStatus.OK)
-  async getComment(@Param() getCommentRequestDto: GetCommentRequestDto) {
-    return ApiResponse.responseWithData(
-      '댓글 조회를 성공했습니다.',
-      await this.commentService.get(getCommentRequestDto),
-    );
-  }
-
   @ApiCreateComment()
   @Post()
   @UseGuards(JwtGuard)
@@ -61,6 +51,16 @@ export class CommentController {
   ) {
     await this.commentService.delete(user, commentDto);
     return ApiResponse.responseWithNoContent('댓글 삭제를 성공했습니다.');
+  }
+
+  @ApiGetComment()
+  @Get('/:feedId')
+  @HttpCode(HttpStatus.OK)
+  async getComment(@Param() getCommentRequestDto: GetCommentRequestDto) {
+    return ApiResponse.responseWithData(
+      '댓글 조회를 성공했습니다.',
+      await this.commentService.get(getCommentRequestDto),
+    );
   }
 
   @ApiUpdateComment()
