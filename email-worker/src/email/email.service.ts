@@ -48,7 +48,10 @@ export class EmailService {
       await this.transporter.sendMail(mailOptions);
       logger.info(`${mailOptions.to} 이메일 전송 성공`);
     } catch (error) {
-      logger.error(`${mailOptions.to} 이메일 전송 실패: ${error}`);
+      logger.error(
+        `${mailOptions.to} 이메일 전송 실패 - 오류 메시지: ${error.message}, 스택 트레이스: ${error.stack}`,
+      );
+      throw error;
     }
   }
 
