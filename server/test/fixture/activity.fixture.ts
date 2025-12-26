@@ -10,26 +10,18 @@ export class ActivityFixture {
   static createActivityFixture(
     user: User,
     overwrites: Partial<Activity> = {},
+    index = 1,
   ): Activity {
     const activity = new Activity();
-    Object.assign(activity, this.DEFAULT_ACTIVITY);
+    Object.assign(activity, {
+      activityDate: new Date(
+        this.DEFAULT_ACTIVITY.activityDate.getTime() +
+          index * 24 * 60 * 60 * 1000,
+      ),
+      viewCount: this.DEFAULT_ACTIVITY.viewCount,
+    });
     Object.assign(activity, overwrites);
     activity.user = user;
     return activity;
-  }
-
-  static createMultipleActivitiesFixture(
-    user: User,
-    activitiesData: Array<{ activityDate: Date; viewCount: number }>,
-  ): Activity[] {
-    return activitiesData.map((data) => this.createActivityFixture(user, data));
-  }
-
-  static createActivityWithDateFixture(
-    user: User,
-    activityDate: Date,
-    viewCount: number = 1,
-  ): Activity {
-    return this.createActivityFixture(user, { activityDate, viewCount });
   }
 }

@@ -135,4 +135,12 @@ export class RedisService {
   ): Promise<string> {
     return this.redisClient.zincrby(key, increment, member);
   }
+
+  async setex(
+    key: string,
+    seconds: number,
+    value: string | number,
+  ): Promise<'OK' | null> {
+    return this.redisClient.setex(key, seconds, value);
+  }
 }
