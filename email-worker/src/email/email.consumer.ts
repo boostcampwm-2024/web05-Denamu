@@ -148,13 +148,11 @@ export class EmailConsumer {
           RMQ_QUEUES.EMAIL_DEAD_LETTER,
           stringifiedMessage,
           {
-            headers: {
-              'x-retry-count': retryCount,
-              'x-error-code': error.code || 'NONE',
-              'x-error-message': error.message,
-              'x-failed-at': new Date().toISOString(),
-              'x-failure-type': 'MAX_RETRIES_EXCEEDED',
-            },
+            headers: this.createDLQHeaders(
+              error,
+              retryCount,
+              'MAX_RETRIES_EXCEEDED',
+            ),
           },
         );
         return;
@@ -174,14 +172,11 @@ export class EmailConsumer {
           RMQ_QUEUES.EMAIL_DEAD_LETTER,
           stringifiedMessage,
           {
-            headers: {
-              'x-retry-count': retryCount,
-              'x-error-code': error.code || 'NONE',
-              'x-response-code': error.responseCode,
-              'x-error-message': error.message,
-              'x-failed-at': new Date().toISOString(),
-              'x-failure-type': 'SMTP_PERMANENT_FAILURE',
-            },
+            headers: this.createDLQHeaders(
+              error,
+              retryCount,
+              'SMTP_PERMANENT_FAILURE',
+            ),
           },
         );
         return;
@@ -193,14 +188,11 @@ export class EmailConsumer {
             RMQ_QUEUES.EMAIL_DEAD_LETTER,
             stringifiedMessage,
             {
-              headers: {
-                'x-retry-count': retryCount,
-                'x-error-code': error.code || 'NONE',
-                'x-response-code': error.responseCode,
-                'x-error-message': error.message,
-                'x-failed-at': new Date().toISOString(),
-                'x-failure-type': 'MAX_RETRIES_EXCEEDED',
-              },
+              headers: this.createDLQHeaders(
+                error,
+                retryCount,
+                'MAX_RETRIES_EXCEEDED',
+              ),
             },
           );
           return;
@@ -225,15 +217,35 @@ export class EmailConsumer {
       RMQ_QUEUES.EMAIL_DEAD_LETTER,
       stringifiedMessage,
       {
-        headers: {
-          'x-retry-count': retryCount,
-          'x-error-code': error.code || 'UNKNOWN',
-          'x-error-message': error.message || 'Unknown error',
-          'x-error-stack': error.stack,
-          'x-failed-at': new Date().toISOString(),
-          'x-failure-type': 'UNKNOWN_ERROR',
-        },
+        headers: this.createDLQHeaders(error, retryCount, 'UNKNOWN_ERROR'),
       },
     );
+  }
+
+  private createDLQHeaders(
+    error: any,
+    retryCount: number,
+    failureType:
+      | 'SMTP_PERMANENT_FAILURE'
+      | 'MAX_RETRIES_EXCEEDED'
+      | 'UNKNOWN_ERROR',
+  ) {
+    const headers: Record<string, any> = {
+      'x-retry-count': retryCount,
+      'x-error-code': error.code || 'UNKNOWN',
+      'x-error-message': error.message || 'Unknown error',
+      'x-failed-at': new Date().toISOString(),
+      'x-failure-type': failureType,
+    };
+
+    if (error.responseCode !== undefined) {
+      headers['x-response-code'] = error.responseCode;
+    }
+
+    if (error.stack) {
+      headers['x-error-stack'] = error.stack;
+    }
+
+    return headers;
   }
 }
