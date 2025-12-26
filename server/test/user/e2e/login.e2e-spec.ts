@@ -2,7 +2,7 @@ import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as supertest from 'supertest';
 import { LoginUserRequestDto } from '../../../src/user/dto/request/loginUser.dto';
 import { UserRepository } from '../../../src/user/repository/user.repository';
-import { UserFixture } from '../../fixture/user.fixture';
+import { UserFixture } from '../../config/common/fixture/user.fixture';
 import TestAgent from 'supertest/lib/agent';
 
 const URL = '/api/user/login';

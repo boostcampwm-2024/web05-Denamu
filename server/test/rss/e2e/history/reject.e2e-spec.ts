@@ -3,7 +3,7 @@ import * as supertest from 'supertest';
 import { RedisService } from '../../../../src/common/redis/redis.service';
 import { RssRejectRepository } from '../../../../src/rss/repository/rss.repository';
 import { RssReject } from '../../../../src/rss/entity/rss.entity';
-import { RssRejectFixture } from '../../../fixture/rss-reject.fixture';
+import { RssRejectFixture } from '../../../config/common/fixture/rss-reject.fixture';
 import TestAgent from 'supertest/lib/agent';
 import { REDIS_KEYS } from '../../../../src/common/redis/redis.constant';
 

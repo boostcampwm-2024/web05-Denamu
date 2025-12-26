@@ -1,10 +1,10 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as supertest from 'supertest';
 import { UserRepository } from '../../../../src/user/repository/user.repository';
-import { UserFixture } from '../../../fixture/user.fixture';
+import { UserFixture } from '../../../config/common/fixture/user.fixture';
 import TestAgent from 'supertest/lib/agent';
 import { User } from '../../../../src/user/entity/user.entity';
-import { createAccessToken } from '../../../jest.setup';
+import { createAccessToken } from '../../../config/e2e/env/jest.setup';
 import { REDIS_KEYS } from '../../../../src/common/redis/redis.constant';
 import * as uuid from 'uuid';
 import { RedisService } from '../../../../src/common/redis/redis.service';

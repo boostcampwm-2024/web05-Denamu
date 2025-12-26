@@ -7,10 +7,10 @@ import {
 } from '../../../src/file/constant/file.constant';
 import { User } from '../../../src/user/entity/user.entity';
 import { UserRepository } from '../../../src/user/repository/user.repository';
-import { UserFixture } from '../../fixture/user.fixture';
+import { UserFixture } from '../../config/common/fixture/user.fixture';
 import TestAgent from 'supertest/lib/agent';
 import { FileRepository } from '../../../src/file/repository/file.repository';
-import { createAccessToken } from '../../jest.setup';
+import { createAccessToken } from '../../config/e2e/env/jest.setup';
 import * as fs from 'fs/promises';
 import * as uuid from 'uuid';
 

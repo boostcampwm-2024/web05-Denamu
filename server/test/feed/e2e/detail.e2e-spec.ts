@@ -1,14 +1,14 @@
 import { TagRepository } from './../../../src/tag/repository/tag.repository';
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as supertest from 'supertest';
-import { FeedFixture } from '../../fixture/feed.fixture';
+import { FeedFixture } from '../../config/common/fixture/feed.fixture';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
-import { RssAcceptFixture } from '../../fixture/rss-accept.fixture';
+import { RssAcceptFixture } from '../../config/common/fixture/rss-accept.fixture';
 import { ManageFeedRequestDto } from '../../../src/feed/dto/request/manageFeed.dto';
 import TestAgent from 'supertest/lib/agent';
 import { Feed } from '../../../src/feed/entity/feed.entity';
-import { TagFixture } from '../../fixture/tag.fixture';
+import { TagFixture } from '../../config/common/fixture/tag.fixture';
 
 const URL = '/api/feed/detail';
 

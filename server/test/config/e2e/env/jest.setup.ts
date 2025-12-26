@@ -1,13 +1,13 @@
 import { ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { AppModule } from '../src/app.module';
-import { WinstonLoggerService } from '../src/common/logger/logger.service';
-import { InternalExceptionsFilter } from '../src/common/filters/internal.exceptions.filter';
-import { HttpExceptionsFilter } from '../src/common/filters/http.exception.filter';
+import { AppModule } from '../../../../src/app.module';
+import { WinstonLoggerService } from '../../../../src/common/logger/logger.service';
+import { InternalExceptionsFilter } from '../../../../src/common/filters/internal.exceptions.filter';
+import { HttpExceptionsFilter } from '../../../../src/common/filters/http.exception.filter';
 import * as cookieParser from 'cookie-parser';
-import { TestService } from '../src/common/test/test.service';
-import { RedisService } from '../src/common/redis/redis.service';
-import { UserService } from '../src/user/service/user.service';
+import { TestService } from '../../../../src/common/test/test.service';
+import { RedisService } from '../../../../src/common/redis/redis.service';
+import { UserService } from '../../../../src/user/service/user.service';
 
 const globalAny: any = global;
 

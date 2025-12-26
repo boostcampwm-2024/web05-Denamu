@@ -3,7 +3,7 @@ import {
   RssAcceptRepository,
   RssRepository,
 } from '../../../src/rss/repository/rss.repository';
-import { RssFixture } from '../../fixture/rss.fixture';
+import { RssFixture } from '../../config/common/fixture/rss.fixture';
 import * as supertest from 'supertest';
 import { DeleteRssRequestDto } from '../../../src/rss/dto/request/deleteRss.dto';
 import TestAgent from 'supertest/lib/agent';
