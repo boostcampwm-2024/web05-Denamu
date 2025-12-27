@@ -1,42 +1,29 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
-import * as supertest from 'supertest';
+import { HttpStatus } from '@nestjs/common';
 import { Feed } from '../../../src/feed/entity/feed.entity';
-import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
-import { FeedRepository } from '../../../src/feed/repository/feed.repository';
 import { RssAcceptFixture } from '../../config/common/fixture/rss-accept.fixture';
 import { FeedFixture } from '../../config/common/fixture/feed.fixture';
 import { GetCommentRequestDto } from '../../../src/comment/dto/request/getComment.dto';
-import TestAgent from 'supertest/lib/agent';
-import { CommentRepository } from '../../../src/comment/repository/comment.repository';
-import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../config/common/fixture/user.fixture';
 import { CommentFixture } from '../../config/common/fixture/comment.fixture';
 import { RssAccept } from '../../../src/rss/entity/rss.entity';
 import { User } from '../../../src/user/entity/user.entity';
 import { Comment } from '../../../src/comment/entity/comment.entity';
+import { CommentE2EHelper } from '../../config/common/helper/comment/comment-helper';
 
 const URL = '/api/comment';
 
 describe(`GET ${URL}/{feedId} E2E Test`, () => {
-  let app: INestApplication;
-  let agent: TestAgent;
+  const {
+    agent,
+    rssAcceptRepository,
+    userRepository,
+    commentRepository,
+    feedRepository,
+  } = new CommentE2EHelper();
   let feed: Feed;
-  let commentRepository: CommentRepository;
-  let userRepository: UserRepository;
-  let rssAcceptRepository: RssAcceptRepository;
-  let feedRepository: FeedRepository;
   let rssAccept: RssAccept;
   let user: User;
   let comment: Comment;
-
-  beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    commentRepository = app.get(CommentRepository);
-    userRepository = app.get(UserRepository);
-    rssAcceptRepository = app.get(RssAcceptRepository);
-    feedRepository = app.get(FeedRepository);
-  });
 
   beforeEach(async () => {
     rssAccept = await rssAcceptRepository.save(
