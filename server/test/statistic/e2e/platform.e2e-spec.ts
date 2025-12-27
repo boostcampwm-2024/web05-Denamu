@@ -1,23 +1,13 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
-import * as supertest from 'supertest';
-import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
+import { HttpStatus } from '@nestjs/common';
 import { RssAcceptFixture } from '../../config/common/fixture/rss-accept.fixture';
-import TestAgent from 'supertest/lib/agent';
 import { RssAccept } from '../../../src/rss/entity/rss.entity';
+import { StatisticE2EHelper } from '../../config/common/helper/statistic/statistic-helper';
 
 const URL = '/api/statistic/platform';
 
 describe(`GET ${URL} E2E Test`, () => {
-  let app: INestApplication;
-  let agent: TestAgent;
-  let rssAcceptRepository: RssAcceptRepository;
+  const { agent, rssAcceptRepository } = new StatisticE2EHelper();
   let rssAcceptList: RssAccept[];
-
-  beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    rssAcceptRepository = app.get(RssAcceptRepository);
-  });
 
   beforeEach(async () => {
     rssAcceptList = await Promise.all([

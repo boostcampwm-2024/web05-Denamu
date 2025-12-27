@@ -1,34 +1,19 @@
 import { RssAccept } from './../../../src/rss/entity/rss.entity';
-import { HttpStatus, INestApplication } from '@nestjs/common';
-import { RedisService } from '../../../src/common/redis/redis.service';
-import * as supertest from 'supertest';
+import { HttpStatus } from '@nestjs/common';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 import { RssAcceptFixture } from '../../config/common/fixture/rss-accept.fixture';
-import { FeedRepository } from '../../../src/feed/repository/feed.repository';
-import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
 import { FeedFixture } from '../../config/common/fixture/feed.fixture';
-import TestAgent from 'supertest/lib/agent';
 import { Feed } from '../../../src/feed/entity/feed.entity';
 import { ReadStatisticRequestDto } from '../../../src/statistic/dto/request/readStatistic.dto';
+import { StatisticE2EHelper } from '../../config/common/helper/statistic/statistic-helper';
 
 const URL = '/api/statistic/today';
 
 describe(`GET ${URL}?limit={} E2E Test`, () => {
-  let app: INestApplication;
-  let agent: TestAgent;
-  let redisService: RedisService;
+  const { agent, rssAcceptRepository, feedRepository, redisService } =
+    new StatisticE2EHelper();
   let feedList: Feed[];
-  let feedRepository: FeedRepository;
-  let rssAcceptRepository: RssAcceptRepository;
   let rssAccept: RssAccept;
-
-  beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    feedRepository = app.get(FeedRepository);
-    rssAcceptRepository = app.get(RssAcceptRepository);
-    redisService = app.get(RedisService);
-  });
 
   beforeEach(async () => {
     rssAccept = await rssAcceptRepository.save(

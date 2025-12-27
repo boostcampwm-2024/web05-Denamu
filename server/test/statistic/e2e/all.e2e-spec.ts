@@ -1,30 +1,18 @@
-import * as supertest from 'supertest';
-import { HttpStatus, INestApplication } from '@nestjs/common';
-import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
-import { FeedRepository } from '../../../src/feed/repository/feed.repository';
+import { HttpStatus } from '@nestjs/common';
 import { RssAcceptFixture } from '../../config/common/fixture/rss-accept.fixture';
 import { FeedFixture } from '../../config/common/fixture/feed.fixture';
 import { Feed } from '../../../src/feed/entity/feed.entity';
-import TestAgent from 'supertest/lib/agent';
 import { ReadStatisticRequestDto } from '../../../src/statistic/dto/request/readStatistic.dto';
 import { RssAccept } from '../../../src/rss/entity/rss.entity';
+import { StatisticE2EHelper } from '../../config/common/helper/statistic/statistic-helper';
 
 const URL = '/api/statistic/all';
 
 describe(`GET ${URL}?limit={} E2E Test`, () => {
-  let app: INestApplication;
-  let agent: TestAgent;
+  const { agent, rssAcceptRepository, feedRepository } =
+    new StatisticE2EHelper();
   let feedList: Feed[];
-  let rssAcceptRepository: RssAcceptRepository;
-  let feedRepository: FeedRepository;
   let rssAccept: RssAccept;
-
-  beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    rssAcceptRepository = app.get(RssAcceptRepository);
-    feedRepository = app.get(FeedRepository);
-  });
 
   beforeEach(async () => {
     rssAccept = await rssAcceptRepository.save(
