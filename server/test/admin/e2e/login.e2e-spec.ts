@@ -2,33 +2,19 @@ import {
   ADMIN_DEFAULT_PASSWORD,
   AdminFixture,
 } from './../../config/common/fixture/admin.fixture';
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import { LoginAdminRequestDto } from '../../../src/admin/dto/request/loginAdmin.dto';
-import * as supertest from 'supertest';
-import { AdminRepository } from '../../../src/admin/repository/admin.repository';
-import TestAgent from 'supertest/lib/agent';
-import { RedisService } from '../../../src/common/redis/redis.service';
-import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 import * as uuid from 'uuid';
 import { Admin } from '../../../src/admin/entity/admin.entity';
+import { AdminE2EHelper } from '../../config/common/helper/admin/admin-helper';
 
 const URL = '/api/admin/login';
 
 describe(`POST ${URL} E2E Test`, () => {
-  let app: INestApplication;
-  let agent: TestAgent;
-  let redisService: RedisService;
+  const { agent, adminRepository, redisService, getRedisKey } =
+    new AdminE2EHelper();
   let admin: Admin;
-  let adminRepository: AdminRepository;
-  const redisKeyMake = (data: string) => `${REDIS_KEYS.ADMIN_AUTH_KEY}:${data}`;
   const sessionKey = 'admin-login-sessionKey';
-
-  beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    redisService = app.get(RedisService);
-    adminRepository = app.get(AdminRepository);
-  });
 
   beforeEach(async () => {
     jest.spyOn(uuid, 'v4').mockReturnValue(sessionKey as any);
@@ -40,7 +26,7 @@ describe(`POST ${URL} E2E Test`, () => {
   afterEach(async () => {
     await Promise.all([
       adminRepository.delete(admin.id),
-      redisService.del(redisKeyMake(sessionKey)),
+      redisService.del(getRedisKey(sessionKey)),
     ]);
   });
 
@@ -60,7 +46,7 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(data).toBeUndefined();
 
     // DB, Redis when
-    const savedSession = await redisService.get(redisKeyMake(sessionKey));
+    const savedSession = await redisService.get(getRedisKey(sessionKey));
 
     // DB, Redis then
     expect(savedSession).toBeNull();
@@ -82,7 +68,7 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(data).toBeUndefined();
 
     // DB, Redis when
-    const savedSession = await redisService.get(redisKeyMake(sessionKey));
+    const savedSession = await redisService.get(getRedisKey(sessionKey));
 
     // DB, Redis then
     expect(savedSession).toBeNull();
@@ -105,7 +91,7 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(data).toBeUndefined();
 
     // DB, Redis when
-    const savedSession = await redisService.get(redisKeyMake(sessionKey));
+    const savedSession = await redisService.get(getRedisKey(sessionKey));
 
     // DB, Redis then
     expect(savedSession).toBe(admin.loginId);

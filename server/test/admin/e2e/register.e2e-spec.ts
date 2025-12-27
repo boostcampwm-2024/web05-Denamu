@@ -1,36 +1,22 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import { RegisterAdminRequestDto } from '../../../src/admin/dto/request/registerAdmin.dto';
-import * as supertest from 'supertest';
 import { AdminFixture } from '../../config/common/fixture/admin.fixture';
-import { AdminRepository } from '../../../src/admin/repository/admin.repository';
-import TestAgent from 'supertest/lib/agent';
-import { RedisService } from '../../../src/common/redis/redis.service';
-import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 import * as bcrypt from 'bcrypt';
+import { AdminE2EHelper } from '../../config/common/helper/admin/admin-helper';
 
 const URL = '/api/admin/register';
 
 describe(`POST ${URL} E2E Test`, () => {
-  let app: INestApplication;
-  let agent: TestAgent;
-  let adminRepository: AdminRepository;
-  let redisService: RedisService;
+  const { agent, adminRepository, redisService, getRedisKey } =
+    new AdminE2EHelper();
   const sessionKey = 'admin-register-session-key';
-  const redisKeyMake = (data: string) => `${REDIS_KEYS.ADMIN_AUTH_KEY}:${data}`;
-
-  beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    adminRepository = app.get(AdminRepository);
-    redisService = app.get(RedisService);
-  });
 
   beforeEach(async () => {
-    await redisService.set(redisKeyMake(sessionKey), 'testAdminId');
+    await redisService.set(getRedisKey(sessionKey), 'testAdminId');
   });
 
   afterEach(async () => {
-    await redisService.del(redisKeyMake(sessionKey));
+    await redisService.del(getRedisKey(sessionKey));
   });
 
   it('[401] 관리자 로그인 쿠키가 없을 경우 회원가입을 실패한다.', async () => {

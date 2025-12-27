@@ -1,30 +1,18 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
-import * as supertest from 'supertest';
-import TestAgent from 'supertest/lib/agent';
-import { RedisService } from '../../../src/common/redis/redis.service';
-import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
+import { HttpStatus } from '@nestjs/common';
+import { AdminE2EHelper } from '../../config/common/helper/admin/admin-helper';
 
 const URL = '/api/admin/sessionId';
 
 describe(`GET ${URL} E2E Test`, () => {
-  let app: INestApplication;
-  let agent: TestAgent;
-  let redisService: RedisService;
+  const { agent, redisService, getRedisKey } = new AdminE2EHelper();
   const sessionKey = 'admin-session-check-key';
-  const redisKeyMake = (data: string) => `${REDIS_KEYS.ADMIN_AUTH_KEY}:${data}`;
-
-  beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    redisService = app.get(RedisService);
-  });
 
   beforeEach(async () => {
-    await redisService.set(redisKeyMake(sessionKey), 'testAdminId');
+    await redisService.set(getRedisKey(sessionKey), 'testAdminId');
   });
 
   afterEach(async () => {
-    await redisService.del(redisKeyMake(sessionKey));
+    await redisService.del(getRedisKey(sessionKey));
   });
 
   it('[401] 관리자 로그인 쿠키가 없을 경우 관리자 자동 로그인을 실패한다.', async () => {
@@ -37,7 +25,7 @@ describe(`GET ${URL} E2E Test`, () => {
     expect(data).toBeUndefined();
 
     // DB, Redis when
-    const savedSession = await redisService.get(redisKeyMake(sessionKey));
+    const savedSession = await redisService.get(getRedisKey(sessionKey));
 
     // DB, Redis then
     expect(savedSession).not.toBeNull();
@@ -55,7 +43,7 @@ describe(`GET ${URL} E2E Test`, () => {
     expect(data).toBeUndefined();
 
     // DB, Redis when
-    const savedSession = await redisService.get(redisKeyMake(sessionKey));
+    const savedSession = await redisService.get(getRedisKey(sessionKey));
 
     // DB, Redis then
     expect(savedSession).not.toBeNull();
@@ -73,7 +61,7 @@ describe(`GET ${URL} E2E Test`, () => {
     expect(data).toBeUndefined();
 
     // DB, Redis when
-    const savedSession = await redisService.get(redisKeyMake(sessionKey));
+    const savedSession = await redisService.get(getRedisKey(sessionKey));
 
     // DB, Redis then
     expect(savedSession).not.toBeNull();
