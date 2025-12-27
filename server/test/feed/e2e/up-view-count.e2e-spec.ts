@@ -1,49 +1,38 @@
-import * as supertest from 'supertest';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
-import { HttpStatus, INestApplication } from '@nestjs/common';
-import { RedisService } from '../../../src/common/redis/redis.service';
-import { FeedRepository } from '../../../src/feed/repository/feed.repository';
-import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
+import { HttpStatus } from '@nestjs/common';
 import { FeedFixture } from '../../config/common/fixture/feed.fixture';
 import { RssAcceptFixture } from '../../config/common/fixture/rss-accept.fixture';
-import TestAgent from 'supertest/lib/agent';
 import { Feed } from '../../../src/feed/entity/feed.entity';
 import { RssAccept } from '../../../src/rss/entity/rss.entity';
+import { FeedE2EHelper } from '../../config/common/helper/feed/feed-helper';
 
 const URL = '/api/feed';
 
 describe(`POST ${URL}/{feedId} E2E Test`, () => {
-  let app: INestApplication;
-  let agent: TestAgent;
-  let redisService: RedisService;
+  const {
+    agent,
+    redisService,
+    feedRepository,
+    rssAcceptRepository,
+    getReadRedisKey,
+  } = new FeedE2EHelper();
   let feed: Feed;
   let rssAccept: RssAccept;
-  let feedRepository: FeedRepository;
-  let rssAcceptRepository: RssAcceptRepository;
   const testIp = '1.1.1.1';
-  const redisKeyMake = (data: string) => `feed:${data}:ip`;
-
-  beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    redisService = app.get(RedisService);
-    feedRepository = app.get(FeedRepository);
-    rssAcceptRepository = app.get(RssAcceptRepository);
-  });
 
   beforeEach(async () => {
     rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
     feed = await feedRepository.save(FeedFixture.createFeedFixture(rssAccept));
-    await redisService.sadd(redisKeyMake(feed.id.toString()), testIp);
+    await redisService.sadd(getReadRedisKey(feed.id.toString()), testIp);
   });
 
   afterEach(async () => {
     await feedRepository.delete(feed.id);
     await Promise.all([
       rssAcceptRepository.delete(rssAccept.id),
-      redisService.del(redisKeyMake(feed.id.toString())),
+      redisService.del(getReadRedisKey(feed.id.toString())),
     ]);
   });
 
@@ -74,7 +63,7 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
       feedRepository.findOneBy({
         id: feed.id,
       }),
-      redisService.sismember(redisKeyMake(feed.id.toString()), testIp),
+      redisService.sismember(getReadRedisKey(feed.id.toString()), testIp),
     ]);
 
     // DB, Redis then
@@ -84,7 +73,7 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
 
   it('[200] 읽은 기록 쿠키가 없지만 읽은 기록 IP가 있을 경우 조회수 상승을 하지 않는 행위를 성공한다.', async () => {
     // given
-    await redisService.sadd(redisKeyMake(feed.id.toString()), testIp);
+    await redisService.sadd(getReadRedisKey(feed.id.toString()), testIp);
 
     // Http when
     const response = await agent
@@ -104,7 +93,7 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
       feedRepository.findOneBy({
         id: feed.id,
       }),
-      redisService.sismember(redisKeyMake(feed.id.toString()), testIp),
+      redisService.sismember(getReadRedisKey(feed.id.toString()), testIp),
     ]);
 
     // DB, Redis then
@@ -114,7 +103,7 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
     // cleanup
     await Promise.all([
       redisService.zrem(REDIS_KEYS.FEED_TREND_KEY, feed.id.toString()),
-      redisService.srem(redisKeyMake(feed.id.toString()), testIp),
+      redisService.srem(getReadRedisKey(feed.id.toString()), testIp),
     ]);
   });
 
@@ -140,7 +129,7 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
       feedRepository.findOneBy({
         id: feed.id,
       }),
-      redisService.sismember(redisKeyMake(feed.id.toString()), testNewIp),
+      redisService.sismember(getReadRedisKey(feed.id.toString()), testNewIp),
     ]);
 
     // DB, Redis then
@@ -150,7 +139,7 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
     // cleanup
     await Promise.all([
       redisService.zrem(REDIS_KEYS.FEED_TREND_KEY, feed.id.toString()),
-      redisService.srem(redisKeyMake(feed.id.toString()), testNewIp),
+      redisService.srem(getReadRedisKey(feed.id.toString()), testNewIp),
       feedRepository.update(feed.id, { viewCount: feed.viewCount }),
     ]);
   });

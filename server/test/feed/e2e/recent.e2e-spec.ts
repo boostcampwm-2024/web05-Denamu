@@ -1,35 +1,22 @@
-import * as supertest from 'supertest';
-import { HttpStatus, INestApplication } from '@nestjs/common';
-import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
+import { HttpStatus } from '@nestjs/common';
 import { RssAcceptFixture } from '../../config/common/fixture/rss-accept.fixture';
 import { FeedFixture } from '../../config/common/fixture/feed.fixture';
-import { FeedRepository } from '../../../src/feed/repository/feed.repository';
-import { RedisService } from '../../../src/common/redis/redis.service';
-import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
-import TestAgent from 'supertest/lib/agent';
 import { Feed } from '../../../src/feed/entity/feed.entity';
 import { RssAccept } from '../../../src/rss/entity/rss.entity';
+import { FeedE2EHelper } from '../../config/common/helper/feed/feed-helper';
 
 const URL = '/api/feed/recent';
 
 describe(`GET ${URL} E2E Test`, () => {
-  let app: INestApplication;
-  let agent: TestAgent;
-  let redisService: RedisService;
+  const {
+    agent,
+    feedRepository,
+    rssAcceptRepository,
+    redisService,
+    getRecentRedisKey,
+  } = new FeedE2EHelper();
   let feedList: Feed[];
   let rssAccept: RssAccept;
-  let rssAcceptRepository: RssAcceptRepository;
-  let feedRepository: FeedRepository;
-  const redisKeyMake = (data: string) =>
-    `${REDIS_KEYS.FEED_RECENT_KEY}:${data}`;
-
-  beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    redisService = app.get(RedisService);
-    rssAcceptRepository = app.get(RssAcceptRepository);
-    feedRepository = app.get(FeedRepository);
-  });
 
   beforeEach(async () => {
     rssAccept = await rssAcceptRepository.save(
@@ -50,7 +37,7 @@ describe(`GET ${URL} E2E Test`, () => {
     // given
     await redisService.executePipeline((pipeline) => {
       feedList.forEach((feed) => {
-        pipeline.hset(redisKeyMake(feed.id.toString()), {
+        pipeline.hset(getRecentRedisKey(feed.id.toString()), {
           id: feed.id,
           blogPlatform: feed.blog.blogPlatform,
           createdAt: feed.createdAt.toISOString(),
@@ -95,7 +82,7 @@ describe(`GET ${URL} E2E Test`, () => {
     // cleanup
     await redisService.executePipeline((pipeline) => {
       feedList.forEach((feed) => {
-        pipeline.del(redisKeyMake(feed.id.toString()));
+        pipeline.del(getRecentRedisKey(feed.id.toString()));
       });
     });
   });
