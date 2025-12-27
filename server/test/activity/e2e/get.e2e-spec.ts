@@ -1,30 +1,17 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
-import * as supertest from 'supertest';
-import { UserRepository } from '../../../src/user/repository/user.repository';
-import { ActivityRepository } from '../../../src/activity/repository/activity.repository';
+import { HttpStatus } from '@nestjs/common';
 import { UserFixture } from '../../config/common/fixture/user.fixture';
 import { ActivityFixture } from '../../config/common/fixture/activity.fixture';
 import { User } from '../../../src/user/entity/user.entity';
-import TestAgent from 'supertest/lib/agent';
 import { ReadActivityQueryRequestDto } from '../../../src/activity/dto/request/readActivity.dto';
 import { Activity } from '../../../src/activity/entity/activity.entity';
+import { ActivityE2EHelper } from '../../config/common/helper/activity/activity-helper';
 
 const URL = '/api/activity';
 
 describe(`GET ${URL}/{userId} E2E Test`, () => {
-  let app: INestApplication;
+  const { agent, activityRepository, userRepository } = new ActivityE2EHelper();
   let user: User;
   let activities: Activity[];
-  let agent: TestAgent;
-  let activityRepository: ActivityRepository;
-  let userRepository: UserRepository;
-
-  beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    activityRepository = app.get(ActivityRepository);
-    userRepository = app.get(UserRepository);
-  });
 
   beforeEach(async () => {
     user = await userRepository.save(
