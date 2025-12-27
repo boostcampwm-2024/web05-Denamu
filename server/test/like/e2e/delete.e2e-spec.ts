@@ -1,7 +1,4 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
-import { UserRepository } from '../../../src/user/repository/user.repository';
-import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
-import { FeedRepository } from '../../../src/feed/repository/feed.repository';
+import { HttpStatus } from '@nestjs/common';
 import { UserFixture } from '../../config/common/fixture/user.fixture';
 import { RssAcceptFixture } from '../../config/common/fixture/rss-accept.fixture';
 import { FeedFixture } from '../../config/common/fixture/feed.fixture';
@@ -9,33 +6,23 @@ import { RssAccept } from '../../../src/rss/entity/rss.entity';
 import { User } from '../../../src/user/entity/user.entity';
 import { Feed } from '../../../src/feed/entity/feed.entity';
 import { ManageLikeRequestDto } from '../../../src/like/dto/request/manageLike.dto';
-import * as supertest from 'supertest';
-import { LikeRepository } from '../../../src/like/repository/like.repository';
-import TestAgent from 'supertest/lib/agent';
 import { createAccessToken } from '../../config/e2e/env/jest.setup';
+import { LikeE2EHelper } from '../../config/common/helper/like/like-helper';
 
 const URL = '/api/like';
 
 describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
-  let app: INestApplication;
+  const {
+    agent,
+    likeRepository,
+    userRepository,
+    rssAcceptRepository,
+    feedRepository,
+  } = new LikeE2EHelper();
   let rssAccept: RssAccept;
   let user: User;
   let feed: Feed;
-  let agent: TestAgent;
-  let likeRepository: LikeRepository;
-  let userRepository: UserRepository;
-  let rssAcceptRepository: RssAcceptRepository;
-  let feedRepository: FeedRepository;
   let accessToken: string;
-
-  beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    likeRepository = app.get(LikeRepository);
-    userRepository = app.get(UserRepository);
-    rssAcceptRepository = app.get(RssAcceptRepository);
-    feedRepository = app.get(FeedRepository);
-  });
 
   beforeEach(async () => {
     rssAccept = await rssAcceptRepository.save(

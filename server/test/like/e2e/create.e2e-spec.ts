@@ -1,41 +1,28 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
-import { UserRepository } from '../../../src/user/repository/user.repository';
-import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
-import { FeedRepository } from '../../../src/feed/repository/feed.repository';
+import { HttpStatus } from '@nestjs/common';
 import { UserFixture } from '../../config/common/fixture/user.fixture';
 import { RssAcceptFixture } from '../../config/common/fixture/rss-accept.fixture';
 import { FeedFixture } from '../../config/common/fixture/feed.fixture';
 import { User } from '../../../src/user/entity/user.entity';
 import { Feed } from '../../../src/feed/entity/feed.entity';
 import { ManageLikeRequestDto } from '../../../src/like/dto/request/manageLike.dto';
-import * as supertest from 'supertest';
-import TestAgent from 'supertest/lib/agent';
-import { LikeRepository } from '../../../src/like/repository/like.repository';
 import { createAccessToken } from '../../config/e2e/env/jest.setup';
 import { RssAccept } from '../../../src/rss/entity/rss.entity';
+import { LikeE2EHelper } from '../../config/common/helper/like/like-helper';
 
 const URL = '/api/like';
 
 describe(`POST ${URL} E2E Test`, () => {
-  let app: INestApplication;
+  const {
+    agent,
+    likeRepository,
+    userRepository,
+    rssAcceptRepository,
+    feedRepository,
+  } = new LikeE2EHelper();
   let user: User;
   let feed: Feed;
-  let agent: TestAgent;
-  let likeRepository: LikeRepository;
-  let userRepository: UserRepository;
-  let rssAcceptRepository: RssAcceptRepository;
-  let feedRepository: FeedRepository;
   let rssAccept: RssAccept;
   let accessToken: string;
-
-  beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    userRepository = app.get(UserRepository);
-    rssAcceptRepository = app.get(RssAcceptRepository);
-    feedRepository = app.get(FeedRepository);
-    likeRepository = app.get(LikeRepository);
-  });
 
   beforeEach(async () => {
     rssAccept = await rssAcceptRepository.save(
