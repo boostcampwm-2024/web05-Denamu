@@ -1,29 +1,15 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
-import * as supertest from 'supertest';
-import { RedisService } from '../../../../src/common/redis/redis.service';
-import { RssRejectRepository } from '../../../../src/rss/repository/rss.repository';
+import { HttpStatus } from '@nestjs/common';
 import { RssReject } from '../../../../src/rss/entity/rss.entity';
 import { RssRejectFixture } from '../../../config/common/fixture/rss-reject.fixture';
-import TestAgent from 'supertest/lib/agent';
-import { REDIS_KEYS } from '../../../../src/common/redis/redis.constant';
+import { RssE2EHelper } from '../../../config/common/helper/rss/rss-helper';
 
 const URL = '/api/rss/history/reject';
 
 describe(`GET ${URL} E2E Test`, () => {
-  let app: INestApplication;
-  let agent: TestAgent;
+  const { agent, rssRejectRepository, redisService, getAdminRedisKey } =
+    new RssE2EHelper();
   let rssRejectList: RssReject[];
-  let redisService: RedisService;
-  let rssRejectRepository: RssRejectRepository;
-  const redisKeyMake = (data: string) => `${REDIS_KEYS.ADMIN_AUTH_KEY}:${data}`;
   const sessionKey = 'admin-rss-history-reject';
-
-  beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    rssRejectRepository = app.get(RssRejectRepository);
-    redisService = app.get(RedisService);
-  });
 
   beforeEach(async () => {
     const rssRejects = Array.from({ length: 2 }).map((_, i) =>
@@ -31,7 +17,7 @@ describe(`GET ${URL} E2E Test`, () => {
     );
     [rssRejectList] = await Promise.all([
       rssRejectRepository.save(rssRejects),
-      redisService.set(redisKeyMake(sessionKey), 'test1234'),
+      redisService.set(getAdminRedisKey(sessionKey), 'test1234'),
     ]);
     rssRejectList.reverse();
   });
@@ -41,7 +27,7 @@ describe(`GET ${URL} E2E Test`, () => {
       rssRejectRepository.delete(
         rssRejectList.map((rssReject) => rssReject.id),
       ),
-      redisService.del(redisKeyMake(sessionKey)),
+      redisService.del(getAdminRedisKey(sessionKey)),
     ]);
   });
 

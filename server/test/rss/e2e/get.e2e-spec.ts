@@ -1,39 +1,20 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
-import * as supertest from 'supertest';
+import { HttpStatus } from '@nestjs/common';
 import { RssFixture } from '../../config/common/fixture/rss.fixture';
-import {
-  RssAcceptRepository,
-  RssRepository,
-} from '../../../src/rss/repository/rss.repository';
-import TestAgent from 'supertest/lib/agent';
-import { RedisService } from '../../../src/common/redis/redis.service';
-import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
+import { RssE2EHelper } from '../../config/common/helper/rss/rss-helper';
 
 const URL = '/api/rss';
 
 describe(`GET ${URL} E2E Test`, () => {
-  let app: INestApplication;
-  let agent: TestAgent;
-  let rssRepository: RssRepository;
-  let rssAcceptRepository: RssAcceptRepository;
-  let redisService: RedisService;
-  const redisKeyMake = (data: string) => `${REDIS_KEYS.ADMIN_AUTH_KEY}:${data}`;
+  const { agent, rssRepository, redisService, getAdminRedisKey } =
+    new RssE2EHelper();
   const sessionKey = 'admin-rss-get';
 
-  beforeAll(() => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    rssRepository = app.get(RssRepository);
-    rssAcceptRepository = app.get(RssAcceptRepository);
-    redisService = app.get(RedisService);
-  });
-
   beforeEach(async () => {
-    await redisService.set(redisKeyMake(sessionKey), 'test1234');
+    await redisService.set(getAdminRedisKey(sessionKey), 'test1234');
   });
 
   afterEach(async () => {
-    await redisService.del(redisKeyMake(sessionKey));
+    await redisService.del(getAdminRedisKey(sessionKey));
   });
 
   it('[401] 관리자 로그인 쿠키가 없을 경우 RSS 조회를 실패한다.', async () => {

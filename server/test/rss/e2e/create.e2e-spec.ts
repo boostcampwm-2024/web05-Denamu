@@ -1,28 +1,13 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import { RegisterRssRequestDto } from '../../../src/rss/dto/request/registerRss.dto';
-import * as supertest from 'supertest';
 import { RssAcceptFixture } from '../../config/common/fixture/rss-accept.fixture';
-import {
-  RssAcceptRepository,
-  RssRepository,
-} from '../../../src/rss/repository/rss.repository';
-import TestAgent from 'supertest/lib/agent';
 import { RssFixture } from '../../config/common/fixture/rss.fixture';
+import { RssE2EHelper } from '../../config/common/helper/rss/rss-helper';
 
 const URL = '/api/rss';
 
 describe(`POST ${URL} E2E Test`, () => {
-  let app: INestApplication;
-  let agent: TestAgent;
-  let rssRepository: RssRepository;
-  let rssAcceptRepository: RssAcceptRepository;
-
-  beforeAll(() => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    rssRepository = app.get(RssRepository);
-    rssAcceptRepository = app.get(RssAcceptRepository);
-  });
+  const { agent, rssRepository, rssAcceptRepository } = new RssE2EHelper();
 
   it('[409] 이미 신청한 RSS를 다시 신청할 경우 RSS 등록 요청을 실패한다.', async () => {
     // given

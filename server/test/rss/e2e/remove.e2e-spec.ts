@@ -1,36 +1,17 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
-import {
-  RssAcceptRepository,
-  RssRepository,
-} from '../../../src/rss/repository/rss.repository';
+import { HttpStatus } from '@nestjs/common';
 import { RssFixture } from '../../config/common/fixture/rss.fixture';
-import * as supertest from 'supertest';
 import { DeleteRssRequestDto } from '../../../src/rss/dto/request/deleteRss.dto';
-import TestAgent from 'supertest/lib/agent';
 import * as uuid from 'uuid';
-import { RedisService } from '../../../src/common/redis/redis.service';
-import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 import { Rss } from '../../../src/rss/entity/rss.entity';
+import { RssE2EHelper } from '../../config/common/helper/rss/rss-helper';
 
 const URL = '/api/rss/remove';
 
 describe(`POST ${URL} E2E Test`, () => {
-  let app: INestApplication;
-  let agent: TestAgent;
-  let rssRepository: RssRepository;
-  let rssAcceptRepository: RssAcceptRepository;
-  let redisService: RedisService;
+  const { agent, rssRepository, redisService, getRssRemoveRedisKey } =
+    new RssE2EHelper();
   let rss: Rss;
   const rssDeleteCode = 'rss-remove-request';
-  const redisKeyMake = (data: string) => `${REDIS_KEYS.RSS_REMOVE_KEY}:${data}`;
-
-  beforeAll(() => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    rssRepository = app.get(RssRepository);
-    rssAcceptRepository = app.get(RssAcceptRepository);
-    redisService = app.get(RedisService);
-  });
 
   beforeEach(async () => {
     jest.spyOn(uuid, 'v4').mockReturnValue(rssDeleteCode as any);
@@ -40,7 +21,7 @@ describe(`POST ${URL} E2E Test`, () => {
   afterEach(async () => {
     await Promise.all([
       rssRepository.delete(rss.id),
-      redisService.del(redisKeyMake(rssDeleteCode)),
+      redisService.del(getRssRemoveRedisKey(rssDeleteCode)),
     ]);
   });
 
@@ -60,7 +41,9 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(data).toBeUndefined();
 
     // DB, Redis when
-    const savedUUID = await redisService.get(redisKeyMake(rssDeleteCode));
+    const savedUUID = await redisService.get(
+      getRssRemoveRedisKey(rssDeleteCode),
+    );
 
     // DB, Redis then
     expect(savedUUID).toBeNull();
@@ -82,7 +65,9 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(data).toBeUndefined();
 
     // DB, Redis when
-    const savedUUID = await redisService.get(redisKeyMake(rssDeleteCode));
+    const savedUUID = await redisService.get(
+      getRssRemoveRedisKey(rssDeleteCode),
+    );
 
     // DB, Redis then
     expect(savedUUID).toBe(rss.rssUrl);
@@ -104,7 +89,9 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(data).toBeUndefined();
 
     // DB, Redis when
-    const savedUUID = await redisService.get(redisKeyMake(rssDeleteCode));
+    const savedUUID = await redisService.get(
+      getRssRemoveRedisKey(rssDeleteCode),
+    );
 
     // DB, Redis then
     expect(savedUUID).toBe(rss.rssUrl);

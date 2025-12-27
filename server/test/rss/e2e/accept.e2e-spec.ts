@@ -1,46 +1,32 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
-import * as supertest from 'supertest';
+import { HttpStatus } from '@nestjs/common';
 import { RssFixture } from '../../config/common/fixture/rss.fixture';
-import { RedisService } from '../../../src/common/redis/redis.service';
-import {
-  RssAcceptRepository,
-  RssRepository,
-} from '../../../src/rss/repository/rss.repository';
-import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
-import TestAgent from 'supertest/lib/agent';
+import { RssE2EHelper } from '../../config/common/helper/rss/rss-helper';
 import { Rss } from '../../../src/rss/entity/rss.entity';
 
 const URL = '/api/rss/accept';
 
 describe(`POST ${URL}/{rssId} E2E Test`, () => {
-  let app: INestApplication;
-  let agent: TestAgent;
-  let rssRepository: RssRepository;
-  let rssAcceptRepository: RssAcceptRepository;
-  let redisService: RedisService;
+  const {
+    agent,
+    rssAcceptRepository,
+    rssRepository,
+    redisService,
+    getAdminRedisKey,
+  } = new RssE2EHelper();
   let rss: Rss;
-  const redisKeyMake = (data: string) => `${REDIS_KEYS.ADMIN_AUTH_KEY}:${data}`;
   const sessionKey = 'admin-rss-accept';
-
-  beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    rssRepository = app.get(RssRepository);
-    rssAcceptRepository = app.get(RssAcceptRepository);
-    redisService = app.get(RedisService);
-  });
 
   beforeEach(async () => {
     [rss] = await Promise.all([
       rssRepository.save(RssFixture.createRssFixture()),
-      redisService.set(redisKeyMake(sessionKey), 'test1234'),
+      redisService.set(getAdminRedisKey(sessionKey), 'test1234'),
     ]);
   });
 
   afterEach(async () => {
     await Promise.all([
       rssRepository.delete(rss.id),
-      redisService.del(redisKeyMake(sessionKey)),
+      redisService.del(getAdminRedisKey(sessionKey)),
     ]);
   });
 
