@@ -1,24 +1,17 @@
-import { INestApplication } from '@nestjs/common';
 import { Socket } from 'socket.io-client';
 import { io } from 'socket.io-client';
-import { RedisService } from '../../../src/common/redis/redis.service';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
-import { ChatService } from '../../../src/chat/service/chat.service';
 import { ChatFixture } from '../../config/common/fixture/chat.fixture';
+import { ChatE2EHelper } from '../../config/common/helper/chat/chat-helper';
 
 const URL = '/chat';
 
 describe('Socket.IO Anonymous Chat E2E Test', () => {
-  let app: INestApplication;
+  const { app, chatService, redisService } = new ChatE2EHelper();
   let clientSocket: Socket;
-  let chatService: ChatService;
-  let redisService: RedisService;
   let serverUrl: string;
 
   beforeAll(async () => {
-    app = global.testApp;
-    redisService = app.get(RedisService);
-    chatService = app.get(ChatService);
     const httpServer = await app.listen(0);
     const port = httpServer.address().port;
     serverUrl = `http://localhost:${port}`;
