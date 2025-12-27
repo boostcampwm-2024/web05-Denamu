@@ -1,36 +1,23 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
-import * as supertest from 'supertest';
+import { HttpStatus } from '@nestjs/common';
 import { UploadFileQueryRequestDto } from '../../../src/file/dto/request/uploadFile.dto';
 import {
   FILE_SIZE_LIMITS,
   FileUploadType,
 } from '../../../src/file/constant/file.constant';
 import { User } from '../../../src/user/entity/user.entity';
-import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../config/common/fixture/user.fixture';
-import TestAgent from 'supertest/lib/agent';
-import { FileRepository } from '../../../src/file/repository/file.repository';
 import { createAccessToken } from '../../config/e2e/env/jest.setup';
 import * as fs from 'fs/promises';
 import * as uuid from 'uuid';
+import { FileE2EHelper } from '../../config/common/helper/file/file-helper';
 
 const URL = '/api/file';
 
 describe(`POST ${URL} E2E Test`, () => {
-  let app: INestApplication;
-  let agent: TestAgent;
+  const { agent, fileRepository, userRepository } = new FileE2EHelper();
   let user: User;
-  let fileRepository: FileRepository;
-  let userRepository: UserRepository;
   let accessToken: string;
   const fileRandomName = 'test-random-uuid-file-name';
-
-  beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    fileRepository = app.get(FileRepository);
-    userRepository = app.get(UserRepository);
-  });
 
   beforeEach(async () => {
     jest.spyOn(fs, 'writeFile').mockResolvedValue(undefined);
