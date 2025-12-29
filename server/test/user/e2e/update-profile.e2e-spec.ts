@@ -1,12 +1,12 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as supertest from 'supertest';
 import { UserRepository } from '../../../src/user/repository/user.repository';
-import { UserFixture } from '../../fixture/user.fixture';
+import { UserFixture } from '../../config/common/fixture/user.fixture';
 import { FileService } from '../../../src/file/service/file.service';
 import { UpdateUserRequestDto } from '../../../src/user/dto/request/updateUser.dto';
 import TestAgent from 'supertest/lib/agent';
 import { User } from '../../../src/user/entity/user.entity';
-import { createAccessToken } from '../../jest.setup';
+import { createAccessToken } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/user/profile';
 

@@ -1,13 +1,13 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { RegisterRssRequestDto } from '../../../src/rss/dto/request/registerRss.dto';
 import * as supertest from 'supertest';
-import { RssAcceptFixture } from '../../fixture/rss-accept.fixture';
+import { RssAcceptFixture } from '../../config/common/fixture/rss-accept.fixture';
 import {
   RssAcceptRepository,
   RssRepository,
 } from '../../../src/rss/repository/rss.repository';
 import TestAgent from 'supertest/lib/agent';
-import { RssFixture } from '../../fixture/rss.fixture';
+import { RssFixture } from '../../config/common/fixture/rss.fixture';
 
 const URL = '/api/rss';
 

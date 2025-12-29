@@ -1,4 +1,4 @@
-import { AdminFixture } from './../../fixture/admin.fixture';
+import { AdminFixture } from './../../config/common/fixture/admin.fixture';
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { LoginAdminRequestDto } from '../../../src/admin/dto/request/loginAdmin.dto';
 import * as supertest from 'supertest';

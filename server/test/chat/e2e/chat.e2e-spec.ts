@@ -4,7 +4,7 @@ import { io } from 'socket.io-client';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 import { ChatService } from '../../../src/chat/service/chat.service';
-import { ChatFixture } from '../../fixture/chat.fixture';
+import { ChatFixture } from '../../config/common/fixture/chat.fixture';
 
 const URL = '/chat';
 
