@@ -34,6 +34,10 @@ describe(`SSE ${URL} E2E Test`, () => {
     );
   });
 
+  afterEach(async () => {
+    await rssAcceptRepository.delete(rssAccept.id);
+  });
+
   it('[SSE] 최초 연결을 할 경우 트랜드 데이터 최대 4개 제공 수신을 성공한다.', async () => {
     // given
     const feeds = Array.from({ length: 2 }).map((_, i) =>
