@@ -2,11 +2,9 @@ const globalAny: any = global;
 
 export default async () => {
   const startTime = process.hrtime.bigint();
-  await Promise.all([
-    deleteMysqlContainer(),
-    deleteRedisContainer(),
-    deleteRabbitMQContainer(),
-  ]);
+  deleteMysqlContainer();
+  deleteRedisContainer();
+  deleteRabbitMQContainer();
   const endTime = process.hrtime.bigint();
   const elapsedMs = Number(endTime - startTime) / 1_000_000;
 
