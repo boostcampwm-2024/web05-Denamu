@@ -34,7 +34,9 @@ describe('email consumer unit test', () => {
       it(`Node.js 네트워크 레벨의 ${errorName}에러가 발생하면 재시도한다.`, async () => {
         //given
         const error = new Error(`${errorName}`) as any;
-        error.code = errorName === 'ESOCKET' ? 'ESOCKET' : undefined;
+        if (errorName === 'ESOCKET') {
+          error.code = 'ESOCKET';
+        }
         const emailPayload: EmailPayload = {
           type: EmailPayloadConstant.USER_CERTIFICATION,
           data: {
@@ -156,12 +158,18 @@ describe('email consumer unit test', () => {
     });
     const allErrors = [...networkErrors, ...commonSmtp4xxErrors];
     allErrors.forEach((targetError) => {
-      it(`재시도 횟수가 3회 이상이면 DLQ로 메시지를 발행한다.`, async () => {
-        let error;
+      const errorName =
+        typeof targetError === 'string'
+          ? targetError
+          : `SMTP ${targetError.responseCode}`;
+      it(`${errorName} 에러에 대해 재시도 횟수가 3회 이상이면 DLQ로 메시지를 발행한다.`, async () => {
         //given
+        let error;
         if (typeof targetError === 'string') {
           error = new Error(`${targetError}`) as any;
-          error.code = targetError === 'ESOCKET' ? 'ESOCKET' : undefined;
+          if (errorName === 'ESOCKET') {
+            error.code = 'ESOCKET';
+          }
         } else {
           error = new Error(`${targetError.message}`) as any;
           error.responseCode = targetError.responseCode;
