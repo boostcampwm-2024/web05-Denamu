@@ -1,9 +1,9 @@
 services:
   # DB 서비스
   mysql-db:
-    image: "mysql:8.0.39"
+    image: 'mysql:8.0.39'
     ports:
-      - "3306:3306"
+      - '3306:3306'
     volumes:
       - denamu-mysql:/var/lib/mysql
     networks:
@@ -20,45 +20,28 @@ services:
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      TZ: "Asia/Seoul"
+      TZ: 'Asia/Seoul'
     healthcheck:
       test:
         [
-          "CMD",
-          "mysqladmin",
-          "ping",
-          "-h",
-          "localhost",
-          "-u",
-          "root",
-          "-p$MYSQL_PASSWORD",
+          'CMD',
+          'mysqladmin',
+          'ping',
+          '-h',
+          'localhost',
+          '-u',
+          'root',
+          '-p$MYSQL_PASSWORD',
         ]
       interval: 10s
       timeout: 5s
       retries: 3
 
-  # MySQL Metrics
-  mysql_metrics:
-    image: prom/mysqld-exporter
-    ports:
-      - "9104:9104"
-    networks:
-      - Denamu
-    env_file:
-      - /var/prod_config/infra/.env.prod
-    command:
-      - "--mysqld.username=$MYSQL_USER:$MYSQL_PASSWORD"
-      - "--mysqld.address=mysql-db:3306"
-    environment:
-      TZ: "Asia/Seoul"
-    depends_on:
-      - mysql-db
-
   # Redis 서비스
   redis:
-    image: "redis:6.0.16-alpine"
+    image: 'redis:6.0.16-alpine'
     ports:
-      - "6379:6379"
+      - '6379:6379'
     volumes:
       - denamu-redis:/data
       - ./redis-init.sh:/usr/local/bin/redis-init.sh:ro
@@ -66,24 +49,24 @@ services:
       - Denamu
     env_file:
       - /var/prod_config/infra/.env.prod
-    entrypoint: ["/bin/sh", "/usr/local/bin/redis-init.sh"]
+    entrypoint: ['/bin/sh', '/usr/local/bin/redis-init.sh']
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 10s
       timeout: 5s
       retries: 3
     environment:
-      TZ: "Asia/Seoul"
+      TZ: 'Asia/Seoul'
 
   # RabbitMQ 서비스
   rabbitmq:
     image: rabbitmq:4.1-management
-    user: "999:999"
+    user: '999:999'
     networks:
       - Denamu
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - '5672:5672'
+      - '15672:15672'
     env_file:
       - /var/prod_config/infra/.env.prod
     volumes:
@@ -91,51 +74,34 @@ services:
       - ./definitions.json:/etc/rabbitmq/definitions.json:ro
       - ./import-definitions.sh:/etc/rabbitmq/import-definitions.sh:ro
       - ./check-rabbitmq-ready.sh:/etc/rabbitmq/check-rabbitmq-ready.sh:ro
-    entrypoint: ["/bin/sh", "/etc/rabbitmq/import-definitions.sh"]
+    entrypoint: ['/bin/sh', '/etc/rabbitmq/import-definitions.sh']
     healthcheck:
-      test: ["CMD", "/bin/sh", "/etc/rabbitmq/check-rabbitmq-ready.sh"]
+      test: ['CMD', '/bin/sh', '/etc/rabbitmq/check-rabbitmq-ready.sh']
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 40s
 
-  # Redis Metrics
-  redis_metrics:
-    image: oliver006/redis_exporter
-    ports:
-      - "9121:9121"
-    networks:
-      - Denamu
-    env_file:
-      - /var/prod_config/infra/.env.prod
-    environment:
-      REDIS_ADDR: "redis://redis:6379"
-      REDIS_USER: "${REDIS_USER}"
-      REDIS_PASSWORD: "${REDIS_PASSWORD}"
-      TZ: "Asia/Seoul"
-    depends_on:
-      - redis
-
   # Prometheus
   prometheus:
-    image: "prom/prometheus"
+    image: 'prom/prometheus'
     ports:
-      - "9090:9090"
+      - '9090:9090'
     networks:
       - Denamu
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - denamu-prometheus:/prometheus
     command:
-      - "--config.file=/etc/prometheus/prometheus.yml"
+      - '--config.file=/etc/prometheus/prometheus.yml'
     environment:
-      TZ: "Asia/Seoul"
+      TZ: 'Asia/Seoul'
 
   # Grafana:
   grafana:
-    image: "grafana/grafana"
+    image: 'grafana/grafana'
     ports:
-      - "3000:3000"
+      - '3000:3000'
     networks:
       - Denamu
     volumes:
@@ -143,13 +109,13 @@ services:
     depends_on:
       - prometheus
     environment:
-      TZ: "Asia/Seoul"
+      TZ: 'Asia/Seoul'
 
   # Node Exporter
   node_exporter:
     image: prom/node-exporter
     ports:
-      - "9100:9100"
+      - '9100:9100'
     networks:
       - Denamu
     volumes:
@@ -157,12 +123,59 @@ services:
       - /sys:/host/sys:ro
       - /:/rootfs:ro
     command:
-      - "--path.procfs=/host/proc"
-      - "--path.rootfs=/rootfs"
-      - "--path.sysfs=/host/sys"
-      - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
     environment:
-      TZ: "Asia/Seoul"
+      TZ:
+        'Asia/Seoul'
+        # MySQL Metrics
+  mysql_metrics:
+    image: prom/mysqld-exporter
+    ports:
+      - '9104:9104'
+    networks:
+      - Denamu
+    env_file:
+      - /var/prod_config/infra/.env.prod
+    command:
+      - '--mysqld.username=$MYSQL_USER:$MYSQL_PASSWORD'
+      - '--mysqld.address=mysql-db:3306'
+    environment:
+      TZ: 'Asia/Seoul'
+    depends_on:
+      - mysql-db
+
+        # Redis Metrics
+  redis_metrics:
+    image: oliver006/redis_exporter
+    ports:
+      - '9121:9121'
+    networks:
+      - Denamu
+    env_file:
+      - /var/prod_config/infra/.env.prod
+    environment:
+      REDIS_ADDR: 'redis://redis:6379'
+      REDIS_USER: '${REDIS_USER}'
+      REDIS_PASSWORD: '${REDIS_PASSWORD}'
+      TZ: 'Asia/Seoul'
+    depends_on:
+      - redis
+
+        # RabbitMQ Metrics
+  rabbitmq_metrics:
+    image: 'kbudde/rabbitmq-exporter'
+    ports:
+      - '9419:9419'
+    environment:
+      REDIS_USER: '${REDIS_USER}'
+      REDIS_PASSWORD: '${REDIS_PASSWORD}'
+    networks:
+      - Denamu
+    depends_on:
+      - rabbitmq
 
 volumes:
   denamu-mysql:
