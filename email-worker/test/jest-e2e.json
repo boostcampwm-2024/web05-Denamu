@@ -1,0 +1,14 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "testRegex": "test/.*\\.e2e-spec\\.ts$",
+  "transform": {
+    "^.+\\.(t|j)s$": "ts-jest"
+  },
+  "testEnvironment": "node",
+  "rootDir": "..",
+  "coverageDirectory": "test/coverage",
+  "globalSetup": "./test/setup/jest.global-setup.ts",
+  "globalTeardown": "./test/setup/jest.global-teardown.ts",
+  "testTimeout": 20000,
+  "maxWorkers": 1
+}
