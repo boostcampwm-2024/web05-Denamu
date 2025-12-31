@@ -33,7 +33,8 @@ jobs:
             echo "RABBITMQ_DEFAULT_PASS=${{ secrets.PRODUCT_RABBITMQ_DEFAULT_PASS }}"
             echo "RABBITMQ_HOST=${{ secrets.PRODUCT_RABBITMQ_HOST }}"
             echo "RABBITMQ_PORT=${{ secrets.PRODUCT_RABBITMQ_PORT }}"
-            echo "RABBITMQ_MANAGEMENT_PORT=${{ secrets.PRODUCT_RABBITMQ_MANAGEMENT_PORT }}"  
+            echo "RABBITMQ_MANAGEMENT_PORT=${{ secrets.PRODUCT_RABBITMQ_MANAGEMENT_PORT }}"
+            echo "RABBIT_URL=http://${{ secrets.PRODUCT_RABBITMQ_HOST }}:${{ secrets.PRODUCT_RABBITMQ_PORT }}"
           } | sudo tee /var/prod_config/infra/.env.prod >/dev/null
 
           sudo chmod +x docker-compose/redis-init.sh

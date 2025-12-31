@@ -174,7 +174,7 @@ services:
     environment:
       RABBIT_USER: '${RABBITMQ_DEFAULT_USER}'
       RABBIT_PASSWORD: '${RABBITMQ_DEFAULT_PASS}'
-      RABBIT_URL: 'http://${RABBITMQ_HOST}:${RABBITMQ_PORT}'
+      RABBIT_URL: '${RABBIT_URL}'
     networks:
       - Denamu
     depends_on:
