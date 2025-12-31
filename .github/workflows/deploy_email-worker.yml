@@ -2,8 +2,8 @@ name: Email-Worker Deployment
 
 on:
   push:
-    branches: [ main ]
-    paths: [ "email-worker/**" ]
+    branches: [main]
+    paths: ['email-worker/**']
   workflow_dispatch:
 
 permissions:
@@ -11,8 +11,8 @@ permissions:
   packages: write
 
 env:
-  IMAGE_NAME: ghcr.io/boostcampwm-2024/web05-denamu/email-worker
-  IMAGE_TAG: sha-${{ github.sha }}
+  EMAIL_WORKER_IMAGE: ${{vars.GHCR}}/email-worker
+  EMAIL_WORKER_TAG: sha-${{ github.sha }}
   SERVICE: email-worker
   ENV_DIR: /var/prod_config/email-worker
   ENV_FILE: /var/prod_config/email-worker/.env.prod
@@ -46,13 +46,13 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
-            ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
-            ${{ env.IMAGE_NAME }}:latest
+            ${{ env.EMAIL_WORKER_IMAGE }}:${{ env.EMAIL_WORKER_TAG }}
+            ${{ env.EMAIL_WORKER_IMAGE }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
   deploy:
-    runs-on: [ self-hosted, prod ]
+    runs-on: [self-hosted, prod]
     needs: build-and-push # Build 및 Push가 끝나면 시작
     steps:
       - name: 코드 체크아웃
@@ -97,8 +97,7 @@ jobs:
 
       - name: Docker 이미지 Pull
         run: |
-          docker pull "${IMAGE_NAME}:${IMAGE_TAG}" || true
-          docker pull "${IMAGE_NAME}:latest" || true
+          docker pull "${EMAIL_WORKER_IMAGE}:latest" || true
           docker compose -f "$COMPOSE_FILE" pull "$SERVICE"
 
       - name: Graceful Shutdown & 서비스 재시작

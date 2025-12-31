@@ -6,9 +6,9 @@ include:
 services:
   # WAS 서비스
   app:
-    image: ghcr.io/boostcampwm-2024/web05-denamu/server:latest
+    image: ${APP_IMAGE}:${APP_TAG}
     ports:
-      - "8080:8080"
+      - '8080:8080'
     env_file:
       - /var/prod_config/server/.env.prod
     networks:
@@ -24,12 +24,12 @@ services:
       - /var/prod_data/server/logs:/app/logs
       - /var/prod_data/objects:/app/objects
     environment:
-      NODE_ENV: "PROD"
-      TZ: "Asia/Seoul"
+      NODE_ENV: 'PROD'
+      TZ: 'Asia/Seoul'
 
   # Feed Crawler 서비스
   feed-crawler:
-    image: ghcr.io/boostcampwm-2024/web05-denamu/feed-crawler:latest
+    image: ${FEED_CRAWLER_IMAGE}:${FEED_CRAWLER_TAG}
     env_file:
       - /var/prod_config/feed-crawler/.env.prod
     networks:
@@ -44,13 +44,12 @@ services:
     volumes:
       - /var/prod_data/feed-crawler/logs:/app/logs
     environment:
-      NODE_ENV: "PROD"
-      TZ: "Asia/Seoul"
-
+      NODE_ENV: 'PROD'
+      TZ: 'Asia/Seoul'
 
   # Email Worker 서비스
   email-worker:
-    image: ghcr.io/boostcampwm-2024/web05-denamu/email-worker:latest
+    image: ${EMAIL_WORKER_IMAGE}:${EMAIL_WORKER_TAG}
     env_file:
       - /var/prod_config/email-worker/.env.prod
     networks:
@@ -65,6 +64,6 @@ services:
     volumes:
       - /var/prod_data/email-worker/logs:/app/logs
     environment:
-      NODE_ENV: "PROD"
-      TZ: "Asia/Seoul"
+      NODE_ENV: 'PROD'
+      TZ: 'Asia/Seoul'
     stop_grace_period: 30s
