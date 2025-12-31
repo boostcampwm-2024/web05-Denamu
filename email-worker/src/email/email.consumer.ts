@@ -1,4 +1,4 @@
-import { RabbitmqService } from '../rabbitmq/rabbitmq.service';
+import { RabbitMQService } from '../rabbitmq/rabbitmq.service';
 import { inject, injectable } from 'tsyringe';
 import { DEPENDENCY_SYMBOLS } from '../types/dependency-symbols';
 import { EmailService } from './email.service';
@@ -16,7 +16,7 @@ export class EmailConsumer {
 
   constructor(
     @inject(DEPENDENCY_SYMBOLS.RabbitMQService)
-    private readonly rabbitmqService: RabbitmqService,
+    private readonly rabbitmqService: RabbitMQService,
     @inject(DEPENDENCY_SYMBOLS.EmailService)
     private readonly emailService: EmailService,
   ) {}
