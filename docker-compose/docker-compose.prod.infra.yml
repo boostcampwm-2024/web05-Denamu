@@ -167,6 +167,8 @@ services:
         # RabbitMQ Metrics
   rabbitmq_metrics:
     image: 'kbudde/rabbitmq-exporter'
+    env_file:
+      - /var/prod_config/infra/.env.prod
     ports:
       - '9419:9419'
     environment:
