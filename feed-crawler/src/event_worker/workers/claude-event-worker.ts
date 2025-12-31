@@ -50,7 +50,7 @@ export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
         `${this.nameTag} ${feed.id} 처리 중 에러 발생: ${error.message}`,
         error.stack,
       );
-      await this.handleFailure(feed, error);
+      await this.handleFailure(feed);
     }
   }
 
@@ -83,7 +83,7 @@ export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
       model: 'claude-3-5-haiku-latest',
     };
     const message = await this.client.messages.create(params);
-    let responseText: string = message.content[0]['text'].replace(
+    const responseText: string = message.content[0]['text'].replace(
       /[\n\r\t\s]+/g,
       ' ',
     );
@@ -105,10 +105,7 @@ export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
     await this.feedRepository.updateSummary(feed.id, feed.summary);
   }
 
-  protected async handleFailure(
-    feed: FeedAIQueueItem,
-    e: Error,
-  ): Promise<void> {
+  protected async handleFailure(feed: FeedAIQueueItem): Promise<void> {
     if (feed.deathCount < 3) {
       feed.deathCount++;
       await this.redisConnection.rpush(redisConstant.FEED_AI_QUEUE, [

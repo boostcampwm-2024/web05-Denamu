@@ -1,6 +1,5 @@
 import { inject, injectable } from 'tsyringe';
 import { RabbitMQManager } from './rabbitmq.manager';
-import { ConsumeMessage } from 'amqplib/properties';
 import { DEPENDENCY_SYMBOLS } from '../types/dependency-symbols';
 import logger from './logger';
 
