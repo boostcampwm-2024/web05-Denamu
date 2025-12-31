@@ -172,8 +172,9 @@ services:
     ports:
       - '9419:9419'
     environment:
-      REDIS_USER: '${REDIS_USER}'
-      REDIS_PASSWORD: '${REDIS_PASSWORD}'
+      REDIS_USER: '${RABBITMQ_DEFAULT_USER}'
+      REDIS_PASSWORD: '${RABBITMQ_DEFAULT_PASS}'
+      RABBIT_URL: 'http://${RABBITMQ_HOST}:${RABBITMQ_PORT}'
     networks:
       - Denamu
     depends_on:
