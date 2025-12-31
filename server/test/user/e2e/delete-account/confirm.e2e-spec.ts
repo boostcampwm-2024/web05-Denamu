@@ -13,7 +13,7 @@ import { FileRepository } from '../../../../src/file/repository/file.repository'
 import {
   createAccessToken,
   createRefreshToken,
-} from '../../../jest.setup';
+} from '../../../config/e2e/env/jest.setup';
 
 const URL = '/api/user/delete-account/confirm';
 
