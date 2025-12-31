@@ -35,7 +35,7 @@ export class ReadFeedInterceptor implements NestInterceptor {
           secret: this.configService.get('JWT_ACCESS_SECRET'),
         });
         request.user = user;
-      } catch (error) {
+      } catch {
         request.user = null;
       }
     } else {

@@ -147,9 +147,9 @@ export class RssService {
 
     const platformRegexp: { [key in Platform]: RegExp } = {
       medium: /^https:\/\/medium\.com/,
-      tistory: /^https:\/\/[a-zA-Z0-9\-]+\.tistory\.com/,
+      tistory: /^https:\/\/[a-zA-Z0-9-]+\.tistory\.com/,
       velog: /^https:\/\/v2\.velog\.io/,
-      github: /^https:\/\/[\w\-]+\.github\.io/,
+      github: /^https:\/\/[\w-]+\.github\.io/,
       etc: /.*/,
     };
 

@@ -143,7 +143,7 @@ export class FeedService {
     const ip = this.getIp(request);
     const feedId = viewUpdateParamDto.feedId;
     if (ip && this.isString(ip)) {
-      const [_, hasCookie, hasIpFlag] = await Promise.all([
+      const [, hasCookie, hasIpFlag] = await Promise.all([
         this.getFeed(feedId),
         Boolean(cookie?.includes(`View_count_${feedId}=${feedId}`)),
         this.redisService.sismember(`feed:${feedId}:ip`, ip),

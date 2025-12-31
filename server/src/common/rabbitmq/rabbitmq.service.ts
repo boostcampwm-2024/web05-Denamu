@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { RabbitMQManager } from './rabbitmq.manager';
-import { ConsumeMessage } from 'amqplib';
 import { WinstonLoggerService } from '../logger/logger.service';
 
 @Injectable()

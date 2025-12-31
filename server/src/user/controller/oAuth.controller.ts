@@ -4,7 +4,6 @@ import {
   HttpCode,
   HttpStatus,
   Query,
-  Req,
   Res,
 } from '@nestjs/common';
 import { OAuthService } from '../service/oAuth.service';
