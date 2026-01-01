@@ -1,4 +1,4 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import * as supertest from 'supertest';
 import { RssAcceptRepository } from '../../../../src/rss/repository/rss.repository';
 import { RssAccept } from '../../../../src/rss/entity/rss.entity';
@@ -6,11 +6,11 @@ import { RssAcceptFixture } from '../../../config/common/fixture/rss-accept.fixt
 import { RedisService } from '../../../../src/common/redis/redis.service';
 import { REDIS_KEYS } from '../../../../src/common/redis/redis.constant';
 import TestAgent from 'supertest/lib/agent';
+import { testApp } from '../../../config/e2e/env/jest.setup';
 
 const URL = '/api/rss/history/accept';
 
 describe(`GET ${URL} E2E Test`, () => {
-  let app: INestApplication;
   let agent: TestAgent;
   let rssAcceptList: RssAccept[];
   let rssAcceptRepository: RssAcceptRepository;
@@ -19,10 +19,9 @@ describe(`GET ${URL} E2E Test`, () => {
   const sessionKey = 'admin-rss-history-accept';
 
   beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    rssAcceptRepository = app.get(RssAcceptRepository);
-    redisService = app.get(RedisService);
+    agent = supertest(testApp.getHttpServer());
+    rssAcceptRepository = testApp.get(RssAcceptRepository);
+    redisService = testApp.get(RedisService);
   });
 
   beforeEach(async () => {

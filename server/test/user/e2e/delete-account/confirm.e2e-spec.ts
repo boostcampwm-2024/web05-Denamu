@@ -1,4 +1,4 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import * as supertest from 'supertest';
 import { UserRepository } from '../../../../src/user/repository/user.repository';
 import { RedisService } from '../../../../src/common/redis/redis.service';
@@ -26,11 +26,11 @@ import {
   createAccessToken,
   createRefreshToken,
 } from '../../../config/e2e/env/jest.setup';
+import { testApp } from '../../../config/e2e/env/jest.setup';
 
 const URL = '/api/user/delete-account/confirm';
 
 describe(`POST ${URL} E2E Test`, () => {
-  let app: INestApplication;
   let agent: TestAgent;
   let redisService: RedisService;
   let userRepository: UserRepository;
@@ -51,16 +51,15 @@ describe(`POST ${URL} E2E Test`, () => {
     `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${data}`;
 
   beforeAll(() => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    redisService = app.get(RedisService);
-    userRepository = app.get(UserRepository);
-    feedRepository = app.get(FeedRepository);
-    rssAcceptRepository = app.get(RssAcceptRepository);
-    commentRepository = app.get(CommentRepository);
-    likeRepository = app.get(LikeRepository);
-    activityRepository = app.get(ActivityRepository);
-    fileRepository = app.get(FileRepository);
+    agent = supertest(testApp.getHttpServer());
+    redisService = testApp.get(RedisService);
+    userRepository = testApp.get(UserRepository);
+    feedRepository = testApp.get(FeedRepository);
+    rssAcceptRepository = testApp.get(RssAcceptRepository);
+    commentRepository = testApp.get(CommentRepository);
+    likeRepository = testApp.get(LikeRepository);
+    activityRepository = testApp.get(ActivityRepository);
+    fileRepository = testApp.get(FileRepository);
   });
 
   beforeEach(async () => {

@@ -6,8 +6,9 @@
 import { IsInt, IsNotEmpty, IsString, Min } from 'class-validator'; // 제거
 
 import * as supertest from 'supertest';
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import TestAgent from 'supertest/lib/agent';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
 const URL = 'API 경로';
 
@@ -36,15 +37,10 @@ class SampleRequestDto {
  * SUITE 멘트: `{METHOD} ${URL} E2E TEST`
  */
 describe(`GET ${URL} E2E Test`, () => {
-  let app: INestApplication;
   let agent: TestAgent;
 
-  /*
-   * NestJS APP은 global.testApp으로 공유합니다.
-   */
   beforeAll(() => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
+    agent = supertest(testApp.getHttpServer());
   });
 
   /*

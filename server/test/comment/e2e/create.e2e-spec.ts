@@ -1,4 +1,4 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import * as supertest from 'supertest';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../config/common/fixture/user.fixture';
@@ -14,11 +14,11 @@ import { CommentRepository } from '../../../src/comment/repository/comment.repos
 import { COMMENT_DEFAULT_TEXT } from '../../config/common/fixture/comment.fixture';
 import { createAccessToken } from '../../config/e2e/env/jest.setup';
 import { RssAccept } from '../../../src/rss/entity/rss.entity';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/comment';
 
 describe(`POST ${URL} E2E Test`, () => {
-  let app: INestApplication;
   let agent: TestAgent;
   let user: User;
   let feed: Feed;
@@ -30,12 +30,11 @@ describe(`POST ${URL} E2E Test`, () => {
   let accessToken: string;
 
   beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    commentRepository = app.get(CommentRepository);
-    userRepository = app.get(UserRepository);
-    rssAcceptRepository = app.get(RssAcceptRepository);
-    feedRepository = app.get(FeedRepository);
+    agent = supertest(testApp.getHttpServer());
+    commentRepository = testApp.get(CommentRepository);
+    userRepository = testApp.get(UserRepository);
+    rssAcceptRepository = testApp.get(RssAcceptRepository);
+    feedRepository = testApp.get(FeedRepository);
   });
 
   beforeEach(async () => {

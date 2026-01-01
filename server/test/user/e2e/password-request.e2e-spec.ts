@@ -1,5 +1,5 @@
 import { ForgotPasswordRequestDto } from '../../../src/user/dto/request/forgotPassword.dto';
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import * as supertest from 'supertest';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import TestAgent from 'supertest/lib/agent';
@@ -8,11 +8,11 @@ import { User } from '../../../src/user/entity/user.entity';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import * as uuid from 'uuid';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/user/password-reset';
 
 describe(`POST ${URL} E2E Test`, () => {
-  let app: INestApplication;
   let agent: TestAgent;
   let user: User;
   let redisService: RedisService;
@@ -22,10 +22,9 @@ describe(`POST ${URL} E2E Test`, () => {
     `${REDIS_KEYS.USER_RESET_PASSWORD_KEY}:${data}`;
 
   beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    redisService = app.get(RedisService);
-    userRepository = app.get(UserRepository);
+    agent = supertest(testApp.getHttpServer());
+    redisService = testApp.get(RedisService);
+    userRepository = testApp.get(UserRepository);
   });
 
   beforeEach(async () => {

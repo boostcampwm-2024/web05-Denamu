@@ -1,4 +1,4 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import * as supertest from 'supertest';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { ActivityRepository } from '../../../src/activity/repository/activity.repository';
@@ -8,11 +8,11 @@ import { User } from '../../../src/user/entity/user.entity';
 import TestAgent from 'supertest/lib/agent';
 import { ReadActivityQueryRequestDto } from '../../../src/activity/dto/request/readActivity.dto';
 import { Activity } from '../../../src/activity/entity/activity.entity';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/activity';
 
 describe(`GET ${URL}/{userId} E2E Test`, () => {
-  let app: INestApplication;
   let user: User;
   let activities: Activity[];
   let agent: TestAgent;
@@ -20,10 +20,9 @@ describe(`GET ${URL}/{userId} E2E Test`, () => {
   let userRepository: UserRepository;
 
   beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    activityRepository = app.get(ActivityRepository);
-    userRepository = app.get(UserRepository);
+    agent = supertest(testApp.getHttpServer());
+    activityRepository = testApp.get(ActivityRepository);
+    userRepository = testApp.get(UserRepository);
   });
 
   beforeEach(async () => {

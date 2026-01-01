@@ -1,4 +1,4 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import * as supertest from 'supertest';
 import { UploadFileQueryRequestDto } from '../../../src/file/dto/request/uploadFile.dto';
 import {
@@ -13,11 +13,11 @@ import { FileRepository } from '../../../src/file/repository/file.repository';
 import { createAccessToken } from '../../config/e2e/env/jest.setup';
 import * as fs from 'fs/promises';
 import * as uuid from 'uuid';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/file';
 
 describe(`POST ${URL} E2E Test`, () => {
-  let app: INestApplication;
   let agent: TestAgent;
   let user: User;
   let fileRepository: FileRepository;
@@ -26,10 +26,9 @@ describe(`POST ${URL} E2E Test`, () => {
   const fileRandomName = 'test-random-uuid-file-name';
 
   beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    fileRepository = app.get(FileRepository);
-    userRepository = app.get(UserRepository);
+    agent = supertest(testApp.getHttpServer());
+    fileRepository = testApp.get(FileRepository);
+    userRepository = testApp.get(UserRepository);
   });
 
   beforeEach(async () => {

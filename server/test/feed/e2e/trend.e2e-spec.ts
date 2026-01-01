@@ -1,4 +1,3 @@
-import { INestApplication } from '@nestjs/common';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 import { RssAcceptFixture } from '../../config/common/fixture/rss-accept.fixture';
@@ -7,11 +6,11 @@ import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository'
 import { FeedFixture } from '../../config/common/fixture/feed.fixture';
 import * as EventSource from 'eventsource';
 import { RssAccept } from '../../../src/rss/entity/rss.entity';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/feed/trend/sse';
 
 describe(`SSE ${URL} E2E Test`, () => {
-  let app: INestApplication;
   let serverUrl: string;
   let feedRepository: FeedRepository;
   let rssAcceptRepository: RssAcceptRepository;
@@ -19,13 +18,12 @@ describe(`SSE ${URL} E2E Test`, () => {
   let rssAccept: RssAccept;
 
   beforeAll(async () => {
-    app = global.testApp;
-    const httpServer = await app.listen(0);
+    const httpServer = await testApp.listen(0);
     const port = httpServer.address().port;
     serverUrl = `http://localhost:${port}${URL}`;
-    feedRepository = app.get(FeedRepository);
-    rssAcceptRepository = app.get(RssAcceptRepository);
-    redisService = app.get(RedisService);
+    feedRepository = testApp.get(FeedRepository);
+    rssAcceptRepository = testApp.get(RssAcceptRepository);
+    redisService = testApp.get(RedisService);
   });
 
   beforeEach(async () => {

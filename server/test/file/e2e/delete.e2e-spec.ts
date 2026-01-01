@@ -1,4 +1,4 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import * as supertest from 'supertest';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { User } from '../../../src/user/entity/user.entity';
@@ -8,11 +8,11 @@ import { File } from '../../../src/file/entity/file.entity';
 import { FileFixture } from '../../config/common/fixture/file.fixture';
 import TestAgent from 'supertest/lib/agent';
 import { createAccessToken } from '../../config/e2e/env/jest.setup';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/file';
 
 describe(`DELETE ${URL}/{fileId} E2E Test`, () => {
-  let app: INestApplication;
   let agent: TestAgent;
   let user: User;
   let fileRepository: FileRepository;
@@ -21,10 +21,9 @@ describe(`DELETE ${URL}/{fileId} E2E Test`, () => {
   let accessToken: string;
 
   beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    fileRepository = app.get(FileRepository);
-    userRepository = app.get(UserRepository);
+    agent = supertest(testApp.getHttpServer());
+    fileRepository = testApp.get(FileRepository);
+    userRepository = testApp.get(UserRepository);
   });
 
   beforeEach(async () => {

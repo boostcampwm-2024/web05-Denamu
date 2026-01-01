@@ -1,13 +1,13 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import * as supertest from 'supertest';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 import TestAgent from 'supertest/lib/agent';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/admin/logout';
 
 describe(`POST ${URL} E2E Test`, () => {
-  let app: INestApplication;
   let agent: TestAgent;
   let redisService: RedisService;
   const redisKeyMake = (data: string) => `${REDIS_KEYS.ADMIN_AUTH_KEY}:${data}`;
@@ -15,9 +15,8 @@ describe(`POST ${URL} E2E Test`, () => {
   const sessionId = 'test1234';
 
   beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    redisService = app.get(RedisService);
+    agent = supertest(testApp.getHttpServer());
+    redisService = testApp.get(RedisService);
   });
 
   beforeEach(async () => {

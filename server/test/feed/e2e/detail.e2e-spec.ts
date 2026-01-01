@@ -1,5 +1,5 @@
 import { TagRepository } from './../../../src/tag/repository/tag.repository';
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import * as supertest from 'supertest';
 import { FeedFixture } from '../../config/common/fixture/feed.fixture';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
@@ -11,11 +11,11 @@ import { Feed } from '../../../src/feed/entity/feed.entity';
 import { TagFixture } from '../../config/common/fixture/tag.fixture';
 import { RssAccept } from '../../../src/rss/entity/rss.entity';
 import { Tag } from '../../../src/tag/entity/tag.entity';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/feed/detail';
 
 describe(`GET ${URL}/{feedId} E2E Test`, () => {
-  let app: INestApplication;
   let agent: TestAgent;
   let feedList: Feed[];
   let rssAccept: RssAccept;
@@ -25,11 +25,10 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
   let tagRepository: TagRepository;
 
   beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    feedRepository = app.get(FeedRepository);
-    rssAcceptRepository = app.get(RssAcceptRepository);
-    tagRepository = app.get(TagRepository);
+    agent = supertest(testApp.getHttpServer());
+    feedRepository = testApp.get(FeedRepository);
+    rssAcceptRepository = testApp.get(RssAcceptRepository);
+    tagRepository = testApp.get(TagRepository);
   });
 
   beforeEach(async () => {

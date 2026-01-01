@@ -1,4 +1,4 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import * as supertest from 'supertest';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import {
@@ -11,11 +11,11 @@ import TestAgent from 'supertest/lib/agent';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import * as bcrypt from 'bcrypt';
 import { User } from '../../../src/user/entity/user.entity';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/user/certificate';
 
 describe(`POST ${URL} E2E Test`, () => {
-  let app: INestApplication;
   let agent: TestAgent;
   let redisService: RedisService;
   let userRepository: UserRepository;
@@ -24,10 +24,9 @@ describe(`POST ${URL} E2E Test`, () => {
   const redisKeyMake = (data: string) => `${REDIS_KEYS.USER_AUTH_KEY}:${data}`;
 
   beforeAll(() => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    redisService = app.get(RedisService);
-    userRepository = app.get(UserRepository);
+    agent = supertest(testApp.getHttpServer());
+    redisService = testApp.get(RedisService);
+    userRepository = testApp.get(UserRepository);
   });
 
   beforeEach(async () => {

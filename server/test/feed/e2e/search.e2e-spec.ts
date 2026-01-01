@@ -1,4 +1,4 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import * as supertest from 'supertest';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
@@ -11,11 +11,11 @@ import {
 import TestAgent from 'supertest/lib/agent';
 import { Feed } from '../../../src/feed/entity/feed.entity';
 import { RssAccept } from '../../../src/rss/entity/rss.entity';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/feed/search';
 
 describe(`GET ${URL}?type={}&find={} E2E Test`, () => {
-  let app: INestApplication;
   let agent: TestAgent;
   let feedList: Feed[];
   let rssAccept: RssAccept;
@@ -23,10 +23,9 @@ describe(`GET ${URL}?type={}&find={} E2E Test`, () => {
   let rssAcceptRepository: RssAcceptRepository;
 
   beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    feedRepository = app.get(FeedRepository);
-    rssAcceptRepository = app.get(RssAcceptRepository);
+    agent = supertest(testApp.getHttpServer());
+    feedRepository = testApp.get(FeedRepository);
+    rssAcceptRepository = testApp.get(RssAcceptRepository);
   });
 
   beforeEach(async () => {

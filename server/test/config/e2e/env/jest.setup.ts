@@ -7,10 +7,11 @@ import { HttpExceptionsFilter } from '../../../../src/common/filters/http.except
 import * as cookieParser from 'cookie-parser';
 import { RedisService } from '../../../../src/common/redis/redis.service';
 import { UserService } from '../../../../src/user/service/user.service';
+import { NestApplication } from '@nestjs/core';
 
-const globalAny: any = global;
+export let testApp: NestApplication;
 
-afterEach(() => {
+afterEach(async () => {
   jest.resetAllMocks();
 });
 
@@ -19,26 +20,24 @@ beforeAll(async () => {
     imports: [AppModule],
   }).compile();
 
-  const app = moduleFixture.createNestApplication();
-  const logger = app.get(WinstonLoggerService);
-  app.setGlobalPrefix('api');
-  app.use(cookieParser());
-  app.useGlobalFilters(
+  testApp = moduleFixture.createNestApplication();
+  const logger = testApp.get(WinstonLoggerService);
+  testApp.setGlobalPrefix('api');
+  testApp.use(cookieParser());
+  testApp.useGlobalFilters(
     new InternalExceptionsFilter(logger),
     new HttpExceptionsFilter(),
   );
-  app.useGlobalPipes(new ValidationPipe({ transform: true }));
-  await app.init();
-  globalAny.testApp = app;
+  testApp.useGlobalPipes(new ValidationPipe({ transform: true }));
+  await testApp.init();
 });
 
 afterAll(async () => {
-  const redisService: RedisService = globalAny.testApp.get(RedisService);
+  const redisService: RedisService = testApp.get(RedisService);
   redisService.disconnect();
 
-  if (globalAny.testApp) {
-    await globalAny.testApp.close();
-    delete globalAny.testApp;
+  if (testApp) {
+    await testApp.close();
   }
 });
 
@@ -48,7 +47,7 @@ export const createAccessToken = (payload?: {
   userName?: string;
   role?: string;
 }) => {
-  const userService = globalAny.testApp.get(UserService);
+  const userService = testApp.get(UserService);
 
   return userService.createToken(
     {
@@ -67,7 +66,7 @@ export const createRefreshToken = (payload?: {
   userName?: string;
   role?: string;
 }) => {
-  const userService = globalAny.testApp.get(UserService);
+  const userService = testApp.get(UserService);
 
   return userService.createToken(
     {

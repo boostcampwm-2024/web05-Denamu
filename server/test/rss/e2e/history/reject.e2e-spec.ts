@@ -1,4 +1,4 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import * as supertest from 'supertest';
 import { RedisService } from '../../../../src/common/redis/redis.service';
 import { RssRejectRepository } from '../../../../src/rss/repository/rss.repository';
@@ -6,11 +6,11 @@ import { RssReject } from '../../../../src/rss/entity/rss.entity';
 import { RssRejectFixture } from '../../../config/common/fixture/rss-reject.fixture';
 import TestAgent from 'supertest/lib/agent';
 import { REDIS_KEYS } from '../../../../src/common/redis/redis.constant';
+import { testApp } from '../../../config/e2e/env/jest.setup';
 
 const URL = '/api/rss/history/reject';
 
 describe(`GET ${URL} E2E Test`, () => {
-  let app: INestApplication;
   let agent: TestAgent;
   let rssRejectList: RssReject[];
   let redisService: RedisService;
@@ -19,10 +19,9 @@ describe(`GET ${URL} E2E Test`, () => {
   const sessionKey = 'admin-rss-history-reject';
 
   beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    rssRejectRepository = app.get(RssRejectRepository);
-    redisService = app.get(RedisService);
+    agent = supertest(testApp.getHttpServer());
+    rssRejectRepository = testApp.get(RssRejectRepository);
+    redisService = testApp.get(RedisService);
   });
 
   beforeEach(async () => {
