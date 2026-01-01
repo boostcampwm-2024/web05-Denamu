@@ -17,11 +17,8 @@ import { RssAccept } from '../../../../src/rss/entity/rss.entity';
 import { RssAcceptFixture } from '../../../config/common/fixture/rss-accept.fixture';
 import { FeedFixture } from '../../../config/common/fixture/feed.fixture';
 import { Feed } from '../../../../src/feed/entity/feed.entity';
-import { Comment } from '../../../../src/comment/entity/comment.entity';
 import { CommentFixture } from '../../../config/common/fixture/comment.fixture';
-import { Like } from '../../../../src/like/entity/like.entity';
 import { FileFixture } from '../../../config/common/fixture/file.fixture';
-import { File } from '../../../../src/file/entity/file.entity';
 import {
   createAccessToken,
   createRefreshToken,
@@ -43,9 +40,6 @@ describe(`POST ${URL} E2E Test`, () => {
   let user: User;
   let rssAccept: RssAccept;
   let feed: Feed;
-  let comment: Comment;
-  let like: Like;
-  let file: File;
   const userDeleteCode = 'user-delete-confirm';
   const redisKeyMake = (data: string) =>
     `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${data}`;
@@ -70,26 +64,12 @@ describe(`POST ${URL} E2E Test`, () => {
       userRepository.save(await UserFixture.createUserCryptFixture()),
       feedRepository.save(FeedFixture.createFeedFixture(rssAccept)),
     ]);
-    [comment, like, file] = await Promise.all([
-      commentRepository.save(CommentFixture.createCommentFixture(feed, user)),
-      likeRepository.save({ feed, user }),
-      fileRepository.save(FileFixture.createFileFixture(user)),
+    await Promise.all([
+      commentRepository.insert(CommentFixture.createCommentFixture(feed, user)),
+      likeRepository.insert({ feed, user }),
+      fileRepository.insert(FileFixture.createFileFixture(user)),
       redisService.set(redisKeyMake(userDeleteCode), user.id),
     ]);
-  });
-
-  afterEach(async () => {
-    await Promise.all([
-      fileRepository.delete(file.id),
-      likeRepository.delete(like.id),
-      commentRepository.delete(comment.id),
-      redisService.del(redisKeyMake(userDeleteCode)),
-    ]);
-    await Promise.all([
-      feedRepository.delete(feed.id),
-      userRepository.delete(user.id),
-    ]);
-    await rssAcceptRepository.delete(rssAccept.id);
   });
 
   it('[404] 회원 탈퇴 인증 코드가 만료되었거나 잘 못된 경우 회원 탈퇴를 실패한다.', async () => {

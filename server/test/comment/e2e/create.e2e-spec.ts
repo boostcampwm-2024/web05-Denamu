@@ -48,14 +48,6 @@ describe(`POST ${URL} E2E Test`, () => {
     accessToken = createAccessToken(user);
   });
 
-  afterEach(async () => {
-    await Promise.all([
-      feedRepository.delete(feed.id),
-      userRepository.delete(user.id),
-    ]);
-    await rssAcceptRepository.delete(rssAccept.id);
-  });
-
   it('[401] 로그인이 되어 있지 않을 경우 댓글 등록을 실패한다.', async () => {
     // given
     const requestDto = new CreateCommentRequestDto({
@@ -164,8 +156,5 @@ describe(`POST ${URL} E2E Test`, () => {
 
     // DB, Redis then
     expect(savedComment).not.toBeNull();
-
-    // cleanup
-    await commentRepository.delete(savedComment.id);
   });
 });

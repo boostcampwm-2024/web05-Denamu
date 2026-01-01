@@ -37,11 +37,6 @@ describe(`GET ${URL}?limit={} E2E Test`, () => {
     feedList = (await feedRepository.save(feeds)).reverse();
   });
 
-  afterEach(async () => {
-    await feedRepository.delete(feedList.map((feed) => feed.id));
-    await rssAcceptRepository.delete(rssAccept.id);
-  });
-
   it('[200] 전체 조회수 통계 요청을 받은 경우 전체 조회수 통계 조회를 성공한다.', async () => {
     // Http when
     const response = await agent.get(URL);

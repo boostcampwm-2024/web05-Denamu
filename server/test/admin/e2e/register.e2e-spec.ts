@@ -28,10 +28,6 @@ describe(`POST ${URL} E2E Test`, () => {
     await redisService.set(redisKeyMake(sessionKey), 'testAdminId');
   });
 
-  afterEach(async () => {
-    await redisService.del(redisKeyMake(sessionKey));
-  });
-
   it('[401] 관리자 로그인 쿠키가 없을 경우 회원가입을 실패한다.', async () => {
     // given
     const newAdminDto = new RegisterAdminRequestDto({
@@ -111,9 +107,6 @@ describe(`POST ${URL} E2E Test`, () => {
 
     // DB, Redis then
     expect(savedAdmin.length).toBe(1);
-
-    // cleanup
-    await adminRepository.delete(admin.id);
   });
 
   it('[201] 관리자 로그인이 되어 있을 경우 다른 관리자 계정 회원가입을 성공한다.', async () => {
@@ -144,8 +137,5 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(
       await bcrypt.compare(newAdminDto.password, savedAdmin.password),
     ).toBeTruthy();
-
-    // cleanup
-    await adminRepository.delete(savedAdmin.id);
   });
 });

@@ -36,10 +36,6 @@ describe(`PATCH ${URL} E2E Test`, () => {
     accessToken = createAccessToken(user);
   });
 
-  afterEach(async () => {
-    await userRepository.delete(user.id);
-  });
-
   it('[401] 로그인하지 않은 유저가 회원 정보 수정 요청을 할 경우 회원 정보 수정을 실패한다.', async () => {
     // given
     const requestDto = new UpdateUserRequestDto({

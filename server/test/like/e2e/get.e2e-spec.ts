@@ -12,7 +12,6 @@ import { LikeRepository } from '../../../src/like/repository/like.repository';
 import { createAccessToken } from '../../config/e2e/env/jest.setup';
 import { User } from '../../../src/user/entity/user.entity';
 import { RssAccept } from '../../../src/rss/entity/rss.entity';
-import { Like } from '../../../src/like/entity/like.entity';
 import { testApp } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/like';
@@ -26,7 +25,6 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
   let feedRepository: FeedRepository;
   let likeRepository: LikeRepository;
   let rssAccept: RssAccept;
-  let like: Like;
 
   beforeAll(async () => {
     agent = supertest(testApp.getHttpServer());
@@ -44,16 +42,7 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
       userRepository.save(await UserFixture.createUserCryptFixture()),
       feedRepository.save(FeedFixture.createFeedFixture(rssAccept)),
     ]);
-    like = await likeRepository.save({ user, feed });
-  });
-
-  afterEach(async () => {
-    await likeRepository.delete(like.id);
-    await Promise.all([
-      feedRepository.delete(feed.id),
-      userRepository.delete(user.id),
-    ]);
-    await rssAcceptRepository.delete(rssAccept.id);
+    await likeRepository.insert({ user, feed });
   });
 
   it('[404] 게시글이 존재하지 않을 경우 좋아요 정보 제공을 실패한다.', async () => {

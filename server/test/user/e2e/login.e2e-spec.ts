@@ -28,10 +28,6 @@ describe(`POST ${URL} E2E Test`, () => {
     );
   });
 
-  afterEach(async () => {
-    await userRepository.delete(user.id);
-  });
-
   it('[401] 아이디가 틀렸을 경우 로그인을 실패한다.', async () => {
     // given
     const requestDto = new LoginUserRequestDto({

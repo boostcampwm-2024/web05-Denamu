@@ -41,10 +41,6 @@ describe(`POST ${URL} E2E Test`, () => {
     accessToken = createAccessToken(user);
   });
 
-  afterEach(async () => {
-    await userRepository.delete(user.id);
-  });
-
   it('[401] 인증되지 않은 사용자가 요청할 경우 파일 업로드를 실패한다.', async () => {
     // given
     const requestDto = new UploadFileQueryRequestDto({
@@ -173,8 +169,5 @@ describe(`POST ${URL} E2E Test`, () => {
 
     // DB, Redis then
     expect(savedFile).not.toBeNull();
-
-    // cleanup
-    await fileRepository.delete(savedFile.id);
   });
 });

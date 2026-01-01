@@ -32,10 +32,6 @@ describe(`SSE ${URL} E2E Test`, () => {
     );
   });
 
-  afterEach(async () => {
-    await rssAcceptRepository.delete(rssAccept.id);
-  });
-
   it('[SSE] 최초 연결을 할 경우 트랜드 데이터 최대 4개 제공 수신을 성공한다.', async () => {
     // given
     const feeds = Array.from({ length: 2 }).map((_, i) =>
@@ -83,12 +79,6 @@ describe(`SSE ${URL} E2E Test`, () => {
         tag: [],
       })),
     );
-
-    // cleanup
-    await Promise.all([
-      feedRepository.delete(feedList.map((_, i) => feedList[i].id)),
-      redisService.del(REDIS_KEYS.FEED_ORIGIN_TREND_KEY),
-    ]);
   });
 
   it('[SSE] 서버로부터 데이터를 받을 때 게시글이 데나무에서 지워진 경우 빈 피드 정보 수신을 성공한다.', async () => {
