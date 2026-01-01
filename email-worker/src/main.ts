@@ -23,8 +23,8 @@ async function startEmailWorker() {
   const dependencies = initializeDependencies();
   await initializeRabbitMQ(dependencies);
 
-  process.on('SIGINT', () => handleShutdown(dependencies, 'SIGINT'));
-  process.on('SIGTERM', () => handleShutdown(dependencies, 'SIGTERM'));
+  process.on('SIGINT', () => void handleShutdown(dependencies, 'SIGINT'));
+  process.on('SIGTERM', () => void handleShutdown(dependencies, 'SIGTERM'));
 }
 
 async function handleShutdown(

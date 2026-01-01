@@ -46,14 +46,14 @@ describe(`SSE ${URL} E2E Test`, () => {
           const response = JSON.parse(event.data);
           es.close();
           resolve(response.data);
-        } catch (error) {
+        } catch {
           es.close();
-          reject(error);
+          reject(new Error(`SSE 연결 오류: ${JSON.stringify(event)}`));
         }
       };
-      es.onerror = (error) => {
+      es.onerror = (event) => {
         es.close();
-        reject(error);
+        reject(new Error(`SSE 연결 오류: ${JSON.stringify(event)}`));
       };
     });
 
@@ -89,14 +89,14 @@ describe(`SSE ${URL} E2E Test`, () => {
           const response = JSON.parse(event.data);
           es.close();
           resolve(response.data);
-        } catch (error) {
+        } catch {
           es.close();
-          reject(error);
+          reject(new Error(`SSE 연결 오류: ${JSON.stringify(event)}`));
         }
       };
-      es.onerror = (error) => {
+      es.onerror = (event) => {
         es.close();
-        reject(error);
+        reject(new Error(`SSE 연결 오류: ${JSON.stringify(event)}`));
       };
     });
 

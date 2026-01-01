@@ -35,7 +35,7 @@ export class ReadFeedInterceptor implements NestInterceptor {
           secret: this.configService.get('JWT_ACCESS_SECRET'),
         });
         request.user = user;
-      } catch (error) {
+      } catch {
         request.user = null;
       }
     } else {
@@ -43,10 +43,12 @@ export class ReadFeedInterceptor implements NestInterceptor {
     }
 
     return next.handle().pipe(
-      tap(async () => {
-        if (user) {
-          await this.handleLoggedInUserActivity(request, user);
-        }
+      tap(() => {
+        void (async () => {
+          if (user) {
+            await this.handleLoggedInUserActivity(request, user);
+          }
+        })();
       }),
     );
   }

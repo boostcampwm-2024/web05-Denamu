@@ -16,7 +16,7 @@ export class RabbitMQManager {
 
   async connect() {
     if (this.connection) return this.connection;
-    if (this.connectionPromise) return this.connectionPromise;
+    if (this.connectionPromise !== null) return this.connectionPromise;
 
     this.connectionPromise = amqp.connect({
       protocol: 'amqp',
@@ -33,7 +33,7 @@ export class RabbitMQManager {
 
   async getChannel() {
     if (this.channel) return this.channel;
-    if (this.channelPromise) return this.channelPromise;
+    if (this.channelPromise !== null) return this.channelPromise;
 
     if (!this.connection) {
       await this.connect();

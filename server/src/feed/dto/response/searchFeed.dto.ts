@@ -25,7 +25,7 @@ export class SearchFeedResult {
   }
 
   static toResultDtoArray(feeds: Feed[]) {
-    return feeds.map(this.toResultDto);
+    return feeds.map((feed) => this.toResultDto(feed));
   }
 }
 

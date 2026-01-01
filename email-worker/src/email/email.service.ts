@@ -46,10 +46,10 @@ export class EmailService {
   ): Promise<void> {
     try {
       await this.transporter.sendMail(mailOptions);
-      logger.info(`${mailOptions.to} 이메일 전송 성공`);
+      logger.info(`${mailOptions.to as string} 이메일 전송 성공`);
     } catch (error) {
       logger.error(
-        `${mailOptions.to} 이메일 전송 실패 - 오류 메시지: ${error.message}, 스택 트레이스: ${error.stack}`,
+        `${mailOptions.to as string} 이메일 전송 실패 - 오류 메시지: ${error.message}, 스택 트레이스: ${error.stack}`,
       );
       throw error;
     }

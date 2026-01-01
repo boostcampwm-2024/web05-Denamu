@@ -13,7 +13,7 @@ import { FileRepository } from '../../../../src/file/repository/file.repository'
 import {
   createAccessToken,
   createRefreshToken,
-} from '../../../jest.setup';
+} from '../../../config/e2e/env/jest.setup';
 
 const URL = '/api/user/delete-account/confirm';
 
@@ -30,7 +30,7 @@ describe(`POST ${URL} E2E Test`, () => {
   const redisKeyMake = (data: string) =>
     `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${data}`;
 
-  beforeAll(async () => {
+  beforeAll(() => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
     redisService = app.get(RedisService);

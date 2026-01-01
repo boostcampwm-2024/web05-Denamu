@@ -1,4 +1,4 @@
-import { validate, IsEnum } from 'class-validator';
+import { validate } from 'class-validator';
 import { OAuthTypeRequestDto } from '../../../src/user/dto/request/oAuthType.dto';
 import { OAuthType } from '../../../src/user/constant/oauth.constant';
 

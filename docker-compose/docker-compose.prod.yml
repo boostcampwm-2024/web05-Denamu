@@ -6,7 +6,7 @@ include:
 services:
   # WAS 서비스
   app:
-    image: ${APP_IMAGE}:${APP_TAG}
+    image: ${GHCR_URL}/server:latest
     ports:
       - '8080:8080'
     env_file:
@@ -29,7 +29,7 @@ services:
 
   # Feed Crawler 서비스
   feed-crawler:
-    image: ${FEED_CRAWLER_IMAGE}:${FEED_CRAWLER_TAG}
+    image: ${GHCR_URL}/feed-crawler:latest
     env_file:
       - /var/prod_config/feed-crawler/.env.prod
     networks:
@@ -49,7 +49,7 @@ services:
 
   # Email Worker 서비스
   email-worker:
-    image: ${EMAIL_WORKER_IMAGE}:${EMAIL_WORKER_TAG}
+    image: ${GHCR_URL}/email-worker:latest
     env_file:
       - /var/prod_config/email-worker/.env.prod
     networks:

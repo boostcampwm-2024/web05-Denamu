@@ -74,7 +74,7 @@ export class FileService {
     try {
       await access(file.path);
       await unlink(file.path);
-    } catch (error) {
+    } catch {
       this.logger.warn(`파일 삭제 실패: ${file.path}`, 'FileService');
     }
 
@@ -91,7 +91,7 @@ export class FileService {
       try {
         await access(file.path);
         await unlink(file.path);
-      } catch (error) {
+      } catch {
         this.logger.warn(`파일 삭제 실패: ${file.path}`, 'FileService');
       }
 

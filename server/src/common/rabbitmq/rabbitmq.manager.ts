@@ -13,7 +13,7 @@ export class RabbitMQManager implements OnModuleDestroy {
 
   async getChannel(): Promise<Channel> {
     if (this.channel) return this.channel;
-    if (this.channelPromise) return this.channelPromise;
+    if (this.channelPromise !== null) return this.channelPromise;
 
     this.channelPromise = this.connection.createChannel();
     this.channel = await this.channelPromise;
