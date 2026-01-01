@@ -20,7 +20,7 @@ describe(`DELETE ${URL}/{fileId} E2E Test`, () => {
   let userRepository: UserRepository;
   let accessToken: string;
 
-  beforeAll(async () => {
+  beforeAll(() => {
     agent = supertest(testApp.getHttpServer());
     fileRepository = testApp.get(FileRepository);
     userRepository = testApp.get(UserRepository);

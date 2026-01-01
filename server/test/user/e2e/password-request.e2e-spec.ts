@@ -21,7 +21,7 @@ describe(`POST ${URL} E2E Test`, () => {
   const redisKeyMake = (data: string) =>
     `${REDIS_KEYS.USER_RESET_PASSWORD_KEY}:${data}`;
 
-  beforeAll(async () => {
+  beforeAll(() => {
     agent = supertest(testApp.getHttpServer());
     redisService = testApp.get(RedisService);
     userRepository = testApp.get(UserRepository);

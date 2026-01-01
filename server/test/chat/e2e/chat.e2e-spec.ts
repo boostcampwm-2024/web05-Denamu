@@ -22,7 +22,7 @@ describe('Socket.IO Anonymous Chat E2E Test', () => {
     serverUrl = `http://localhost:${port}`;
   });
 
-  afterEach(async () => {
+  afterEach(() => {
     if (clientSocket && clientSocket.connected) {
       clientSocket.disconnect();
     }

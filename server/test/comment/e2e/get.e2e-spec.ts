@@ -29,7 +29,7 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
   let user: User;
   let comment: Comment;
 
-  beforeAll(async () => {
+  beforeAll(() => {
     agent = supertest(testApp.getHttpServer());
     commentRepository = testApp.get(CommentRepository);
     userRepository = testApp.get(UserRepository);

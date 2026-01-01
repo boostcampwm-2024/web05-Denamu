@@ -19,7 +19,7 @@ describe(`GET ${URL}?limit={}&lastId={} E2E Test`, () => {
   let feedRepository: FeedRepository;
   let rssAcceptRepository: RssAcceptRepository;
 
-  beforeAll(async () => {
+  beforeAll(() => {
     agent = supertest(testApp.getHttpServer());
     feedRepository = testApp.get(FeedRepository);
     rssAcceptRepository = testApp.get(RssAcceptRepository);
@@ -29,7 +29,7 @@ describe(`GET ${URL}?limit={}&lastId={} E2E Test`, () => {
     rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
-    const feeds = Array.from({ length: 10 }).map((_, i) =>
+    const feeds = Array.from({ length: 10 }).map(() =>
       FeedFixture.createFeedFixture(rssAccept),
     );
 

@@ -22,7 +22,7 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
   const testIp = '1.1.1.1';
   const redisKeyMake = (data: string) => `feed:${data}:ip`;
 
-  beforeAll(async () => {
+  beforeAll(() => {
     agent = supertest(testApp.getHttpServer());
     redisService = testApp.get(RedisService);
     feedRepository = testApp.get(FeedRepository);

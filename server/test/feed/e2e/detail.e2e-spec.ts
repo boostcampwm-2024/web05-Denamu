@@ -24,7 +24,7 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
   let rssAcceptRepository: RssAcceptRepository;
   let tagRepository: TagRepository;
 
-  beforeAll(async () => {
+  beforeAll(() => {
     agent = supertest(testApp.getHttpServer());
     feedRepository = testApp.get(FeedRepository);
     rssAcceptRepository = testApp.get(RssAcceptRepository);
@@ -36,7 +36,7 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
       RssAcceptFixture.createRssAcceptFixture(),
     );
 
-    const feeds = Array.from({ length: 2 }).map((_, i) =>
+    const feeds = Array.from({ length: 2 }).map(() =>
       FeedFixture.createFeedFixture(rssAccept),
     );
     tag = await tagRepository.save(TagFixture.createTagFixture());

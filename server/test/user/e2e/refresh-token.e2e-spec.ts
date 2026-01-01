@@ -15,7 +15,7 @@ describe(`POST ${URL} E2E Test`, () => {
   let userRepository: UserRepository;
   let refreshToken: string;
 
-  beforeAll(async () => {
+  beforeAll(() => {
     agent = supertest(testApp.getHttpServer());
     userRepository = testApp.get(UserRepository);
   });

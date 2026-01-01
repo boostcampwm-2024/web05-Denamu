@@ -19,7 +19,7 @@ describe(`GET ${URL}/{userId} E2E Test`, () => {
   let activityRepository: ActivityRepository;
   let userRepository: UserRepository;
 
-  beforeAll(async () => {
+  beforeAll(() => {
     agent = supertest(testApp.getHttpServer());
     activityRepository = testApp.get(ActivityRepository);
     userRepository = testApp.get(UserRepository);

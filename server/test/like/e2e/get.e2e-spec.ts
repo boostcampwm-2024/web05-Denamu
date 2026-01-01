@@ -26,7 +26,7 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
   let likeRepository: LikeRepository;
   let rssAccept: RssAccept;
 
-  beforeAll(async () => {
+  beforeAll(() => {
     agent = supertest(testApp.getHttpServer());
     userRepository = testApp.get(UserRepository);
     rssAcceptRepository = testApp.get(RssAcceptRepository);

@@ -18,14 +18,14 @@ describe(`GET ${URL} E2E Test`, () => {
   const redisKeyMake = (data: string) => `${REDIS_KEYS.ADMIN_AUTH_KEY}:${data}`;
   const sessionKey = 'admin-rss-history-accept';
 
-  beforeAll(async () => {
+  beforeAll(() => {
     agent = supertest(testApp.getHttpServer());
     rssAcceptRepository = testApp.get(RssAcceptRepository);
     redisService = testApp.get(RedisService);
   });
 
   beforeEach(async () => {
-    const rssAccepts = Array.from({ length: 2 }).map((_, i) =>
+    const rssAccepts = Array.from({ length: 2 }).map(() =>
       RssAcceptFixture.createRssAcceptFixture(),
     );
     [rssAcceptList] = await Promise.all([

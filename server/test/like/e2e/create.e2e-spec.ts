@@ -28,7 +28,7 @@ describe(`POST ${URL} E2E Test`, () => {
   let rssAccept: RssAccept;
   let accessToken: string;
 
-  beforeAll(async () => {
+  beforeAll(() => {
     agent = supertest(testApp.getHttpServer());
     userRepository = testApp.get(UserRepository);
     rssAcceptRepository = testApp.get(RssAcceptRepository);

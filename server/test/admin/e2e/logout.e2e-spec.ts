@@ -14,7 +14,7 @@ describe(`POST ${URL} E2E Test`, () => {
   const sessionKey = 'admin-logout-sessionKey';
   const sessionId = 'test1234';
 
-  beforeAll(async () => {
+  beforeAll(() => {
     agent = supertest(testApp.getHttpServer());
     redisService = testApp.get(RedisService);
   });

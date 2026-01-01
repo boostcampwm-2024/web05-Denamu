@@ -18,7 +18,7 @@ describe(`POST ${URL} E2E Test`, () => {
   const sessionKey = 'admin-register-session-key';
   const redisKeyMake = (data: string) => `${REDIS_KEYS.ADMIN_AUTH_KEY}:${data}`;
 
-  beforeAll(async () => {
+  beforeAll(() => {
     agent = supertest(testApp.getHttpServer());
     adminRepository = testApp.get(AdminRepository);
     redisService = testApp.get(RedisService);

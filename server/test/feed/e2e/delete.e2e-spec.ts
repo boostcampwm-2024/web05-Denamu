@@ -18,7 +18,7 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
   let agent: TestAgent;
   let rssAcceptRepository: RssAcceptRepository;
 
-  beforeAll(async () => {
+  beforeAll(() => {
     agent = supertest(testApp.getHttpServer());
     feedRepository = testApp.get(FeedRepository);
     rssAcceptRepository = testApp.get(RssAcceptRepository);

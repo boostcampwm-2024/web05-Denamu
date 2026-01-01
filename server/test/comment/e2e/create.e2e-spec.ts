@@ -29,7 +29,7 @@ describe(`POST ${URL} E2E Test`, () => {
   let feedRepository: FeedRepository;
   let accessToken: string;
 
-  beforeAll(async () => {
+  beforeAll(() => {
     agent = supertest(testApp.getHttpServer());
     commentRepository = testApp.get(CommentRepository);
     userRepository = testApp.get(UserRepository);

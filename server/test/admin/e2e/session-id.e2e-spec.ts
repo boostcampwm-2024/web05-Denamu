@@ -13,7 +13,7 @@ describe(`GET ${URL} E2E Test`, () => {
   const sessionKey = 'admin-session-check-key';
   const redisKeyMake = (data: string) => `${REDIS_KEYS.ADMIN_AUTH_KEY}:${data}`;
 
-  beforeAll(async () => {
+  beforeAll(() => {
     agent = supertest(testApp.getHttpServer());
     redisService = testApp.get(RedisService);
   });

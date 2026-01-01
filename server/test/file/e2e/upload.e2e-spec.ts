@@ -25,7 +25,7 @@ describe(`POST ${URL} E2E Test`, () => {
   let accessToken: string;
   const fileRandomName = 'test-random-uuid-file-name';
 
-  beforeAll(async () => {
+  beforeAll(() => {
     agent = supertest(testApp.getHttpServer());
     fileRepository = testApp.get(FileRepository);
     userRepository = testApp.get(UserRepository);

@@ -31,7 +31,7 @@ describe(`PATCH ${URL} E2E Test`, () => {
   let user: User;
   let accessToken: string;
 
-  beforeAll(async () => {
+  beforeAll(() => {
     agent = supertest(testApp.getHttpServer());
     commentRepository = testApp.get(CommentRepository);
     userRepository = testApp.get(UserRepository);

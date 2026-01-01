@@ -34,7 +34,7 @@ describe(`SSE ${URL} E2E Test`, () => {
 
   it('[SSE] 최초 연결을 할 경우 트랜드 데이터 최대 4개 제공 수신을 성공한다.', async () => {
     // given
-    const feeds = Array.from({ length: 2 }).map((_, i) =>
+    const feeds = Array.from({ length: 2 }).map(() =>
       FeedFixture.createFeedFixture(rssAccept),
     );
     const feedList = await feedRepository.save(feeds);
@@ -49,7 +49,7 @@ describe(`SSE ${URL} E2E Test`, () => {
     const data = await new Promise((resolve, reject) => {
       es.onmessage = (event) => {
         try {
-          const response = JSON.parse(event.data);
+          const response = JSON.parse(event.data) as { data?: unknown };
           es.close();
           resolve(response.data);
         } catch {
@@ -90,7 +90,7 @@ describe(`SSE ${URL} E2E Test`, () => {
     const data = await new Promise((resolve, reject) => {
       es.onmessage = (event) => {
         try {
-          const response = JSON.parse(event.data);
+          const response = JSON.parse(event.data) as { data?: unknown };
           es.close();
           resolve(response.data);
         } catch {
