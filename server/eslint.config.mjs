@@ -15,7 +15,7 @@ export default defineConfig([
     extends: [
       eslintConfigPrettier,
       js.configs.recommended,
-      tseslint.configs.recommendedTypeChecked,
+      ...tseslint.configs.recommendedTypeChecked,
     ],
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
