@@ -103,15 +103,19 @@ jobs:
           {
             echo "REDIS_USER=${{ secrets.REDIS_USERNAME }}"
             echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}"
+            echo "REDIS_ADDR=${{ secrets.REDIS_ADDR }}"
             echo "MYSQL_ROOT_PASSWORD=${{ secrets.PRODUCT_DB_PASSWORD }}"
             echo "MYSQL_DATABASE=${{ secrets.PRODUCT_DB_DATABASE }}"
             echo "MYSQL_USER=${{ secrets.PRODUCT_DB_USERNAME }}"
             echo "MYSQL_PASSWORD=${{ secrets.PRODUCT_DB_PASSWORD }}"
-            echo "RABBITMQ_DEFAULT_USER=${{ secrets.PRODUCT_RABBITMQ_DEFAULT_USER }}"
-            echo "RABBITMQ_DEFAULT_PASS=${{ secrets.PRODUCT_RABBITMQ_DEFAULT_PASS }}" 
-            echo "RABBITMQ_HOST=${{ secrets.PRODUCT_RABBITMQ_HOST }}"  
-            echo "RABBITMQ_PORT=${{ secrets.PRODUCT_RABBITMQ_PORT }}"  
-            echo "RABBITMQ_MANAGEMENT_PORT=${{ secrets.PRODUCT_RABBITMQ_MANAGEMENT_PORT }}"  
+            echo "MYSQL_ROOT_HOST=localhost"
+            echo "RABBIT_USER=${{ secrets.PRODUCT_RABBITMQ_DEFAULT_USER }}"
+            echo "RABBIT_PASSWORD=${{ secrets.PRODUCT_RABBITMQ_DEFAULT_PASS }}"
+            echo "RABBITMQ_HOST=${{ secrets.PRODUCT_RABBITMQ_HOST }}"
+            echo "RABBITMQ_PORT=${{ secrets.PRODUCT_RABBITMQ_PORT }}"
+            echo "RABBITMQ_MANAGEMENT_PORT=${{ secrets.PRODUCT_RABBITMQ_MANAGEMENT_PORT }}"
+            echo "RABBIT_URL=http://${{ secrets.PRODUCT_RABBITMQ_HOST }}:${{ secrets.PRODUCT_RABBITMQ_PORT }}"
+            echo "TZ=Asia/Seoul"
           } | sudo tee /var/prod_config/infra/.env.prod >/dev/null
 
       - name: Docker 이미지 Pull & 서비스 재시작
