@@ -71,7 +71,9 @@ const createTestDatabases = async (container: StartedMySqlContainer) => {
 
 const createRedisContainer = async () => {
   console.log('Starting Redis container...');
-  redisContainer = await new RedisContainer('redis:6.0.16-alpine').start();
+  redisContainer = await new RedisContainer('redis:6.0.16-alpine')
+    .withCommand(['redis-server', '--databases', `${MAX_WORKERS + 1}`])
+    .start();
 
   process.env.REDIS_HOST = redisContainer.getHost();
   process.env.REDIS_PORT = redisContainer.getPort().toString();

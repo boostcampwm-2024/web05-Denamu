@@ -8,10 +8,31 @@ import * as cookieParser from 'cookie-parser';
 import { RedisService } from '../../../../src/common/redis/redis.service';
 import { UserService } from '../../../../src/user/service/user.service';
 import { NestApplication } from '@nestjs/core';
+import { DataSource } from 'typeorm';
 
 export let testApp: NestApplication;
 
 afterEach(async () => {
+  const redisService = testApp.get(RedisService);
+  await redisService.flushdb();
+
+  const dataSource = testApp.get(DataSource);
+  const queryRunner = dataSource.createQueryRunner();
+  await queryRunner.connect();
+
+  await queryRunner.query('SET FOREIGN_KEY_CHECKS = 0');
+
+  for (const entity of dataSource.entityMetadatas) {
+    if (entity.tableType === 'view') {
+      continue;
+    }
+
+    await queryRunner.query(`TRUNCATE TABLE \`${entity.tableName}\``);
+  }
+
+  await queryRunner.query('SET FOREIGN_KEY_CHECKS = 1');
+  await queryRunner.release();
+
   jest.resetAllMocks();
 });
 
