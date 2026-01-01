@@ -16,10 +16,6 @@ services:
       - --skip-character-set-client-handshake
     environment:
       MYSQL_ROOT_HOST: localhost
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       TZ: 'Asia/Seoul'
     healthcheck:
       test:
