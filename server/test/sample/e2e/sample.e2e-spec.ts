@@ -49,11 +49,6 @@ describe(`GET ${URL} E2E Test`, () => {
   beforeEach(async () => {});
 
   /*
-   * 생성 E2E를 제외한 곳에서 공용 데이터를 제거하기 위한 구역입니다.
-   */
-  afterEach(async () => {});
-
-  /*
    *
    * 테스트 코드는 소스 코드 순서로 배치를 해주세요.
    * TEST 멘트: '[정수 응답 코드] ~ 경우 ~ {성공/실패}한다.'
@@ -65,7 +60,6 @@ describe(`GET ${URL} E2E Test`, () => {
    * // Http then: 응답 값 및 데이터 검증
    * // DB, Redis when: 데이터 저장소 요청
    * // DB, Redis then: 데이터 값 검증
-   * // cleanup: 사전 데이터 정리
    */
 
   /*

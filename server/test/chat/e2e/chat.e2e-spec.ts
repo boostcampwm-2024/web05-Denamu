@@ -26,7 +26,6 @@ describe('Socket.IO Anonymous Chat E2E Test', () => {
     if (clientSocket && clientSocket.connected) {
       clientSocket.disconnect();
     }
-    await redisService.del(REDIS_KEYS.CHAT_HISTORY_KEY);
   });
 
   it('[Disconnect] 최대 인원을 초과할 경우 연결을 실패한다.', async () => {

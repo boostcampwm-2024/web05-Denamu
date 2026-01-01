@@ -36,13 +36,6 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
     ]);
   });
 
-  afterEach(async () => {
-    await Promise.all([
-      rssRepository.delete(rss.id),
-      redisService.del(redisKeyMake(sessionKey)),
-    ]);
-  });
-
   it('[401] 관리자 로그인 쿠키가 없을 경우 RSS 승인을 실패한다.', async () => {
     // Http when
     const response = await agent.post(`${URL}/${Number.MAX_SAFE_INTEGER}`);
@@ -181,8 +174,5 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
     // DB, Redis then
     expect(savedRssAccept).not.toBeNull();
     expect(savedRss).toBeNull();
-
-    // cleanup
-    await rssAcceptRepository.delete(savedRssAccept.id);
   });
 });

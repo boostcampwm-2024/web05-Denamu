@@ -34,11 +34,6 @@ describe(`GET ${URL}/{userId} E2E Test`, () => {
     );
   });
 
-  afterEach(async () => {
-    await activityRepository.delete(activities.map((activity) => activity.id));
-    await userRepository.delete(user.id);
-  });
-
   it('[404] 존재하지 않는 사용자 ID로 요청할 경우 활동 데이터 조회를 실패한다.', async () => {
     // given
     const requestDto = new ReadActivityQueryRequestDto({

@@ -31,11 +31,6 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
     feed = await feedRepository.save(FeedFixture.createFeedFixture(rssAccept));
   });
 
-  afterEach(async () => {
-    await feedRepository.delete(feed.id);
-    await rssAcceptRepository.delete(rssAccept.id);
-  });
-
   it('[404] 존재하지 않는 게시글 ID에 요청을 보낼 경우 404를 응답한다.', async () => {
     // Http when
     const response = await agent.delete(`${URL}/${Number.MAX_SAFE_INTEGER}`);

@@ -32,10 +32,6 @@ describe(`POST ${URL} E2E Test`, () => {
     user = await userRepository.save(UserFixture.createUserFixture());
   });
 
-  afterEach(async () => {
-    await userRepository.delete(user.id);
-  });
-
   it('[200] 존재하지 않는 이메일로 요청한 경우 비밀번호 재설정 이메일 요청을 성공한다.', async () => {
     // given
     const requestDto = new ForgotPasswordRequestDto({

@@ -23,10 +23,6 @@ describe(`GET ${URL} E2E Test`, () => {
     user = await userRepository.save(UserFixture.createUserFixture());
   });
 
-  afterEach(async () => {
-    await userRepository.delete(user.id);
-  });
-
   it('[200] 중복 이메일이 존재하지 않을 경우 이메일 중복 검사를 성공한다.', async () => {
     // given
     const requestDto = new CheckEmailDuplicationRequestDto({

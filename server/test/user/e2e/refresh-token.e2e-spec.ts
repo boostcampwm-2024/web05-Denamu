@@ -27,10 +27,6 @@ describe(`POST ${URL} E2E Test`, () => {
     refreshToken = createRefreshToken(user);
   });
 
-  afterEach(async () => {
-    await userRepository.delete(user.id);
-  });
-
   it('[401] Refresh Token이 없을 경우 Access Token 발급을 실패한다.', async () => {
     // Http when
     const response = await agent.post(URL);

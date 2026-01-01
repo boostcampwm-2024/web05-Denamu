@@ -45,12 +45,6 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
     feedList = await feedRepository.save(feeds);
   });
 
-  afterEach(async () => {
-    await feedRepository.delete(feedList.map((feed) => feed.id));
-    await tagRepository.delete(tag.id);
-    await rssAcceptRepository.delete(rssAccept.id);
-  });
-
   it('[404] 존재하지 않는 피드 ID로 요청할 경우 게시글 상세 조회에 실패한다.', async () => {
     // given
     const feedDetailRequestDto = new ManageFeedRequestDto({

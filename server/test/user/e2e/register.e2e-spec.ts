@@ -53,9 +53,6 @@ describe(`POST ${URL} E2E Test`, () => {
 
     // DB, Redis then
     expect(savedRegisterCode).toBeNull();
-
-    // cleanup
-    await userRepository.delete(user.id);
   });
 
   it('[201] 중복되는 회원이 없을 경우 회원가입을 성공한다.', async () => {

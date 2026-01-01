@@ -40,11 +40,6 @@ describe(`GET ${URL} E2E Test`, () => {
     feedList = (await feedRepository.save(feeds)).reverse();
   });
 
-  afterEach(async () => {
-    await feedRepository.delete(feedList.map((feed) => feed.id));
-    await rssAcceptRepository.delete(rssAccept.id);
-  });
-
   it('[200] 최신 피드 업데이트 요청이 들어올 경우 최신 피드 제공을 성공한다.', async () => {
     // given
     await redisService.executePipeline((pipeline) => {
@@ -90,13 +85,6 @@ describe(`GET ${URL} E2E Test`, () => {
         };
       }),
     );
-
-    // cleanup
-    await redisService.executePipeline((pipeline) => {
-      feedList.forEach((feed) => {
-        pipeline.del(redisKeyMake(feed.id.toString()));
-      });
-    });
   });
 
   it('[200] 최신 피드가 없을 경우 빈 배열 제공을 성공한다.', async () => {

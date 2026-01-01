@@ -31,13 +31,6 @@ describe(`PATCH ${URL} E2E Test`, () => {
     user = await userRepository.save(UserFixture.createUserFixture());
   });
 
-  afterEach(async () => {
-    await Promise.all([
-      userRepository.delete(user.id),
-      redisService.del(redisKeyMake(passwordPatchCode)),
-    ]);
-  });
-
   it('[404] 존재하지 않는 비밀번호 세션 ID를 통해 비밀번호 변경 요청을 할 경우 비밀번호 변경을 실패한다.', async () => {
     // given
     const requestDto = new ResetPasswordRequestDto({

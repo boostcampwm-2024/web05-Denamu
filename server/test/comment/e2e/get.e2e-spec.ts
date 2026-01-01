@@ -50,15 +50,6 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
     );
   });
 
-  afterEach(async () => {
-    await commentRepository.delete(comment.id);
-    await Promise.all([
-      userRepository.delete(user.id),
-      feedRepository.delete(feed.id),
-    ]);
-    await rssAcceptRepository.delete(rssAccept.id);
-  });
-
   it('[404] 게시글이 존재하지 않을 경우 댓글 조회를 실패한다.', async () => {
     // Http when
     const response = await agent.get(`${URL}/${Number.MAX_SAFE_INTEGER}`);

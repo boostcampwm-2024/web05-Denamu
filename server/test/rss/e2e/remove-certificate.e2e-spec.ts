@@ -18,7 +18,6 @@ import { LikeRepository } from '../../../src/like/repository/like.repository';
 import { Rss, RssAccept } from '../../../src/rss/entity/rss.entity';
 import { Feed } from '../../../src/feed/entity/feed.entity';
 import { User } from '../../../src/user/entity/user.entity';
-import { Comment } from '../../../src/comment/entity/comment.entity';
 import { RssAcceptFixture } from '../../config/common/fixture/rss-accept.fixture';
 import { testApp } from '../../config/e2e/env/jest.setup';
 
@@ -36,7 +35,6 @@ describe(`DELETE ${URL}/{code} E2E Test`, () => {
   let rssAccept: RssAccept;
   let feed: Feed;
   let user: User;
-  let comment: Comment;
   let rss: Rss;
   const redisKeyMake = (data: string) => `${REDIS_KEYS.RSS_REMOVE_KEY}:${data}`;
   const rssDeleteCode = 'rss-remove-certificate';
@@ -61,22 +59,9 @@ describe(`DELETE ${URL}/{code} E2E Test`, () => {
       userRepository.save(await UserFixture.createUserCryptFixture()),
       feedRepository.save(FeedFixture.createFeedFixture(rssAccept)),
     ]);
-    comment = await commentRepository.save(
+    await commentRepository.insert(
       CommentFixture.createCommentFixture(feed, user),
     );
-  });
-
-  afterEach(async () => {
-    await commentRepository.delete(comment.id);
-    await Promise.all([
-      feedRepository.delete(feed.id),
-      userRepository.delete(user.id),
-    ]);
-    await Promise.all([
-      rssAcceptRepository.delete(rssAccept.id),
-      rssRepository.delete(rss.id),
-      redisService.del(redisKeyMake(rssDeleteCode)),
-    ]);
   });
 
   it('[404] RSS 삭제 요청이 만료되었거나 없을 경우 RSS 삭제 인증을 실패한다.', async () => {

@@ -26,10 +26,6 @@ describe(`GET ${URL} E2E Test`, () => {
     await redisService.set(redisKeyMake(sessionKey), 'test1234');
   });
 
-  afterEach(async () => {
-    await redisService.del(redisKeyMake(sessionKey));
-  });
-
   it('[401] 관리자 로그인 쿠키가 없을 경우 RSS 조회를 실패한다.', async () => {
     // Http when
     const response = await agent.get(URL);
@@ -85,8 +81,5 @@ describe(`GET ${URL} E2E Test`, () => {
         rssUrl: rss.rssUrl,
       },
     ]);
-
-    // cleanup
-    await rssRepository.delete(rss.id);
   });
 });
