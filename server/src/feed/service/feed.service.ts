@@ -143,9 +143,11 @@ export class FeedService {
     const ip = this.getIp(request);
     const feedId = viewUpdateParamDto.feedId;
     if (ip && this.isString(ip)) {
-      const [, hasCookie, hasIpFlag] = await Promise.all([
+      const hasCookie = Boolean(
+        cookie?.includes(`View_count_${feedId}=${feedId}`),
+      );
+      const [, hasIpFlag] = await Promise.all([
         this.getFeed(feedId),
-        Boolean(cookie?.includes(`View_count_${feedId}=${feedId}`)),
         this.redisService.sismember(`feed:${feedId}:ip`, ip),
       ]);
 
@@ -242,7 +244,7 @@ export class FeedService {
     const feed = await this.getFeed(feedDeleteCheckDto.feedId);
     const response = await fetch(feed.path);
 
-    if (response.status === HttpStatus.NOT_FOUND) {
+    if (response.status === (HttpStatus.NOT_FOUND as number)) {
       await this.feedRepository.delete({ id: feedDeleteCheckDto.feedId });
       throw new NotFoundException('원본 게시글이 삭제되었습니다.');
     }

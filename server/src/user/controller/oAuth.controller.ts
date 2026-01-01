@@ -23,10 +23,7 @@ export class OAuthController {
   @Get()
   @ApiOAuth()
   @HttpCode(HttpStatus.FOUND)
-  async getProvider(
-    @Query() provider: OAuthTypeRequestDto,
-    @Res() res: Response,
-  ) {
+  getProvider(@Query() provider: OAuthTypeRequestDto, @Res() res: Response) {
     return res.redirect(this.oauthService.getAuthUrl(provider.type));
   }
 

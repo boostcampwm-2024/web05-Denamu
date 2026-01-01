@@ -19,7 +19,7 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
   const redisKeyMake = (data: string) => `${REDIS_KEYS.ADMIN_AUTH_KEY}:${data}`;
   const sessionKey = 'admin-rss-reject';
 
-  beforeAll(async () => {
+  beforeAll(() => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
     rssRepository = app.get(RssRepository);

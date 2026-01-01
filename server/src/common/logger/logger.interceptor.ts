@@ -13,7 +13,7 @@ export class LoggingInterceptor implements NestInterceptor {
   constructor(private readonly logger: WinstonLoggerService) {}
   intercept(context: ExecutionContext, next: CallHandler<any>) {
     const startTime = Date.now();
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<Request>();
     const url = request.url;
 
     const excludedKeywords = ['register', 'login', 'signup', 'metrics'];
