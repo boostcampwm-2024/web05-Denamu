@@ -1,8 +1,5 @@
 import { HttpStatus } from '@nestjs/common';
-import {
-  RssAcceptRepository,
-  RssRepository,
-} from '../../../src/rss/repository/rss.repository';
+import { RssRepository } from '../../../src/rss/repository/rss.repository';
 import { RssFixture } from '../../config/common/fixture/rss.fixture';
 import * as supertest from 'supertest';
 import { DeleteRssRequestDto } from '../../../src/rss/dto/request/deleteRss.dto';
@@ -18,7 +15,6 @@ const URL = '/api/rss/remove';
 describe(`POST ${URL} E2E Test`, () => {
   let agent: TestAgent;
   let rssRepository: RssRepository;
-  let rssAcceptRepository: RssAcceptRepository;
   let redisService: RedisService;
   let rss: Rss;
   const rssDeleteCode = 'rss-remove-request';
@@ -27,20 +23,12 @@ describe(`POST ${URL} E2E Test`, () => {
   beforeAll(() => {
     agent = supertest(testApp.getHttpServer());
     rssRepository = testApp.get(RssRepository);
-    rssAcceptRepository = testApp.get(RssAcceptRepository);
     redisService = testApp.get(RedisService);
   });
 
   beforeEach(async () => {
     jest.spyOn(uuid, 'v4').mockReturnValue(rssDeleteCode as any);
     rss = await rssRepository.save(RssFixture.createRssFixture());
-  });
-
-  afterEach(async () => {
-    await Promise.all([
-      rssRepository.delete(rss.id),
-      redisService.del(redisKeyMake(rssDeleteCode)),
-    ]);
   });
 
   it('[404] RSS가 없을 경우 RSS 삭제 신청을 실패한다.', async () => {

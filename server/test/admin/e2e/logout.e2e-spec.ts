@@ -23,10 +23,6 @@ describe(`POST ${URL} E2E Test`, () => {
     await redisService.set(redisKeyMake(sessionKey), sessionId);
   });
 
-  afterEach(async () => {
-    await redisService.del(redisKeyMake(sessionKey));
-  });
-
   it('[401] 관리자 로그인 쿠키가 없을 경우 로그아웃을 실패한다.', async () => {
     // Http when
     const response = await agent.post(URL);

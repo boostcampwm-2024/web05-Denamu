@@ -54,9 +54,6 @@ describe(`POST ${URL} E2E Test`, () => {
     // DB, Redis then
     expect(savedRss.length).toBe(1);
     expect(savedRssAccept.length).toBe(0);
-
-    // cleanup
-    await rssRepository.delete(rss.id);
   });
 
   it('[409] 이미 등록 완료된 RSS를 다시 신청할 경우 RSS 등록 요청을 실패한다.', async () => {
@@ -92,9 +89,6 @@ describe(`POST ${URL} E2E Test`, () => {
     // DB, Redis then
     expect(savedRss.length).toBe(0);
     expect(savedRssAccept.length).toBe(1);
-
-    // cleanup
-    await rssAcceptRepository.delete(acceptedRss.id);
   });
 
   it('[201] 등록되지 않은 RSS 등록 요청을 받았을 경우 RSS 등록 요청을 성공한다.', async () => {
@@ -124,8 +118,5 @@ describe(`POST ${URL} E2E Test`, () => {
 
     // DB, Redis then
     expect(savedRss).not.toBeNull();
-
-    // cleanup
-    await rssRepository.delete(savedRss.id);
   });
 });

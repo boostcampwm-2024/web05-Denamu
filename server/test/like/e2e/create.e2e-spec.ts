@@ -47,14 +47,6 @@ describe(`POST ${URL} E2E Test`, () => {
     accessToken = createAccessToken(user);
   });
 
-  afterEach(async () => {
-    await Promise.all([
-      feedRepository.delete(feed.id),
-      userRepository.delete(user.id),
-    ]);
-    await rssAcceptRepository.delete(rssAccept.id);
-  });
-
   it('[401] 로그인이 되어 있지 않을 경우 좋아요 등록을 실패한다.', async () => {
     // given
     const requestDto = new ManageLikeRequestDto({
@@ -108,7 +100,7 @@ describe(`POST ${URL} E2E Test`, () => {
 
   it('[409] 이미 좋아요를 한 게시글일 경우 좋아요 등록을 실패한다.', async () => {
     // given
-    const like = await likeRepository.save({
+    await likeRepository.insert({
       user,
       feed,
     });
@@ -135,9 +127,6 @@ describe(`POST ${URL} E2E Test`, () => {
 
     // DB, Redis then
     expect(savedLike.length).toBe(1);
-
-    // cleanup
-    await likeRepository.delete(like.id);
   });
 
   it('[201] 로그인이 되어 있으며 좋아요를 한 적이 없을 경우 좋아요 등록을 성공한다.', async () => {
@@ -165,8 +154,5 @@ describe(`POST ${URL} E2E Test`, () => {
 
     // DB, Redis then
     expect(savedLike).not.toBeNull();
-
-    // cleanup
-    await likeRepository.delete(savedLike.id);
   });
 });

@@ -47,14 +47,6 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
     accessToken = createAccessToken(user);
   });
 
-  afterEach(async () => {
-    await Promise.all([
-      feedRepository.delete(feed.id),
-      userRepository.delete(user.id),
-    ]);
-    await rssAcceptRepository.delete(rssAccept.id);
-  });
-
   it('[401] 로그인이 되어 있지 않을 경우 좋아요 삭제를 실패한다.', async () => {
     // given
     const requestDto = new ManageLikeRequestDto({

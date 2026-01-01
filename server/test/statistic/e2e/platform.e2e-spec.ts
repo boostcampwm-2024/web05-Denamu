@@ -3,7 +3,6 @@ import * as supertest from 'supertest';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
 import { RssAcceptFixture } from '../../config/common/fixture/rss-accept.fixture';
 import TestAgent from 'supertest/lib/agent';
-import { RssAccept } from '../../../src/rss/entity/rss.entity';
 import { testApp } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/statistic/platform';
@@ -11,7 +10,6 @@ const URL = '/api/statistic/platform';
 describe(`GET ${URL} E2E Test`, () => {
   let agent: TestAgent;
   let rssAcceptRepository: RssAcceptRepository;
-  let rssAcceptList: RssAccept[];
 
   beforeAll(async () => {
     agent = supertest(testApp.getHttpServer());
@@ -19,19 +17,13 @@ describe(`GET ${URL} E2E Test`, () => {
   });
 
   beforeEach(async () => {
-    rssAcceptList = await Promise.all([
-      rssAcceptRepository.save(RssAcceptFixture.createRssAcceptFixture()),
-      rssAcceptRepository.save(RssAcceptFixture.createRssAcceptFixture()),
-      rssAcceptRepository.save(
+    await Promise.all([
+      rssAcceptRepository.insert(RssAcceptFixture.createRssAcceptFixture()),
+      rssAcceptRepository.insert(RssAcceptFixture.createRssAcceptFixture()),
+      rssAcceptRepository.insert(
         RssAcceptFixture.createRssAcceptFixture({ blogPlatform: 'velog' }),
       ),
     ]);
-  });
-
-  afterEach(async () => {
-    await rssAcceptRepository.delete(
-      rssAcceptList.map((rssAccept) => rssAccept.id),
-    );
   });
 
   it('[200] 블로그 플랫폼별 통계 요청을 받은 경우 블로그 플랫폼별 개수 통계 조회를 성공한다.', async () => {

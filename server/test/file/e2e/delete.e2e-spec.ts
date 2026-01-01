@@ -34,11 +34,6 @@ describe(`DELETE ${URL}/{fileId} E2E Test`, () => {
     accessToken = createAccessToken(user);
   });
 
-  afterEach(async () => {
-    await fileRepository.delete(file.id);
-    await userRepository.delete(user.id);
-  });
-
   it('[401] 파일에 삭제 권한이 없을 경우 파일 삭제를 실패한다.', async () => {
     // Http when
     const response = await agent.delete(`${URL}/${Number.MAX_SAFE_INTEGER}`);

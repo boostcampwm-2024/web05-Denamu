@@ -37,11 +37,6 @@ describe(`GET ${URL}?limit={}&lastId={} E2E Test`, () => {
     feedList = (await feedRepository.save(feeds)).reverse();
   });
 
-  afterEach(async () => {
-    await feedRepository.delete(feedList.map((feed) => feed.id));
-    await rssAcceptRepository.delete(rssAccept.id);
-  });
-
   it('[200] 마지막 수신 피드 ID가 없을 경우 최신 피드부터 피드 목록 제공을 성공한다.', async () => {
     // given
     const requestDto = new ReadFeedPaginationRequestDto({

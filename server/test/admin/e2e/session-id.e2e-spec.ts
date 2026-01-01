@@ -22,10 +22,6 @@ describe(`GET ${URL} E2E Test`, () => {
     await redisService.set(redisKeyMake(sessionKey), 'testAdminId');
   });
 
-  afterEach(async () => {
-    await redisService.del(redisKeyMake(sessionKey));
-  });
-
   it('[401] 관리자 로그인 쿠키가 없을 경우 관리자 자동 로그인을 실패한다.', async () => {
     // Http when
     const response = await agent.get(URL);

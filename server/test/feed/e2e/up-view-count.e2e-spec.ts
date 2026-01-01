@@ -1,5 +1,4 @@
 import * as supertest from 'supertest';
-import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 import { HttpStatus } from '@nestjs/common';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
@@ -36,14 +35,6 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
     );
     feed = await feedRepository.save(FeedFixture.createFeedFixture(rssAccept));
     await redisService.sadd(redisKeyMake(feed.id.toString()), testIp);
-  });
-
-  afterEach(async () => {
-    await feedRepository.delete(feed.id);
-    await Promise.all([
-      rssAcceptRepository.delete(rssAccept.id),
-      redisService.del(redisKeyMake(feed.id.toString())),
-    ]);
   });
 
   it('[404] 피드가 서비스에 존재하지 않을 경우 조회수 상승을 실패한다.', async () => {
@@ -109,12 +100,6 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
     // DB, Redis then
     expect(savedFeed.viewCount).toBe(feed.viewCount);
     expect(savedFeedReadRedis).not.toBeNull();
-
-    // cleanup
-    await Promise.all([
-      redisService.zrem(REDIS_KEYS.FEED_TREND_KEY, feed.id.toString()),
-      redisService.srem(redisKeyMake(feed.id.toString()), testIp),
-    ]);
   });
 
   it('[200] 피드를 읽은 기록이 없을 경우 조회수 상승을 성공한다.', async () => {
@@ -145,12 +130,5 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
     // DB, Redis then
     expect(savedFeed.viewCount).toBe(feed.viewCount + 1);
     expect(savedFeedReadRedis).not.toBeNull();
-
-    // cleanup
-    await Promise.all([
-      redisService.zrem(REDIS_KEYS.FEED_TREND_KEY, feed.id.toString()),
-      redisService.srem(redisKeyMake(feed.id.toString()), testNewIp),
-      feedRepository.update(feed.id, { viewCount: feed.viewCount }),
-    ]);
   });
 });

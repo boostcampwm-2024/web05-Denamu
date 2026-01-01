@@ -39,11 +39,6 @@ describe(`GET ${URL}?type={}&find={} E2E Test`, () => {
     feedList = await feedRepository.save(feeds);
   });
 
-  afterEach(async () => {
-    await feedRepository.delete(feedList.map((feed) => feed.id));
-    await rssAcceptRepository.delete(rssAccept.id);
-  });
-
   it('[200] 검색 결과에 적합한 게시글이 존재할 경우 검색 결과 제공을 성공한다.', async () => {
     // given
     const requestDto = new SearchFeedRequestDto({

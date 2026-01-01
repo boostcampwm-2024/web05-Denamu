@@ -53,15 +53,6 @@ describe(`PATCH ${URL} E2E Test`, () => {
     accessToken = createAccessToken(user);
   });
 
-  afterEach(async () => {
-    await commentRepository.delete(comment.id);
-    await Promise.all([
-      userRepository.delete(user.id),
-      feedRepository.delete(feed.id),
-    ]);
-    await rssAcceptRepository.delete(rssAccept.id);
-  });
-
   it('[401] 로그인이 되어있지 않을 경우 댓글 수정을 실패한다.', async () => {
     // given
     const requestDto = new UpdateCommentRequestDto({
