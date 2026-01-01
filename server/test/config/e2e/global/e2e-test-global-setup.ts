@@ -11,7 +11,9 @@ import * as os from 'os';
 const CPU_COUNT = os.cpus().length;
 const MAX_WORKERS = Math.max(1, Math.floor(CPU_COUNT * 0.5));
 
-const globalAny: any = global;
+export let mysqlContainer: StartedMySqlContainer;
+export let redisContainer: StartedRedisContainer;
+export let rabbitMQContainer: StartedRabbitMQContainer;
 
 export default async () => {
   console.log('Starting global setup...');
@@ -32,10 +34,7 @@ export default async () => {
 
 const createMysqlContainer = async () => {
   console.log('Starting MySQL container...');
-  const mysqlContainer: StartedMySqlContainer = await new MySqlContainer(
-    'mysql:8.0.39',
-  ).start();
-  globalAny.__MYSQL_CONTAINER__ = mysqlContainer;
+  mysqlContainer = await new MySqlContainer('mysql:8.0.39').start();
 
   process.env.DB_TYPE = 'mysql';
   process.env.DB_HOST = mysqlContainer.getHost();
@@ -72,10 +71,7 @@ const createTestDatabases = async (container: StartedMySqlContainer) => {
 
 const createRedisContainer = async () => {
   console.log('Starting Redis container...');
-  const redisContainer: StartedRedisContainer = await new RedisContainer(
-    'redis:6.0.16-alpine',
-  ).start();
-  globalAny.__REDIS_CONTAINER__ = redisContainer;
+  redisContainer = await new RedisContainer('redis:6.0.16-alpine').start();
 
   process.env.REDIS_HOST = redisContainer.getHost();
   process.env.REDIS_PORT = redisContainer.getPort().toString();
@@ -85,16 +81,14 @@ const createRedisContainer = async () => {
 
 const createRabbitMQContainer = async () => {
   console.log('Starting RabbitMQ container...');
-  const rabbitMQContainer: StartedRabbitMQContainer =
-    await new RabbitMQContainer('rabbitmq:4.1-management')
-      .withCopyFilesToContainer([
-        {
-          source: `${path.resolve(__dirname, 'rabbitMQ-definitions.json')}`,
-          target: '/etc/rabbitmq/definitions.json',
-        },
-      ])
-      .start();
-  globalAny.__RABBITMQ_CONTAINER__ = rabbitMQContainer;
+  rabbitMQContainer = await new RabbitMQContainer('rabbitmq:4.1-management')
+    .withCopyFilesToContainer([
+      {
+        source: `${path.resolve(__dirname, 'rabbitMQ-definitions.json')}`,
+        target: '/etc/rabbitmq/definitions.json',
+      },
+    ])
+    .start();
 
   process.env.RABBITMQ_HOST = rabbitMQContainer.getHost();
   process.env.RABBITMQ_PORT = rabbitMQContainer.getMappedPort(5672).toString();
