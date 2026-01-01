@@ -47,9 +47,9 @@ describe('Socket.IO Anonymous Chat E2E Test', () => {
         try {
           clientSocket.close();
           resolve(message);
-        } catch (error) {
+        } catch {
           clientSocket.close();
-          reject(error);
+          reject(new Error(`Socket.IO 채팅 오류: ${JSON.stringify(message)}`));
         }
       });
     });
@@ -81,9 +81,11 @@ describe('Socket.IO Anonymous Chat E2E Test', () => {
         try {
           clientSocket.close();
           resolve(chatHistory);
-        } catch (error) {
+        } catch {
           clientSocket.close();
-          reject(error);
+          reject(
+            new Error(`Socket.IO 채팅 오류: ${JSON.stringify(chatHistory)}`),
+          );
         }
       });
     });
@@ -106,9 +108,9 @@ describe('Socket.IO Anonymous Chat E2E Test', () => {
         try {
           clientSocket.close();
           resolve(data);
-        } catch (error) {
+        } catch {
           clientSocket.close();
-          reject(error);
+          reject(new Error(`Socket.IO 채팅 오류: ${JSON.stringify(data)}`));
         }
       });
     });
@@ -137,9 +139,9 @@ describe('Socket.IO Anonymous Chat E2E Test', () => {
         try {
           clientSocket.close();
           resolve(message);
-        } catch (error) {
+        } catch {
           clientSocket.close();
-          reject(error);
+          reject(new Error(`Socket.IO 채팅 오류: ${JSON.stringify(message)}`));
         }
       });
     });

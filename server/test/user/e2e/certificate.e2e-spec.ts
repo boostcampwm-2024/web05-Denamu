@@ -18,7 +18,7 @@ describe(`POST ${URL} E2E Test`, () => {
   const userRegisterCode = 'user-register-certificate';
   const redisKeyMake = (data: string) => `${REDIS_KEYS.USER_AUTH_KEY}:${data}`;
 
-  beforeAll(async () => {
+  beforeAll(() => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
     redisService = app.get(RedisService);

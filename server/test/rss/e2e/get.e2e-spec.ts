@@ -1,10 +1,7 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as supertest from 'supertest';
 import { RssFixture } from '../../config/common/fixture/rss.fixture';
-import {
-  RssAcceptRepository,
-  RssRepository,
-} from '../../../src/rss/repository/rss.repository';
+import { RssRepository } from '../../../src/rss/repository/rss.repository';
 import TestAgent from 'supertest/lib/agent';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
@@ -15,7 +12,6 @@ describe(`GET ${URL} E2E Test`, () => {
   let app: INestApplication;
   let agent: TestAgent;
   let rssRepository: RssRepository;
-  let rssAcceptRepository: RssAcceptRepository;
   let redisService: RedisService;
   const redisKeyMake = (data: string) => `${REDIS_KEYS.ADMIN_AUTH_KEY}:${data}`;
   const sessionKey = 'admin-rss-get';
@@ -24,7 +20,6 @@ describe(`GET ${URL} E2E Test`, () => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
     rssRepository = app.get(RssRepository);
-    rssAcceptRepository = app.get(RssAcceptRepository);
     redisService = app.get(RedisService);
   });
 

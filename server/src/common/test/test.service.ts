@@ -14,11 +14,13 @@ export class TestService {
       const entities = this.dataSource.entityMetadatas;
       await queryRunner.query('SET FOREIGN_KEY_CHECKS = 0;');
 
-      entities
-        .filter((entity) => !entity.tableName.endsWith('_view'))
-        .map(async (entity) => {
-          await queryRunner.query(`TRUNCATE TABLE ${entity.tableName};`);
-        });
+      await Promise.all(
+        entities
+          .filter((entity) => !entity.tableName.endsWith('_view'))
+          .map((entity) =>
+            queryRunner.query(`TRUNCATE TABLE ${entity.tableName};`),
+          ),
+      );
 
       await queryRunner.query('SET FOREIGN_KEY_CHECKS = 1;');
 

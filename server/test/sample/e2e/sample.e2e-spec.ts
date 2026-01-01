@@ -42,7 +42,7 @@ describe(`GET ${URL} E2E Test`, () => {
   /*
    * NestJS APP은 global.testApp으로 공유합니다.
    */
-  beforeAll(async () => {
+  beforeAll(() => {
     app = global.testApp;
     agent = supertest(app.getHttpServer());
   });

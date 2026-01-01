@@ -47,6 +47,6 @@ export class ReadRssResponseDto {
   }
 
   static toResponseDtoArray(rssList: Rss[]) {
-    return rssList.map(this.toResponseDto);
+    return rssList.map((rss) => this.toResponseDto(rss));
   }
 }

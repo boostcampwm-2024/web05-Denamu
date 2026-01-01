@@ -52,6 +52,6 @@ export class GetCommentResponseDto {
   }
 
   static toResponseDtoArray(comments: Comment[]) {
-    return comments.map(this.toResponseDto);
+    return comments.map((comment) => this.toResponseDto(comment));
   }
 }

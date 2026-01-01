@@ -76,7 +76,6 @@ export class MySQLConnection implements DatabaseConnection {
             오류 메시지: ${error.message}
             스택 트레이스: ${error.stack}`,
           );
-          throw error;
         }
       }
     }

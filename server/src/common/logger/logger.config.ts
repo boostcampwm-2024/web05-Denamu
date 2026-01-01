@@ -4,7 +4,7 @@ import * as DailyRotateFile from 'winston-daily-rotate-file';
 // 로그 출력 포맷 정의 함수
 export const logFormat = winston.format.printf(
   ({ level, message, timestamp }) => {
-    return `${timestamp} ${level}: ${message}`;
+    return `${timestamp as string} ${level}: ${message as string}`;
   },
 );
 
