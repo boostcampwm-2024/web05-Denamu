@@ -83,7 +83,7 @@ jobs:
             echo "REDIS_HOST=${{ secrets.REDIS_HOST }}"
             echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}"
             echo "REDIS_PORT=${{ secrets.REDIS_PORT }}"
-            echo "REDIS_USER=${{ secrets.REDIS_USERNAME }}"
+            echo "REDIS_USER=${{ secrets.REDIS_USER }}"
             echo "TIME_INTERVAL=${{ vars.FEED_CRAWLER_TIME_INTERVAL }}"
             echo "AI_RATE_LIMIT_COUNT=${{ vars.AI_RATE_LIMIT_COUNT }}"
             } | sudo tee "$ENV_FILE" >/dev/null

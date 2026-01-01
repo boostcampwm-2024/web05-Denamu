@@ -131,7 +131,7 @@ export class UserService {
 
     return this.jwtService.sign(payload, {
       expiresIn: this.configService.get(
-        `${mode === 'access' ? 'ACCESS_TOKEN_EXPIRE' : 'REFRESH_TOKEN_EXPIRE'}`,
+        `${mode === 'access' ? 'JWT_ACCESS_TOKEN_EXPIRE' : 'JWT_REFRESH_TOKEN_EXPIRE'}`,
       ),
       secret: this.configService.get('JWT_ACCESS_SECRET'),
     });
@@ -275,13 +275,17 @@ export class UserService {
     }
 
     if (accessToken) {
-      const accessTokenExpire = this.configService.get('ACCESS_TOKEN_EXPIRE');
+      const accessTokenExpire = this.configService.get(
+        'JWT_ACCESS_TOKEN_EXPIRE',
+      );
       const ttlInSeconds = this.parseTimeToSeconds(accessTokenExpire);
       await this.addToJwtBlacklist(accessToken, ttlInSeconds);
     }
 
     if (refreshToken) {
-      const refreshTokenExpire = this.configService.get('REFRESH_TOKEN_EXPIRE');
+      const refreshTokenExpire = this.configService.get(
+        'JWT_REFRESH_TOKEN_EXPIRE',
+      );
       const ttlInSeconds = this.parseTimeToSeconds(refreshTokenExpire);
       await this.addToJwtBlacklist(refreshToken, ttlInSeconds);
     }
@@ -296,7 +300,7 @@ export class UserService {
     const match = time.match(regex);
 
     if (!match) {
-      const defaultExpire = this.configService.get('ACCESS_TOKEN_EXPIRE');
+      const defaultExpire = this.configService.get('JWT_ACCESS_TOKEN_EXPIRE');
       if (defaultExpire && defaultExpire !== time) {
         return this.parseTimeToSeconds(defaultExpire);
       }

@@ -14,7 +14,7 @@ import Redis from 'ioredis';
         return new Redis({
           host: configService.get<string>('REDIS_HOST'),
           port: configService.get<number>('REDIS_PORT'),
-          username: configService.get<string>('REDIS_USERNAME'),
+          username: configService.get<string>('REDIS_USER'),
           password: configService.get<string>('REDIS_PASSWORD'),
         });
       },
