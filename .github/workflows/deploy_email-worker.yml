@@ -98,7 +98,7 @@ jobs:
 
       - name: Docker 이미지 Pull
         run: |
-          docker pull "${{ env.EMAIL_WORKER_IMAGE }}:latest" || true
+          docker pull "$EMAIL_WORKER_IMAGE:latest" || true
           docker compose -f "$COMPOSE_FILE" pull "$SERVICE"
 
       - name: Graceful Shutdown & 서비스 재시작
