@@ -9,6 +9,7 @@ on:
   workflow_dispatch:
 
 env:
+  GHCR_URL: ${{ vars.GHCR }}
   COMPOSE_FILE: docker-compose/docker-compose.prod.yml
 
 jobs:
