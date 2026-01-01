@@ -60,7 +60,7 @@ services:
 
   # RabbitMQ 서비스
   rabbitmq:
-    image: rabbitmq:4.1-management
+    image: rabbitmq:4.1-alpine
     user: '999:999'
     networks:
       - Denamu
@@ -128,9 +128,9 @@ services:
       - '--path.sysfs=/host/sys'
       - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
     environment:
-      TZ:
-        'Asia/Seoul'
-        # MySQL Metrics
+      TZ: 'Asia/Seoul'
+
+  # MySQL Metrics
   mysql_metrics:
     image: prom/mysqld-exporter
     ports:
@@ -147,7 +147,7 @@ services:
     depends_on:
       - mysql-db
 
-        # Redis Metrics
+  # Redis Metrics
   redis_metrics:
     image: oliver006/redis_exporter
     ports:
@@ -164,7 +164,7 @@ services:
     depends_on:
       - redis
 
-        # RabbitMQ Metrics
+  # RabbitMQ Metrics
   rabbitmq_metrics:
     image: 'kbudde/rabbitmq-exporter'
     env_file:
