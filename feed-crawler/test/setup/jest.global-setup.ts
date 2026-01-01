@@ -19,7 +19,7 @@ const createMysqlContainer = async () => {
   process.env.DB_HOST = mysqlContainer.getHost();
   process.env.DB_PORT = mysqlContainer.getPort().toString();
   process.env.DB_USER = mysqlContainer.getUsername();
-  process.env.DB_PASS = mysqlContainer.getUserPassword();
+  process.env.DB_PASSWORD = mysqlContainer.getUserPassword();
   process.env.DB_NAME = mysqlContainer.getDatabase();
 };
 
