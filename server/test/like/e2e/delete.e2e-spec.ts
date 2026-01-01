@@ -1,4 +1,4 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
@@ -13,11 +13,11 @@ import * as supertest from 'supertest';
 import { LikeRepository } from '../../../src/like/repository/like.repository';
 import TestAgent from 'supertest/lib/agent';
 import { createAccessToken } from '../../config/e2e/env/jest.setup';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/like';
 
 describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
-  let app: INestApplication;
   let rssAccept: RssAccept;
   let user: User;
   let feed: Feed;
@@ -29,12 +29,11 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
   let accessToken: string;
 
   beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    likeRepository = app.get(LikeRepository);
-    userRepository = app.get(UserRepository);
-    rssAcceptRepository = app.get(RssAcceptRepository);
-    feedRepository = app.get(FeedRepository);
+    agent = supertest(testApp.getHttpServer());
+    likeRepository = testApp.get(LikeRepository);
+    userRepository = testApp.get(UserRepository);
+    rssAcceptRepository = testApp.get(RssAcceptRepository);
+    feedRepository = testApp.get(FeedRepository);
   });
 
   beforeEach(async () => {

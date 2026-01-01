@@ -1,4 +1,4 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import { RegisterAdminRequestDto } from '../../../src/admin/dto/request/registerAdmin.dto';
 import * as supertest from 'supertest';
 import { AdminFixture } from '../../config/common/fixture/admin.fixture';
@@ -7,11 +7,11 @@ import TestAgent from 'supertest/lib/agent';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 import * as bcrypt from 'bcrypt';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/admin/register';
 
 describe(`POST ${URL} E2E Test`, () => {
-  let app: INestApplication;
   let agent: TestAgent;
   let adminRepository: AdminRepository;
   let redisService: RedisService;
@@ -19,10 +19,9 @@ describe(`POST ${URL} E2E Test`, () => {
   const redisKeyMake = (data: string) => `${REDIS_KEYS.ADMIN_AUTH_KEY}:${data}`;
 
   beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    adminRepository = app.get(AdminRepository);
-    redisService = app.get(RedisService);
+    agent = supertest(testApp.getHttpServer());
+    adminRepository = testApp.get(AdminRepository);
+    redisService = testApp.get(RedisService);
   });
 
   beforeEach(async () => {

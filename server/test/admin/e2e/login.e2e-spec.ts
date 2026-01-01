@@ -2,7 +2,7 @@ import {
   ADMIN_DEFAULT_PASSWORD,
   AdminFixture,
 } from './../../config/common/fixture/admin.fixture';
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import { LoginAdminRequestDto } from '../../../src/admin/dto/request/loginAdmin.dto';
 import * as supertest from 'supertest';
 import { AdminRepository } from '../../../src/admin/repository/admin.repository';
@@ -11,11 +11,11 @@ import { RedisService } from '../../../src/common/redis/redis.service';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 import * as uuid from 'uuid';
 import { Admin } from '../../../src/admin/entity/admin.entity';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/admin/login';
 
 describe(`POST ${URL} E2E Test`, () => {
-  let app: INestApplication;
   let agent: TestAgent;
   let redisService: RedisService;
   let admin: Admin;
@@ -24,10 +24,9 @@ describe(`POST ${URL} E2E Test`, () => {
   const sessionKey = 'admin-login-sessionKey';
 
   beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    redisService = app.get(RedisService);
-    adminRepository = app.get(AdminRepository);
+    agent = supertest(testApp.getHttpServer());
+    redisService = testApp.get(RedisService);
+    adminRepository = testApp.get(AdminRepository);
   });
 
   beforeEach(async () => {

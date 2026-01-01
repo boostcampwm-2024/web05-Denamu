@@ -1,5 +1,5 @@
 import { RssAccept } from './../../../src/rss/entity/rss.entity';
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import * as supertest from 'supertest';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
@@ -10,11 +10,11 @@ import { FeedFixture } from '../../config/common/fixture/feed.fixture';
 import TestAgent from 'supertest/lib/agent';
 import { Feed } from '../../../src/feed/entity/feed.entity';
 import { ReadStatisticRequestDto } from '../../../src/statistic/dto/request/readStatistic.dto';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/statistic/today';
 
 describe(`GET ${URL}?limit={} E2E Test`, () => {
-  let app: INestApplication;
   let agent: TestAgent;
   let redisService: RedisService;
   let feedList: Feed[];
@@ -23,11 +23,10 @@ describe(`GET ${URL}?limit={} E2E Test`, () => {
   let rssAccept: RssAccept;
 
   beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    feedRepository = app.get(FeedRepository);
-    rssAcceptRepository = app.get(RssAcceptRepository);
-    redisService = app.get(RedisService);
+    agent = supertest(testApp.getHttpServer());
+    feedRepository = testApp.get(FeedRepository);
+    rssAcceptRepository = testApp.get(RssAcceptRepository);
+    redisService = testApp.get(RedisService);
   });
 
   beforeEach(async () => {

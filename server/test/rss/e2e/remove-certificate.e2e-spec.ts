@@ -3,7 +3,7 @@ import { CommentFixture } from '../../config/common/fixture/comment.fixture';
 import { FeedFixture } from '../../config/common/fixture/feed.fixture';
 import { REDIS_KEYS } from './../../../src/common/redis/redis.constant';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import {
   RssAcceptRepository,
   RssRepository,
@@ -20,11 +20,11 @@ import { Feed } from '../../../src/feed/entity/feed.entity';
 import { User } from '../../../src/user/entity/user.entity';
 import { Comment } from '../../../src/comment/entity/comment.entity';
 import { RssAcceptFixture } from '../../config/common/fixture/rss-accept.fixture';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/rss/remove';
 
 describe(`DELETE ${URL}/{code} E2E Test`, () => {
-  let app: INestApplication;
   let agent: TestAgent;
   let feedRepository: FeedRepository;
   let rssAcceptRepository: RssAcceptRepository;
@@ -42,15 +42,14 @@ describe(`DELETE ${URL}/{code} E2E Test`, () => {
   const rssDeleteCode = 'rss-remove-certificate';
 
   beforeAll(() => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    rssAcceptRepository = app.get(RssAcceptRepository);
-    rssRepository = app.get(RssRepository);
-    redisService = app.get(RedisService);
-    feedRepository = app.get(FeedRepository);
-    commentRepository = app.get(CommentRepository);
-    userRepository = app.get(UserRepository);
-    likeRepository = app.get(LikeRepository);
+    agent = supertest(testApp.getHttpServer());
+    rssAcceptRepository = testApp.get(RssAcceptRepository);
+    rssRepository = testApp.get(RssRepository);
+    redisService = testApp.get(RedisService);
+    feedRepository = testApp.get(FeedRepository);
+    commentRepository = testApp.get(CommentRepository);
+    userRepository = testApp.get(UserRepository);
+    likeRepository = testApp.get(LikeRepository);
   });
 
   beforeEach(async () => {

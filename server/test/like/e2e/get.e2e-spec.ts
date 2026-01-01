@@ -1,4 +1,4 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
@@ -13,11 +13,11 @@ import { createAccessToken } from '../../config/e2e/env/jest.setup';
 import { User } from '../../../src/user/entity/user.entity';
 import { RssAccept } from '../../../src/rss/entity/rss.entity';
 import { Like } from '../../../src/like/entity/like.entity';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/like';
 
 describe(`GET ${URL}/{feedId} E2E Test`, () => {
-  let app: INestApplication;
   let agent: TestAgent;
   let feed: Feed;
   let user: User;
@@ -29,12 +29,11 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
   let like: Like;
 
   beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    userRepository = app.get(UserRepository);
-    rssAcceptRepository = app.get(RssAcceptRepository);
-    feedRepository = app.get(FeedRepository);
-    likeRepository = app.get(LikeRepository);
+    agent = supertest(testApp.getHttpServer());
+    userRepository = testApp.get(UserRepository);
+    rssAcceptRepository = testApp.get(RssAcceptRepository);
+    feedRepository = testApp.get(FeedRepository);
+    likeRepository = testApp.get(LikeRepository);
   });
 
   beforeEach(async () => {

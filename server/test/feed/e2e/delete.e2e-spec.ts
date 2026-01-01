@@ -1,4 +1,4 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
 import { FeedFixture } from '../../config/common/fixture/feed.fixture';
@@ -7,11 +7,11 @@ import { Feed } from '../../../src/feed/entity/feed.entity';
 import * as supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 import { RssAccept } from '../../../src/rss/entity/rss.entity';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/feed';
 
 describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
-  let app: INestApplication;
   let feed: Feed;
   let feedRepository: FeedRepository;
   let rssAccept: RssAccept;
@@ -19,10 +19,9 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
   let rssAcceptRepository: RssAcceptRepository;
 
   beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    feedRepository = app.get(FeedRepository);
-    rssAcceptRepository = app.get(RssAcceptRepository);
+    agent = supertest(testApp.getHttpServer());
+    feedRepository = testApp.get(FeedRepository);
+    rssAcceptRepository = testApp.get(RssAcceptRepository);
   });
 
   beforeEach(async () => {

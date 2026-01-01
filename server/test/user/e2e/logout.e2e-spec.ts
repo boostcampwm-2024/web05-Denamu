@@ -1,24 +1,23 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import * as supertest from 'supertest';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../config/common/fixture/user.fixture';
 import TestAgent from 'supertest/lib/agent';
 import { User } from '../../../src/user/entity/user.entity';
 import { createAccessToken } from '../../config/e2e/env/jest.setup';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/user/logout';
 
 describe(`POST ${URL} E2E Test`, () => {
-  let app: INestApplication;
   let agent: TestAgent;
   let user: User;
   let userRepository: UserRepository;
   let accessToken: string;
 
   beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    userRepository = app.get(UserRepository);
+    agent = supertest(testApp.getHttpServer());
+    userRepository = testApp.get(UserRepository);
   });
 
   beforeEach(async () => {

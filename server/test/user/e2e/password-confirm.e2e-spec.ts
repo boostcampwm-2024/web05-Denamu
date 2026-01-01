@@ -1,4 +1,4 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import * as supertest from 'supertest';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../config/common/fixture/user.fixture';
@@ -8,11 +8,11 @@ import { ResetPasswordRequestDto } from '../../../src/user/dto/request/resetPass
 import TestAgent from 'supertest/lib/agent';
 import * as bcrypt from 'bcrypt';
 import { User } from '../../../src/user/entity/user.entity';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/user/password';
 
 describe(`PATCH ${URL} E2E Test`, () => {
-  let app: INestApplication;
   let agent: TestAgent;
   let redisService: RedisService;
   let userRepository: UserRepository;
@@ -22,10 +22,9 @@ describe(`PATCH ${URL} E2E Test`, () => {
     `${REDIS_KEYS.USER_RESET_PASSWORD_KEY}:${data}`;
 
   beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    redisService = app.get(RedisService);
-    userRepository = app.get(UserRepository);
+    agent = supertest(testApp.getHttpServer());
+    redisService = testApp.get(RedisService);
+    userRepository = testApp.get(UserRepository);
   });
 
   beforeEach(async () => {
