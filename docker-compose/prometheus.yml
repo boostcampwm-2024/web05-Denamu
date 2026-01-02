@@ -22,4 +22,4 @@ scrape_configs:
 
   - job_name: 'rabbitMQ_exporter'
     static_configs:
-      - targets: ['rabbitmq_metrics:9419']
+      - targets: ['rabbitmq:15692']

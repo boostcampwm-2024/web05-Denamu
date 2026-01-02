@@ -57,6 +57,7 @@ services:
       - Denamu
     ports:
       - '5672:5672'
+      - '15692:15692'
     env_file:
       - /var/prod_config/infra/.env.prod
     volumes:
@@ -143,18 +144,6 @@ services:
       - /var/prod_config/infra/.env.prod
     depends_on:
       - redis
-
-  # RabbitMQ Metrics
-  rabbitmq_metrics:
-    image: 'kbudde/rabbitmq-exporter'
-    env_file:
-      - /var/prod_config/infra/.env.prod
-    ports:
-      - '9419:9419'
-    networks:
-      - Denamu
-    depends_on:
-      - rabbitmq
 
 volumes:
   denamu-mysql:
