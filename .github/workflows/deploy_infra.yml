@@ -10,7 +10,7 @@ on:
 
 env:
   GHCR_URL: ${{ vars.GHCR }}
-  COMPOSE_FILE: docker-compose/docker-compose.prod.infra.yml
+  COMPOSE_FILE: docker-compose/docker-compose.prod.yml
 
 jobs:
   deployment:
