@@ -1,4 +1,4 @@
-name: denamu-production-application
+name: denamu-production
 
 include:
   - docker-compose.prod.infra.yml
