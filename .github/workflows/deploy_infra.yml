@@ -33,10 +33,11 @@ jobs:
           {
             echo "MYSQL_ROOT_HOST=localhost" # MYSQL
             echo "MYSQL_DATABASE=${{ secrets.DB_NAME }}" # MYSQL
-            echo "MYSQL_PASSWORD=${{ secrets.DB_PASSWORD }}" # MYSQL, MYSQL Exporter
-            echo "MYSQL_PORT=${{ secrets.DB_PORT}}" # MYSQL, MYSQL Exporter
+            echo "MYSQL_PASSWORD=${{ secrets.DB_PASSWORD }}" # MYSQL
+            echo "MYSQL_PORT=${{ secrets.DB_PORT}}" # MYSQL
             echo "MYSQL_ROOT_PASSWORD=${{ secrets.DB_ROOT_PASSWORD }}" # MYSQL
-            echo "MYSQL_USER=${{ secrets.DB_USER }}" # MYSQL, MYSQL Exporter
+            echo "MYSQL_USER=${{ secrets.DB_USER }}" # MYSQL
+            echo "DATA_SOURCE_NAME=${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@tcp(${{ secrets.DB_HOST }}:${{ secrets.DB_PORT }})" # MYSQL Exporter
             echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}" # Redis
             echo "REDIS_USER=${{ secrets.REDIS_USER }}" # Redis, Redis Exporter
             echo "REDIS_ADDR=${{ secrets.REDIS_ADDR }}" # Redis Exporter

@@ -129,9 +129,6 @@ services:
       - Denamu
     env_file:
       - /var/prod_config/infra/.env.prod
-    command:
-      - '--mysqld.username=$MYSQL_USER:$MYSQL_PASSWORD'
-      - '--mysqld.address=mysql-db:3306'
     depends_on:
       - mysql-db
 
