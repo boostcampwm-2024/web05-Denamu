@@ -37,6 +37,7 @@ services:
       retries: 3
     profiles:
       - was-dev
+      - default
 
   # Redis 서비스
   redis:
@@ -62,6 +63,7 @@ services:
       TZ: 'Asia/Seoul'
     profiles:
       - was-dev
+      - default
 
   # RabbitMQ 서비스
   rabbitmq:
@@ -89,6 +91,7 @@ services:
       start_period: 40s
     profiles:
       - was-dev
+      - default
 
 volumes:
   denamu-mysql:

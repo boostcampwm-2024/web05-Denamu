@@ -82,6 +82,7 @@ services:
           action: rebuild
     profiles:
       - was-dev
+      - default
 
   # Feed Crawler 개발 서비스
   feed-crawler:
