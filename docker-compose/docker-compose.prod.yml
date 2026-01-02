@@ -1,8 +1,5 @@
 name: denamu-production
 
-include:
-  - docker-compose.prod.infra.yml
-
 services:
   # WAS 서비스
   app:
@@ -67,3 +64,7 @@ services:
       NODE_ENV: 'PROD'
       TZ: 'Asia/Seoul'
     stop_grace_period: 30s
+
+networks:
+  Denamu:
+    external: true

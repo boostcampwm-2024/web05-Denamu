@@ -5,12 +5,12 @@ on:
     branches:
       - main
     paths:
-      - docker-compose/docker-compose.prod*.yml
+      - docker-compose/docker-compose.prod.infra.yml
   workflow_dispatch:
 
 env:
   GHCR_URL: ${{ vars.GHCR }}
-  COMPOSE_FILE: docker-compose/docker-compose.prod.yml
+  COMPOSE_FILE: docker-compose/docker-compose.prod.infra.yml
 
 jobs:
   deployment:
