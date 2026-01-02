@@ -39,7 +39,7 @@ jobs:
             echo "MYSQL_PORT=${{ secrets.DB_PORT }}" # MYSQL
             echo "MYSQL_ROOT_PASSWORD=${{ secrets.DB_ROOT_PASSWORD }}" # MYSQL
             echo "MYSQL_USER=${{ secrets.DB_USER }}" # MYSQL
-            echo "GRAFANA_PORT=${{ secrets.GRAFANA_PORT }} # Grafana
+            echo "GRAFANA_PORT=${{ secrets.GRAFANA_PORT }}"" # Grafana
             echo "NODE_METRIC_PORT=${{ secrets.NODE_METRIC_PORT }}" # Node Exporter
             echo "PROMETHEUS_PORT=${{ secrets.PROMETHEUS_PORT }}" # Prometheus
             echo "RABBITMQ_HOST=${{ secrets.RABBITMQ_HOST }}" # RabbitMQ
