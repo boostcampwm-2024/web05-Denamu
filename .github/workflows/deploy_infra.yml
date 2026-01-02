@@ -11,6 +11,8 @@ on:
 env:
   GHCR_URL: ${{ vars.GHCR }}
   COMPOSE_FILE: docker-compose/docker-compose.prod.yml
+  INFRA_ENV_FILE: /var/prod_config/infra/.env.prod
+  INFRA_ENV_DIR: /var/prod_config/infra
 
 jobs:
   deployment:
@@ -28,8 +30,8 @@ jobs:
 
       - name: 인프라 환경변수 및 설정 파일 최신화
         run: |
-          sudo mkdir -p /var/prod_config/infra
-          sudo install -m 600 /dev/null /var/prod_config/infra/.env.prod
+          sudo mkdir -p "${{env.INFRA_ENV_DIR}}"
+          sudo install -m 600 /dev/null "${{env.INFRA_ENV_FILE}}"
           {
             echo "MYSQL_ROOT_HOST=localhost" # MYSQL
             echo "MYSQL_HOST=${{ secrets.DB_HOST }}" # MYSQL Exporter
@@ -55,21 +57,21 @@ jobs:
             echo "REDIS_ADDR=${{ secrets.REDIS_HOST }}://${{ secrets.REDIS_HOST }}:${{ secrets.REDIS_PORT }}" # Redis Exporter
             echo "SERVER_PORT=${{ secrets.SERVER_PORT}}" # Server Port
             echo "TZ=Asia/Seoul" # ALL
-          } | sudo tee /var/prod_config/infra/.env.prod >/dev/null
+          } | sudo tee "${{env.INFRA_ENV_FILE}}" >/dev/null
 
           sudo chmod +x docker-compose/redis/redis-init.sh
 
       - name: 인프라 서비스 재시작
         run: |
           set -a
-          source /var/prod_config/infra/.env.prod
+          source ${{ env.INFRA_ENV_FILE }}
           set +a
 
           echo "=== 실제 배포 시작 ==="
-          docker compose -f "$COMPOSE_FILE" down
-          docker compose -f "$COMPOSE_FILE" up -d
+          docker compose -f "${{env.COMPOSE_FILE}}" down
+          docker compose -f "${{env.COMPOSE_FILE}}" up -d
           docker image prune -f || true
 
-          docker compose -f "$COMPOSE_FILE" down
-          docker compose -f "$COMPOSE_FILE" up -d
+          docker compose -f "${{env.COMPOSE_FILE}}" down
+          docker compose -f "${{env.COMPOSE_FILE}}" up -d
           docker image prune -f || true

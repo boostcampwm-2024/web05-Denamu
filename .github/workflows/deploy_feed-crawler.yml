@@ -15,8 +15,9 @@ env:
   FEED_CRAWLER_IMAGE: ${{ vars.GHCR }}/feed-crawler
   FEED_CRAWLER_TAG: sha-${{ github.sha }}
   SERVICE: feed-crawler
-  ENV_DIR: /var/prod_config/feed-crawler
-  ENV_FILE: /var/prod_config/feed-crawler/.env.prod
+  FEED-CRAWLER_ENV_DIR: /var/prod_config/feed-crawler
+  FEED-CRAWLER_ENV_FILE: /var/prod_config/feed-crawler/.env.prod
+  INFRA_ENV_FILE: /var/prod_config/infra/.env.prod
   COMPOSE_FILE: docker-compose/docker-compose.prod.yml
 
 jobs:
@@ -67,8 +68,8 @@ jobs:
 
       - name: 환경변수 최신화
         run: |
-          sudo mkdir -p "$ENV_DIR"
-          sudo install -m 600 /dev/null "$ENV_FILE"
+          sudo mkdir -p "${{env.FEED-CRAWLER_ENV_DIR}}"
+          sudo install -m 600 /dev/null "${{env.FEED-CRAWLER_ENV_FILE}}"
           {
             echo "AI_API_KEY=${{ secrets.AI_API_KEY }}"
             echo "DB_HOST=${{ secrets.DB_HOST }}"
@@ -86,15 +87,16 @@ jobs:
             echo "REDIS_USER=${{ secrets.REDIS_USER }}"
             echo "TIME_INTERVAL=${{ vars.FEED_CRAWLER_TIME_INTERVAL }}"
             echo "AI_RATE_LIMIT_COUNT=${{ vars.AI_RATE_LIMIT_COUNT }}"
-            } | sudo tee "$ENV_FILE" >/dev/null
+            } | sudo tee "${{env.FEED-CRAWLER_ENV_FILE}}" >/dev/null
 
       - name: Docker 이미지 Pull & 서비스 재시작
         run: |
           set -a
-          source ${{ env.ENV_FILE }}
+          source ${{ env.FEED-CRAWLER_ENV_FILE }}
+          source ${{ env.INFRA_ENV_FILE }}
           set +a
 
-          docker pull "$FEED_CRAWLER_IMAGE:latest" || true
-          docker compose -f "$COMPOSE_FILE" pull "$SERVICE"
-          docker compose -f "$COMPOSE_FILE" up -d --no-deps --force-recreate "$SERVICE"
+          docker pull "${{env.FEED_CRAWLER_IMAGE}}:latest" || true
+          docker compose -f "${{env.COMPOSE_FILE}}" pull "${{env.SERVICE}}"
+          docker compose -f "${{env.COMPOSE_FILE}}" up -d --no-deps --force-recreate "${{env.SERVICE}}"
           docker image prune -f || true
