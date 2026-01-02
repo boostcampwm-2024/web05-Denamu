@@ -36,12 +36,13 @@ const createMysqlContainer = async () => {
   console.log('Starting MySQL container...');
   mysqlContainer = await new MySqlContainer('mysql:8.0.39').start();
 
-  process.env.DB_TYPE = 'mysql';
   process.env.DB_HOST = mysqlContainer.getHost();
-  process.env.DB_PORT = mysqlContainer.getPort().toString();
-  process.env.DB_USERNAME = mysqlContainer.getUsername();
+  process.env.DB_NAME = mysqlContainer.getDatabase();
   process.env.DB_PASSWORD = mysqlContainer.getUserPassword();
-
+  process.env.DB_PORT = mysqlContainer.getPort().toString();
+  process.env.DB_USER = mysqlContainer.getUsername();
+  process.env.DB_TYPE = 'mysql';
+  
   await createTestDatabases(mysqlContainer);
 };
 
@@ -77,7 +78,7 @@ const createRedisContainer = async () => {
 
   process.env.REDIS_HOST = redisContainer.getHost();
   process.env.REDIS_PORT = redisContainer.getPort().toString();
-  process.env.REDIS_USERNAME = '';
+  process.env.REDIS_USER = '';
   process.env.REDIS_PASSWORD = '';
 };
 
@@ -94,8 +95,8 @@ const createRabbitMQContainer = async () => {
 
   process.env.RABBITMQ_HOST = rabbitMQContainer.getHost();
   process.env.RABBITMQ_PORT = rabbitMQContainer.getMappedPort(5672).toString();
-  process.env.RABBITMQ_DEFAULT_USER = 'guest';
-  process.env.RABBITMQ_DEFAULT_PASS = 'guest';
+  process.env.RABBITMQ_USER = 'guest';
+  process.env.RABBITMQ_PASSWORD = 'guest';
   await rabbitMQContainer.exec([
     'rabbitmqctl',
     'import_definitions',
@@ -106,7 +107,7 @@ const createRabbitMQContainer = async () => {
 const jwtEnvSetup = () => {
   console.log('Starting Jwt Environment...');
   process.env.JWT_ACCESS_SECRET = 'temp';
+  process.env.JWT_ACCESS_TOKEN_EXPIRE = '1d';
   process.env.JWT_REFRESH_SECRET = 'temp';
-  process.env.ACCESS_TOKEN_EXPIRE = '1d';
-  process.env.REFRESH_TOKEN_EXPIRE = '1d';
+  process.env.JWT_REFRESH_TOKEN_EXPIRE = '1d';
 };

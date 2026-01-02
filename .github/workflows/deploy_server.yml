@@ -11,7 +11,8 @@ permissions:
   packages: write
 
 env:
-  APP_IMAGE: ${{vars.GHCR}}/server
+  GHCR_URL: ${{ vars.GHCR }}
+  APP_IMAGE: ${{ vars.GHCR }}/server
   APP_TAG: sha-${{ github.sha }}
   SERVICE: app
   ENV_DIR: /var/prod_config/server
@@ -69,53 +70,57 @@ jobs:
           sudo mkdir -p "$ENV_DIR"
           sudo install -m 600 /dev/null "$ENV_FILE"
           {
-            echo "PORT=${{ secrets.PRODUCT_PORT }}"
+            echo "DB_HOST=${{ secrets.DB_HOST }}"
+            echo "DB_NAME=${{ secrets.DB_NAME }}"
+            echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}"
+            echo "DB_PORT=${{ secrets.DB_PORT }}"
+            echo "DB_USER=${{ secrets.DB_USER }}"
             echo "DB_TYPE=mysql"
-            echo "DB_DATABASE=${{ secrets.PRODUCT_DB_DATABASE }}"
-            echo "DB_HOST=${{ secrets.PRODUCT_DB_HOST }}"
-            echo "DB_PORT=${{ secrets.PRODUCT_DB_PORT }}"
-            echo "DB_USERNAME=${{ secrets.PRODUCT_DB_USERNAME }}"
-            echo "DB_PASSWORD=${{ secrets.PRODUCT_DB_PASSWORD }}"
-            echo "REDIS_HOST=${{ secrets.REDIS_HOST }}"
-            echo "REDIS_PORT=${{ secrets.REDIS_PORT }}"
-            echo "REDIS_USERNAME=${{ secrets.REDIS_USERNAME }}"
-            echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}"
-            echo "EMAIL_USER=${{ secrets.EMAIL_USER }}"
-            echo "EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}"
-            echo "JWT_ACCESS_SECRET=${{ secrets.JWT_ACCESS_SECRET }}"
-            echo "JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }}"
-            echo "REFRESH_TOKEN_EXPIRE=${{ secrets.REFRESH_TOKEN_EXPIRE }}"
-            echo "ACCESS_TOKEN_EXPIRE=${{ secrets.ACCESS_TOKEN_EXPIRE }}"
-            echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}"
-            echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}"
             echo "GITHUB_CLIENT_ID=${{ secrets.GIT_CLIENT_ID }}"
             echo "GITHUB_CLIENT_SECRET=${{ secrets.GIT_CLIENT_SECRET }}"
-            echo "RABBITMQ_DEFAULT_USER=${{ secrets.PRODUCT_RABBITMQ_DEFAULT_USER }}"
-            echo "RABBITMQ_DEFAULT_PASS=${{ secrets.PRODUCT_RABBITMQ_DEFAULT_PASS }}"
-            echo "RABBITMQ_HOST=${{ secrets.PRODUCT_RABBITMQ_HOST }}"
-            echo "RABBITMQ_PORT=${{ secrets.PRODUCT_RABBITMQ_PORT }}"
+            echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}"
+            echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}"
+            echo "JWT_ACCESS_SECRET=${{ secrets.JWT_ACCESS_SECRET }}"
+            echo "JWT_ACCESS_TOKEN_EXPIRE=${{ secrets.JWT_ACCESS_TOKEN_EXPIRE }}"
+            echo "JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }}"
+            echo "JWT_REFRESH_TOKEN_EXPIRE=${{ secrets.JWT_REFRESH_TOKEN_EXPIRE }}"
+            echo "RABBITMQ_HOST=${{ secrets.RABBITMQ_HOST }}"
+            echo "RABBITMQ_PASSWORD=${{ secrets.RABBITMQ_PASSWORD }}"
+            echo "RABBITMQ_PORT=${{ secrets.RABBITMQ_PORT }}"
+            echo "RABBITMQ_USER=${{ secrets.RABBITMQ_USER }}"
+            echo "REDIS_HOST=${{ secrets.REDIS_HOST }}"
+            echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}"
+            echo "REDIS_PORT=${{ secrets.REDIS_PORT }}"
+            echo "REDIS_USER=${{ secrets.REDIS_USER }}"
+            echo "SERVER_PORT=${{ secrets.SERVER_PORT }}"
           } | sudo tee "$ENV_FILE" >/dev/null
 
           # 인프라용 환경변수 파일 생성 (Redis, MySQL 등)
           sudo mkdir -p /var/prod_config/infra
           sudo install -m 600 /dev/null /var/prod_config/infra/.env.prod
           {
-            echo "REDIS_USER=${{ secrets.REDIS_USERNAME }}"
-            echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}"
-            echo "MYSQL_ROOT_PASSWORD=${{ secrets.PRODUCT_DB_PASSWORD }}"
-            echo "MYSQL_DATABASE=${{ secrets.PRODUCT_DB_DATABASE }}"
-            echo "MYSQL_USER=${{ secrets.PRODUCT_DB_USERNAME }}"
-            echo "MYSQL_PASSWORD=${{ secrets.PRODUCT_DB_PASSWORD }}"
-            echo "RABBITMQ_DEFAULT_USER=${{ secrets.PRODUCT_RABBITMQ_DEFAULT_USER }}"
-            echo "RABBITMQ_DEFAULT_PASS=${{ secrets.PRODUCT_RABBITMQ_DEFAULT_PASS }}" 
-            echo "RABBITMQ_HOST=${{ secrets.PRODUCT_RABBITMQ_HOST }}"  
-            echo "RABBITMQ_PORT=${{ secrets.PRODUCT_RABBITMQ_PORT }}"  
-            echo "RABBITMQ_MANAGEMENT_PORT=${{ secrets.PRODUCT_RABBITMQ_MANAGEMENT_PORT }}"  
+            echo "MYSQL_ROOT_HOST=localhost" # MYSQL
+            echo "MYSQL_DATABASE=${{ secrets.DB_NAME }}" # MYSQL
+            echo "MYSQL_PASSWORD=${{ secrets.DB_PASSWORD }}" # MYSQL, MYSQL Exporter
+            echo "MYSQL_PORT=${{ secrets.DB_PORT}}" # MYSQL, MYSQL Exporter
+            echo "MYSQL_ROOT_PASSWORD=${{ secrets.DB_ROOT_PASSWORD }}" # MYSQL
+            echo "MYSQL_USER=${{ secrets.DB_USER }}" # MYSQL, MYSQL Exporter
+            echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}" # Redis
+            echo "REDIS_USER=${{ secrets.REDIS_USER }}" # Redis, Redis Exporter
+            echo "REDIS_ADDR=${{ secrets.REDIS_ADDR }}" # Redis Exporter
+            echo "RABBITMQ_HOST=${{ secrets.RABBITMQ_HOST }}" # RabbitMQ
+            echo "RABBIT_PASSWORD=${{ secrets.RABBITMQ_PASSWORD }}" # RabbitMQ Exporter
+            echo "RABBITMQ_DEFAULT_PASS=${{ secrets.RABBITMQ_PASSWORD }}" # RabbitMQ
+            echo "RABBITMQ_PORT=${{ secrets.RABBITMQ_PORT }}" # RabbitMQ
+            echo "RABBIT_USER=${{ secrets.RABBITMQ_USER }}" # RabbitMQ Exporter
+            echo "RABBITMQ_DEFAULT_USER=${{ secrets.RABBITMQ_USER }}" # RabbitMQ
+            echo "RABBIT_URL=http://${{ secrets.RABBITMQ_HOST }}:${{ secrets.RABBITMQ_PORT }}" # RabbitMQ Exporter
+            echo "TZ=Asia/Seoul" # ALL
           } | sudo tee /var/prod_config/infra/.env.prod >/dev/null
 
       - name: Docker 이미지 Pull & 서비스 재시작
         run: |
-          docker pull "${APP_IMAGE}:latest" || true
+          docker pull "$APP_IMAGE:latest" || true
           docker compose -f "$COMPOSE_FILE" pull "$SERVICE"
           docker compose -f "$COMPOSE_FILE" up -d --no-deps --force-recreate "$SERVICE"
           docker image prune -f || true

@@ -14,13 +14,6 @@ services:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
       - --skip-character-set-client-handshake
-    environment:
-      MYSQL_ROOT_HOST: localhost
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      TZ: 'Asia/Seoul'
     healthcheck:
       test:
         [
@@ -55,18 +48,15 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
-    environment:
-      TZ: 'Asia/Seoul'
 
   # RabbitMQ 서비스
   rabbitmq:
-    image: rabbitmq:4.1-management
+    image: rabbitmq:4.1-alpine
     user: '999:999'
     networks:
       - Denamu
     ports:
       - '5672:5672'
-      - '15672:15672'
     env_file:
       - /var/prod_config/infra/.env.prod
     volumes:
@@ -87,6 +77,8 @@ services:
     image: 'prom/prometheus'
     ports:
       - '9090:9090'
+    env_file:
+      - /var/prod_config/infra/.env.prod
     networks:
       - Denamu
     volumes:
@@ -94,8 +86,6 @@ services:
       - denamu-prometheus:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
-    environment:
-      TZ: 'Asia/Seoul'
 
   # Grafana:
   grafana:
@@ -108,8 +98,8 @@ services:
       - denamu-grafana:/var/lib/grafana
     depends_on:
       - prometheus
-    environment:
-      TZ: 'Asia/Seoul'
+    env_file:
+      - /var/prod_config/infra/.env.prod
 
   # Node Exporter
   node_exporter:
@@ -118,6 +108,8 @@ services:
       - '9100:9100'
     networks:
       - Denamu
+    env_file:
+      - /var/prod_config/infra/.env.prod
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
@@ -127,10 +119,8 @@ services:
       - '--path.rootfs=/rootfs'
       - '--path.sysfs=/host/sys'
       - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
-    environment:
-      TZ:
-        'Asia/Seoul'
-        # MySQL Metrics
+
+  # MySQL Metrics
   mysql_metrics:
     image: prom/mysqld-exporter
     ports:
@@ -142,12 +132,10 @@ services:
     command:
       - '--mysqld.username=$MYSQL_USER:$MYSQL_PASSWORD'
       - '--mysqld.address=mysql-db:3306'
-    environment:
-      TZ: 'Asia/Seoul'
     depends_on:
       - mysql-db
 
-        # Redis Metrics
+  # Redis Metrics
   redis_metrics:
     image: oliver006/redis_exporter
     ports:
@@ -156,25 +144,16 @@ services:
       - Denamu
     env_file:
       - /var/prod_config/infra/.env.prod
-    environment:
-      REDIS_ADDR: 'redis://redis:6379'
-      REDIS_USER: '${REDIS_USER}'
-      REDIS_PASSWORD: '${REDIS_PASSWORD}'
-      TZ: 'Asia/Seoul'
     depends_on:
       - redis
 
-        # RabbitMQ Metrics
+  # RabbitMQ Metrics
   rabbitmq_metrics:
     image: 'kbudde/rabbitmq-exporter'
     env_file:
       - /var/prod_config/infra/.env.prod
     ports:
       - '9419:9419'
-    environment:
-      RABBIT_USER: '${RABBITMQ_DEFAULT_USER}'
-      RABBIT_PASSWORD: '${RABBITMQ_DEFAULT_PASS}'
-      RABBIT_URL: 'http://${RABBITMQ_HOST}:${RABBITMQ_PORT}'
     networks:
       - Denamu
     depends_on:

@@ -11,7 +11,8 @@ permissions:
   packages: write
 
 env:
-  FEED_CRAWLER_IMAGE: ${{vars.GHCR}}/feed-crawler
+  GHCR_URL: ${{ vars.GHCR }}
+  FEED_CRAWLER_IMAGE: ${{ vars.GHCR }}/feed-crawler
   FEED_CRAWLER_TAG: sha-${{ github.sha }}
   SERVICE: feed-crawler
   ENV_DIR: /var/prod_config/feed-crawler
@@ -69,44 +70,50 @@ jobs:
           sudo mkdir -p "$ENV_DIR"
           sudo install -m 600 /dev/null "$ENV_FILE"
           {
-            echo "DB_PORT=${{ secrets.FEED_CRAWLER_DB_PORT }}"
-            echo "DB_HOST=${{ secrets.FEED_CRAWLER_DB_HOST }}"
-            echo "DB_NAME=${{ secrets.FEED_CRAWLER_DB_NAME }}"
-            echo "DB_USER=${{ secrets.FEED_CRAWLER_DB_USER }}"
-            echo "DB_PASS=${{ secrets.FEED_CRAWLER_DB_PASSWORD }}"
-            echo "TIME_INTERVAL=${{ vars.FEED_CRAWLER_TIME_INTERVAL }}"
-            echo "REDIS_HOST=${{ secrets.REDIS_HOST }}"
-            echo "REDIS_PORT=${{ secrets.REDIS_PORT }}"
-            echo "REDIS_USERNAME=${{ secrets.REDIS_USERNAME }}"
-            echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}"
             echo "AI_API_KEY=${{ secrets.AI_API_KEY }}"
+            echo "DB_HOST=${{ secrets.DB_HOST }}"
+            echo "DB_NAME=${{ secrets.DB_NAME }}"
+            echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}"
+            echo "DB_PORT=${{ secrets.DB_PORT }}"
+            echo "DB_USER=${{ secrets.DB_USER }}"
+            echo "RABBITMQ_HOST=${{ secrets.RABBITMQ_HOST }}"
+            echo "RABBITMQ_PASSWORD=${{ secrets.RABBITMQ_PASSWORD }}"
+            echo "RABBITMQ_PORT=${{ secrets.RABBITMQ_PORT }}"
+            echo "RABBITMQ_USER=${{ secrets.RABBITMQ_USER }}"
+            echo "REDIS_HOST=${{ secrets.REDIS_HOST }}"
+            echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}"
+            echo "REDIS_PORT=${{ secrets.REDIS_PORT }}"
+            echo "REDIS_USER=${{ secrets.REDIS_USER }}"
+            echo "TIME_INTERVAL=${{ vars.FEED_CRAWLER_TIME_INTERVAL }}"
             echo "AI_RATE_LIMIT_COUNT=${{ vars.AI_RATE_LIMIT_COUNT }}"
-            echo "RABBITMQ_DEFAULT_USER=${{ secrets.PRODUCT_RABBITMQ_DEFAULT_USER }}"
-            echo "RABBITMQ_DEFAULT_PASS=${{ secrets.PRODUCT_RABBITMQ_DEFAULT_PASS }}"
-            echo "RABBITMQ_HOST=${{ secrets.PRODUCT_RABBITMQ_HOST }}"
-            echo "RABBITMQ_PORT=${{ secrets.PRODUCT_RABBITMQ_PORT }}"
-          } | sudo tee "$ENV_FILE" >/dev/null
+            } | sudo tee "$ENV_FILE" >/dev/null
 
           # 인프라용 환경변수 파일 생성 (Redis, MySQL 등)
           sudo mkdir -p /var/prod_config/infra
           sudo install -m 600 /dev/null /var/prod_config/infra/.env.prod
           {
-            echo "REDIS_USER=${{ secrets.REDIS_USERNAME }}"
-            echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}"
-            echo "MYSQL_ROOT_PASSWORD=${{ secrets.PRODUCT_DB_PASSWORD }}"
-            echo "MYSQL_DATABASE=${{ secrets.PRODUCT_DB_DATABASE }}"
-            echo "MYSQL_USER=${{ secrets.PRODUCT_DB_USERNAME }}"
-            echo "MYSQL_PASSWORD=${{ secrets.PRODUCT_DB_PASSWORD }}"
-            echo "RABBITMQ_DEFAULT_USER=${{ secrets.PRODUCT_RABBITMQ_DEFAULT_USER }}"
-            echo "RABBITMQ_DEFAULT_PASS=${{ secrets.PRODUCT_RABBITMQ_DEFAULT_PASS }}"  
-            echo "RABBITMQ_HOST=${{ secrets.PRODUCT_RABBITMQ_HOST }}"  
-            echo "RABBITMQ_PORT=${{ secrets.PRODUCT_RABBITMQ_PORT }}"  
-            echo "RABBITMQ_MANAGEMENT_PORT=${{ secrets.PRODUCT_RABBITMQ_MANAGEMENT_PORT }}"  
+            echo "MYSQL_ROOT_HOST=localhost" # MYSQL
+            echo "MYSQL_DATABASE=${{ secrets.DB_NAME }}" # MYSQL
+            echo "MYSQL_PASSWORD=${{ secrets.DB_PASSWORD }}" # MYSQL, MYSQL Exporter
+            echo "MYSQL_PORT=${{ secrets.DB_PORT}}" # MYSQL, MYSQL Exporter
+            echo "MYSQL_ROOT_PASSWORD=${{ secrets.DB_ROOT_PASSWORD }}" # MYSQL
+            echo "MYSQL_USER=${{ secrets.DB_USER }}" # MYSQL, MYSQL Exporter
+            echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}" # Redis
+            echo "REDIS_USER=${{ secrets.REDIS_USER }}" # Redis, Redis Exporter
+            echo "REDIS_ADDR=${{ secrets.REDIS_ADDR }}" # Redis Exporter
+            echo "RABBITMQ_HOST=${{ secrets.RABBITMQ_HOST }}" # RabbitMQ
+            echo "RABBIT_PASSWORD=${{ secrets.RABBITMQ_PASSWORD }}" # RabbitMQ Exporter
+            echo "RABBITMQ_DEFAULT_PASS=${{ secrets.RABBITMQ_PASSWORD }}" # RabbitMQ
+            echo "RABBITMQ_PORT=${{ secrets.RABBITMQ_PORT }}" # RabbitMQ
+            echo "RABBIT_USER=${{ secrets.RABBITMQ_USER }}" # RabbitMQ Exporter
+            echo "RABBITMQ_DEFAULT_USER=${{ secrets.RABBITMQ_USER }}" # RabbitMQ
+            echo "RABBIT_URL=http://${{ secrets.RABBITMQ_HOST }}:${{ secrets.RABBITMQ_PORT }}" # RabbitMQ Exporter
+            echo "TZ=Asia/Seoul" # ALL
           } | sudo tee /var/prod_config/infra/.env.prod >/dev/null
 
       - name: Docker 이미지 Pull & 서비스 재시작
         run: |
-          docker pull "${FEED_CRAWLER_IMAGE}:latest" || true
+          docker pull "$FEED_CRAWLER_IMAGE:latest" || true
           docker compose -f "$COMPOSE_FILE" pull "$SERVICE"
           docker compose -f "$COMPOSE_FILE" up -d --no-deps --force-recreate "$SERVICE"
           docker image prune -f || true

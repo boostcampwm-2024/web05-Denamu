@@ -9,6 +9,7 @@ on:
   workflow_dispatch:
 
 env:
+  GHCR_URL: ${{ vars.GHCR }}
   COMPOSE_FILE: docker-compose/docker-compose.prod.yml
 
 jobs:
@@ -18,28 +19,53 @@ jobs:
       - name: 코드 체크아웃
         uses: actions/checkout@v4
 
+      - name: GHCR 로그인 (prod)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_GITHUB_TOKEN }}
+
       - name: 인프라 환경변수 및 설정 파일 최신화
         run: |
           sudo mkdir -p /var/prod_config/infra
           sudo install -m 600 /dev/null /var/prod_config/infra/.env.prod
           {
-            echo "REDIS_USER=${{ secrets.REDIS_USERNAME }}"
-            echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}"
-            echo "MYSQL_ROOT_PASSWORD=${{ secrets.PRODUCT_DB_PASSWORD }}"
-            echo "MYSQL_DATABASE=${{ secrets.PRODUCT_DB_DATABASE }}"
-            echo "MYSQL_USER=${{ secrets.PRODUCT_DB_USERNAME }}"
-            echo "MYSQL_PASSWORD=${{ secrets.PRODUCT_DB_PASSWORD }}"
-            echo "RABBITMQ_DEFAULT_USER=${{ secrets.PRODUCT_RABBITMQ_DEFAULT_USER }}"
-            echo "RABBITMQ_DEFAULT_PASS=${{ secrets.PRODUCT_RABBITMQ_DEFAULT_PASS }}"
-            echo "RABBITMQ_HOST=${{ secrets.PRODUCT_RABBITMQ_HOST }}"
-            echo "RABBITMQ_PORT=${{ secrets.PRODUCT_RABBITMQ_PORT }}"
-            echo "RABBITMQ_MANAGEMENT_PORT=${{ secrets.PRODUCT_RABBITMQ_MANAGEMENT_PORT }}"  
+            echo "MYSQL_ROOT_HOST=localhost" # MYSQL
+            echo "MYSQL_DATABASE=${{ secrets.DB_NAME }}" # MYSQL
+            echo "MYSQL_PASSWORD=${{ secrets.DB_PASSWORD }}" # MYSQL, MYSQL Exporter
+            echo "MYSQL_PORT=${{ secrets.DB_PORT}}" # MYSQL, MYSQL Exporter
+            echo "MYSQL_ROOT_PASSWORD=${{ secrets.DB_ROOT_PASSWORD }}" # MYSQL
+            echo "MYSQL_USER=${{ secrets.DB_USER }}" # MYSQL, MYSQL Exporter
+            echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}" # Redis
+            echo "REDIS_USER=${{ secrets.REDIS_USER }}" # Redis, Redis Exporter
+            echo "REDIS_ADDR=${{ secrets.REDIS_ADDR }}" # Redis Exporter
+            echo "RABBITMQ_HOST=${{ secrets.RABBITMQ_HOST }}" # RabbitMQ
+            echo "RABBIT_PASSWORD=${{ secrets.RABBITMQ_PASSWORD }}" # RabbitMQ Exporter
+            echo "RABBITMQ_DEFAULT_PASS=${{ secrets.RABBITMQ_PASSWORD }}" # RabbitMQ
+            echo "RABBITMQ_PORT=${{ secrets.RABBITMQ_PORT }}" # RabbitMQ
+            echo "RABBIT_USER=${{ secrets.RABBITMQ_USER }}" # RabbitMQ Exporter
+            echo "RABBITMQ_DEFAULT_USER=${{ secrets.RABBITMQ_USER }}" # RabbitMQ
+            echo "RABBIT_URL=http://${{ secrets.RABBITMQ_HOST }}:${{ secrets.RABBITMQ_PORT }}" # RabbitMQ Exporter
+            echo "TZ=Asia/Seoul" # ALL
           } | sudo tee /var/prod_config/infra/.env.prod >/dev/null
 
           sudo chmod +x docker-compose/redis-init.sh
 
       - name: 인프라 서비스 재시작
         run: |
+          echo "=== 환경변수 확인 ==="
+          echo "GHCR_URL: $GHCR_URL"
+          echo "COMPOSE_FILE: $COMPOSE_FILE"
+
+          echo "=== docker-compose config 미리보기 ==="
+          docker compose -f "$COMPOSE_FILE" config | grep "image:"
+
+          echo "=== 실제 배포 시작 ==="
+          docker compose -f "$COMPOSE_FILE" down
+          docker compose -f "$COMPOSE_FILE" up -d
+          docker image prune -f || true
+
           docker compose -f "$COMPOSE_FILE" down
           docker compose -f "$COMPOSE_FILE" up -d
           docker image prune -f || true

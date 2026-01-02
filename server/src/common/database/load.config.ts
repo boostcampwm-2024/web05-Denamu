@@ -9,14 +9,14 @@ export function loadDBSetting(configService: ConfigService) {
 
   const database = isTest
     ? `denamu_test_${workerId}`
-    : configService.get<string>('DB_DATABASE');
+    : configService.get<string>('DB_NAME');
 
   return {
     type: configService.get<'mysql'>('DB_TYPE'),
     database,
     host: configService.get<string>('DB_HOST'),
     port: configService.get<number>('DB_PORT'),
-    username: configService.get<string>('DB_USERNAME'),
+    username: configService.get<string>('DB_USER'),
     password: configService.get<string>('DB_PASSWORD'),
     entities: [`${__dirname}/../../**/*.entity.{js,ts}`],
 
