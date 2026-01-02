@@ -88,29 +88,6 @@ jobs:
             echo "AI_RATE_LIMIT_COUNT=${{ vars.AI_RATE_LIMIT_COUNT }}"
             } | sudo tee "$ENV_FILE" >/dev/null
 
-          # 인프라용 환경변수 파일 생성 (Redis, MySQL 등)
-          sudo mkdir -p /var/prod_config/infra
-          sudo install -m 600 /dev/null /var/prod_config/infra/.env.prod
-          {
-            echo "MYSQL_ROOT_HOST=localhost" # MYSQL
-            echo "MYSQL_DATABASE=${{ secrets.DB_NAME }}" # MYSQL
-            echo "MYSQL_PASSWORD=${{ secrets.DB_PASSWORD }}" # MYSQL, MYSQL Exporter
-            echo "MYSQL_PORT=${{ secrets.DB_PORT}}" # MYSQL, MYSQL Exporter
-            echo "MYSQL_ROOT_PASSWORD=${{ secrets.DB_ROOT_PASSWORD }}" # MYSQL
-            echo "MYSQL_USER=${{ secrets.DB_USER }}" # MYSQL, MYSQL Exporter
-            echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}" # Redis
-            echo "REDIS_USER=${{ secrets.REDIS_USER }}" # Redis, Redis Exporter
-            echo "REDIS_ADDR=${{ secrets.REDIS_ADDR }}" # Redis Exporter
-            echo "RABBITMQ_HOST=${{ secrets.RABBITMQ_HOST }}" # RabbitMQ
-            echo "RABBIT_PASSWORD=${{ secrets.RABBITMQ_PASSWORD }}" # RabbitMQ Exporter
-            echo "RABBITMQ_DEFAULT_PASS=${{ secrets.RABBITMQ_PASSWORD }}" # RabbitMQ
-            echo "RABBITMQ_PORT=${{ secrets.RABBITMQ_PORT }}" # RabbitMQ
-            echo "RABBIT_USER=${{ secrets.RABBITMQ_USER }}" # RabbitMQ Exporter
-            echo "RABBITMQ_DEFAULT_USER=${{ secrets.RABBITMQ_USER }}" # RabbitMQ
-            echo "RABBIT_URL=http://${{ secrets.RABBITMQ_HOST }}:${{ secrets.RABBITMQ_PORT }}" # RabbitMQ Exporter
-            echo "TZ=Asia/Seoul" # ALL
-          } | sudo tee /var/prod_config/infra/.env.prod >/dev/null
-
       - name: Docker 이미지 Pull & 서비스 재시작
         run: |
           docker pull "$FEED_CRAWLER_IMAGE:latest" || true
