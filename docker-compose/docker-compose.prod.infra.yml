@@ -37,7 +37,7 @@ services:
       - '$REDIS_PORT:6379'
     volumes:
       - denamu-redis:/data
-      - ./redis-init.sh:/usr/local/bin/redis-init.sh:ro
+      - ./redis/redis-init.sh:/usr/local/bin/redis-init.sh:ro
     networks:
       - Denamu
     env_file:
@@ -62,9 +62,9 @@ services:
       - /var/prod_config/infra/.env.prod
     volumes:
       - denamu-rabbitmq:/var/lib/rabbitmq
-      - ./definitions.json:/etc/rabbitmq/definitions.json:ro
-      - ./import-definitions.sh:/etc/rabbitmq/import-definitions.sh:ro
-      - ./check-rabbitmq-ready.sh:/etc/rabbitmq/check-rabbitmq-ready.sh:ro
+      - ./rabbitMQ/definitions.json:/etc/rabbitmq/definitions.json:ro
+      - ./rabbitMQ/import-definitions.sh:/etc/rabbitmq/import-definitions.sh:ro
+      - ./rabbitMQ/check-rabbitmq-ready.sh:/etc/rabbitmq/check-rabbitmq-ready.sh:ro
     entrypoint: ['/bin/sh', '/etc/rabbitmq/import-definitions.sh']
     healthcheck:
       test: ['CMD', '/bin/sh', '/etc/rabbitmq/check-rabbitmq-ready.sh']

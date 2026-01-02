@@ -57,7 +57,7 @@ jobs:
             echo "TZ=Asia/Seoul" # ALL
           } | sudo tee /var/prod_config/infra/.env.prod >/dev/null
 
-          sudo chmod +x docker-compose/redis-init.sh
+          sudo chmod +x docker-compose/redis/redis-init.sh
 
       - name: 인프라 서비스 재시작
         run: |
