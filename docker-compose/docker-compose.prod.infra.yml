@@ -83,7 +83,7 @@ services:
     networks:
       - Denamu
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - denamu-prometheus:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
