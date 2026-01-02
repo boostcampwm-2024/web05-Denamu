@@ -5,51 +5,61 @@ import { WinstonLoggerService } from '../../../../src/common/logger/logger.servi
 import { InternalExceptionsFilter } from '../../../../src/common/filters/internal.exceptions.filter';
 import { HttpExceptionsFilter } from '../../../../src/common/filters/http.exception.filter';
 import * as cookieParser from 'cookie-parser';
-import { TestService } from '../../../../src/common/test/test.service';
 import { RedisService } from '../../../../src/common/redis/redis.service';
 import { UserService } from '../../../../src/user/service/user.service';
+import { NestApplication } from '@nestjs/core';
+import { DataSource } from 'typeorm';
 
-const globalAny: any = global;
+export let testApp: NestApplication;
 
-afterEach(() => {
+afterEach(async () => {
+  const redisService = testApp.get(RedisService);
+  await redisService.flushdb();
+
+  const dataSource = testApp.get(DataSource);
+  const queryRunner = dataSource.createQueryRunner();
+  await queryRunner.connect();
+
+  await queryRunner.query('SET FOREIGN_KEY_CHECKS = 0');
+
+  for (const entity of dataSource.entityMetadatas) {
+    if (entity.tableType === 'view') {
+      continue;
+    }
+
+    await queryRunner.query(`TRUNCATE TABLE \`${entity.tableName}\``);
+  }
+
+  await queryRunner.query('SET FOREIGN_KEY_CHECKS = 1');
+  await queryRunner.release();
+
   jest.resetAllMocks();
 });
 
 beforeAll(async () => {
-  console.log('Initializing NestJS application...');
   const moduleFixture = await Test.createTestingModule({
     imports: [AppModule],
   }).compile();
 
-  const app = moduleFixture.createNestApplication();
-  const logger = app.get(WinstonLoggerService);
-  app.setGlobalPrefix('api');
-  app.use(cookieParser());
-  app.useGlobalFilters(
+  testApp = moduleFixture.createNestApplication();
+  const logger = testApp.get(WinstonLoggerService);
+  testApp.setGlobalPrefix('api');
+  testApp.use(cookieParser());
+  testApp.useGlobalFilters(
     new InternalExceptionsFilter(logger),
     new HttpExceptionsFilter(),
   );
-  app.useGlobalPipes(new ValidationPipe({ transform: true }));
-  await app.init();
-  globalAny.testApp = app;
-
-  console.log('NestJS application initialized.');
+  testApp.useGlobalPipes(new ValidationPipe({ transform: true }));
+  await testApp.init();
 });
 
 afterAll(async () => {
-  const testService = globalAny.testApp.get(TestService);
-  await testService.cleanDatabase();
-
-  const redisService: RedisService = globalAny.testApp.get(RedisService);
-  await redisService.flushall();
+  const redisService: RedisService = testApp.get(RedisService);
   redisService.disconnect();
 
-  console.log('Closing NestJS application...');
-  if (globalAny.testApp) {
-    await globalAny.testApp.close();
-    delete globalAny.testApp;
+  if (testApp) {
+    await testApp.close();
   }
-  console.log('NestJS application closed.');
 });
 
 export const createAccessToken = (payload?: {
@@ -58,7 +68,7 @@ export const createAccessToken = (payload?: {
   userName?: string;
   role?: string;
 }) => {
-  const userService = globalAny.testApp.get(UserService);
+  const userService = testApp.get(UserService);
 
   return userService.createToken(
     {
@@ -77,7 +87,7 @@ export const createRefreshToken = (payload?: {
   userName?: string;
   role?: string;
 }) => {
-  const userService = globalAny.testApp.get(UserService);
+  const userService = testApp.get(UserService);
 
   return userService.createToken(
     {

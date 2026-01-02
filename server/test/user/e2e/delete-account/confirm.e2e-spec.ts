@@ -1,4 +1,4 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import * as supertest from 'supertest';
 import { UserRepository } from '../../../../src/user/repository/user.repository';
 import { RedisService } from '../../../../src/common/redis/redis.service';
@@ -10,15 +10,24 @@ import { CommentRepository } from '../../../../src/comment/repository/comment.re
 import { LikeRepository } from '../../../../src/like/repository/like.repository';
 import { ActivityRepository } from '../../../../src/activity/repository/activity.repository';
 import { FileRepository } from '../../../../src/file/repository/file.repository';
+import { User } from '../../../../src/user/entity/user.entity';
+import { FeedRepository } from '../../../../src/feed/repository/feed.repository';
+import { RssAcceptRepository } from '../../../../src/rss/repository/rss.repository';
+import { RssAccept } from '../../../../src/rss/entity/rss.entity';
+import { RssAcceptFixture } from '../../../config/common/fixture/rss-accept.fixture';
+import { FeedFixture } from '../../../config/common/fixture/feed.fixture';
+import { Feed } from '../../../../src/feed/entity/feed.entity';
+import { CommentFixture } from '../../../config/common/fixture/comment.fixture';
+import { FileFixture } from '../../../config/common/fixture/file.fixture';
 import {
   createAccessToken,
   createRefreshToken,
 } from '../../../config/e2e/env/jest.setup';
+import { testApp } from '../../../config/e2e/env/jest.setup';
 
 const URL = '/api/user/delete-account/confirm';
 
 describe(`POST ${URL} E2E Test`, () => {
-  let app: INestApplication;
   let agent: TestAgent;
   let redisService: RedisService;
   let userRepository: UserRepository;
@@ -26,19 +35,41 @@ describe(`POST ${URL} E2E Test`, () => {
   let likeRepository: LikeRepository;
   let activityRepository: ActivityRepository;
   let fileRepository: FileRepository;
+  let feedRepository: FeedRepository;
+  let rssAcceptRepository: RssAcceptRepository;
+  let user: User;
+  let rssAccept: RssAccept;
+  let feed: Feed;
   const userDeleteCode = 'user-delete-confirm';
   const redisKeyMake = (data: string) =>
     `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${data}`;
 
   beforeAll(() => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    redisService = app.get(RedisService);
-    userRepository = app.get(UserRepository);
-    commentRepository = app.get(CommentRepository);
-    likeRepository = app.get(LikeRepository);
-    activityRepository = app.get(ActivityRepository);
-    fileRepository = app.get(FileRepository);
+    agent = supertest(testApp.getHttpServer());
+    redisService = testApp.get(RedisService);
+    userRepository = testApp.get(UserRepository);
+    feedRepository = testApp.get(FeedRepository);
+    rssAcceptRepository = testApp.get(RssAcceptRepository);
+    commentRepository = testApp.get(CommentRepository);
+    likeRepository = testApp.get(LikeRepository);
+    activityRepository = testApp.get(ActivityRepository);
+    fileRepository = testApp.get(FileRepository);
+  });
+
+  beforeEach(async () => {
+    rssAccept = await rssAcceptRepository.save(
+      RssAcceptFixture.createRssAcceptFixture(),
+    );
+    [user, feed] = await Promise.all([
+      userRepository.save(await UserFixture.createUserCryptFixture()),
+      feedRepository.save(FeedFixture.createFeedFixture(rssAccept)),
+    ]);
+    await Promise.all([
+      commentRepository.insert(CommentFixture.createCommentFixture(feed, user)),
+      likeRepository.insert({ feed, user }),
+      fileRepository.insert(FileFixture.createFileFixture(user)),
+      redisService.set(redisKeyMake(userDeleteCode), user.id),
+    ]);
   });
 
   it('[404] 회원 탈퇴 인증 코드가 만료되었거나 잘 못된 경우 회원 탈퇴를 실패한다.', async () => {
@@ -54,6 +85,16 @@ describe(`POST ${URL} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const [savedUser, savedDeleteCode] = await Promise.all([
+      userRepository.findOneBy({ id: user.id }),
+      redisService.get(redisKeyMake(userDeleteCode)),
+    ]);
+
+    // DB, Redis then
+    expect(savedUser).not.toBeNull();
+    expect(savedDeleteCode).toBe(user.id.toString());
   });
 
   it('[200] 회원 탈퇴 인증 코드가 있을 경우 회원 탈퇴를 성공한다.', async () => {
@@ -80,17 +121,25 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(data).toBeUndefined();
 
     // DB, Redis when
-    const savedComment = await commentRepository.findBy({
-      user: { id: user.id },
-    });
-    const savedLike = await likeRepository.findBy({ user: { id: user.id } });
-    const savedActivity = await activityRepository.findBy({
-      user: { id: user.id },
-    });
-    const savedFile = await fileRepository.findBy({ user: { id: user.id } });
-    const savedUserDeleteCode = await redisService.get(
-      redisKeyMake(userDeleteCode),
-    );
+    const [
+      savedUser,
+      savedUserDeleteCode,
+      savedLikes,
+      savedComments,
+      savedActivities,
+      savedFiles,
+    ] = await Promise.all([
+      userRepository.findOneBy({ id: user.id }),
+      redisService.get(redisKeyMake(userDeleteCode)),
+      likeRepository.findBy({ user: { id: user.id } }),
+      commentRepository.findBy({
+        user: { id: user.id },
+      }),
+      activityRepository.findBy({
+        user: { id: user.id },
+      }),
+      fileRepository.findBy({ user: { id: user.id } }),
+    ]);
     const blacklistedAccessToken = await redisService.get(
       `${REDIS_KEYS.USER_BLACKLIST_JWT_PREFIX}:${accessToken}`,
     );
@@ -99,11 +148,12 @@ describe(`POST ${URL} E2E Test`, () => {
     );
 
     // DB, Redis then
-    expect(savedComment.length).toBe(0);
-    expect(savedLike.length).toBe(0);
-    expect(savedActivity.length).toBe(0);
-    expect(savedFile.length).toBe(0);
+    expect(savedUser).toBeNull();
     expect(savedUserDeleteCode).toBeNull();
+    expect(savedLikes.length).toBe(0);
+    expect(savedComments.length).toBe(0);
+    expect(savedActivities.length).toBe(0);
+    expect(savedFiles.length).toBe(0);
     expect(blacklistedAccessToken).toBe('1');
     expect(blacklistedRefreshToken).toBe('1');
   });

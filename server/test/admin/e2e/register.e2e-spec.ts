@@ -1,4 +1,4 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import { RegisterAdminRequestDto } from '../../../src/admin/dto/request/registerAdmin.dto';
 import * as supertest from 'supertest';
 import { AdminFixture } from '../../config/common/fixture/admin.fixture';
@@ -7,27 +7,25 @@ import TestAgent from 'supertest/lib/agent';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 import * as bcrypt from 'bcrypt';
-import { Admin } from '../../../src/admin/entity/admin.entity';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/admin/register';
 
 describe(`POST ${URL} E2E Test`, () => {
-  let app: INestApplication;
   let agent: TestAgent;
   let adminRepository: AdminRepository;
-  let admin: Admin;
+  let redisService: RedisService;
   const sessionKey = 'admin-register-session-key';
   const redisKeyMake = (data: string) => `${REDIS_KEYS.ADMIN_AUTH_KEY}:${data}`;
 
-  beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    adminRepository = app.get(AdminRepository);
-    const redisService = app.get(RedisService);
-    admin = await adminRepository.save(
-      await AdminFixture.createAdminCryptFixture(),
-    );
-    await redisService.set(redisKeyMake(sessionKey), admin.loginId);
+  beforeAll(() => {
+    agent = supertest(testApp.getHttpServer());
+    adminRepository = testApp.get(AdminRepository);
+    redisService = testApp.get(RedisService);
+  });
+
+  beforeEach(async () => {
+    await redisService.set(redisKeyMake(sessionKey), 'testAdminId');
   });
 
   it('[401] 관리자 로그인 쿠키가 없을 경우 회원가입을 실패한다.', async () => {
@@ -83,9 +81,12 @@ describe(`POST ${URL} E2E Test`, () => {
 
   it('[409] 중복된 ID로 회원가입을 할 경우 다른 관리자 계정 회원가입을 실패한다.', async () => {
     // given
+    const admin = await adminRepository.save(
+      await AdminFixture.createAdminCryptFixture(),
+    );
     const newAdminDto = new RegisterAdminRequestDto({
-      loginId: AdminFixture.GENERAL_ADMIN.loginId,
-      password: AdminFixture.GENERAL_ADMIN.password,
+      loginId: admin.loginId,
+      password: 'testNewAdminPassword!',
     });
 
     // Http when
@@ -136,8 +137,5 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(
       await bcrypt.compare(newAdminDto.password, savedAdmin.password),
     ).toBeTruthy();
-
-    // cleanup
-    await adminRepository.delete({ loginId: newAdminDto.loginId });
   });
 });

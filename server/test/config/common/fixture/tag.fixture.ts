@@ -1,13 +1,15 @@
 import { Tag } from '../../../../src/tag/entity/tag.entity';
+import * as uuid from 'uuid';
 
 export class TagFixture {
-  static readonly GENERAL_TAG = {
-    name: 'test',
-  };
+  static createGeneralUser() {
+    return {
+      name: `test${uuid.v4()}`,
+    };
+  }
 
   static createTagFixture(overwrites: Partial<Tag> = {}): Tag {
     const tag = new Tag();
-    Object.assign(tag, { ...this.GENERAL_TAG });
-    return Object.assign(tag, overwrites);
+    return Object.assign(tag, this.createGeneralUser(), overwrites);
   }
 }

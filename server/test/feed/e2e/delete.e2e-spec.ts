@@ -1,4 +1,4 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
 import { FeedFixture } from '../../config/common/fixture/feed.fixture';
@@ -7,22 +7,24 @@ import { Feed } from '../../../src/feed/entity/feed.entity';
 import * as supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 import { RssAccept } from '../../../src/rss/entity/rss.entity';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/feed';
 
 describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
-  let app: INestApplication;
   let feed: Feed;
   let feedRepository: FeedRepository;
   let rssAccept: RssAccept;
   let agent: TestAgent;
+  let rssAcceptRepository: RssAcceptRepository;
 
-  beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    feedRepository = app.get(FeedRepository);
-    const rssAcceptRepository = app.get(RssAcceptRepository);
+  beforeAll(() => {
+    agent = supertest(testApp.getHttpServer());
+    feedRepository = testApp.get(FeedRepository);
+    rssAcceptRepository = testApp.get(RssAcceptRepository);
+  });
 
+  beforeEach(async () => {
     rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
@@ -72,7 +74,6 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
 
   it('[200] 원본 게시글이 존재할 경우 조회를 성공한다.', async () => {
     // given
-    feed = await feedRepository.save(FeedFixture.createFeedFixture(rssAccept));
     global.fetch = jest
       .fn()
       .mockResolvedValue({ ok: true, status: HttpStatus.OK });
@@ -90,8 +91,5 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
 
     // DB, Redis then
     expect(savedFeed).not.toBeNull();
-
-    // cleanup
-    await feedRepository.delete(feed.id);
   });
 });

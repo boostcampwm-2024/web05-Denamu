@@ -50,8 +50,7 @@ export class UserScheduler {
       }
     } catch (error) {
       this.logger.error(
-        `[UserScheduler]: streak 업데이트 스케줄러 동작중 오류 발생: ${error.message}`,
-        error.stack,
+        `[UserScheduler]: streak 업데이트 스케줄러 동작중 오류 발생: ${error}`,
       );
     }
   }

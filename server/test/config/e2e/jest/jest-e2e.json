@@ -10,7 +10,7 @@
   "setupFilesAfterEnv": ["./test/config/e2e/env/jest.setup.ts"],
   "globalSetup": "./test/config/e2e/global/e2e-test-global-setup.ts",
   "globalTeardown": "./test/config/e2e/global/e2e-test-global-teardown.ts",
-  "maxWorkers": 1,
+  "maxWorkers": "50%",
   "testTimeout": 20000,
   "testPathIgnorePatterns": ["test/sample/"],
   "coveragePathIgnorePatterns": ["test/", "src/common/database/migration"]

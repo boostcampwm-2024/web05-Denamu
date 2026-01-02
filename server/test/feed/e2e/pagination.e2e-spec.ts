@@ -1,4 +1,4 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import * as supertest from 'supertest';
 import { FeedFixture } from '../../config/common/fixture/feed.fixture';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
@@ -7,24 +7,30 @@ import { RssAcceptFixture } from '../../config/common/fixture/rss-accept.fixture
 import { ReadFeedPaginationRequestDto } from '../../../src/feed/dto/request/readFeedPagination.dto';
 import TestAgent from 'supertest/lib/agent';
 import { Feed } from '../../../src/feed/entity/feed.entity';
+import { RssAccept } from '../../../src/rss/entity/rss.entity';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/feed';
 
 describe(`GET ${URL}?limit={}&lastId={} E2E Test`, () => {
-  let app: INestApplication;
   let agent: TestAgent;
   let feedList: Feed[];
+  let rssAccept: RssAccept;
+  let feedRepository: FeedRepository;
+  let rssAcceptRepository: RssAcceptRepository;
 
-  beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    const feedRepository = app.get(FeedRepository);
-    const rssAcceptRepository = app.get(RssAcceptRepository);
-    const rssAccept = await rssAcceptRepository.save(
+  beforeAll(() => {
+    agent = supertest(testApp.getHttpServer());
+    feedRepository = testApp.get(FeedRepository);
+    rssAcceptRepository = testApp.get(RssAcceptRepository);
+  });
+
+  beforeEach(async () => {
+    rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
-    const feeds = Array.from({ length: 10 }).map((_, i) =>
-      FeedFixture.createFeedFixture(rssAccept, _, i + 1),
+    const feeds = Array.from({ length: 10 }).map(() =>
+      FeedFixture.createFeedFixture(rssAccept),
     );
 
     // 최신 게시글부터 제공하기에 테스트 편의성을 위해 최신 게시글을 앞으로

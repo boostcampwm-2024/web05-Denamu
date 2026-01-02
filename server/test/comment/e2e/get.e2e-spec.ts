@@ -1,4 +1,4 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import * as supertest from 'supertest';
 import { Feed } from '../../../src/feed/entity/feed.entity';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
@@ -11,27 +11,43 @@ import { CommentRepository } from '../../../src/comment/repository/comment.repos
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../config/common/fixture/user.fixture';
 import { CommentFixture } from '../../config/common/fixture/comment.fixture';
+import { RssAccept } from '../../../src/rss/entity/rss.entity';
+import { User } from '../../../src/user/entity/user.entity';
+import { Comment } from '../../../src/comment/entity/comment.entity';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/comment';
 
 describe(`GET ${URL}/{feedId} E2E Test`, () => {
-  let app: INestApplication;
   let agent: TestAgent;
   let feed: Feed;
   let commentRepository: CommentRepository;
   let userRepository: UserRepository;
+  let rssAcceptRepository: RssAcceptRepository;
+  let feedRepository: FeedRepository;
+  let rssAccept: RssAccept;
+  let user: User;
+  let comment: Comment;
 
-  beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    commentRepository = app.get(CommentRepository);
-    userRepository = app.get(UserRepository);
-    const rssAcceptRepository = app.get(RssAcceptRepository);
-    const feedRepository = app.get(FeedRepository);
-    const rssAccept = await rssAcceptRepository.save(
+  beforeAll(() => {
+    agent = supertest(testApp.getHttpServer());
+    commentRepository = testApp.get(CommentRepository);
+    userRepository = testApp.get(UserRepository);
+    rssAcceptRepository = testApp.get(RssAcceptRepository);
+    feedRepository = testApp.get(FeedRepository);
+  });
+
+  beforeEach(async () => {
+    rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
-    feed = await feedRepository.save(FeedFixture.createFeedFixture(rssAccept));
+    [user, feed] = await Promise.all([
+      userRepository.save(await UserFixture.createUserCryptFixture()),
+      feedRepository.save(FeedFixture.createFeedFixture(rssAccept)),
+    ]);
+    comment = await commentRepository.save(
+      CommentFixture.createCommentFixture(feed, user),
+    );
   });
 
   it('[404] 게시글이 존재하지 않을 경우 댓글 조회를 실패한다.', async () => {
@@ -46,10 +62,6 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
 
   it('[200] 게시글이 존재할 경우 댓글 조회를 성공한다.', async () => {
     // given
-    const user = await userRepository.save(UserFixture.createUserFixture());
-    const comment = await commentRepository.save(
-      CommentFixture.createCommentFixture(feed, user),
-    );
     const requestDto = new GetCommentRequestDto({
       feedId: feed.id,
     });
@@ -72,8 +84,5 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
         },
       },
     ]);
-
-    // cleanup
-    await commentRepository.delete(comment.id);
   });
 });

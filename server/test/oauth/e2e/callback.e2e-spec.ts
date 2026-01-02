@@ -1,22 +1,21 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import * as supertest from 'supertest';
 import { OAuthCallbackRequestDto } from '../../../src/user/dto/request/oAuthCallbackDto';
 import { OAuthType } from '../../../src/user/constant/oauth.constant';
 import TestAgent from 'supertest/lib/agent';
 import axios from 'axios';
 import { ProviderRepository } from '../../../src/user/repository/provider.repository';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/oauth/callback';
 
 describe(`GET ${URL} E2E Test`, () => {
-  let app: INestApplication;
   let agent: TestAgent;
   let providerRepository: ProviderRepository;
 
   beforeAll(() => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    providerRepository = app.get(ProviderRepository);
+    agent = supertest(testApp.getHttpServer());
+    providerRepository = testApp.get(ProviderRepository);
   });
 
   it('[302] Github OAuth 로그인 콜백으로 인증 서버에서 데이터를 받을 경우 리다이렉트를 성공한다.', async () => {

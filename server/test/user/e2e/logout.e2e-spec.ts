@@ -1,25 +1,30 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import * as supertest from 'supertest';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../config/common/fixture/user.fixture';
 import TestAgent from 'supertest/lib/agent';
 import { User } from '../../../src/user/entity/user.entity';
 import { createAccessToken } from '../../config/e2e/env/jest.setup';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/user/logout';
 
 describe(`POST ${URL} E2E Test`, () => {
-  let app: INestApplication;
   let agent: TestAgent;
   let user: User;
+  let userRepository: UserRepository;
+  let accessToken: string;
 
-  beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    const userRepository = app.get(UserRepository);
+  beforeAll(() => {
+    agent = supertest(testApp.getHttpServer());
+    userRepository = testApp.get(UserRepository);
+  });
+
+  beforeEach(async () => {
     user = await userRepository.save(
       await UserFixture.createUserCryptFixture(),
     );
+    accessToken = createAccessToken(user);
   });
 
   it('[401] Access Token이 존재하지 않을 경우 로그아웃을 실패한다.', async () => {
@@ -33,9 +38,6 @@ describe(`POST ${URL} E2E Test`, () => {
   });
 
   it('[200] 로그인된 상태일 경우 로그아웃을 성공한다.', async () => {
-    // given
-    const accessToken = createAccessToken(user);
-
     // Http when
     const response = await agent
       .post(URL)
