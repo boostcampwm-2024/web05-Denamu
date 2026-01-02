@@ -82,16 +82,16 @@ jobs:
 
       - name: Docker 이미지 Pull
         run: |
-          docker pull "${{env.EMAIL_WORKER_IMAGE}}:latest" || true
-          docker compose -f "${{env.COMPOSE_FILE}}" pull "${{env.SERVICE}}"
-
-      - name: Graceful Shutdown & 서비스 재시작
-        run: |
           set -a
           source ${{ env.EMAIL-WORKER_ENV_FILE }}
           source ${{ env.INFRA_ENV_FILE }}
           set +a
 
+          docker pull "${{env.EMAIL_WORKER_IMAGE}}:latest" || true
+          docker compose -f "${{env.COMPOSE_FILE}}" pull "${{env.SERVICE}}"
+
+      - name: Graceful Shutdown & 서비스 재시작
+        run: |
           docker compose -f "${{env.COMPOSE_FILE}}" stop -t ${{env.STOP_GRACE_PERIOD}} "${{env.SERVICE}}" || true
           docker compose -f "${{env.COMPOSE_FILE}}" up -d --no-deps --force-recreate "${{env.SERVICE}}"
           docker image prune -f || true
