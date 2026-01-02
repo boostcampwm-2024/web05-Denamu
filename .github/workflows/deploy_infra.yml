@@ -32,19 +32,28 @@ jobs:
           sudo install -m 600 /dev/null /var/prod_config/infra/.env.prod
           {
             echo "MYSQL_ROOT_HOST=localhost" # MYSQL
+            echo "MYSQL_HOST=${{ secrets.DB_HOST }}" # MYSQL Exporter
+            echo "MYSQL_METRIC_PORT=${{ secrets.DB_METRIC_PORT }}" # MYSQL Exporter
             echo "MYSQL_DATABASE=${{ secrets.DB_NAME }}" # MYSQL
             echo "MYSQL_PASSWORD=${{ secrets.DB_PASSWORD }}" # MYSQL
-            echo "MYSQL_PORT=${{ secrets.DB_PORT}}" # MYSQL
+            echo "MYSQL_PORT=${{ secrets.DB_PORT }}" # MYSQL
             echo "MYSQL_ROOT_PASSWORD=${{ secrets.DB_ROOT_PASSWORD }}" # MYSQL
             echo "MYSQL_USER=${{ secrets.DB_USER }}" # MYSQL
-            echo "DATA_SOURCE_NAME=${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@tcp(${{ secrets.DB_HOST }}:${{ secrets.DB_PORT }})/" # MYSQL Exporter
-            echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}" # Redis
-            echo "REDIS_USER=${{ secrets.REDIS_USER }}" # Redis, Redis Exporter
-            echo "REDIS_ADDR=${{ secrets.REDIS_ADDR }}" # Redis Exporter
+            echo "GRAFANA_PORT=${{ secrets.GRAFANA_PORT }} # Grafana
+            echo "NODE_METRIC_PORT=${{ secrets.NODE_METRIC_PORT }}" # Node Exporter
+            echo "PROMETHEUS_PORT=${{ secrets.PROMETHEUS_PORT }}" # Prometheus
             echo "RABBITMQ_HOST=${{ secrets.RABBITMQ_HOST }}" # RabbitMQ
             echo "RABBITMQ_DEFAULT_PASS=${{ secrets.RABBITMQ_PASSWORD }}" # RabbitMQ
             echo "RABBITMQ_PORT=${{ secrets.RABBITMQ_PORT }}" # RabbitMQ
+            echo "RABBITMQ_METRIC_PORT=${{ secrets.RABBITMQ_METRIC_PORT }}" # RabbitMQ
             echo "RABBITMQ_DEFAULT_USER=${{ secrets.RABBITMQ_USER }}" # RabbitMQ
+            echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" # Redis, Redis Exporter
+            echo "REDIS_METRIC_PORT=${{ secrets.REDIS_METRIC_PORT }}" # Redis Exporter
+            echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}" # Redis
+            echo "REDIS_PORT=${{ secrets.REDIS_PORT }}" # Redis, Redis Exporter
+            echo "REDIS_USER=${{ secrets.REDIS_USER }}" # Redis, Redis Exporter
+            echo "REDIS_ADDR=${{ secrets.REDIS_HOST }}://${{ secrets.REDIS_HOST }}:${{ secrets.REDIS_PORT }}" # Redis Exporter
+            echo "SERVER_PORT=${{ secrets.SERVER_PORT}}" # Server Port
             echo "TZ=Asia/Seoul" # ALL
           } | sudo tee /var/prod_config/infra/.env.prod >/dev/null
 
@@ -52,12 +61,9 @@ jobs:
 
       - name: 인프라 서비스 재시작
         run: |
-          echo "=== 환경변수 확인 ==="
-          echo "GHCR_URL: $GHCR_URL"
-          echo "COMPOSE_FILE: $COMPOSE_FILE"
-
-          echo "=== docker-compose config 미리보기 ==="
-          docker compose -f "$COMPOSE_FILE" config | grep "image:"
+          set -a
+          source /var/prod_config/infra/.env.prod
+          set +a
 
           echo "=== 실제 배포 시작 ==="
           docker compose -f "$COMPOSE_FILE" down

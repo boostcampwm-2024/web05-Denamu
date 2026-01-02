@@ -8,7 +8,7 @@ services:
   app:
     image: ${GHCR_URL}/server:latest
     ports:
-      - '8080:8080'
+      - '$SERVER_PORT:$SERVER_PORT'
     env_file:
       - /var/prod_config/server/.env.prod
     networks:
