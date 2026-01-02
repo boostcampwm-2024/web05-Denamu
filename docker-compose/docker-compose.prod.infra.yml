@@ -1,3 +1,5 @@
+name: denamu-production-infra
+
 services:
   # DB 서비스
   mysql-db:

@@ -1,4 +1,4 @@
-name: denamu-production
+name: denamu-production-application
 
 services:
   # WAS 서비스
