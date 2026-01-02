@@ -3,19 +3,23 @@ global:
   evaluation_interval: 15s
 
 scrape_configs:
-  - job_name: "node_exporter"
+  - job_name: 'node_exporter'
     static_configs:
-      - targets: ["node_exporter:9100"]
+      - targets: ['node_exporter:9100']
 
-  - job_name: "nestJS Server"
-    metrics_path: "/api/metrics"
+  - job_name: 'nestJS Server'
+    metrics_path: '/api/metrics'
     static_configs:
-      - targets: ["app:8080"]
+      - targets: ['app:8080']
 
-  - job_name: "mysql_exporter"
+  - job_name: 'mysql_exporter'
     static_configs:
-      - targets: ["mysql_metrics:9104"]
+      - targets: ['mysql_metrics:9104']
 
-  - job_name: "redis_exporter"
+  - job_name: 'redis_exporter'
     static_configs:
-      - targets: ["redis_metrics:9121"]
+      - targets: ['redis_metrics:9121']
+
+  - job_name: 'rabbitMQ_exporter'
+    static_configs:
+      - targets: ['rabbitmq_metrics:9419']
