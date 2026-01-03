@@ -103,7 +103,6 @@ jobs:
           source ${{ env.INFRA_ENV_FILE }}
           set +a
 
-          docker pull "${{env.APP_IMAGE}}:latest" || true
           docker compose -f "${{env.COMPOSE_FILE}}" pull "${{env.SERVICE}}"
           docker compose -f "${{env.COMPOSE_FILE}}" up -d --no-deps --force-recreate "${{env.SERVICE}}"
-          docker image prune -f || true
+          docker image prune -f

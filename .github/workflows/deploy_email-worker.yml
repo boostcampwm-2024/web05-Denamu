@@ -19,7 +19,6 @@ env:
   EMAIL-WORKER_ENV_FILE: /var/prod_config/email-worker/.env.prod
   INFRA_ENV_FILE: /var/prod_config/infra/.env.prod
   COMPOSE_FILE: docker-compose/docker-compose.prod.yml
-  STOP_GRACE_PERIOD: 30
 
 jobs:
   build-and-push:
@@ -80,16 +79,6 @@ jobs:
             echo "RABBITMQ_USER=${{ secrets.RABBITMQ_USER }}"
           } | sudo tee "${{env.EMAIL-WORKER_ENV_FILE}}" >/dev/null
 
-      - name: Docker 이미지 Pull
-        run: |
-          set -a
-          source ${{ env.EMAIL-WORKER_ENV_FILE }}
-          source ${{ env.INFRA_ENV_FILE }}
-          set +a
-
-          docker pull "${{env.EMAIL_WORKER_IMAGE}}:latest" || true
-          docker compose -f "${{env.COMPOSE_FILE}}" pull "${{env.SERVICE}}"
-
       - name: Graceful Shutdown & 서비스 재시작
         run: |
           set -a
@@ -97,6 +86,7 @@ jobs:
           source ${{ env.INFRA_ENV_FILE }}
           set +a
 
-          docker compose -f "${{env.COMPOSE_FILE}}" stop -t ${{env.STOP_GRACE_PERIOD}} "${{env.SERVICE}}" || true
+          docker compose -f "${{env.COMPOSE_FILE}}" pull "${{env.SERVICE}}"
+          docker compose -f "${{env.COMPOSE_FILE}}" stop "${{env.SERVICE}}"
           docker compose -f "${{env.COMPOSE_FILE}}" up -d --no-deps --force-recreate "${{env.SERVICE}}"
-          docker image prune -f || true
+          docker image prune -f
