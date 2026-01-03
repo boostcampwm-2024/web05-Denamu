@@ -71,7 +71,3 @@ jobs:
           docker compose -f "${{env.COMPOSE_FILE}}" down
           docker compose -f "${{env.COMPOSE_FILE}}" up -d
           docker image prune -f || true
-
-          docker compose -f "${{env.COMPOSE_FILE}}" down
-          docker compose -f "${{env.COMPOSE_FILE}}" up -d
-          docker image prune -f || true
