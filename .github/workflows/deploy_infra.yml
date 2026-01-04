@@ -54,7 +54,7 @@ jobs:
             echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}" # Redis
             echo "REDIS_PORT=${{ secrets.REDIS_PORT }}" # Redis, Redis Exporter
             echo "REDIS_USER=${{ secrets.REDIS_USER }}" # Redis, Redis Exporter
-            echo "REDIS_ADDR=${{ secrets.REDIS_HOST }}://${{ secrets.REDIS_HOST }}:${{ secrets.REDIS_PORT }}" # Redis Exporter
+            echo "REDIS_ADDR=redis://${{ secrets.REDIS_HOST }}:${{ secrets.REDIS_PORT }}" # Redis Exporter
             echo "SERVER_PORT=${{ secrets.SERVER_PORT}}" # Server Port
             echo "TZ=Asia/Seoul" # ALL
           } | sudo tee "${{env.INFRA_ENV_FILE}}" >/dev/null
