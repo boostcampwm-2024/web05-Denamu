@@ -10,8 +10,8 @@ services:
       context: ../nginx
       dockerfile: Dockerfile.dev
     ports:
-      - "80:80"
-      - "443:443"
+      - '80:80'
+      - '443:443'
     networks:
       - Denamu
     depends_on:
@@ -28,17 +28,17 @@ services:
         - path: ../nginx/scripts/generate_cert.sh
           action: rebuild
     environment:
-      TZ: "Asia/Seoul"
+      TZ: 'Asia/Seoul'
     profiles:
       - default
 
-  # Client 서비스
+  # Client 개발 서비스
   web:
     build:
       context: ../client
       dockerfile: docker/Dockerfile.dev
     ports:
-      - "5173:5173"
+      - '5173:5173'
     networks:
       - Denamu
     volumes:
@@ -49,18 +49,18 @@ services:
         - path: ../client/package.json
           action: rebuild
     environment:
-      TZ: "Asia/Seoul"
+      TZ: 'Asia/Seoul'
     profiles:
       - default
 
-  # WAS 서비스
+  # WAS 개발 서비스
   app:
     build:
       context: ../server
       dockerfile: docker/Dockerfile.dev
     image: denamu-dev-app:latest
     ports:
-      - "8080:8080"
+      - '8080:8080'
     networks:
       - Denamu
     depends_on:
@@ -74,16 +74,17 @@ services:
       - ../server:/var/web05-Denamu/server
       - /var/web05-Denamu/server/node_modules
     environment:
-      NODE_ENV: "DEV"
-      TZ: "Asia/Seoul"
+      NODE_ENV: 'DEV'
+      TZ: 'Asia/Seoul'
     develop:
       watch:
         - path: ../server/package.json
           action: rebuild
     profiles:
       - was-dev
+      - default
 
-  # Feed Crawler 서비스
+  # Feed Crawler 개발 서비스
   feed-crawler:
     build:
       context: ../feed-crawler
@@ -102,8 +103,8 @@ services:
       - ../feed-crawler:/var/web05-Denamu/feed-crawler
       - /var/web05-Denamu/feed-crawler/node_modules
     environment:
-      NODE_ENV: "DEV"
-      TZ: "Asia/Seoul"
+      NODE_ENV: 'DEV'
+      TZ: 'Asia/Seoul'
     develop:
       watch:
         - path: ../feed-crawler/package.json
@@ -111,7 +112,7 @@ services:
     profiles:
       - default
 
-  # Email Worker 서비스
+  # Email Worker 개발 서비스
   email-worker:
     build:
       context: ../email-worker
@@ -130,12 +131,12 @@ services:
       - ../email-worker:/var/web05-Denamu/email-worker
       - /var/web05-Denamu/email-worker/node_modules
     environment:
-      NODE_ENV: "DEV"
-      TZ: "Asia/Seoul"
+      NODE_ENV: 'DEV'
+      TZ: 'Asia/Seoul'
     stop_grace_period: 30s
     develop:
       watch:
         - path: ../email-worker/package.json
           action: rebuild
     profiles:
-      - was-dev
+      - default

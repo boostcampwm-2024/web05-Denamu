@@ -3,7 +3,7 @@ services:
   mysql-db:
     image: 'mysql:8.0.39'
     ports:
-      - '3306:3306'
+      - '$MYSQL_PORT:3306'
     volumes:
       - denamu-mysql:/var/lib/mysql
     networks:
@@ -24,7 +24,7 @@ services:
           'localhost',
           '-u',
           'root',
-          '-p$MYSQL_PASSWORD',
+          '-p$MYSQL_ROOT_PASSWORD',
         ]
       interval: 10s
       timeout: 5s
@@ -34,10 +34,10 @@ services:
   redis:
     image: 'redis:6.0.16-alpine'
     ports:
-      - '6379:6379'
+      - '$REDIS_PORT:6379'
     volumes:
       - denamu-redis:/data
-      - ./redis-init.sh:/usr/local/bin/redis-init.sh:ro
+      - ./redis/redis-init.sh:/usr/local/bin/redis-init.sh:ro
     networks:
       - Denamu
     env_file:
@@ -56,14 +56,15 @@ services:
     networks:
       - Denamu
     ports:
-      - '5672:5672'
+      - '$RABBITMQ_PORT:5672'
+      - '$RABBITMQ_METRIC_PORT:15692'
     env_file:
       - /var/prod_config/infra/.env.prod
     volumes:
       - denamu-rabbitmq:/var/lib/rabbitmq
-      - ./definitions.json:/etc/rabbitmq/definitions.json:ro
-      - ./import-definitions.sh:/etc/rabbitmq/import-definitions.sh:ro
-      - ./check-rabbitmq-ready.sh:/etc/rabbitmq/check-rabbitmq-ready.sh:ro
+      - ./rabbitMQ/definitions.json:/etc/rabbitmq/definitions.json:ro
+      - ./rabbitMQ/import-definitions.sh:/etc/rabbitmq/import-definitions.sh:ro
+      - ./rabbitMQ/check-rabbitmq-ready.sh:/etc/rabbitmq/check-rabbitmq-ready.sh:ro
     entrypoint: ['/bin/sh', '/etc/rabbitmq/import-definitions.sh']
     healthcheck:
       test: ['CMD', '/bin/sh', '/etc/rabbitmq/check-rabbitmq-ready.sh']
@@ -76,13 +77,13 @@ services:
   prometheus:
     image: 'prom/prometheus'
     ports:
-      - '9090:9090'
+      - '$PROMETHEUS_PORT:9090'
     env_file:
       - /var/prod_config/infra/.env.prod
     networks:
       - Denamu
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - denamu-prometheus:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
@@ -91,7 +92,7 @@ services:
   grafana:
     image: 'grafana/grafana'
     ports:
-      - '3000:3000'
+      - '$GRAFANA_PORT:3000'
     networks:
       - Denamu
     volumes:
@@ -105,7 +106,7 @@ services:
   node_exporter:
     image: prom/node-exporter
     ports:
-      - '9100:9100'
+      - '$NODE_METRIC_PORT:9100'
     networks:
       - Denamu
     env_file:
@@ -124,40 +125,30 @@ services:
   mysql_metrics:
     image: prom/mysqld-exporter
     ports:
-      - '9104:9104'
+      - '$MYSQL_METRIC_PORT:9104'
     networks:
       - Denamu
     env_file:
       - /var/prod_config/infra/.env.prod
+    depends_on:
+      mysql-db:
+        condition: service_healthy
     command:
       - '--mysqld.username=$MYSQL_USER:$MYSQL_PASSWORD'
-      - '--mysqld.address=mysql-db:3306'
-    depends_on:
-      - mysql-db
+      - '--mysqld.address=$MYSQL_HOST:$MYSQL_PORT'
 
   # Redis Metrics
   redis_metrics:
     image: oliver006/redis_exporter
     ports:
-      - '9121:9121'
+      - '$REDIS_METRIC_PORT:9121'
     networks:
       - Denamu
     env_file:
       - /var/prod_config/infra/.env.prod
     depends_on:
-      - redis
-
-  # RabbitMQ Metrics
-  rabbitmq_metrics:
-    image: 'kbudde/rabbitmq-exporter'
-    env_file:
-      - /var/prod_config/infra/.env.prod
-    ports:
-      - '9419:9419'
-    networks:
-      - Denamu
-    depends_on:
-      - rabbitmq
+      redis:
+        condition: service_healthy
 
 volumes:
   denamu-mysql:
