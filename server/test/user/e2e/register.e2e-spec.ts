@@ -1,4 +1,4 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import { RegisterUserRequestDto } from '../../../src/user/dto/request/registerUser.dto';
 import * as supertest from 'supertest';
 import { UserRepository } from '../../../src/user/repository/user.repository';
@@ -8,11 +8,11 @@ import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import * as uuid from 'uuid';
 import * as bcrypt from 'bcrypt';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/user/register';
 
 describe(`POST ${URL} E2E Test`, () => {
-  let app: INestApplication;
   let agent: TestAgent;
   let userRepository: UserRepository;
   let redisService: RedisService;
@@ -20,10 +20,9 @@ describe(`POST ${URL} E2E Test`, () => {
   const redisKeyMake = (data: string) => `${REDIS_KEYS.USER_AUTH_KEY}:${data}`;
 
   beforeAll(() => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    userRepository = app.get(UserRepository);
-    redisService = app.get(RedisService);
+    agent = supertest(testApp.getHttpServer());
+    userRepository = testApp.get(UserRepository);
+    redisService = testApp.get(RedisService);
   });
 
   beforeEach(() => {
@@ -54,9 +53,6 @@ describe(`POST ${URL} E2E Test`, () => {
 
     // DB, Redis then
     expect(savedRegisterCode).toBeNull();
-
-    // cleanup
-    await userRepository.delete(user.id);
   });
 
   it('[201] 중복되는 회원이 없을 경우 회원가입을 성공한다.', async () => {
@@ -88,8 +84,5 @@ describe(`POST ${URL} E2E Test`, () => {
       email: requestDto.email,
       userName: requestDto.userName,
     });
-
-    // cleanup
-    await userRepository.delete({ email: requestDto.email });
   });
 });

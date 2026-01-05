@@ -1,34 +1,31 @@
-import { INestApplication } from '@nestjs/common';
 import { Socket } from 'socket.io-client';
 import { io } from 'socket.io-client';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 import { ChatService } from '../../../src/chat/service/chat.service';
 import { ChatFixture } from '../../config/common/fixture/chat.fixture';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
 const URL = '/chat';
 
 describe('Socket.IO Anonymous Chat E2E Test', () => {
-  let app: INestApplication;
   let clientSocket: Socket;
   let chatService: ChatService;
   let redisService: RedisService;
   let serverUrl: string;
 
   beforeAll(async () => {
-    app = global.testApp;
-    redisService = app.get(RedisService);
-    chatService = app.get(ChatService);
-    const httpServer = await app.listen(0);
+    redisService = testApp.get(RedisService);
+    chatService = testApp.get(ChatService);
+    const httpServer = await testApp.listen(0);
     const port = httpServer.address().port;
     serverUrl = `http://localhost:${port}`;
   });
 
-  afterEach(async () => {
+  afterEach(() => {
     if (clientSocket && clientSocket.connected) {
       clientSocket.disconnect();
     }
-    await redisService.del(REDIS_KEYS.CHAT_HISTORY_KEY);
   });
 
   it('[Disconnect] 최대 인원을 초과할 경우 연결을 실패한다.', async () => {
@@ -55,7 +52,7 @@ describe('Socket.IO Anonymous Chat E2E Test', () => {
     });
 
     // Socket.IO then
-    expect(data).toEqual({
+    expect(data).toStrictEqual({
       message: '채팅 서버의 한계에 도달했습니다. 잠시후 재시도 해주세요.',
     });
   });
@@ -117,7 +114,7 @@ describe('Socket.IO Anonymous Chat E2E Test', () => {
 
     // Socket.IO then
     expect(data).toStrictEqual({
-      userCount: expect.any(Number),
+      userCount: 1,
       name: expect.any(String),
     });
   });
@@ -147,7 +144,9 @@ describe('Socket.IO Anonymous Chat E2E Test', () => {
     });
 
     // Socket.IO then
-    expect(data).toMatchObject({
+    expect(data).toStrictEqual({
+      userId: chat.userId,
+      messageId: chat.messageId,
       message: chat.message,
       username: expect.any(String),
       timestamp: expect.any(String),

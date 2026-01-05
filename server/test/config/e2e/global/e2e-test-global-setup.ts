@@ -5,26 +5,36 @@ import {
   StartedRabbitMQContainer,
 } from '@testcontainers/rabbitmq';
 import * as path from 'path';
+import * as mysql from 'mysql2/promise';
+import * as os from 'os';
 
-const globalAny: any = global;
+const CPU_COUNT = os.cpus().length;
+const MAX_WORKERS = Math.max(1, Math.floor(CPU_COUNT * 0.5));
+
+export let mysqlContainer: StartedMySqlContainer;
+export let redisContainer: StartedRedisContainer;
+export let rabbitMQContainer: StartedRabbitMQContainer;
 
 export default async () => {
   console.log('Starting global setup...');
-  await createMysqlContainer();
-  await createRedisContainer();
-  await createRabbitMQContainer();
+  const startTime = process.hrtime.bigint();
+  await Promise.all([
+    createMysqlContainer(),
+    createRedisContainer(),
+    createRabbitMQContainer(),
+  ]);
   jwtEnvSetup();
-  console.log('Global setup completed.');
+  const endTime = process.hrtime.bigint();
+  const elapsedMs = Number(endTime - startTime) / 1_000_000;
+
+  console.log(
+    `Global setup completed. Elapsed time: ${elapsedMs.toFixed(2)} ms`,
+  );
 };
 
 const createMysqlContainer = async () => {
   console.log('Starting MySQL container...');
-  const mysqlContainer: StartedMySqlContainer = await new MySqlContainer(
-    'mysql:8.0.39',
-  )
-    .withDatabase('denamu')
-    .start();
-  globalAny.__MYSQL_CONTAINER__ = mysqlContainer;
+  mysqlContainer = await new MySqlContainer('mysql:8.0.39').start();
 
   process.env.DB_HOST = mysqlContainer.getHost();
   process.env.DB_NAME = mysqlContainer.getDatabase();
@@ -32,14 +42,39 @@ const createMysqlContainer = async () => {
   process.env.DB_PORT = mysqlContainer.getPort().toString();
   process.env.DB_USER = mysqlContainer.getUsername();
   process.env.DB_TYPE = 'mysql';
+  
+  await createTestDatabases(mysqlContainer);
+};
+
+const createTestDatabases = async (container: StartedMySqlContainer) => {
+  console.log('Starting Creating Test Databases...');
+  const user = 'root';
+  const password = container.getRootPassword();
+
+  const conn = await mysql.createConnection({
+    host: container.getHost(),
+    port: container.getPort(),
+    user,
+    password,
+    database: 'mysql',
+  });
+
+  for (let i = 1; i <= MAX_WORKERS; i++) {
+    await conn.query(`CREATE DATABASE IF NOT EXISTS denamu_test_${i}`);
+    await conn.query(
+      `GRANT ALL PRIVILEGES ON denamu_test_${i}.* TO '${container.getUsername()}'@'%'`,
+    );
+  }
+
+  await conn.query(`FLUSH PRIVILEGES`);
+  await conn.end();
 };
 
 const createRedisContainer = async () => {
   console.log('Starting Redis container...');
-  const redisContainer: StartedRedisContainer = await new RedisContainer(
-    'redis:6.0.16-alpine',
-  ).start();
-  globalAny.__REDIS_CONTAINER__ = redisContainer;
+  redisContainer = await new RedisContainer('redis:6.0.16-alpine')
+    .withCommand(['redis-server', '--databases', `${MAX_WORKERS + 1}`])
+    .start();
 
   process.env.REDIS_HOST = redisContainer.getHost();
   process.env.REDIS_PORT = redisContainer.getPort().toString();
@@ -49,16 +84,14 @@ const createRedisContainer = async () => {
 
 const createRabbitMQContainer = async () => {
   console.log('Starting RabbitMQ container...');
-  const rabbitMQContainer: StartedRabbitMQContainer =
-    await new RabbitMQContainer('rabbitmq:4.1-management')
-      .withCopyFilesToContainer([
-        {
-          source: `${path.resolve(__dirname, 'rabbitMQ-definitions.json')}`,
-          target: '/etc/rabbitmq/definitions.json',
-        },
-      ])
-      .start();
-  globalAny.__RABBITMQ_CONTAINER__ = rabbitMQContainer;
+  rabbitMQContainer = await new RabbitMQContainer('rabbitmq:4.1-management')
+    .withCopyFilesToContainer([
+      {
+        source: `${path.resolve(__dirname, 'rabbitMQ-definitions.json')}`,
+        target: '/etc/rabbitmq/definitions.json',
+      },
+    ])
+    .start();
 
   process.env.RABBITMQ_HOST = rabbitMQContainer.getHost();
   process.env.RABBITMQ_PORT = rabbitMQContainer.getMappedPort(5672).toString();

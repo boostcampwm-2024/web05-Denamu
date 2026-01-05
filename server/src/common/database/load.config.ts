@@ -5,9 +5,15 @@ export function loadDBSetting(configService: ConfigService) {
   const isDev = env === 'LOCAL' || env === 'DEV';
   const isTest = env === 'TEST';
 
+  const workerId = process.env.JEST_WORKER_ID;
+
+  const database = isTest
+    ? `denamu_test_${workerId}`
+    : configService.get<string>('DB_NAME');
+
   return {
-    type: configService.get<'mysql' | 'sqlite'>('DB_TYPE'),
-    database: configService.get<string>('DB_NAME'),
+    type: configService.get<'mysql'>('DB_TYPE'),
+    database,
     host: configService.get<string>('DB_HOST'),
     port: configService.get<number>('DB_PORT'),
     username: configService.get<string>('DB_USER'),

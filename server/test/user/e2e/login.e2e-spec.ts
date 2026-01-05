@@ -1,28 +1,38 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import * as supertest from 'supertest';
 import { LoginUserRequestDto } from '../../../src/user/dto/request/loginUser.dto';
 import { UserRepository } from '../../../src/user/repository/user.repository';
-import { UserFixture } from '../../config/common/fixture/user.fixture';
+import {
+  USER_DEFAULT_PASSWORD,
+  UserFixture,
+} from '../../config/common/fixture/user.fixture';
 import TestAgent from 'supertest/lib/agent';
+import { User } from '../../../src/user/entity/user.entity';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/user/login';
 
 describe(`POST ${URL} E2E Test`, () => {
-  let app: INestApplication;
   let agent: TestAgent;
+  let userRepository: UserRepository;
+  let user: User;
 
-  beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    const userRepository = app.get(UserRepository);
-    await userRepository.insert(await UserFixture.createUserCryptFixture());
+  beforeAll(() => {
+    agent = supertest(testApp.getHttpServer());
+    userRepository = testApp.get(UserRepository);
+  });
+
+  beforeEach(async () => {
+    user = await userRepository.save(
+      await UserFixture.createUserCryptFixture(),
+    );
   });
 
   it('[401] 아이디가 틀렸을 경우 로그인을 실패한다.', async () => {
     // given
     const requestDto = new LoginUserRequestDto({
       email: 'testWrong@test.com',
-      password: UserFixture.GENERAL_USER.password,
+      password: USER_DEFAULT_PASSWORD,
     });
 
     // Http when
@@ -37,7 +47,7 @@ describe(`POST ${URL} E2E Test`, () => {
   it('[401] 비밀번호가 틀렸을 경우 로그인을 실패한다.', async () => {
     // given
     const requestDto = new LoginUserRequestDto({
-      email: UserFixture.GENERAL_USER.email,
+      email: user.email,
       password: 'testWrongPassword!',
     });
 
@@ -53,8 +63,8 @@ describe(`POST ${URL} E2E Test`, () => {
   it('[200] 아이디와 비밀번호에 해당하는 유저가 존재할 경우 로그인을 성공한다.', async () => {
     // given
     const requestDto = new LoginUserRequestDto({
-      email: UserFixture.GENERAL_USER.email,
-      password: UserFixture.GENERAL_USER.password,
+      email: user.email,
+      password: USER_DEFAULT_PASSWORD,
     });
 
     // Http when

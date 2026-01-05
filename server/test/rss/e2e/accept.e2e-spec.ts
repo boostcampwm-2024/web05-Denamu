@@ -1,4 +1,4 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import * as supertest from 'supertest';
 import { RssFixture } from '../../config/common/fixture/rss.fixture';
 import { RedisService } from '../../../src/common/redis/redis.service';
@@ -8,29 +8,30 @@ import {
 } from '../../../src/rss/repository/rss.repository';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 import TestAgent from 'supertest/lib/agent';
+import { Rss } from '../../../src/rss/entity/rss.entity';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/rss/accept';
 
 describe(`POST ${URL}/{rssId} E2E Test`, () => {
-  let app: INestApplication;
   let agent: TestAgent;
   let rssRepository: RssRepository;
   let rssAcceptRepository: RssAcceptRepository;
   let redisService: RedisService;
+  let rss: Rss;
   const redisKeyMake = (data: string) => `${REDIS_KEYS.ADMIN_AUTH_KEY}:${data}`;
   const sessionKey = 'admin-rss-accept';
 
   beforeAll(() => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    rssRepository = app.get(RssRepository);
-    rssAcceptRepository = app.get(RssAcceptRepository);
-    redisService = app.get(RedisService);
+    agent = supertest(testApp.getHttpServer());
+    rssRepository = testApp.get(RssRepository);
+    rssAcceptRepository = testApp.get(RssAcceptRepository);
+    redisService = testApp.get(RedisService);
   });
 
   beforeEach(async () => {
-    await Promise.all([
-      rssRepository.delete({}),
+    [rss] = await Promise.all([
+      rssRepository.save(RssFixture.createRssFixture()),
       redisService.set(redisKeyMake(sessionKey), 'test1234'),
     ]);
   });
@@ -43,6 +44,20 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const [savedRssAccept, savedRss] = await Promise.all([
+      rssAcceptRepository.findOneBy({
+        rssUrl: rss.rssUrl,
+      }),
+      rssRepository.findOneBy({
+        id: rss.id,
+      }),
+    ]);
+
+    // DB, Redis then
+    expect(savedRssAccept).toBeNull();
+    expect(savedRss).not.toBeNull();
   });
 
   it('[401] 관리자 로그인 쿠키가 만료됐을 경우 RSS 승인을 실패한다.', async () => {
@@ -55,6 +70,20 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const [savedRssAccept, savedRss] = await Promise.all([
+      rssAcceptRepository.findOneBy({
+        rssUrl: rss.rssUrl,
+      }),
+      rssRepository.findOneBy({
+        id: rss.id,
+      }),
+    ]);
+
+    // DB, Redis then
+    expect(savedRssAccept).toBeNull();
+    expect(savedRss).not.toBeNull();
   });
 
   it('[404] 대기 목록에 없는 RSS를 승인할 경우 RSS 승인을 실패한다.', async () => {
@@ -67,11 +96,24 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const [savedRssAccept, savedRss] = await Promise.all([
+      rssAcceptRepository.findOneBy({
+        rssUrl: rss.rssUrl,
+      }),
+      rssRepository.findOneBy({
+        id: rss.id,
+      }),
+    ]);
+
+    // DB, Redis then
+    expect(savedRssAccept).toBeNull();
+    expect(savedRss).not.toBeNull();
   });
 
   it('[400] 잘못된 RSS URL을 승인할 경우 RSS 승인을 실패한다.', async () => {
     // given
-    const rss = await rssRepository.save(RssFixture.createRssFixture());
     global.fetch = jest.fn().mockResolvedValue({
       ok: false,
       status: HttpStatus.BAD_REQUEST,
@@ -88,15 +130,14 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
     expect(data).toBeUndefined();
 
     // DB, Redis when
-    const savedRssAccept = await rssAcceptRepository.findOneBy({
-      rssUrl: rss.rssUrl,
-      name: rss.name,
-      userName: rss.userName,
-      email: rss.email,
-    });
-    const savedRss = await rssRepository.findOneBy({
-      id: rss.id,
-    });
+    const [savedRssAccept, savedRss] = await Promise.all([
+      rssAcceptRepository.findOneBy({
+        rssUrl: rss.rssUrl,
+      }),
+      rssRepository.findOneBy({
+        id: rss.id,
+      }),
+    ]);
 
     // DB, Redis then
     expect(savedRssAccept).toBeNull();
@@ -105,7 +146,6 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
 
   it('[201] 관리자 로그인이 되어 있을 경우 RSS 승인을 성공한다.', async () => {
     // given
-    const rss = await rssRepository.save(RssFixture.createRssFixture());
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
       status: HttpStatus.OK,
@@ -122,18 +162,17 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
     expect(data).toBeUndefined();
 
     // DB, Redis when
-    const savedRssAccept = await rssAcceptRepository.findOneBy({
-      rssUrl: rss.rssUrl,
-    });
-    const savedRss = await rssRepository.findOneBy({
-      id: rss.id,
-    });
+    const [savedRssAccept, savedRss] = await Promise.all([
+      rssAcceptRepository.findOneBy({
+        rssUrl: rss.rssUrl,
+      }),
+      rssRepository.findOneBy({
+        id: rss.id,
+      }),
+    ]);
 
     // DB, Redis then
     expect(savedRssAccept).not.toBeNull();
     expect(savedRss).toBeNull();
-
-    // cleanup
-    await rssAcceptRepository.delete({ rssUrl: rss.rssUrl });
   });
 });

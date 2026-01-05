@@ -1,5 +1,5 @@
 import { TagRepository } from './../../../src/tag/repository/tag.repository';
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import * as supertest from 'supertest';
 import { FeedFixture } from '../../config/common/fixture/feed.fixture';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
@@ -9,31 +9,40 @@ import { ManageFeedRequestDto } from '../../../src/feed/dto/request/manageFeed.d
 import TestAgent from 'supertest/lib/agent';
 import { Feed } from '../../../src/feed/entity/feed.entity';
 import { TagFixture } from '../../config/common/fixture/tag.fixture';
+import { RssAccept } from '../../../src/rss/entity/rss.entity';
+import { Tag } from '../../../src/tag/entity/tag.entity';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/feed/detail';
 
 describe(`GET ${URL}/{feedId} E2E Test`, () => {
-  let app: INestApplication;
   let agent: TestAgent;
   let feedList: Feed[];
+  let rssAccept: RssAccept;
+  let tag: Tag;
+  let feedRepository: FeedRepository;
+  let rssAcceptRepository: RssAcceptRepository;
+  let tagRepository: TagRepository;
 
-  beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    const feedRepository = app.get(FeedRepository);
-    const rssAcceptRepository = app.get(RssAcceptRepository);
-    const tagRepository = app.get(TagRepository);
-    const rssAccept = await rssAcceptRepository.save(
+  beforeAll(() => {
+    agent = supertest(testApp.getHttpServer());
+    feedRepository = testApp.get(FeedRepository);
+    rssAcceptRepository = testApp.get(RssAcceptRepository);
+    tagRepository = testApp.get(TagRepository);
+  });
+
+  beforeEach(async () => {
+    rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
 
-    feedList = Array.from({ length: 2 }).map((_, i) =>
-      FeedFixture.createFeedFixture(rssAccept, _, i + 1),
+    const feeds = Array.from({ length: 2 }).map(() =>
+      FeedFixture.createFeedFixture(rssAccept),
     );
-    const tag = await tagRepository.save(TagFixture.createTagFixture());
-    feedList[0].tags = [tag];
+    tag = await tagRepository.save(TagFixture.createTagFixture());
+    feeds[0].tags = [tag];
 
-    feedList = await feedRepository.save(feedList);
+    feedList = await feedRepository.save(feeds);
   });
 
   it('[404] 존재하지 않는 피드 ID로 요청할 경우 게시글 상세 조회에 실패한다.', async () => {
@@ -64,18 +73,18 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual({
-      author: 'blog1',
+      author: feedList[0].blog.name,
       blogPlatform: 'etc',
-      comments: 0,
-      createdAt: '2025-11-21T01:00:00.000Z',
+      comments: feedList[0].commentCount,
+      createdAt: feedList[0].createdAt.toISOString(),
       id: feedList[0].id,
-      likes: 0,
-      path: 'https://test.com/test1',
-      summary: 'test summary 1',
-      tag: ['test'],
-      thumbnail: 'https://test.com/test1.png',
-      title: 'test1',
-      viewCount: 1,
+      likes: feedList[0].likeCount,
+      path: feedList[0].path,
+      summary: feedList[0].summary,
+      tag: feedList[0].tags.map((tag) => tag.name),
+      thumbnail: feedList[0].thumbnail,
+      title: feedList[0].title,
+      viewCount: feedList[0].viewCount,
     });
   });
 
@@ -92,18 +101,18 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual({
-      author: 'blog1',
-      blogPlatform: 'etc',
-      comments: 0,
-      createdAt: '2025-11-21T02:00:00.000Z',
+      author: feedList[1].blog.name,
+      blogPlatform: feedList[1].blog.blogPlatform,
+      comments: feedList[1].commentCount,
+      createdAt: feedList[1].createdAt.toISOString(),
       id: feedList[1].id,
-      likes: 0,
-      path: 'https://test.com/test2',
-      summary: 'test summary 2',
+      likes: feedList[1].likeCount,
+      path: feedList[1].path,
+      summary: feedList[1].summary,
       tag: [],
-      thumbnail: 'https://test.com/test2.png',
-      title: 'test2',
-      viewCount: 1,
+      thumbnail: feedList[1].thumbnail,
+      title: feedList[1].title,
+      viewCount: feedList[1].viewCount,
     });
   });
 });
