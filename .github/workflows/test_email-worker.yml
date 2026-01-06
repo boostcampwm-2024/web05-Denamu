@@ -1,0 +1,40 @@
+name: EMAIL-WORKER Test
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "email-worker/**"
+      - ".github/workflows/test_email-worker.yml"
+  workflow_dispatch:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. 현재 PR 브랜치로 체크아웃 하기
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      # 2. Node.js 환경 설정
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      # 3. 의존성 설치
+      - name: Install dependencies
+        working-directory: ./email-worker
+        run: npm ci
+
+      # 4. Unit 테스트 실행
+      - name: Run Unit Test
+        working-directory: ./email-worker
+        run: npm run test:unit
+
+      # TODO: E2E 테스트 실행
