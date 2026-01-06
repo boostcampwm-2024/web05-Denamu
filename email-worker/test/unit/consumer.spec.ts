@@ -1,15 +1,158 @@
 import 'reflect-metadata';
-import { EmailPayload, EmailPayloadConstant } from '../../src/types/types';
+import {
+  EmailPayload,
+  EmailPayloadConstant,
+  RssRegistration,
+  RssRemoval,
+  User,
+} from '../../src/types/types';
 import { EmailConsumer } from '../../src/email/email.consumer';
 import { RabbitmqService } from '../../src/rabbitmq/rabbitmq.service';
 import { EmailService } from '../../src/email/email.service';
 import { RETRY_CONFIG, RMQ_QUEUES } from '../../src/rabbitmq/rabbitmq.constant';
 
 describe('email consumer unit test', () => {
+  let emailConsumer: EmailConsumer;
+  let rabbitmqService: jest.Mocked<RabbitmqService>;
+  let emailService: jest.Mocked<EmailService>;
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('handleEmailByType unit test', () => {
+    beforeEach(() => {
+      emailService = {
+        sendUserCertificationMail: jest.fn().mockResolvedValue(undefined),
+        sendRssMail: jest.fn().mockResolvedValue(undefined),
+        sendRssRemoveCertificationMail: jest.fn().mockResolvedValue(undefined),
+        sendPasswordResetEmail: jest.fn().mockResolvedValue(undefined),
+        sendDeleteAccountMail: jest.fn().mockResolvedValue(undefined),
+      } as any;
+      rabbitmqService = {
+        sendMessageToQueue: jest.fn().mockResolvedValue(null),
+      } as any;
+      emailConsumer = new EmailConsumer(rabbitmqService, emailService);
+    });
+
+    it('USER_CERTIFICATION 타입일 때 sendUserCertificationMail을 호출한다', async () => {
+      const userData: User = {
+        email: 'test@test.com',
+        userName: 'tester',
+        uuid: 'test-uuid',
+      };
+      const payload: EmailPayload = {
+        type: EmailPayloadConstant.USER_CERTIFICATION,
+        data: userData,
+      };
+
+      await emailConsumer.handleEmailByType(payload);
+
+      expect(emailService.sendUserCertificationMail).toHaveBeenCalledTimes(1);
+      expect(emailService.sendUserCertificationMail).toHaveBeenCalledWith(
+        userData,
+      );
+    });
+
+    it('RSS_REGISTRATION 타입일 때 sendRssMail을 호출한다', async () => {
+      const rssData: RssRegistration = {
+        rss: {
+          name: 'Test Blog',
+          userName: 'tester',
+          email: 'test@test.com',
+          rssUrl: 'https://test.com/rss',
+        },
+        approveFlag: true,
+        description: '승인되었습니다',
+      };
+      const payload: EmailPayload = {
+        type: EmailPayloadConstant.RSS_REGISTRATION,
+        data: rssData,
+      };
+
+      await emailConsumer.handleEmailByType(payload);
+
+      expect(emailService.sendRssMail).toHaveBeenCalledTimes(1);
+      expect(emailService.sendRssMail).toHaveBeenCalledWith(rssData);
+    });
+
+    it('RSS_REMOVAL 타입일 때 sendRssRemoveCertificationMail을 호출한다', async () => {
+      const rssRemovalData: RssRemoval = {
+        userName: 'tester',
+        email: 'test@test.com',
+        rssUrl: 'https://test.com/rss',
+        certificateCode: 'cert-code-123',
+      };
+      const payload: EmailPayload = {
+        type: EmailPayloadConstant.RSS_REMOVAL,
+        data: rssRemovalData,
+      };
+
+      await emailConsumer.handleEmailByType(payload);
+
+      expect(emailService.sendRssRemoveCertificationMail).toHaveBeenCalledTimes(
+        1,
+      );
+      expect(emailService.sendRssRemoveCertificationMail).toHaveBeenCalledWith(
+        rssRemovalData,
+      );
+    });
+
+    it('PASSWORD_RESET 타입일 때 sendPasswordResetEmail을 호출한다', async () => {
+      const userData: User = {
+        email: 'test@test.com',
+        userName: 'tester',
+        uuid: 'reset-uuid',
+      };
+      const payload: EmailPayload = {
+        type: EmailPayloadConstant.PASSWORD_RESET,
+        data: userData,
+      };
+
+      await emailConsumer.handleEmailByType(payload);
+
+      expect(emailService.sendPasswordResetEmail).toHaveBeenCalledTimes(1);
+      expect(emailService.sendPasswordResetEmail).toHaveBeenCalledWith(
+        userData,
+      );
+    });
+
+    it('ACCOUNT_DELETION 타입일 때 sendDeleteAccountMail을 호출한다', async () => {
+      const userData: User = {
+        email: 'test@test.com',
+        userName: 'tester',
+        uuid: 'delete-uuid',
+      };
+      const payload: EmailPayload = {
+        type: EmailPayloadConstant.ACCOUNT_DELETION,
+        data: userData,
+      };
+
+      await emailConsumer.handleEmailByType(payload);
+
+      expect(emailService.sendDeleteAccountMail).toHaveBeenCalledTimes(1);
+      expect(emailService.sendDeleteAccountMail).toHaveBeenCalledWith(userData);
+    });
+
+    it('알 수 없는 타입일 때 아무 메서드도 호출하지 않는다', async () => {
+      const payload = {
+        type: 'unknownType',
+        data: {},
+      } as any;
+
+      await emailConsumer.handleEmailByType(payload);
+
+      expect(emailService.sendUserCertificationMail).not.toHaveBeenCalled();
+      expect(emailService.sendRssMail).not.toHaveBeenCalled();
+      expect(
+        emailService.sendRssRemoveCertificationMail,
+      ).not.toHaveBeenCalled();
+      expect(emailService.sendPasswordResetEmail).not.toHaveBeenCalled();
+      expect(emailService.sendDeleteAccountMail).not.toHaveBeenCalled();
+    });
+  });
+
   describe('handleEmailByError unit test', () => {
-    let emailConsumer: EmailConsumer;
-    let rabbitmqService: jest.Mocked<RabbitmqService>;
-    let emailService: jest.Mocked<EmailService>;
     const networkErrors = [
       `ESOCKET`,
       `ECONNREFUSED`,
@@ -36,10 +179,6 @@ describe('email consumer unit test', () => {
         sendMessageToQueue: jest.fn().mockResolvedValue(null),
       } as any;
       emailConsumer = new EmailConsumer(rabbitmqService, emailService);
-    });
-
-    afterEach(() => {
-      jest.clearAllMocks();
     });
 
     describe('재시도 가능한 에러', () => {
