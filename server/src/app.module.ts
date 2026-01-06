@@ -11,7 +11,6 @@ import { FeedModule } from './feed/module/feed.module';
 import { WinstonLoggerModule } from './common/logger/logger.module';
 import { ChatModule } from './chat/module/chat.module';
 import { StatisticModule } from './statistic/module/statistic.module';
-import { TestModule } from './common/test/test.module';
 import { UserModule } from './user/module/user.module';
 import { ActivityModule } from './activity/module/activity.module';
 import { EmailModule } from './common/email/email.module';
@@ -60,7 +59,6 @@ const exists = !!chosen && fs.existsSync(chosen);
     }),
     WinstonLoggerModule,
     RedisModule,
-    TestModule,
     EmailModule,
     MetricsModule,
     AdminModule,

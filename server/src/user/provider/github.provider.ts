@@ -85,7 +85,7 @@ export class GithubOAuthProvider implements OAuthProvider {
         },
       );
 
-      const { id, email, name, avatar_url } = response.data as any;
+      const { id, email, name, avatar_url } = response.data;
       return {
         id,
         email,

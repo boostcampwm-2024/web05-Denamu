@@ -58,7 +58,7 @@ export class FeedRepository {
       `[MySQL] ${
         insertedFeeds.length
       }개의 피드 데이터가 성공적으로 데이터베이스에 삽입되었습니다.${
-        !!duplicateCount ? ' ' + duplicateCount + '개의 중복 피드 발생' : ''
+        duplicateCount ? ' ' + duplicateCount + '개의 중복 피드 발생' : ''
       }`,
     );
 

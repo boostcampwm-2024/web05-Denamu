@@ -1,4 +1,4 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import * as supertest from 'supertest';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../config/common/fixture/user.fixture';
@@ -13,36 +13,44 @@ import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository'
 import TestAgent from 'supertest/lib/agent';
 import { createAccessToken } from '../../config/e2e/env/jest.setup';
 import { User } from '../../../src/user/entity/user.entity';
+import { RssAccept } from '../../../src/rss/entity/rss.entity';
+import { Feed } from '../../../src/feed/entity/feed.entity';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/comment';
 
 describe(`DELETE ${URL} E2E Test`, () => {
-  let app: INestApplication;
   let agent: TestAgent;
   let comment: Comment;
-  let commentRepository: CommentRepository;
   let user: User;
+  let rssAccept: RssAccept;
+  let feed: Feed;
+  let commentRepository: CommentRepository;
+  let userRepository: UserRepository;
+  let rssAcceptRepository: RssAcceptRepository;
+  let feedRepository: FeedRepository;
+  let accessToken: string;
 
-  beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    commentRepository = app.get(CommentRepository);
-    const userRepository = app.get(UserRepository);
-    const rssAcceptRepository = app.get(RssAcceptRepository);
-    const feedRepository = app.get(FeedRepository);
-    const rssAccept = await rssAcceptRepository.save(
+  beforeAll(() => {
+    agent = supertest(testApp.getHttpServer());
+    commentRepository = testApp.get(CommentRepository);
+    userRepository = testApp.get(UserRepository);
+    rssAcceptRepository = testApp.get(RssAcceptRepository);
+    feedRepository = testApp.get(FeedRepository);
+  });
+
+  beforeEach(async () => {
+    rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
-    const feed = await feedRepository.save(
-      FeedFixture.createFeedFixture(rssAccept),
-    );
-
-    user = await userRepository.save(
-      await UserFixture.createUserCryptFixture(),
-    );
+    [user, feed] = await Promise.all([
+      userRepository.save(await UserFixture.createUserCryptFixture()),
+      feedRepository.save(FeedFixture.createFeedFixture(rssAccept)),
+    ]);
     comment = await commentRepository.save(
       CommentFixture.createCommentFixture(feed, user),
     );
+    accessToken = createAccessToken(user);
   });
 
   it('[401] 로그인이 되어 있지 않을 경우 댓글 삭제를 실패한다.', async () => {
@@ -70,7 +78,6 @@ describe(`DELETE ${URL} E2E Test`, () => {
 
   it('[404] 삭제하고자 하는 댓글이 존재하지 않을 경우 댓글 삭제를 실패한다.', async () => {
     // given
-    const accessToken = createAccessToken(user);
     const requestDto = new DeleteCommentRequestDto({
       commentId: Number.MAX_SAFE_INTEGER,
     });
@@ -97,7 +104,7 @@ describe(`DELETE ${URL} E2E Test`, () => {
 
   it('[401] 본인이 작성한 댓글이 아닐 경우 댓글 삭제를 실패한다.', async () => {
     // given
-    const accessToken = createAccessToken({ id: Number.MAX_SAFE_INTEGER });
+    accessToken = createAccessToken({ id: Number.MAX_SAFE_INTEGER });
     const requestDto = new DeleteCommentRequestDto({
       commentId: comment.id,
     });
@@ -124,7 +131,6 @@ describe(`DELETE ${URL} E2E Test`, () => {
 
   it('[200] 본인이 작성한 댓글일 경우 댓글 삭제를 성공한다.', async () => {
     // given
-    const accessToken = createAccessToken(user);
     const requestDto = new DeleteCommentRequestDto({
       commentId: comment.id,
     });

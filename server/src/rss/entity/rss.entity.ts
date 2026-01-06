@@ -59,7 +59,7 @@ export class RssReject extends RssInformation {
   name: 'rss_accept',
 })
 export class RssAccept extends RssInformation {
-  @OneToMany((type) => Feed, (feed) => feed.blog)
+  @OneToMany(() => Feed, (feed) => feed.blog)
   feeds: Feed[];
 
   @Index({ fulltext: true, parser: 'ngram' })

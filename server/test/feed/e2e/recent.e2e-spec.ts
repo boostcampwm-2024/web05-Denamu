@@ -1,5 +1,5 @@
 import * as supertest from 'supertest';
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
 import { RssAcceptFixture } from '../../config/common/fixture/rss-accept.fixture';
 import { FeedFixture } from '../../config/common/fixture/feed.fixture';
@@ -8,31 +8,36 @@ import { RedisService } from '../../../src/common/redis/redis.service';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 import TestAgent from 'supertest/lib/agent';
 import { Feed } from '../../../src/feed/entity/feed.entity';
+import { RssAccept } from '../../../src/rss/entity/rss.entity';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/feed/recent';
 
 describe(`GET ${URL} E2E Test`, () => {
-  let app: INestApplication;
   let agent: TestAgent;
   let redisService: RedisService;
   let feedList: Feed[];
+  let rssAccept: RssAccept;
+  let rssAcceptRepository: RssAcceptRepository;
+  let feedRepository: FeedRepository;
   const redisKeyMake = (data: string) =>
     `${REDIS_KEYS.FEED_RECENT_KEY}:${data}`;
 
-  beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    redisService = app.get(RedisService);
-    const rssAcceptRepository = app.get(RssAcceptRepository);
-    const rssAccept = await rssAcceptRepository.save(
+  beforeAll(() => {
+    agent = supertest(testApp.getHttpServer());
+    redisService = testApp.get(RedisService);
+    rssAcceptRepository = testApp.get(RssAcceptRepository);
+    feedRepository = testApp.get(FeedRepository);
+  });
+
+  beforeEach(async () => {
+    rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
-    const feedRepository = app.get(FeedRepository);
-    const feeds = Array.from({ length: 2 }).map((_, i) => {
-      return FeedFixture.createFeedFixture(rssAccept, {}, i + 1);
-    });
+    const feeds = FeedFixture.createFeedsFixture(rssAccept, 2);
 
-    feedList = await feedRepository.save(feeds);
+    // 최신 피드가 앞쪽에 오도록 생성
+    feedList = (await feedRepository.save(feeds)).reverse();
   });
 
   it('[200] 최신 피드 업데이트 요청이 들어올 경우 최신 피드 제공을 성공한다.', async () => {
@@ -62,33 +67,24 @@ describe(`GET ${URL} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual(
-      feedList
-        .map((_, i) => {
-          const feed = feedList[i];
-          return {
-            id: feed.id,
-            author: feed.blog.name,
-            blogPlatform: feed.blog.blogPlatform,
-            title: feed.title,
-            path: feed.path,
-            tag: [],
-            createdAt: feed.createdAt.toISOString(),
-            thumbnail: feed.thumbnail,
-            viewCount: feed.viewCount,
-            likes: feed.likeCount,
-            isNew: true,
-            comments: feed.commentCount,
-          };
-        })
-        .reverse(),
+      feedList.map((_, i) => {
+        const feed = feedList[i];
+        return {
+          id: feed.id,
+          author: feed.blog.name,
+          blogPlatform: feed.blog.blogPlatform,
+          title: feed.title,
+          path: feed.path,
+          tag: [],
+          createdAt: feed.createdAt.toISOString(),
+          thumbnail: feed.thumbnail,
+          viewCount: feed.viewCount,
+          likes: feed.likeCount,
+          isNew: true,
+          comments: feed.commentCount,
+        };
+      }),
     );
-
-    // cleanup
-    await redisService.executePipeline((pipeline) => {
-      feedList.forEach((feed) => {
-        pipeline.del(redisKeyMake(feed.id.toString()));
-      });
-    });
   });
 
   it('[200] 최신 피드가 없을 경우 빈 배열 제공을 성공한다.', async () => {

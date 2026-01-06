@@ -95,7 +95,7 @@ export class ReadFeedRecentResponseDto {
   }
 
   static toResponseDtoArray(feeds: FeedRecentRedis[]) {
-    return feeds.map(this.toResponseDto);
+    return feeds.map((feed) => this.toResponseDto(feed));
   }
 }
 

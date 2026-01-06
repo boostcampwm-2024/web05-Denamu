@@ -35,7 +35,7 @@ export class FeedResult {
   }
 
   public static toResultDtoArray(feedList: FeedPaginationResult[]) {
-    return feedList.map(this.toResultDto);
+    return feedList.map((feed) => this.toResultDto(feed));
   }
 }
 
@@ -178,7 +178,7 @@ export class FeedTrendResponseDto {
     });
   }
 
-  public static toResponseDtoArray(FeedList: FeedView[]) {
-    return FeedList.map(this.toResponseDto);
+  public static toResponseDtoArray(feedList: FeedView[]) {
+    return feedList.map((feed) => this.toResponseDto(feed));
   }
 }

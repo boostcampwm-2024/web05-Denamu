@@ -69,7 +69,7 @@ export class AdminController {
   @Get('/sessionId')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AdminAuthGuard)
-  async getSessionIdAdmin() {
+  getSessionIdAdmin() {
     return ApiResponse.responseWithNoContent('정상적인 sessionId 입니다.');
   }
 }

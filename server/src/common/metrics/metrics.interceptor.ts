@@ -7,6 +7,7 @@ import {
 import { InjectMetric } from '@willsoto/nestjs-prometheus';
 import { Counter, Histogram } from 'prom-client';
 import { finalize, Observable } from 'rxjs';
+import { Request, Response } from 'express';
 
 @Injectable()
 export class MetricsInterceptor implements NestInterceptor {
@@ -25,10 +26,11 @@ export class MetricsInterceptor implements NestInterceptor {
     context: ExecutionContext,
     next: CallHandler<any>,
   ): Observable<any> {
-    const req = context.switchToHttp().getRequest();
+    const req: Request = context.switchToHttp().getRequest();
     const method = req.method;
-    const route = req.route?.path || req.url;
+    const route = (req.route as { path: string })?.path || req.url;
     const start = Date.now();
+    const res = context.switchToHttp().getResponse<Response>();
 
     if (route.includes('metrics')) {
       return next.handle();
@@ -38,7 +40,7 @@ export class MetricsInterceptor implements NestInterceptor {
       finalize(() => {
         const duration = (Date.now() - start) / 1000;
 
-        if (context.switchToHttp().getResponse().statusCode >= 500) {
+        if (res.statusCode >= 500) {
           this.httpRequestsFailCounter.inc({ method, route });
         } else {
           this.httpRequestsSuccessCounter.inc({ method, route });
