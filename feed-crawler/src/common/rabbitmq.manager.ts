@@ -16,14 +16,14 @@ export class RabbitMQManager {
 
   async connect() {
     if (this.connection) return this.connection;
-    if (this.connectionPromise) return this.connectionPromise;
+    if (this.connectionPromise !== null) return this.connectionPromise;
 
     this.connectionPromise = amqp.connect({
       protocol: 'amqp',
       hostname: process.env.RABBITMQ_HOST,
       port: Number.parseInt(process.env.RABBITMQ_PORT),
-      username: process.env.RABBITMQ_DEFAULT_USER,
-      password: process.env.RABBITMQ_DEFAULT_PASS,
+      username: process.env.RABBITMQ_USER,
+      password: process.env.RABBITMQ_PASSWORD,
     });
 
     this.connection = await this.connectionPromise;
@@ -33,7 +33,7 @@ export class RabbitMQManager {
 
   async getChannel() {
     if (this.channel) return this.channel;
-    if (this.channelPromise) return this.channelPromise;
+    if (this.channelPromise !== null) return this.channelPromise;
 
     if (!this.connection) {
       await this.connect();

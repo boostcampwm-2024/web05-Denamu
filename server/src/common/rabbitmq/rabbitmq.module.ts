@@ -16,8 +16,8 @@ import { RabbitMQManager } from './rabbitmq.manager';
           protocol: 'amqp',
           hostname: configService.get<string>('RABBITMQ_HOST'),
           port: configService.get<number>('RABBITMQ_PORT'),
-          username: configService.get<string>('RABBITMQ_DEFAULT_USER'),
-          password: configService.get<string>('RABBITMQ_DEFAULT_PASS'),
+          username: configService.get<string>('RABBITMQ_USER'),
+          password: configService.get<string>('RABBITMQ_PASSWORD'),
         });
       },
     },

@@ -1,4 +1,4 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import { RegisterRssRequestDto } from '../../../src/rss/dto/request/registerRss.dto';
 import * as supertest from 'supertest';
 import { RssAcceptFixture } from '../../config/common/fixture/rss-accept.fixture';
@@ -8,24 +8,19 @@ import {
 } from '../../../src/rss/repository/rss.repository';
 import TestAgent from 'supertest/lib/agent';
 import { RssFixture } from '../../config/common/fixture/rss.fixture';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/rss';
 
 describe(`POST ${URL} E2E Test`, () => {
-  let app: INestApplication;
   let agent: TestAgent;
   let rssRepository: RssRepository;
   let rssAcceptRepository: RssAcceptRepository;
 
   beforeAll(() => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    rssRepository = app.get(RssRepository);
-    rssAcceptRepository = app.get(RssAcceptRepository);
-  });
-
-  beforeEach(async () => {
-    await rssRepository.delete({});
+    agent = supertest(testApp.getHttpServer());
+    rssRepository = testApp.get(RssRepository);
+    rssAcceptRepository = testApp.get(RssAcceptRepository);
   });
 
   it('[409] 이미 신청한 RSS를 다시 신청할 경우 RSS 등록 요청을 실패한다.', async () => {
@@ -47,19 +42,18 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(data).toBeUndefined();
 
     // DB, Redis when
-    const savedRss = await rssRepository.findBy({
-      rssUrl: rss.rssUrl,
-    });
-    const savedRssAccept = await rssAcceptRepository.findBy({
-      rssUrl: rss.rssUrl,
-    });
+    const [savedRss, savedRssAccept] = await Promise.all([
+      rssRepository.findBy({
+        rssUrl: rss.rssUrl,
+      }),
+      rssAcceptRepository.findBy({
+        rssUrl: rss.rssUrl,
+      }),
+    ]);
 
     // DB, Redis then
     expect(savedRss.length).toBe(1);
     expect(savedRssAccept.length).toBe(0);
-
-    // cleanup
-    await rssRepository.delete({ id: rss.id });
   });
 
   it('[409] 이미 등록 완료된 RSS를 다시 신청할 경우 RSS 등록 요청을 실패한다.', async () => {
@@ -83,19 +77,18 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(data).toBeUndefined();
 
     // DB, Redis when
-    const savedRss = await rssRepository.findBy({
-      rssUrl: acceptedRss.rssUrl,
-    });
-    const savedRssAccept = await rssAcceptRepository.findBy({
-      rssUrl: acceptedRss.rssUrl,
-    });
+    const [savedRss, savedRssAccept] = await Promise.all([
+      rssRepository.findBy({
+        rssUrl: acceptedRss.rssUrl,
+      }),
+      rssAcceptRepository.findBy({
+        rssUrl: acceptedRss.rssUrl,
+      }),
+    ]);
 
     // DB, Redis then
     expect(savedRss.length).toBe(0);
     expect(savedRssAccept.length).toBe(1);
-
-    // cleanup
-    await rssAcceptRepository.delete({ id: acceptedRss.id });
   });
 
   it('[201] 등록되지 않은 RSS 등록 요청을 받았을 경우 RSS 등록 요청을 성공한다.', async () => {

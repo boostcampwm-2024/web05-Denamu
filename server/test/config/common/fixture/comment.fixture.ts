@@ -2,11 +2,15 @@ import { Comment } from '../../../../src/comment/entity/comment.entity';
 import { Feed } from '../../../../src/feed/entity/feed.entity';
 import { User } from '../../../../src/user/entity/user.entity';
 
+export const COMMENT_DEFAULT_TEXT = 'test comment';
+
 export class CommentFixture {
-  static readonly GENERAL_COMMENT = {
-    comment: 'test',
-    date: new Date('2025-11-22'),
-  };
+  static createGeneralComment() {
+    return {
+      comment: COMMENT_DEFAULT_TEXT,
+      date: new Date('2025-11-22'),
+    };
+  }
 
   static createCommentFixture(
     feed: Feed,
@@ -14,11 +18,11 @@ export class CommentFixture {
     overwrites: Partial<Comment> = {},
   ): Comment {
     const comment = new Comment();
-    Object.assign(comment, {
-      ...this.GENERAL_COMMENT,
-      feed,
-      user,
-    });
-    return Object.assign(comment, overwrites);
+    return Object.assign(
+      comment,
+      this.createGeneralComment(),
+      { feed, user },
+      overwrites,
+    );
   }
 }

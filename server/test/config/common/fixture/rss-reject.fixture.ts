@@ -1,18 +1,21 @@
 import { RssReject } from '../../../../src/rss/entity/rss.entity';
+import * as uuid from 'uuid';
 
 export class RssRejectFixture {
+  static createGeneralRssReject() {
+    return {
+      name: 'test name',
+      userName: 'test user name',
+      email: `test${uuid.v4()}@test.com`,
+      rssUrl: `https://example${uuid.v4()}.com/rss`,
+      description: 'test description',
+    };
+  }
+
   static createRssRejectFixture(
     overwrites: Partial<RssReject> = {},
-    index: number = 1,
   ): RssReject {
     const rssReject = new RssReject();
-    Object.assign(rssReject, {
-      name: `blog${index}`,
-      userName: `name${index}`,
-      email: `test${index}@test.com`,
-      rssUrl: `https://example${index}.com/rss`,
-      description: `description${index}`,
-    });
-    return Object.assign(rssReject, overwrites);
+    return Object.assign(rssReject, this.createGeneralRssReject(), overwrites);
   }
 }

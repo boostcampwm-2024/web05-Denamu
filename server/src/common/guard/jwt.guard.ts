@@ -21,7 +21,7 @@ export class JwtGuard extends AuthGuard('jwt') {
     return super.canActivate(context);
   }
 
-  handleRequest(err: any, user: any, info: any) {
+  handleRequest(err: any, user: any) {
     if (err || !user) {
       throw new UnauthorizedException('인증되지 않은 요청입니다.');
     }
@@ -37,7 +37,7 @@ export class RefreshJwtGuard extends AuthGuard('jwt-refresh') {
     return super.canActivate(context);
   }
 
-  handleRequest(err: any, user: any, info: any) {
+  handleRequest(err: any, user: any) {
     if (err || !user) {
       throw new UnauthorizedException('인증되지 않은 요청입니다.');
     }

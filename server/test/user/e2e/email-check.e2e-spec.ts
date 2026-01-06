@@ -1,22 +1,25 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import * as supertest from 'supertest';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { UserFixture } from '../../config/common/fixture/user.fixture';
 import { CheckEmailDuplicationRequestDto } from '../../../src/user/dto/request/checkEmailDuplication.dto';
 import TestAgent from 'supertest/lib/agent';
 import { User } from '../../../src/user/entity/user.entity';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/user/email-check';
 
 describe(`GET ${URL} E2E Test`, () => {
-  let app: INestApplication;
   let agent: TestAgent;
   let user: User;
+  let userRepository: UserRepository;
 
-  beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    const userRepository = app.get(UserRepository);
+  beforeAll(() => {
+    agent = supertest(testApp.getHttpServer());
+    userRepository = testApp.get(UserRepository);
+  });
+
+  beforeEach(async () => {
     user = await userRepository.save(UserFixture.createUserFixture());
   });
 

@@ -145,16 +145,16 @@ export class RssService {
   private identifyPlatformFromRssUrl(rssUrl: string) {
     type Platform = 'medium' | 'tistory' | 'velog' | 'github' | 'etc';
 
-    const platformRegexp: { [key in Platform]: RegExp } = {
+    const platformRegexp: Record<Platform, RegExp> = {
       medium: /^https:\/\/medium\.com/,
-      tistory: /^https:\/\/[a-zA-Z0-9\-]+\.tistory\.com/,
+      tistory: /^https:\/\/[a-zA-Z0-9-]+\.tistory\.com/,
       velog: /^https:\/\/v2\.velog\.io/,
-      github: /^https:\/\/[\w\-]+\.github\.io/,
+      github: /^https:\/\/[\w-]+\.github\.io/,
       etc: /.*/,
     };
 
-    for (const platform in platformRegexp) {
-      if (platformRegexp[platform].test(rssUrl)) {
+    for (const [platform, regex] of Object.entries(platformRegexp)) {
+      if (regex.test(rssUrl)) {
         return platform;
       }
     }
@@ -172,7 +172,7 @@ export class RssService {
       return rssAccept;
     });
 
-    this.enqueueFullFeedCrawlMessage(rssAccept.id);
+    void this.enqueueFullFeedCrawlMessage(rssAccept.id);
     await this.emailProducer.produceRssRegistration(rssAccept, true);
   }
 

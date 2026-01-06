@@ -98,7 +98,7 @@ export class UserController {
   @Post('/refresh-token')
   @HttpCode(HttpStatus.OK)
   @UseGuards(RefreshJwtGuard)
-  async refreshAccessToken(@CurrentUser() user: Payload) {
+  refreshAccessToken(@CurrentUser() user: Payload) {
     return ApiResponse.responseWithData(
       '엑세스 토큰을 재발급했습니다.',
       this.userService.refreshAccessToken(user),
@@ -109,7 +109,7 @@ export class UserController {
   @Post('/logout')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtGuard)
-  async logoutUser(@Res({ passthrough: true }) res) {
+  logoutUser(@Res({ passthrough: true }) res: Response) {
     res.clearCookie('refresh_token');
     return ApiResponse.responseWithNoContent('로그아웃을 성공했습니다.');
   }

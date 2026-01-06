@@ -1,4 +1,4 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
@@ -13,32 +13,38 @@ import * as supertest from 'supertest';
 import { LikeRepository } from '../../../src/like/repository/like.repository';
 import TestAgent from 'supertest/lib/agent';
 import { createAccessToken } from '../../config/e2e/env/jest.setup';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/like';
 
 describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
-  let app: INestApplication;
   let rssAccept: RssAccept;
   let user: User;
   let feed: Feed;
   let agent: TestAgent;
   let likeRepository: LikeRepository;
+  let userRepository: UserRepository;
+  let rssAcceptRepository: RssAcceptRepository;
+  let feedRepository: FeedRepository;
+  let accessToken: string;
 
-  beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    likeRepository = app.get(LikeRepository);
-    const userRepository = app.get(UserRepository);
-    const rssAcceptRepository = app.get(RssAcceptRepository);
-    const feedRepository = app.get(FeedRepository);
+  beforeAll(() => {
+    agent = supertest(testApp.getHttpServer());
+    likeRepository = testApp.get(LikeRepository);
+    userRepository = testApp.get(UserRepository);
+    rssAcceptRepository = testApp.get(RssAcceptRepository);
+    feedRepository = testApp.get(FeedRepository);
+  });
 
-    user = await userRepository.save(
-      await UserFixture.createUserCryptFixture(),
-    );
+  beforeEach(async () => {
     rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
-    feed = await feedRepository.save(FeedFixture.createFeedFixture(rssAccept));
+    [user, feed] = await Promise.all([
+      userRepository.save(await UserFixture.createUserCryptFixture()),
+      feedRepository.save(FeedFixture.createFeedFixture(rssAccept)),
+    ]);
+    accessToken = createAccessToken(user);
   });
 
   it('[401] 로그인이 되어 있지 않을 경우 좋아요 삭제를 실패한다.', async () => {
@@ -61,7 +67,6 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
     const requestDto = new ManageLikeRequestDto({
       feedId: Number.MAX_SAFE_INTEGER,
     });
-    const accessToken = createAccessToken(user);
 
     // Http when
     const response = await agent
@@ -79,7 +84,6 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
     const requestDto = new ManageLikeRequestDto({
       feedId: feed.id,
     });
-    const accessToken = createAccessToken(user);
 
     // Http when
     const response = await agent
@@ -102,7 +106,6 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
     const requestDto = new ManageLikeRequestDto({
       feedId: feed.id,
     });
-    const accessToken = createAccessToken(user);
 
     // Http when
     const response = await agent

@@ -1,4 +1,4 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import * as supertest from 'supertest';
 import { UserRepository } from '../../../../src/user/repository/user.repository';
 import { UserFixture } from '../../../config/common/fixture/user.fixture';
@@ -8,30 +8,32 @@ import { createAccessToken } from '../../../config/e2e/env/jest.setup';
 import { REDIS_KEYS } from '../../../../src/common/redis/redis.constant';
 import * as uuid from 'uuid';
 import { RedisService } from '../../../../src/common/redis/redis.service';
+import { testApp } from '../../../config/e2e/env/jest.setup';
 
 const URL = '/api/user/delete-account/request';
 
 describe(`POST ${URL} E2E Test`, () => {
-  let app: INestApplication;
   let agent: TestAgent;
   let user: User;
   let redisService: RedisService;
+  let userRepository: UserRepository;
+  let accessToken: string;
   const userDeleteCode = 'user-delete-request';
   const redisKeyMake = (data: string) =>
     `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${data}`;
 
-  beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    redisService = app.get(RedisService);
-    const userRepository = app.get(UserRepository);
+  beforeAll(() => {
+    agent = supertest(testApp.getHttpServer());
+    redisService = testApp.get(RedisService);
+    userRepository = testApp.get(UserRepository);
+  });
+
+  beforeEach(async () => {
+    jest.spyOn(uuid, 'v4').mockReturnValue(userDeleteCode as any);
     user = await userRepository.save(
       await UserFixture.createUserCryptFixture(),
     );
-  });
-
-  beforeEach(() => {
-    jest.spyOn(uuid, 'v4').mockReturnValue(userDeleteCode as any);
+    accessToken = createAccessToken(user);
   });
 
   it('[401] 로그인 되지 않은 유저가 회원 탈퇴를 신청할 경우 회원 탈퇴 신청을 실패한다.', async () => {
@@ -53,9 +55,6 @@ describe(`POST ${URL} E2E Test`, () => {
   });
 
   it('[200] 회원 탈퇴 신청을 받을 경우 회원 탈퇴 신청을 성공한다.', async () => {
-    // given
-    const accessToken = createAccessToken(user);
-
     // Http when
     const response = await agent
       .post(URL)

@@ -2,8 +2,8 @@ name: Email-Worker Deployment
 
 on:
   push:
-    branches: [ main ]
-    paths: [ "email-worker/**" ]
+    branches: [main]
+    paths: ['email-worker/**', 'docker-compose/docker-compose.prod.yml']
   workflow_dispatch:
 
 permissions:
@@ -11,13 +11,14 @@ permissions:
   packages: write
 
 env:
-  IMAGE_NAME: ghcr.io/boostcampwm-2024/web05-denamu/email-worker
-  IMAGE_TAG: sha-${{ github.sha }}
+  GHCR_URL: ${{ vars.GHCR }}
+  EMAIL_WORKER_IMAGE: ${{ vars.GHCR }}/email-worker
+  EMAIL_WORKER_TAG: sha-${{ github.sha }}
   SERVICE: email-worker
-  ENV_DIR: /var/prod_config/email-worker
-  ENV_FILE: /var/prod_config/email-worker/.env.prod
+  EMAIL-WORKER_ENV_DIR: /var/prod_config/email-worker
+  EMAIL-WORKER_ENV_FILE: /var/prod_config/email-worker/.env.prod
+  INFRA_ENV_FILE: /var/prod_config/infra/.env.prod
   COMPOSE_FILE: docker-compose/docker-compose.prod.yml
-  STOP_GRACE_PERIOD: 30
 
 jobs:
   build-and-push:
@@ -46,13 +47,13 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
-            ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
-            ${{ env.IMAGE_NAME }}:latest
+            ${{ env.EMAIL_WORKER_IMAGE }}:${{ env.EMAIL_WORKER_TAG }}
+            ${{ env.EMAIL_WORKER_IMAGE }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
   deploy:
-    runs-on: [ self-hosted, prod ]
+    runs-on: [self-hosted, prod]
     needs: build-and-push # Build 및 Push가 끝나면 시작
     steps:
       - name: 코드 체크아웃
@@ -67,42 +68,25 @@ jobs:
 
       - name: 환경변수 최신화
         run: |
-          sudo mkdir -p "$ENV_DIR"
-          sudo install -m 600 /dev/null "$ENV_FILE"
+          sudo mkdir -p "${{env.EMAIL-WORKER_ENV_DIR}}"
+          sudo install -m 600 /dev/null "${{env.EMAIL-WORKER_ENV_FILE}}"
           {
-            echo "EMAIL_USER=${{ secrets.EMAIL_USER }}"
             echo "EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}"
-            echo "RABBITMQ_DEFAULT_USER=${{ secrets.PRODUCT_RABBITMQ_DEFAULT_USER }}"
-            echo "RABBITMQ_DEFAULT_PASS=${{ secrets.PRODUCT_RABBITMQ_DEFAULT_PASS }}"
-            echo "RABBITMQ_HOST=${{ secrets.PRODUCT_RABBITMQ_HOST }}"
-            echo "RABBITMQ_PORT=${{ secrets.PRODUCT_RABBITMQ_PORT }}"
-          } | sudo tee "$ENV_FILE" >/dev/null
-
-          # 인프라용 환경변수 파일 생성 (Redis, MySQL 등)
-          sudo mkdir -p /var/prod_config/infra
-          sudo install -m 600 /dev/null /var/prod_config/infra/.env.prod
-          {
-            echo "REDIS_USER=${{ secrets.REDIS_USERNAME }}"
-            echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}"
-            echo "MYSQL_ROOT_PASSWORD=${{ secrets.PRODUCT_DB_PASSWORD }}"
-            echo "MYSQL_DATABASE=${{ secrets.PRODUCT_DB_DATABASE }}"
-            echo "MYSQL_USER=${{ secrets.PRODUCT_DB_USERNAME }}"
-            echo "MYSQL_PASSWORD=${{ secrets.PRODUCT_DB_PASSWORD }}"
-            echo "RABBITMQ_DEFAULT_USER=${{ secrets.PRODUCT_RABBITMQ_DEFAULT_USER }}"
-            echo "RABBITMQ_DEFAULT_PASS=${{ secrets.PRODUCT_RABBITMQ_DEFAULT_PASS }}"  
-            echo "RABBITMQ_HOST=${{ secrets.PRODUCT_RABBITMQ_HOST }}"  
-            echo "RABBITMQ_PORT=${{ secrets.PRODUCT_RABBITMQ_PORT }}"  
-            echo "RABBITMQ_MANAGEMENT_PORT=${{ secrets.PRODUCT_RABBITMQ_MANAGEMENT_PORT }}"  
-          } | sudo tee /var/prod_config/infra/.env.prod >/dev/null
-
-      - name: Docker 이미지 Pull
-        run: |
-          docker pull "${IMAGE_NAME}:${IMAGE_TAG}" || true
-          docker pull "${IMAGE_NAME}:latest" || true
-          docker compose -f "$COMPOSE_FILE" pull "$SERVICE"
+            echo "EMAIL_USER=${{ secrets.EMAIL_USER }}"
+            echo "RABBITMQ_HOST=${{ secrets.RABBITMQ_HOST }}"
+            echo "RABBITMQ_PASSWORD=${{ secrets.RABBITMQ_PASSWORD }}"
+            echo "RABBITMQ_PORT=${{ secrets.RABBITMQ_PORT }}"
+            echo "RABBITMQ_USER=${{ secrets.RABBITMQ_USER }}"
+          } | sudo tee "${{env.EMAIL-WORKER_ENV_FILE}}" >/dev/null
 
       - name: Graceful Shutdown & 서비스 재시작
         run: |
-          docker compose -f "$COMPOSE_FILE" stop -t $STOP_GRACE_PERIOD "$SERVICE" || true
-          docker compose -f "$COMPOSE_FILE" up -d --no-deps --force-recreate "$SERVICE"
-          docker image prune -f || true
+          set -a
+          source ${{ env.EMAIL-WORKER_ENV_FILE }}
+          source ${{ env.INFRA_ENV_FILE }}
+          set +a
+
+          docker compose -f "${{env.COMPOSE_FILE}}" pull "${{env.SERVICE}}"
+          docker compose -f "${{env.COMPOSE_FILE}}" stop "${{env.SERVICE}}"
+          docker compose -f "${{env.COMPOSE_FILE}}" up -d --no-deps --force-recreate "${{env.SERVICE}}"
+          docker image prune -f

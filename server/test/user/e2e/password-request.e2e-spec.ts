@@ -1,5 +1,5 @@
 import { ForgotPasswordRequestDto } from '../../../src/user/dto/request/forgotPassword.dto';
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import * as supertest from 'supertest';
 import { UserRepository } from '../../../src/user/repository/user.repository';
 import TestAgent from 'supertest/lib/agent';
@@ -8,28 +8,28 @@ import { User } from '../../../src/user/entity/user.entity';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import * as uuid from 'uuid';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/user/password-reset';
 
 describe(`POST ${URL} E2E Test`, () => {
-  let app: INestApplication;
   let agent: TestAgent;
   let user: User;
   let redisService: RedisService;
+  let userRepository: UserRepository;
   const passwordPatchCode = 'user-password-request';
   const redisKeyMake = (data: string) =>
     `${REDIS_KEYS.USER_RESET_PASSWORD_KEY}:${data}`;
 
-  beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    redisService = app.get(RedisService);
-    const userRepository = app.get(UserRepository);
-    user = await userRepository.save(UserFixture.createUserFixture());
+  beforeAll(() => {
+    agent = supertest(testApp.getHttpServer());
+    redisService = testApp.get(RedisService);
+    userRepository = testApp.get(UserRepository);
   });
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.spyOn(uuid, 'v4').mockReturnValue(passwordPatchCode as any);
+    user = await userRepository.save(UserFixture.createUserFixture());
   });
 
   it('[200] 존재하지 않는 이메일로 요청한 경우 비밀번호 재설정 이메일 요청을 성공한다.', async () => {

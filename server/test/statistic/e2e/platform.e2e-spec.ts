@@ -1,26 +1,27 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import * as supertest from 'supertest';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
 import { RssAcceptFixture } from '../../config/common/fixture/rss-accept.fixture';
 import TestAgent from 'supertest/lib/agent';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
 const URL = '/api/statistic/platform';
 
 describe(`GET ${URL} E2E Test`, () => {
-  let app: INestApplication;
   let agent: TestAgent;
+  let rssAcceptRepository: RssAcceptRepository;
 
-  beforeAll(async () => {
-    app = global.testApp;
-    agent = supertest(app.getHttpServer());
-    const rssAcceptRepository = app.get(RssAcceptRepository);
+  beforeAll(() => {
+    agent = supertest(testApp.getHttpServer());
+    rssAcceptRepository = testApp.get(RssAcceptRepository);
+  });
+
+  beforeEach(async () => {
     await Promise.all([
-      rssAcceptRepository.insert(RssAcceptFixture.createRssAcceptFixture({})),
+      rssAcceptRepository.insert(RssAcceptFixture.createRssAcceptFixture()),
+      rssAcceptRepository.insert(RssAcceptFixture.createRssAcceptFixture()),
       rssAcceptRepository.insert(
-        RssAcceptFixture.createRssAcceptFixture({}, 2),
-      ),
-      rssAcceptRepository.insert(
-        RssAcceptFixture.createRssAcceptFixture({ blogPlatform: 'velog' }, 3),
+        RssAcceptFixture.createRssAcceptFixture({ blogPlatform: 'velog' }),
       ),
     ]);
   });
