@@ -12,7 +12,9 @@ describe('RabbitmqService', () => {
     mockChannel = {
       publish: jest.fn().mockReturnValue(true),
       sendToQueue: jest.fn().mockReturnValue(true),
-      consume: jest.fn().mockResolvedValue({ consumerTag: 'test-consumer-tag' }),
+      consume: jest
+        .fn()
+        .mockResolvedValue({ consumerTag: 'test-consumer-tag' }),
       ack: jest.fn(),
       nack: jest.fn(),
       cancel: jest.fn().mockResolvedValue({}),
@@ -29,7 +31,7 @@ describe('RabbitmqService', () => {
     jest.clearAllMocks();
   });
 
-  describe('sendMessage', () => {
+  describe('sendMessage unit test', () => {
     it('exchange와 routingKey를 사용하여 메시지를 발행한다', async () => {
       const exchange = 'TestExchange';
       const routingKey = 'test.routing.key';
@@ -47,7 +49,7 @@ describe('RabbitmqService', () => {
     });
   });
 
-  describe('sendMessageToQueue', () => {
+  describe('sendMessageToQueue unit test', () => {
     it('큐에 메시지를 직접 전송한다', async () => {
       const queue = 'test.queue';
       const message = JSON.stringify({ data: 'test-data' });
@@ -82,12 +84,15 @@ describe('RabbitmqService', () => {
     });
   });
 
-  describe('consumeMessage', () => {
+  describe('consumeMessage unit test', () => {
     it('큐에서 메시지를 소비하고 consumerTag를 반환한다', async () => {
       const queue = 'test.queue';
       const onMessage = jest.fn();
 
-      const consumerTag = await rabbitmqService.consumeMessage(queue, onMessage);
+      const consumerTag = await rabbitmqService.consumeMessage(
+        queue,
+        onMessage,
+      );
 
       expect(mockRabbitMQManager.getChannel).toHaveBeenCalledTimes(1);
       expect(mockChannel.consume).toHaveBeenCalledTimes(1);
@@ -168,7 +173,9 @@ describe('RabbitmqService', () => {
     it('SHUTDOWN_IN_PROGRESS 에러 발생 시 메시지를 큐에 반환한다 (nack with requeue)', async () => {
       const queue = 'test.queue';
       const testPayload = { type: 'test' };
-      const onMessage = jest.fn().mockRejectedValue(new Error('SHUTDOWN_IN_PROGRESS'));
+      const onMessage = jest
+        .fn()
+        .mockRejectedValue(new Error('SHUTDOWN_IN_PROGRESS'));
 
       let capturedMessage: ConsumeMessage;
       mockChannel.consume.mockImplementation(async (q, callback) => {
@@ -187,7 +194,11 @@ describe('RabbitmqService', () => {
 
       await new Promise((resolve) => setImmediate(resolve));
 
-      expect(mockChannel.nack).toHaveBeenCalledWith(capturedMessage, false, true);
+      expect(mockChannel.nack).toHaveBeenCalledWith(
+        capturedMessage,
+        false,
+        true,
+      );
       expect(mockChannel.ack).not.toHaveBeenCalled();
     });
 
@@ -213,12 +224,16 @@ describe('RabbitmqService', () => {
 
       await new Promise((resolve) => setImmediate(resolve));
 
-      expect(mockChannel.nack).toHaveBeenCalledWith(capturedMessage, false, false);
+      expect(mockChannel.nack).toHaveBeenCalledWith(
+        capturedMessage,
+        false,
+        false,
+      );
       expect(mockChannel.ack).not.toHaveBeenCalled();
     });
   });
 
-  describe('closeConsumer', () => {
+  describe('closeConsumer unit test', () => {
     it('consumerTag로 consumer를 취소한다', async () => {
       const consumerTag = 'test-consumer-tag';
 

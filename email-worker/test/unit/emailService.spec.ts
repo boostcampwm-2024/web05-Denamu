@@ -6,7 +6,7 @@ import { PRODUCT_DOMAIN } from '../../src/email/email.content';
 
 jest.mock('nodemailer');
 
-describe('EmailService', () => {
+describe('EmailService unit test', () => {
   let emailService: EmailService;
   let mockSendMail: jest.Mock;
   const mockEmailUser = 'test@denamu.dev';
@@ -33,7 +33,7 @@ describe('EmailService', () => {
     delete process.env.EMAIL_PASSWORD;
   });
 
-  describe('EmailService 생성자', () => {
+  describe('EmailService 생성자 unit test', () => {
     it('EMAIL_USER 환경 변수가 없으면 에러를 던진다', () => {
       delete process.env.EMAIL_USER;
 
@@ -63,12 +63,12 @@ describe('EmailService', () => {
     });
   });
 
-  describe('sendUserCertificationMail', () => {
+  describe('sendUserCertificationMail unit test', () => {
     it('회원가입 인증 메일을 올바르게 전송한다', async () => {
       const user: User = {
         email: 'user@test.com',
         userName: 'testUser',
-        uuid: 'test-uuid-123',
+        uuid: 'test-uuid',
       };
 
       await emailService.sendUserCertificationMail(user);
@@ -93,7 +93,7 @@ describe('EmailService', () => {
       const user: User = {
         email: 'user@test.com',
         userName: 'testUser',
-        uuid: 'test-uuid-123',
+        uuid: 'test-uuid',
       };
       const error = new Error('SMTP connection failed');
       mockSendMail.mockRejectedValue(error);
@@ -104,13 +104,13 @@ describe('EmailService', () => {
     });
   });
 
-  describe('sendRssMail', () => {
+  describe('sendRssMail unit test', () => {
     it('RSS 등록 승인 메일을 올바르게 전송한다', async () => {
       const rssRegistration: RssRegistration = {
         rss: {
           name: 'Test Blog',
-          userName: 'blogger',
-          email: 'blogger@test.com',
+          userName: 'tester',
+          email: 'tester@test.com',
           rssUrl: 'https://test.com/rss',
         },
         approveFlag: true,
@@ -137,8 +137,8 @@ describe('EmailService', () => {
       const rssRegistration: RssRegistration = {
         rss: {
           name: 'Test Blog',
-          userName: 'blogger',
-          email: 'blogger@test.com',
+          userName: 'tester',
+          email: 'tester@test.com',
           rssUrl: 'https://test.com/rss',
         },
         approveFlag: false,
@@ -159,13 +159,13 @@ describe('EmailService', () => {
     });
   });
 
-  describe('sendRssRemoveCertificationMail', () => {
+  describe('sendRssRemoveCertificationMail unit test', () => {
     it('RSS 삭제 인증 메일을 올바르게 전송한다', async () => {
       const rssRemoval: RssRemoval = {
-        userName: 'blogger',
-        email: 'blogger@test.com',
+        userName: 'tester',
+        email: 'tester@test.com',
         rssUrl: 'https://test.com/rss',
-        certificateCode: 'ABC123',
+        certificateCode: 'test-uuid',
       };
 
       await emailService.sendRssRemoveCertificationMail(rssRemoval);
@@ -186,12 +186,12 @@ describe('EmailService', () => {
     });
   });
 
-  describe('sendPasswordResetEmail', () => {
+  describe('sendPasswordResetEmail unit test', () => {
     it('비밀번호 재설정 메일을 올바르게 전송한다', async () => {
       const user: User = {
-        email: 'user@test.com',
-        userName: 'testUser',
-        uuid: 'reset-uuid-456',
+        email: 'tester@test.com',
+        userName: 'tester',
+        uuid: 'test-uuid',
       };
 
       await emailService.sendPasswordResetEmail(user);
@@ -213,12 +213,12 @@ describe('EmailService', () => {
     });
   });
 
-  describe('sendDeleteAccountMail', () => {
+  describe('sendDeleteAccountMail unit test', () => {
     it('회원탈퇴 확인 메일을 올바르게 전송한다', async () => {
       const user: User = {
-        email: 'user@test.com',
-        userName: 'testUser',
-        uuid: 'delete-uuid-789',
+        email: 'tester@test.com',
+        userName: 'tester',
+        uuid: 'test-uuid',
       };
 
       await emailService.sendDeleteAccountMail(user);

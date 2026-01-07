@@ -181,10 +181,9 @@ describe('email consumer unit test', () => {
       emailConsumer = new EmailConsumer(rabbitmqService, emailService);
     });
 
-    describe('재시도 가능한 에러', () => {
-      // Node.js 네트워크 레벨의 에러
+    describe('Transient Error test', () => {
       networkErrors.forEach((errorName) => {
-        it(`Node.js 네트워크 레벨의 ${errorName}에러가 발생하면 재시도한다.`, async () => {
+        it(`Node.js 네트워크 레벨의 ${errorName} 에러가 발생하면 재시도한다.`, async () => {
           //given
           const error = new Error(`${errorName}`) as any;
           if (errorName === 'ESOCKET') {
@@ -224,7 +223,6 @@ describe('email consumer unit test', () => {
         });
       });
 
-      // SMTP 레벨의 400번대 에러 검증
       commonSmtp4xxErrors.forEach(({ responseCode, message }) => {
         it(`SMTP ${responseCode} 에러가 발생하면 재시도한다.`, async () => {
           //given
@@ -265,7 +263,7 @@ describe('email consumer unit test', () => {
       });
     });
 
-    describe('영구적 실패, 즉시 DLQ로 발행되는 에러', () => {
+    describe('Permanent Error test', () => {
       // SMTP 레벨의 500번대 에러
       commonSmtp5xxErrors.forEach(({ responseCode, message }) => {
         it(`SMTP ${responseCode} 에러가 발생하면 DLQ로 메시지를 발행한다.`, async () => {
@@ -344,7 +342,7 @@ describe('email consumer unit test', () => {
       });
     });
 
-    describe('재시도 횟수 초과', () => {
+    describe('Transient Error 재시도 횟수 초과', () => {
       const allErrors = [...networkErrors, ...commonSmtp4xxErrors];
       allErrors.forEach((targetError) => {
         const errorName =
