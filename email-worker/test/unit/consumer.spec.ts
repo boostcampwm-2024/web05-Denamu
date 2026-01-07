@@ -207,10 +207,7 @@ describe('email consumer unit test', () => {
           );
 
           //then
-          //1. 호출횟수 검증
           expect(rabbitmqService.sendMessageToQueue).toHaveBeenCalledTimes(1);
-
-          //2. 입력 인자 검증
           expect(rabbitmqService.sendMessageToQueue).toHaveBeenCalledWith(
             RETRY_CONFIG.WAITING_QUEUE[0],
             JSON.stringify(emailPayload),
@@ -246,10 +243,7 @@ describe('email consumer unit test', () => {
           );
 
           //then
-          //1. 호출횟수 검증
           expect(rabbitmqService.sendMessageToQueue).toHaveBeenCalledTimes(1);
-
-          //2. 입력 인자 검증
           expect(rabbitmqService.sendMessageToQueue).toHaveBeenCalledWith(
             RETRY_CONFIG.WAITING_QUEUE[0],
             JSON.stringify(emailPayload),
@@ -288,10 +282,7 @@ describe('email consumer unit test', () => {
           );
 
           //then
-          //1. 호출횟수 검증
           expect(rabbitmqService.sendMessageToQueue).toHaveBeenCalledTimes(1);
-
-          //2. 입력 인자 검증
           expect(rabbitmqService.sendMessageToQueue).toHaveBeenCalledWith(
             RMQ_QUEUES.EMAIL_DEAD_LETTER,
             JSON.stringify(emailPayload),
@@ -323,10 +314,7 @@ describe('email consumer unit test', () => {
         await emailConsumer.handleEmailByError(error, emailPayload, retryCount);
 
         //then
-        //1. 호출횟수 검증
         expect(rabbitmqService.sendMessageToQueue).toHaveBeenCalledTimes(1);
-
-        //2. 입력 인자 검증
         expect(rabbitmqService.sendMessageToQueue).toHaveBeenCalledWith(
           RMQ_QUEUES.EMAIL_DEAD_LETTER,
           JSON.stringify(emailPayload),
@@ -379,10 +367,7 @@ describe('email consumer unit test', () => {
           );
 
           //then
-          //1. 호출횟수 검증
           expect(rabbitmqService.sendMessageToQueue).toHaveBeenCalledTimes(1);
-
-          //2. 입력 인자 검증
           expect(rabbitmqService.sendMessageToQueue).toHaveBeenCalledWith(
             RMQ_QUEUES.EMAIL_DEAD_LETTER,
             JSON.stringify(emailPayload),
