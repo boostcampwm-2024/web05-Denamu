@@ -3,7 +3,7 @@ import { RabbitmqService } from '../../src/rabbitmq/rabbitmq.service';
 import { RabbitMQManager } from '../../src/rabbitmq/rabbitmq.manager';
 import { Channel, ConsumeMessage } from 'amqplib';
 
-describe('RabbitmqService', () => {
+describe('RabbitmqService unit test', () => {
   let rabbitmqService: RabbitmqService;
   let mockRabbitMQManager: jest.Mocked<RabbitMQManager>;
   let mockChannel: jest.Mocked<Channel>;
