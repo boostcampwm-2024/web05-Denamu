@@ -54,6 +54,6 @@ export class ReadRssRejectHistoryResponseDto {
   }
 
   static toResponseDtoArray(rssRejectList: RssReject[]) {
-    return rssRejectList.map(this.toResponseDto);
+    return rssRejectList.map((rssReject) => this.toResponseDto(rssReject));
   }
 }

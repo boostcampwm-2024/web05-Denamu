@@ -69,7 +69,7 @@ const MOCK_RSS_OBJ: RssObj = {
   id: 1,
   blogName: '테스트 블로그',
   blogPlatform: 'etc',
-  rssUrl: 'https://denamu.site/rss',
+  rssUrl: 'https://denamu.dev/rss',
 };
 
 describe('Parser 모듈 테스트', () => {

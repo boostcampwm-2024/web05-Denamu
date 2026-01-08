@@ -1,63 +1,105 @@
-import { AdminFixture } from './../../fixture/admin.fixture';
-import { INestApplication } from '@nestjs/common';
+import {
+  ADMIN_DEFAULT_PASSWORD,
+  AdminFixture,
+} from './../../config/common/fixture/admin.fixture';
+import { HttpStatus } from '@nestjs/common';
 import { LoginAdminRequestDto } from '../../../src/admin/dto/request/loginAdmin.dto';
-import * as request from 'supertest';
+import * as supertest from 'supertest';
 import { AdminRepository } from '../../../src/admin/repository/admin.repository';
-describe('POST api/admin/login E2E Test', () => {
-  let app: INestApplication;
+import TestAgent from 'supertest/lib/agent';
+import { RedisService } from '../../../src/common/redis/redis.service';
+import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
+import * as uuid from 'uuid';
+import { Admin } from '../../../src/admin/entity/admin.entity';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
-  beforeAll(async () => {
-    app = global.testApp;
-    const adminRepository = app.get(AdminRepository);
-    await adminRepository.insert(await AdminFixture.createAdminCryptFixture());
+const URL = '/api/admin/login';
+
+describe(`POST ${URL} E2E Test`, () => {
+  let agent: TestAgent;
+  let redisService: RedisService;
+  let admin: Admin;
+  let adminRepository: AdminRepository;
+  const redisKeyMake = (data: string) => `${REDIS_KEYS.ADMIN_AUTH_KEY}:${data}`;
+  const sessionKey = 'admin-login-sessionKey';
+
+  beforeAll(() => {
+    agent = supertest(testApp.getHttpServer());
+    redisService = testApp.get(RedisService);
+    adminRepository = testApp.get(AdminRepository);
   });
 
-  it('등록된 계정이면 정상적으로 로그인할 수 있다.', async () => {
-    //given
-    const loginAdminDto = new LoginAdminRequestDto({
-      loginId: 'test1234',
-      password: 'test1234!',
-    });
-
-    //when
-    const response = await request(app.getHttpServer())
-      .post('/api/admin/login')
-      .send(loginAdminDto);
-
-    //then
-    expect(response.status).toBe(200);
-    expect(response.headers['set-cookie'][0]).toContain('sessionId=');
+  beforeEach(async () => {
+    jest.spyOn(uuid, 'v4').mockReturnValue(sessionKey as any);
+    admin = await adminRepository.save(
+      await AdminFixture.createAdminCryptFixture(),
+    );
   });
 
-  it('등록되지 않은 ID로 로그인을 시도하면 401 UnAuthorized 예외가 발생한다.', async () => {
-    //given
-    const loginWrongAdminIdDto = new LoginAdminRequestDto({
+  it('[401] 등록되지 않은 ID로 로그인할 경우 로그인을 실패한다.', async () => {
+    // given
+    const requestDto = new LoginAdminRequestDto({
       loginId: 'testWrongAdminId',
-      password: 'test1234!',
+      password: ADMIN_DEFAULT_PASSWORD,
     });
 
-    //when
-    const response = await request(app.getHttpServer())
-      .post('/api/admin/login')
-      .send(loginWrongAdminIdDto);
+    // Http when
+    const response = await agent.post(URL).send(requestDto);
 
-    //then
-    expect(response.status).toBe(401);
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedSession = await redisService.get(redisKeyMake(sessionKey));
+
+    // DB, Redis then
+    expect(savedSession).toBeNull();
   });
 
-  it('비밀번호가 다르다면 401 UnAuthorized 예외가 발생한다.', async () => {
-    //given
-    const loginWrongAdminPasswordDto = new LoginAdminRequestDto({
-      loginId: 'test1234',
+  it('[401] 비밀번호가 다를 경우 로그인을 실패한다.', async () => {
+    // given
+    const requestDto = new LoginAdminRequestDto({
+      loginId: admin.loginId,
       password: 'testWrongAdminPassword!',
     });
 
-    //when
-    const response = await request(app.getHttpServer())
-      .post('/api/admin/login')
-      .send(loginWrongAdminPasswordDto);
+    // Http when
+    const response = await agent.post(URL).send(requestDto);
 
-    //then
-    expect(response.status).toBe(401);
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedSession = await redisService.get(redisKeyMake(sessionKey));
+
+    // DB, Redis then
+    expect(savedSession).toBeNull();
+  });
+
+  it('[200] 존재하는 사용자의 정보로 로그인할 경우 로그인을 성공한다.', async () => {
+    // given
+    const requestDto = new LoginAdminRequestDto({
+      loginId: admin.loginId,
+      password: ADMIN_DEFAULT_PASSWORD,
+    });
+
+    // Http when
+    const response = await agent.post(URL).send(requestDto);
+
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.OK);
+    expect(response.headers['set-cookie'][0]).toContain(sessionKey);
+    expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedSession = await redisService.get(redisKeyMake(sessionKey));
+
+    // DB, Redis then
+    expect(savedSession).toBe(admin.loginId);
   });
 });

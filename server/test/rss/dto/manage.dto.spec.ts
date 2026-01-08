@@ -1,7 +1,7 @@
 import { validate } from 'class-validator';
 import { ManageRssRequestDto } from '../../../src/rss/dto/request/manageRss.dto';
 
-describe('ManageRssRequestDto Test', () => {
+describe(`${ManageRssRequestDto.name} Test`, () => {
   let dto: ManageRssRequestDto;
 
   beforeEach(() => {

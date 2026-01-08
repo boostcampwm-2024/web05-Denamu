@@ -1,0 +1,22 @@
+FROM node:22-alpine AS builder
+
+WORKDIR /var/web05-Denamu/email-worker
+
+COPY .. .
+
+RUN npm ci
+
+RUN npm run build
+
+FROM node:22-alpine
+
+WORKDIR /var/web05-Denamu/email-worker
+
+COPY --from=builder /var/web05-Denamu/email-worker/dist ./dist
+COPY --from=builder /var/web05-Denamu/email-worker/package.json .
+COPY --from=builder /var/web05-Denamu/email-worker/node_modules ./node_modules
+COPY --from=builder /var/web05-Denamu/email-worker/env ./env
+
+RUN touch /var/log/email-worker.log
+
+CMD ["sh", "-c", "npm run start && tail -f /var/log/email-worker.log"]

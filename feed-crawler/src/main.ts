@@ -35,10 +35,10 @@ function initializeDependencies() {
 function registerSchedulers(
   dependencies: ReturnType<typeof initializeDependencies>,
 ) {
-  schedule.scheduleJob('FEED CRAWLING', '0,30 * * * *', async () => {
+  schedule.scheduleJob('FEED CRAWLING', '0,30 * * * *', () => {
     const now = new Date();
     logger.info(`Feed Crawling Start: ${now.toISOString()}`);
-    dependencies.feedCrawler.start(now);
+    void dependencies.feedCrawler.start(now);
   });
 
   schedule.scheduleJob(
@@ -46,13 +46,13 @@ function registerSchedulers(
     `*/1 * * * *`,
     () => {
       logger.info(`AI Request Start: ${new Date().toISOString()}`);
-      dependencies.claudeEventWorker.start();
+      void dependencies.claudeEventWorker.start();
     },
   );
 
-  schedule.scheduleJob('FULL FEED CRAWLING', '*/5 * * * *', async () => {
+  schedule.scheduleJob('FULL FEED CRAWLING', '*/5 * * * *', () => {
     logger.info(`Full Feed Crawling Start: ${new Date().toISOString()}`);
-    dependencies.fullFeedCrawlEventWorker.start();
+    void dependencies.fullFeedCrawlEventWorker.start();
   });
 }
 
@@ -75,8 +75,8 @@ async function startScheduler() {
   await initializeRabbitMQ(dependencies);
   registerSchedulers(dependencies);
 
-  process.on('SIGINT', () => handleShutdown(dependencies, 'SIGINT'));
-  process.on('SIGTERM', () => handleShutdown(dependencies, 'SIGTERM'));
+  process.on('SIGINT', () => void handleShutdown(dependencies, 'SIGINT'));
+  process.on('SIGTERM', () => void handleShutdown(dependencies, 'SIGTERM'));
 }
 
 async function initializeRabbitMQ(

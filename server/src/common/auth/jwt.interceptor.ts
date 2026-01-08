@@ -27,7 +27,7 @@ export class InjectUserInterceptor implements NestInterceptor {
           secret: this.configService.get('JWT_ACCESS_SECRET'),
         });
         request.user = payload;
-      } catch (e) {
+      } catch {
         request.user = null;
       }
     } else {

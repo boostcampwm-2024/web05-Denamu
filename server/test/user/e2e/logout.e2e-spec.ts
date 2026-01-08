@@ -1,55 +1,52 @@
-import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
-import { UserService } from '../../../src/user/service/user.service';
+import { HttpStatus } from '@nestjs/common';
+import * as supertest from 'supertest';
 import { UserRepository } from '../../../src/user/repository/user.repository';
-import { UserFixture } from '../../fixture/user.fixture';
+import { UserFixture } from '../../config/common/fixture/user.fixture';
+import TestAgent from 'supertest/lib/agent';
 import { User } from '../../../src/user/entity/user.entity';
+import { createAccessToken } from '../../config/e2e/env/jest.setup';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
-describe('POST /api/user/logout E2E Test', () => {
-  let app: INestApplication;
-  let userService: UserService;
-  let userInformation: User;
+const URL = '/api/user/logout';
 
-  beforeAll(async () => {
-    app = global.testApp;
-    userService = app.get(UserService);
-    const userRepository = app.get(UserRepository);
+describe(`POST ${URL} E2E Test`, () => {
+  let agent: TestAgent;
+  let user: User;
+  let userRepository: UserRepository;
+  let accessToken: string;
 
-    userInformation = await userRepository.save(
+  beforeAll(() => {
+    agent = supertest(testApp.getHttpServer());
+    userRepository = testApp.get(UserRepository);
+  });
+
+  beforeEach(async () => {
+    user = await userRepository.save(
       await UserFixture.createUserCryptFixture(),
     );
+    accessToken = createAccessToken(user);
   });
 
-  it('로그아웃을 정상적으로 성공한다.', async () => {
-    // given
-    const accessToken = userService.createToken(
-      {
-        id: userInformation.id,
-        email: userInformation.email,
-        userName: userInformation.userName,
-        role: 'user',
-      },
-      'access',
-    );
-    const agent = request.agent(app.getHttpServer());
+  it('[401] Access Token이 존재하지 않을 경우 로그아웃을 실패한다.', async () => {
+    // Http when
+    const response = await agent.post(URL);
 
-    // when
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(data).toBeUndefined();
+  });
+
+  it('[200] 로그인된 상태일 경우 로그아웃을 성공한다.', async () => {
+    // Http when
     const response = await agent
-      .post('/api/user/logout')
+      .post(URL)
       .set('Authorization', `Bearer ${accessToken}`);
 
-    // then
-    expect(response.status).toBe(200);
-  });
-
-  it('Access Token이 존재하지 않았을 때, 오류가 발생한다.', async () => {
-    // given
-    const agent = request.agent(app.getHttpServer());
-
-    // when
-    const response = await agent.post('/api/user/logout');
-
-    // then
-    expect(response.status).toBe(401);
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.OK);
+    expect(response.headers['set-cookie'][0]).toContain('refresh_token=');
+    expect(data).toBeUndefined();
   });
 });

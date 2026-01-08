@@ -8,6 +8,7 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   Res,
   UseGuards,
 } from '@nestjs/common';
@@ -20,9 +21,13 @@ import { ApiCertificateUser } from '../api-docs/certificateUser.api-docs';
 import { CertificateUserRequestDto } from '../dto/request/certificateUser.dto';
 import { CheckEmailDuplicationRequestDto } from '../dto/request/checkEmailDuplication.dto';
 import { LoginUserRequestDto } from '../dto/request/loginUser.dto';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { ApiLoginUser } from '../api-docs/loginUser.api-docs';
-import { JwtGuard, Payload, RefreshJwtGuard } from '../../common/guard/jwt.guard';
+import {
+  JwtGuard,
+  Payload,
+  RefreshJwtGuard,
+} from '../../common/guard/jwt.guard';
 import { ApiRefreshToken } from '../api-docs/refreshToken.api-docs';
 import { ApiLogoutUser } from '../api-docs/logoutUser.api-docs';
 import { UpdateUserRequestDto } from '../dto/request/updateUser.dto';
@@ -93,7 +98,7 @@ export class UserController {
   @Post('/refresh-token')
   @HttpCode(HttpStatus.OK)
   @UseGuards(RefreshJwtGuard)
-  async refreshAccessToken(@CurrentUser() user: Payload) {
+  refreshAccessToken(@CurrentUser() user: Payload) {
     return ApiResponse.responseWithData(
       '엑세스 토큰을 재발급했습니다.',
       this.userService.refreshAccessToken(user),
@@ -104,7 +109,7 @@ export class UserController {
   @Post('/logout')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtGuard)
-  async logoutUser(@Res({ passthrough: true }) res) {
+  logoutUser(@Res({ passthrough: true }) res: Response) {
     res.clearCookie('refresh_token');
     return ApiResponse.responseWithNoContent('로그아웃을 성공했습니다.');
   }
@@ -127,8 +132,17 @@ export class UserController {
   @Post('/delete-account/request')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtGuard)
-  async requestDeleteAccount(@Req() req) {
-    await this.userService.requestDeleteAccount(req.user.id);
+  async requestDeleteAccount(
+    @CurrentUser() user: Payload,
+    @Req() req: Request,
+  ) {
+    const accessToken = req.headers.authorization?.replace('Bearer ', '');
+    const refreshToken = req.cookies['refresh_token'];
+    await this.userService.requestDeleteAccount(
+      user.id,
+      accessToken,
+      refreshToken,
+    );
     return ApiResponse.responseWithNoContent(
       '회원탈퇴 신청이 성공적으로 처리되었습니다. 이메일을 확인해주세요.',
     );

@@ -15,7 +15,7 @@ export const Sidebar = () => {
       <div className="flex flex-col h-full">
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center space-x-2">
-            <img src="https://denamu.site/files/denamu-icon.svg" alt="Denamu" className="w-10 h-auto" />
+            <img src="https://denamu.dev/files/denamu-icon.svg" alt="Denamu" className="w-10 h-auto" />
             <span className="text-xl font-semibold">Denamu</span>
           </div>
         </div>

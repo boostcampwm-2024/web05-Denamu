@@ -1,50 +1,80 @@
-import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import { HttpStatus } from '@nestjs/common';
+import * as supertest from 'supertest';
 import { RedisService } from '../../../../src/common/redis/redis.service';
 import { RssRejectRepository } from '../../../../src/rss/repository/rss.repository';
 import { RssReject } from '../../../../src/rss/entity/rss.entity';
-import { RssRejectFixture } from '../../../fixture/rssReject.fixture';
+import { RssRejectFixture } from '../../../config/common/fixture/rss-reject.fixture';
+import TestAgent from 'supertest/lib/agent';
+import { REDIS_KEYS } from '../../../../src/common/redis/redis.constant';
+import { testApp } from '../../../config/e2e/env/jest.setup';
 
-describe('GET /api/rss/history/reject E2E Test', () => {
-  let app: INestApplication;
-  beforeAll(async () => {
-    app = global.testApp;
-    const rssRejectRepository = app.get(RssRejectRepository);
-    const redisService = app.get(RedisService);
-    const rssAccepts: RssReject[] = [];
-    for (let i = 1; i <= 2; i++) {
-      rssAccepts.push(RssRejectFixture.createRssRejectFixture({}, i));
-    }
-    await Promise.all([
-      rssRejectRepository.insert(rssAccepts),
-      redisService.set('auth:sid', 'test1234'),
-    ]);
+const URL = '/api/rss/history/reject';
+
+describe(`GET ${URL} E2E Test`, () => {
+  let agent: TestAgent;
+  let rssRejectList: RssReject[];
+  let redisService: RedisService;
+  let rssRejectRepository: RssRejectRepository;
+  const redisKeyMake = (data: string) => `${REDIS_KEYS.ADMIN_AUTH_KEY}:${data}`;
+  const sessionKey = 'admin-rss-history-reject';
+
+  beforeAll(() => {
+    agent = supertest(testApp.getHttpServer());
+    rssRejectRepository = testApp.get(RssRejectRepository);
+    redisService = testApp.get(RedisService);
   });
 
-  it('관리자 로그인이 되어있지 않으면 조회할 수 없다.', async () => {
-    // when
-    const noCookieResponse = await request(app.getHttpServer()).get(
-      '/api/rss/history/reject',
+  beforeEach(async () => {
+    const rssRejects = Array.from({ length: 2 }).map(() =>
+      RssRejectFixture.createRssRejectFixture(),
     );
-    const noSessionResponse = await request(app.getHttpServer())
-      .get('/api/rss/history/reject')
-      .set('Cookie', 'sessionId=invalid');
-
-    // then
-    expect(noCookieResponse.status).toBe(401);
-    expect(noSessionResponse.status).toBe(401);
+    [rssRejectList] = await Promise.all([
+      rssRejectRepository.save(rssRejects),
+      redisService.set(redisKeyMake(sessionKey), 'test1234'),
+    ]);
+    rssRejectList.reverse();
   });
 
-  it('관리자 로그인이 되어 있으면 최신순으로 기록 데이터를 응답한다.', async () => {
-    // when
-    const response = await request(app.getHttpServer())
-      .get('/api/rss/history/reject')
-      .set('Cookie', 'sessionId=sid');
+  it('[401] 관리자 로그인 쿠키가 없을 경우 RSS 거절 기록 조회를 실패한다.', async () => {
+    // Http when
+    const response = await agent.get(URL);
 
-    // then
-    expect(response.status).toBe(200);
-    expect(response.body.data.map((rejectRss) => rejectRss.id)).toStrictEqual([
-      2, 1,
-    ]);
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(data).toBeUndefined();
+  });
+
+  it('[401] 관리자 로그인 쿠키가 만료됐을 경우 RSS 거절 기록 조회를 실패한다.', async () => {
+    // Http when
+    const response = await agent
+      .get(URL)
+      .set('Cookie', `sessionId=Wrong${sessionKey}`);
+
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(data).toBeUndefined();
+  });
+
+  it('[200] 관리자 로그인이 되어 있을 경우 RSS 거절 기록 조회를 성공한다.', async () => {
+    // Http when
+    const response = await agent
+      .get(URL)
+      .set('Cookie', `sessionId=${sessionKey}`);
+
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.OK);
+    expect(data).toStrictEqual(
+      rssRejectList.map((rssReject) => ({
+        description: rssReject.description,
+        email: rssReject.email,
+        id: rssReject.id,
+        name: rssReject.name,
+        rssUrl: rssReject.rssUrl,
+        userName: rssReject.userName,
+      })),
+    );
   });
 });

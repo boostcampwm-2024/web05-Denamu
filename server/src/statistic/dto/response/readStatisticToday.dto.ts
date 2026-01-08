@@ -33,6 +33,8 @@ export class ReadStatisticTodayResponseDto {
   }
 
   static toResponseDtoArray(todayViewCountList: Partial<Feed>[]) {
-    return todayViewCountList.map(this.toResponseDto);
+    return todayViewCountList.map((todayViewCount) =>
+      this.toResponseDto(todayViewCount),
+    );
   }
 }

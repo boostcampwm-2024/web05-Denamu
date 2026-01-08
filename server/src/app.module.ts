@@ -11,7 +11,6 @@ import { FeedModule } from './feed/module/feed.module';
 import { WinstonLoggerModule } from './common/logger/logger.module';
 import { ChatModule } from './chat/module/chat.module';
 import { StatisticModule } from './statistic/module/statistic.module';
-import { TestModule } from './common/test/test.module';
 import { UserModule } from './user/module/user.module';
 import { ActivityModule } from './activity/module/activity.module';
 import { EmailModule } from './common/email/email.module';
@@ -22,6 +21,7 @@ import { MetricsInterceptor } from './common/metrics/metrics.interceptor';
 import { LikeModule } from './like/module/like.module';
 import { FileModule } from './file/module/file.module';
 import { RabbitMQModule } from './common/rabbitmq/rabbitmq.module';
+import { TagModule } from './tag/module/tag.module';
 
 const envMap = {
   LOCAL: path.join(process.cwd(), 'env/.env.local'),
@@ -59,7 +59,6 @@ const exists = !!chosen && fs.existsSync(chosen);
     }),
     WinstonLoggerModule,
     RedisModule,
-    TestModule,
     EmailModule,
     MetricsModule,
     AdminModule,
@@ -67,6 +66,7 @@ const exists = !!chosen && fs.existsSync(chosen);
     FeedModule,
     ChatModule,
     UserModule,
+    TagModule,
     ActivityModule,
     StatisticModule,
     CommentModule,

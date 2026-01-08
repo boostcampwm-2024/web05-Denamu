@@ -23,13 +23,13 @@ async function bootstrap() {
     origin: [
       'http://localhost:5173',
       'http://localhost:4173',
-      'https://www.denamu.site',
-      'https://denamu.site',
+      'https://www.denamu.dev',
+      'https://denamu.dev',
     ],
     credentials: true,
   });
   setupSwagger(app);
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.SERVER_PORT ?? 3000);
 }
 
-bootstrap();
+void bootstrap();

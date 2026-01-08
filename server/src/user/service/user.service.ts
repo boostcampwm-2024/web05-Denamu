@@ -6,10 +6,9 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { RegisterUserRequestDto } from '../dto/request/registerUser.dto';
-import { v4 as uuidv4 } from 'uuid';
+import * as uuid from 'uuid';
 import { RedisService } from '../../common/redis/redis.service';
 import { REFRESH_TOKEN_TTL, SALT_ROUNDS } from '../constant/user.constants';
-import { EmailService } from '../../common/email/email.service';
 import { LoginUserRequestDto } from '../dto/request/loginUser.dto';
 import { Response } from 'express';
 import * as bcrypt from 'bcrypt';
@@ -22,13 +21,14 @@ import { FileService } from '../../file/service/file.service';
 import { CheckEmailDuplicationResponseDto } from '../dto/response/checkEmailDuplication.dto';
 import { REDIS_KEYS } from '../../common/redis/redis.constant';
 import { CreateAccessTokenResponseDto } from '../dto/response/createAccessToken.dto';
+import { EmailProducer } from '../../common/email/email.producer';
 
 @Injectable()
 export class UserService {
   constructor(
     private readonly userRepository: UserRepository,
     private readonly redisService: RedisService,
-    private readonly emailService: EmailService,
+    private readonly emailProducer: EmailProducer,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly fileService: FileService,
@@ -64,15 +64,17 @@ export class UserService {
     const newUser = registerDto.toEntity();
     newUser.password = await this.createHashedPassword(registerDto.password);
 
-    const uuid = uuidv4();
+    const userRegisterCode = uuid.v4();
     await this.redisService.set(
-      `${REDIS_KEYS.USER_AUTH_KEY}:${uuid}`,
+      `${REDIS_KEYS.USER_AUTH_KEY}:${userRegisterCode}`,
       JSON.stringify(newUser),
       'EX',
       600,
     );
-
-    this.emailService.sendUserCertificationMail(newUser, uuid);
+    await this.emailProducer.produceUserCertification(
+      newUser,
+      userRegisterCode,
+    );
   }
 
   async certificateUser(uuid: string): Promise<void> {
@@ -119,7 +121,7 @@ export class UserService {
     return CreateAccessTokenResponseDto.toResponseDto(accessToken);
   }
 
-  createToken(userInformation: Payload, mode: string) {
+  createToken(userInformation: Payload, mode: 'refresh' | 'access') {
     const payload = {
       id: userInformation.id,
       email: userInformation.email,
@@ -129,7 +131,7 @@ export class UserService {
 
     return this.jwtService.sign(payload, {
       expiresIn: this.configService.get(
-        `${mode === 'access' ? 'ACCESS_TOKEN_EXPIRE' : 'REFRESH_TOKEN_EXPIRE'}`,
+        `${mode === 'access' ? 'JWT_ACCESS_TOKEN_EXPIRE' : 'JWT_REFRESH_TOKEN_EXPIRE'}`,
       ),
       secret: this.configService.get('JWT_ACCESS_SECRET'),
     });
@@ -202,15 +204,14 @@ export class UserService {
       return;
     }
 
-    const uuid = uuidv4();
+    const forgotPasswordCode = uuid.v4();
     await this.redisService.set(
-      `${REDIS_KEYS.USER_RESET_PASSWORD_KEY}:${uuid}`,
+      `${REDIS_KEYS.USER_RESET_PASSWORD_KEY}:${forgotPasswordCode}`,
       JSON.stringify(user.id),
       'EX',
       600,
     );
-
-    this.emailService.sendPasswordResetEmail(user, uuid);
+    await this.emailProducer.producePasswordReset(user, forgotPasswordCode);
   }
 
   async resetPassword(uuid: string, password: string): Promise<void> {
@@ -235,29 +236,36 @@ export class UserService {
     await this.userRepository.save(user);
   }
 
-  async requestDeleteAccount(userId: number): Promise<void> {
+  async requestDeleteAccount(
+    userId: number,
+    accessToken?: string,
+    refreshToken?: string,
+  ): Promise<void> {
     const user = await this.getUser(userId);
 
-    const token = uuidv4();
-    await this.redisService.set(
-      `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${token}`,
-      user.id.toString(),
-      'EX',
-      600,
-    );
+    const userDeleteCode = uuid.v4();
 
-    this.emailService.sendDeleteAccountMail(user, token);
+    if (accessToken || refreshToken) {
+      await this.redisService.set(
+        `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${userDeleteCode}`,
+        `${user.id.toString()}:${accessToken || ''}:${refreshToken || ''}`,
+        'EX',
+        600,
+      );
+    }
+    await this.emailProducer.produceAccountDeletion(user, userDeleteCode);
   }
 
   async confirmDeleteAccount(token: string): Promise<void> {
-    const userIdString = await this.redisService.get(
-      `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${token}`,
-    );
+    const redisKey = `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${token}`;
 
-    if (!userIdString) {
+    const data = await this.redisService.get(redisKey);
+
+    if (!data) {
       throw new NotFoundException('유효하지 않거나 만료된 토큰입니다.');
     }
 
+    const [userIdString, accessToken, refreshToken] = data.split(':');
     const userId = parseInt(userIdString, 10);
 
     const user = await this.getUser(userId);
@@ -266,10 +274,57 @@ export class UserService {
       await this.fileService.deleteByPath(user.profileImage);
     }
 
+    if (accessToken) {
+      const accessTokenExpire = this.configService.get(
+        'JWT_ACCESS_TOKEN_EXPIRE',
+      );
+      const ttlInSeconds = this.parseTimeToSeconds(accessTokenExpire);
+      await this.addToJwtBlacklist(accessToken, ttlInSeconds);
+    }
+
+    if (refreshToken) {
+      const refreshTokenExpire = this.configService.get(
+        'JWT_REFRESH_TOKEN_EXPIRE',
+      );
+      const ttlInSeconds = this.parseTimeToSeconds(refreshTokenExpire);
+      await this.addToJwtBlacklist(refreshToken, ttlInSeconds);
+    }
+
     await this.userRepository.remove(user);
 
-    await this.redisService.del(
-      `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${token}`,
-    );
+    await this.redisService.del(redisKey);
+  }
+
+  private parseTimeToSeconds(time: string): number {
+    const regex = /^(\d+)([smhd])$/;
+    const match = time.match(regex);
+
+    if (!match) {
+      const defaultExpire = this.configService.get('JWT_ACCESS_TOKEN_EXPIRE');
+      if (defaultExpire && defaultExpire !== time) {
+        return this.parseTimeToSeconds(defaultExpire);
+      }
+      return 3600;
+    }
+
+    const value = parseInt(match[1], 10);
+    const unit = match[2];
+
+    const multipliers: Record<string, number> = {
+      s: 1,
+      m: 60,
+      h: 3600,
+      d: 86400,
+    };
+
+    return value * multipliers[unit];
+  }
+
+  private async addToJwtBlacklist(
+    token: string,
+    ttl: number,
+  ): Promise<'OK' | null> {
+    const blacklistKey = `${REDIS_KEYS.USER_BLACKLIST_JWT_PREFIX}:${token}`;
+    return this.redisService.setex(blacklistKey, ttl, '1');
   }
 }

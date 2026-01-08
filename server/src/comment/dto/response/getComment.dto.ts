@@ -39,7 +39,7 @@ export class GetCommentResponseDto {
   }
 
   static toResponseDto(comment: Comment) {
-    new GetCommentResponseDto({
+    return new GetCommentResponseDto({
       id: comment.id,
       comment: comment.comment,
       date: comment.date,
@@ -52,6 +52,6 @@ export class GetCommentResponseDto {
   }
 
   static toResponseDtoArray(comments: Comment[]) {
-    return comments.map(this.toResponseDto);
+    return comments.map((comment) => this.toResponseDto(comment));
   }
 }

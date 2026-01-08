@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { RabbitMQManager } from './rabbitmq.manager';
-import { ConsumeMessage } from 'amqplib';
 import { WinstonLoggerService } from '../logger/logger.service';
 
 @Injectable()
@@ -15,23 +14,31 @@ export class RabbitMQService {
     channel.publish(exchange, routingKey, Buffer.from(message));
   }
 
-  async consumeMessage(
+  async consumeMessage<T>(
     queue: string,
-    onMessage: (msg: ConsumeMessage | null) => void | Promise<void>,
+    onMessage: (payload: T) => void | Promise<void>,
   ) {
     const channel = await this.rabbitMQManager.getChannel();
-    await channel.consume(queue, async (message) => {
-      try {
-        if (!message) return;
+    const { consumerTag } = await channel.consume(queue, (message) => {
+      void (async () => {
+        try {
+          if (!message) return;
 
-        const parsedMessage = JSON.parse(message.content.toString());
-        await onMessage(parsedMessage);
+          const parsedMessage = JSON.parse(message.content.toString()) as T;
+          await onMessage(parsedMessage);
 
-        channel.ack(message);
-      } catch (err) {
-        this.logger.error('메시지 처리 중 오류 발생:', err);
-        channel.nack(message, false, false);
-      }
+          channel.ack(message);
+        } catch (error) {
+          this.logger.error('메시지 처리 중 오류 발생:', error);
+          channel.nack(message, false, false);
+        }
+      })();
     });
+    return consumerTag;
+  }
+
+  async closeConsumer(consumerTag: string) {
+    const channel = await this.rabbitMQManager.getChannel();
+    await channel.cancel(consumerTag);
   }
 }

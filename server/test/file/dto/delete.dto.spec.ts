@@ -1,11 +1,11 @@
 import { validate } from 'class-validator';
-import { DeleteFileRequestDto } from '../../../src/file/dto/request/deleteFile.dto';
+import { DeleteFileParamRequestDto } from '../../../src/file/dto/request/deleteFile.dto';
 
-describe('DeleteFileRequestDto Test', () => {
-  let dto: DeleteFileRequestDto;
+describe(`${DeleteFileParamRequestDto.name} Test`, () => {
+  let dto: DeleteFileParamRequestDto;
 
   beforeEach(() => {
-    dto = new DeleteFileRequestDto({ id: 1 });
+    dto = new DeleteFileParamRequestDto({ id: 1 });
   });
 
   it('파일 ID가 1 이상의 정수일 경우 유효성 검사에 성공한다.', async () => {

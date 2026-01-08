@@ -1,0 +1,92 @@
+name: Email-Worker Deployment
+
+on:
+  push:
+    branches: [main]
+    paths: ['email-worker/**', 'docker-compose/docker-compose.prod.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  GHCR_URL: ${{ vars.GHCR }}
+  EMAIL_WORKER_IMAGE: ${{ vars.GHCR }}/email-worker
+  EMAIL_WORKER_TAG: sha-${{ github.sha }}
+  SERVICE: email-worker
+  EMAIL-WORKER_ENV_DIR: /var/prod_config/email-worker
+  EMAIL-WORKER_ENV_FILE: /var/prod_config/email-worker/.env.prod
+  INFRA_ENV_FILE: /var/prod_config/infra/.env.prod
+  COMPOSE_FILE: docker-compose/docker-compose.prod.yml
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: QEMU 멀티 아키텍쳐 에뮬레이터
+        uses: docker/setup-qemu-action@v3
+
+      - name: Buildx 멀티 아키텍쳐 빌더
+        uses: docker/setup-buildx-action@v3
+
+      - name: GHCR 로그인
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_GITHUB_TOKEN }}
+
+      - name: Docker 이미지 Build 및 Push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./email-worker
+          file: ./email-worker/docker/Dockerfile.prod
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ${{ env.EMAIL_WORKER_IMAGE }}:${{ env.EMAIL_WORKER_TAG }}
+            ${{ env.EMAIL_WORKER_IMAGE }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    runs-on: [self-hosted, prod]
+    needs: build-and-push # Build 및 Push가 끝나면 시작
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: GHCR 로그인 (prod)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_GITHUB_TOKEN }}
+
+      - name: 환경변수 최신화
+        run: |
+          sudo mkdir -p "${{env.EMAIL-WORKER_ENV_DIR}}"
+          sudo install -m 600 /dev/null "${{env.EMAIL-WORKER_ENV_FILE}}"
+          {
+            echo "EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}"
+            echo "EMAIL_USER=${{ secrets.EMAIL_USER }}"
+            echo "RABBITMQ_HOST=${{ secrets.RABBITMQ_HOST }}"
+            echo "RABBITMQ_PASSWORD=${{ secrets.RABBITMQ_PASSWORD }}"
+            echo "RABBITMQ_PORT=${{ secrets.RABBITMQ_PORT }}"
+            echo "RABBITMQ_USER=${{ secrets.RABBITMQ_USER }}"
+          } | sudo tee "${{env.EMAIL-WORKER_ENV_FILE}}" >/dev/null
+
+      - name: Graceful Shutdown & 서비스 재시작
+        run: |
+          set -a
+          source ${{ env.EMAIL-WORKER_ENV_FILE }}
+          source ${{ env.INFRA_ENV_FILE }}
+          set +a
+
+          docker compose -f "${{env.COMPOSE_FILE}}" pull "${{env.SERVICE}}"
+          docker compose -f "${{env.COMPOSE_FILE}}" stop "${{env.SERVICE}}"
+          docker compose -f "${{env.COMPOSE_FILE}}" up -d --no-deps --force-recreate "${{env.SERVICE}}"
+          docker image prune -f
