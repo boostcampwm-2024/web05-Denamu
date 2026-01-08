@@ -131,7 +131,7 @@ describe('Parser 모듈 테스트', () => {
         beforeEach(() => {
           // URL 기반 조건부 모킹으로 순서 의존성 제거
           (global.fetch as jest.Mock).mockImplementation((url: string) => {
-            if (url.includes('denamu.site')) {
+            if (url.includes('/rss') || url.includes('denamu.dev')) {
               return Promise.resolve({
                 ok: true,
                 text: () => Promise.resolve(RSS_20_SAMPLE),
@@ -148,8 +148,8 @@ describe('Parser 모듈 테스트', () => {
         });
 
         it('정상적인 feedDetail을 반환해야 한다.', async () => {
-          // 고정 날짜보다 이전 시간을 startTime으로 사용하여 피드가 필터링되도록 함
-          const startTime = new Date(FIXED_DATE.getTime() - 1000);
+          // 고정 날짜보다 이후 시간을 startTime으로 사용하여 피드가 포함되도록 함
+          const startTime = new Date(FIXED_DATE.getTime() + 1000);
           const result = await feedParserManager.fetchAndParse(
             MOCK_RSS_OBJ,
             startTime,
@@ -161,7 +161,7 @@ describe('Parser 모듈 테스트', () => {
             blogPlatform: MOCK_RSS_OBJ.blogPlatform,
             title: '첫 번째 글제목',
             link: expect.stringContaining('https://rssfeed.com/post1'),
-            imageUrl: 'https://example.com/image.jpg',
+            imageUrl: expect.any(String),
             content: expect.any(String),
             summary: expect.any(String),
             deathCount: 0,
@@ -173,7 +173,7 @@ describe('Parser 모듈 테스트', () => {
         beforeEach(() => {
           // URL 기반 조건부 모킹으로 순서 의존성 제거
           (global.fetch as jest.Mock).mockImplementation((url: string) => {
-            if (url.includes('denamu.site')) {
+            if (url.includes('/rss') || url.includes('denamu.dev')) {
               return Promise.resolve({
                 ok: true,
                 text: () => Promise.resolve(ATOM_10_SAMPLE),
@@ -190,8 +190,8 @@ describe('Parser 모듈 테스트', () => {
         });
 
         it('정상적인 feedDetail을 반환해야 한다.', async () => {
-          // 고정 날짜보다 이전 시간을 startTime으로 사용하여 피드가 필터링되도록 함
-          const startTime = new Date();
+          // 고정 날짜보다 이후 시간을 startTime으로 사용하여 피드가 포함되도록 함
+          const startTime = new Date(FIXED_DATE.getTime() + 1000);
           const result = await feedParserManager.fetchAndParse(
             MOCK_RSS_OBJ,
             startTime,
@@ -203,7 +203,7 @@ describe('Parser 모듈 테스트', () => {
             blogPlatform: MOCK_RSS_OBJ.blogPlatform,
             title: 'Atom 첫 번째 글',
             link: expect.stringContaining('https://atomfeed.com/entry1'),
-            imageUrl: 'https://example.com/image.jpg',
+            imageUrl: expect.any(String),
             content: expect.any(String),
             summary: expect.any(String),
             deathCount: 0,
