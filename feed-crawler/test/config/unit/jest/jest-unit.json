@@ -5,7 +5,7 @@
     "^.+\\.(t|j)s$": "ts-jest"
   },
   "testEnvironment": "node",
-  "rootDir": "..",
+  "rootDir": "../../../..",
   "coverageDirectory": "test/coverage",
   "testTimeout": 10000
 }

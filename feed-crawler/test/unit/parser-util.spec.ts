@@ -14,7 +14,7 @@ describe('ParserUtil', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    jest.restoreAllMocks();
   });
 
   describe('getThumbnailUrl', () => {

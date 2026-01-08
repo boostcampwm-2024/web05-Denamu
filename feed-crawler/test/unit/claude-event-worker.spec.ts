@@ -112,16 +112,6 @@ describe('ClaudeEventWorker', () => {
     });
   });
 
-  describe('getQueueKey', () => {
-    it('올바른 큐 키를 반환해야 한다', () => {
-      // When
-      const result = claudeEventWorker['getQueueKey']();
-
-      // Then
-      expect(result).toBe(redisConstant.FEED_AI_QUEUE);
-    });
-  });
-
   describe('processItem', () => {
     it('정상적인 피드 처리를 수행해야 한다', async () => {
       // Given

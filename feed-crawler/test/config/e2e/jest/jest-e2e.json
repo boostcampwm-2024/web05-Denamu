@@ -5,11 +5,11 @@
     "^.+\\.(t|j)s$": "ts-jest"
   },
   "testEnvironment": "node",
-  "rootDir": "..",
+  "rootDir": "../../../..",
   "coverageDirectory": "test/coverage",
-  "setupFilesAfterEnv": ["./test/jest.setup.ts"],
-  "globalSetup": "./test/setup/jest.global-setup.ts",
-  "globalTeardown": "./test/setup/jest.global-teardown.ts",
+  "setupFilesAfterEnv": ["./test/config/e2e/env/jest.setup.ts"],
+  "globalSetup": "./test/config/e2e/global/jest.global-setup.ts",
+  "globalTeardown": "./test/config/e2e/global/jest.global-teardown.ts",
   "testTimeout": 20000,
   "maxWorkers": 1
 }

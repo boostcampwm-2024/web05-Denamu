@@ -56,6 +56,7 @@ describe('FeedCrawler', () => {
   ];
 
   beforeEach(() => {
+    jest.clearAllMocks();
     mockFeedRepository = {
       deleteRecentFeed: jest.fn(),
       insertFeeds: jest.fn(),

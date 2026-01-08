@@ -1,5 +1,5 @@
 import { MySqlContainer } from '@testcontainers/mysql';
-import { setupTestContainer } from './testContext.setup';
+import { setupTestContainer } from '../../../setup/testContext.setup';
 const globalAny: any = global;
 
 export default async function globalSetup() {
