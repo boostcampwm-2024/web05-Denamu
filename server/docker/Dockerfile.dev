@@ -2,15 +2,15 @@ FROM node:22-alpine AS builder
 
 WORKDIR /var/web05-Denamu/server
 
-COPY ../package*.json ./
+COPY package*.json ./
 
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 
 FROM node:22-alpine
 
 WORKDIR /var/web05-Denamu/server
 
-COPY .. .
+COPY . .
 
 COPY --from=builder /var/web05-Denamu/server/node_modules ./node_modules
 
