@@ -21,7 +21,9 @@
     "paths": {
       "@src/*": ["src/*"],
       "@test/*": ["test/*"]
-    }
+    },
+    "resolveJsonModule": true,
+    "esModuleInterop": true
   },
   "watchOptions": {
     "watchFile": "fixedPollingInterval"
