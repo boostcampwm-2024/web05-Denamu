@@ -1,20 +1,20 @@
 import { HttpStatus } from '@nestjs/common';
-import * as supertest from 'supertest';
-import { Feed } from '../../../src/feed/entity/feed.entity';
-import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
-import { FeedRepository } from '../../../src/feed/repository/feed.repository';
-import { RssAcceptFixture } from '../../config/common/fixture/rss-accept.fixture';
-import { FeedFixture } from '../../config/common/fixture/feed.fixture';
-import { GetCommentRequestDto } from '../../../src/comment/dto/request/getComment.dto';
+import supertest from 'supertest';
+import { Feed } from '@src/feed/entity/feed.entity';
+import { RssAcceptRepository } from '@src/rss/repository/rss.repository';
+import { FeedRepository } from '@src/feed/repository/feed.repository';
+import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture';
+import { FeedFixture } from '@test/config/common/fixture/feed.fixture';
+import { GetCommentRequestDto } from '@src/comment/dto/request/getComment.dto';
 import TestAgent from 'supertest/lib/agent';
-import { CommentRepository } from '../../../src/comment/repository/comment.repository';
-import { UserRepository } from '../../../src/user/repository/user.repository';
-import { UserFixture } from '../../config/common/fixture/user.fixture';
-import { CommentFixture } from '../../config/common/fixture/comment.fixture';
-import { RssAccept } from '../../../src/rss/entity/rss.entity';
-import { User } from '../../../src/user/entity/user.entity';
-import { Comment } from '../../../src/comment/entity/comment.entity';
-import { testApp } from '../../config/e2e/env/jest.setup';
+import { CommentRepository } from '@src/comment/repository/comment.repository';
+import { UserRepository } from '@src/user/repository/user.repository';
+import { UserFixture } from '@test/config/common/fixture/user.fixture';
+import { CommentFixture } from '@test/config/common/fixture/comment.fixture';
+import { RssAccept } from '@src/rss/entity/rss.entity';
+import { User } from '@src/user/entity/user.entity';
+import { Comment } from '@src/comment/entity/comment.entity';
+import { testApp } from '@test/config/e2e/env/jest.setup';
 
 const URL = '/api/comment';
 

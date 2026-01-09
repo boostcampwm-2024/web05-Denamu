@@ -1,11 +1,11 @@
 import { HttpStatus } from '@nestjs/common';
-import * as supertest from 'supertest';
-import { RssFixture } from '../../config/common/fixture/rss.fixture';
-import { RssRepository } from '../../../src/rss/repository/rss.repository';
+import supertest from 'supertest';
+import { RssFixture } from '@test/config/common/fixture/rss.fixture';
+import { RssRepository } from '@src/rss/repository/rss.repository';
 import TestAgent from 'supertest/lib/agent';
-import { RedisService } from '../../../src/common/redis/redis.service';
-import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
-import { testApp } from '../../config/e2e/env/jest.setup';
+import { RedisService } from '@src/common/redis/redis.service';
+import { REDIS_KEYS } from '@src/common/redis/redis.constant';
+import { testApp } from '@test/config/e2e/env/jest.setup';
 
 const URL = '/api/rss';
 

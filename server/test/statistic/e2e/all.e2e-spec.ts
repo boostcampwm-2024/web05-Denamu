@@ -1,14 +1,14 @@
-import * as supertest from 'supertest';
+import supertest from 'supertest';
 import { HttpStatus } from '@nestjs/common';
-import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
-import { FeedRepository } from '../../../src/feed/repository/feed.repository';
-import { RssAcceptFixture } from '../../config/common/fixture/rss-accept.fixture';
-import { FeedFixture } from '../../config/common/fixture/feed.fixture';
-import { Feed } from '../../../src/feed/entity/feed.entity';
+import { RssAcceptRepository } from '@src/rss/repository/rss.repository';
+import { FeedRepository } from '@src/feed/repository/feed.repository';
+import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture';
+import { FeedFixture } from '@test/config/common/fixture/feed.fixture';
+import { Feed } from '@src/feed/entity/feed.entity';
 import TestAgent from 'supertest/lib/agent';
-import { ReadStatisticRequestDto } from '../../../src/statistic/dto/request/readStatistic.dto';
-import { RssAccept } from '../../../src/rss/entity/rss.entity';
-import { testApp } from '../../config/e2e/env/jest.setup';
+import { ReadStatisticRequestDto } from '@src/statistic/dto/request/readStatistic.dto';
+import { RssAccept } from '@src/rss/entity/rss.entity';
+import { testApp } from '@test/config/e2e/env/jest.setup';
 
 const URL = '/api/statistic/all';
 

@@ -1,14 +1,14 @@
 import { HttpStatus } from '@nestjs/common';
-import * as supertest from 'supertest';
-import { UserRepository } from '../../../src/user/repository/user.repository';
-import { UserFixture } from '../../config/common/fixture/user.fixture';
-import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
-import { RedisService } from '../../../src/common/redis/redis.service';
-import { ResetPasswordRequestDto } from '../../../src/user/dto/request/resetPassword.dto';
+import supertest from 'supertest';
+import { UserRepository } from '@src/user/repository/user.repository';
+import { UserFixture } from '@test/config/common/fixture/user.fixture';
+import { REDIS_KEYS } from '@src/common/redis/redis.constant';
+import { RedisService } from '@src/common/redis/redis.service';
+import { ResetPasswordRequestDto } from '@src/user/dto/request/resetPassword.dto';
 import TestAgent from 'supertest/lib/agent';
 import * as bcrypt from 'bcrypt';
-import { User } from '../../../src/user/entity/user.entity';
-import { testApp } from '../../config/e2e/env/jest.setup';
+import { User } from '@src/user/entity/user.entity';
+import { testApp } from '@test/config/e2e/env/jest.setup';
 
 const URL = '/api/user/password';
 
