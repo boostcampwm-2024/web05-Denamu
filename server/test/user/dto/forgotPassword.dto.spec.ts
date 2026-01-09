@@ -1,5 +1,5 @@
 import { validate } from 'class-validator';
-import { ForgotPasswordRequestDto } from '../../../src/user/dto/request/forgotPassword.dto';
+import { ForgotPasswordRequestDto } from '@src/user/dto/request/forgotPassword.dto';
 
 describe(`${ForgotPasswordRequestDto.name} Test`, () => {
   let dto: ForgotPasswordRequestDto;

@@ -1,29 +1,29 @@
 import { HttpStatus } from '@nestjs/common';
-import * as supertest from 'supertest';
-import { UserRepository } from '../../../../src/user/repository/user.repository';
-import { RedisService } from '../../../../src/common/redis/redis.service';
-import { UserFixture } from '../../../config/common/fixture/user.fixture';
-import { REDIS_KEYS } from '../../../../src/common/redis/redis.constant';
-import { ConfirmDeleteAccountDto } from '../../../../src/user/dto/request/confirmDeleteAccount.dto';
+import supertest from 'supertest';
+import { UserRepository } from '@src/user/repository/user.repository';
+import { RedisService } from '@src/common/redis/redis.service';
+import { UserFixture } from '@test/config/common/fixture/user.fixture';
+import { REDIS_KEYS } from '@src/common/redis/redis.constant';
+import { ConfirmDeleteAccountDto } from '@src/user/dto/request/confirmDeleteAccount.dto';
 import TestAgent from 'supertest/lib/agent';
-import { CommentRepository } from '../../../../src/comment/repository/comment.repository';
-import { LikeRepository } from '../../../../src/like/repository/like.repository';
-import { ActivityRepository } from '../../../../src/activity/repository/activity.repository';
-import { FileRepository } from '../../../../src/file/repository/file.repository';
-import { User } from '../../../../src/user/entity/user.entity';
-import { FeedRepository } from '../../../../src/feed/repository/feed.repository';
-import { RssAcceptRepository } from '../../../../src/rss/repository/rss.repository';
-import { RssAccept } from '../../../../src/rss/entity/rss.entity';
-import { RssAcceptFixture } from '../../../config/common/fixture/rss-accept.fixture';
-import { FeedFixture } from '../../../config/common/fixture/feed.fixture';
-import { Feed } from '../../../../src/feed/entity/feed.entity';
-import { CommentFixture } from '../../../config/common/fixture/comment.fixture';
-import { FileFixture } from '../../../config/common/fixture/file.fixture';
+import { CommentRepository } from '@src/comment/repository/comment.repository';
+import { LikeRepository } from '@src/like/repository/like.repository';
+import { ActivityRepository } from '@src/activity/repository/activity.repository';
+import { FileRepository } from '@src/file/repository/file.repository';
+import { User } from '@src/user/entity/user.entity';
+import { FeedRepository } from '@src/feed/repository/feed.repository';
+import { RssAcceptRepository } from '@src/rss/repository/rss.repository';
+import { RssAccept } from '@src/rss/entity/rss.entity';
+import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture';
+import { FeedFixture } from '@test/config/common/fixture/feed.fixture';
+import { Feed } from '@src/feed/entity/feed.entity';
+import { CommentFixture } from '@test/config/common/fixture/comment.fixture';
+import { FileFixture } from '@test/config/common/fixture/file.fixture';
 import {
   createAccessToken,
   createRefreshToken,
-} from '../../../config/e2e/env/jest.setup';
-import { testApp } from '../../../config/e2e/env/jest.setup';
+} from '@test/config/e2e/env/jest.setup';
+import { testApp } from '@test/config/e2e/env/jest.setup';
 
 const URL = '/api/user/delete-account/confirm';
 

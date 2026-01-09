@@ -1,4 +1,4 @@
-import { Rss } from '../../../../src/rss/entity/rss.entity';
+import { Rss } from '@src/rss/entity/rss.entity';
 import * as uuid from 'uuid';
 
 export class RssFixture {

@@ -1,14 +1,14 @@
 import { HttpStatus } from '@nestjs/common';
-import * as supertest from 'supertest';
-import { UserRepository } from '../../../src/user/repository/user.repository';
-import { ActivityRepository } from '../../../src/activity/repository/activity.repository';
-import { UserFixture } from '../../config/common/fixture/user.fixture';
-import { ActivityFixture } from '../../config/common/fixture/activity.fixture';
-import { User } from '../../../src/user/entity/user.entity';
+import supertest from 'supertest';
+import { UserRepository } from '@src/user/repository/user.repository';
+import { ActivityRepository } from '@src/activity/repository/activity.repository';
+import { UserFixture } from '@test/config/common/fixture/user.fixture';
+import { ActivityFixture } from '@test/config/common/fixture/activity.fixture';
+import { User } from '@src/user/entity/user.entity';
 import TestAgent from 'supertest/lib/agent';
-import { ReadActivityQueryRequestDto } from '../../../src/activity/dto/request/readActivity.dto';
-import { Activity } from '../../../src/activity/entity/activity.entity';
-import { testApp } from '../../config/e2e/env/jest.setup';
+import { ReadActivityQueryRequestDto } from '@src/activity/dto/request/readActivity.dto';
+import { Activity } from '@src/activity/entity/activity.entity';
+import { testApp } from '@test/config/e2e/env/jest.setup';
 
 const URL = '/api/activity';
 

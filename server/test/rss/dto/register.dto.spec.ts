@@ -1,5 +1,5 @@
 import { validate } from 'class-validator';
-import { RegisterRssRequestDto } from '../../../src/rss/dto/request/registerRss.dto';
+import { RegisterRssRequestDto } from '@src/rss/dto/request/registerRss.dto';
 
 describe(`${RegisterRssRequestDto.name} Test`, () => {
   let dto: RegisterRssRequestDto;

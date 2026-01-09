@@ -1,5 +1,5 @@
 import { validate } from 'class-validator';
-import { ManageFeedRequestDto } from '../../../src/feed/dto/request/manageFeed.dto';
+import { ManageFeedRequestDto } from '@src/feed/dto/request/manageFeed.dto';
 
 describe(`${ManageFeedRequestDto.name} Test`, () => {
   let dto: ManageFeedRequestDto;

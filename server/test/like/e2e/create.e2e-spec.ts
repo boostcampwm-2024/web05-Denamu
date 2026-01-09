@@ -1,19 +1,19 @@
 import { HttpStatus } from '@nestjs/common';
-import { UserRepository } from '../../../src/user/repository/user.repository';
-import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
-import { FeedRepository } from '../../../src/feed/repository/feed.repository';
-import { UserFixture } from '../../config/common/fixture/user.fixture';
-import { RssAcceptFixture } from '../../config/common/fixture/rss-accept.fixture';
-import { FeedFixture } from '../../config/common/fixture/feed.fixture';
-import { User } from '../../../src/user/entity/user.entity';
-import { Feed } from '../../../src/feed/entity/feed.entity';
-import { ManageLikeRequestDto } from '../../../src/like/dto/request/manageLike.dto';
-import * as supertest from 'supertest';
+import { UserRepository } from '@src/user/repository/user.repository';
+import { RssAcceptRepository } from '@src/rss/repository/rss.repository';
+import { FeedRepository } from '@src/feed/repository/feed.repository';
+import { UserFixture } from '@test/config/common/fixture/user.fixture';
+import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture';
+import { FeedFixture } from '@test/config/common/fixture/feed.fixture';
+import { User } from '@src/user/entity/user.entity';
+import { Feed } from '@src/feed/entity/feed.entity';
+import { ManageLikeRequestDto } from '@src/like/dto/request/manageLike.dto';
+import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
-import { LikeRepository } from '../../../src/like/repository/like.repository';
-import { createAccessToken } from '../../config/e2e/env/jest.setup';
-import { RssAccept } from '../../../src/rss/entity/rss.entity';
-import { testApp } from '../../config/e2e/env/jest.setup';
+import { LikeRepository } from '@src/like/repository/like.repository';
+import { createAccessToken } from '@test/config/e2e/env/jest.setup';
+import { RssAccept } from '@src/rss/entity/rss.entity';
+import { testApp } from '@test/config/e2e/env/jest.setup';
 
 const URL = '/api/like';
 

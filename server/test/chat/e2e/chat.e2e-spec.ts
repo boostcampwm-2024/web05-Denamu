@@ -1,10 +1,10 @@
 import { Socket } from 'socket.io-client';
 import { io } from 'socket.io-client';
-import { RedisService } from '../../../src/common/redis/redis.service';
-import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
-import { ChatService } from '../../../src/chat/service/chat.service';
-import { ChatFixture } from '../../config/common/fixture/chat.fixture';
-import { testApp } from '../../config/e2e/env/jest.setup';
+import { RedisService } from '@src/common/redis/redis.service';
+import { REDIS_KEYS } from '@src/common/redis/redis.constant';
+import { ChatService } from '@src/chat/service/chat.service';
+import { ChatFixture } from '@test/config/common/fixture/chat.fixture';
+import { testApp } from '@test/config/e2e/env/jest.setup';
 
 const URL = '/chat';
 

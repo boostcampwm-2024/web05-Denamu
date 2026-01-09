@@ -1,14 +1,14 @@
 import { HttpStatus } from '@nestjs/common';
-import * as supertest from 'supertest';
-import { LoginUserRequestDto } from '../../../src/user/dto/request/loginUser.dto';
-import { UserRepository } from '../../../src/user/repository/user.repository';
+import supertest from 'supertest';
+import { LoginUserRequestDto } from '@src/user/dto/request/loginUser.dto';
+import { UserRepository } from '@src/user/repository/user.repository';
 import {
   USER_DEFAULT_PASSWORD,
   UserFixture,
-} from '../../config/common/fixture/user.fixture';
+} from '@test/config/common/fixture/user.fixture';
 import TestAgent from 'supertest/lib/agent';
-import { User } from '../../../src/user/entity/user.entity';
-import { testApp } from '../../config/e2e/env/jest.setup';
+import { User } from '@src/user/entity/user.entity';
+import { testApp } from '@test/config/e2e/env/jest.setup';
 
 const URL = '/api/user/login';
 
