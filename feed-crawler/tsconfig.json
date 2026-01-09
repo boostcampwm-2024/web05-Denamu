@@ -16,6 +16,17 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
-    "noFallthroughCasesInSwitch": false
+    "noFallthroughCasesInSwitch": false,
+    "baseUrl": ".",
+    "paths": {
+      "@src": ["src/*"],
+      "@common": ["src/common/*"],
+      "@event_worker": ["src/event_worker/*"],
+      "@repository": ["src/repository/*"],
+      "@types": ["src/types/*"],
+      "@test": ["test/*"]
+    },
+    "resolveJsonModule": true,
+    "esModuleInterop": true
   }
 }
