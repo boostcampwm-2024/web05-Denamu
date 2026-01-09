@@ -1,8 +1,8 @@
 import { Brackets, DataSource, Repository } from 'typeorm';
-import { Feed, FeedView } from '../entity/feed.entity';
+import { Feed, FeedView } from '@src/feed/entity/feed.entity';
 import { Injectable } from '@nestjs/common';
-import { ReadFeedPaginationRequestDto } from '../dto/request/readFeedPagination.dto';
-import { SearchType } from '../dto/request/searchFeed.dto';
+import { ReadFeedPaginationRequestDto } from '@src/feed/dto/request/readFeedPagination.dto';
+import { SearchType } from '@src/feed/dto/request/searchFeed.dto';
 
 @Injectable()
 export class FeedRepository extends Repository<Feed> {

@@ -1,5 +1,5 @@
 import { DataSource, Repository } from 'typeorm';
-import { Comment } from '../entity/comment.entity';
+import { Comment } from '@src/comment/entity/comment.entity';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()

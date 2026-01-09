@@ -3,17 +3,17 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { CommentRepository } from '../repository/comment.repository';
-import { CreateCommentRequestDto } from '../dto/request/createComment.dto';
-import { Payload } from '../../common/guard/jwt.guard';
-import { DeleteCommentRequestDto } from '../dto/request/deleteComment.dto';
-import { UpdateCommentRequestDto } from '../dto/request/updateComment.dto';
-import { GetCommentRequestDto } from '../dto/request/getComment.dto';
+import { CommentRepository } from '@src/comment/repository/comment.repository';
+import { CreateCommentRequestDto } from '@src/comment/dto/request/createComment.dto';
+import { Payload } from '@src/common/guard/jwt.guard';
+import { DeleteCommentRequestDto } from '@src/comment/dto/request/deleteComment.dto';
+import { UpdateCommentRequestDto } from '@src/comment/dto/request/updateComment.dto';
+import { GetCommentRequestDto } from '@src/comment/dto/request/getComment.dto';
 import { DataSource } from 'typeorm';
-import { Comment } from '../entity/comment.entity';
-import { GetCommentResponseDto } from '../dto/response/getComment.dto';
-import { FeedService } from '../../feed/service/feed.service';
-import { UserService } from '../../user/service/user.service';
+import { Comment } from '@src/comment/entity/comment.entity';
+import { GetCommentResponseDto } from '@src/comment/dto/response/getComment.dto';
+import { FeedService } from '@src/feed/service/feed.service';
+import { UserService } from '@src/user/service/user.service';
 
 @Injectable()
 export class CommentService {
