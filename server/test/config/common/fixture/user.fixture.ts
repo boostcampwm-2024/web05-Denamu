@@ -1,7 +1,7 @@
-import { User } from '@src/user/entity/user.entity';
+import { User } from '@user/entity/user.entity';
 import * as bcrypt from 'bcrypt';
 import * as uuid from 'uuid';
-import { SALT_ROUNDS } from '@src/user/constant/user.constants';
+import { SALT_ROUNDS } from '@user/constant/user.constants';
 
 export const USER_DEFAULT_PASSWORD = 'test1234!';
 

@@ -9,23 +9,23 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { AdminAuthGuard } from '@src/common/guard/auth.guard';
+import { AdminAuthGuard } from '@common/guard/auth.guard';
 import { ApiTags } from '@nestjs/swagger';
-import { RssService } from '@src/rss/service/rss.service';
-import { RegisterRssRequestDto } from '@src/rss/dto/request/registerRss.dto';
-import { ApiResponse } from '@src/common/response/common.response';
-import { RejectRssRequestDto } from '@src/rss/dto/request/rejectRss';
-import { ManageRssRequestDto } from '@src/rss/dto/request/manageRss.dto';
-import { ApiCreateRss } from '@src/rss/api-docs/createRss.api-docs';
-import { ApiAcceptRss } from '@src/rss/api-docs/acceptRss.api-docs';
-import { ApiReadRssAcceptHistory } from '@src/rss/api-docs/readRssAcceptHistory.api-docs';
-import { ApiReadRssRejectHistory } from '@src/rss/api-docs/readRssRejectHistory.api-docs';
-import { ApiReadAllRss } from '@src/rss/api-docs/readAllRss.api-docs';
-import { ApiRejectRss } from '@src/rss/api-docs/rejectRss.api-docs';
-import { ApiDeleteRss } from '@src/rss/api-docs/deleteRss.api-docs';
-import { DeleteRssRequestDto } from '@src/rss/dto/request/deleteRss.dto';
-import { ApiDeleteCertificateRss } from '@src/rss/api-docs/deleteCertificateRss.api-docs';
-import { DeleteCertificateRssRequestDto } from '@src/rss/dto/request/deleteCertificateRss.dto';
+import { RssService } from '@rss/service/rss.service';
+import { RegisterRssRequestDto } from '@rss/dto/request/registerRss.dto';
+import { ApiResponse } from '@common/response/common.response';
+import { RejectRssRequestDto } from '@rss/dto/request/rejectRss';
+import { ManageRssRequestDto } from '@rss/dto/request/manageRss.dto';
+import { ApiCreateRss } from '@rss/api-docs/createRss.api-docs';
+import { ApiAcceptRss } from '@rss/api-docs/acceptRss.api-docs';
+import { ApiReadRssAcceptHistory } from '@rss/api-docs/readRssAcceptHistory.api-docs';
+import { ApiReadRssRejectHistory } from '@rss/api-docs/readRssRejectHistory.api-docs';
+import { ApiReadAllRss } from '@rss/api-docs/readAllRss.api-docs';
+import { ApiRejectRss } from '@rss/api-docs/rejectRss.api-docs';
+import { ApiDeleteRss } from '@rss/api-docs/deleteRss.api-docs';
+import { DeleteRssRequestDto } from '@rss/dto/request/deleteRss.dto';
+import { ApiDeleteCertificateRss } from '@rss/api-docs/deleteCertificateRss.api-docs';
+import { DeleteCertificateRssRequestDto } from '@rss/dto/request/deleteCertificateRss.dto';
 
 @ApiTags('RSS')
 @Controller('rss')

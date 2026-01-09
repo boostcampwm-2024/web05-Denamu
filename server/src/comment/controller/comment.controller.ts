@@ -11,18 +11,18 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { CommentService } from '@src/comment/service/comment.service';
-import { ApiCreateComment } from '@src/comment/api-docs/createComment.api-docs';
-import { ApiDeleteComment } from '@src/comment/api-docs/deleteComment.api-docs';
-import { ApiUpdateComment } from '@src/comment/api-docs/updateComment.api-docs';
-import { JwtGuard, Payload } from '@src/common/guard/jwt.guard';
-import { ApiResponse } from '@src/common/response/common.response';
-import { CreateCommentRequestDto } from '@src/comment/dto/request/createComment.dto';
-import { DeleteCommentRequestDto } from '@src/comment/dto/request/deleteComment.dto';
-import { UpdateCommentRequestDto } from '@src/comment/dto/request/updateComment.dto';
-import { GetCommentRequestDto } from '@src/comment/dto/request/getComment.dto';
-import { ApiGetComment } from '@src/comment/api-docs/getComment.api-docs';
-import { CurrentUser } from '@src/common/decorator';
+import { CommentService } from '@comment/service/comment.service';
+import { ApiCreateComment } from '@comment/api-docs/createComment.api-docs';
+import { ApiDeleteComment } from '@comment/api-docs/deleteComment.api-docs';
+import { ApiUpdateComment } from '@comment/api-docs/updateComment.api-docs';
+import { JwtGuard, Payload } from '@common/guard/jwt.guard';
+import { ApiResponse } from '@common/response/common.response';
+import { CreateCommentRequestDto } from '@comment/dto/request/createComment.dto';
+import { DeleteCommentRequestDto } from '@comment/dto/request/deleteComment.dto';
+import { UpdateCommentRequestDto } from '@comment/dto/request/updateComment.dto';
+import { GetCommentRequestDto } from '@comment/dto/request/getComment.dto';
+import { ApiGetComment } from '@comment/api-docs/getComment.api-docs';
+import { CurrentUser } from '@common/decorator';
 
 @ApiTags('Comment')
 @Controller('comment')

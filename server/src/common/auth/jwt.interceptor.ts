@@ -8,7 +8,7 @@ import { Observable } from 'rxjs';
 import { Request } from 'express';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { Payload } from '@src/common/guard/jwt.guard';
+import { Payload } from '@common/guard/jwt.guard';
 
 @Injectable()
 export class InjectUserInterceptor implements NestInterceptor {

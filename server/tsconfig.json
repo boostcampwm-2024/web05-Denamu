@@ -20,6 +20,18 @@
     "baseUrl": ".",
     "paths": {
       "@src/*": ["src/*"],
+      "@activity/*": ["src/activity/*"],
+      "@admin/*": ["src/admin/*"],
+      "@chat/*": ["src/chat/*"],
+      "@comment/*": ["src/comment/*"],
+      "@common/*": ["src/common/*"],
+      "@file/*": ["src/file/*"],
+      "@feed/*": ["src/feed/*"],
+      "@like/*": ["src/like/*"],
+      "@rss/*": ["src/rss/*"],
+      "@statistic/*": ["src/statistic/*"],
+      "@tag/*": ["src/tag/*"],
+      "@user/*": ["src/user/*"],
       "@test/*": ["test/*"]
     },
     "resolveJsonModule": true,

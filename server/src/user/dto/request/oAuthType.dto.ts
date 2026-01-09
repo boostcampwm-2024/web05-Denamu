@@ -1,4 +1,4 @@
-import { OAuthType } from '@src/user/constant/oauth.constant';
+import { OAuthType } from '@user/constant/oauth.constant';
 import { IsEnum } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 

@@ -1,7 +1,7 @@
 import {
   SearchFeedRequestDto,
   SearchType,
-} from '@src/feed/dto/request/searchFeed.dto';
+} from '@feed/dto/request/searchFeed.dto';
 import { validate } from 'class-validator';
 
 describe(`${SearchFeedRequestDto.name} Test`, () => {

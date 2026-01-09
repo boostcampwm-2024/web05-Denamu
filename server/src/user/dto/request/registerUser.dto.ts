@@ -1,5 +1,5 @@
 import { IsEmail, IsNotEmpty, IsString, Matches } from 'class-validator';
-import { User } from '@src/user/entity/user.entity';
+import { User } from '@user/entity/user.entity';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class RegisterUserRequestDto {

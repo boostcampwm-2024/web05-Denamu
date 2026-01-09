@@ -10,16 +10,16 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { AdminService } from '@src/admin/service/admin.service';
-import { RegisterAdminRequestDto } from '@src/admin/dto/request/registerAdmin.dto';
+import { AdminService } from '@admin/service/admin.service';
+import { RegisterAdminRequestDto } from '@admin/dto/request/registerAdmin.dto';
 import { ApiTags } from '@nestjs/swagger';
-import { ApiResponse } from '@src/common/response/common.response';
-import { LoginAdminRequestDto } from '@src/admin/dto/request/loginAdmin.dto';
-import { AdminAuthGuard } from '@src/common/guard/auth.guard';
-import { ApiLoginAdmin } from '@src/admin/api-docs/loginAdmin.api-docs';
-import { ApiGetSessionIdAdmin } from '@src/admin/api-docs/getSessionIdAdmin.api-docs';
-import { ApiLogoutAdmin } from '@src/admin/api-docs/logoutAdmin.api-docs';
-import { ApiCreateAdmin } from '@src/admin/api-docs/createAdmin.api-docs';
+import { ApiResponse } from '@common/response/common.response';
+import { LoginAdminRequestDto } from '@admin/dto/request/loginAdmin.dto';
+import { AdminAuthGuard } from '@common/guard/auth.guard';
+import { ApiLoginAdmin } from '@admin/api-docs/loginAdmin.api-docs';
+import { ApiGetSessionIdAdmin } from '@admin/api-docs/getSessionIdAdmin.api-docs';
+import { ApiLogoutAdmin } from '@admin/api-docs/logoutAdmin.api-docs';
+import { ApiCreateAdmin } from '@admin/api-docs/createAdmin.api-docs';
 
 @ApiTags('Admin')
 @Controller('admin')

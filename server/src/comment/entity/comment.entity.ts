@@ -7,8 +7,8 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Feed } from '@src/feed/entity/feed.entity';
-import { User } from '@src/user/entity/user.entity';
+import { Feed } from '@feed/entity/feed.entity';
+import { User } from '@user/entity/user.entity';
 
 @Entity({ name: 'comment' })
 export class Comment extends BaseEntity {

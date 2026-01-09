@@ -1,17 +1,17 @@
 import { HttpStatus } from '@nestjs/common';
-import { UserRepository } from '@src/user/repository/user.repository';
-import { RssAcceptRepository } from '@src/rss/repository/rss.repository';
-import { FeedRepository } from '@src/feed/repository/feed.repository';
+import { UserRepository } from '@user/repository/user.repository';
+import { RssAcceptRepository } from '@rss/repository/rss.repository';
+import { FeedRepository } from '@feed/repository/feed.repository';
 import { UserFixture } from '@test/config/common/fixture/user.fixture';
 import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture';
 import { FeedFixture } from '@test/config/common/fixture/feed.fixture';
-import { Feed } from '@src/feed/entity/feed.entity';
+import { Feed } from '@feed/entity/feed.entity';
 import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
-import { LikeRepository } from '@src/like/repository/like.repository';
+import { LikeRepository } from '@like/repository/like.repository';
 import { createAccessToken } from '@test/config/e2e/env/jest.setup';
-import { User } from '@src/user/entity/user.entity';
-import { RssAccept } from '@src/rss/entity/rss.entity';
+import { User } from '@user/entity/user.entity';
+import { RssAccept } from '@rss/entity/rss.entity';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
 const URL = '/api/like';

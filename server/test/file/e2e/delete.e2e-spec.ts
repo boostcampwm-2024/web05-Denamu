@@ -1,10 +1,10 @@
 import { HttpStatus } from '@nestjs/common';
 import supertest from 'supertest';
-import { UserRepository } from '@src/user/repository/user.repository';
-import { User } from '@src/user/entity/user.entity';
+import { UserRepository } from '@user/repository/user.repository';
+import { User } from '@user/entity/user.entity';
 import { UserFixture } from '@test/config/common/fixture/user.fixture';
-import { FileRepository } from '@src/file/repository/file.repository';
-import { File } from '@src/file/entity/file.entity';
+import { FileRepository } from '@file/repository/file.repository';
+import { File } from '@file/entity/file.entity';
 import { FileFixture } from '@test/config/common/fixture/file.fixture';
 import TestAgent from 'supertest/lib/agent';
 import { createAccessToken } from '@test/config/e2e/env/jest.setup';
