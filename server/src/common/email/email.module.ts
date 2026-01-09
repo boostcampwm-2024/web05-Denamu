@@ -1,5 +1,5 @@
 import { Global, Module } from '@nestjs/common';
-import { EmailProducer } from './email.producer';
+import { EmailProducer } from '@src/common/email/email.producer';
 
 @Global()
 @Module({

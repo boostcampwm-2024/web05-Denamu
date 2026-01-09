@@ -1,13 +1,13 @@
-import { ReadStatisticAllResponseDto } from '../dto/response/readStatisticAll.dto';
-import { RssAcceptRepository } from '../../rss/repository/rss.repository';
+import { ReadStatisticAllResponseDto } from '@src/statistic/dto/response/readStatisticAll.dto';
+import { RssAcceptRepository } from '@src/rss/repository/rss.repository';
 import { Injectable } from '@nestjs/common';
-import { RedisService } from '../../common/redis/redis.service';
-import { FeedRepository } from '../../feed/repository/feed.repository';
-import { REDIS_KEYS } from '../../common/redis/redis.constant';
-import { ReadStatisticPlatformResponseDto } from '../dto/response/readStatisticPlatform.dto';
-import { ReadStatisticTodayResponseDto } from '../dto/response/readStatisticToday.dto';
-import { Feed } from '../../feed/entity/feed.entity';
-import { ReadStatisticRequestDto } from '../dto/request/readStatistic.dto';
+import { RedisService } from '@src/common/redis/redis.service';
+import { FeedRepository } from '@src/feed/repository/feed.repository';
+import { REDIS_KEYS } from '@src/common/redis/redis.constant';
+import { ReadStatisticPlatformResponseDto } from '@src/statistic/dto/response/readStatisticPlatform.dto';
+import { ReadStatisticTodayResponseDto } from '@src/statistic/dto/response/readStatisticToday.dto';
+import { Feed } from '@src/feed/entity/feed.entity';
+import { ReadStatisticRequestDto } from '@src/statistic/dto/request/readStatistic.dto';
 
 @Injectable()
 export class StatisticService {

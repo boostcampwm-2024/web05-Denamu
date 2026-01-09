@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { UserRepository } from '../repository/user.repository';
+import { UserRepository } from '@src/user/repository/user.repository';
 import { Not } from 'typeorm';
-import { WinstonLoggerService } from '../../common/logger/logger.service';
+import { WinstonLoggerService } from '@src/common/logger/logger.service';
 
 @Injectable()
 export class UserScheduler {

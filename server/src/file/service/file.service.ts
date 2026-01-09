@@ -1,12 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { File } from '../entity/file.entity';
+import { File } from '@src/file/entity/file.entity';
 import { unlink, access } from 'fs/promises';
-import { FileRepository } from '../repository/file.repository';
-import { UploadFileResponseDto } from '../dto/response/uploadFile.dto';
-import { WinstonLoggerService } from '../../common/logger/logger.service';
+import { FileRepository } from '@src/file/repository/file.repository';
+import { UploadFileResponseDto } from '@src/file/dto/response/uploadFile.dto';
+import { WinstonLoggerService } from '@src/common/logger/logger.service';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { FileUploadType } from '../constant/file.constant';
+import { FileUploadType } from '@src/file/constant/file.constant';
 import * as uuid from 'uuid';
 
 @Injectable()

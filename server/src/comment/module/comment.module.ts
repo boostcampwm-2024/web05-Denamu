@@ -1,10 +1,10 @@
 import { forwardRef } from '@nestjs/common';
 import { Module } from '@nestjs/common';
-import { CommentController } from '../controller/comment.controller';
-import { CommentRepository } from '../repository/comment.repository';
-import { CommentService } from '../service/comment.service';
-import { FeedModule } from '../../feed/module/feed.module';
-import { UserModule } from '../../user/module/user.module';
+import { CommentController } from '@src/comment/controller/comment.controller';
+import { CommentRepository } from '@src/comment/repository/comment.repository';
+import { CommentService } from '@src/comment/service/comment.service';
+import { FeedModule } from '@src/feed/module/feed.module';
+import { UserModule } from '@src/user/module/user.module';
 
 @Module({
   imports: [UserModule, forwardRef(() => FeedModule)],

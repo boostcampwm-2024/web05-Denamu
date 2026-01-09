@@ -10,16 +10,16 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { JwtGuard, Payload } from '../../common/guard/jwt.guard';
-import { ApiResponse } from '../../common/response/common.response';
-import { LikeService } from '../service/like.service';
+import { JwtGuard, Payload } from '@src/common/guard/jwt.guard';
+import { ApiResponse } from '@src/common/response/common.response';
+import { LikeService } from '@src/like/service/like.service';
 import { ApiTags } from '@nestjs/swagger';
-import { ApiCreateLike } from '../api-docs/createLike.api-docs';
-import { ApiDeleteLike } from '../api-docs/deleteLike.api-docs';
-import { ManageLikeRequestDto } from '../dto/request/manageLike.dto';
-import { ApiGetLike } from '../api-docs/getLike.api-docs';
-import { InjectUserInterceptor } from '../../common/auth/jwt.interceptor';
-import { CurrentUser } from '../../common/decorator';
+import { ApiCreateLike } from '@src/like/api-docs/createLike.api-docs';
+import { ApiDeleteLike } from '@src/like/api-docs/deleteLike.api-docs';
+import { ManageLikeRequestDto } from '@src/like/dto/request/manageLike.dto';
+import { ApiGetLike } from '@src/like/api-docs/getLike.api-docs';
+import { InjectUserInterceptor } from '@src/common/auth/jwt.interceptor';
+import { CurrentUser } from '@src/common/decorator';
 
 @ApiTags('Like')
 @Controller('like')

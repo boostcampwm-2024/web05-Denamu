@@ -1,22 +1,22 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
-import { UserRepository } from '../repository/user.repository';
-import { ProviderRepository } from '../repository/provider.repository';
-import { WinstonLoggerService } from '../../common/logger/logger.service';
+import { UserRepository } from '@src/user/repository/user.repository';
+import { ProviderRepository } from '@src/user/repository/provider.repository';
+import { WinstonLoggerService } from '@src/common/logger/logger.service';
 import { Response } from 'express';
-import { User } from '../entity/user.entity';
-import { Provider } from '../entity/provider.entity';
+import { User } from '@src/user/entity/user.entity';
+import { Provider } from '@src/user/entity/provider.entity';
 import {
   OAuthType,
   ProviderData,
   StateData,
   UserInfo,
-} from '../constant/oauth.constant';
-import { OAuthProvider } from '../provider/oauth-provider.interface';
-import { UserService } from './user.service';
-import { cookieConfig } from '../../common/cookie/cookie.config';
-import { Payload } from '../../common/guard/jwt.guard';
-import { REFRESH_TOKEN_TTL } from '../constant/user.constants';
-import { OAuthCallbackRequestDto } from '../dto/request/oAuthCallbackDto';
+} from '@src/user/constant/oauth.constant';
+import { OAuthProvider } from '@src/user/provider/oauth-provider.interface';
+import { UserService } from '@src/user/service/user.service';
+import { cookieConfig } from '@src/common/cookie/cookie.config';
+import { Payload } from '@src/common/guard/jwt.guard';
+import { REFRESH_TOKEN_TTL } from '@src/user/constant/user.constants';
+import { OAuthCallbackRequestDto } from '@src/user/dto/request/oAuthCallbackDto';
 
 @Injectable()
 export class OAuthService {

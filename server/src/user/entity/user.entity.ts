@@ -7,8 +7,8 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Activity } from '../../activity/entity/activity.entity';
-import { Provider } from './provider.entity';
+import { Activity } from '@src/activity/entity/activity.entity';
+import { Provider } from '@src/user/entity/provider.entity';
 
 @Entity({
   name: 'user',
