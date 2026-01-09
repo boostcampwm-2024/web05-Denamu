@@ -1,8 +1,8 @@
 import { WinstonModule } from 'nest-winston';
-import { getLogTransport, logFormat } from '@src/common/logger/logger.config';
+import { getLogTransport, logFormat } from '@common/logger/logger.config';
 import * as winston from 'winston';
 import { Global, Module } from '@nestjs/common';
-import { WinstonLoggerService } from '@src/common/logger/logger.service';
+import { WinstonLoggerService } from '@common/logger/logger.service';
 
 const winstonModule = WinstonModule.forRoot({
   // 로그 출력 형식에 대한 정의

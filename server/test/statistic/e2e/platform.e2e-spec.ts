@@ -1,6 +1,6 @@
 import { HttpStatus } from '@nestjs/common';
 import supertest from 'supertest';
-import { RssAcceptRepository } from '@src/rss/repository/rss.repository';
+import { RssAcceptRepository } from '@rss/repository/rss.repository';
 import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture';
 import TestAgent from 'supertest/lib/agent';
 import { testApp } from '@test/config/e2e/env/jest.setup';

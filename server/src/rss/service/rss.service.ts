@@ -8,20 +8,20 @@ import {
   RssRejectRepository,
   RssRepository,
   RssAcceptRepository,
-} from '@src/rss/repository/rss.repository';
-import { RegisterRssRequestDto } from '@src/rss/dto/request/registerRss.dto';
+} from '@rss/repository/rss.repository';
+import { RegisterRssRequestDto } from '@rss/dto/request/registerRss.dto';
 import { DataSource } from 'typeorm';
-import { Rss, RssReject, RssAccept } from '@src/rss/entity/rss.entity';
-import { ReadRssResponseDto } from '@src/rss/dto/response/readRss.dto';
-import { ReadRssAcceptHistoryResponseDto } from '@src/rss/dto/response/readRssAcceptHistory.dto';
-import { ReadRssRejectHistoryResponseDto } from '@src/rss/dto/response/readRssRejectHistory.dto';
-import { ManageRssRequestDto } from '@src/rss/dto/request/manageRss.dto';
-import { RejectRssRequestDto } from '@src/rss/dto/request/rejectRss';
-import { DeleteRssRequestDto } from '@src/rss/dto/request/deleteRss.dto';
-import { RedisService } from '@src/common/redis/redis.service';
-import { DeleteCertificateRssRequestDto } from '@src/rss/dto/request/deleteCertificateRss.dto';
-import { REDIS_KEYS } from '@src/common/redis/redis.constant';
-import { EmailProducer } from '@src/common/email/email.producer';
+import { Rss, RssReject, RssAccept } from '@rss/entity/rss.entity';
+import { ReadRssResponseDto } from '@rss/dto/response/readRss.dto';
+import { ReadRssAcceptHistoryResponseDto } from '@rss/dto/response/readRssAcceptHistory.dto';
+import { ReadRssRejectHistoryResponseDto } from '@rss/dto/response/readRssRejectHistory.dto';
+import { ManageRssRequestDto } from '@rss/dto/request/manageRss.dto';
+import { RejectRssRequestDto } from '@rss/dto/request/rejectRss';
+import { DeleteRssRequestDto } from '@rss/dto/request/deleteRss.dto';
+import { RedisService } from '@common/redis/redis.service';
+import { DeleteCertificateRssRequestDto } from '@rss/dto/request/deleteCertificateRss.dto';
+import { REDIS_KEYS } from '@common/redis/redis.constant';
+import { EmailProducer } from '@common/email/email.producer';
 import * as uuid from 'uuid';
 
 type FullFeedCrawlMessage = {

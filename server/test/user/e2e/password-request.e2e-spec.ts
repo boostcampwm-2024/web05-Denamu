@@ -1,12 +1,12 @@
-import { ForgotPasswordRequestDto } from '@src/user/dto/request/forgotPassword.dto';
+import { ForgotPasswordRequestDto } from '@user/dto/request/forgotPassword.dto';
 import { HttpStatus } from '@nestjs/common';
 import supertest from 'supertest';
-import { UserRepository } from '@src/user/repository/user.repository';
+import { UserRepository } from '@user/repository/user.repository';
 import TestAgent from 'supertest/lib/agent';
 import { UserFixture } from '@test/config/common/fixture/user.fixture';
-import { User } from '@src/user/entity/user.entity';
-import { REDIS_KEYS } from '@src/common/redis/redis.constant';
-import { RedisService } from '@src/common/redis/redis.service';
+import { User } from '@user/entity/user.entity';
+import { REDIS_KEYS } from '@common/redis/redis.constant';
+import { RedisService } from '@common/redis/redis.service';
 import * as uuid from 'uuid';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 

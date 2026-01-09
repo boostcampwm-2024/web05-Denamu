@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { RabbitMQManager } from '@src/common/rabbitmq/rabbitmq.manager';
-import { WinstonLoggerService } from '@src/common/logger/logger.service';
+import { RabbitMQManager } from '@common/rabbitmq/rabbitmq.manager';
+import { WinstonLoggerService } from '@common/logger/logger.service';
 
 @Injectable()
 export class RabbitMQService {

@@ -1,15 +1,15 @@
 import { RssAccept } from './../../../src/rss/entity/rss.entity';
 import { HttpStatus } from '@nestjs/common';
-import { RedisService } from '@src/common/redis/redis.service';
+import { RedisService } from '@common/redis/redis.service';
 import supertest from 'supertest';
-import { REDIS_KEYS } from '@src/common/redis/redis.constant';
+import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture';
-import { FeedRepository } from '@src/feed/repository/feed.repository';
-import { RssAcceptRepository } from '@src/rss/repository/rss.repository';
+import { FeedRepository } from '@feed/repository/feed.repository';
+import { RssAcceptRepository } from '@rss/repository/rss.repository';
 import { FeedFixture } from '@test/config/common/fixture/feed.fixture';
 import TestAgent from 'supertest/lib/agent';
-import { Feed } from '@src/feed/entity/feed.entity';
-import { ReadStatisticRequestDto } from '@src/statistic/dto/request/readStatistic.dto';
+import { Feed } from '@feed/entity/feed.entity';
+import { ReadStatisticRequestDto } from '@statistic/dto/request/readStatistic.dto';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
 const URL = '/api/statistic/today';

@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { RedisService } from '@src/common/redis/redis.service';
+import { RedisService } from '@common/redis/redis.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { FeedService } from '@src/feed/service/feed.service';
+import { FeedService } from '@feed/service/feed.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { REDIS_KEYS } from '@src/common/redis/redis.constant';
+import { REDIS_KEYS } from '@common/redis/redis.constant';
 import * as _ from 'lodash';
 
 @Injectable()

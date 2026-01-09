@@ -1,12 +1,12 @@
 import { HttpStatus } from '@nestjs/common';
-import { FeedRepository } from '@src/feed/repository/feed.repository';
-import { RssAcceptRepository } from '@src/rss/repository/rss.repository';
+import { FeedRepository } from '@feed/repository/feed.repository';
+import { RssAcceptRepository } from '@rss/repository/rss.repository';
 import { FeedFixture } from '@test/config/common/fixture/feed.fixture';
 import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture';
-import { Feed } from '@src/feed/entity/feed.entity';
+import { Feed } from '@feed/entity/feed.entity';
 import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
-import { RssAccept } from '@src/rss/entity/rss.entity';
+import { RssAccept } from '@rss/entity/rss.entity';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
 const URL = '/api/feed';

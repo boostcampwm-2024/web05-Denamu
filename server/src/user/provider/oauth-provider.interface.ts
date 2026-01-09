@@ -1,4 +1,4 @@
-import { OAuthTokenResponse, UserInfo } from '@src/user/constant/oauth.constant';
+import { OAuthTokenResponse, UserInfo } from '@user/constant/oauth.constant';
 
 export interface OAuthProvider {
   getAuthUrl(): string;

@@ -1,5 +1,5 @@
 import { ApiTags } from '@nestjs/swagger';
-import { ApiResponse } from '@src/common/response/common.response';
+import { ApiResponse } from '@common/response/common.response';
 import {
   Controller,
   Delete,
@@ -14,22 +14,22 @@ import {
   Sse,
   UseInterceptors,
 } from '@nestjs/common';
-import { FeedService } from '@src/feed/service/feed.service';
-import { ReadFeedPaginationRequestDto } from '@src/feed/dto/request/readFeedPagination.dto';
-import { SearchFeedRequestDto } from '@src/feed/dto/request/searchFeed.dto';
+import { FeedService } from '@feed/service/feed.service';
+import { ReadFeedPaginationRequestDto } from '@feed/dto/request/readFeedPagination.dto';
+import { SearchFeedRequestDto } from '@feed/dto/request/searchFeed.dto';
 import { Response, Request } from 'express';
 import { Observable } from 'rxjs';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { ApiReadFeedPagination } from '@src/feed/api-docs/readFeedPagination.api-docs';
-import { ApiReadTrendFeedList } from '@src/feed/api-docs/readTrendFeedList.api-docs';
-import { ApiSearchFeedList } from '@src/feed/api-docs/searchFeedList.api-docs';
-import { ApiUpdateFeedViewCount } from '@src/feed/api-docs/updateFeedViewCount.api-docs';
-import { ApiReadRecentFeedList } from '@src/feed/api-docs/readRecentFeedList.api-docs';
-import { FeedTrendResponseDto } from '@src/feed/dto/response/readFeedPagination.dto';
-import { ApiGetFeedDetail } from '@src/feed/api-docs/getFeedDetail.api-docs';
-import { ReadFeedInterceptor } from '@src/feed/interceptor/read-feed.interceptor';
-import { ManageFeedRequestDto } from '@src/feed/dto/request/manageFeed.dto';
-import { ApiDeleteCheckFeed } from '@src/feed/api-docs/deleteCheckFeed.api-docs';
+import { ApiReadFeedPagination } from '@feed/api-docs/readFeedPagination.api-docs';
+import { ApiReadTrendFeedList } from '@feed/api-docs/readTrendFeedList.api-docs';
+import { ApiSearchFeedList } from '@feed/api-docs/searchFeedList.api-docs';
+import { ApiUpdateFeedViewCount } from '@feed/api-docs/updateFeedViewCount.api-docs';
+import { ApiReadRecentFeedList } from '@feed/api-docs/readRecentFeedList.api-docs';
+import { FeedTrendResponseDto } from '@feed/dto/response/readFeedPagination.dto';
+import { ApiGetFeedDetail } from '@feed/api-docs/getFeedDetail.api-docs';
+import { ReadFeedInterceptor } from '@feed/interceptor/read-feed.interceptor';
+import { ManageFeedRequestDto } from '@feed/dto/request/manageFeed.dto';
+import { ApiDeleteCheckFeed } from '@feed/api-docs/deleteCheckFeed.api-docs';
 
 @ApiTags('Feed')
 @Controller('feed')
