@@ -1,3 +1,5 @@
+import { injectable } from 'tsyringe';
+
 import logger from '@src/logger';
 
 import {
@@ -13,7 +15,6 @@ import { Rss, RssRegistration, RssRemoval, User } from '@app-types/types';
 
 import * as nodemailer from 'nodemailer';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
-import { injectable } from 'tsyringe';
 
 @injectable()
 export class EmailService {
