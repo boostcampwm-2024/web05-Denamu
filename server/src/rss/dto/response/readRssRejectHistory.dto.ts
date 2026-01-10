@@ -1,5 +1,6 @@
-import { ApiProperty } from '@nestjs/swagger';
 import { RssReject } from '@rss/entity/rss.entity';
+
+import { ApiProperty } from '@nestjs/swagger';
 
 export class ReadRssRejectHistoryResponseDto {
   @ApiProperty({

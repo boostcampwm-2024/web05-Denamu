@@ -1,5 +1,6 @@
-import { validate } from 'class-validator';
 import { ReadStatisticRequestDto } from '@statistic/dto/request/readStatistic.dto';
+
+import { validate } from 'class-validator';
 
 describe(`${ReadStatisticRequestDto.name} Test`, () => {
   let dto: ReadStatisticRequestDto;

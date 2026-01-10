@@ -1,5 +1,6 @@
-import { validate } from 'class-validator';
 import { CheckEmailDuplicationRequestDto } from '@user/dto/request/checkEmailDuplication.dto';
+
+import { validate } from 'class-validator';
 
 describe(`${CheckEmailDuplicationRequestDto.name} Test`, () => {
   let dto: CheckEmailDuplicationRequestDto;

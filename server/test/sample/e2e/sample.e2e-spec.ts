@@ -2,13 +2,14 @@
  * 본 테스트 코드는 E2E 샘플 테스트 코드에요.
  * 주석들은 테스트 코드를 작성하면서 완료된 부분들을 확인 후 제거하시면서 작업하면 편해요.
  */
+import { testApp } from '@test/config/e2e/env/jest.setup';
 
-import { IsInt, IsNotEmpty, IsString, Min } from 'class-validator'; // 제거
+import { HttpStatus } from '@nestjs/common';
+import { IsInt, IsNotEmpty, IsString, Min } from 'class-validator';
+// 제거
 
 import supertest from 'supertest';
-import { HttpStatus } from '@nestjs/common';
 import TestAgent from 'supertest/lib/agent';
-import { testApp } from '@test/config/e2e/env/jest.setup';
 
 const URL = 'API 경로';
 

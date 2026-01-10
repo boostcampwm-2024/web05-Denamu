@@ -1,25 +1,33 @@
-import { UserFixture } from '@test/config/common/fixture/user.fixture';
-import { CommentFixture } from '@test/config/common/fixture/comment.fixture';
-import { FeedFixture } from '@test/config/common/fixture/feed.fixture';
-import { REDIS_KEYS } from '@common/redis/redis.constant';
+import { CommentRepository } from '@comment/repository/comment.repository';
+
+import { RedisService } from '@common/redis/redis.service';
+
+import { Feed } from '@feed/entity/feed.entity';
 import { FeedRepository } from '@feed/repository/feed.repository';
-import { HttpStatus } from '@nestjs/common';
+
+import { LikeRepository } from '@like/repository/like.repository';
+
+import { Rss, RssAccept } from '@rss/entity/rss.entity';
 import {
   RssAcceptRepository,
   RssRepository,
 } from '@rss/repository/rss.repository';
-import { RedisService } from '@common/redis/redis.service';
-import { CommentRepository } from '@comment/repository/comment.repository';
-import { UserRepository } from '@user/repository/user.repository';
-import supertest from 'supertest';
-import { RssFixture } from '@test/config/common/fixture/rss.fixture';
-import TestAgent from 'supertest/lib/agent';
-import { LikeRepository } from '@like/repository/like.repository';
-import { Rss, RssAccept } from '@rss/entity/rss.entity';
-import { Feed } from '@feed/entity/feed.entity';
+
 import { User } from '@user/entity/user.entity';
+import { UserRepository } from '@user/repository/user.repository';
+
+import { CommentFixture } from '@test/config/common/fixture/comment.fixture';
+import { FeedFixture } from '@test/config/common/fixture/feed.fixture';
 import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture';
+import { RssFixture } from '@test/config/common/fixture/rss.fixture';
+import { UserFixture } from '@test/config/common/fixture/user.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
+
+import { HttpStatus } from '@nestjs/common';
+import supertest from 'supertest';
+import TestAgent from 'supertest/lib/agent';
+
+import { REDIS_KEYS } from './../../../src/common/redis/redis.constant';
 
 const URL = '/api/rss/remove';
 

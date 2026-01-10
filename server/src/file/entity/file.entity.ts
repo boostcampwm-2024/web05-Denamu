@@ -1,12 +1,13 @@
+import { User } from '@user/entity/user.entity';
+
 import {
-  Entity,
-  PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
-  ManyToOne,
+  Entity,
   JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
-import { User } from '@user/entity/user.entity';
 
 @Entity({ name: 'file' })
 export class File {

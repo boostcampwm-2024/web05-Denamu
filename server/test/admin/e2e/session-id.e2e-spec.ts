@@ -1,9 +1,11 @@
+import { REDIS_KEYS } from '@common/redis/redis.constant';
+import { RedisService } from '@common/redis/redis.service';
+
+import { testApp } from '@test/config/e2e/env/jest.setup';
+
 import { HttpStatus } from '@nestjs/common';
 import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
-import { RedisService } from '@common/redis/redis.service';
-import { REDIS_KEYS } from '@common/redis/redis.constant';
-import { testApp } from '@test/config/e2e/env/jest.setup';
 
 const URL = '/api/admin/sessionId';
 

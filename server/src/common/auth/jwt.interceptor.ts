@@ -1,14 +1,15 @@
+import { Payload } from '@common/guard/jwt.guard';
+
 import {
+  CallHandler,
+  ExecutionContext,
   Injectable,
   NestInterceptor,
-  ExecutionContext,
-  CallHandler,
 } from '@nestjs/common';
-import { Observable } from 'rxjs';
-import { Request } from 'express';
-import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { Payload } from '@common/guard/jwt.guard';
+import { JwtService } from '@nestjs/jwt';
+import { Request } from 'express';
+import { Observable } from 'rxjs';
 
 @Injectable()
 export class InjectUserInterceptor implements NestInterceptor {

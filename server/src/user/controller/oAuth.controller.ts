@@ -1,3 +1,10 @@
+import { ApiOAuth } from '@user/api-docs/oAuth.api-docs';
+import { ApiOAuthCallback } from '@user/api-docs/oAuthCallback.api-docs';
+import { OAUTH_URL_PATH } from '@user/constant/oauth.constant';
+import { OAuthCallbackRequestDto } from '@user/dto/request/oAuthCallbackDto';
+import { OAuthTypeRequestDto } from '@user/dto/request/oAuthType.dto';
+import { OAuthService } from '@user/service/oAuth.service';
+
 import {
   Controller,
   Get,
@@ -6,14 +13,8 @@ import {
   Query,
   Res,
 } from '@nestjs/common';
-import { OAuthService } from '@user/service/oAuth.service';
 import { ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
-import { ApiOAuth } from '@user/api-docs/oAuth.api-docs';
-import { ApiOAuthCallback } from '@user/api-docs/oAuthCallback.api-docs';
-import { OAuthTypeRequestDto } from '@user/dto/request/oAuthType.dto';
-import { OAUTH_URL_PATH } from '@user/constant/oauth.constant';
-import { OAuthCallbackRequestDto } from '@user/dto/request/oAuthCallbackDto';
 
 @ApiTags('OAuth')
 @Controller('oauth')

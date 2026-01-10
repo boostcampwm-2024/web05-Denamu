@@ -1,5 +1,6 @@
-import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import { Payload } from '@common/guard/jwt.guard';
+
+import { ExecutionContext, createParamDecorator } from '@nestjs/common';
 import { Request } from 'express';
 
 export const CurrentUser = createParamDecorator(

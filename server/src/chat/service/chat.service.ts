@@ -1,14 +1,16 @@
-import { REDIS_KEYS } from '@common/redis/redis.constant';
-import { Injectable } from '@nestjs/common';
-import { Socket } from 'socket.io';
-import { RedisService } from '@common/redis/redis.service';
-import { getRandomNickname } from '@woowa-babble/random-nickname';
 import {
   BroadcastPayload,
   CHAT_HISTORY_LIMIT,
   CLIENT_KEY_PREFIX,
   MAX_CLIENTS,
 } from '@chat/constant/chat.constant';
+
+import { REDIS_KEYS } from '@common/redis/redis.constant';
+import { RedisService } from '@common/redis/redis.service';
+
+import { Injectable } from '@nestjs/common';
+import { getRandomNickname } from '@woowa-babble/random-nickname';
+import { Socket } from 'socket.io';
 
 @Injectable()
 export class ChatService {

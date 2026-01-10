@@ -2,6 +2,7 @@ import {
   SearchFeedRequestDto,
   SearchType,
 } from '@feed/dto/request/searchFeed.dto';
+
 import { validate } from 'class-validator';
 
 describe(`${SearchFeedRequestDto.name} Test`, () => {

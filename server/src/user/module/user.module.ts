@@ -1,17 +1,21 @@
+import { AdminModule } from '@admin/module/admin.module';
+
+import { JwtAuthModule } from '@common/auth/jwt.module';
+
+import { FileModule } from '@file/module/file.module';
+
+import { OAuthController } from '@user/controller/oAuth.controller';
+import { UserController } from '@user/controller/user.controller';
+import { GithubOAuthProvider } from '@user/provider/github.provider';
+import { GoogleOAuthProvider } from '@user/provider/google.provider';
+import { ProviderRepository } from '@user/repository/provider.repository';
+import { UserRepository } from '@user/repository/user.repository';
+import { UserScheduler } from '@user/scheduler/user.scheduler';
+import { OAuthService } from '@user/service/oAuth.service';
+import { UserService } from '@user/service/user.service';
+
 import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
-import { UserRepository } from '@user/repository/user.repository';
-import { UserService } from '@user/service/user.service';
-import { UserController } from '@user/controller/user.controller';
-import { OAuthController } from '@user/controller/oAuth.controller';
-import { OAuthService } from '@user/service/oAuth.service';
-import { ProviderRepository } from '@user/repository/provider.repository';
-import { JwtAuthModule } from '@common/auth/jwt.module';
-import { AdminModule } from '@admin/module/admin.module';
-import { GoogleOAuthProvider } from '@user/provider/google.provider';
-import { GithubOAuthProvider } from '@user/provider/github.provider';
-import { UserScheduler } from '@user/scheduler/user.scheduler';
-import { FileModule } from '@file/module/file.module';
 
 @Module({
   imports: [JwtAuthModule, AdminModule, FileModule, ScheduleModule.forRoot()],

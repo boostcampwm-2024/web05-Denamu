@@ -1,8 +1,10 @@
+import { WinstonLoggerService } from '@common/logger/logger.service';
+
+import { UserRepository } from '@user/repository/user.repository';
+
 import { Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { UserRepository } from '@user/repository/user.repository';
 import { Not } from 'typeorm';
-import { WinstonLoggerService } from '@common/logger/logger.service';
 
 @Injectable()
 export class UserScheduler {

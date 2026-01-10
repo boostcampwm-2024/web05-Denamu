@@ -1,7 +1,8 @@
-import { IsIn, IsInt, IsOptional, Min } from 'class-validator';
-import { Type } from 'class-transformer';
 import { ALLOWED_TAGS, AllowedTag } from '@feed/constant/tagType.constants';
+
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import { IsIn, IsInt, IsOptional, Min } from 'class-validator';
 
 export class ReadFeedPaginationRequestDto {
   @ApiProperty({

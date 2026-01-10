@@ -1,14 +1,17 @@
-import { HttpStatus } from '@nestjs/common';
-import { RssRepository } from '@rss/repository/rss.repository';
-import { RssFixture } from '@test/config/common/fixture/rss.fixture';
-import supertest from 'supertest';
+import { REDIS_KEYS } from '@common/redis/redis.constant';
+import { RedisService } from '@common/redis/redis.service';
+
 import { DeleteRssRequestDto } from '@rss/dto/request/deleteRss.dto';
+import { Rss } from '@rss/entity/rss.entity';
+import { RssRepository } from '@rss/repository/rss.repository';
+
+import { RssFixture } from '@test/config/common/fixture/rss.fixture';
+import { testApp } from '@test/config/e2e/env/jest.setup';
+
+import { HttpStatus } from '@nestjs/common';
+import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 import * as uuid from 'uuid';
-import { RedisService } from '@common/redis/redis.service';
-import { REDIS_KEYS } from '@common/redis/redis.constant';
-import { Rss } from '@rss/entity/rss.entity';
-import { testApp } from '@test/config/e2e/env/jest.setup';
 
 const URL = '/api/rss/remove';
 

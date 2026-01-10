@@ -1,8 +1,10 @@
-import { Module } from '@nestjs/common';
-import { ActivityRepository } from '@activity/repository/activity.repository';
 import { ActivityController } from '@activity/controller/activity.controller';
+import { ActivityRepository } from '@activity/repository/activity.repository';
 import { ActivityService } from '@activity/service/activity.service';
+
 import { UserModule } from '@user/module/user.module';
+
+import { Module } from '@nestjs/common';
 
 @Module({
   imports: [UserModule],
