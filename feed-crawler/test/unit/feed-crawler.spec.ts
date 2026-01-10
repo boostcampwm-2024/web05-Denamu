@@ -1,9 +1,9 @@
 import 'reflect-metadata';
-import { FeedCrawler } from '../../src/feed-crawler';
-import { FeedRepository } from '../../src/repository/feed.repository';
-import { RssRepository } from '../../src/repository/rss.repository';
-import { FeedParserManager } from '../../src/common/parser/feed-parser-manager';
-import { RssObj, FeedDetail } from '../../src/common/types';
+import { FeedCrawler } from '@src/feed-crawler';
+import { FeedRepository } from '@repository/feed.repository';
+import { RssRepository } from '@repository/rss.repository';
+import { FeedParserManager } from '@common/parser/feed-parser-manager';
+import { RssObj, FeedDetail } from '@common/types';
 
 describe('FeedCrawler', () => {
   let feedCrawler: FeedCrawler;

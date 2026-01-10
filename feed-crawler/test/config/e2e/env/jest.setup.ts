@@ -1,4 +1,4 @@
-import { setupTestContainer } from '../../../setup/testContext.setup';
+import { setupTestContainer } from '@test/setup/testContext.setup';
 
 beforeEach(() => {
   jest.restoreAllMocks();

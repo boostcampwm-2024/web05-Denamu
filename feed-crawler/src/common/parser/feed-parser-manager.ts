@@ -1,10 +1,10 @@
 import { inject, injectable } from 'tsyringe';
-import { FeedDetail, RssObj } from '../types';
-import { Rss20Parser } from './formats/rss20-parser';
-import { Atom10Parser } from './formats/atom10-parser';
-import { BaseFeedParser } from './base-feed-parser';
-import { DEPENDENCY_SYMBOLS } from '../../types/dependency-symbols';
-import logger from '../logger';
+import { FeedDetail, RssObj } from '@common/types';
+import { Rss20Parser } from '@common/parser/formats/rss20-parser';
+import { Atom10Parser } from '@common/parser/formats/atom10-parser';
+import { BaseFeedParser } from '@common/parser/base-feed-parser';
+import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
+import logger from '@common/logger';
 
 @injectable()
 export class FeedParserManager {

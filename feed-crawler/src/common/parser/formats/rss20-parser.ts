@@ -1,7 +1,7 @@
 import { inject, injectable } from 'tsyringe';
-import { BaseFeedParser, RawFeed } from '../base-feed-parser';
-import { ParserUtil } from '../utils/parser-util';
-import { DEPENDENCY_SYMBOLS } from '../../../types/dependency-symbols';
+import { BaseFeedParser, RawFeed } from '@common/parser/base-feed-parser';
+import { ParserUtil } from '@common/parser/utils/parser-util';
+import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
 
 @injectable()
 export class Rss20Parser extends BaseFeedParser {

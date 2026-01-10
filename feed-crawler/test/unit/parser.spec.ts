@@ -1,15 +1,15 @@
 import 'reflect-metadata';
-import { ParserUtil } from '../../src/common/parser/utils/parser-util';
-import { Rss20Parser } from '../../src/common/parser/formats/rss20-parser';
-import { Atom10Parser } from '../../src/common/parser/formats/atom10-parser';
-import { FeedParserManager } from '../../src/common/parser/feed-parser-manager';
+import { ParserUtil } from '@common/parser/utils/parser-util';
+import { Rss20Parser } from '@common/parser/formats/rss20-parser';
+import { Atom10Parser } from '@common/parser/formats/atom10-parser';
+import { FeedParserManager } from '@common/parser/feed-parser-manager';
 import {
   FIXED_DATE,
   RSS_20_SAMPLE,
   ATOM_10_SAMPLE,
   INVALID_XML,
   MOCK_RSS_OBJ,
-} from '../config/constant/parser-fixtures';
+} from '@test/config/constant/parser-fixtures';
 
 describe('Parser 모듈 테스트', () => {
   let parserUtil: ParserUtil;
