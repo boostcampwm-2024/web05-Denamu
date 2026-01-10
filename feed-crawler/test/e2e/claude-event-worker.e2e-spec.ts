@@ -1,6 +1,7 @@
-import { ResultSetHeader } from 'mysql2';
 import { ClaudeEventWorker } from '@event_worker/workers/claude-event-worker';
+
 import { setupTestContainer } from '@test/setup/testContext.setup';
+import { ResultSetHeader } from 'mysql2';
 
 describe('Claude AI e2e-test', () => {
   const testContext = setupTestContainer();
