@@ -1,3 +1,5 @@
+import { inject, injectable } from 'tsyringe';
+
 import { FeedCrawler } from '@src/feed-crawler';
 
 import { redisConstant } from '@common/constant';
@@ -10,8 +12,6 @@ import { AbstractQueueWorker } from '@event_worker/abstract-queue-worker';
 import { RssRepository } from '@repository/rss.repository';
 
 import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
-
-import { inject, injectable } from 'tsyringe';
 
 @injectable()
 export class FullFeedCrawlEventWorker extends AbstractQueueWorker<FullFeedCrawlMessage> {

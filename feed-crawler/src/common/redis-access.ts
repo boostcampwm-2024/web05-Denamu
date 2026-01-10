@@ -1,8 +1,9 @@
-import logger from '@common/logger';
+import { injectable } from 'tsyringe';
 
 import Redis, { ChainableCommander } from 'ioredis';
 import Redis_Mock from 'ioredis-mock';
-import { injectable } from 'tsyringe';
+
+import logger from '@common/logger';
 
 @injectable()
 export class RedisConnection {

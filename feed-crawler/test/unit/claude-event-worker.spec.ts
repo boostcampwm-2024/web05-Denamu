@@ -1,3 +1,7 @@
+import 'reflect-metadata';
+
+import Anthropic from '@anthropic-ai/sdk';
+
 import { redisConstant } from '@common/constant';
 import { RedisConnection } from '@common/redis-access';
 import { ClaudeResponse, FeedAIQueueItem } from '@common/types';
@@ -6,9 +10,6 @@ import { ClaudeEventWorker } from '@event_worker/workers/claude-event-worker';
 
 import { FeedRepository } from '@repository/feed.repository';
 import { TagMapRepository } from '@repository/tag-map.repository';
-
-import Anthropic from '@anthropic-ai/sdk';
-import 'reflect-metadata';
 
 // Anthropic 모킹
 jest.mock('@anthropic-ai/sdk');

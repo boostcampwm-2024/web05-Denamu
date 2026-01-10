@@ -1,6 +1,7 @@
+import { injectable } from 'tsyringe';
+
 import { Channel, ChannelModel } from 'amqplib';
 import * as amqp from 'amqplib';
-import { injectable } from 'tsyringe';
 
 @injectable()
 export class RabbitMQManager {

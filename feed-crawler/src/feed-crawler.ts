@@ -1,3 +1,5 @@
+import { inject, injectable } from 'tsyringe';
+
 import logger from '@common/logger';
 import { FeedParserManager } from '@common/parser/feed-parser-manager';
 import { FeedDetail, RssObj } from '@common/types';
@@ -6,8 +8,6 @@ import { FeedRepository } from '@repository/feed.repository';
 import { RssRepository } from '@repository/rss.repository';
 
 import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
-
-import { inject, injectable } from 'tsyringe';
 
 @injectable()
 export class FeedCrawler {
