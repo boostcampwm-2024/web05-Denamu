@@ -1,3 +1,8 @@
+import { HttpStatus } from '@nestjs/common';
+
+import supertest from 'supertest';
+import TestAgent from 'supertest/lib/agent';
+
 import { CommentRepository } from '@comment/repository/comment.repository';
 
 import { RedisService } from '@common/redis/redis.service';
@@ -22,10 +27,6 @@ import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture
 import { RssFixture } from '@test/config/common/fixture/rss.fixture';
 import { UserFixture } from '@test/config/common/fixture/user.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
-
-import { HttpStatus } from '@nestjs/common';
-import supertest from 'supertest';
-import TestAgent from 'supertest/lib/agent';
 
 import { REDIS_KEYS } from './../../../src/common/redis/redis.constant';
 

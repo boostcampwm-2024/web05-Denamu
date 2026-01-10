@@ -1,6 +1,6 @@
-import { ReadFeedPaginationRequestDto } from '@feed/dto/request/readFeedPagination.dto';
-
 import { validate } from 'class-validator';
+
+import { ReadFeedPaginationRequestDto } from '@feed/dto/request/readFeedPagination.dto';
 
 describe(`${ReadFeedPaginationRequestDto.name} Test`, () => {
   let dto: ReadFeedPaginationRequestDto;

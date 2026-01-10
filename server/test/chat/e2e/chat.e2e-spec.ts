@@ -1,3 +1,6 @@
+import { Socket } from 'socket.io-client';
+import { io } from 'socket.io-client';
+
 import { ChatService } from '@chat/service/chat.service';
 
 import { REDIS_KEYS } from '@common/redis/redis.constant';
@@ -5,9 +8,6 @@ import { RedisService } from '@common/redis/redis.service';
 
 import { ChatFixture } from '@test/config/common/fixture/chat.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
-
-import { Socket } from 'socket.io-client';
-import { io } from 'socket.io-client';
 
 const URL = '/chat';
 

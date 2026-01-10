@@ -1,3 +1,7 @@
+import { Module, forwardRef } from '@nestjs/common';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ScheduleModule } from '@nestjs/schedule';
+
 import { ActivityModule } from '@activity/module/activity.module';
 
 import { CommentModule } from '@comment/module/comment.module';
@@ -18,10 +22,6 @@ import { LikeModule } from '@like/module/like.module';
 import { RssModule } from '@rss/module/rss.module';
 
 import { UserModule } from '@user/module/user.module';
-
-import { Module, forwardRef } from '@nestjs/common';
-import { EventEmitterModule } from '@nestjs/event-emitter';
-import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [

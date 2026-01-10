@@ -1,6 +1,6 @@
-import { FeedView } from '@feed/entity/feed.entity';
-
 import { ApiProperty } from '@nestjs/swagger';
+
+import { FeedView } from '@feed/entity/feed.entity';
 
 export class GetFeedDetailResponseDto {
   @ApiProperty({

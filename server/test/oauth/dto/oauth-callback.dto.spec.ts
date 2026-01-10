@@ -1,6 +1,6 @@
-import { OAuthCallbackRequestDto } from '@user/dto/request/oAuthCallbackDto';
-
 import { validate } from 'class-validator';
+
+import { OAuthCallbackRequestDto } from '@user/dto/request/oAuthCallbackDto';
 
 describe('OAuthCallbackRequestDto Test', () => {
   let dto: OAuthCallbackRequestDto;

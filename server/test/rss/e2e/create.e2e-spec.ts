@@ -1,3 +1,8 @@
+import { HttpStatus } from '@nestjs/common';
+
+import supertest from 'supertest';
+import TestAgent from 'supertest/lib/agent';
+
 import { RegisterRssRequestDto } from '@rss/dto/request/registerRss.dto';
 import {
   RssAcceptRepository,
@@ -7,10 +12,6 @@ import {
 import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture';
 import { RssFixture } from '@test/config/common/fixture/rss.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
-
-import { HttpStatus } from '@nestjs/common';
-import supertest from 'supertest';
-import TestAgent from 'supertest/lib/agent';
 
 const URL = '/api/rss';
 

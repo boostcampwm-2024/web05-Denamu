@@ -1,3 +1,8 @@
+import { HttpStatus } from '@nestjs/common';
+
+import supertest from 'supertest';
+import TestAgent from 'supertest/lib/agent';
+
 import { ActivityRepository } from '@activity/repository/activity.repository';
 
 import { CommentRepository } from '@comment/repository/comment.repository';
@@ -29,10 +34,6 @@ import {
   createRefreshToken,
 } from '@test/config/e2e/env/jest.setup';
 import { testApp } from '@test/config/e2e/env/jest.setup';
-
-import { HttpStatus } from '@nestjs/common';
-import supertest from 'supertest';
-import TestAgent from 'supertest/lib/agent';
 
 const URL = '/api/user/delete-account/confirm';
 

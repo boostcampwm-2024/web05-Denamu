@@ -9,6 +9,8 @@
     "classProperties"
   ],
   "importOrder": [
+    "^@nestjs/(.*)?$",
+    "<THIRD_PARTY_MODULES>",
     "^@src/(.*)?$",
     "^@activity/(.*)?$",
     "^@admin/(.*)?$",
@@ -23,7 +25,6 @@
     "^@tag/(.*)?$",
     "^@user/(.*)?$",
     "^@test/(.*)$",
-    "<THIRD_PARTY_MODULES>",
     "^[./]"
   ],
   "importOrderSeparation": true,

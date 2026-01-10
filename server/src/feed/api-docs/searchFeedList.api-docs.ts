@@ -1,5 +1,3 @@
-import { SearchType } from '@feed/dto/request/searchFeed.dto';
-
 import { applyDecorators } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
@@ -7,6 +5,8 @@ import {
   ApiOperation,
   ApiQuery,
 } from '@nestjs/swagger';
+
+import { SearchType } from '@feed/dto/request/searchFeed.dto';
 
 export function ApiSearchFeedList() {
   return applyDecorators(

@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+
 import Redis, { ChainableCommander } from 'ioredis';
 import { RedisKey } from 'ioredis/built/utils/RedisCommander';
 

@@ -1,6 +1,6 @@
-import { Feed } from '@feed/entity/feed.entity';
-
 import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
+
+import { Feed } from '@feed/entity/feed.entity';
 
 @Entity({ name: 'tag' })
 export class Tag {

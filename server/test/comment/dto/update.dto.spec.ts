@@ -1,6 +1,6 @@
-import { UpdateCommentRequestDto } from '@comment/dto/request/updateComment.dto';
-
 import { validate } from 'class-validator';
+
+import { UpdateCommentRequestDto } from '@comment/dto/request/updateComment.dto';
 
 describe(`${UpdateCommentRequestDto.name} Test`, () => {
   let dto: UpdateCommentRequestDto;

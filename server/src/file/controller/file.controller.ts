@@ -1,14 +1,3 @@
-import { CurrentUser } from '@common/decorator';
-import { JwtGuard, Payload } from '@common/guard/jwt.guard';
-import { ApiResponse } from '@common/response/common.response';
-
-import { ApiDeleteFile } from '@file/api-docs/deleteFile.api-docs';
-import { ApiUploadProfileFile } from '@file/api-docs/uploadProfileFile.api-docs';
-import { FILE_SIZE_LIMITS } from '@file/constant/file.constant';
-import { DeleteFileParamRequestDto } from '@file/dto/request/deleteFile.dto';
-import { UploadFileQueryRequestDto } from '@file/dto/request/uploadFile.dto';
-import { FileService } from '@file/service/file.service';
-
 import {
   Controller,
   Delete,
@@ -26,6 +15,17 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags } from '@nestjs/swagger';
+
+import { CurrentUser } from '@common/decorator';
+import { JwtGuard, Payload } from '@common/guard/jwt.guard';
+import { ApiResponse } from '@common/response/common.response';
+
+import { ApiDeleteFile } from '@file/api-docs/deleteFile.api-docs';
+import { ApiUploadProfileFile } from '@file/api-docs/uploadProfileFile.api-docs';
+import { FILE_SIZE_LIMITS } from '@file/constant/file.constant';
+import { DeleteFileParamRequestDto } from '@file/dto/request/deleteFile.dto';
+import { UploadFileQueryRequestDto } from '@file/dto/request/uploadFile.dto';
+import { FileService } from '@file/service/file.service';
 
 @ApiTags('File')
 @Controller('file')

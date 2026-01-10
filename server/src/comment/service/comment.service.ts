@@ -1,3 +1,11 @@
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
+
+import { DataSource } from 'typeorm';
+
 import { CreateCommentRequestDto } from '@comment/dto/request/createComment.dto';
 import { DeleteCommentRequestDto } from '@comment/dto/request/deleteComment.dto';
 import { GetCommentRequestDto } from '@comment/dto/request/getComment.dto';
@@ -11,13 +19,6 @@ import { Payload } from '@common/guard/jwt.guard';
 import { FeedService } from '@feed/service/feed.service';
 
 import { UserService } from '@user/service/user.service';
-
-import {
-  Injectable,
-  NotFoundException,
-  UnauthorizedException,
-} from '@nestjs/common';
-import { DataSource } from 'typeorm';
 
 @Injectable()
 export class CommentService {

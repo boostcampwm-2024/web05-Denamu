@@ -1,3 +1,20 @@
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Patch,
+  Post,
+  Query,
+  Req,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
+
+import { Request, Response } from 'express';
+
 import { CurrentUser } from '@common/decorator';
 import { JwtGuard, Payload, RefreshJwtGuard } from '@common/guard/jwt.guard';
 import { ApiResponse } from '@common/response/common.response';
@@ -22,22 +39,6 @@ import { RegisterUserRequestDto } from '@user/dto/request/registerUser.dto';
 import { ResetPasswordRequestDto } from '@user/dto/request/resetPassword.dto';
 import { UpdateUserRequestDto } from '@user/dto/request/updateUser.dto';
 import { UserService } from '@user/service/user.service';
-
-import {
-  Body,
-  Controller,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Patch,
-  Post,
-  Query,
-  Req,
-  Res,
-  UseGuards,
-} from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
-import { Request, Response } from 'express';
 
 @ApiTags('User')
 @Controller('user')

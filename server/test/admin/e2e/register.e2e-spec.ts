@@ -1,3 +1,9 @@
+import { HttpStatus } from '@nestjs/common';
+
+import * as bcrypt from 'bcrypt';
+import supertest from 'supertest';
+import TestAgent from 'supertest/lib/agent';
+
 import { RegisterAdminRequestDto } from '@admin/dto/request/registerAdmin.dto';
 import { AdminRepository } from '@admin/repository/admin.repository';
 
@@ -6,11 +12,6 @@ import { RedisService } from '@common/redis/redis.service';
 
 import { AdminFixture } from '@test/config/common/fixture/admin.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
-
-import { HttpStatus } from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
-import supertest from 'supertest';
-import TestAgent from 'supertest/lib/agent';
 
 const URL = '/api/admin/register';
 

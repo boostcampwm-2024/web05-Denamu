@@ -1,3 +1,7 @@
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+
+import { Response } from 'express';
+
 import { cookieConfig } from '@common/cookie/cookie.config';
 import { Payload } from '@common/guard/jwt.guard';
 import { WinstonLoggerService } from '@common/logger/logger.service';
@@ -16,9 +20,6 @@ import { OAuthProvider } from '@user/provider/oauth-provider.interface';
 import { ProviderRepository } from '@user/repository/provider.repository';
 import { UserRepository } from '@user/repository/user.repository';
 import { UserService } from '@user/service/user.service';
-
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
-import { Response } from 'express';
 
 @Injectable()
 export class OAuthService {

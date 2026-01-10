@@ -1,7 +1,3 @@
-import { Feed } from '@feed/entity/feed.entity';
-
-import { User } from '@user/entity/user.entity';
-
 import {
   BaseEntity,
   Column,
@@ -11,6 +7,10 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+
+import { Feed } from '@feed/entity/feed.entity';
+
+import { User } from '@user/entity/user.entity';
 
 @Entity({ name: 'comment' })
 export class Comment extends BaseEntity {

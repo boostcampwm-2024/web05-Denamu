@@ -1,5 +1,9 @@
-import { UpdateCommentRequestDto } from '@src/comment/dto/request/updateComment.dto';
+import { HttpStatus } from '@nestjs/common';
 
+import supertest from 'supertest';
+import TestAgent from 'supertest/lib/agent';
+
+import { UpdateCommentRequestDto } from '@comment/dto/request/updateComment.dto';
 import { Comment } from '@comment/entity/comment.entity';
 import { CommentRepository } from '@comment/repository/comment.repository';
 
@@ -17,10 +21,6 @@ import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture
 import { UserFixture } from '@test/config/common/fixture/user.fixture';
 import { createAccessToken } from '@test/config/e2e/env/jest.setup';
 import { testApp } from '@test/config/e2e/env/jest.setup';
-
-import { HttpStatus } from '@nestjs/common';
-import supertest from 'supertest';
-import TestAgent from 'supertest/lib/agent';
 
 import { RssAccept } from './../../../src/rss/entity/rss.entity';
 

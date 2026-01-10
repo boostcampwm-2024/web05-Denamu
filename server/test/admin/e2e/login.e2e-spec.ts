@@ -1,3 +1,9 @@
+import { HttpStatus } from '@nestjs/common';
+
+import supertest from 'supertest';
+import TestAgent from 'supertest/lib/agent';
+import * as uuid from 'uuid';
+
 import { LoginAdminRequestDto } from '@admin/dto/request/loginAdmin.dto';
 import { Admin } from '@admin/entity/admin.entity';
 import { AdminRepository } from '@admin/repository/admin.repository';
@@ -10,11 +16,6 @@ import {
   AdminFixture,
 } from '@test/config/common/fixture/admin.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
-
-import { HttpStatus } from '@nestjs/common';
-import supertest from 'supertest';
-import TestAgent from 'supertest/lib/agent';
-import * as uuid from 'uuid';
 
 const URL = '/api/admin/login';
 

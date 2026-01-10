@@ -1,3 +1,9 @@
+import { HttpStatus } from '@nestjs/common';
+
+import fs from 'fs/promises';
+import supertest from 'supertest';
+import TestAgent from 'supertest/lib/agent';
+
 import { File } from '@file/entity/file.entity';
 import { FileRepository } from '@file/repository/file.repository';
 
@@ -8,11 +14,6 @@ import { FileFixture } from '@test/config/common/fixture/file.fixture';
 import { UserFixture } from '@test/config/common/fixture/user.fixture';
 import { createAccessToken } from '@test/config/e2e/env/jest.setup';
 import { testApp } from '@test/config/e2e/env/jest.setup';
-
-import { HttpStatus } from '@nestjs/common';
-import fs from 'fs/promises';
-import supertest from 'supertest';
-import TestAgent from 'supertest/lib/agent';
 
 const URL = '/api/file';
 

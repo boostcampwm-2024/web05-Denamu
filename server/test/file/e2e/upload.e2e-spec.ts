@@ -1,3 +1,10 @@
+import { HttpStatus } from '@nestjs/common';
+
+import fs from 'fs/promises';
+import supertest from 'supertest';
+import TestAgent from 'supertest/lib/agent';
+import * as uuid from 'uuid';
+
 import { FILE_SIZE_LIMITS, FileUploadType } from '@file/constant/file.constant';
 import { UploadFileQueryRequestDto } from '@file/dto/request/uploadFile.dto';
 import { FileRepository } from '@file/repository/file.repository';
@@ -8,12 +15,6 @@ import { UserRepository } from '@user/repository/user.repository';
 import { UserFixture } from '@test/config/common/fixture/user.fixture';
 import { createAccessToken } from '@test/config/e2e/env/jest.setup';
 import { testApp } from '@test/config/e2e/env/jest.setup';
-
-import { HttpStatus } from '@nestjs/common';
-import fs from 'fs/promises';
-import supertest from 'supertest';
-import TestAgent from 'supertest/lib/agent';
-import * as uuid from 'uuid';
 
 const URL = '/api/file';
 

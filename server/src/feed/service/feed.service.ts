@@ -1,3 +1,7 @@
+import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+
+import { Request, Response } from 'express';
+
 import { cookieConfig } from '@common/cookie/cookie.config';
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
@@ -25,9 +29,6 @@ import {
   FeedRepository,
   FeedViewRepository,
 } from '@feed/repository/feed.repository';
-
-import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
-import { Request, Response } from 'express';
 
 @Injectable()
 export class FeedService {

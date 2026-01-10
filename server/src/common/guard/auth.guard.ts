@@ -1,13 +1,14 @@
-import { REDIS_KEYS } from '@common/redis/redis.constant';
-import { RedisService } from '@common/redis/redis.service';
-
 import {
   CanActivate,
   ExecutionContext,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+
 import { Request } from 'express';
+
+import { REDIS_KEYS } from '@common/redis/redis.constant';
+import { RedisService } from '@common/redis/redis.service';
 
 @Injectable()
 export class AdminAuthGuard implements CanActivate {

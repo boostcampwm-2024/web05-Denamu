@@ -1,6 +1,6 @@
-import { ReadActivityParamRequestDto } from '@activity/dto/request/readActivity.dto';
-
 import { validate } from 'class-validator';
+
+import { ReadActivityParamRequestDto } from '@activity/dto/request/readActivity.dto';
 
 describe(`${ReadActivityParamRequestDto.name} Test`, () => {
   let dto: ReadActivityParamRequestDto;

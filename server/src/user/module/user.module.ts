@@ -1,3 +1,6 @@
+import { Module } from '@nestjs/common';
+import { ScheduleModule } from '@nestjs/schedule';
+
 import { AdminModule } from '@admin/module/admin.module';
 
 import { JwtAuthModule } from '@common/auth/jwt.module';
@@ -13,9 +16,6 @@ import { UserRepository } from '@user/repository/user.repository';
 import { UserScheduler } from '@user/scheduler/user.scheduler';
 import { OAuthService } from '@user/service/oAuth.service';
 import { UserService } from '@user/service/user.service';
-
-import { Module } from '@nestjs/common';
-import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [JwtAuthModule, AdminModule, FileModule, ScheduleModule.forRoot()],
