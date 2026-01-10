@@ -1,5 +1,8 @@
 import { injectable } from 'tsyringe';
 
+import * as nodemailer from 'nodemailer';
+import SMTPTransport from 'nodemailer/lib/smtp-transport';
+
 import logger from '@src/logger';
 
 import {
@@ -12,9 +15,6 @@ import {
 } from '@email/email.content';
 
 import { Rss, RssRegistration, RssRemoval, User } from '@app-types/types';
-
-import * as nodemailer from 'nodemailer';
-import SMTPTransport from 'nodemailer/lib/smtp-transport';
 
 @injectable()
 export class EmailService {

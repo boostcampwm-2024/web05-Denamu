@@ -9,13 +9,15 @@
     "classProperties"
   ],
   "importOrder": [
+    "^reflect-metadata$",
     "^tsconfig-paths/register$",
     "^tsyringe$",
+    "<THIRD_PARTY_MODULES>",
+    "^@src/env-load$",
     "^@src/(.*)?$",
     "^@email/(.*)?$",
     "^@rabbitmq/(.*)?$",
     "^@app-types/(.*)?$",
-    "<THIRD_PARTY_MODULES>",
     "^[./]"
   ],
   "importOrderSeparation": true,

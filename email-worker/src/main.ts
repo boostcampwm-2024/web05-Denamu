@@ -1,5 +1,8 @@
-import { container } from '@src/container';
+import 'reflect-metadata';
+
 import '@src/env-load';
+
+import { container } from '@src/container';
 import logger from '@src/logger';
 
 import { EmailConsumer } from '@email/email.consumer';
@@ -7,8 +10,6 @@ import { EmailConsumer } from '@email/email.consumer';
 import { RabbitMQManager } from '@rabbitmq/rabbitmq.manager';
 
 import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
-
-import 'reflect-metadata';
 
 function initializeDependencies() {
   return {
