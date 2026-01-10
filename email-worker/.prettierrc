@@ -1,5 +1,21 @@
 {
   "singleQuote": true,
   "trailingComma": "all",
-  "endOfLine": "lf"
+  "endOfLine": "lf",
+  "plugins": ["@trivago/prettier-plugin-sort-imports"],
+  "importOrderParserPlugins": [
+    "typescript",
+    "decorators-legacy",
+    "classProperties"
+  ],
+  "importOrder": [
+    "^@src/(.*)?$",
+    "^@email/(.*)?$",
+    "^@rabbitmq/(.*)?$",
+    "^@app-types/(.*)?$",
+    "<THIRD_PARTY_MODULES>",
+    "^[./]"
+  ],
+  "importOrderSeparation": true,
+  "importOrderSortSpecifiers": true
 }
