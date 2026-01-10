@@ -1,3 +1,8 @@
+import { HttpStatus } from '@nestjs/common';
+
+import supertest from 'supertest';
+import TestAgent from 'supertest/lib/agent';
+
 import { LoginUserRequestDto } from '@user/dto/request/loginUser.dto';
 import { User } from '@user/entity/user.entity';
 import { UserRepository } from '@user/repository/user.repository';
@@ -7,10 +12,6 @@ import {
   UserFixture,
 } from '@test/config/common/fixture/user.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
-
-import { HttpStatus } from '@nestjs/common';
-import supertest from 'supertest';
-import TestAgent from 'supertest/lib/agent';
 
 const URL = '/api/user/login';
 

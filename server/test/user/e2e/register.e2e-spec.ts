@@ -1,3 +1,10 @@
+import { HttpStatus } from '@nestjs/common';
+
+import * as bcrypt from 'bcrypt';
+import supertest from 'supertest';
+import TestAgent from 'supertest/lib/agent';
+import * as uuid from 'uuid';
+
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
 
@@ -6,12 +13,6 @@ import { UserRepository } from '@user/repository/user.repository';
 
 import { UserFixture } from '@test/config/common/fixture/user.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
-
-import { HttpStatus } from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
-import supertest from 'supertest';
-import TestAgent from 'supertest/lib/agent';
-import * as uuid from 'uuid';
 
 const URL = '/api/user/register';
 

@@ -1,9 +1,9 @@
+import * as bcrypt from 'bcrypt';
+import * as uuid from 'uuid';
+
 import { Admin } from '@admin/entity/admin.entity';
 
 import { SALT_ROUNDS } from '@user/constant/user.constants';
-
-import * as bcrypt from 'bcrypt';
-import * as uuid from 'uuid';
 
 export const ADMIN_DEFAULT_PASSWORD = 'test1234!';
 

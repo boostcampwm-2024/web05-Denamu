@@ -1,12 +1,12 @@
+import { Controller, Get, HttpCode, HttpStatus, Query } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
+
 import { ApiResponse } from '@common/response/common.response';
 
 import { ApiReadPlatformStatistic } from '@statistic/api-docs/readPlatformStatistic.api-docs';
 import { ApiReadStatistic } from '@statistic/api-docs/readStatistic.api-docs';
 import { ReadStatisticRequestDto } from '@statistic/dto/request/readStatistic.dto';
 import { StatisticService } from '@statistic/service/statistic.service';
-
-import { Controller, Get, HttpCode, HttpStatus, Query } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Statistic')
 @Controller('statistic')

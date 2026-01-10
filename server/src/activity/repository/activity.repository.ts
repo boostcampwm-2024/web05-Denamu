@@ -1,7 +1,8 @@
-import { Activity } from '@activity/entity/activity.entity';
-
 import { Injectable } from '@nestjs/common';
+
 import { DataSource, Repository } from 'typeorm';
+
+import { Activity } from '@activity/entity/activity.entity';
 
 @Injectable()
 export class ActivityRepository extends Repository<Activity> {

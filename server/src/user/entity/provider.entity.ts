@@ -1,5 +1,3 @@
-import { User } from '@user/entity/user.entity';
-
 import {
   BaseEntity,
   Column,
@@ -10,6 +8,8 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+
+import { User } from '@user/entity/user.entity';
 
 @Entity({
   name: 'provider',

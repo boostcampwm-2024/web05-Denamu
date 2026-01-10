@@ -1,6 +1,6 @@
-import { ReadActivityQueryRequestDto } from '@activity/dto/request/readActivity.dto';
-
 import { validate } from 'class-validator';
+
+import { ReadActivityQueryRequestDto } from '@activity/dto/request/readActivity.dto';
 
 describe(`${ReadActivityQueryRequestDto.name} Test`, () => {
   let dto: ReadActivityQueryRequestDto;

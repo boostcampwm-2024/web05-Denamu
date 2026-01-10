@@ -1,3 +1,8 @@
+import { HttpStatus } from '@nestjs/common';
+
+import supertest from 'supertest';
+import TestAgent from 'supertest/lib/agent';
+
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
 
@@ -9,10 +14,6 @@ import {
 
 import { RssFixture } from '@test/config/common/fixture/rss.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
-
-import { HttpStatus } from '@nestjs/common';
-import supertest from 'supertest';
-import TestAgent from 'supertest/lib/agent';
 
 const URL = '/api/rss/accept';
 

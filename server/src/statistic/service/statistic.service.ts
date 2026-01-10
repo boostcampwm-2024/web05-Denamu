@@ -1,3 +1,5 @@
+import { Injectable } from '@nestjs/common';
+
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
 
@@ -10,8 +12,6 @@ import { ReadStatisticRequestDto } from '@statistic/dto/request/readStatistic.dt
 import { ReadStatisticAllResponseDto } from '@statistic/dto/response/readStatisticAll.dto';
 import { ReadStatisticPlatformResponseDto } from '@statistic/dto/response/readStatisticPlatform.dto';
 import { ReadStatisticTodayResponseDto } from '@statistic/dto/response/readStatisticToday.dto';
-
-import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class StatisticService {

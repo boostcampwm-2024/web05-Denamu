@@ -1,9 +1,10 @@
-import { RabbitMQManager } from '@common/rabbitmq/rabbitmq.manager';
-import { RabbitMQService } from '@common/rabbitmq/rabbitmq.service';
-
 import { Global, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+
 import * as amqp from 'amqplib';
+
+import { RabbitMQManager } from '@common/rabbitmq/rabbitmq.manager';
+import { RabbitMQService } from '@common/rabbitmq/rabbitmq.service';
 
 @Global()
 @Module({

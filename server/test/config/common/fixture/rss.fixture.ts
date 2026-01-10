@@ -1,6 +1,6 @@
-import { Rss } from '@rss/entity/rss.entity';
-
 import * as uuid from 'uuid';
+
+import { Rss } from '@rss/entity/rss.entity';
 
 export class RssFixture {
   static createGeneralRss(): Partial<Rss> {

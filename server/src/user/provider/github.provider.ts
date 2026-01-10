@@ -1,3 +1,8 @@
+import { BadGatewayException, Injectable } from '@nestjs/common';
+
+import axios from 'axios';
+import * as querystring from 'node:querystring';
+
 import { WinstonLoggerService } from '@common/logger/logger.service';
 
 import {
@@ -7,10 +12,6 @@ import {
   UserInfo,
 } from '@user/constant/oauth.constant';
 import { OAuthProvider } from '@user/provider/oauth-provider.interface';
-
-import { BadGatewayException, Injectable } from '@nestjs/common';
-import axios from 'axios';
-import * as querystring from 'node:querystring';
 
 @Injectable()
 export class GithubOAuthProvider implements OAuthProvider {

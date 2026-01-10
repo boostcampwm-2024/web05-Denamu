@@ -1,3 +1,11 @@
+import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { TypeOrmModule } from '@nestjs/typeorm';
+
+import * as fs from 'fs';
+import * as path from 'path';
+
 import { ActivityModule } from '@activity/module/activity.module';
 
 import { AdminModule } from '@admin/module/admin.module';
@@ -27,13 +35,6 @@ import { StatisticModule } from '@statistic/module/statistic.module';
 import { TagModule } from '@tag/module/tag.module';
 
 import { UserModule } from '@user/module/user.module';
-
-import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_INTERCEPTOR } from '@nestjs/core';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import * as fs from 'fs';
-import * as path from 'path';
 
 const envMap = {
   LOCAL: path.join(process.cwd(), 'env/.env.local'),

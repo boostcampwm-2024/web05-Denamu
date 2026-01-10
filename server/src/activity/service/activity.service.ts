@@ -1,3 +1,5 @@
+import { Injectable } from '@nestjs/common';
+
 import {
   DailyActivityDto,
   ReadActivityResponseDto,
@@ -5,8 +7,6 @@ import {
 import { ActivityRepository } from '@activity/repository/activity.repository';
 
 import { UserService } from '@user/service/user.service';
-
-import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class ActivityService {

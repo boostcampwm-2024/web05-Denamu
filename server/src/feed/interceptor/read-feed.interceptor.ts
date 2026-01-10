@@ -1,10 +1,3 @@
-import { ActivityService } from '@activity/service/activity.service';
-
-import { Payload } from '@common/guard/jwt.guard';
-import { RedisService } from '@common/redis/redis.service';
-
-import { UserService } from '@user/service/user.service';
-
 import {
   CallHandler,
   ExecutionContext,
@@ -13,8 +6,16 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+
 import { Request } from 'express';
 import { Observable, tap } from 'rxjs';
+
+import { ActivityService } from '@activity/service/activity.service';
+
+import { Payload } from '@common/guard/jwt.guard';
+import { RedisService } from '@common/redis/redis.service';
+
+import { UserService } from '@user/service/user.service';
 
 @Injectable()
 export class ReadFeedInterceptor implements NestInterceptor {

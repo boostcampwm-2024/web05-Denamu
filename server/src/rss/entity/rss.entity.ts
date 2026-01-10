@@ -1,5 +1,3 @@
-import { Feed } from '@feed/entity/feed.entity';
-
 import {
   BaseEntity,
   Column,
@@ -8,6 +6,8 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+
+import { Feed } from '@feed/entity/feed.entity';
 
 export class RssInformation extends BaseEntity {
   @PrimaryGeneratedColumn()

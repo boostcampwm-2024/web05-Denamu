@@ -1,4 +1,5 @@
 import { Inject, Injectable, OnModuleDestroy } from '@nestjs/common';
+
 import { Channel, ChannelModel } from 'amqplib';
 
 @Injectable()
