@@ -1,14 +1,17 @@
-import { ForgotPasswordRequestDto } from '@user/dto/request/forgotPassword.dto';
-import { HttpStatus } from '@nestjs/common';
-import supertest from 'supertest';
-import { UserRepository } from '@user/repository/user.repository';
-import TestAgent from 'supertest/lib/agent';
-import { UserFixture } from '@test/config/common/fixture/user.fixture';
-import { User } from '@user/entity/user.entity';
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
-import * as uuid from 'uuid';
+
+import { ForgotPasswordRequestDto } from '@user/dto/request/forgotPassword.dto';
+import { User } from '@user/entity/user.entity';
+import { UserRepository } from '@user/repository/user.repository';
+
+import { UserFixture } from '@test/config/common/fixture/user.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
+
+import { HttpStatus } from '@nestjs/common';
+import supertest from 'supertest';
+import TestAgent from 'supertest/lib/agent';
+import * as uuid from 'uuid';
 
 const URL = '/api/user/password-reset';
 

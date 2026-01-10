@@ -1,5 +1,6 @@
-import { ApiProperty } from '@nestjs/swagger';
 import { Comment } from '@comment/entity/comment.entity';
+
+import { ApiProperty } from '@nestjs/swagger';
 
 export class GetCommentResponseDto {
   @ApiProperty({

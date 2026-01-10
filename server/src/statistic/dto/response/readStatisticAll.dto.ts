@@ -1,5 +1,6 @@
-import { ApiProperty } from '@nestjs/swagger';
 import { Feed } from '@feed/entity/feed.entity';
+
+import { ApiProperty } from '@nestjs/swagger';
 
 export class ReadStatisticAllResponseDto {
   @ApiProperty({

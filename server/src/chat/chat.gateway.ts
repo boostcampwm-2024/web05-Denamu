@@ -1,17 +1,18 @@
+import type { BroadcastPayload } from '@chat/constant/chat.constant';
+import { ChatScheduler } from '@chat/scheduler/chat.scheduler';
+import { ChatService } from '@chat/service/chat.service';
+
+import { Injectable } from '@nestjs/common';
 import {
-  SubscribeMessage,
-  WebSocketGateway,
   OnGatewayConnection,
   OnGatewayDisconnect,
+  SubscribeMessage,
+  WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
-import { Injectable } from '@nestjs/common';
-import { ChatService } from '@chat/service/chat.service';
-import { ChatScheduler } from '@chat/scheduler/chat.scheduler';
 import { InjectMetric } from '@willsoto/nestjs-prometheus';
 import { Counter, Gauge } from 'prom-client';
-import type { BroadcastPayload } from '@chat/constant/chat.constant';
+import { Server, Socket } from 'socket.io';
 
 @Injectable()
 @WebSocketGateway({

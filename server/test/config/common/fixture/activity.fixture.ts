@@ -1,4 +1,5 @@
 import { Activity } from '@activity/entity/activity.entity';
+
 import { User } from '@user/entity/user.entity';
 
 const DAY_MS = 24 * 60 * 60 * 1000;

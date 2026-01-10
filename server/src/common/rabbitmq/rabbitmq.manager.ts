@@ -1,5 +1,5 @@
 import { Inject, Injectable, OnModuleDestroy } from '@nestjs/common';
-import { ChannelModel, Channel } from 'amqplib';
+import { Channel, ChannelModel } from 'amqplib';
 
 @Injectable()
 export class RabbitMQManager implements OnModuleDestroy {

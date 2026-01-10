@@ -1,3 +1,12 @@
+import { ApiReadActivities } from '@activity/api-docs/readActivities.api-docs';
+import {
+  ReadActivityParamRequestDto,
+  ReadActivityQueryRequestDto,
+} from '@activity/dto/request/readActivity.dto';
+import { ActivityService } from '@activity/service/activity.service';
+
+import { ApiResponse } from '@common/response/common.response';
+
 import {
   Controller,
   Get,
@@ -7,13 +16,6 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { ActivityService } from '@activity/service/activity.service';
-import { ApiResponse } from '@common/response/common.response';
-import {
-  ReadActivityParamRequestDto,
-  ReadActivityQueryRequestDto,
-} from '@activity/dto/request/readActivity.dto';
-import { ApiReadActivities } from '@activity/api-docs/readActivities.api-docs';
 
 @ApiTags('Activity')
 @Controller('activity')

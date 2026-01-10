@@ -1,5 +1,6 @@
-import { validate } from 'class-validator';
 import { DeleteCommentRequestDto } from '@comment/dto/request/deleteComment.dto';
+
+import { validate } from 'class-validator';
 
 describe(`${DeleteCommentRequestDto.name} Test`, () => {
   let dto: DeleteCommentRequestDto;

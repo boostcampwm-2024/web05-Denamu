@@ -1,5 +1,6 @@
-import { validate } from 'class-validator';
 import { ConfirmDeleteAccountDto } from '@user/dto/request/confirmDeleteAccount.dto';
+
+import { validate } from 'class-validator';
 
 describe(`${ConfirmDeleteAccountDto.name} Test`, () => {
   let dto: ConfirmDeleteAccountDto;

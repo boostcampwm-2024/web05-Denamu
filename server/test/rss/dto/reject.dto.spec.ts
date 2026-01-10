@@ -1,5 +1,6 @@
-import { validate } from 'class-validator';
 import { RejectRssRequestDto } from '@rss/dto/request/rejectRss';
+
+import { validate } from 'class-validator';
 
 describe(`${RejectRssRequestDto.name} Test`, () => {
   let dto: RejectRssRequestDto;

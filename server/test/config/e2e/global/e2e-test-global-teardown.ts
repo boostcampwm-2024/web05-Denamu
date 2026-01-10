@@ -1,7 +1,7 @@
 import {
   mysqlContainer,
-  redisContainer,
   rabbitMQContainer,
+  redisContainer,
 } from './e2e-test-global-setup';
 
 export default async () => {

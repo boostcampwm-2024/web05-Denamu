@@ -1,5 +1,6 @@
-import { validate } from 'class-validator';
 import { UpdateUserRequestDto } from '@user/dto/request/updateUser.dto';
+
+import { validate } from 'class-validator';
 
 describe(`${UpdateUserRequestDto.name} Test`, () => {
   let dto: UpdateUserRequestDto;

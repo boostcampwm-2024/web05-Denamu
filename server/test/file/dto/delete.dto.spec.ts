@@ -1,5 +1,6 @@
-import { validate } from 'class-validator';
 import { DeleteFileParamRequestDto } from '@file/dto/request/deleteFile.dto';
+
+import { validate } from 'class-validator';
 
 describe(`${DeleteFileParamRequestDto.name} Test`, () => {
   let dto: DeleteFileParamRequestDto;

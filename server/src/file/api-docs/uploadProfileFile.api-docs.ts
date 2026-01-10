@@ -1,3 +1,5 @@
+import { FileUploadType } from '@file/constant/file.constant';
+
 import { applyDecorators } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
@@ -8,7 +10,6 @@ import {
   ApiQuery,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { FileUploadType } from '@file/constant/file.constant';
 
 export function ApiUploadProfileFile() {
   return applyDecorators(

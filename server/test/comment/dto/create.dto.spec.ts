@@ -1,5 +1,6 @@
-import { validate } from 'class-validator';
 import { CreateCommentRequestDto } from '@comment/dto/request/createComment.dto';
+
+import { validate } from 'class-validator';
 
 describe(`${CreateCommentRequestDto.name} Test`, () => {
   let dto: CreateCommentRequestDto;
