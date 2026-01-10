@@ -9,6 +9,8 @@
     "classProperties"
   ],
   "importOrder": [
+    "^tsconfig-paths/register$",
+    "^tsyringe$",
     "^@src/(.*)?$",
     "^@email/(.*)?$",
     "^@rabbitmq/(.*)?$",

@@ -1,3 +1,5 @@
+import { inject, injectable } from 'tsyringe';
+
 import logger from '@src/logger';
 
 import { EmailService } from '@email/email.service';
@@ -9,7 +11,6 @@ import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
 import { EmailPayload, EmailPayloadConstant } from '@app-types/types';
 
 import { Options } from 'amqplib/properties';
-import { inject, injectable } from 'tsyringe';
 
 @injectable()
 export class EmailConsumer {
