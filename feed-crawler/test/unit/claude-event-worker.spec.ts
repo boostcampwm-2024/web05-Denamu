@@ -1,10 +1,10 @@
 import 'reflect-metadata';
-import { ClaudeEventWorker } from '../../src/event_worker/workers/claude-event-worker';
-import { TagMapRepository } from '../../src/repository/tag-map.repository';
-import { FeedRepository } from '../../src/repository/feed.repository';
-import { RedisConnection } from '../../src/common/redis-access';
-import { FeedAIQueueItem, ClaudeResponse } from '../../src/common/types';
-import { redisConstant } from '../../src/common/constant';
+import { ClaudeEventWorker } from '@event_worker/workers/claude-event-worker';
+import { TagMapRepository } from '@repository/tag-map.repository';
+import { FeedRepository } from '@repository/feed.repository';
+import { RedisConnection } from '@common/redis-access';
+import { FeedAIQueueItem, ClaudeResponse } from '@common/types';
+import { redisConstant } from '@common/constant';
 import Anthropic from '@anthropic-ai/sdk';
 
 // Anthropic 모킹
