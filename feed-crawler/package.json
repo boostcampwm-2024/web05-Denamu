@@ -38,6 +38,7 @@
     "typescript-eslint": "^8.51.0"
   },
   "scripts": {
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "build": "tsc --project tsconfig.build.json && tsc-alias",
