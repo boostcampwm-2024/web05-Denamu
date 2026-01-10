@@ -1,6 +1,7 @@
-import 'tsconfig-paths/register';
-import { MySqlContainer } from '@testcontainers/mysql';
 import { setupTestContainer } from '@test/setup/testContext.setup';
+import { MySqlContainer } from '@testcontainers/mysql';
+import 'tsconfig-paths/register';
+
 const globalAny: any = global;
 
 export default async function globalSetup() {

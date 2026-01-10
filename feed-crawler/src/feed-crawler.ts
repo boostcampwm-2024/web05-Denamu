@@ -1,10 +1,13 @@
-import { inject, injectable } from 'tsyringe';
+import logger from '@common/logger';
+import { FeedParserManager } from '@common/parser/feed-parser-manager';
+import { FeedDetail, RssObj } from '@common/types';
+
 import { FeedRepository } from '@repository/feed.repository';
 import { RssRepository } from '@repository/rss.repository';
-import logger from '@common/logger';
-import { RssObj, FeedDetail } from '@common/types';
-import { FeedParserManager } from '@common/parser/feed-parser-manager';
+
 import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
+
+import { inject, injectable } from 'tsyringe';
 
 @injectable()
 export class FeedCrawler {
@@ -36,9 +39,8 @@ export class FeedCrawler {
       return;
     }
     logger.info(`총 ${newFeeds.length}개의 새로운 피드가 있습니다.`);
-    const insertedData: FeedDetail[] = await this.feedRepository.insertFeeds(
-      newFeeds,
-    );
+    const insertedData: FeedDetail[] =
+      await this.feedRepository.insertFeeds(newFeeds);
     await this.feedRepository.saveAiQueue(insertedData);
     await this.feedRepository.setRecentFeedList(insertedData);
 
@@ -62,9 +64,8 @@ export class FeedCrawler {
     logger.info(
       `${rssObj.blogName}에서 ${newFeeds.length}개의 피드를 가져왔습니다.`,
     );
-    const insertedData: FeedDetail[] = await this.feedRepository.insertFeeds(
-      newFeeds,
-    );
+    const insertedData: FeedDetail[] =
+      await this.feedRepository.insertFeeds(newFeeds);
     await this.feedRepository.saveAiQueue(insertedData);
 
     return insertedData;
