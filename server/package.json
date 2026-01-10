@@ -94,7 +94,6 @@
     "@types/sanitize-html": "^2.13.0",
     "@types/supertest": "^6.0.0",
     "@types/uuid": "^10.0.0",
-    "chokidar": "^3.6.0",
     "eslint": "^9.0.0",
     "eslint-config-prettier": "^9.0.0",
     "eventsource": "^2.0.2",
