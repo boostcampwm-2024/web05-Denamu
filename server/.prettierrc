@@ -1,5 +1,31 @@
 {
   "singleQuote": true,
   "trailingComma": "all",
-  "endOfLine": "lf"
+  "endOfLine": "lf",
+  "plugins": ["@trivago/prettier-plugin-sort-imports"],
+  "importOrderParserPlugins": [
+    "typescript",
+    "decorators-legacy",
+    "classProperties"
+  ],
+  "importOrder": [
+    "^@src/(.*)?$",
+    "^@activity/(.*)?$",
+    "^@admin/(.*)?$",
+    "^@chat/(.*)?$",
+    "^@comment/(.*)?$",
+    "^@common/(.*)?$",
+    "^@feed/(.*)?$",
+    "^@file/(.*)?$",
+    "^@like/(.*)?$",
+    "^@rss/(.*)?$",
+    "^@statistic/(.*)?$",
+    "^@tag/(.*)?$",
+    "^@user/(.*)?$",
+    "^@test/(.*)$",
+    "<THIRD_PARTY_MODULES>",
+    "^[./]"
+  ],
+  "importOrderSeparation": true,
+  "importOrderSortSpecifiers": true
 }
