@@ -1,9 +1,9 @@
+import 'reflect-metadata';
+
 import { FeedParserManager } from '@common/parser/feed-parser-manager';
 import { Atom10Parser } from '@common/parser/formats/atom10-parser';
 import { Rss20Parser } from '@common/parser/formats/rss20-parser';
 import { FeedDetail, RssObj } from '@common/types';
-
-import 'reflect-metadata';
 
 // fetch 모킹
 global.fetch = jest.fn();

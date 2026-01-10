@@ -3,8 +3,6 @@ import { RedisConnection } from '@common/redis-access';
 
 import { AbstractQueueWorker } from '@event_worker/abstract-queue-worker';
 
-import 'reflect-metadata';
-
 // logger 모킹
 jest.mock('@common/logger', () => ({
   default: {

@@ -1,7 +1,12 @@
+import 'reflect-metadata';
+
+import * as schedule from 'node-schedule';
+
+import '@common/env-load';
+
 import { container } from '@src/container';
 import { FeedCrawler } from '@src/feed-crawler';
 
-import '@common/env-load';
 import logger from '@common/logger';
 import { RabbitMQManager } from '@common/rabbitmq.manager';
 import { RedisConnection } from '@common/redis-access';
@@ -11,9 +16,6 @@ import { FullFeedCrawlEventWorker } from '@event_worker/workers/full-feed-crawl-
 
 import { DatabaseConnection } from '@app-types/database-connection';
 import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
-
-import * as schedule from 'node-schedule';
-import 'reflect-metadata';
 
 function initializeDependencies() {
   return {

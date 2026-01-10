@@ -1,3 +1,5 @@
+import { container } from 'tsyringe';
+
 import { FeedCrawler } from '@src/feed-crawler';
 
 import { MySQLConnection } from '@common/mysql-access';
@@ -18,8 +20,6 @@ import { TagMapRepository } from '@repository/tag-map.repository';
 
 import { DatabaseConnection } from '@app-types/database-connection';
 import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
-
-import { container } from 'tsyringe';
 
 container.registerSingleton<DatabaseConnection>(
   DEPENDENCY_SYMBOLS.DatabaseConnection,

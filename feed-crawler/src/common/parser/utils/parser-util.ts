@@ -1,8 +1,9 @@
-import logger from '@common/logger';
+import { injectable } from 'tsyringe';
 
 import { unescape } from 'html-escaper';
 import { parse } from 'node-html-parser';
-import { injectable } from 'tsyringe';
+
+import logger from '@common/logger';
 
 @injectable()
 export class ParserUtil {

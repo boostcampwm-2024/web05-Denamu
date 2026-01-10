@@ -1,3 +1,5 @@
+import { XMLParser } from 'fast-xml-parser';
+
 import {
   FEED_AI_SUMMARY_IN_PROGRESS_MESSAGE,
   ONE_MINUTE,
@@ -5,8 +7,6 @@ import {
 } from '@common/constant';
 import { ParserUtil } from '@common/parser/utils/parser-util';
 import { FeedDetail, RssObj } from '@common/types';
-
-import { XMLParser } from 'fast-xml-parser';
 
 export interface RawFeed {
   title: string;

@@ -1,6 +1,6 @@
-import { ParserUtil } from '@common/parser/utils/parser-util';
-
 import 'reflect-metadata';
+
+import { ParserUtil } from '@common/parser/utils/parser-util';
 
 // fetch 모킹
 global.fetch = jest.fn();

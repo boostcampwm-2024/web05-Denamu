@@ -1,3 +1,7 @@
+import { inject, injectable } from 'tsyringe';
+
+import Anthropic from '@anthropic-ai/sdk';
+
 import { PROMPT_CONTENT, redisConstant } from '@common/constant';
 import logger from '@common/logger';
 import { RedisConnection } from '@common/redis-access';
@@ -9,10 +13,6 @@ import { FeedRepository } from '@repository/feed.repository';
 import { TagMapRepository } from '@repository/tag-map.repository';
 
 import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
-
-import Anthropic from '@anthropic-ai/sdk';
-import 'reflect-metadata';
-import { inject, injectable } from 'tsyringe';
 
 @injectable()
 export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {

@@ -1,3 +1,5 @@
+import { inject, injectable } from 'tsyringe';
+
 import { redisConstant } from '@common/constant';
 import logger from '@common/logger';
 import { RedisConnection } from '@common/redis-access';
@@ -5,8 +7,6 @@ import { FeedDetail } from '@common/types';
 
 import { DatabaseConnection } from '@app-types/database-connection';
 import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
-
-import { inject, injectable } from 'tsyringe';
 
 @injectable()
 export class FeedRepository {

@@ -1,7 +1,4 @@
-import { FeedParserManager } from '@common/parser/feed-parser-manager';
-import { Atom10Parser } from '@common/parser/formats/atom10-parser';
-import { Rss20Parser } from '@common/parser/formats/rss20-parser';
-import { ParserUtil } from '@common/parser/utils/parser-util';
+import 'reflect-metadata';
 
 import {
   ATOM_10_SAMPLE,
@@ -10,7 +7,11 @@ import {
   MOCK_RSS_OBJ,
   RSS_20_SAMPLE,
 } from '@test/config/constant/parser-fixtures';
-import 'reflect-metadata';
+
+import { FeedParserManager } from '@common/parser/feed-parser-manager';
+import { Atom10Parser } from '@common/parser/formats/atom10-parser';
+import { Rss20Parser } from '@common/parser/formats/rss20-parser';
+import { ParserUtil } from '@common/parser/utils/parser-util';
 
 describe('Parser 모듈 테스트', () => {
   let parserUtil: ParserUtil;
