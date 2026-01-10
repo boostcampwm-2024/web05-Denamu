@@ -11,6 +11,7 @@
   },
   "devDependencies": {
     "@testcontainers/rabbitmq": "^11.7.2",
+    "@trivago/prettier-plugin-sort-imports": "^6.0.2",
     "@types/amqplib": "^0.10.7",
     "@types/jest": "^29.5.2",
     "@types/node": "^22.9.0",
