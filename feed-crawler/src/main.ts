@@ -9,6 +9,7 @@ import { ClaudeEventWorker } from './event_worker/workers/claude-event-worker';
 import * as schedule from 'node-schedule';
 import { RedisConnection } from './common/redis-access';
 import { FullFeedCrawlEventWorker } from './event_worker/workers/full-feed-crawl-event-worker';
+import { RabbitMQManager } from './common/rabbitmq.manager';
 
 function initializeDependencies() {
   return {
@@ -25,16 +26,19 @@ function initializeDependencies() {
     fullFeedCrawlEventWorker: container.resolve<FullFeedCrawlEventWorker>(
       DEPENDENCY_SYMBOLS.FullFeedCrawlEventWorker,
     ),
+    rabbitMQManager: container.resolve<RabbitMQManager>(
+      DEPENDENCY_SYMBOLS.RabbitMQManager,
+    ),
   };
 }
 
 function registerSchedulers(
   dependencies: ReturnType<typeof initializeDependencies>,
 ) {
-  schedule.scheduleJob('FEED CRAWLING', '0,30 * * * *', async () => {
+  schedule.scheduleJob('FEED CRAWLING', '0,30 * * * *', () => {
     const now = new Date();
     logger.info(`Feed Crawling Start: ${now.toISOString()}`);
-    dependencies.feedCrawler.start(now);
+    void dependencies.feedCrawler.start(now);
   });
 
   schedule.scheduleJob(
@@ -42,13 +46,13 @@ function registerSchedulers(
     `*/1 * * * *`,
     () => {
       logger.info(`AI Request Start: ${new Date().toISOString()}`);
-      dependencies.claudeEventWorker.start();
+      void dependencies.claudeEventWorker.start();
     },
   );
 
-  schedule.scheduleJob('FULL FEED CRAWLING', '*/5 * * * *', async () => {
+  schedule.scheduleJob('FULL FEED CRAWLING', '*/5 * * * *', () => {
     logger.info(`Full Feed Crawling Start: ${new Date().toISOString()}`);
-    dependencies.fullFeedCrawlEventWorker.start();
+    void dependencies.fullFeedCrawlEventWorker.start();
   });
 }
 
@@ -59,18 +63,38 @@ async function handleShutdown(
   logger.info(`${signal} 신호 수신, feed-crawler 종료 중...`);
   await dependencies.dbConnection.end();
   await dependencies.redisConnection.quit();
-  logger.info('DB 및 Redis 연결 종료');
+  await dependencies.rabbitMQManager.disconnect();
+  logger.info('DB, Redis, RabbitMQ 연결 종료');
   process.exit(0);
 }
 
-function startScheduler() {
+async function startScheduler() {
   logger.info('[Feed Crawler Scheduler Start]');
 
   const dependencies = initializeDependencies();
+  await initializeRabbitMQ(dependencies);
   registerSchedulers(dependencies);
 
-  process.on('SIGINT', () => handleShutdown(dependencies, 'SIGINT'));
-  process.on('SIGTERM', () => handleShutdown(dependencies, 'SIGTERM'));
+  process.on('SIGINT', () => void handleShutdown(dependencies, 'SIGINT'));
+  process.on('SIGTERM', () => void handleShutdown(dependencies, 'SIGTERM'));
 }
 
-startScheduler();
+async function initializeRabbitMQ(
+  dependencies: ReturnType<typeof initializeDependencies>,
+) {
+  try {
+    logger.info(`RabbitMQ 초기화 시작...`);
+
+    await dependencies.rabbitMQManager.connect();
+
+    logger.info(`RabbitMQ 초기화 완료`);
+  } catch (error) {
+    logger.error(`RabbitMQ 초기화 실패:`, error);
+    throw error;
+  }
+}
+
+startScheduler().catch((error) => {
+  logger.error(`스케줄러 시작 실패: `, error);
+  process.exit(1);
+});

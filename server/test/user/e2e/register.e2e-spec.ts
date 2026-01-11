@@ -1,47 +1,88 @@
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import { RegisterUserRequestDto } from '../../../src/user/dto/request/registerUser.dto';
-import * as request from 'supertest';
+import * as supertest from 'supertest';
 import { UserRepository } from '../../../src/user/repository/user.repository';
-import { UserFixture } from '../../fixture/user.fixture';
+import { UserFixture } from '../../config/common/fixture/user.fixture';
+import TestAgent from 'supertest/lib/agent';
+import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
+import { RedisService } from '../../../src/common/redis/redis.service';
+import * as uuid from 'uuid';
+import * as bcrypt from 'bcrypt';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
-describe('POST api/user/register E2E Test', () => {
-  let app: INestApplication;
+const URL = '/api/user/register';
 
-  const newRegisterDto = new RegisterUserRequestDto({
-    email: 'test1234@test.com',
-    password: 'test1234!',
-    userName: 'test1234',
+describe(`POST ${URL} E2E Test`, () => {
+  let agent: TestAgent;
+  let userRepository: UserRepository;
+  let redisService: RedisService;
+  const userRegisterCode = 'user-register-request';
+  const redisKeyMake = (data: string) => `${REDIS_KEYS.USER_AUTH_KEY}:${data}`;
+
+  beforeAll(() => {
+    agent = supertest(testApp.getHttpServer());
+    userRepository = testApp.get(UserRepository);
+    redisService = testApp.get(RedisService);
   });
 
-  beforeAll(async () => {
-    app = global.testApp;
+  beforeEach(() => {
+    jest.spyOn(uuid, 'v4').mockReturnValue(userRegisterCode as any);
   });
 
-  it('회원가입 요청에 정상적으로 성공한다.', async () => {
+  it('[409] 이미 가입된 이메일을 입력할 경우 회원가입을 실패한다.', async () => {
     // given
-    const agent = request.agent(app.getHttpServer());
+    const user = await userRepository.save(UserFixture.createUserFixture());
+    const requestDto = new RegisterUserRequestDto({
+      email: user.email,
+      password: user.password,
+      userName: user.userName,
+    });
 
-    // when
-    const response = await agent
-      .post('/api/user/register')
-      .send(newRegisterDto);
+    // Http when
+    const response = await agent.post(URL).send(requestDto);
 
-    // then
-    expect(response.status).toBe(201);
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.CONFLICT);
+    expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedRegisterCode = await redisService.get(
+      redisKeyMake(userRegisterCode),
+    );
+
+    // DB, Redis then
+    expect(savedRegisterCode).toBeNull();
   });
 
-  it('이미 가입된 이메일을 입력하면 409 Conflict 예외가 발생한다.', async () => {
+  it('[201] 중복되는 회원이 없을 경우 회원가입을 성공한다.', async () => {
     // given
-    const agent = request.agent(app.getHttpServer());
-    const userRepository = app.get(UserRepository);
-    await userRepository.insert(await UserFixture.createUserFixture());
+    const requestDto = new RegisterUserRequestDto({
+      email: 'test1234@test.com',
+      password: 'test1234!',
+      userName: 'test1234',
+    });
 
-    // when
-    const response = await agent
-      .post('/api/user/register')
-      .send(newRegisterDto);
+    // Http when
+    const response = await agent.post(URL).send(requestDto);
 
-    // then
-    expect(response.status).toBe(409);
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.CREATED);
+    expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedRegisterCode = JSON.parse(
+      await redisService.get(redisKeyMake(userRegisterCode)),
+    );
+
+    // DB, Redis then
+    expect(
+      await bcrypt.compare(requestDto.password, savedRegisterCode.password),
+    ).toBeTruthy();
+    expect(savedRegisterCode).toMatchObject({
+      email: requestDto.email,
+      userName: requestDto.userName,
+    });
   });
 });

@@ -17,7 +17,7 @@ export class MySQLConnection implements DatabaseConnection {
       host: process.env.DB_HOST,
       port: parseInt(process.env.DB_PORT),
       user: process.env.DB_USER,
-      password: process.env.DB_PASS,
+      password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
       connectionLimit: CONNECTION_LIMIT,
     });
@@ -76,7 +76,6 @@ export class MySQLConnection implements DatabaseConnection {
             오류 메시지: ${error.message}
             스택 트레이스: ${error.stack}`,
           );
-          throw error;
         }
       }
     }

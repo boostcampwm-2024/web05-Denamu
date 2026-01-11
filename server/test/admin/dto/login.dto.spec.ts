@@ -1,8 +1,8 @@
 import { LoginAdminRequestDto } from '../../../src/admin/dto/request/loginAdmin.dto';
 import { validate } from 'class-validator';
-import { AdminFixture } from '../../fixture/admin.fixture';
+import { AdminFixture } from '../../config/common/fixture/admin.fixture';
 
-describe('LoginAdminRequestDto Test', () => {
+describe(`${LoginAdminRequestDto.name} Test`, () => {
   let dto: LoginAdminRequestDto;
 
   beforeEach(() => {

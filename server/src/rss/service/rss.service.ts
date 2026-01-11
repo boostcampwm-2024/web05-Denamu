@@ -10,7 +10,6 @@ import {
   RssAcceptRepository,
 } from '../repository/rss.repository';
 import { RegisterRssRequestDto } from '../dto/request/registerRss.dto';
-import { EmailService } from '../../common/email/email.service';
 import { DataSource } from 'typeorm';
 import { Rss, RssReject, RssAccept } from '../entity/rss.entity';
 import { ReadRssResponseDto } from '../dto/response/readRss.dto';
@@ -21,8 +20,9 @@ import { RejectRssRequestDto } from '../dto/request/rejectRss';
 import { DeleteRssRequestDto } from '../dto/request/deleteRss.dto';
 import { RedisService } from '../../common/redis/redis.service';
 import { DeleteCertificateRssRequestDto } from '../dto/request/deleteCertificateRss.dto';
-import { FeedRepository } from '../../feed/repository/feed.repository';
 import { REDIS_KEYS } from '../../common/redis/redis.constant';
+import { EmailProducer } from '../../common/email/email.producer';
+import * as uuid from 'uuid';
 
 type FullFeedCrawlMessage = {
   rssId: number;
@@ -36,10 +36,9 @@ export class RssService {
     private readonly rssRepository: RssRepository,
     private readonly rssAcceptRepository: RssAcceptRepository,
     private readonly rssRejectRepository: RssRejectRepository,
-    private readonly emailService: EmailService,
+    private readonly emailProducer: EmailProducer,
     private readonly dataSource: DataSource,
     private readonly redisService: RedisService,
-    private readonly feedRepository: FeedRepository,
   ) {}
 
   async createRss(rssRegisterBodyDto: RegisterRssRequestDto) {
@@ -92,7 +91,7 @@ export class RssService {
       throw new BadRequestException(`${rss.rssUrl}이 올바른 RSS가 아닙니다.`);
     }
 
-    this.acceptRssBackProcess(rss);
+    await this.acceptRssBackProcess(rss);
   }
 
   async rejectRss(
@@ -118,7 +117,7 @@ export class RssService {
       ]);
       return rejectRss;
     });
-    this.emailService.sendRssMail(
+    await this.emailProducer.produceRssRegistration(
       rejectRss,
       false,
       rssRejectBodyDto.description,
@@ -146,16 +145,16 @@ export class RssService {
   private identifyPlatformFromRssUrl(rssUrl: string) {
     type Platform = 'medium' | 'tistory' | 'velog' | 'github' | 'etc';
 
-    const platformRegexp: { [key in Platform]: RegExp } = {
+    const platformRegexp: Record<Platform, RegExp> = {
       medium: /^https:\/\/medium\.com/,
-      tistory: /^https:\/\/[a-zA-Z0-9\-]+\.tistory\.com/,
+      tistory: /^https:\/\/[a-zA-Z0-9-]+\.tistory\.com/,
       velog: /^https:\/\/v2\.velog\.io/,
-      github: /^https:\/\/[\w\-]+\.github\.io/,
+      github: /^https:\/\/[\w-]+\.github\.io/,
       etc: /.*/,
     };
 
-    for (const platform in platformRegexp) {
-      if (platformRegexp[platform].test(rssUrl)) {
+    for (const [platform, regex] of Object.entries(platformRegexp)) {
+      if (regex.test(rssUrl)) {
         return platform;
       }
     }
@@ -173,8 +172,8 @@ export class RssService {
       return rssAccept;
     });
 
-    this.enqueueFullFeedCrawlMessage(rssAccept.id);
-    this.emailService.sendRssMail(rssAccept, true);
+    void this.enqueueFullFeedCrawlMessage(rssAccept.id);
+    await this.emailProducer.produceRssRegistration(rssAccept, true);
   }
 
   private async enqueueFullFeedCrawlMessage(rssId: number) {
@@ -210,7 +209,7 @@ export class RssService {
       throw new NotFoundException('RSS 데이터를 찾을 수 없습니다.');
     }
 
-    const certificateCode = this.generateRandomAlphaNumeric();
+    const certificateCode = uuid.v4();
 
     await this.redisService.set(
       `${REDIS_KEYS.RSS_REMOVE_KEY}:${certificateCode}`,
@@ -219,7 +218,7 @@ export class RssService {
       300,
     );
 
-    this.emailService.sendRssRemoveCertificationMail(
+    await this.emailProducer.produceRssRemoval(
       rssAccept?.userName ?? rssWait.userName,
       requestDeleteRssDto.email,
       requestDeleteRssDto.blogUrl,
@@ -227,23 +226,9 @@ export class RssService {
     );
   }
 
-  private generateRandomAlphaNumeric(length = 6): string {
-    const charset =
-      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-
-    for (let i = 0; i < length; i++) {
-      const index = Math.floor(Math.random() * charset.length);
-      result += charset[index];
-    }
-
-    return result;
-  }
-
   async deleteRss(deleteRssDto: DeleteCertificateRssRequestDto) {
-    const rssUrl = await this.redisService.get(
-      `${REDIS_KEYS.RSS_REMOVE_KEY}:${deleteRssDto.code}`,
-    );
+    const redisKey = `${REDIS_KEYS.RSS_REMOVE_KEY}:${deleteRssDto.code}`;
+    const rssUrl = await this.redisService.get(redisKey);
 
     if (!rssUrl) {
       throw new NotFoundException(
@@ -251,23 +236,17 @@ export class RssService {
       );
     }
 
-    const rss = await this.rssAcceptRepository.findOne({
-      where: {
-        rssUrl: rssUrl,
-      },
-    });
+    try {
+      const [rssAccept, rss] = await Promise.all([
+        this.rssAcceptRepository.delete({ rssUrl }),
+        this.rssRepository.delete({ rssUrl }),
+      ]);
 
-    if (!rss) {
-      await this.redisService.del(
-        `${REDIS_KEYS.RSS_REMOVE_KEY}:${deleteRssDto.code}`,
-      );
-      throw new NotFoundException('이미 지워진 RSS 정보입니다.');
+      if (rssAccept.affected === 0 && rss.affected === 0) {
+        throw new NotFoundException('이미 지워진 RSS 정보입니다.');
+      }
+    } finally {
+      await this.redisService.del(redisKey);
     }
-
-    await this.feedRepository.delete({
-      blog: {
-        id: rss.id,
-      },
-    });
   }
 }

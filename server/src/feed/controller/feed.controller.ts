@@ -53,7 +53,7 @@ export class FeedController {
 
   @ApiReadTrendFeedList()
   @Sse('trend/sse')
-  async readTrendFeedList() {
+  readTrendFeedList() {
     return new Observable((observer) => {
       this.feedService
         .readTrendFeedList()
@@ -64,6 +64,9 @@ export class FeedController {
               data: trendData,
             },
           });
+        })
+        .catch((err) => {
+          observer.error(err);
         });
       this.eventService.on(
         'ranking-update',

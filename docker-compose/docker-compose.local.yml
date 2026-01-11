@@ -10,8 +10,8 @@ services:
       context: ../
       dockerfile: client/docker/Dockerfile.local
     ports:
-      - "80:80"
-      - "443:443"
+      - '80:80'
+      - '443:443'
     networks:
       - Denamu
     depends_on:
@@ -19,7 +19,7 @@ services:
     volumes:
       - ../nginx/logs:/var/log/nginx
     environment:
-      TZ: "Asia/Seoul"
+      TZ: 'Asia/Seoul'
 
   # WAS 서비스
   app:
@@ -28,7 +28,7 @@ services:
       dockerfile: docker/Dockerfile.local
     image: denamu-local-portfolio-app:latest
     ports:
-      - "8080:8080"
+      - '8080:8080'
     networks:
       - Denamu
     depends_on:
@@ -36,11 +36,15 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     volumes:
       - ../server/logs:/var/web05-Denamu/server/logs
     environment:
-      NODE_ENV: "LOCAL"
-      TZ: "Asia/Seoul"
+      NODE_ENV: 'LOCAL'
+      TZ: 'Asia/Seoul'
+    profiles:
+      - default
 
   # Feed Crawler 서비스
   feed-crawler:
@@ -55,8 +59,36 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     volumes:
       - ../feed-crawler/logs:/var/web05-Denamu/feed-crawler/logs
     environment:
-      NODE_ENV: "LOCAL"
-      TZ: "Asia/Seoul"
+      NODE_ENV: 'LOCAL'
+      TZ: 'Asia/Seoul'
+    profiles:
+      - default
+
+  # Email Worker 서비스
+  email-worker:
+    build:
+      context: ../email-worker
+      dockerfile: docker/Dockerfile.local
+    image: denamu-local-portfolio-email-worker:latest
+    networks:
+      - Denamu
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - ../feed-crawler/logs:/var/web05-Denamu/email-worker/logs
+    environment:
+      NODE_ENV: 'LOCAL'
+      TZ: 'Asia/Seoul'
+    stop_grace_period: 30s
+    profiles:
+      - default

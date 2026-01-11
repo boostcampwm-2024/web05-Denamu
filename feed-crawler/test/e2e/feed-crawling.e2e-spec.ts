@@ -6,7 +6,7 @@ describe('feed crawling e2e-test', () => {
   const testContext = setupTestContainer();
   let feedCrawler: FeedCrawler;
 
-  beforeAll(async () => {
+  beforeAll(() => {
     feedCrawler = new FeedCrawler(
       testContext.rssRepository,
       testContext.feedRepository,

@@ -1,95 +1,152 @@
-import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
-import { Repository } from 'typeorm';
-import { Rss, RssReject } from '../../../src/rss/entity/rss.entity';
-import { RssFixture } from '../../fixture/rss.fixture';
+import { RssRejectRepository } from './../../../src/rss/repository/rss.repository';
+import { HttpStatus } from '@nestjs/common';
+import * as supertest from 'supertest';
+import { RssFixture } from '../../config/common/fixture/rss.fixture';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import { RejectRssRequestDto } from '../../../src/rss/dto/request/rejectRss';
-import {
-  RssRejectRepository,
-  RssRepository,
-} from '../../../src/rss/repository/rss.repository';
+import { RssRepository } from '../../../src/rss/repository/rss.repository';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
+import TestAgent from 'supertest/lib/agent';
+import { Rss } from '../../../src/rss/entity/rss.entity';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
-describe('Rss Reject E2E Test', () => {
-  let app: INestApplication;
-  let rssRepository: Repository<Rss>;
-  let rssRejectRepository: Repository<RssReject>;
+const URL = '/api/rss/reject';
+
+describe(`POST ${URL}/{rssId} E2E Test`, () => {
+  let agent: TestAgent;
+  let rssRepository: RssRepository;
+  let rssRejectRepository: RssRejectRepository;
   let redisService: RedisService;
+  let rss: Rss;
+  const redisKeyMake = (data: string) => `${REDIS_KEYS.ADMIN_AUTH_KEY}:${data}`;
+  const sessionKey = 'admin-rss-reject';
 
-  beforeAll(async () => {
-    app = global.testApp;
-    rssRepository = app.get(RssRepository);
-    rssRejectRepository = app.get(RssRejectRepository);
-    redisService = app.get(RedisService);
+  beforeAll(() => {
+    agent = supertest(testApp.getHttpServer());
+    rssRepository = testApp.get(RssRepository);
+    rssRejectRepository = testApp.get(RssRejectRepository);
+    redisService = testApp.get(RedisService);
   });
 
   beforeEach(async () => {
-    await Promise.all([
-      rssRepository.delete({}),
-      redisService.set(`${REDIS_KEYS.ADMIN_AUTH_KEY}:sid`, 'test_admin'),
+    [rss] = await Promise.all([
+      rssRepository.save(RssFixture.createRssFixture()),
+      redisService.set(redisKeyMake(sessionKey), 'test1234'),
     ]);
   });
 
-  describe('POST /api/rss/reject/{rssId}', () => {
-    describe('정상적인 요청을 한다.', () => {
-      it('정상적으로 RSS를 거절한다.', async () => {
-        // given
-        const REJECT_REASON = '거절 사유';
-        const rss = await rssRepository.save(RssFixture.createRssFixture());
-        const rejectRssDto = new RejectRssRequestDto({
-          description: REJECT_REASON,
-        });
+  it('[401] 관리자 로그인 쿠키가 없을 경우 RSS 거부를 실패한다.', async () => {
+    // Http when
+    const response = await agent.post(`${URL}/${Number.MAX_SAFE_INTEGER}`);
 
-        // when
-        const response = await request(app.getHttpServer())
-          .post(`/api/rss/reject/${rss.id}`)
-          .set('Cookie', 'sessionId=sid')
-          .send(rejectRssDto);
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(data).toBeUndefined();
 
-        const accepted = await rssRejectRepository.findOne({
-          where: { description: REJECT_REASON },
-        });
+    // DB, Redis when
+    const [savedRss, savedRssReject] = await Promise.all([
+      rssRepository.findOneBy({ id: rss.id }),
+      rssRejectRepository.findOneBy({
+        rssUrl: rss.rssUrl,
+        userName: rss.userName,
+      }),
+    ]);
 
-        // then
-        expect(response.status).toBe(201);
-        expect(accepted).not.toBeNull();
-      });
+    // DB, Redis then
+    expect(savedRss).not.toBeNull();
+    expect(savedRssReject).toBeNull();
+  });
+
+  it('[401] 관리자 로그인 쿠키가 만료됐을 경우 RSS 거부를 실패한다.', async () => {
+    // Http when
+    const response = await agent
+      .post(`${URL}/${Number.MAX_SAFE_INTEGER}`)
+      .set('Cookie', `sessionId=Wrong${sessionKey}`);
+
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const [savedRss, savedRssReject] = await Promise.all([
+      rssRepository.findOneBy({ id: rss.id }),
+      rssRejectRepository.findOneBy({
+        rssUrl: rss.rssUrl,
+        userName: rss.userName,
+      }),
+    ]);
+
+    // DB, Redis then
+    expect(savedRss).not.toBeNull();
+    expect(savedRssReject).toBeNull();
+  });
+
+  it('[404] 존재하지 않는 RSS를 거부할 경우 RSS 거부를 실패한다.', async () => {
+    // given
+    const REJECT_REASON = '거절 사유';
+    const requestDTO = new RejectRssRequestDto({
+      description: REJECT_REASON,
     });
 
-    describe('비정상적인 요청을 한다.', () => {
-      it('존재하지 않는 rss를 거절할 때', async () => {
-        // given
-        const REJECT_REASON = '거절 사유';
-        const rejectRssDto = new RejectRssRequestDto({
-          description: REJECT_REASON,
-        });
+    // Http when
+    const response = await agent
+      .post(`${URL}/${Number.MAX_SAFE_INTEGER}`)
+      .set('Cookie', `sessionId=${sessionKey}`)
+      .send(requestDTO);
 
-        // when
-        const response = await request(app.getHttpServer())
-          .post(`/api/rss/reject/1`)
-          .set('Cookie', 'sessionId=sid')
-          .send(rejectRssDto);
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    expect(data).toBeUndefined();
 
-        // then
-        expect(response.status).toBe(404);
-      });
+    // DB, Redis when
+    const [savedRss, savedRssReject] = await Promise.all([
+      rssRepository.findOneBy({ id: rss.id }),
+      rssRejectRepository.findOneBy({
+        rssUrl: rss.rssUrl,
+        userName: rss.userName,
+      }),
+    ]);
 
-      it('유효한 세션이 존재하지 않을 때', async () => {
-        // when
-        const noCookieResponse = await request(app.getHttpServer())
-          .post(`/api/rss/reject/1`)
-          .send();
+    // DB, Redis then
+    expect(savedRss).not.toBeNull();
+    expect(savedRssReject).toBeNull();
+  });
 
-        const noSessionResponse = await request(app.getHttpServer())
-          .post(`/api/rss/reject/1`)
-          .set('Cookie', 'sessionId=invalid')
-          .send();
-
-        // then
-        expect(noCookieResponse.status).toBe(401);
-        expect(noSessionResponse.status).toBe(401);
-      });
+  it('[201] 신청된 RSS를 거부할 경우 RSS 거부를 성공한다.', async () => {
+    // given
+    const REJECT_REASON = '거절 사유';
+    const requestDto = new RejectRssRequestDto({
+      description: REJECT_REASON,
     });
+
+    // Http when
+    const response = await agent
+      .post(`${URL}/${rss.id}`)
+      .set('Cookie', `sessionId=${sessionKey}`)
+      .send(requestDto);
+
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.CREATED);
+    expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const [savedRssReject, savedRss] = await Promise.all([
+      rssRejectRepository.findOneBy({
+        rssUrl: rss.rssUrl,
+        userName: rss.userName,
+        name: rss.name,
+        email: rss.email,
+        description: REJECT_REASON,
+      }),
+      rssRepository.findOneBy({ id: rss.id }),
+    ]);
+
+    // DB, Redis then
+    expect(savedRssReject).not.toBeNull();
+    expect(savedRss).toBeNull();
   });
 });

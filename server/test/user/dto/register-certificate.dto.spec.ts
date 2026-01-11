@@ -1,7 +1,7 @@
 import { validate } from 'class-validator';
 import { CertificateUserRequestDto } from '../../../src/user/dto/request/certificateUser.dto';
 
-describe('CertificateUserRequestDto Test', () => {
+describe(`${CertificateUserRequestDto.name} Test`, () => {
   let dto: CertificateUserRequestDto;
 
   beforeEach(() => {

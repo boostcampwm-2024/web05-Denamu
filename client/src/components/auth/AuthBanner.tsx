@@ -26,7 +26,7 @@ export const AuthBanner = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <img src={`https://denamu.site/files/denamu-icon.svg`} alt="Denamu" className="w-80 h-auto" />
+          <img src={`https://denamu.dev/files/denamu-icon.svg`} alt="Denamu" className="w-80 h-auto" />
         </motion.div>
 
         <motion.div

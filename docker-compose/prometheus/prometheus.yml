@@ -19,3 +19,7 @@ scrape_configs:
   - job_name: "redis_exporter"
     static_configs:
       - targets: ["redis_metrics:9121"]
+
+  - job_name: "rabbitMQ_exporter"
+    static_configs:
+      - targets: ["rabbitmq:15692"]

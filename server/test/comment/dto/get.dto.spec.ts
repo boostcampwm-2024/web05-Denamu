@@ -1,7 +1,7 @@
 import { GetCommentRequestDto } from '../../../src/comment/dto/request/getComment.dto';
 import { validate } from 'class-validator';
 
-describe('GetCommentRequestDto Test', () => {
+describe(`${GetCommentRequestDto.name} Test`, () => {
   let dto: GetCommentRequestDto;
 
   beforeEach(() => {

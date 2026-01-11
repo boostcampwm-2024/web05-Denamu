@@ -1,101 +1,110 @@
-import { INestApplication } from '@nestjs/common';
 import { RedisService } from '../../../src/common/redis/redis.service';
 import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
-import { RssAcceptFixture } from '../../fixture/rssAccept.fixture';
+import { RssAcceptFixture } from '../../config/common/fixture/rss-accept.fixture';
 import { FeedRepository } from '../../../src/feed/repository/feed.repository';
 import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
-import { Feed } from '../../../src/feed/entity/feed.entity';
-import { FeedFixture } from '../../fixture/feed.fixture';
+import { FeedFixture } from '../../config/common/fixture/feed.fixture';
 import * as EventSource from 'eventsource';
+import { RssAccept } from '../../../src/rss/entity/rss.entity';
+import { testApp } from '../../config/e2e/env/jest.setup';
 
-describe('SSE /api/trend/sse E2E Test', () => {
-  let app: INestApplication;
+const URL = '/api/feed/trend/sse';
+
+describe(`SSE ${URL} E2E Test`, () => {
+  let serverUrl: string;
   let feedRepository: FeedRepository;
+  let rssAcceptRepository: RssAcceptRepository;
+  let redisService: RedisService;
+  let rssAccept: RssAccept;
 
   beforeAll(async () => {
-    app = global.testApp;
-    feedRepository = app.get(FeedRepository);
-    const rssAcceptRepository = app.get(RssAcceptRepository);
-    const redisService = app.get(RedisService);
-    const [blog] = await Promise.all([
-      rssAcceptRepository.save(RssAcceptFixture.createRssAcceptFixture()),
-      redisService.rpush(REDIS_KEYS.FEED_ORIGIN_TREND_KEY, 1, 2),
-    ]);
-    const feeds: Feed[] = [];
-    for (let i = 1; i <= 2; i++) {
-      feeds.push(FeedFixture.createFeedFixture(blog, {}, i));
-    }
-    await Promise.all([feedRepository.insert(feeds), app.listen(7000)]);
+    const httpServer = await testApp.listen(0);
+    const port = httpServer.address().port;
+    serverUrl = `http://localhost:${port}${URL}`;
+    feedRepository = testApp.get(FeedRepository);
+    rssAcceptRepository = testApp.get(RssAcceptRepository);
+    redisService = testApp.get(RedisService);
   });
 
-  it('최초 연결이 되면 트랜드 데이터를 최대 4개 받을 수 있다.', async () => {
-    // given
-    const es = new EventSource('http://localhost:7000/api/feed/trend/sse');
-    const timeout = new Promise((_, reject) =>
-      setTimeout(
-        () => reject(new Error('Timeout occurred before receiving data')),
-        1000,
-      ),
+  beforeEach(async () => {
+    rssAccept = await rssAcceptRepository.save(
+      RssAcceptFixture.createRssAcceptFixture(),
     );
-    const eventResult = new Promise((resolve, reject) => {
+  });
+
+  it('[SSE] 최초 연결을 할 경우 트랜드 데이터 최대 4개 제공 수신을 성공한다.', async () => {
+    // given
+    const feeds = Array.from({ length: 2 }).map(() =>
+      FeedFixture.createFeedFixture(rssAccept),
+    );
+    const feedList = await feedRepository.save(feeds);
+    await redisService.rpush(
+      REDIS_KEYS.FEED_ORIGIN_TREND_KEY,
+      feedList[0].id,
+      feedList[1].id,
+    );
+
+    // SSE when
+    const es = new EventSource(serverUrl);
+    const data = await new Promise((resolve, reject) => {
       es.onmessage = (event) => {
         try {
-          const response = JSON.parse(event.data);
-          const feedList = response.data;
-          const idList = feedList.map((feed) => feed.id);
+          const response = JSON.parse(event.data) as { data?: unknown };
           es.close();
-          resolve(idList);
-        } catch (error) {
+          resolve(response.data);
+        } catch {
           es.close();
-          reject(error);
+          reject(new Error(`SSE 연결 오류: ${JSON.stringify(event)}`));
         }
       };
-      es.onerror = (error) => {
+      es.onerror = (event) => {
         es.close();
-        reject(error);
+        reject(new Error(`SSE 연결 오류: ${JSON.stringify(event)}`));
       };
     });
 
-    // when
-    const idList = await Promise.race([eventResult, timeout]);
-
-    // then
-    expect(idList).toStrictEqual([1, 2]);
+    // SSE then
+    expect(data).toStrictEqual(
+      feedList.map((feed) => ({
+        id: feed.id,
+        author: feed.blog.name,
+        blogPlatform: feed.blog.blogPlatform,
+        title: feed.title,
+        path: feed.path,
+        createdAt: feed.createdAt.toISOString(),
+        thumbnail: feed.thumbnail,
+        viewCount: feed.viewCount,
+        likes: feed.likeCount,
+        comments: feed.commentCount,
+        tag: [],
+      })),
+    );
   });
 
-  it('서버로부터 데이터를 받을 때, 게시글이 지워진 상황이라면 게시글을 받지 않는다.', async () => {
+  it('[SSE] 서버로부터 데이터를 받을 때 게시글이 데나무에서 지워진 경우 빈 피드 정보 수신을 성공한다.', async () => {
     // given
-    await feedRepository.delete({ id: 2 });
-    const es = new EventSource('http://localhost:7000/api/feed/trend/sse');
-    const timeout = new Promise((_, reject) =>
-      setTimeout(
-        () => reject(new Error('Timeout occurred before receiving data')),
-        1000,
-      ),
-    );
-    const eventResult = new Promise((resolve, reject) => {
+    await redisService.rpush(REDIS_KEYS.FEED_ORIGIN_TREND_KEY, '0');
+
+    // SSE when
+    const es = new EventSource(serverUrl);
+    const data = await new Promise((resolve, reject) => {
       es.onmessage = (event) => {
         try {
-          const response = JSON.parse(event.data);
-          const feedList = response.data;
-          const idList = feedList.map((feed) => feed.id);
+          const response = JSON.parse(event.data) as { data?: unknown };
           es.close();
-          resolve(idList);
-        } catch (error) {
+          resolve(response.data);
+        } catch {
           es.close();
-          reject(error);
+          reject(new Error(`SSE 연결 오류: ${JSON.stringify(event)}`));
         }
       };
-      es.onerror = (error) => {
+      es.onerror = (event) => {
         es.close();
-        reject(error);
+        reject(new Error(`SSE 연결 오류: ${JSON.stringify(event)}`));
       };
     });
 
-    // when
-    const idList = await Promise.race([eventResult, timeout]);
-
-    // then
-    expect(idList).toStrictEqual([1]);
+    // SSE then
+    expect(data).toStrictEqual([]);
   });
 });

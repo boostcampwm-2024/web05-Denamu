@@ -33,6 +33,6 @@ export class ReadStatisticAllResponseDto {
   }
 
   static toResponseDtoArray(feeds: Feed[]) {
-    return feeds.map(this.toResponseDto);
+    return feeds.map((feed) => this.toResponseDto(feed));
   }
 }

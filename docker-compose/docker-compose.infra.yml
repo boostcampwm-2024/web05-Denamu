@@ -1,12 +1,12 @@
 services:
   # DB 서비스
   mysql-db:
-    image: "mysql:8.0.39"
+    image: 'mysql:8.0.39'
     ports:
-      - "3306:3306"
+      - '3306:3306'
     volumes:
       - denamu-mysql:/var/lib/mysql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - Denamu
     command:
@@ -15,57 +15,88 @@ services:
       - --skip-character-set-client-handshake
     environment:
       MYSQL_ROOT_HOST: localhost
-      MYSQL_ROOT_PASSWORD: "denamu-db"
-      MYSQL_DATABASE: "denamu"
-      MYSQL_USER: "denamu-db-user"
-      MYSQL_PASSWORD: "denamu-db-pw"
-      TZ: "Asia/Seoul"
+      MYSQL_ROOT_PASSWORD: 'denamu-db'
+      MYSQL_DATABASE: 'denamu'
+      MYSQL_USER: 'denamu-db-user'
+      MYSQL_PASSWORD: 'denamu-db-pw'
+      TZ: 'Asia/Seoul'
     healthcheck:
       test:
         [
-          "CMD",
-          "mysqladmin",
-          "ping",
-          "-h",
-          "localhost",
-          "-u",
-          "root",
-          "-pdenamu-db",
+          'CMD',
+          'mysqladmin',
+          'ping',
+          '-h',
+          'localhost',
+          '-u',
+          'root',
+          '-pdenamu-db',
         ]
       interval: 10s
       timeout: 5s
       retries: 3
     profiles:
       - was-dev
+      - default
 
   # Redis 서비스
   redis:
-    image: "redis:6.0.16-alpine"
+    image: 'redis:6.0.16-alpine'
     ports:
-      - "6379:6379"
+      - '6379:6379'
     volumes:
       - denamu-redis:/data
     networks:
       - Denamu
     entrypoint:
       [
-        "sh",
-        "-c",
+        'sh',
+        '-c',
         "redis-server & sleep 5 && echo 'ACL SETUSER denamu-redis-user on >denamu-redis-pw allkeys allcommands' | redis-cli && tail -f /dev/null",
       ]
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 10s
       timeout: 5s
       retries: 3
     environment:
-      TZ: "Asia/Seoul"
+      TZ: 'Asia/Seoul'
     profiles:
       - was-dev
+      - default
+
+  # RabbitMQ 서비스
+  rabbitmq:
+    image: rabbitmq:4.1-management
+    user: '999:999'
+    networks:
+      - Denamu
+    ports:
+      - '5672:5672' #AMQP 프로토콜 포트
+      - '15672:15672' # Management UI 포트
+    environment:
+      RABBITMQ_DEFAULT_USER: 'denamu-rabbitmq-user'
+      RABBITMQ_DEFAULT_PASS: 'denamu-rabbitmq-password'
+    volumes:
+      - denamu-rabbitmq:/var/lib/rabbitmq
+      - ./rabbitMQ/definitions.json:/etc/rabbitmq/definitions.json:ro
+      - ./rabbitMQ/import-definitions.sh:/etc/rabbitmq/import-definitions.sh:ro
+      - ./rabbitMQ/check-rabbitmq-ready.sh:/etc/rabbitmq/check-rabbitmq-ready.sh:ro
+    entrypoint: ['/bin/sh', '/etc/rabbitmq/import-definitions.sh']
+    healthcheck:
+      test: ['CMD', '/bin/sh', '/etc/rabbitmq/check-rabbitmq-ready.sh']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    profiles:
+      - was-dev
+      - default
 
 volumes:
   denamu-mysql:
   denamu-redis:
+  denamu-rabbitmq:
 
 networks:
   Denamu:

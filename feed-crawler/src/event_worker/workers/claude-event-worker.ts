@@ -46,10 +46,6 @@ export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
       const aiData = await this.requestAI(feed);
       await this.saveAIResult(aiData);
     } catch (error) {
-      logger.error(
-        `${this.nameTag} ${feed.id} 처리 중 에러 발생: ${error.message}`,
-        error.stack,
-      );
       await this.handleFailure(feed, error);
     }
   }
@@ -83,7 +79,7 @@ export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
       model: 'claude-3-5-haiku-latest',
     };
     const message = await this.client.messages.create(params);
-    let responseText: string = message.content[0]['text'].replace(
+    const responseText: string = message.content[0]['text'].replace(
       /[\n\r\t\s]+/g,
       ' ',
     );
@@ -107,19 +103,46 @@ export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
 
   protected async handleFailure(
     feed: FeedAIQueueItem,
-    e: Error,
+    error: Error,
   ): Promise<void> {
-    if (feed.deathCount < 3) {
+    const shouldRetry = this.isRetryableError(error);
+
+    logger.error(
+      `${this.nameTag} ${feed.id} 처리 실패:
+      - 에러: ${error.name} - ${error.message}
+      - 재시도 가능: ${shouldRetry}
+      - 현재 deathCount: ${feed.deathCount}`,
+    );
+
+    if (shouldRetry && feed.deathCount < 3) {
       feed.deathCount++;
       await this.redisConnection.rpush(redisConstant.FEED_AI_QUEUE, [
         JSON.stringify(feed),
       ]);
-      logger.warn(`${this.nameTag} ${feed.id} 재시도 (${feed.deathCount})`);
-    } else {
-      logger.error(
-        `${this.nameTag} ${feed.id} 의 Death Count 3회 이상 발생. AI 요청 스킵`,
+      logger.warn(
+        `${this.nameTag} ${feed.id} 재시도 예약 (${feed.deathCount}/3)`,
       );
+    } else {
+      const reason = shouldRetry
+        ? `Death Count 3회 초과`
+        : `재시도 불가능한 에러 (${error.name})`;
+      logger.error(`${this.nameTag} ${feed.id} 영구 실패 - ${reason}`);
       await this.feedRepository.updateNullSummary(feed.id);
     }
+  }
+
+  private isRetryableError(error: Error): boolean {
+    const message = error.message.toLowerCase();
+
+    // 재시도하면 안 되는 케이스 (영구적 에러)
+    if (message.includes('invalid') || message.includes('401')) return false;
+    if (message.includes('json') || message.includes('parse')) return false;
+
+    // 재시도해야 하는 케이스 (일시적 에러)
+    if (message.includes('rate limit') || message.includes('429')) return true;
+    if (message.includes('timeout') || message.includes('503')) return true;
+
+    // 기본값: 재시도
+    return true;
   }
 }
