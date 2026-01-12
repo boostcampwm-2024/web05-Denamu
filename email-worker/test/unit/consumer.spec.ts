@@ -342,7 +342,7 @@ describe('email consumer unit test', () => {
           let error;
           if (typeof targetError === 'string') {
             error = new Error(`${targetError}`) as any;
-            if (errorName === 'ESOCKET') {
+            if (targetError === 'ESOCKET') {
               error.code = 'ESOCKET';
             }
           } else {
