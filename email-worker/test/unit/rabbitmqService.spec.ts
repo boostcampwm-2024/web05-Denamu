@@ -18,7 +18,7 @@ describe('RabbitmqService unit test', () => {
       ack: jest.fn(),
       nack: jest.fn(),
       cancel: jest.fn().mockResolvedValue({}),
-    } as any;
+    } as Partial<Channel> as jest.Mocked<Channel>;
 
     mockRabbitMQManager = {
       getChannel: jest.fn().mockResolvedValue(mockChannel),
@@ -116,7 +116,7 @@ describe('RabbitmqService unit test', () => {
           },
         } as any;
 
-        await callback(mockMessage);
+        callback(mockMessage);
         return { consumerTag: 'test-consumer-tag' };
       });
 
