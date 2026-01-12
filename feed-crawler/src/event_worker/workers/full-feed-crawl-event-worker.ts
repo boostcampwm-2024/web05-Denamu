@@ -62,9 +62,6 @@ export class FullFeedCrawlEventWorker extends AbstractQueueWorker<FullFeedCrawlM
         `${this.nameTag} RSS ID ${rssId}에서 ${insertedFeeds.length}개의 피드를 처리했습니다.`,
       );
     } catch (error) {
-      logger.error(
-        `${this.nameTag} RSS ID ${rssId} 처리 중 오류 발생: ${error.message}`,
-      );
       await this.handleFailure(crawlMessage, error);
     }
   }
@@ -73,18 +70,47 @@ export class FullFeedCrawlEventWorker extends AbstractQueueWorker<FullFeedCrawlM
     crawlMessage: FullFeedCrawlMessage,
     error: Error,
   ): Promise<void> {
-    if (crawlMessage.deathCount < 3) {
+    const shouldRetry = this.isRetryableError(error);
+
+    logger.error(
+      `${this.nameTag} RSS ID ${crawlMessage.rssId} 처리 실패:
+      - 에러: ${error.name} - ${error.message}
+      - 재시도 가능: ${shouldRetry}
+      - 현재 deathCount: ${crawlMessage.deathCount}`,
+    );
+
+    if (shouldRetry && crawlMessage.deathCount < 3) {
       crawlMessage.deathCount++;
       await this.redisConnection.rpush(redisConstant.FULL_FEED_CRAWL_QUEUE, [
         JSON.stringify(crawlMessage),
       ]);
-      logger.error(
-        `${this.nameTag} ${crawlMessage.rssId} 의 Death Count 3회 이상 발생. 크롤링 스킵 처리`,
+      logger.warn(
+        `${this.nameTag} RSS ID ${crawlMessage.rssId} 재시도 예약 (${crawlMessage.deathCount}/3)`,
       );
     } else {
+      const reason = shouldRetry
+        ? `Death Count 3회 초과`
+        : `재시도 불가능한 에러 (${error.name})`;
       logger.error(
-        `${this.nameTag} RSS ID ${crawlMessage.rssId} 전체 피드 크롤링 실패: ${error.message}`,
+        `${this.nameTag} RSS ID ${crawlMessage.rssId} 영구 실패 - ${reason}`,
       );
     }
+  }
+
+  private isRetryableError(error: Error): boolean {
+    const message = error.message.toLowerCase();
+
+    // 재시도하면 안 되는 케이스 (영구적 에러)
+    if (message.includes('invalid') || message.includes('401')) return false;
+    if (message.includes('json') || message.includes('parse')) return false;
+    if (message.includes('찾을 수 없습니다')) return false; // RSS 없음
+
+    // 재시도해야 하는 케이스 (일시적 에러)
+    if (message.includes('rate limit') || message.includes('429')) return true;
+    if (message.includes('timeout') || message.includes('503')) return true;
+    if (message.includes('network') || message.includes('fetch')) return true;
+
+    // 기본값: 재시도
+    return true;
   }
 }
