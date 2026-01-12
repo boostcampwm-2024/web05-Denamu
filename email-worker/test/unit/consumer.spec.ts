@@ -255,6 +255,81 @@ describe('email consumer unit test', () => {
           );
         });
       });
+
+      describe('재시도 횟수에 따른 대기 큐 선택 검증', () => {
+        const retryCountTestCases = [
+          { retryCount: 0, expectedQueue: RETRY_CONFIG.WAITING_QUEUE[0], description: '5초 대기 큐' },
+          { retryCount: 1, expectedQueue: RETRY_CONFIG.WAITING_QUEUE[1], description: '10초 대기 큐' },
+          { retryCount: 2, expectedQueue: RETRY_CONFIG.WAITING_QUEUE[2], description: '20초 대기 큐' },
+        ];
+
+        retryCountTestCases.forEach(({ retryCount, expectedQueue, description }) => {
+          it(`네트워크 에러 발생 시 retryCount=${retryCount}이면 ${description}(${expectedQueue})로 메시지를 발행한다.`, async () => {
+            //given
+            const error = new Error('ECONNREFUSED') as any;
+            const emailPayload: EmailPayload = {
+              type: EmailPayloadConstant.USER_CERTIFICATION,
+              data: {
+                email: `test@test.com`,
+                userName: `tester`,
+                uuid: `tester-uuid`,
+              },
+            };
+
+            //when
+            await emailConsumer.handleEmailByError(
+              error,
+              emailPayload,
+              retryCount,
+            );
+
+            //then
+            expect(rabbitmqService.sendMessageToQueue).toHaveBeenCalledTimes(1);
+            expect(rabbitmqService.sendMessageToQueue).toHaveBeenCalledWith(
+              expectedQueue,
+              JSON.stringify(emailPayload),
+              {
+                headers: {
+                  'x-retry-count': retryCount + 1,
+                },
+              },
+            );
+          });
+
+          it(`SMTP 4xx 에러 발생 시 retryCount=${retryCount}이면 ${description}(${expectedQueue})로 메시지를 발행한다.`, async () => {
+            //given
+            const error = new Error('Mailbox unavailable') as any;
+            error.responseCode = 450;
+            const emailPayload: EmailPayload = {
+              type: EmailPayloadConstant.USER_CERTIFICATION,
+              data: {
+                email: `test@test.com`,
+                userName: `tester`,
+                uuid: `tester-uuid`,
+              },
+            };
+
+            //when
+            await emailConsumer.handleEmailByError(
+              error,
+              emailPayload,
+              retryCount,
+            );
+
+            //then
+            expect(rabbitmqService.sendMessageToQueue).toHaveBeenCalledTimes(1);
+            expect(rabbitmqService.sendMessageToQueue).toHaveBeenCalledWith(
+              expectedQueue,
+              JSON.stringify(emailPayload),
+              {
+                headers: {
+                  'x-retry-count': retryCount + 1,
+                },
+              },
+            );
+          });
+        });
+      });
     });
 
     describe('Permanent Error test', () => {
