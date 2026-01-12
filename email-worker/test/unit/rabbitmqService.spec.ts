@@ -134,7 +134,7 @@ describe('RabbitmqService unit test', () => {
       const onMessage = jest.fn();
 
       mockChannel.consume.mockImplementation(async (q, callback) => {
-        await callback(null);
+        callback(null);
         return { consumerTag: 'test-consumer-tag' };
       });
 
@@ -159,7 +159,7 @@ describe('RabbitmqService unit test', () => {
           },
         } as any;
 
-        await callback(mockMessage);
+        callback(mockMessage);
         return { consumerTag: 'test-consumer-tag' };
       });
 
@@ -186,7 +186,7 @@ describe('RabbitmqService unit test', () => {
           },
         } as any;
 
-        await callback(capturedMessage);
+        callback(capturedMessage);
         return { consumerTag: 'test-consumer-tag' };
       });
 
@@ -216,7 +216,7 @@ describe('RabbitmqService unit test', () => {
           },
         } as any;
 
-        await callback(capturedMessage);
+        callback(capturedMessage);
         return { consumerTag: 'test-consumer-tag' };
       });
 
