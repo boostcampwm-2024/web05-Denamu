@@ -1,5 +1,5 @@
 import { validate } from 'class-validator';
-import { CertificateUserRequestDto } from '../../../src/user/dto/request/certificateUser.dto';
+import { CertificateUserRequestDto } from '@user/dto/request/certificateUser.dto';
 
 describe(`${CertificateUserRequestDto.name} Test`, () => {
   let dto: CertificateUserRequestDto;

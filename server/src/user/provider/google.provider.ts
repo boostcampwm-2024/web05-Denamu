@@ -1,4 +1,4 @@
-import { OAuthProvider } from './oauth-provider.interface';
+import { OAuthProvider } from '@user/provider/oauth-provider.interface';
 import * as querystring from 'node:querystring';
 import { BadGatewayException, Injectable } from '@nestjs/common';
 import {
@@ -6,9 +6,9 @@ import {
   OAUTH_URL_PATH,
   OAuthTokenResponse,
   UserInfo,
-} from '../constant/oauth.constant';
+} from '@user/constant/oauth.constant';
 import axios from 'axios';
-import { WinstonLoggerService } from '../../common/logger/logger.service';
+import { WinstonLoggerService } from '@common/logger/logger.service';
 
 @Injectable()
 export class GoogleOAuthProvider implements OAuthProvider {

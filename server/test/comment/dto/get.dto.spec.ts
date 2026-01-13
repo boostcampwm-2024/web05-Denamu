@@ -1,4 +1,4 @@
-import { GetCommentRequestDto } from '../../../src/comment/dto/request/getComment.dto';
+import { GetCommentRequestDto } from '@comment/dto/request/getComment.dto';
 import { validate } from 'class-validator';
 
 describe(`${GetCommentRequestDto.name} Test`, () => {

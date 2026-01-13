@@ -1,11 +1,11 @@
-import { HttpExceptionsFilter } from './common/filters/http.exception.filter';
+import { HttpExceptionsFilter } from '@common/filters/http.exception.filter';
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { setupSwagger } from './common/swagger/swagger';
-import * as cookieParser from 'cookie-parser';
-import { InternalExceptionsFilter } from './common/filters/internal.exceptions.filter';
-import { LoggingInterceptor } from './common/logger/logger.interceptor';
-import { WinstonLoggerService } from './common/logger/logger.service';
+import { AppModule } from '@src/app.module';
+import { setupSwagger } from '@common/swagger/swagger';
+import cookieParser from 'cookie-parser';
+import { InternalExceptionsFilter } from '@common/filters/internal.exceptions.filter';
+import { LoggingInterceptor } from '@common/logger/logger.interceptor';
+import { WinstonLoggerService } from '@common/logger/logger.service';
 import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {

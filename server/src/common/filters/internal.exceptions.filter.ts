@@ -7,8 +7,8 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { Response } from 'express';
-import { ApiResponse } from '../response/common.response';
-import { WinstonLoggerService } from '../logger/logger.service';
+import { ApiResponse } from '@common/response/common.response';
+import { WinstonLoggerService } from '@common/logger/logger.service';
 
 @Catch()
 export class InternalExceptionsFilter implements ExceptionFilter {

@@ -1,10 +1,10 @@
-import { RabbitmqService } from '../rabbitmq/rabbitmq.service';
+import { RabbitmqService } from '@rabbitmq/rabbitmq.service';
 import { inject, injectable } from 'tsyringe';
-import { DEPENDENCY_SYMBOLS } from '../types/dependency-symbols';
-import { EmailService } from './email.service';
-import logger from '../logger';
-import { RETRY_CONFIG, RMQ_QUEUES } from '../rabbitmq/rabbitmq.constant';
-import { EmailPayload, EmailPayloadConstant } from '../types/types';
+import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
+import { EmailService } from '@email/email.service';
+import logger from '@src/logger';
+import { RETRY_CONFIG, RMQ_QUEUES } from '@rabbitmq/rabbitmq.constant';
+import { EmailPayload, EmailPayloadConstant } from '@app-types/types';
 import { Options } from 'amqplib/properties';
 
 @injectable()

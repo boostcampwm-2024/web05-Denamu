@@ -1,17 +1,17 @@
 import {
   ADMIN_DEFAULT_PASSWORD,
   AdminFixture,
-} from './../../config/common/fixture/admin.fixture';
+} from '@test/config/common/fixture/admin.fixture';
 import { HttpStatus } from '@nestjs/common';
-import { LoginAdminRequestDto } from '../../../src/admin/dto/request/loginAdmin.dto';
-import * as supertest from 'supertest';
-import { AdminRepository } from '../../../src/admin/repository/admin.repository';
+import { LoginAdminRequestDto } from '@admin/dto/request/loginAdmin.dto';
+import supertest from 'supertest';
+import { AdminRepository } from '@admin/repository/admin.repository';
 import TestAgent from 'supertest/lib/agent';
-import { RedisService } from '../../../src/common/redis/redis.service';
-import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
+import { RedisService } from '@common/redis/redis.service';
+import { REDIS_KEYS } from '@common/redis/redis.constant';
 import * as uuid from 'uuid';
-import { Admin } from '../../../src/admin/entity/admin.entity';
-import { testApp } from '../../config/e2e/env/jest.setup';
+import { Admin } from '@admin/entity/admin.entity';
+import { testApp } from '@test/config/e2e/env/jest.setup';
 
 const URL = '/api/admin/login';
 

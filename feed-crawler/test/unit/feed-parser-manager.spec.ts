@@ -1,8 +1,8 @@
 import 'reflect-metadata';
-import { FeedParserManager } from '../../src/common/parser/feed-parser-manager';
-import { Rss20Parser } from '../../src/common/parser/formats/rss20-parser';
-import { Atom10Parser } from '../../src/common/parser/formats/atom10-parser';
-import { RssObj, FeedDetail } from '../../src/common/types';
+import { FeedParserManager } from '@common/parser/feed-parser-manager';
+import { Rss20Parser } from '@common/parser/formats/rss20-parser';
+import { Atom10Parser } from '@common/parser/formats/atom10-parser';
+import { RssObj, FeedDetail } from '@common/types';
 
 // fetch 모킹
 global.fetch = jest.fn();

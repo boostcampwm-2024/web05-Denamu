@@ -1,9 +1,9 @@
 import { HttpStatus } from '@nestjs/common';
-import * as supertest from 'supertest';
-import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
-import { RssAcceptFixture } from '../../config/common/fixture/rss-accept.fixture';
+import supertest from 'supertest';
+import { RssAcceptRepository } from '@rss/repository/rss.repository';
+import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture';
 import TestAgent from 'supertest/lib/agent';
-import { testApp } from '../../config/e2e/env/jest.setup';
+import { testApp } from '@test/config/e2e/env/jest.setup';
 
 const URL = '/api/statistic/platform';
 

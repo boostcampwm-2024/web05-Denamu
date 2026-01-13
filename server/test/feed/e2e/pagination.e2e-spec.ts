@@ -1,14 +1,14 @@
 import { HttpStatus } from '@nestjs/common';
-import * as supertest from 'supertest';
-import { FeedFixture } from '../../config/common/fixture/feed.fixture';
-import { FeedRepository } from '../../../src/feed/repository/feed.repository';
-import { RssAcceptRepository } from '../../../src/rss/repository/rss.repository';
-import { RssAcceptFixture } from '../../config/common/fixture/rss-accept.fixture';
-import { ReadFeedPaginationRequestDto } from '../../../src/feed/dto/request/readFeedPagination.dto';
+import supertest from 'supertest';
+import { FeedFixture } from '@test/config/common/fixture/feed.fixture';
+import { FeedRepository } from '@feed/repository/feed.repository';
+import { RssAcceptRepository } from '@rss/repository/rss.repository';
+import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture';
+import { ReadFeedPaginationRequestDto } from '@feed/dto/request/readFeedPagination.dto';
 import TestAgent from 'supertest/lib/agent';
-import { Feed } from '../../../src/feed/entity/feed.entity';
-import { RssAccept } from '../../../src/rss/entity/rss.entity';
-import { testApp } from '../../config/e2e/env/jest.setup';
+import { Feed } from '@feed/entity/feed.entity';
+import { RssAccept } from '@rss/entity/rss.entity';
+import { testApp } from '@test/config/e2e/env/jest.setup';
 
 const URL = '/api/feed';
 

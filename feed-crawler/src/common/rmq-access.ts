@@ -1,7 +1,7 @@
 import { inject, injectable } from 'tsyringe';
-import { RabbitMQManager } from './rabbitmq.manager';
-import { DEPENDENCY_SYMBOLS } from '../types/dependency-symbols';
-import logger from './logger';
+import { RabbitMQManager } from '@common/rabbitmq.manager';
+import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
+import logger from '@common/logger';
 
 @injectable()
 export class RabbitMQConnection {

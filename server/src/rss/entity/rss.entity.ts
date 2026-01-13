@@ -6,7 +6,7 @@ import {
   Index,
   OneToMany,
 } from 'typeorm';
-import { Feed } from '../../feed/entity/feed.entity';
+import { Feed } from '@feed/entity/feed.entity';
 
 export class RssInformation extends BaseEntity {
   @PrimaryGeneratedColumn()

@@ -1,6 +1,6 @@
 import { validate } from 'class-validator';
-import { OAuthTypeRequestDto } from '../../../src/user/dto/request/oAuthType.dto';
-import { OAuthType } from '../../../src/user/constant/oauth.constant';
+import { OAuthTypeRequestDto } from '@user/dto/request/oAuthType.dto';
+import { OAuthType } from '@user/constant/oauth.constant';
 
 describe('OAuthTypeRequestDto Test', () => {
   let dto: OAuthTypeRequestDto;

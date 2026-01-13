@@ -1,15 +1,15 @@
 import 'reflect-metadata';
-import './common/env-load';
-import logger from './common/logger';
-import { FeedCrawler } from './feed-crawler';
-import { container } from './container';
-import { DEPENDENCY_SYMBOLS } from './types/dependency-symbols';
-import { DatabaseConnection } from './types/database-connection';
-import { ClaudeEventWorker } from './event_worker/workers/claude-event-worker';
+import '@common/env-load';
+import logger from '@common/logger';
+import { FeedCrawler } from '@src/feed-crawler';
+import { container } from '@src/container';
+import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
+import { DatabaseConnection } from '@app-types/database-connection';
+import { ClaudeEventWorker } from '@event_worker/workers/claude-event-worker';
 import * as schedule from 'node-schedule';
-import { RedisConnection } from './common/redis-access';
-import { FullFeedCrawlEventWorker } from './event_worker/workers/full-feed-crawl-event-worker';
-import { RabbitMQManager } from './common/rabbitmq.manager';
+import { RedisConnection } from '@common/redis-access';
+import { FullFeedCrawlEventWorker } from '@event_worker/workers/full-feed-crawl-event-worker';
+import { RabbitMQManager } from '@common/rabbitmq.manager';
 
 function initializeDependencies() {
   return {

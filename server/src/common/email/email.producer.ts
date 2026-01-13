@@ -1,10 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { RabbitMQService } from '../rabbitmq/rabbitmq.service';
-import { WinstonLoggerService } from '../logger/logger.service';
-import { RMQ_EXCHANGES, RMQ_ROUTING_KEYS } from '../rabbitmq/rabbitmq.constant';
-import { EmailPayload, EmailPayloadConstant } from './email.type';
-import { User } from '../../user/entity/user.entity';
-import { Rss } from '../../rss/entity/rss.entity';
+import { RabbitMQService } from '@common/rabbitmq/rabbitmq.service';
+import { WinstonLoggerService } from '@common/logger/logger.service';
+import {
+  RMQ_EXCHANGES,
+  RMQ_ROUTING_KEYS,
+} from '@common/rabbitmq/rabbitmq.constant';
+import { EmailPayload, EmailPayloadConstant } from '@common/email/email.type';
+import { User } from '@user/entity/user.entity';
+import { Rss } from '@rss/entity/rss.entity';
 
 @Injectable()
 export class EmailProducer {

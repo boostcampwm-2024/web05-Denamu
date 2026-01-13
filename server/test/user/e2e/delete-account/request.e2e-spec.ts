@@ -1,14 +1,14 @@
 import { HttpStatus } from '@nestjs/common';
-import * as supertest from 'supertest';
-import { UserRepository } from '../../../../src/user/repository/user.repository';
-import { UserFixture } from '../../../config/common/fixture/user.fixture';
+import supertest from 'supertest';
+import { UserRepository } from '@user/repository/user.repository';
+import { UserFixture } from '@test/config/common/fixture/user.fixture';
 import TestAgent from 'supertest/lib/agent';
-import { User } from '../../../../src/user/entity/user.entity';
-import { createAccessToken } from '../../../config/e2e/env/jest.setup';
-import { REDIS_KEYS } from '../../../../src/common/redis/redis.constant';
+import { User } from '@user/entity/user.entity';
+import { createAccessToken } from '@test/config/e2e/env/jest.setup';
+import { REDIS_KEYS } from '@common/redis/redis.constant';
 import * as uuid from 'uuid';
-import { RedisService } from '../../../../src/common/redis/redis.service';
-import { testApp } from '../../../config/e2e/env/jest.setup';
+import { RedisService } from '@common/redis/redis.service';
+import { testApp } from '@test/config/e2e/env/jest.setup';
 
 const URL = '/api/user/delete-account/request';
 

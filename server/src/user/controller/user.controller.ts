@@ -12,34 +12,30 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { ApiResponse } from '../../common/response/common.response';
-import { UserService } from '../service/user.service';
-import { RegisterUserRequestDto } from '../dto/request/registerUser.dto';
-import { ApiCheckEmailDuplication } from '../api-docs/checkEmailDuplication.api-docs';
-import { ApiRegisterUser } from '../api-docs/registerUser.api-docs';
-import { ApiCertificateUser } from '../api-docs/certificateUser.api-docs';
-import { CertificateUserRequestDto } from '../dto/request/certificateUser.dto';
-import { CheckEmailDuplicationRequestDto } from '../dto/request/checkEmailDuplication.dto';
-import { LoginUserRequestDto } from '../dto/request/loginUser.dto';
+import { ApiResponse } from '@common/response/common.response';
+import { UserService } from '@user/service/user.service';
+import { RegisterUserRequestDto } from '@user/dto/request/registerUser.dto';
+import { ApiCheckEmailDuplication } from '@user/api-docs/checkEmailDuplication.api-docs';
+import { ApiRegisterUser } from '@user/api-docs/registerUser.api-docs';
+import { ApiCertificateUser } from '@user/api-docs/certificateUser.api-docs';
+import { CertificateUserRequestDto } from '@user/dto/request/certificateUser.dto';
+import { CheckEmailDuplicationRequestDto } from '@user/dto/request/checkEmailDuplication.dto';
+import { LoginUserRequestDto } from '@user/dto/request/loginUser.dto';
 import { Request, Response } from 'express';
-import { ApiLoginUser } from '../api-docs/loginUser.api-docs';
-import {
-  JwtGuard,
-  Payload,
-  RefreshJwtGuard,
-} from '../../common/guard/jwt.guard';
-import { ApiRefreshToken } from '../api-docs/refreshToken.api-docs';
-import { ApiLogoutUser } from '../api-docs/logoutUser.api-docs';
-import { UpdateUserRequestDto } from '../dto/request/updateUser.dto';
-import { ApiUpdateUser } from '../api-docs/updateUser.api-docs';
-import { ConfirmDeleteAccountDto } from '../dto/request/confirmDeleteAccount.dto';
-import { ApiRequestDeleteAccount } from '../api-docs/requestDeleteAccount.api-docs';
-import { ApiConfirmDeleteAccount } from '../api-docs/confirmDeleteAccount.api-docs';
-import { ResetPasswordRequestDto } from '../dto/request/resetPassword.dto';
-import { ForgotPasswordRequestDto } from '../dto/request/forgotPassword.dto';
-import { ApiForgotPassword } from '../api-docs/forgotPassword.api-docs';
-import { ApiResetPassword } from '../api-docs/resetPassword.api-docs';
-import { CurrentUser } from '../../common/decorator';
+import { ApiLoginUser } from '@user/api-docs/loginUser.api-docs';
+import { JwtGuard, Payload, RefreshJwtGuard } from '@common/guard/jwt.guard';
+import { ApiRefreshToken } from '@user/api-docs/refreshToken.api-docs';
+import { ApiLogoutUser } from '@user/api-docs/logoutUser.api-docs';
+import { UpdateUserRequestDto } from '@user/dto/request/updateUser.dto';
+import { ApiUpdateUser } from '@user/api-docs/updateUser.api-docs';
+import { ConfirmDeleteAccountDto } from '@user/dto/request/confirmDeleteAccount.dto';
+import { ApiRequestDeleteAccount } from '@user/api-docs/requestDeleteAccount.api-docs';
+import { ApiConfirmDeleteAccount } from '@user/api-docs/confirmDeleteAccount.api-docs';
+import { ResetPasswordRequestDto } from '@user/dto/request/resetPassword.dto';
+import { ForgotPasswordRequestDto } from '@user/dto/request/forgotPassword.dto';
+import { ApiForgotPassword } from '@user/api-docs/forgotPassword.api-docs';
+import { ApiResetPassword } from '@user/api-docs/resetPassword.api-docs';
+import { CurrentUser } from '@common/decorator';
 
 @ApiTags('User')
 @Controller('user')

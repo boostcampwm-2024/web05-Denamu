@@ -1,17 +1,17 @@
 import { HttpStatus } from '@nestjs/common';
-import * as supertest from 'supertest';
-import { RedisService } from '../../../src/common/redis/redis.service';
+import supertest from 'supertest';
+import { RedisService } from '@common/redis/redis.service';
 import {
   USER_DEFAULT_PASSWORD,
   UserFixture,
-} from '../../config/common/fixture/user.fixture';
-import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
-import { CertificateUserRequestDto } from '../../../src/user/dto/request/certificateUser.dto';
+} from '@test/config/common/fixture/user.fixture';
+import { REDIS_KEYS } from '@common/redis/redis.constant';
+import { CertificateUserRequestDto } from '@user/dto/request/certificateUser.dto';
 import TestAgent from 'supertest/lib/agent';
-import { UserRepository } from '../../../src/user/repository/user.repository';
+import { UserRepository } from '@user/repository/user.repository';
 import * as bcrypt from 'bcrypt';
-import { User } from '../../../src/user/entity/user.entity';
-import { testApp } from '../../config/e2e/env/jest.setup';
+import { User } from '@user/entity/user.entity';
+import { testApp } from '@test/config/e2e/env/jest.setup';
 
 const URL = '/api/user/certificate';
 

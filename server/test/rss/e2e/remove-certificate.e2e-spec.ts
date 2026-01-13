@@ -1,25 +1,25 @@
-import { UserFixture } from '../../config/common/fixture/user.fixture';
-import { CommentFixture } from '../../config/common/fixture/comment.fixture';
-import { FeedFixture } from '../../config/common/fixture/feed.fixture';
-import { REDIS_KEYS } from './../../../src/common/redis/redis.constant';
-import { FeedRepository } from '../../../src/feed/repository/feed.repository';
+import { UserFixture } from '@test/config/common/fixture/user.fixture';
+import { CommentFixture } from '@test/config/common/fixture/comment.fixture';
+import { FeedFixture } from '@test/config/common/fixture/feed.fixture';
+import { REDIS_KEYS } from '@common/redis/redis.constant';
+import { FeedRepository } from '@feed/repository/feed.repository';
 import { HttpStatus } from '@nestjs/common';
 import {
   RssAcceptRepository,
   RssRepository,
-} from '../../../src/rss/repository/rss.repository';
-import { RedisService } from '../../../src/common/redis/redis.service';
-import { CommentRepository } from '../../../src/comment/repository/comment.repository';
-import { UserRepository } from '../../../src/user/repository/user.repository';
-import * as supertest from 'supertest';
-import { RssFixture } from '../../config/common/fixture/rss.fixture';
+} from '@rss/repository/rss.repository';
+import { RedisService } from '@common/redis/redis.service';
+import { CommentRepository } from '@comment/repository/comment.repository';
+import { UserRepository } from '@user/repository/user.repository';
+import supertest from 'supertest';
+import { RssFixture } from '@test/config/common/fixture/rss.fixture';
 import TestAgent from 'supertest/lib/agent';
-import { LikeRepository } from '../../../src/like/repository/like.repository';
-import { Rss, RssAccept } from '../../../src/rss/entity/rss.entity';
-import { Feed } from '../../../src/feed/entity/feed.entity';
-import { User } from '../../../src/user/entity/user.entity';
-import { RssAcceptFixture } from '../../config/common/fixture/rss-accept.fixture';
-import { testApp } from '../../config/e2e/env/jest.setup';
+import { LikeRepository } from '@like/repository/like.repository';
+import { Rss, RssAccept } from '@rss/entity/rss.entity';
+import { Feed } from '@feed/entity/feed.entity';
+import { User } from '@user/entity/user.entity';
+import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture';
+import { testApp } from '@test/config/e2e/env/jest.setup';
 
 const URL = '/api/rss/remove';
 
