@@ -6,12 +6,12 @@ import SMTPTransport from 'nodemailer/lib/smtp-transport';
 import logger from '@src/logger';
 
 import {
-  PRODUCT_DOMAIN,
   createDeleteAccountContent,
   createPasswordResetMailContent,
   createRssRegistrationContent,
   createRssRemoveCertificateContent,
   createVerificationMailContent,
+  PRODUCT_DOMAIN,
 } from '@email/email.content';
 
 import { Rss, RssRegistration, RssRemoval, User } from '@app-types/types';

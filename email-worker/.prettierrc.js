@@ -1,0 +1,27 @@
+module.exports = {
+  singleQuote: true,
+  trailingComma: 'all',
+  endOfLine: 'lf',
+  plugins: ['@trivago/prettier-plugin-sort-imports'],
+  importOrderParserPlugins: [
+    'typescript',
+    'decorators-legacy',
+    'classProperties',
+  ],
+  importOrder: [
+    '^reflect-metadata$',
+    '^tsconfig-paths/register$',
+    '^tsyringe$',
+    '<THIRD_PARTY_MODULES>',
+    '^@src/env-load$',
+    '^@src/(.*)?$',
+    '^@email/(.*)?$',
+    '^@rabbitmq/(.*)?$',
+    '^@app-types/(.*)?$',
+    '^[./]',
+  ],
+  importOrderSeparation: true,
+  importOrderSortSpecifiers: true,
+  importOrderGroupNamespaceSpecifiers: true,
+  importOrderCaseInsensitive: true,
+};
