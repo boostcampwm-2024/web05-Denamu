@@ -7,13 +7,13 @@ import {
   User,
 } from '@app-types/types';
 import { EmailConsumer } from '@email/email.consumer';
-import { RabbitmqService } from '@rabbitmq/rabbitmq.service';
+import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
 import { EmailService } from '@email/email.service';
 import { RETRY_CONFIG, RMQ_QUEUES } from '@rabbitmq/rabbitmq.constant';
 
 describe('email consumer unit test', () => {
   let emailConsumer: EmailConsumer;
-  let rabbitmqService: jest.Mocked<RabbitmqService>;
+  let rabbitmqService: jest.Mocked<RabbitMQService>;
   let emailService: jest.Mocked<EmailService>;
 
   afterEach(() => {
