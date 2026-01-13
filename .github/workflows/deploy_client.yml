@@ -2,10 +2,8 @@ name: Client Deployment
 
 on:
   push:
-    branches:
-      - main
-    paths:
-      - "client/**"
+    branches: [main]
+    paths: ['client/**', '.github/workflows/deploy_client.yml']
   workflow_dispatch: # 수동 실행을 허용하는 이벤트
 
 env:
@@ -21,8 +19,8 @@ jobs:
       - name: Node.js 설정
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
-          cache: "npm"
+          node-version: '22'
+          cache: 'npm'
           cache-dependency-path: client/package-lock.json
 
       - name: 의존성 설치

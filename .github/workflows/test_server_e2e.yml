@@ -2,11 +2,8 @@ name: BE E2E Test
 
 on:
   pull_request:
-    branches:
-      - main
-    paths:
-      - 'server/**'
-      - '.github/workflows/test_server_e2e.yml'
+    branches: [main]
+    paths: ['server/**', '.github/workflows/test_server_e2e.yml']
   workflow_dispatch:
 
 jobs:

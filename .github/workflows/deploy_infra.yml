@@ -2,10 +2,12 @@ name: Infra Deployment
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
     paths:
-      - docker-compose/docker-compose.prod.infra.yml
+      [
+        'docker-compose/docker-compose.prod.infra.yml',
+        '.github/workflows/deploy_infra.yml',
+      ]
   workflow_dispatch:
 
 env:

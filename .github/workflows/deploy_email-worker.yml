@@ -3,7 +3,12 @@ name: Email-Worker Deployment
 on:
   push:
     branches: [main]
-    paths: ['email-worker/**', 'docker-compose/docker-compose.prod.yml']
+    paths:
+      [
+        'email-worker/**',
+        'docker-compose/docker-compose.prod.yml',
+        '.github/workflows/deploy_email-worker.yml',
+      ]
   workflow_dispatch:
 
 permissions:
