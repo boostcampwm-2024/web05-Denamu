@@ -15,11 +15,11 @@
     "stress-be": "artillery run -o loadtest/BE_Report loadtest/BE_loadtest.json",
     "stress-fe-html": "artillery report loadtest/FE_Report",
     "stress-be-html": "artillery report loadtest/BE_Report",
-    "start:dev": "docker compose -f docker-compose/docker-compose.dev.yml --profile default up --build",
-    "start:local": "docker compose -f docker-compose/docker-compose.local.yml --profile default up --build",
-    "start:dev:was": "docker compose -f docker-compose/docker-compose.dev.yml --profile was up --build",
-    "start:dev:feed": "docker compose -f docker-compose/docker-compose.dev.yml --profile feed-crawler up --build",
-    "start:dev:email": "docker compose -f docker-compose/docker-compose.dev.yml --profile email-worker up --build"
+    "start:dev": "docker compose -f docker-compose/docker-compose.dev.yml --profile default up --build --watch",
+    "start:dev:was": "docker compose -f docker-compose/docker-compose.dev.yml --profile was up --build --watch",
+    "start:dev:feed": "docker compose -f docker-compose/docker-compose.dev.yml --profile feed-crawler up --build --watch",
+    "start:dev:email": "docker compose -f docker-compose/docker-compose.dev.yml --profile email-worker up --build --watch",
+    "start:local": "docker compose -f docker-compose/docker-compose.local.yml --profile default up --build"
   },
   "config": {
     "commitizen": {
