@@ -1,0 +1,132 @@
+{
+  "vhosts": [
+    {
+      "name": "/"
+    }
+  ],
+  "permissions": [
+    {
+      "user": "guest",
+      "vhost": "/",
+      "configure": ".*",
+      "write": ".*",
+      "read": ".*"
+    }
+  ],
+  "exchanges": [
+    {
+      "name": "EmailExchange",
+      "vhost": "/",
+      "type": "direct",
+      "durable": true
+    },
+    {
+      "name": "CrawlingExchange",
+      "vhost": "/",
+      "type": "topic",
+      "durable": true
+    },
+    {
+      "name": "DeadLetterExchange",
+      "vhost": "/",
+      "type": "topic",
+      "durable": true
+    }
+  ],
+  "queues": [
+    {
+      "name": "email.send.queue",
+      "vhost": "/",
+      "durable": true,
+      "arguments": {
+        "x-dead-letter-exchange": "DeadLetterExchange",
+        "x-dead-letter-routing-key": "email.deadLetter"
+      }
+    },
+    {
+      "name": "email.send.wait.5s",
+      "vhost": "/",
+      "durable": true,
+      "arguments": {
+        "x-message-ttl": 5000,
+        "x-dead-letter-exchange": "",
+        "x-dead-letter-routing-key": "email.send.queue"
+      }
+    },
+    {
+      "name": "email.send.wait.10s",
+      "vhost": "/",
+      "durable": true,
+      "arguments": {
+        "x-message-ttl": 10000,
+        "x-dead-letter-exchange": "",
+        "x-dead-letter-routing-key": "email.send.queue"
+      }
+    },
+    {
+      "name": "email.send.wait.20s",
+      "vhost": "/",
+      "durable": true,
+      "arguments": {
+        "x-message-ttl": 20000,
+        "x-dead-letter-exchange": "",
+        "x-dead-letter-routing-key": "email.send.queue"
+      }
+    },
+    {
+      "name": "crawling.full.queue",
+      "vhost": "/",
+      "durable": true,
+      "arguments": {
+        "x-dead-letter-exchange": "DeadLetterExchange",
+        "x-dead-letter-routing-key": "crawling.full.deadLetter"
+      }
+    },
+    {
+      "name": "email.deadLetter.queue",
+      "vhost": "/",
+      "durable": true,
+      "arguments": {}
+    },
+    {
+      "name": "crawling.full.deadLetter.queue",
+      "vhost": "/",
+      "durable": true,
+      "arguments": {}
+    }
+  ],
+  "bindings": [
+    {
+      "source": "EmailExchange",
+      "vhost": "/",
+      "destination": "email.send.queue",
+      "destination_type": "queue",
+      "routing_key": "email.send",
+      "arguments": {}
+    },
+    {
+      "source": "CrawlingExchange",
+      "vhost": "/",
+      "destination": "crawling.full.queue",
+      "destination_type": "queue",
+      "routing_key": "crawling.full",
+      "arguments": {}
+    },
+    {
+      "source": "DeadLetterExchange",
+      "vhost": "/",
+      "destination": "email.deadLetter.queue",
+      "destination_type": "queue",
+      "routing_key": "email.deadLetter",
+      "arguments": {}
+    },
+    {
+      "source": "DeadLetterExchange",
+      "vhost": "/",
+      "destination": "crawling.full.deadLetter.queue",
+      "destination_type": "queue",
+      "routing_key": "crawling.full.deadLetter",
+      "arguments": {}
+    }
+  ]
+}
