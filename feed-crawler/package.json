@@ -43,9 +43,9 @@
     "build": "tsc --project tsconfig.build.json && tsc-alias",
     "start": "node dist/src/main.js",
     "start:dev": "nodemon",
-    "test:unit": "cross-env NODE_ENV=test jest --config test/config/unit/jest/jest.config.ts",
-    "test:unit:cov": "cross-env NODE_ENV=test jest --coverage --config test/config/unit/jest/jest.config.ts",
-    "test:e2e": "cross-env NODE_ENV=test jest --config test/config/e2e/jest/jest.config.ts",
-    "test:e2e:cov": "cross-env NODE_ENV=test jest --coverage --config test/config/e2e/jest/jest.config.ts"
+    "test:unit": "cross-env NODE_ENV=TEST jest --config test/config/unit/jest/jest.config.ts",
+    "test:unit:cov": "cross-env NODE_ENV=TEST jest --coverage --config test/config/unit/jest/jest.config.ts",
+    "test:e2e": "cross-env NODE_ENV=TEST jest --config test/config/e2e/jest/jest.config.ts",
+    "test:e2e:cov": "cross-env NODE_ENV=TEST jest --coverage --config test/config/e2e/jest/jest.config.ts"
   }
 }
