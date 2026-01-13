@@ -5,6 +5,7 @@ import TestAgent from 'supertest/lib/agent';
 
 import { CommentRepository } from '@comment/repository/comment.repository';
 
+import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
 
 import { Feed } from '@feed/entity/feed.entity';
@@ -27,8 +28,6 @@ import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture
 import { RssFixture } from '@test/config/common/fixture/rss.fixture';
 import { UserFixture } from '@test/config/common/fixture/user.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
-
-import { REDIS_KEYS } from './../../../src/common/redis/redis.constant';
 
 const URL = '/api/rss/remove';
 

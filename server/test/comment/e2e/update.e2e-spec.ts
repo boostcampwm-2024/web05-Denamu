@@ -10,6 +10,7 @@ import { CommentRepository } from '@comment/repository/comment.repository';
 import { Feed } from '@feed/entity/feed.entity';
 import { FeedRepository } from '@feed/repository/feed.repository';
 
+import { RssAccept } from '@rss/entity/rss.entity';
 import { RssAcceptRepository } from '@rss/repository/rss.repository';
 
 import { User } from '@user/entity/user.entity';
@@ -21,8 +22,6 @@ import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture
 import { UserFixture } from '@test/config/common/fixture/user.fixture';
 import { createAccessToken } from '@test/config/e2e/env/jest.setup';
 import { testApp } from '@test/config/e2e/env/jest.setup';
-
-import { RssAccept } from './../../../src/rss/entity/rss.entity';
 
 const URL = '/api/comment';
 

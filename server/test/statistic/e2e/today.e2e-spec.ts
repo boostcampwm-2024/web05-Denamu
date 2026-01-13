@@ -9,6 +9,7 @@ import { RedisService } from '@common/redis/redis.service';
 import { Feed } from '@feed/entity/feed.entity';
 import { FeedRepository } from '@feed/repository/feed.repository';
 
+import { RssAccept } from '@rss/entity/rss.entity';
 import { RssAcceptRepository } from '@rss/repository/rss.repository';
 
 import { ReadStatisticRequestDto } from '@statistic/dto/request/readStatistic.dto';
@@ -16,8 +17,6 @@ import { ReadStatisticRequestDto } from '@statistic/dto/request/readStatistic.dt
 import { FeedFixture } from '@test/config/common/fixture/feed.fixture';
 import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
-
-import { RssAccept } from './../../../src/rss/entity/rss.entity';
 
 const URL = '/api/statistic/today';
 
