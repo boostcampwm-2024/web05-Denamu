@@ -1,12 +1,12 @@
-name: BE DTO Test
+name: EMAIL-WORKER Test
 
 on:
   pull_request:
     branches:
       - main
     paths:
-      - 'server/**'
-      - '.github/workflows/test_server_dto.yml'
+      - 'email-worker/**'
+      - '.github/workflows/test_email-worker.yml'
   workflow_dispatch:
 
 jobs:
@@ -27,12 +27,12 @@ jobs:
 
       # 3. 의존성 설치
       - name: Install dependencies
-        working-directory: ./server
+        working-directory: ./email-worker
         run: npm ci
 
-      # 4. DTO 테스트 실행
-      - name: Run DTO Test
-        working-directory: ./server
-        run: npm run test:dto
+      # 4. Unit 테스트 실행
+      - name: Run Unit Test
+        working-directory: ./email-worker
+        run: npm run test:unit
 
-      # TODO: 테스트 커버리지, 혹은 테스트 로그 커멘트 작성 로직 추가하기
+      # TODO: E2E 테스트 실행
