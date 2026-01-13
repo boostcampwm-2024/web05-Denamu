@@ -93,7 +93,6 @@ services:
       start_period: 40s
     profiles:
       - was
-      - feed-crawler
       - email-worker
       - default
 
