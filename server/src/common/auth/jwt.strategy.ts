@@ -2,10 +2,10 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { Payload } from '../guard/jwt.guard';
+import { Payload } from '@common/guard/jwt.guard';
 import { Request } from 'express';
-import { RedisService } from '../redis/redis.service';
-import { REDIS_KEYS } from '../redis/redis.constant';
+import { RedisService } from '@common/redis/redis.service';
+import { REDIS_KEYS } from '@common/redis/redis.constant';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {

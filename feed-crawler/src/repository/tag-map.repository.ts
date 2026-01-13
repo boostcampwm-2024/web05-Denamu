@@ -1,5 +1,5 @@
-import { DatabaseConnection } from '../types/database-connection';
-import { DEPENDENCY_SYMBOLS } from '../types/dependency-symbols';
+import { DatabaseConnection } from '@app-types/database-connection';
+import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
 import { inject, injectable } from 'tsyringe';
 
 @injectable()

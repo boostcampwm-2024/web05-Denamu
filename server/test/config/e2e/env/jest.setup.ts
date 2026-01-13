@@ -1,12 +1,12 @@
 import { ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { AppModule } from '../../../../src/app.module';
-import { WinstonLoggerService } from '../../../../src/common/logger/logger.service';
-import { InternalExceptionsFilter } from '../../../../src/common/filters/internal.exceptions.filter';
-import { HttpExceptionsFilter } from '../../../../src/common/filters/http.exception.filter';
-import * as cookieParser from 'cookie-parser';
-import { RedisService } from '../../../../src/common/redis/redis.service';
-import { UserService } from '../../../../src/user/service/user.service';
+import { AppModule } from '@src/app.module';
+import { WinstonLoggerService } from '@common/logger/logger.service';
+import { InternalExceptionsFilter } from '@common/filters/internal.exceptions.filter';
+import { HttpExceptionsFilter } from '@common/filters/http.exception.filter';
+import cookieParser from 'cookie-parser';
+import { RedisService } from '@common/redis/redis.service';
+import { UserService } from '@user/service/user.service';
 import { NestApplication } from '@nestjs/core';
 import { DataSource } from 'typeorm';
 

@@ -21,20 +21,22 @@
     "testcontainers": "^10.25.0",
     "ts-jest": "^29.1.0",
     "ts-node": "^10.9.2",
+    "tsc-alias": "^1.8.16",
+    "tsconfig-paths": "^4.2.0",
     "typescript": "^5.6.3",
     "typescript-eslint": "^8.51.0"
   },
   "scripts": {
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "build": "tsc --project tsconfig.build.json",
+    "build": "tsc --project tsconfig.build.json && tsc-alias",
     "start": "node dist/src/main.js",
-    "start:dev": "ts-node src/main.ts",
-    "test": "cross-env NODE_ENV=test jest --config test/jest-integration.json",
-    "test:cov": "cross-env NODE_ENV=test jest --coverage --config test/jest-integration.json",
-    "test:unit": "cross-env NODE_ENV=test jest --config test/jest-unit.json",
-    "test:unit:cov": "cross-env NODE_ENV=test jest --coverage --config test/jest-unit.json",
-    "test:e2e": "cross-env NODE_ENV=test jest --config test/jest-e2e.json",
-    "test:e2e:cov": "cross-env NODE_ENV=test jest --coverage --config test/jest-e2e.json"
+    "start:dev": "ts-node -r tsconfig-paths/register src/main.ts",
+    "test": "cross-env NODE_ENV=test jest --config test/config/unit/jest/jest.config.ts",
+    "test:cov": "cross-env NODE_ENV=test jest --coverage --config test/config/unit/jest/jest.config.ts",
+    "test:unit": "cross-env NODE_ENV=test jest --config test/config/unit/jest/jest.config.ts",
+    "test:unit:cov": "cross-env NODE_ENV=test jest --coverage --config test/config/unit/jest/jest.config.ts",
+    "test:e2e": "cross-env NODE_ENV=test jest --config test/config/unit/jest/jest.config.ts",
+    "test:e2e:cov": "cross-env NODE_ENV=test jest --coverage --config test/config/unit/jest/jest.config.ts"
   }
 }

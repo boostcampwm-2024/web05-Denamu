@@ -1,5 +1,5 @@
-import { RedisConnection } from '../common/redis-access';
-import logger from '../common/logger';
+import { RedisConnection } from '@common/redis-access';
+import logger from '@common/logger';
 
 export abstract class AbstractQueueWorker<T> {
   protected readonly nameTag: string;

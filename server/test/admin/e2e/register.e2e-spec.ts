@@ -1,13 +1,13 @@
 import { HttpStatus } from '@nestjs/common';
-import { RegisterAdminRequestDto } from '../../../src/admin/dto/request/registerAdmin.dto';
-import * as supertest from 'supertest';
-import { AdminFixture } from '../../config/common/fixture/admin.fixture';
-import { AdminRepository } from '../../../src/admin/repository/admin.repository';
+import { RegisterAdminRequestDto } from '@admin/dto/request/registerAdmin.dto';
+import supertest from 'supertest';
+import { AdminFixture } from '@test/config/common/fixture/admin.fixture';
+import { AdminRepository } from '@admin/repository/admin.repository';
 import TestAgent from 'supertest/lib/agent';
-import { RedisService } from '../../../src/common/redis/redis.service';
-import { REDIS_KEYS } from '../../../src/common/redis/redis.constant';
+import { RedisService } from '@common/redis/redis.service';
+import { REDIS_KEYS } from '@common/redis/redis.constant';
 import * as bcrypt from 'bcrypt';
-import { testApp } from '../../config/e2e/env/jest.setup';
+import { testApp } from '@test/config/e2e/env/jest.setup';
 
 const URL = '/api/admin/register';
 

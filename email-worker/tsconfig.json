@@ -16,6 +16,15 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
-    "noFallthroughCasesInSwitch": false
+    "noFallthroughCasesInSwitch": false,
+    "baseUrl": ".",
+    "paths": {
+      "@src/*": ["src/*"],
+      "@app-types/*": ["src/types/*"],
+      "@email/*": ["src/email/*"],
+      "@rabbitmq/*": ["src/rabbitmq/*"]
+    },
+    "resolveJsonModule": true,
+    "esModuleInterop": true
   }
 }

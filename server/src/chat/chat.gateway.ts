@@ -7,11 +7,11 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Injectable } from '@nestjs/common';
-import { ChatService } from './service/chat.service';
-import { ChatScheduler } from './scheduler/chat.scheduler';
+import { ChatService } from '@chat/service/chat.service';
+import { ChatScheduler } from '@chat/scheduler/chat.scheduler';
 import { InjectMetric } from '@willsoto/nestjs-prometheus';
 import { Counter, Gauge } from 'prom-client';
-import type { BroadcastPayload } from './constant/chat.constant';
+import type { BroadcastPayload } from '@chat/constant/chat.constant';
 
 @Injectable()
 @WebSocketGateway({

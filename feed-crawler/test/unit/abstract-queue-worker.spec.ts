@@ -1,10 +1,10 @@
 import 'reflect-metadata';
-import { AbstractQueueWorker } from '../../src/event_worker/abstract-queue-worker';
-import { RedisConnection } from '../../src/common/redis-access';
-import logger from '../../src/common/logger';
+import { AbstractQueueWorker } from '@event_worker/abstract-queue-worker';
+import { RedisConnection } from '@common/redis-access';
+import logger from '@common/logger';
 
 // logger 모킹
-jest.mock('../../src/common/logger', () => ({
+jest.mock('@common/logger', () => ({
   default: {
     info: jest.fn(),
     error: jest.fn(),

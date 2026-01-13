@@ -1,5 +1,5 @@
 import { injectable } from 'tsyringe';
-import logger from '../../logger';
+import logger from '@common/logger';
 import { parse } from 'node-html-parser';
 import { unescape } from 'html-escaper';
 

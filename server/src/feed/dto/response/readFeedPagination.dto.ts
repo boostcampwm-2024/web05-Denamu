@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { FeedView } from '../../entity/feed.entity';
+import { FeedView } from '@feed/entity/feed.entity';
 
 export class FeedResult {
   private constructor(

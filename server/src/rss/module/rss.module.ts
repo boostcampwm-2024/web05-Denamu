@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
-import { RssController } from '../controller/rss.controller';
-import { RssService } from '../service/rss.service';
+import { RssController } from '@rss/controller/rss.controller';
+import { RssService } from '@rss/service/rss.service';
 import {
   RssRejectRepository,
   RssRepository,
   RssAcceptRepository,
-} from '../repository/rss.repository';
-import { EmailModule } from '../../common/email/email.module';
+} from '@rss/repository/rss.repository';
+import { EmailModule } from '@common/email/email.module';
 
 @Module({
   imports: [EmailModule],

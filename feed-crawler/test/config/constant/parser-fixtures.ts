@@ -1,4 +1,4 @@
-import { RssObj } from '../../../src/common/types';
+import { RssObj } from '@common/types';
 
 /**
  * Parser 테스트용 픽스처 데이터

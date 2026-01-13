@@ -5,10 +5,10 @@
 
 import { IsInt, IsNotEmpty, IsString, Min } from 'class-validator'; // 제거
 
-import * as supertest from 'supertest';
+import supertest from 'supertest';
 import { HttpStatus } from '@nestjs/common';
 import TestAgent from 'supertest/lib/agent';
-import { testApp } from '../../config/e2e/env/jest.setup';
+import { testApp } from '@test/config/e2e/env/jest.setup';
 
 const URL = 'API 경로';
 

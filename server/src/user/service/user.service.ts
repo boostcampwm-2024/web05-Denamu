@@ -1,27 +1,27 @@
-import { UserRepository } from '../repository/user.repository';
+import { UserRepository } from '@user/repository/user.repository';
 import {
   ConflictException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { RegisterUserRequestDto } from '../dto/request/registerUser.dto';
+import { RegisterUserRequestDto } from '@user/dto/request/registerUser.dto';
 import * as uuid from 'uuid';
-import { RedisService } from '../../common/redis/redis.service';
-import { REFRESH_TOKEN_TTL, SALT_ROUNDS } from '../constant/user.constants';
-import { LoginUserRequestDto } from '../dto/request/loginUser.dto';
+import { RedisService } from '@common/redis/redis.service';
+import { REFRESH_TOKEN_TTL, SALT_ROUNDS } from '@user/constant/user.constants';
+import { LoginUserRequestDto } from '@user/dto/request/loginUser.dto';
 import { Response } from 'express';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { cookieConfig } from '../../common/cookie/cookie.config';
-import { Payload } from '../../common/guard/jwt.guard';
-import { UpdateUserRequestDto } from '../dto/request/updateUser.dto';
-import { FileService } from '../../file/service/file.service';
-import { CheckEmailDuplicationResponseDto } from '../dto/response/checkEmailDuplication.dto';
-import { REDIS_KEYS } from '../../common/redis/redis.constant';
-import { CreateAccessTokenResponseDto } from '../dto/response/createAccessToken.dto';
-import { EmailProducer } from '../../common/email/email.producer';
+import { cookieConfig } from '@common/cookie/cookie.config';
+import { Payload } from '@common/guard/jwt.guard';
+import { UpdateUserRequestDto } from '@user/dto/request/updateUser.dto';
+import { FileService } from '@file/service/file.service';
+import { CheckEmailDuplicationResponseDto } from '@user/dto/response/checkEmailDuplication.dto';
+import { REDIS_KEYS } from '@common/redis/redis.constant';
+import { CreateAccessTokenResponseDto } from '@user/dto/response/createAccessToken.dto';
+import { EmailProducer } from '@common/email/email.producer';
 
 @Injectable()
 export class UserService {

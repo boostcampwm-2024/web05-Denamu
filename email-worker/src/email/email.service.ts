@@ -7,10 +7,10 @@ import {
   createVerificationMailContent,
   createDeleteAccountContent,
   PRODUCT_DOMAIN,
-} from './email.content';
+} from '@email/email.content';
 import { injectable } from 'tsyringe';
-import logger from '../logger';
-import { Rss, RssRegistration, RssRemoval, User } from '../types/types';
+import logger from '@src/logger';
+import { Rss, RssRegistration, RssRemoval, User } from '@app-types/types';
 
 @injectable()
 export class EmailService {
@@ -49,7 +49,9 @@ export class EmailService {
       logger.info(`${mailOptions.to as string} 이메일 전송 성공`);
     } catch (error) {
       logger.error(
-        `${mailOptions.to as string} 이메일 전송 실패 - 오류 메시지: ${error.message}, 스택 트레이스: ${error.stack}`,
+        `${mailOptions.to as string} 이메일 전송 실패 - 오류 메시지: ${
+          error.message
+        }, 스택 트레이스: ${error.stack}`,
       );
       throw error;
     }
