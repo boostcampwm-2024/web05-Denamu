@@ -1,7 +1,7 @@
 import { Global, Module } from '@nestjs/common';
 
-import { WinstonModule } from 'nest-winston';
 import * as winston from 'winston';
+import { WinstonModule } from 'nest-winston';
 
 import { getLogTransport, logFormat } from '@common/logger/logger.config';
 import { WinstonLoggerService } from '@common/logger/logger.service';

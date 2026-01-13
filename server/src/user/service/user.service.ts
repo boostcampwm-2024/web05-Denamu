@@ -8,8 +8,8 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 
 import * as bcrypt from 'bcrypt';
-import { Response } from 'express';
 import * as uuid from 'uuid';
+import { Response } from 'express';
 
 import { cookieConfig } from '@common/cookie/cookie.config';
 import { EmailProducer } from '@common/email/email.producer';

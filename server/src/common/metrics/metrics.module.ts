@@ -1,10 +1,10 @@
 import { Global, Module } from '@nestjs/common';
 
 import {
-  PrometheusModule,
   makeCounterProvider,
   makeGaugeProvider,
   makeHistogramProvider,
+  PrometheusModule,
 } from '@willsoto/nestjs-prometheus';
 
 const httpRequestsTotalProvider = makeCounterProvider({

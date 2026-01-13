@@ -1,9 +1,9 @@
 import { HttpStatus } from '@nestjs/common';
 
 import * as bcrypt from 'bcrypt';
+import * as uuid from 'uuid';
 import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
-import * as uuid from 'uuid';
 
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';

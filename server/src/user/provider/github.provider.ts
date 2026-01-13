@@ -1,7 +1,7 @@
 import { BadGatewayException, Injectable } from '@nestjs/common';
 
-import axios from 'axios';
 import * as querystring from 'node:querystring';
+import axios from 'axios';
 
 import { WinstonLoggerService } from '@common/logger/logger.service';
 

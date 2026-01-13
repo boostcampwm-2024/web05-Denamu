@@ -1,9 +1,9 @@
 import { HttpStatus } from '@nestjs/common';
 
+import * as uuid from 'uuid';
 import fs from 'fs/promises';
 import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
-import * as uuid from 'uuid';
 
 import { FILE_SIZE_LIMITS, FileUploadType } from '@file/constant/file.constant';
 import { UploadFileQueryRequestDto } from '@file/dto/request/uploadFile.dto';

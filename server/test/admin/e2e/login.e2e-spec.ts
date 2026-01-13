@@ -1,8 +1,8 @@
 import { HttpStatus } from '@nestjs/common';
 
+import * as uuid from 'uuid';
 import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
-import * as uuid from 'uuid';
 
 import { LoginAdminRequestDto } from '@admin/dto/request/loginAdmin.dto';
 import { Admin } from '@admin/entity/admin.entity';

@@ -5,8 +5,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import { DataSource } from 'typeorm';
 import * as uuid from 'uuid';
+import { DataSource } from 'typeorm';
 
 import { EmailProducer } from '@common/email/email.producer';
 import { REDIS_KEYS } from '@common/redis/redis.constant';

@@ -1,12 +1,12 @@
+import * as mysql from 'mysql2/promise';
+import * as os from 'os';
+import * as path from 'path';
 import { MySqlContainer, StartedMySqlContainer } from '@testcontainers/mysql';
 import {
   RabbitMQContainer,
   StartedRabbitMQContainer,
 } from '@testcontainers/rabbitmq';
 import { RedisContainer, StartedRedisContainer } from '@testcontainers/redis';
-import * as mysql from 'mysql2/promise';
-import * as os from 'os';
-import * as path from 'path';
 
 const CPU_COUNT = os.cpus().length;
 const MAX_WORKERS = Math.max(1, Math.floor(CPU_COUNT * 0.5));

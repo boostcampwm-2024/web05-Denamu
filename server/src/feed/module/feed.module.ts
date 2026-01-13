@@ -1,4 +1,4 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
 
