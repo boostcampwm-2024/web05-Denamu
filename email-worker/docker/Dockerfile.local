@@ -17,6 +17,4 @@ COPY --from=builder /var/web05-Denamu/email-worker/package.json .
 COPY --from=builder /var/web05-Denamu/email-worker/node_modules ./node_modules
 COPY --from=builder /var/web05-Denamu/email-worker/env ./env
 
-RUN touch /var/log/email-worker.log
-
-CMD ["sh", "-c", "npm run start && tail -f /var/log/email-worker.log"]
+CMD ["npm","run","start"]
