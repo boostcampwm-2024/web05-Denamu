@@ -1,4 +1,4 @@
-import { RssRejectRepository } from './../../../src/rss/repository/rss.repository';
+import { RssRejectRepository } from '@rss/repository/rss.repository';
 import { HttpStatus } from '@nestjs/common';
 import supertest from 'supertest';
 import { RssFixture } from '@test/config/common/fixture/rss.fixture';

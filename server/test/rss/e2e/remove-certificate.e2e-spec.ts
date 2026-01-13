@@ -1,7 +1,7 @@
 import { UserFixture } from '@test/config/common/fixture/user.fixture';
 import { CommentFixture } from '@test/config/common/fixture/comment.fixture';
 import { FeedFixture } from '@test/config/common/fixture/feed.fixture';
-import { REDIS_KEYS } from './../../../src/common/redis/redis.constant';
+import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { FeedRepository } from '@feed/repository/feed.repository';
 import { HttpStatus } from '@nestjs/common';
 import {

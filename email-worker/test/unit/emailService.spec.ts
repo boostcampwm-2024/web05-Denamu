@@ -1,8 +1,8 @@
 import 'reflect-metadata';
 import * as nodemailer from 'nodemailer';
-import { EmailService } from '../../src/email/email.service';
-import { RssRegistration, RssRemoval, User } from '../../src/types/types';
-import { PRODUCT_DOMAIN } from '../../src/email/email.content';
+import { EmailService } from '@email/email.service';
+import { RssRegistration, RssRemoval, User } from '@app-types/types';
+import { PRODUCT_DOMAIN } from '@email/email.content';
 
 jest.mock('nodemailer');
 

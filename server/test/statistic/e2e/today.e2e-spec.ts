@@ -1,4 +1,4 @@
-import { RssAccept } from './../../../src/rss/entity/rss.entity';
+import { RssAccept } from '@rss/entity/rss.entity';
 import { HttpStatus } from '@nestjs/common';
 import { RedisService } from '@common/redis/redis.service';
 import supertest from 'supertest';

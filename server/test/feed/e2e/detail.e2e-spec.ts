@@ -1,4 +1,4 @@
-import { TagRepository } from './../../../src/tag/repository/tag.repository';
+import { TagRepository } from '@tag/repository/tag.repository';
 import { HttpStatus } from '@nestjs/common';
 import supertest from 'supertest';
 import { FeedFixture } from '@test/config/common/fixture/feed.fixture';
