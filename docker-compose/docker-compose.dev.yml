@@ -81,7 +81,7 @@ services:
         - path: ../server/package.json
           action: rebuild
     profiles:
-      - was-dev
+      - was
       - default
 
   # Feed Crawler 개발 서비스
@@ -110,6 +110,7 @@ services:
         - path: ../feed-crawler/package.json
           action: rebuild
     profiles:
+      - feed-crawler
       - default
 
   # Email Worker 개발 서비스
@@ -139,4 +140,5 @@ services:
         - path: ../email-worker/package.json
           action: rebuild
     profiles:
+      - email-worker
       - default
