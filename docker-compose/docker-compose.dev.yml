@@ -122,10 +122,6 @@ services:
     networks:
       - Denamu
     depends_on:
-      mysql-db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
       rabbitmq:
         condition: service_healthy
     volumes:

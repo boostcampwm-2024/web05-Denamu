@@ -38,7 +38,6 @@ services:
     profiles:
       - was
       - feed-crawler
-      - email-worker
       - default
 
   # Redis 서비스
@@ -66,7 +65,6 @@ services:
     profiles:
       - was
       - feed-crawler
-      - email-worker
       - default
 
   # RabbitMQ 서비스
