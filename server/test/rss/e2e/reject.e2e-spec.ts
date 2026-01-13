@@ -9,10 +9,11 @@ import { RedisService } from '@common/redis/redis.service';
 import { RejectRssRequestDto } from '@rss/dto/request/rejectRss';
 import { Rss } from '@rss/entity/rss.entity';
 import { RssRepository } from '@rss/repository/rss.repository';
-import { RssRejectRepository } from '@rss/repository/rss.repository';
 
 import { RssFixture } from '@test/config/common/fixture/rss.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
+
+import { RssRejectRepository } from './../../../src/rss/repository/rss.repository';
 
 const URL = '/api/rss/reject';
 
