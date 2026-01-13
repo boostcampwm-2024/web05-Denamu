@@ -1,7 +1,6 @@
 {
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.3",
-    "amqplib": "^0.10.9",
     "cross-env": "^7.0.3",
     "dotenv": "^16.4.5",
     "fast-xml-parser": "^4.5.0",
@@ -18,7 +17,6 @@
   "devDependencies": {
     "@testcontainers/mysql": "^10.25.0",
     "@trivago/prettier-plugin-sort-imports": "^6.0.2",
-    "@types/amqplib": "^0.10.7",
     "@types/jest": "^29.5.2",
     "@types/node": "^22.9.0",
     "@types/node-fetch": "^2.6.11",
