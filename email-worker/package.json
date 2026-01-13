@@ -32,11 +32,11 @@
     "build": "tsc --project tsconfig.build.json && tsc-alias",
     "start": "node dist/src/main.js",
     "start:dev": "ts-node -r tsconfig-paths/register src/main.ts",
-    "test": "cross-env NODE_ENV=test jest --config test/jest-integration.json",
-    "test:cov": "cross-env NODE_ENV=test jest --coverage --config test/jest-integration.json",
-    "test:unit": "cross-env NODE_ENV=test jest --config test/jest-unit.json",
-    "test:unit:cov": "cross-env NODE_ENV=test jest --coverage --config test/jest-unit.json",
-    "test:e2e": "cross-env NODE_ENV=test jest --config test/jest-e2e.json",
-    "test:e2e:cov": "cross-env NODE_ENV=test jest --coverage --config test/jest-e2e.json"
+    "test": "cross-env NODE_ENV=test jest --config test/config/unit/jest/jest.config.ts",
+    "test:cov": "cross-env NODE_ENV=test jest --coverage --config test/config/unit/jest/jest.config.ts",
+    "test:unit": "cross-env NODE_ENV=test jest --config test/config/unit/jest/jest.config.ts",
+    "test:unit:cov": "cross-env NODE_ENV=test jest --coverage --config test/config/unit/jest/jest.config.ts",
+    "test:e2e": "cross-env NODE_ENV=test jest --config test/config/unit/jest/jest.config.ts",
+    "test:e2e:cov": "cross-env NODE_ENV=test jest --coverage --config test/config/unit/jest/jest.config.ts"
   }
 }
