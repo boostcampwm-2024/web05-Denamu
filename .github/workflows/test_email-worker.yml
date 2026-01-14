@@ -2,11 +2,8 @@ name: EMAIL-WORKER Test
 
 on:
   pull_request:
-    branches:
-      - main
-    paths:
-      - 'email-worker/**'
-      - '.github/workflows/test_email-worker.yml'
+    branches: [main]
+    paths: ['email-worker/**', '.github/workflows/test_email-worker.yml']
   workflow_dispatch:
 
 jobs:

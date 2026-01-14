@@ -2,11 +2,8 @@ name: BE DTO Test
 
 on:
   pull_request:
-    branches:
-      - main
-    paths:
-      - 'server/**'
-      - '.github/workflows/test_server_dto.yml'
+    branches: [main]
+    paths: ['server/**', '.github/workflows/test_server_dto.yml']
   workflow_dispatch:
 
 jobs:
