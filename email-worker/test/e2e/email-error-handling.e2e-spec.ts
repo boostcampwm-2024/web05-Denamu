@@ -52,11 +52,13 @@ describe('Email Error Handling E2E Test', () => {
   });
 
   afterAll(async () => {
+    console.log('Closing Email Consumer...');
     if (global.testContext) {
       await emailConsumer.close();
       await rabbitmqManager.disconnect();
       delete global.testContext;
     }
+    console.log('Email Consumer closed.');
   });
 
   describe('네트워크 에러 → Waiting Queue 시나리오', () => {
