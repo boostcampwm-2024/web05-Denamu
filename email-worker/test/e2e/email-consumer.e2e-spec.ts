@@ -3,7 +3,7 @@ import { EmailConsumer } from '@email/email.consumer';
 import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
 import { EmailPayloadConstant } from '@src/types/types';
 import { RMQ_EXCHANGES, RMQ_ROUTING_KEYS } from '@rabbitmq/rabbitmq.constant';
-import { setupTestContainer } from '../setup/testContext.setup';
+import { setupTestContainer } from '@test/setup/testContext.setup';
 import { RabbitMQManager } from '@rabbitmq/rabbitmq.manager';
 
 describe(`email consumer e2e test`, () => {
