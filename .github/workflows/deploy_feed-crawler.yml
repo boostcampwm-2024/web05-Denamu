@@ -3,7 +3,12 @@ name: Feed-Crawler Deployment
 on:
   push:
     branches: [main]
-    paths: ['feed-crawler/**', 'docker-compose/docker-compose.prod.yml']
+    paths:
+      [
+        'feed-crawler/**',
+        'docker-compose/docker-compose.prod.yml',
+        '.github/workflows/deploy_feed-crawler.yml',
+      ]
   workflow_dispatch:
 
 permissions:

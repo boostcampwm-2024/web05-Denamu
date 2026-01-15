@@ -2,11 +2,8 @@ name: BE DTO Test
 
 on:
   pull_request:
-    branches:
-      - main
-    paths:
-      - 'server/**'
-      - '.github/workflows/test_server_dto.yml'
+    branches: [main]
+    paths: ['server/**', '.github/workflows/test_server_dto.yml']
   workflow_dispatch:
 
 jobs:
@@ -17,15 +14,13 @@ jobs:
       # 1. 현재 PR 브랜치로 체크아웃 하기
       - name: Checkout code
         uses: actions/checkout@v3
-        with:
-          ref: ${{ github.event.pull_request.head.ref }}
 
       # 2. Node.js 환경 설정
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
-          cache: "npm"
+          node-version: '22'
+          cache: 'npm'
 
       # 3. 의존성 설치
       - name: Install dependencies
