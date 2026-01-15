@@ -28,6 +28,9 @@ const createRabbitMQContainer = async () => {
 
   process.env.RABBITMQ_HOST = rabbitMQContainer.getHost();
   process.env.RABBITMQ_PORT = rabbitMQContainer.getMappedPort(5672).toString();
+  process.env.RABBITMQ_MANAGEMENT_PORT = rabbitMQContainer
+    .getMappedPort(15672)
+    .toString();
   process.env.RABBITMQ_DEFAULT_USER = 'guest';
   process.env.RABBITMQ_DEFAULT_PASS = 'guest';
   await rabbitMQContainer.exec([
