@@ -38,7 +38,8 @@ export async function getMessagesFromQueue(
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: 'Basic ' + Buffer.from(`${user}:${pass}`).toString('base64'),
+      Authorization:
+        'Basic ' + Buffer.from(`${user}:${pass}`).toString('base64'),
     },
     body: JSON.stringify({
       count,
@@ -51,7 +52,9 @@ export async function getMessagesFromQueue(
     if (response.status === 404) {
       return []; // 큐가 존재하지 않으면 빈 배열 반환
     }
-    throw new Error(`Failed to get messages from queue: ${response.statusText}`);
+    throw new Error(
+      `Failed to get messages from queue: ${response.statusText}`,
+    );
   }
 
   const messages = await response.json();
