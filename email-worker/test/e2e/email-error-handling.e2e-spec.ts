@@ -15,7 +15,7 @@ import {
   purgeAllEmailQueues,
   clearMailpit,
   getMailpitMessages,
-} from '@test/helpers/rabbitmq-test.helper';
+} from '@test/e2e/helpers/rabbitmq-test.helper';
 
 describe('Email Error Handling E2E Test', () => {
   let emailConsumer: EmailConsumer;
