@@ -64,7 +64,6 @@ describe(`email consumer e2e test`, () => {
       method: 'DELETE',
     });
 
-    console.log(JSON.stringify(data));
     expect(data.messages).toHaveLength(1);
     expect(data.messages[0].To[0].Address).toBe('test@test.com');
     expect(data.messages[0].Subject).toContain('회원가입');
@@ -104,7 +103,6 @@ describe(`email consumer e2e test`, () => {
       method: 'DELETE',
     });
 
-    console.log(JSON.stringify(data));
     expect(data.messages).toHaveLength(1);
     expect(data.messages[0].To[0].Address).toBe('test@test.com');
     expect(data.messages[0].Subject).toContain('RSS 삭제');
@@ -147,7 +145,6 @@ describe(`email consumer e2e test`, () => {
       method: 'DELETE',
     });
 
-    console.log(JSON.stringify(data));
     expect(data.messages).toHaveLength(1);
     expect(data.messages[0].To[0].Address).toBe('test@test.com');
     expect(data.messages[0].Subject).toContain('RSS 등록이 승인');
@@ -191,7 +188,6 @@ describe(`email consumer e2e test`, () => {
       method: 'DELETE',
     });
 
-    console.log(JSON.stringify(data));
     expect(data.messages).toHaveLength(1);
     expect(data.messages[0].To[0].Address).toBe('test@test.com');
     expect(data.messages[0].Subject).toContain('RSS 등록이 거부');
@@ -229,7 +225,6 @@ describe(`email consumer e2e test`, () => {
       method: 'DELETE',
     });
 
-    console.log(JSON.stringify(data));
     expect(data.messages).toHaveLength(1);
     expect(data.messages[0].To[0].Address).toBe('test@test.com');
     expect(data.messages[0].Subject).toContain('비밀번호 재설정');
@@ -267,7 +262,6 @@ describe(`email consumer e2e test`, () => {
       method: 'DELETE',
     });
 
-    console.log(JSON.stringify(data));
     expect(data.messages).toHaveLength(1);
     expect(data.messages[0].To[0].Address).toBe('test@test.com');
     expect(data.messages[0].Subject).toContain('회원탈퇴');
