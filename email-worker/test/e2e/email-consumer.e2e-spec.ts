@@ -6,7 +6,7 @@ import { RMQ_EXCHANGES, RMQ_ROUTING_KEYS } from '@rabbitmq/rabbitmq.constant';
 import { setupTestContainer } from '@test/setup/testContext.setup';
 import { RabbitMQManager } from '@rabbitmq/rabbitmq.manager';
 
-describe(`email consumer e2e test`, () => {
+describe(`Email Normal Scenario E2E Test`, () => {
   let emailConsumer: EmailConsumer;
   let rabbitmqService: RabbitMQService;
   let rabbitmqManager: RabbitMQManager;
