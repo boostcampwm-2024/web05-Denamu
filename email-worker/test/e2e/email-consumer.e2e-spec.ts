@@ -1,13 +1,10 @@
 import 'reflect-metadata';
-import { EmailConsumer } from '../../src/email/email.consumer';
-import { RabbitMQService } from '../../src/rabbitmq/rabbitmq.service';
-import { EmailPayloadConstant } from '../../src/types/types';
-import {
-  RMQ_EXCHANGES,
-  RMQ_ROUTING_KEYS,
-} from '../../src/rabbitmq/rabbitmq.constant';
+import { EmailConsumer } from '@email/email.consumer';
+import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
+import { EmailPayloadConstant } from '@src/types/types';
+import { RMQ_EXCHANGES, RMQ_ROUTING_KEYS } from '@rabbitmq/rabbitmq.constant';
 import { setupTestContainer } from '../setup/testContext.setup';
-import { RabbitMQManager } from '../../src/rabbitmq/rabbitmq.manager';
+import { RabbitMQManager } from '@rabbitmq/rabbitmq.manager';
 
 describe(`email consumer e2e test`, () => {
   let emailConsumer: EmailConsumer;
