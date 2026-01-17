@@ -5,7 +5,7 @@ import {
   RMQ_ROUTING_KEYS,
 } from '@rabbitmq/rabbitmq.constant';
 import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
-import { EmailPayload } from '@app-types/types';
+import { EmailPayload } from '@src/types/types';
 
 /**
  * RabbitMQ Management API를 통해 조회한 메시지 형식

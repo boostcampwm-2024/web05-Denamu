@@ -4,7 +4,7 @@ import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
 import { EmailService } from '@email/email.service';
 import { EmailPayload, EmailPayloadConstant } from '@src/types/types';
 import { RMQ_QUEUES, RETRY_CONFIG } from '@rabbitmq/rabbitmq.constant';
-import { setupTestContainer } from '@test/setup/testContext.setup';
+import { setupTestContainer } from '@test/config/e2e/common/testContext.setup';
 import { RabbitMQManager } from '@rabbitmq/rabbitmq.manager';
 import { Channel } from 'amqplib';
 import {
@@ -15,7 +15,7 @@ import {
   purgeAllEmailQueues,
   clearMailpit,
   getMailpitMessages,
-} from '@test/e2e/helpers/rabbitmq-test.helper';
+} from '@test/config/e2e/common/rabbitmq-test.helper';
 
 describe('Email Error Handling E2E Test', () => {
   let emailConsumer: EmailConsumer;

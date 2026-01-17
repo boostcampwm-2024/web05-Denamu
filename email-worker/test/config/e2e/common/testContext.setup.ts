@@ -1,9 +1,9 @@
 import { container, DependencyContainer } from 'tsyringe';
-import { RabbitMQService } from '../../src/rabbitmq/rabbitmq.service';
-import { EmailConsumer } from '../../src/email/email.consumer';
-import { EmailService } from '../../src/email/email.service';
-import { RabbitMQManager } from '../../src/rabbitmq/rabbitmq.manager';
-import { DEPENDENCY_SYMBOLS } from '../../src/types/dependency-symbols';
+import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
+import { EmailConsumer } from '@email/email.consumer';
+import { EmailService } from '@email/email.service';
+import { RabbitMQManager } from '@rabbitmq/rabbitmq.manager';
+import { DEPENDENCY_SYMBOLS } from '@src/types/dependency-symbols';
 
 export interface TestContext {
   container: DependencyContainer;
