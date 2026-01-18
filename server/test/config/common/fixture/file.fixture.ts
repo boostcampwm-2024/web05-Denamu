@@ -1,5 +1,6 @@
-import { File } from '@file/entity/file.entity';
 import * as uuid from 'uuid';
+
+import { File } from '@file/entity/file.entity';
 
 export class FileFixture {
   static createGeneralFile() {

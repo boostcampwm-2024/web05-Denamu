@@ -12,7 +12,9 @@ import {
   ViewColumn,
   ViewEntity,
 } from 'typeorm';
+
 import { RssAccept } from '@rss/entity/rss.entity';
+
 import { Tag } from '@tag/entity/tag.entity';
 
 @Entity({ name: 'feed' })

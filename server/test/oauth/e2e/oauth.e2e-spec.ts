@@ -1,9 +1,12 @@
 import { HttpStatus } from '@nestjs/common';
-import { OAuthTypeRequestDto } from '@user/dto/request/oAuthType.dto';
-import { OAuthType } from '@user/constant/oauth.constant';
+
 import supertest from 'supertest';
-import { OAuthService } from '@user/service/oAuth.service';
 import TestAgent from 'supertest/lib/agent';
+
+import { OAuthType } from '@user/constant/oauth.constant';
+import { OAuthTypeRequestDto } from '@user/dto/request/oAuthType.dto';
+import { OAuthService } from '@user/service/oAuth.service';
+
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
 const URL = '/api/oauth';

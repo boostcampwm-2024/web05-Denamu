@@ -1,4 +1,5 @@
 import { validate } from 'class-validator';
+
 import { ManageLikeRequestDto } from '@like/dto/request/manageLike.dto';
 
 describe(`${ManageLikeRequestDto.name} Test`, () => {

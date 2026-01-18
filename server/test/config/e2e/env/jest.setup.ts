@@ -1,14 +1,18 @@
 import { ValidationPipe } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
-import { AppModule } from '@src/app.module';
-import { WinstonLoggerService } from '@common/logger/logger.service';
-import { InternalExceptionsFilter } from '@common/filters/internal.exceptions.filter';
-import { HttpExceptionsFilter } from '@common/filters/http.exception.filter';
-import cookieParser from 'cookie-parser';
-import { RedisService } from '@common/redis/redis.service';
-import { UserService } from '@user/service/user.service';
 import { NestApplication } from '@nestjs/core';
+import { Test } from '@nestjs/testing';
+
+import cookieParser from 'cookie-parser';
 import { DataSource } from 'typeorm';
+
+import { AppModule } from '@src/app.module';
+
+import { HttpExceptionsFilter } from '@common/filters/http.exception.filter';
+import { InternalExceptionsFilter } from '@common/filters/internal.exceptions.filter';
+import { WinstonLoggerService } from '@common/logger/logger.service';
+import { RedisService } from '@common/redis/redis.service';
+
+import { UserService } from '@user/service/user.service';
 
 export let testApp: NestApplication;
 

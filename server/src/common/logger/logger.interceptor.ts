@@ -4,9 +4,11 @@ import {
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
-import { finalize } from 'rxjs';
-import { WinstonLoggerService } from '@common/logger/logger.service';
+
 import { Request } from 'express';
+import { finalize } from 'rxjs';
+
+import { WinstonLoggerService } from '@common/logger/logger.service';
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
