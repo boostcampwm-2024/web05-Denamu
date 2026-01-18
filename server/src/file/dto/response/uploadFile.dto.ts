@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+
 import { File } from '@file/entity/file.entity';
 
 export class UploadFileResponseDto {

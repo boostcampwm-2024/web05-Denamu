@@ -1,7 +1,9 @@
 import 'reflect-metadata';
-import { RabbitmqService } from '@rabbitmq/rabbitmq.service';
-import { RabbitMQManager } from '@rabbitmq/rabbitmq.manager';
+
 import { Channel, ConsumeMessage } from 'amqplib';
+
+import { RabbitMQManager } from '@rabbitmq/rabbitmq.manager';
+import { RabbitmqService } from '@rabbitmq/rabbitmq.service';
 
 describe('RabbitmqService unit test', () => {
   let rabbitmqService: RabbitmqService;

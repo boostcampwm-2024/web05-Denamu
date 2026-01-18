@@ -1,5 +1,7 @@
 import { setupTestContainer } from '@test/setup/testContext.setup';
+
 import { FeedCrawler } from '@src/feed-crawler';
+
 import { redisConstant } from '@common/constant';
 
 describe('feed crawling e2e-test', () => {

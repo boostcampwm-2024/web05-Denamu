@@ -1,9 +1,12 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { LikeController } from '@like/controller/like.controller';
-import { LikeService } from '@like/service/like.service';
-import { LikeRepository } from '@like/repository/like.repository';
-import { FeedModule } from '@feed/module/feed.module';
+
 import { JwtAuthModule } from '@common/auth/jwt.module';
+
+import { FeedModule } from '@feed/module/feed.module';
+
+import { LikeController } from '@like/controller/like.controller';
+import { LikeRepository } from '@like/repository/like.repository';
+import { LikeService } from '@like/service/like.service';
 
 @Module({
   imports: [forwardRef(() => FeedModule), JwtAuthModule],

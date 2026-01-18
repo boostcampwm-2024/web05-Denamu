@@ -1,5 +1,7 @@
 import { Comment } from '@comment/entity/comment.entity';
+
 import { Feed } from '@feed/entity/feed.entity';
+
 import { User } from '@user/entity/user.entity';
 
 export const COMMENT_DEFAULT_TEXT = 'test comment';

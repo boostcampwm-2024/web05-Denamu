@@ -1,4 +1,5 @@
 import { validate } from 'class-validator';
+
 import { CheckEmailDuplicationRequestDto } from '@user/dto/request/checkEmailDuplication.dto';
 
 describe(`${CheckEmailDuplicationRequestDto.name} Test`, () => {

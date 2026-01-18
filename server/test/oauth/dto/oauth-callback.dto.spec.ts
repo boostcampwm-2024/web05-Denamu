@@ -1,4 +1,5 @@
 import { validate } from 'class-validator';
+
 import { OAuthCallbackRequestDto } from '@user/dto/request/oAuthCallbackDto';
 
 describe('OAuthCallbackRequestDto Test', () => {

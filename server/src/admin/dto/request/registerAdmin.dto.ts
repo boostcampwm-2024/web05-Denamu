@@ -1,5 +1,7 @@
-import { IsNotEmpty, IsString, Length, Matches } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+
+import { IsNotEmpty, IsString, Length, Matches } from 'class-validator';
+
 import { Admin } from '@admin/entity/admin.entity';
 
 const PASSWORD_REG = /^(?=.*[!@#$%^&*()_+])[A-Za-z0-9!@#$%^&*()_+]+$/;

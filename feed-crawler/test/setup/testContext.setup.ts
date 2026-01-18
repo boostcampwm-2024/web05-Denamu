@@ -1,19 +1,25 @@
 import 'reflect-metadata';
-import { DatabaseConnection } from '@app-types/database-connection';
-import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
-import { MySQLConnection } from '@common/mysql-access';
-import { RedisConnection } from '@common/redis-access';
-import { RssRepository } from '@repository/rss.repository';
-import { FeedRepository } from '@repository/feed.repository';
+
 import { container } from 'tsyringe';
 import { DependencyContainer } from 'tsyringe';
-import { ParserUtil } from '@common/parser/utils/parser-util';
-import { ClaudeEventWorker } from '@event_worker/workers/claude-event-worker';
-import { TagMapRepository } from '@repository/tag-map.repository';
-import { FeedParserManager } from '@common/parser/feed-parser-manager';
-import { Rss20Parser } from '@common/parser/formats/rss20-parser';
-import { Atom10Parser } from '@common/parser/formats/atom10-parser';
+
 import { FeedCrawler } from '@src/feed-crawler';
+
+import { MySQLConnection } from '@common/mysql-access';
+import { FeedParserManager } from '@common/parser/feed-parser-manager';
+import { Atom10Parser } from '@common/parser/formats/atom10-parser';
+import { Rss20Parser } from '@common/parser/formats/rss20-parser';
+import { ParserUtil } from '@common/parser/utils/parser-util';
+import { RedisConnection } from '@common/redis-access';
+
+import { ClaudeEventWorker } from '@event_worker/workers/claude-event-worker';
+
+import { FeedRepository } from '@repository/feed.repository';
+import { RssRepository } from '@repository/rss.repository';
+import { TagMapRepository } from '@repository/tag-map.repository';
+
+import { DatabaseConnection } from '@app-types/database-connection';
+import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
 
 export interface TestContext {
   container: DependencyContainer;

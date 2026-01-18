@@ -1,13 +1,17 @@
-import 'reflect-metadata';
 import { inject, injectable } from 'tsyringe';
+
 import Anthropic from '@anthropic-ai/sdk';
-import { ClaudeResponse, FeedAIQueueItem } from '@common/types';
-import { TagMapRepository } from '@repository/tag-map.repository';
-import { FeedRepository } from '@repository/feed.repository';
-import logger from '@common/logger';
+
 import { PROMPT_CONTENT, redisConstant } from '@common/constant';
+import logger from '@common/logger';
 import { RedisConnection } from '@common/redis-access';
+import { ClaudeResponse, FeedAIQueueItem } from '@common/types';
+
 import { AbstractQueueWorker } from '@event_worker/abstract-queue-worker';
+
+import { FeedRepository } from '@repository/feed.repository';
+import { TagMapRepository } from '@repository/tag-map.repository';
+
 import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
 
 @injectable()

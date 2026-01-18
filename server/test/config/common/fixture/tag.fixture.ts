@@ -1,5 +1,6 @@
-import { Tag } from '@tag/entity/tag.entity';
 import * as uuid from 'uuid';
+
+import { Tag } from '@tag/entity/tag.entity';
 
 export class TagFixture {
   static createGeneralUser() {

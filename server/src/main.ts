@@ -1,12 +1,15 @@
-import { HttpExceptionsFilter } from '@common/filters/http.exception.filter';
+import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from '@src/app.module';
-import { setupSwagger } from '@common/swagger/swagger';
+
 import cookieParser from 'cookie-parser';
+
+import { AppModule } from '@src/app.module';
+
+import { HttpExceptionsFilter } from '@common/filters/http.exception.filter';
 import { InternalExceptionsFilter } from '@common/filters/internal.exceptions.filter';
 import { LoggingInterceptor } from '@common/logger/logger.interceptor';
 import { WinstonLoggerService } from '@common/logger/logger.service';
-import { ValidationPipe } from '@nestjs/common';
+import { setupSwagger } from '@common/swagger/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

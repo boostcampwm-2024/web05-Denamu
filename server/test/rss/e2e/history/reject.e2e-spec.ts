@@ -1,11 +1,15 @@
 import { HttpStatus } from '@nestjs/common';
+
 import supertest from 'supertest';
-import { RedisService } from '@common/redis/redis.service';
-import { RssRejectRepository } from '@rss/repository/rss.repository';
-import { RssReject } from '@rss/entity/rss.entity';
-import { RssRejectFixture } from '@test/config/common/fixture/rss-reject.fixture';
 import TestAgent from 'supertest/lib/agent';
+
 import { REDIS_KEYS } from '@common/redis/redis.constant';
+import { RedisService } from '@common/redis/redis.service';
+
+import { RssReject } from '@rss/entity/rss.entity';
+import { RssRejectRepository } from '@rss/repository/rss.repository';
+
+import { RssRejectFixture } from '@test/config/common/fixture/rss-reject.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
 const URL = '/api/rss/history/reject';

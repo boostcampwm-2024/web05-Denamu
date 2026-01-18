@@ -1,4 +1,5 @@
 import { validate } from 'class-validator';
+
 import { UpdateUserRequestDto } from '@user/dto/request/updateUser.dto';
 
 describe(`${UpdateUserRequestDto.name} Test`, () => {

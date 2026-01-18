@@ -1,4 +1,5 @@
 import { validate } from 'class-validator';
+
 import { CreateCommentRequestDto } from '@comment/dto/request/createComment.dto';
 
 describe(`${CreateCommentRequestDto.name} Test`, () => {

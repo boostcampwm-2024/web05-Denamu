@@ -1,6 +1,8 @@
-import { OAuthType } from '@user/constant/oauth.constant';
-import { IsEnum } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+
+import { IsEnum } from 'class-validator';
+
+import { OAuthType } from '@user/constant/oauth.constant';
 
 export class OAuthTypeRequestDto {
   @ApiProperty({

@@ -1,5 +1,6 @@
-import { RssReject } from '@rss/entity/rss.entity';
 import * as uuid from 'uuid';
+
+import { RssReject } from '@rss/entity/rss.entity';
 
 export class RssRejectFixture {
   static createGeneralRssReject() {

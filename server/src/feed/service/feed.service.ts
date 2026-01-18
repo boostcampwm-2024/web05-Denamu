@@ -1,31 +1,34 @@
 import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
-import {
-  FeedRepository,
-  FeedViewRepository,
-} from '@feed/repository/feed.repository';
+
+import { Request, Response } from 'express';
+
+import { cookieConfig } from '@common/cookie/cookie.config';
+import { REDIS_KEYS } from '@common/redis/redis.constant';
+import { RedisService } from '@common/redis/redis.service';
+
+import { ManageFeedRequestDto } from '@feed/dto/request/manageFeed.dto';
 import { ReadFeedPaginationRequestDto } from '@feed/dto/request/readFeedPagination.dto';
-import { FeedView } from '@feed/entity/feed.entity';
+import { SearchFeedRequestDto } from '@feed/dto/request/searchFeed.dto';
+import { GetFeedDetailResponseDto } from '@feed/dto/response/getFeedDetail';
 import {
-  ReadFeedPaginationResponseDto,
   FeedPaginationResult,
   FeedResult,
   FeedTrendResponseDto,
+  ReadFeedPaginationResponseDto,
 } from '@feed/dto/response/readFeedPagination.dto';
-import { RedisService } from '@common/redis/redis.service';
-import { SearchFeedRequestDto } from '@feed/dto/request/searchFeed.dto';
-import { Response, Request } from 'express';
-import { cookieConfig } from '@common/cookie/cookie.config';
-import { REDIS_KEYS } from '@common/redis/redis.constant';
-import {
-  SearchFeedResponseDto,
-  SearchFeedResult,
-} from '@feed/dto/response/searchFeed.dto';
 import {
   FeedRecentRedis,
   ReadFeedRecentResponseDto,
 } from '@feed/dto/response/readFeedRecent.dto';
-import { GetFeedDetailResponseDto } from '@feed/dto/response/getFeedDetail';
-import { ManageFeedRequestDto } from '@feed/dto/request/manageFeed.dto';
+import {
+  SearchFeedResponseDto,
+  SearchFeedResult,
+} from '@feed/dto/response/searchFeed.dto';
+import { FeedView } from '@feed/entity/feed.entity';
+import {
+  FeedRepository,
+  FeedViewRepository,
+} from '@feed/repository/feed.repository';
 
 @Injectable()
 export class FeedService {

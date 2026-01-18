@@ -8,6 +8,7 @@ import {
   ApiQuery,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+
 import { FileUploadType } from '@file/constant/file.constant';
 
 export function ApiUploadProfileFile() {

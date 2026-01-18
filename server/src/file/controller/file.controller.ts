@@ -1,29 +1,31 @@
 import {
   Controller,
-  Post,
   Delete,
-  UseInterceptors,
-  UploadedFile,
-  Param,
-  UseGuards,
-  Query,
-  HttpStatus,
-  HttpCode,
   FileTypeValidator,
+  HttpCode,
+  HttpStatus,
   MaxFileSizeValidator,
+  Param,
   ParseFilePipe,
+  Post,
+  Query,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { FileService } from '@file/service/file.service';
 import { ApiTags } from '@nestjs/swagger';
+
+import { CurrentUser } from '@common/decorator';
 import { JwtGuard, Payload } from '@common/guard/jwt.guard';
 import { ApiResponse } from '@common/response/common.response';
-import { ApiUploadProfileFile } from '@file/api-docs/uploadProfileFile.api-docs';
+
 import { ApiDeleteFile } from '@file/api-docs/deleteFile.api-docs';
+import { ApiUploadProfileFile } from '@file/api-docs/uploadProfileFile.api-docs';
+import { FILE_SIZE_LIMITS } from '@file/constant/file.constant';
 import { DeleteFileParamRequestDto } from '@file/dto/request/deleteFile.dto';
 import { UploadFileQueryRequestDto } from '@file/dto/request/uploadFile.dto';
-import { CurrentUser } from '@common/decorator';
-import { FILE_SIZE_LIMITS } from '@file/constant/file.constant';
+import { FileService } from '@file/service/file.service';
 
 @ApiTags('File')
 @Controller('file')

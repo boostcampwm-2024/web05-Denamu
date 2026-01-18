@@ -1,13 +1,14 @@
+import { ApiProperty } from '@nestjs/swagger';
+
+import { Type } from 'class-transformer';
 import {
-  IsNotEmpty,
   IsEnum,
   IsInt,
+  IsNotEmpty,
+  IsOptional,
   IsString,
   Min,
-  IsOptional,
 } from 'class-validator';
-import { Type } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
 
 export enum SearchType {
   TITLE = 'title',

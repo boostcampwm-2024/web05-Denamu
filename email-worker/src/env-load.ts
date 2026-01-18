@@ -1,6 +1,6 @@
 import * as dotenv from 'dotenv';
-import * as path from 'path';
 import * as fs from 'fs';
+import * as path from 'path';
 
 if (process.env.NODE_ENV !== 'PROD') {
   const envMap = {

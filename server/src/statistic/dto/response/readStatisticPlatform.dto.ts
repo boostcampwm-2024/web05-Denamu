@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+
 import { RssAccept } from '@rss/entity/rss.entity';
 
 export class ReadStatisticPlatformResponseDto {

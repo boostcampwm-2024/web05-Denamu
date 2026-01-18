@@ -1,9 +1,9 @@
+import { applyDecorators } from '@nestjs/common';
 import {
   ApiOkResponse,
   ApiOperation,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { applyDecorators } from '@nestjs/common';
 
 export function ApiLogoutAdmin() {
   return applyDecorators(

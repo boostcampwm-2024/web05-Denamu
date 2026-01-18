@@ -11,6 +11,7 @@
   },
   "devDependencies": {
     "@testcontainers/rabbitmq": "^11.7.2",
+    "@trivago/prettier-plugin-sort-imports": "^6.0.2",
     "@types/amqplib": "^0.10.7",
     "@types/jest": "^29.5.2",
     "@types/node": "^22.9.0",
@@ -27,6 +28,7 @@
     "typescript-eslint": "^8.51.0"
   },
   "scripts": {
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "build": "tsc --project tsconfig.build.json && tsc-alias",

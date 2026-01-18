@@ -1,8 +1,10 @@
 import * as mysql from 'mysql2/promise';
-import { CONNECTION_LIMIT } from '@common/constant';
 import { PoolConnection } from 'mysql2/promise';
-import { DatabaseConnection } from '@app-types/database-connection';
+
+import { CONNECTION_LIMIT } from '@common/constant';
 import logger from '@common/logger';
+
+import { DatabaseConnection } from '@app-types/database-connection';
 
 export class MySQLConnection implements DatabaseConnection {
   private pool: mysql.Pool;

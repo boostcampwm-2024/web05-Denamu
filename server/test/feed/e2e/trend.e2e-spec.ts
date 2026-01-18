@@ -1,11 +1,15 @@
-import { RedisService } from '@common/redis/redis.service';
-import { REDIS_KEYS } from '@common/redis/redis.constant';
-import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture';
-import { FeedRepository } from '@feed/repository/feed.repository';
-import { RssAcceptRepository } from '@rss/repository/rss.repository';
-import { FeedFixture } from '@test/config/common/fixture/feed.fixture';
 import EventSource from 'eventsource';
+
+import { REDIS_KEYS } from '@common/redis/redis.constant';
+import { RedisService } from '@common/redis/redis.service';
+
+import { FeedRepository } from '@feed/repository/feed.repository';
+
 import { RssAccept } from '@rss/entity/rss.entity';
+import { RssAcceptRepository } from '@rss/repository/rss.repository';
+
+import { FeedFixture } from '@test/config/common/fixture/feed.fixture';
+import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
 const URL = '/api/feed/trend/sse';

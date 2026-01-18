@@ -1,16 +1,21 @@
-import { TagRepository } from '@tag/repository/tag.repository';
 import { HttpStatus } from '@nestjs/common';
+
 import supertest from 'supertest';
-import { FeedFixture } from '@test/config/common/fixture/feed.fixture';
-import { FeedRepository } from '@feed/repository/feed.repository';
-import { RssAcceptRepository } from '@rss/repository/rss.repository';
-import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture';
-import { ManageFeedRequestDto } from '@feed/dto/request/manageFeed.dto';
 import TestAgent from 'supertest/lib/agent';
+
+import { ManageFeedRequestDto } from '@feed/dto/request/manageFeed.dto';
 import { Feed } from '@feed/entity/feed.entity';
-import { TagFixture } from '@test/config/common/fixture/tag.fixture';
+import { FeedRepository } from '@feed/repository/feed.repository';
+
 import { RssAccept } from '@rss/entity/rss.entity';
+import { RssAcceptRepository } from '@rss/repository/rss.repository';
+
 import { Tag } from '@tag/entity/tag.entity';
+import { TagRepository } from '@tag/repository/tag.repository';
+
+import { FeedFixture } from '@test/config/common/fixture/feed.fixture';
+import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture';
+import { TagFixture } from '@test/config/common/fixture/tag.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
 const URL = '/api/feed/detail';

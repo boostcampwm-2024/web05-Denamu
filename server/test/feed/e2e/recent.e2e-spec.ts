@@ -1,14 +1,19 @@
-import supertest from 'supertest';
 import { HttpStatus } from '@nestjs/common';
-import { RssAcceptRepository } from '@rss/repository/rss.repository';
-import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture';
-import { FeedFixture } from '@test/config/common/fixture/feed.fixture';
-import { FeedRepository } from '@feed/repository/feed.repository';
-import { RedisService } from '@common/redis/redis.service';
-import { REDIS_KEYS } from '@common/redis/redis.constant';
+
+import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
+
+import { REDIS_KEYS } from '@common/redis/redis.constant';
+import { RedisService } from '@common/redis/redis.service';
+
 import { Feed } from '@feed/entity/feed.entity';
+import { FeedRepository } from '@feed/repository/feed.repository';
+
 import { RssAccept } from '@rss/entity/rss.entity';
+import { RssAcceptRepository } from '@rss/repository/rss.repository';
+
+import { FeedFixture } from '@test/config/common/fixture/feed.fixture';
+import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
 const URL = '/api/feed/recent';

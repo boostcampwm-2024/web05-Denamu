@@ -5,6 +5,7 @@ import {
   ApiOperation,
   ApiQuery,
 } from '@nestjs/swagger';
+
 import { SearchType } from '@feed/dto/request/searchFeed.dto';
 
 export function ApiSearchFeedList() {

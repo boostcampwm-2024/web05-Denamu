@@ -1,15 +1,19 @@
+import { injectable } from 'tsyringe';
+
 import * as nodemailer from 'nodemailer';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
+
+import logger from '@src/logger';
+
 import {
+  createDeleteAccountContent,
   createPasswordResetMailContent,
   createRssRegistrationContent,
   createRssRemoveCertificateContent,
   createVerificationMailContent,
-  createDeleteAccountContent,
   PRODUCT_DOMAIN,
 } from '@email/email.content';
-import { injectable } from 'tsyringe';
-import logger from '@src/logger';
+
 import { Rss, RssRegistration, RssRemoval, User } from '@app-types/types';
 
 @injectable()
