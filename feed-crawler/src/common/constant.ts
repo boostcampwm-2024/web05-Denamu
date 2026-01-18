@@ -7,7 +7,7 @@ export const redisConstant = {
 
 export const ONE_MINUTE = 60 * 1000;
 export const TIME_INTERVAL =
-  process.env.NODE_ENV !== 'test'
+  process.env.NODE_ENV !== 'TEST'
     ? parseInt(process.env.TIME_INTERVAL)
     : Number.MAX_SAFE_INTEGER;
 

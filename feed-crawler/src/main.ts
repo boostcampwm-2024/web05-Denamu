@@ -9,7 +9,6 @@ import { ClaudeEventWorker } from '@event_worker/workers/claude-event-worker';
 import * as schedule from 'node-schedule';
 import { RedisConnection } from '@common/redis-access';
 import { FullFeedCrawlEventWorker } from '@event_worker/workers/full-feed-crawl-event-worker';
-import { RabbitMQManager } from '@common/rabbitmq.manager';
 
 function initializeDependencies() {
   return {
@@ -25,9 +24,6 @@ function initializeDependencies() {
     ),
     fullFeedCrawlEventWorker: container.resolve<FullFeedCrawlEventWorker>(
       DEPENDENCY_SYMBOLS.FullFeedCrawlEventWorker,
-    ),
-    rabbitMQManager: container.resolve<RabbitMQManager>(
-      DEPENDENCY_SYMBOLS.RabbitMQManager,
     ),
   };
 }
@@ -63,8 +59,7 @@ async function handleShutdown(
   logger.info(`${signal} 신호 수신, feed-crawler 종료 중...`);
   await dependencies.dbConnection.end();
   await dependencies.redisConnection.quit();
-  await dependencies.rabbitMQManager.disconnect();
-  logger.info('DB, Redis, RabbitMQ 연결 종료');
+  logger.info('DB, Redis 연결 종료');
   process.exit(0);
 }
 
@@ -72,26 +67,10 @@ async function startScheduler() {
   logger.info('[Feed Crawler Scheduler Start]');
 
   const dependencies = initializeDependencies();
-  await initializeRabbitMQ(dependencies);
   registerSchedulers(dependencies);
 
   process.on('SIGINT', () => void handleShutdown(dependencies, 'SIGINT'));
   process.on('SIGTERM', () => void handleShutdown(dependencies, 'SIGTERM'));
-}
-
-async function initializeRabbitMQ(
-  dependencies: ReturnType<typeof initializeDependencies>,
-) {
-  try {
-    logger.info(`RabbitMQ 초기화 시작...`);
-
-    await dependencies.rabbitMQManager.connect();
-
-    logger.info(`RabbitMQ 초기화 완료`);
-  } catch (error) {
-    logger.error(`RabbitMQ 초기화 실패:`, error);
-    throw error;
-  }
 }
 
 startScheduler().catch((error) => {

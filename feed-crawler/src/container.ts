@@ -13,8 +13,6 @@ import { Rss20Parser } from '@common/parser/formats/rss20-parser';
 import { Atom10Parser } from '@common/parser/formats/atom10-parser';
 import { FeedCrawler } from '@src/feed-crawler';
 import { FullFeedCrawlEventWorker } from '@event_worker/workers/full-feed-crawl-event-worker';
-import { RabbitMQConnection } from '@common/rmq-access';
-import { RabbitMQManager } from '@common/rabbitmq.manager';
 
 container.registerSingleton<DatabaseConnection>(
   DEPENDENCY_SYMBOLS.DatabaseConnection,
@@ -74,16 +72,6 @@ container.registerSingleton<FeedCrawler>(
 container.registerSingleton<FullFeedCrawlEventWorker>(
   DEPENDENCY_SYMBOLS.FullFeedCrawlEventWorker,
   FullFeedCrawlEventWorker,
-);
-
-container.registerSingleton<RabbitMQConnection>(
-  DEPENDENCY_SYMBOLS.RabbitMQConnection,
-  RabbitMQConnection,
-);
-
-container.registerSingleton<RabbitMQManager>(
-  DEPENDENCY_SYMBOLS.RabbitMQManager,
-  RabbitMQManager,
 );
 
 export { container };

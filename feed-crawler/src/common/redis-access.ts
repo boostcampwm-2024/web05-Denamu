@@ -14,7 +14,7 @@ export class RedisConnection {
   }
 
   connect() {
-    if (process.env.NODE_ENV === 'test') {
+    if (process.env.NODE_ENV === 'TEST') {
       this.redis = new Redis_Mock();
     } else {
       this.redis = new Redis({

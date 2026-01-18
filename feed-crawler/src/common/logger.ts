@@ -1,34 +1,46 @@
 import * as winston from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
 
-const { combine, timestamp, printf } = winston.format;
-
-const logFormat = printf(({ level, message, timestamp }) => {
-  return `${timestamp} [${level}]: ${message}`;
-});
+const logFormat = winston.format.printf(
+  ({ level, message, timestamp }) =>
+    `${timestamp as string} [${level}]: ${message as string}`,
+);
 
 const logDir = `${process.cwd()}/logs`;
 
 function getLogTransport() {
   const transports = [];
-  transports.push(new winston.transports.Console());
+  const consoleLevel = process.env.NODE_ENV === 'DEV' ? 'silly' : 'info';
+
+  transports.push(
+    new winston.transports.Console({
+      level: consoleLevel,
+      format: winston.format.combine(
+        winston.format.colorize(),
+        winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+        logFormat,
+      ),
+    }),
+  );
 
   if (process.env.NODE_ENV === 'LOCAL' || process.env.NODE_ENV === 'PROD') {
     transports.push(
       ...[
+        //info 레벨 로그 파일 설정
         new DailyRotateFile({
           level: 'info',
           datePattern: 'YYYY-MM-DD',
           dirname: logDir,
-          filename: `%DATE%.feed-crawler.log`,
+          filename: `%DATE%.log`,
           maxFiles: 30,
           zippedArchive: true,
         }),
+        //error 레벨 로그 파일 설정
         new DailyRotateFile({
           level: 'error',
           datePattern: 'YYYY-MM-DD',
           dirname: `${logDir}/error`,
-          filename: `%DATE%.feed-crawler.error.log`,
+          filename: `%DATE%.error.log`,
           maxFiles: 30,
           zippedArchive: true,
         }),
@@ -36,26 +48,12 @@ function getLogTransport() {
     );
   }
 
-  if (process.env.NODE_ENV === 'LOCAL' || process.env.NODE_ENV === 'DEV') {
-    transports.push(
-      new winston.transports.Console({
-        format: winston.format.combine(
-          winston.format.colorize(),
-          winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-          logFormat,
-        ),
-      }),
-    );
-  }
-
   return transports;
 }
 
 const logger = winston.createLogger({
-  level: 'info',
-  format: combine(timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }), logFormat),
   transports: getLogTransport(),
-  silent: process.env.NODE_ENV === 'test',
+  silent: process.env.NODE_ENV === 'TEST',
 });
 
 export default logger;

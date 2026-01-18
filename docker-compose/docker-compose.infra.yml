@@ -36,7 +36,8 @@ services:
       timeout: 5s
       retries: 3
     profiles:
-      - was-dev
+      - was
+      - feed-crawler
       - default
 
   # Redis 서비스
@@ -62,7 +63,8 @@ services:
     environment:
       TZ: 'Asia/Seoul'
     profiles:
-      - was-dev
+      - was
+      - feed-crawler
       - default
 
   # RabbitMQ 서비스
@@ -90,7 +92,8 @@ services:
       retries: 5
       start_period: 40s
     profiles:
-      - was-dev
+      - was
+      - email-worker
       - default
 
 volumes:
