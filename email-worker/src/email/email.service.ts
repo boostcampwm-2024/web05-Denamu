@@ -31,8 +31,8 @@ export class EmailService {
       throw new Error('EMAIL_PASSWORD 환경 변수가 설정되지 않았습니다.');
     }
     this.transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 587,
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: Number(process.env.SMTP_PORT) || 587,
       secure: false,
       auth: {
         user: this.emailUser,

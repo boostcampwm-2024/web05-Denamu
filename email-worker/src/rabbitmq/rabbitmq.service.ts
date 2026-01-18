@@ -5,7 +5,7 @@ import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
 import logger from '@src/logger';
 
 @injectable()
-export class RabbitmqService {
+export class RabbitMQService {
   private nameTag: string;
 
   constructor(
