@@ -7,9 +7,7 @@ import { FeedParserManager } from '@common/parser/feed-parser-manager';
 import { Atom10Parser } from '@common/parser/formats/atom10-parser';
 import { Rss20Parser } from '@common/parser/formats/rss20-parser';
 import { ParserUtil } from '@common/parser/utils/parser-util';
-import { RabbitMQManager } from '@common/rabbitmq.manager';
 import { RedisConnection } from '@common/redis-access';
-import { RabbitMQConnection } from '@common/rmq-access';
 
 import { ClaudeEventWorker } from '@event_worker/workers/claude-event-worker';
 import { FullFeedCrawlEventWorker } from '@event_worker/workers/full-feed-crawl-event-worker';
@@ -79,16 +77,6 @@ container.registerSingleton<FeedCrawler>(
 container.registerSingleton<FullFeedCrawlEventWorker>(
   DEPENDENCY_SYMBOLS.FullFeedCrawlEventWorker,
   FullFeedCrawlEventWorker,
-);
-
-container.registerSingleton<RabbitMQConnection>(
-  DEPENDENCY_SYMBOLS.RabbitMQConnection,
-  RabbitMQConnection,
-);
-
-container.registerSingleton<RabbitMQManager>(
-  DEPENDENCY_SYMBOLS.RabbitMQManager,
-  RabbitMQManager,
 );
 
 export { container };
