@@ -81,7 +81,7 @@ services:
         - path: ../server/package.json
           action: rebuild
     profiles:
-      - was-dev
+      - was
       - default
 
   # Feed Crawler 개발 서비스
@@ -97,8 +97,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
     volumes:
       - ../feed-crawler:/var/web05-Denamu/feed-crawler
       - /var/web05-Denamu/feed-crawler/node_modules
@@ -110,6 +108,7 @@ services:
         - path: ../feed-crawler/package.json
           action: rebuild
     profiles:
+      - feed-crawler
       - default
 
   # Email Worker 개발 서비스
@@ -121,10 +120,6 @@ services:
     networks:
       - Denamu
     depends_on:
-      mysql-db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
       rabbitmq:
         condition: service_healthy
     volumes:
@@ -139,4 +134,5 @@ services:
         - path: ../email-worker/package.json
           action: rebuild
     profiles:
+      - email-worker
       - default

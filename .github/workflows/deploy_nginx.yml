@@ -1,0 +1,27 @@
+name: Nginx Configuration Deployment
+
+on:
+  push:
+    branches: [main]
+    paths: ["nginx.conf", ".github/workflows/deploy_nginx.yml"]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, prod]
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: nginx 설정 검사 및 reload
+        run: |
+          echo "=== nginx.conf 문법 검사 ==="
+          if ! sudo nginx -t; then
+            echo "❌ nginx 설정 오류!"
+            exit 1
+          fi
+
+          echo "=== nginx reload ==="
+          sudo systemctl reload nginx
+
+          echo "✅ nginx.conf가 반영되었습니다."

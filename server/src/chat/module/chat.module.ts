@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
-import { ChatGateway } from '@chat/chat.gateway';
 import { ScheduleModule } from '@nestjs/schedule';
-import { ChatService } from '@chat/service/chat.service';
+
+import { ChatGateway } from '@chat/chat.gateway';
 import { ChatScheduler } from '@chat/scheduler/chat.scheduler';
+import { ChatService } from '@chat/service/chat.service';
 
 @Module({
   imports: [ScheduleModule.forRoot()],

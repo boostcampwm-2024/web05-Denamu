@@ -1,27 +1,40 @@
 import { Module } from '@nestjs/common';
-import * as path from 'path';
-import * as fs from 'fs';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { loadDBSetting } from '@common/database/load.config';
-import { AdminModule } from '@admin/module/admin.module';
-import { RedisModule } from '@common/redis/redis.module';
-import { RssModule } from '@rss/module/rss.module';
-import { FeedModule } from '@feed/module/feed.module';
-import { WinstonLoggerModule } from '@common/logger/logger.module';
-import { ChatModule } from '@chat/module/chat.module';
-import { StatisticModule } from '@statistic/module/statistic.module';
-import { UserModule } from '@user/module/user.module';
-import { ActivityModule } from '@activity/module/activity.module';
-import { EmailModule } from '@common/email/email.module';
-import { CommentModule } from '@comment/module/comment.module';
-import { MetricsModule } from '@common/metrics/metrics.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
+import { TypeOrmModule } from '@nestjs/typeorm';
+
+import * as fs from 'fs';
+import * as path from 'path';
+
+import { ActivityModule } from '@activity/module/activity.module';
+
+import { AdminModule } from '@admin/module/admin.module';
+
+import { ChatModule } from '@chat/module/chat.module';
+
+import { CommentModule } from '@comment/module/comment.module';
+
+import { loadDBSetting } from '@common/database/load.config';
+import { EmailModule } from '@common/email/email.module';
+import { WinstonLoggerModule } from '@common/logger/logger.module';
 import { MetricsInterceptor } from '@common/metrics/metrics.interceptor';
-import { LikeModule } from '@like/module/like.module';
-import { FileModule } from '@file/module/file.module';
+import { MetricsModule } from '@common/metrics/metrics.module';
 import { RabbitMQModule } from '@common/rabbitmq/rabbitmq.module';
+import { RedisModule } from '@common/redis/redis.module';
+
+import { FeedModule } from '@feed/module/feed.module';
+
+import { FileModule } from '@file/module/file.module';
+
+import { LikeModule } from '@like/module/like.module';
+
+import { RssModule } from '@rss/module/rss.module';
+
+import { StatisticModule } from '@statistic/module/statistic.module';
+
 import { TagModule } from '@tag/module/tag.module';
+
+import { UserModule } from '@user/module/user.module';
 
 const envMap = {
   LOCAL: path.join(process.cwd(), 'env/.env.local'),

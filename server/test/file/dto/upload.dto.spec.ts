@@ -1,6 +1,7 @@
 import { validate } from 'class-validator';
-import { UploadFileQueryRequestDto } from '@file/dto/request/uploadFile.dto';
+
 import { FileUploadType } from '@file/constant/file.constant';
+import { UploadFileQueryRequestDto } from '@file/dto/request/uploadFile.dto';
 
 describe('UploadFileQueryRequestDto Test', () => {
   let dto: UploadFileQueryRequestDto;

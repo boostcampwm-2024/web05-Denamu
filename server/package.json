@@ -26,9 +26,9 @@
     "test:watch": "cross-env NODE_ENV=TEST jest --config test/config/integration/jest/jest.config.ts --watch",
     "test:debug": "cross-env NODE_ENV=TEST node --inspect-brk ./node_modules/jest/bin/jest.js --runInBand --config test/config/integration/jest/jest.config.ts",
     "typeorm": "typeorm-ts-node-commonjs",
-    "migration:create": "cross-env NODE_ENV=PROD npm run typeorm -- migration:create",
-    "prod:migration:generate": "cross-env NODE_ENV=PROD npm run typeorm -- migration:generate -d dataSource.ts",
-    "local:migration:generate": "cross-env NODE_ENV=LOCAL npm run typeorm -- migration:generate -d dataSource.ts"
+    "migration:create": "npm run typeorm -- migration:create",
+    "prod:migration:generate": "npm run typeorm -- migration:generate -d dataSource.ts",
+    "local:migration:generate": "npm run typeorm -- migration:generate -d dataSource.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.3",
@@ -80,6 +80,7 @@
     "@testcontainers/mysql": "^11.7.2",
     "@testcontainers/rabbitmq": "^11.7.2",
     "@testcontainers/redis": "^11.7.2",
+    "@trivago/prettier-plugin-sort-imports": "^6.0.2",
     "@types/amqplib": "^0.10.7",
     "@types/bcrypt": "^5.0.2",
     "@types/cookie-parser": "^1.4.7",

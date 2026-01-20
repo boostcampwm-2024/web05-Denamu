@@ -1,5 +1,7 @@
-import { LoginAdminRequestDto } from '@admin/dto/request/loginAdmin.dto';
 import { validate } from 'class-validator';
+
+import { LoginAdminRequestDto } from '@admin/dto/request/loginAdmin.dto';
+
 import { AdminFixture } from '@test/config/common/fixture/admin.fixture';
 
 describe(`${LoginAdminRequestDto.name} Test`, () => {

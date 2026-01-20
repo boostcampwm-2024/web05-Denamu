@@ -20,9 +20,9 @@
     "baseUrl": ".",
     "paths": {
       "@src/*": ["src/*"],
-      "@app-types/*": ["src/types/*"],
       "@email/*": ["src/email/*"],
       "@rabbitmq/*": ["src/rabbitmq/*"],
+      "@app-types/*": ["src/types/*"],
       "@test/*":["test/*"]
     },
     "resolveJsonModule": true,

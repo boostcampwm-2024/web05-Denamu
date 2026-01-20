@@ -1,6 +1,8 @@
-import { Feed } from '@feed/entity/feed.entity';
-import { RssAccept } from '@rss/entity/rss.entity';
 import * as uuid from 'uuid';
+
+import { Feed } from '@feed/entity/feed.entity';
+
+import { RssAccept } from '@rss/entity/rss.entity';
 
 export class FeedFixture {
   static createGeneralFeed(index: number) {

@@ -1,10 +1,13 @@
 import { HttpStatus } from '@nestjs/common';
-import supertest from 'supertest';
-import { OAuthCallbackRequestDto } from '@user/dto/request/oAuthCallbackDto';
-import { OAuthType } from '@user/constant/oauth.constant';
-import TestAgent from 'supertest/lib/agent';
+
 import axios from 'axios';
+import supertest from 'supertest';
+import TestAgent from 'supertest/lib/agent';
+
+import { OAuthType } from '@user/constant/oauth.constant';
+import { OAuthCallbackRequestDto } from '@user/dto/request/oAuthCallbackDto';
 import { ProviderRepository } from '@user/repository/provider.repository';
+
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
 const URL = '/api/oauth/callback';

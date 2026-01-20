@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+
 import { User } from '@user/entity/user.entity';
 
 export class DailyActivityDto {

@@ -1,7 +1,9 @@
+import { injectable } from 'tsyringe';
+
 import Redis, { ChainableCommander } from 'ioredis';
 import Redis_Mock from 'ioredis-mock';
+
 import logger from '@common/logger';
-import { injectable } from 'tsyringe';
 
 @injectable()
 export class RedisConnection {
@@ -14,7 +16,7 @@ export class RedisConnection {
   }
 
   connect() {
-    if (process.env.NODE_ENV === 'test') {
+    if (process.env.NODE_ENV === 'TEST') {
       this.redis = new Redis_Mock();
     } else {
       this.redis = new Redis({

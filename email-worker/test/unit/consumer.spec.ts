@@ -1,4 +1,11 @@
 import 'reflect-metadata';
+
+import { EmailConsumer } from '@email/email.consumer';
+import { EmailService } from '@email/email.service';
+
+import { RETRY_CONFIG, RMQ_QUEUES } from '@rabbitmq/rabbitmq.constant';
+import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
+
 import {
   EmailPayload,
   EmailPayloadConstant,
@@ -6,10 +13,6 @@ import {
   RssRemoval,
   User,
 } from '@app-types/types';
-import { EmailConsumer } from '@email/email.consumer';
-import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
-import { EmailService } from '@email/email.service';
-import { RETRY_CONFIG, RMQ_QUEUES } from '@rabbitmq/rabbitmq.constant';
 
 describe('email consumer unit test', () => {
   let emailConsumer: EmailConsumer;

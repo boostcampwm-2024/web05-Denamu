@@ -1,15 +1,19 @@
-import { Like } from '@like/entity/like.entity';
-import { DataSource } from 'typeorm';
 import {
   ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { LikeRepository } from '@like/repository/like.repository';
+
+import { DataSource } from 'typeorm';
+
 import { Payload } from '@common/guard/jwt.guard';
+
+import { FeedService } from '@feed/service/feed.service';
+
 import { ManageLikeRequestDto } from '@like/dto/request/manageLike.dto';
 import { GetLikeResponseDto } from '@like/dto/response/getLike.dto';
-import { FeedService } from '@feed/service/feed.service';
+import { Like } from '@like/entity/like.entity';
+import { LikeRepository } from '@like/repository/like.repository';
 
 @Injectable()
 export class LikeService {

@@ -39,8 +39,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
     volumes:
       - /var/prod_data/feed-crawler/logs:/app/logs
     environment:
@@ -55,10 +53,6 @@ services:
     networks:
       - Denamu
     depends_on:
-      mysql-db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
       rabbitmq:
         condition: service_healthy
     volumes:
