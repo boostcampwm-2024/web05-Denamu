@@ -32,4 +32,7 @@ jobs:
         working-directory: ./email-worker
         run: npm run test:unit
 
-      # TODO: E2E 테스트 실행
+        # 5. E2E 테스트 실행
+      - name: Run E2E Test
+        working-directory: ./email-worker
+        run: npm run test:e2e

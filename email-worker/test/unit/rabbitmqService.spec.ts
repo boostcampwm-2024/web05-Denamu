@@ -2,11 +2,11 @@ import 'reflect-metadata';
 
 import { Channel, ConsumeMessage } from 'amqplib';
 
+import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
 import { RabbitMQManager } from '@rabbitmq/rabbitmq.manager';
-import { RabbitmqService } from '@rabbitmq/rabbitmq.service';
 
 describe('RabbitmqService unit test', () => {
-  let rabbitmqService: RabbitmqService;
+  let rabbitmqService: RabbitMQService;
   let mockRabbitMQManager: jest.Mocked<RabbitMQManager>;
   let mockChannel: jest.Mocked<Channel>;
 
@@ -26,7 +26,7 @@ describe('RabbitmqService unit test', () => {
       getChannel: jest.fn().mockResolvedValue(mockChannel),
     } as any;
 
-    rabbitmqService = new RabbitmqService(mockRabbitMQManager);
+    rabbitmqService = new RabbitMQService(mockRabbitMQManager);
   });
 
   afterEach(() => {

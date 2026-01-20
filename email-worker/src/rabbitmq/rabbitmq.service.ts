@@ -9,7 +9,7 @@ import { RabbitMQManager } from '@rabbitmq/rabbitmq.manager';
 import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
 
 @injectable()
-export class RabbitmqService {
+export class RabbitMQService {
   private nameTag: string;
 
   constructor(

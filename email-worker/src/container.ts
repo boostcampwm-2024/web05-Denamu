@@ -4,13 +4,13 @@ import { EmailConsumer } from '@email/email.consumer';
 import { EmailService } from '@email/email.service';
 
 import { RabbitMQManager } from '@rabbitmq/rabbitmq.manager';
-import { RabbitmqService } from '@rabbitmq/rabbitmq.service';
+import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
 
 import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
 
-container.registerSingleton<RabbitmqService>(
+container.registerSingleton<RabbitMQService>(
   DEPENDENCY_SYMBOLS.RabbitMQService,
-  RabbitmqService,
+  RabbitMQService,
 );
 
 container.registerSingleton<RabbitMQManager>(

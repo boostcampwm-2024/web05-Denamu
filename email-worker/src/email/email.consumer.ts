@@ -7,7 +7,7 @@ import logger from '@src/logger';
 import { EmailService } from '@email/email.service';
 
 import { RETRY_CONFIG, RMQ_QUEUES } from '@rabbitmq/rabbitmq.constant';
-import { RabbitmqService } from '@rabbitmq/rabbitmq.service';
+import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
 
 import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
 import { EmailPayload, EmailPayloadConstant } from '@app-types/types';
@@ -21,7 +21,7 @@ export class EmailConsumer {
 
   constructor(
     @inject(DEPENDENCY_SYMBOLS.RabbitMQService)
-    private readonly rabbitmqService: RabbitmqService,
+    private readonly rabbitmqService: RabbitMQService,
     @inject(DEPENDENCY_SYMBOLS.EmailService)
     private readonly emailService: EmailService,
   ) {}

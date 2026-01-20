@@ -22,7 +22,8 @@
       "@src/*": ["src/*"],
       "@email/*": ["src/email/*"],
       "@rabbitmq/*": ["src/rabbitmq/*"],
-      "@app-types/*": ["src/types/*"]
+      "@app-types/*": ["src/types/*"],
+      "@test/*":["test/*"]
     },
     "resolveJsonModule": true,
     "esModuleInterop": true
