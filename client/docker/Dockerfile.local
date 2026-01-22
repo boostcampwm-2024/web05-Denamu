@@ -2,10 +2,13 @@ FROM node:22-alpine AS builder
 
 WORKDIR /var/web05-Denamu/client
 
-COPY ./client .
+COPY ./client/package*.json ./
 ENV VITE_VISUALIZE=OFF
 
 RUN npm ci
+
+COPY ./client .
+
 RUN npm run build:local
 
 RUN mkdir -p /etc/nginx/scripts
