@@ -5,6 +5,7 @@ import { Atom10Parser } from './formats/atom10-parser';
 import { BaseFeedParser } from './base-feed-parser';
 import { DEPENDENCY_SYMBOLS } from '../../types/dependency-symbols';
 import logger from '../logger';
+import { WarnCodes, InfoCodes } from '../log-codes';
 
 @injectable()
 export class FeedParserManager {
@@ -21,8 +22,7 @@ export class FeedParserManager {
     try {
       const response = await fetch(rssObj.rssUrl, {
         headers: {
-          Accept:
-            'application/rss+xml, application/xml, text/xml, application/atom+xml',
+          Accept: 'application/rss+xml, application/xml, text/xml, application/atom+xml',
         },
       });
 
@@ -39,7 +39,12 @@ export class FeedParserManager {
 
       return await parser.parseFeed(rssObj, xmlData, startTime);
     } catch (error) {
-      logger.warn(`[${rssObj.rssUrl}] 피드 파싱 중 오류 발생: ${error}`);
+      logger.warn(`피드 파싱 실패: ${rssObj.rssUrl}`, {
+        code: WarnCodes.FC_RSS_PARSE_WARN,
+        context: 'RssParser',
+        rssUrl: rssObj.rssUrl,
+        error: (error as Error).message,
+      });
       return [];
     }
   }
@@ -48,8 +53,7 @@ export class FeedParserManager {
     try {
       const response = await fetch(rssObj.rssUrl, {
         headers: {
-          Accept:
-            'application/rss+xml, application/xml, text/xml, application/atom+xml',
+          Accept: 'application/rss+xml, application/xml, text/xml, application/atom+xml',
         },
       });
 
@@ -63,13 +67,15 @@ export class FeedParserManager {
       if (!parser) {
         throw new Error(`지원하지 않는 피드 형식: ${rssObj.rssUrl}`);
       }
-      logger.info(
-        `${rssObj.blogName}: ${parser.constructor.name} 사용 (전체 피드)`,
-      );
 
       return await parser.parseAllFeeds(rssObj, xmlData);
     } catch (error) {
-      logger.warn(`[${rssObj.rssUrl}] 전체 피드 파싱 중 오류 발생: ${error}`);
+      logger.warn(`전체 피드 파싱 실패: ${rssObj.rssUrl}`, {
+        code: WarnCodes.FC_RSS_PARSE_WARN,
+        context: 'RssParser',
+        rssUrl: rssObj.rssUrl,
+        error: (error as Error).message,
+      });
       return [];
     }
   }

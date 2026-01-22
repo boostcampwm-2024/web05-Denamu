@@ -1,5 +1,6 @@
 import { FeedDetail } from '../common/types';
 import logger from '../common/logger';
+import { InfoCodes, ErrorCodes } from '../common/log-codes';
 import { redisConstant } from '../common/constant';
 import { RedisConnection } from '../common/redis-access';
 import { inject, injectable } from 'tsyringe';
@@ -17,9 +18,9 @@ export class FeedRepository {
 
   public async insertFeeds(resultData: FeedDetail[]) {
     const query = `
-            INSERT INTO feed (blog_id, created_at, title, path, thumbnail, summary)
-            VALUES (?, ?, ?, ?, ?, ?)
-        `;
+      INSERT INTO feed (blog_id, created_at, title, path, thumbnail, summary)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `;
 
     const insertPromises = resultData.map(async (feed, index) => {
       try {
@@ -33,8 +34,12 @@ export class FeedRepository {
         ]);
         return { result, index, success: true };
       } catch (error) {
-        if (error.code === 'ER_DUP_ENTRY') {
-          logger.info(`중복 피드 스킵: ${feed.title} (${feed.link})`);
+        if ((error as any).code === 'ER_DUP_ENTRY') {
+          logger.info(`중복 피드 스킵: ${feed.title}`, {
+            code: InfoCodes.FC_FEED_DUPLICATE_SKIP,
+            context: 'FeedRepository',
+            feedUrl: feed.link,
+          });
           return { result: null, index, success: false, duplicate: true };
         }
         throw error;
@@ -50,17 +55,14 @@ export class FeedRepository {
         id: result.result.insertId,
       }));
 
-    const duplicateCount = promiseResults.filter(
-      (result) => result.duplicate,
-    ).length;
+    const duplicateCount = promiseResults.filter((result) => result.duplicate).length;
 
-    logger.info(
-      `[MySQL] ${
-        insertedFeeds.length
-      }개의 피드 데이터가 성공적으로 데이터베이스에 삽입되었습니다.${
-        duplicateCount ? ' ' + duplicateCount + '개의 중복 피드 발생' : ''
-      }`,
-    );
+    logger.info(`피드 저장 완료: ${insertedFeeds.length}개`, {
+      code: InfoCodes.FC_FEED_COUNT,
+      context: 'FeedRepository',
+      insertedCount: insertedFeeds.length,
+      duplicateCount,
+    });
 
     return insertedFeeds;
   }
@@ -82,13 +84,20 @@ export class FeedRepository {
       if (keysToDelete.length > 0) {
         await this.redisConnection.del(...keysToDelete);
       }
-      logger.info(`[Redis] 최근 게시글 캐시가 정상적으로 삭제되었습니다.`);
+
+      logger.info('캐시 삭제 성공', {
+        code: InfoCodes.FC_CACHE_DELETE_SUCCESS,
+        context: 'CacheService',
+        key: 'feed:recent:*',
+        deletedCount: keysToDelete.length,
+      });
     } catch (error) {
-      logger.error(
-        `[Redis] 최근 게시글 캐시를 삭제하는 도중 에러가 발생했습니다.
-        에러 메시지: ${error.message}
-        스택 트레이스: ${error.stack}`,
-      );
+      logger.error('캐시 삭제 실패', {
+        code: ErrorCodes.FC_CACHE_DELETE_ERROR,
+        context: 'CacheService',
+        key: 'feed:recent:*',
+        stack: (error as Error).stack,
+      });
     }
   }
 
@@ -111,31 +120,38 @@ export class FeedRepository {
           });
         }
       });
-      logger.info(`[Redis] 최근 게시글 캐시가 정상적으로 저장되었습니다.`);
+
+      logger.info('캐시 저장 성공', {
+        code: InfoCodes.FC_CACHE_SAVE_SUCCESS,
+        context: 'CacheService',
+        key: 'feed:recent:*',
+        count: feedLists.length,
+      });
     } catch (error) {
-      logger.error(
-        `[Redis] 최근 게시글 캐시를 저장하는 도중 에러가 발생했습니다.
-        에러 메시지: ${error.message}
-        스택 트레이스: ${error.stack}`,
-      );
+      logger.error('캐시 저장 실패', {
+        code: ErrorCodes.FC_CACHE_SAVE_ERROR,
+        context: 'CacheService',
+        key: 'feed:recent:*',
+        stack: (error as Error).stack,
+      });
     }
   }
 
   public async updateSummary(feedId: number, summary: string) {
     const query = `
-              UPDATE feed 
-              SET summary=?
-              WHERE id=?
-          `;
-
+      UPDATE feed
+      SET summary=?
+      WHERE id=?
+    `;
     await this.dbConnection.executeQuery(query, [summary, feedId]);
   }
 
   public async updateNullSummary(feedId: number) {
     const query = `
-          UPDATE feed
-          SET summary=NULL
-          WHERE id=?`;
+      UPDATE feed
+      SET summary=NULL
+      WHERE id=?
+    `;
     await this.dbConnection.executeQuery(query, [feedId]);
   }
 
@@ -153,13 +169,18 @@ export class FeedRepository {
           );
         }
       });
+
+      logger.info(`AI Queue 푸시 성공: ${feedLists.length}개`, {
+        code: InfoCodes.FC_QUEUE_PUSH_SUCCESS,
+        context: 'QueueService',
+        count: feedLists.length,
+      });
     } catch (error) {
-      logger.error(
-        `[Redis] AI Queue 데이터 삽입 중 에러가 발생했습니다.
-        에러 메시지: ${error.message}
-        스택 트레이스: ${error.stack}`,
-      );
+      logger.error('AI Queue 푸시 실패', {
+        code: ErrorCodes.FC_QUEUE_PUSH_ERROR,
+        context: 'QueueService',
+        stack: (error as Error).stack,
+      });
     }
-    logger.info(`[Redis] AI Queue 데이터 삽입이 정상적으로 수행되었습니다.`);
   }
 }

@@ -9,48 +9,71 @@ clients:
   - url: http://loki:3100/loki/api/v1/push
 
 scrape_configs:
-  # WAS (NestJS Server) 로그 수집
-  - job_name: server-logs
+  # ===== WAS (NestJS Server) 로그 수집 =====
+  - job_name: server-info-logs
     static_configs:
       - targets:
           - localhost
         labels:
           job: server
           service: nestjs-was
-          __path__: /var/log/server/*.log
+          level: info
+          __path__: /var/log/server/info/*.log
     pipeline_stages:
-      # JSON 로그 파싱
       - json:
           expressions:
             level: level
             message: message
             timestamp: timestamp
             context: context
+            code: code
             method: method
             url: url
             statusCode: statusCode
             responseTime: responseTime
-      # 타임스탬프 추출
       - timestamp:
           source: timestamp
           format: RFC3339
-      # 레이블 설정
       - labels:
-          level:
           context:
+          code:
           method:
           statusCode:
-      # 출력 메시지 설정
       - output:
           source: message
 
-  # WAS 에러 로그 수집
+  - job_name: server-warn-logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: server
+          service: nestjs-was
+          level: warn
+          __path__: /var/log/server/warn/*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            level: level
+            message: message
+            timestamp: timestamp
+            context: context
+            code: code
+      - timestamp:
+          source: timestamp
+          format: RFC3339
+      - labels:
+          context:
+          code:
+      - output:
+          source: message
+
   - job_name: server-error-logs
     static_configs:
       - targets:
           - localhost
         labels:
-          job: server-error
+          job: server
           service: nestjs-was
           level: error
           __path__: /var/log/server/error/*.log
@@ -61,25 +84,27 @@ scrape_configs:
             message: message
             timestamp: timestamp
             context: context
+            code: code
             stack: stack
       - timestamp:
           source: timestamp
           format: RFC3339
       - labels:
-          level:
           context:
+          code:
       - output:
           source: message
 
-  # Feed Crawler 로그 수집
-  - job_name: feed-crawler-logs
+  # ===== Feed Crawler 로그 수집 =====
+  - job_name: feed-crawler-info-logs
     static_configs:
       - targets:
           - localhost
         labels:
           job: feed-crawler
           service: feed-crawler
-          __path__: /var/log/feed-crawler/*.log
+          level: info
+          __path__: /var/log/feed-crawler/info/*.log
     pipeline_stages:
       - json:
           expressions:
@@ -87,24 +112,51 @@ scrape_configs:
             message: message
             timestamp: timestamp
             context: context
+            code: code
             feedUrl: feedUrl
             articleCount: articleCount
       - timestamp:
           source: timestamp
           format: RFC3339
       - labels:
-          level:
           context:
+          code:
       - output:
           source: message
 
-  # Feed Crawler 에러 로그 수집
+  - job_name: feed-crawler-warn-logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: feed-crawler
+          service: feed-crawler
+          level: warn
+          __path__: /var/log/feed-crawler/warn/*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            level: level
+            message: message
+            timestamp: timestamp
+            context: context
+            code: code
+            feedUrl: feedUrl
+      - timestamp:
+          source: timestamp
+          format: RFC3339
+      - labels:
+          context:
+          code:
+      - output:
+          source: message
+
   - job_name: feed-crawler-error-logs
     static_configs:
       - targets:
           - localhost
         labels:
-          job: feed-crawler-error
+          job: feed-crawler
           service: feed-crawler
           level: error
           __path__: /var/log/feed-crawler/error/*.log
@@ -115,13 +167,94 @@ scrape_configs:
             message: message
             timestamp: timestamp
             context: context
+            code: code
             stack: stack
             feedUrl: feedUrl
       - timestamp:
           source: timestamp
           format: RFC3339
       - labels:
-          level:
           context:
+          code:
+      - output:
+          source: message
+
+  # ===== Email Worker 로그 수집 =====
+  - job_name: email-worker-info-logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: email-worker
+          service: email-worker
+          level: info
+          __path__: /var/log/email-worker/info/*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            level: level
+            message: message
+            timestamp: timestamp
+            context: context
+            code: code
+      - timestamp:
+          source: timestamp
+          format: RFC3339
+      - labels:
+          context:
+          code:
+      - output:
+          source: message
+
+  - job_name: email-worker-warn-logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: email-worker
+          service: email-worker
+          level: warn
+          __path__: /var/log/email-worker/warn/*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            level: level
+            message: message
+            timestamp: timestamp
+            context: context
+            code: code
+      - timestamp:
+          source: timestamp
+          format: RFC3339
+      - labels:
+          context:
+          code:
+      - output:
+          source: message
+
+  - job_name: email-worker-error-logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: email-worker
+          service: email-worker
+          level: error
+          __path__: /var/log/email-worker/error/*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            level: level
+            message: message
+            timestamp: timestamp
+            context: context
+            code: code
+            stack: stack
+      - timestamp:
+          source: timestamp
+          format: RFC3339
+      - labels:
+          context:
+          code:
       - output:
           source: message

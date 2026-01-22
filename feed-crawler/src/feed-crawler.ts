@@ -2,6 +2,7 @@ import { inject, injectable } from 'tsyringe';
 import { FeedRepository } from './repository/feed.repository';
 import { RssRepository } from './repository/rss.repository';
 import logger from './common/logger';
+import { InfoCodes } from './common/log-codes';
 import { RssObj, FeedDetail } from './common/types';
 import { FeedParserManager } from './common/parser/feed-parser-manager';
 import { DEPENDENCY_SYMBOLS } from './types/dependency-symbols';
@@ -18,13 +19,19 @@ export class FeedCrawler {
   ) {}
 
   async start(startTime: Date) {
-    logger.info('==========작업 시작==========');
+    logger.info('크롤링 작업 시작', {
+      code: InfoCodes.FC_CRAWL_START,
+      context: 'Crawler',
+    });
 
     await this.feedRepository.deleteRecentFeed();
 
     const rssObjects = await this.rssRepository.selectAllRss();
     if (!rssObjects || !rssObjects.length) {
-      logger.info('등록된 RSS가 없습니다.');
+      logger.info('등록된 RSS가 없습니다', {
+        code: InfoCodes.FC_RSS_EMPTY,
+        context: 'Crawler',
+      });
       return;
     }
 
@@ -32,53 +39,75 @@ export class FeedCrawler {
     const newFeeds = newFeedsByRss.flat();
 
     if (!newFeeds.length) {
-      logger.info('새로운 피드가 없습니다.');
+      logger.info('새로운 피드가 없습니다', {
+        code: InfoCodes.FC_FEED_EMPTY,
+        context: 'Crawler',
+      });
       return;
     }
-    logger.info(`총 ${newFeeds.length}개의 새로운 피드가 있습니다.`);
-    const insertedData: FeedDetail[] = await this.feedRepository.insertFeeds(
-      newFeeds,
-    );
+
+    logger.info(`총 ${newFeeds.length}개의 새로운 피드 발견`, {
+      code: InfoCodes.FC_FEED_COUNT,
+      context: 'Crawler',
+      count: newFeeds.length,
+    });
+
+    const insertedData: FeedDetail[] = await this.feedRepository.insertFeeds(newFeeds);
     await this.feedRepository.saveAiQueue(insertedData);
     await this.feedRepository.setRecentFeedList(insertedData);
 
     const endTime = Date.now();
     const executionTime = endTime - startTime.getTime();
 
-    logger.info(`실행 시간: ${executionTime / 1000}seconds`);
-    logger.info('==========작업 완료==========');
+    logger.info(`크롤링 완료: ${executionTime}ms`, {
+      code: InfoCodes.FC_CRAWL_COMPLETE,
+      context: 'Crawler',
+      executionTimeMs: executionTime,
+      feedCount: insertedData.length,
+    });
   }
 
   async startFullCrawl(rssObj: RssObj): Promise<FeedDetail[]> {
-    logger.info(`전체 피드 크롤링 시작: ${rssObj.blogName}(${rssObj.rssUrl})`);
+    logger.info(`전체 피드 크롤링: ${rssObj.blogName}`, {
+      code: InfoCodes.FC_FULL_CRAWL_START,
+      context: 'FullCrawler',
+      rssId: rssObj.id,
+      blogName: rssObj.blogName,
+    });
 
     const newFeeds = await this.feedParserManager.fetchAndParseAll(rssObj);
 
     if (!newFeeds.length) {
-      logger.info(`${rssObj.blogName}에서 가져올 피드가 없습니다.`);
+      logger.info(`${rssObj.blogName}에서 가져올 피드 없음`, {
+        code: InfoCodes.FC_FEED_EMPTY,
+        context: 'FullCrawler',
+        blogName: rssObj.blogName,
+      });
       return [];
     }
 
-    logger.info(
-      `${rssObj.blogName}에서 ${newFeeds.length}개의 피드를 가져왔습니다.`,
-    );
-    const insertedData: FeedDetail[] = await this.feedRepository.insertFeeds(
-      newFeeds,
-    );
+    logger.info(`${rssObj.blogName}에서 ${newFeeds.length}개 피드 발견`, {
+      code: InfoCodes.FC_FEED_FOUND,
+      context: 'FullCrawler',
+      blogName: rssObj.blogName,
+      count: newFeeds.length,
+    });
+
+    const insertedData: FeedDetail[] = await this.feedRepository.insertFeeds(newFeeds);
     await this.feedRepository.saveAiQueue(insertedData);
 
     return insertedData;
   }
 
-  private feedGroupByRss(
-    rssObjects: RssObj[],
-    startTime: Date,
-  ): Promise<FeedDetail[][]> {
+  private feedGroupByRss(rssObjects: RssObj[], startTime: Date): Promise<FeedDetail[][]> {
     return Promise.all(
       rssObjects.map(async (rssObj: RssObj) => {
-        logger.info(
-          `${rssObj.blogName}(${rssObj.rssUrl}) 에서 데이터 조회하는 중...`,
-        );
+        logger.info(`${rssObj.blogName} 데이터 조회 중`, {
+          code: InfoCodes.FC_WORKER_START,
+          context: 'RssWorker',
+          rssId: rssObj.id,
+          blogName: rssObj.blogName,
+        });
         return await this.feedParserManager.fetchAndParse(rssObj, startTime);
       }),
     );

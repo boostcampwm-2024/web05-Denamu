@@ -5,6 +5,7 @@ import { DEPENDENCY_SYMBOLS } from './types/dependency-symbols';
 import { RabbitMQManager } from './rabbitmq/rabbitmq.manager';
 import { EmailConsumer } from './email/email.consumer';
 import logger from './logger';
+import { InfoCodes, ErrorCodes } from './log-codes';
 
 function initializeDependencies() {
   return {
@@ -18,7 +19,10 @@ function initializeDependencies() {
 }
 
 async function startEmailWorker() {
-  logger.info('[Email Worker Start]');
+  logger.info('Email Worker 시작', {
+    code: InfoCodes.EW_WORKER_START,
+    context: 'Main',
+  });
 
   const dependencies = initializeDependencies();
   await initializeRabbitMQ(dependencies);
@@ -31,24 +35,48 @@ async function handleShutdown(
   dependencies: ReturnType<typeof initializeDependencies>,
   signal: string,
 ) {
-  logger.info(`${signal} 신호 수신, email-worker 종료 중...`);
+  logger.info(`${signal} 신호 수신, email-worker 종료 중...`, {
+    code: InfoCodes.EW_WORKER_SHUTDOWN_SIGNAL,
+    context: 'Main',
+    signal,
+  });
+
   try {
-    logger.info('새로운 메시지 수신 중지...');
+    logger.info('새로운 메시지 수신 중지...', {
+      code: InfoCodes.EW_CONSUMER_STOP_RECEIVE,
+      context: 'Main',
+    });
     await dependencies.emailConsumer.stopConsuming();
 
-    logger.info('진행 중인 이메일 전송 작업 완료 대기...');
+    logger.info('진행 중인 이메일 전송 작업 완료 대기...', {
+      code: InfoCodes.EW_CONSUMER_WAIT_TASKS,
+      context: 'Main',
+    });
     await dependencies.emailConsumer.waitForPendingTasks();
 
-    logger.info('Consumer 정리 중...');
+    logger.info('Consumer 정리 중...', {
+      code: InfoCodes.EW_CONSUMER_CLEANUP,
+      context: 'Main',
+    });
     await dependencies.emailConsumer.close();
 
-    logger.info('RabbitMQ 연결 종료 중...');
+    logger.info('RabbitMQ 연결 종료 중...', {
+      code: InfoCodes.EW_RABBITMQ_DISCONNECT,
+      context: 'Main',
+    });
     await dependencies.rabbitMQManager.disconnect();
 
-    logger.info('Email Worker 정상 종료');
+    logger.info('Email Worker 정상 종료', {
+      code: InfoCodes.EW_WORKER_SHUTDOWN_COMPLETE,
+      context: 'Main',
+    });
     process.exit(0);
   } catch (error) {
-    logger.error(`Email Worker 종료 중 에러 발생: ${error}`);
+    logger.error(`Email Worker 종료 중 에러 발생`, {
+      code: ErrorCodes.EW_WORKER_SHUTDOWN_ERROR,
+      context: 'Main',
+      stack: (error as Error).stack,
+    });
     process.exit(1);
   }
 }
@@ -57,20 +85,37 @@ async function initializeRabbitMQ(
   dependencies: ReturnType<typeof initializeDependencies>,
 ) {
   try {
-    logger.info(`RabbitMQ 초기화 시작...`);
+    logger.info('RabbitMQ 초기화 시작...', {
+      code: InfoCodes.EW_RABBITMQ_INIT_START,
+      context: 'Main',
+    });
 
     await dependencies.rabbitMQManager.connect();
-    logger.info(`RabbitMQ 초기화 완료`);
+    logger.info('RabbitMQ 초기화 완료', {
+      code: InfoCodes.EW_RABBITMQ_INIT_COMPLETE,
+      context: 'Main',
+    });
 
     await dependencies.emailConsumer.start();
-    logger.info(`RabbitMQ Email Consumer 시작 완료`);
+    logger.info('RabbitMQ Email Consumer 시작 완료', {
+      code: InfoCodes.EW_RABBITMQ_CONSUMER_START,
+      context: 'Main',
+    });
   } catch (error) {
-    logger.error(`RabbitMQ 초기화 실패: ${error}`);
+    logger.error(`RabbitMQ 초기화 실패`, {
+      code: ErrorCodes.EW_RABBITMQ_INIT_ERROR,
+      context: 'Main',
+      stack: (error as Error).stack,
+    });
     throw error;
   }
 }
 
 startEmailWorker().catch((error) => {
-  logger.error(`Email Consumer 시작 실패: ${error}`);
+  logger.error(`Email Consumer 시작 실패`, {
+    code: ErrorCodes.EW_WORKER_START_FAILURE,
+    context: 'Main',
+    stack: (error as Error).stack,
+  });
   process.exit(1);
 });

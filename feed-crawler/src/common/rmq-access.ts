@@ -2,17 +2,14 @@ import { inject, injectable } from 'tsyringe';
 import { RabbitMQManager } from './rabbitmq.manager';
 import { DEPENDENCY_SYMBOLS } from '../types/dependency-symbols';
 import logger from './logger';
+import { ErrorCodes } from './log-codes';
 
 @injectable()
 export class RabbitMQConnection {
-  private nameTag: string;
-
   constructor(
     @inject(DEPENDENCY_SYMBOLS.RabbitMQManager)
     private readonly rabbitMQManager: RabbitMQManager,
-  ) {
-    this.nameTag = '[RabbitMQ]';
-  }
+  ) {}
 
   async sendMessage<T>(exchange: string, routingKey: string, message: T) {
     const channel = await this.rabbitMQManager.getChannel();
@@ -32,15 +29,15 @@ export class RabbitMQConnection {
         try {
           const parsedMessage = JSON.parse(message.content.toString()) as T;
           await onMessage(parsedMessage);
-
           channel.ack(message);
         } catch (err: unknown) {
-          const error = err as { message?: string; stack?: string };
-          logger.error(
-            `${this.nameTag} 메시지 처리 중 오류 발생
-            오류 메시지: ${error.message}
-            스택 트레이스: ${error.stack}`,
-          );
+          const error = err as Error;
+          logger.error('RabbitMQ 메시지 처리 오류', {
+            code: ErrorCodes.FC_RABBITMQ_MESSAGE_ERROR,
+            context: 'RabbitMQ',
+            queue,
+            stack: error.stack,
+          });
           channel.nack(message, false, false);
         }
       })();

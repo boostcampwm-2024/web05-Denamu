@@ -1,5 +1,6 @@
 import { injectable } from 'tsyringe';
 import logger from '../../logger';
+import { WarnCodes } from '../../log-codes';
 import { parse } from 'node-html-parser';
 import { unescape } from 'html-escaper';
 
@@ -17,13 +18,16 @@ export class ParserUtil {
 
     const htmlData = await response.text();
     const htmlRootElement = parse(htmlData);
-    const metaImage = htmlRootElement.querySelector(
-      'meta[property="og:image"]',
-    );
+    const metaImage = htmlRootElement.querySelector('meta[property="og:image"]');
     let thumbnailUrl = metaImage?.getAttribute('content') ?? '';
 
     if (!thumbnailUrl.length) {
-      logger.warn(`${feedUrl}에서 썸네일 추출 실패`);
+      logger.warn(`썸네일 추출 실패: ${feedUrl}`, {
+        code: WarnCodes.FC_THUMBNAIL_EXTRACT_WARN,
+        context: 'ThumbnailService',
+        feedUrl,
+        reason: '썸네일 메타태그 없음',
+      });
       return thumbnailUrl;
     }
 

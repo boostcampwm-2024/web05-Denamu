@@ -1,13 +1,12 @@
 {
   "dependencies": {
+    "@denamu/logger": "^1.0.0",
     "amqplib": "^0.10.9",
     "cross-env": "^7.0.3",
     "dotenv": "^16.4.5",
     "nodemailer": "^6.9.16",
     "reflect-metadata": "^0.2.2",
-    "tsyringe": "^4.8.0",
-    "winston": "^3.16.0",
-    "winston-daily-rotate-file": "^5.0.0"
+    "tsyringe": "^4.8.0"
   },
   "devDependencies": {
     "@testcontainers/rabbitmq": "^11.7.2",

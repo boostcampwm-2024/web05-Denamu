@@ -10,6 +10,7 @@ import {
 } from './email.content';
 import { injectable } from 'tsyringe';
 import logger from '../logger';
+import { InfoCodes, ErrorCodes } from '../log-codes';
 import { Rss, RssRegistration, RssRemoval, User } from '../types/types';
 
 @injectable()
@@ -46,11 +47,19 @@ export class EmailService {
   ): Promise<void> {
     try {
       await this.transporter.sendMail(mailOptions);
-      logger.info(`${mailOptions.to as string} 이메일 전송 성공`);
+      logger.info('이메일 전송 성공', {
+        code: InfoCodes.EW_EMAIL_SEND_SUCCESS,
+        context: 'EmailService',
+        to: mailOptions.to as string,
+      });
     } catch (error) {
-      logger.error(
-        `${mailOptions.to as string} 이메일 전송 실패 - 오류 메시지: ${error.message}, 스택 트레이스: ${error.stack}`,
-      );
+      logger.error('이메일 전송 실패', {
+        code: ErrorCodes.EW_EMAIL_SEND_FAILURE,
+        context: 'EmailService',
+        to: mailOptions.to as string,
+        errorMessage: (error as Error).message,
+        stack: (error as Error).stack,
+      });
       throw error;
     }
   }

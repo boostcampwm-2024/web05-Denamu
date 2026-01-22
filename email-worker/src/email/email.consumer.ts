@@ -3,6 +3,7 @@ import { inject, injectable } from 'tsyringe';
 import { DEPENDENCY_SYMBOLS } from '../types/dependency-symbols';
 import { EmailService } from './email.service';
 import logger from '../logger';
+import { InfoCodes, WarnCodes, ErrorCodes } from '../log-codes';
 import { RETRY_CONFIG, RMQ_QUEUES } from '../rabbitmq/rabbitmq.constant';
 import { EmailPayload, EmailPayloadConstant } from '../types/types';
 import { Options } from 'amqplib/properties';
@@ -22,50 +23,74 @@ export class EmailConsumer {
   ) {}
 
   async start() {
-    logger.info('[EmailConsumer] 시작 중...');
+    logger.info('EmailConsumer 시작 중...', {
+      code: InfoCodes.EW_CONSUMER_START,
+      context: 'EmailConsumer',
+    });
 
     this.consumerTag = await this.rabbitmqService.consumeMessage(
       RMQ_QUEUES.EMAIL_SEND,
       async (payload: EmailPayload, retryCount: number) => {
         if (this.shuttingDownFlag) {
-          logger.warn('[EmailConsumer] Shutdown 중, 메시지 처리 건너뜀');
+          logger.warn('Shutdown 중, 메시지 처리 건너뜀', {
+            code: WarnCodes.EW_CONSUMER_SHUTDOWN_SKIP,
+            context: 'EmailConsumer',
+          });
           throw new Error('SHUTDOWN_IN_PROGRESS');
         }
 
         this.pendingTasks++;
-        logger.info(
-          `[EmailConsumer] 이메일 전송 시작 (대기 중인 작업: ${this.pendingTasks})`,
-        );
+        logger.info('이메일 전송 시작', {
+          code: InfoCodes.EW_CONSUMER_TASK_START,
+          context: 'EmailConsumer',
+          pendingTasks: this.pendingTasks,
+        });
 
         try {
           await this.handleEmailByType(payload);
-          logger.info('[EmailConsumer] 이메일 전송 완료');
+          logger.info('이메일 전송 완료', {
+            code: InfoCodes.EW_CONSUMER_TASK_COMPLETE,
+            context: 'EmailConsumer',
+          });
         } catch (error) {
           await this.handleEmailByError(error, payload, retryCount);
         } finally {
           this.pendingTasks--;
-          logger.info(`[EmailConsumer] 남은 작업: ${this.pendingTasks}`);
+          logger.info(`남은 작업: ${this.pendingTasks}`, {
+            code: InfoCodes.EW_CONSUMER_TASK_REMAINING,
+            context: 'EmailConsumer',
+            pendingTasks: this.pendingTasks,
+          });
 
           if (
             this.shuttingDownFlag &&
             this.pendingTasks === 0 &&
             this.shutdownResolver
           ) {
-            logger.info('[EmailConsumer] 모든 작업 완료 - Shutdown 진행');
+            logger.info('모든 작업 완료 - Shutdown 진행', {
+              code: InfoCodes.EW_CONSUMER_ALL_COMPLETE,
+              context: 'EmailConsumer',
+            });
             this.shutdownResolver();
           }
         }
       },
     );
 
-    logger.info('[EmailConsumer] 이메일 큐 리스닝 시작');
+    logger.info('이메일 큐 리스닝 시작', {
+      code: InfoCodes.EW_CONSUMER_LISTENING,
+      context: 'EmailConsumer',
+    });
   }
 
   async close() {
     if (!this.shuttingDownFlag && this.consumerTag) {
       await this.stopConsuming();
     }
-    logger.info('[EmailConsumer] 종료');
+    logger.info('EmailConsumer 종료', {
+      code: InfoCodes.EW_CONSUMER_CLOSE,
+      context: 'EmailConsumer',
+    });
   }
 
   async handleEmailByType(payload: EmailPayload) {
@@ -91,7 +116,11 @@ export class EmailConsumer {
         break;
 
       default:
-        logger.info(`처리할 수 없는 이메일 타입이 입력되었습니다.`);
+        logger.info('처리할 수 없는 이메일 타입이 입력되었습니다.', {
+          code: InfoCodes.EW_EMAIL_TYPE_UNKNOWN,
+          context: 'EmailConsumer',
+          payloadType: (payload as any).type,
+        });
     }
   }
 
@@ -100,25 +129,37 @@ export class EmailConsumer {
 
     if (this.consumerTag) {
       await this.rabbitmqService.closeConsumer(this.consumerTag);
-      logger.info('[EmailConsumer] Consumer 중지 - 새 메시지 받지 않음');
+      logger.info('Consumer 중지 - 새 메시지 받지 않음', {
+        code: InfoCodes.EW_CONSUMER_STOP,
+        context: 'EmailConsumer',
+      });
     }
   }
 
   async waitForPendingTasks(): Promise<void> {
     if (this.pendingTasks === 0) {
-      logger.info('[EmailConsumer] 대기 중인 작업 없음');
+      logger.info('대기 중인 작업 없음', {
+        code: InfoCodes.EW_CONSUMER_NO_PENDING,
+        context: 'EmailConsumer',
+      });
       return;
     }
 
-    logger.info(`[EmailConsumer] ${this.pendingTasks}개 작업 완료 대기 중...`);
+    logger.info(`${this.pendingTasks}개 작업 완료 대기 중...`, {
+      code: InfoCodes.EW_CONSUMER_WAIT_PENDING,
+      context: 'EmailConsumer',
+      pendingTasks: this.pendingTasks,
+    });
 
     return new Promise((resolve) => {
       this.shutdownResolver = resolve;
 
       setTimeout(() => {
-        logger.warn(
-          `[EmailConsumer] 대기 시간 초과 - 강제 종료 (남은 작업: ${this.pendingTasks})`,
-        );
+        logger.warn('대기 시간 초과 - 강제 종료', {
+          code: WarnCodes.EW_CONSUMER_TIMEOUT,
+          context: 'EmailConsumer',
+          pendingTasks: this.pendingTasks,
+        });
         resolve();
       }, 10000);
     });
@@ -247,11 +288,12 @@ export class EmailConsumer {
       }
     }
 
-    logger.error(
-      `[EmailConsumer] 알 수 없는 에러로 DLQ 메시지 발행
-      오류 메시지: ${error.message} 
-      스택 트레이스: ${error.stack}`,
-    );
+    logger.error('알 수 없는 에러로 DLQ 메시지 발행', {
+      code: ErrorCodes.EW_EMAIL_UNKNOWN_ERROR,
+      context: 'EmailConsumer',
+      errorMessage: error.message,
+      stack: error.stack,
+    });
     // 즉시 DLQ로 메시지 발행
     // todo: Slack 이나 Discord 연동을 통한 새로운 에러에 대한 알림 구현
     await this.rabbitmqService.sendMessageToQueue(

@@ -1,15 +1,14 @@
 import Redis, { ChainableCommander } from 'ioredis';
 import Redis_Mock from 'ioredis-mock';
-import logger from '../common/logger';
+import logger from './logger';
+import { ErrorCodes } from './log-codes';
 import { injectable } from 'tsyringe';
 
 @injectable()
 export class RedisConnection {
   private redis: Redis;
-  private nameTag: string;
 
   constructor() {
-    this.nameTag = '[Redis]';
     this.connect();
   }
 
@@ -30,11 +29,13 @@ export class RedisConnection {
     try {
       return await this.redis.rpop(key);
     } catch (error) {
-      logger.error(
-        `${this.nameTag} rpop 실행 중 오류 발생:
-        메시지: ${error.message}
-        스택 트레이스: ${error.stack}`,
-      );
+      logger.error('Redis rpop 오류', {
+        code: ErrorCodes.FC_REDIS_OPERATION_ERROR,
+        context: 'Redis',
+        operation: 'rpop',
+        key,
+        stack: (error as Error).stack,
+      });
       throw error;
     }
   }
@@ -43,11 +44,13 @@ export class RedisConnection {
     try {
       await this.redis.rpush(key, ...elements);
     } catch (error) {
-      logger.error(
-        `${this.nameTag} rpush 실행 중 오류 발생:
-        메시지: ${error.message}
-        스택 트레이스: ${error.stack}`,
-      );
+      logger.error('Redis rpush 오류', {
+        code: ErrorCodes.FC_REDIS_OPERATION_ERROR,
+        context: 'Redis',
+        operation: 'rpush',
+        key,
+        stack: (error as Error).stack,
+      });
     }
   }
 
@@ -56,11 +59,11 @@ export class RedisConnection {
       try {
         await this.redis.quit();
       } catch (error) {
-        logger.error(
-          `${this.nameTag} connection quit 중 오류 발생:
-          메시지: ${error.message}
-          스택 트레이스: ${error.stack}`,
-        );
+        logger.error('Redis 종료 오류', {
+          code: ErrorCodes.FC_REDIS_CLOSE_ERROR,
+          context: 'Redis',
+          stack: (error as Error).stack,
+        });
       }
     }
   }
@@ -74,13 +77,7 @@ export class RedisConnection {
     match?: string,
     count?: number,
   ): Promise<[cursor: string, keys: string[]]> {
-    const result = await this.redis.scan(
-      cursor,
-      'MATCH',
-      match || '*',
-      'COUNT',
-      count || 10,
-    );
+    const result = await this.redis.scan(cursor, 'MATCH', match || '*', 'COUNT', count || 10);
     return [result[0], result[1]];
   }
 
@@ -90,11 +87,11 @@ export class RedisConnection {
       commands(pipeline);
       return pipeline.exec();
     } catch (error) {
-      logger.error(
-        `${this.nameTag} 파이프라인 실행 중 오류 발생:
-        메시지: ${error.message}
-        스택 트레이스: ${error.stack}`,
-      );
+      logger.error('Redis 파이프라인 오류', {
+        code: ErrorCodes.FC_REDIS_PIPELINE_ERROR,
+        context: 'Redis',
+        stack: (error as Error).stack,
+      });
       throw error;
     }
   }

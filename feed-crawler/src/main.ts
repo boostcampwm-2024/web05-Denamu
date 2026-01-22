@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import './common/env-load';
 import logger from './common/logger';
+import { InfoCodes, ErrorCodes } from './common/log-codes';
 import { FeedCrawler } from './feed-crawler';
 import { container } from './container';
 import { DEPENDENCY_SYMBOLS } from './types/dependency-symbols';
@@ -36,22 +37,31 @@ function registerSchedulers(
   dependencies: ReturnType<typeof initializeDependencies>,
 ) {
   schedule.scheduleJob('FEED CRAWLING', '0,30 * * * *', () => {
-    const now = new Date();
-    logger.info(`Feed Crawling Start: ${now.toISOString()}`);
-    void dependencies.feedCrawler.start(now);
+    logger.info('크롤링 작업 시작', {
+      code: InfoCodes.FC_CRAWL_START,
+      context: 'Scheduler',
+    });
+    void dependencies.feedCrawler.start(new Date());
   });
 
   schedule.scheduleJob(
     'AI API PER MINUTE REQUEST RATE LIMIT',
     `*/1 * * * *`,
     () => {
-      logger.info(`AI Request Start: ${new Date().toISOString()}`);
+      logger.info('AI Worker 시작', {
+        code: InfoCodes.FC_WORKER_START,
+        context: 'Scheduler',
+        workerId: 'claude-event-worker',
+      });
       void dependencies.claudeEventWorker.start();
     },
   );
 
   schedule.scheduleJob('FULL FEED CRAWLING', '*/5 * * * *', () => {
-    logger.info(`Full Feed Crawling Start: ${new Date().toISOString()}`);
+    logger.info('전체 피드 크롤링 시작', {
+      code: InfoCodes.FC_FULL_CRAWL_START,
+      context: 'Scheduler',
+    });
     void dependencies.fullFeedCrawlEventWorker.start();
   });
 }
@@ -60,16 +70,27 @@ async function handleShutdown(
   dependencies: ReturnType<typeof initializeDependencies>,
   signal: string,
 ) {
-  logger.info(`${signal} 신호 수신, feed-crawler 종료 중...`);
+  logger.info(`종료 신호 수신: ${signal}`, {
+    code: InfoCodes.FC_SHUTDOWN_SIGNAL,
+    context: 'Shutdown',
+    signal,
+  });
   await dependencies.dbConnection.end();
   await dependencies.redisConnection.quit();
   await dependencies.rabbitMQManager.disconnect();
-  logger.info('DB, Redis, RabbitMQ 연결 종료');
+  logger.info('모든 연결 종료 완료', {
+    code: InfoCodes.FC_CONNECTIONS_CLOSED,
+    context: 'Shutdown',
+  });
   process.exit(0);
 }
 
 async function startScheduler() {
-  logger.info('[Feed Crawler Scheduler Start]');
+  logger.info('스케줄러 시작', {
+    code: InfoCodes.FC_SCHEDULER_START,
+    context: 'Scheduler',
+    cronExpressions: ['0,30 * * * *', '*/1 * * * *', '*/5 * * * *'],
+  });
 
   const dependencies = initializeDependencies();
   await initializeRabbitMQ(dependencies);
@@ -83,18 +104,32 @@ async function initializeRabbitMQ(
   dependencies: ReturnType<typeof initializeDependencies>,
 ) {
   try {
-    logger.info(`RabbitMQ 초기화 시작...`);
+    logger.info('RabbitMQ 초기화 시작', {
+      code: InfoCodes.FC_RABBITMQ_INIT_START,
+      context: 'RabbitMQ',
+    });
 
     await dependencies.rabbitMQManager.connect();
 
-    logger.info(`RabbitMQ 초기화 완료`);
+    logger.info('RabbitMQ 초기화 완료', {
+      code: InfoCodes.FC_RABBITMQ_INIT_COMPLETE,
+      context: 'RabbitMQ',
+    });
   } catch (error) {
-    logger.error(`RabbitMQ 초기화 실패:`, error);
+    logger.error(`RabbitMQ 초기화 실패: ${(error as Error).message}`, {
+      code: ErrorCodes.FC_RABBITMQ_INIT_ERROR,
+      context: 'RabbitMQ',
+      stack: (error as Error).stack,
+    });
     throw error;
   }
 }
 
 startScheduler().catch((error) => {
-  logger.error(`스케줄러 시작 실패: `, error);
+  logger.error(`스케줄러 시작 실패: ${error.message}`, {
+    code: ErrorCodes.FC_SCHEDULER_START_ERROR,
+    context: 'Scheduler',
+    stack: error.stack,
+  });
   process.exit(1);
 });
