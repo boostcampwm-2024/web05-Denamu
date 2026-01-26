@@ -93,10 +93,76 @@ services:
       - was-dev
       - default
 
+  # Grafana - 로그 시각화
+  grafana:
+    image: 'grafana/grafana:latest'
+    ports:
+      - '3000:3000'
+    networks:
+      - Denamu
+    volumes:
+      - denamu-grafana:/var/lib/grafana
+      - ./grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+      - ./grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml
+      - ./grafana/denamu-logs-dashboard.json:/etc/grafana/provisioning/dashboards/denamu-logs-dashboard.json
+    depends_on:
+      - loki
+    environment:
+      TZ: 'Asia/Seoul'
+      GF_SECURITY_ADMIN_PASSWORD: 'admin'
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/provisioning/dashboards/denamu-logs-dashboard.json
+    profiles:
+      - default
+
+  # Loki - 로그 수집 및 저장소
+  loki:
+    image: grafana/loki:2.9.3
+    ports:
+      - '3100:3100'
+    networks:
+      - Denamu
+    volumes:
+      - ./loki-config.yml:/etc/loki/local-config.yaml
+      - denamu-loki:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    environment:
+      TZ: 'Asia/Seoul'
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'wget --no-verbose --tries=1 --spider http://localhost:3100/ready || exit 1',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    profiles:
+      - default
+
+  # Promtail - 로그 수집 에이전트
+  promtail:
+    image: grafana/promtail:2.9.3
+    networks:
+      - Denamu
+    volumes:
+      - ./promtail-config.yml:/etc/promtail/config.yml
+      - ../server/logs:/var/log/server:ro
+      - ../feed-crawler/logs:/var/log/feed-crawler:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    environment:
+      TZ: 'Asia/Seoul'
+    profiles:
+      - default
+
 volumes:
   denamu-mysql:
   denamu-redis:
   denamu-rabbitmq:
+  denamu-grafana:
+  denamu-loki:
 
 networks:
   Denamu:

@@ -20,6 +20,8 @@ services:
       - ../nginx/logs:/var/log/nginx
     environment:
       TZ: 'Asia/Seoul'
+    profiles:
+      - default
 
   # WAS 서비스
   app:
