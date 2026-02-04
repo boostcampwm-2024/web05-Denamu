@@ -11,6 +11,10 @@
 - **EmailService**: Verify SMTP send success/failure.
 - **RabbitMQService**: Verify message publish and consume operations.
 
+## Principle
+
+- GIVEN / WHEN / THEN comments MUST be used inside each it block only.
+
 # E2E Tests
 
 ## Setup
@@ -46,6 +50,7 @@
 
 - Tests **must be deterministic**.
 - Tests **must be isolated**.
+- GIVEN / WHEN / THEN comments MUST be used inside each it block only.
 
 # Commands
 

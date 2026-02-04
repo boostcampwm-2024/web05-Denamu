@@ -7,6 +7,10 @@
 - Private methods are tested using `jest.spyOn()`.
 - `@anthropic-ai/sdk` is module-mocked with `jest.mock()`.
 
+## Principle
+
+- GIVEN / WHEN / THEN comments MUST be used inside each it block only.
+
 ## Test Targets
 
 - **FeedCrawler**: Crawling flow, parallel processing, early termination scenarios
@@ -33,11 +37,12 @@
 - **All temporary test containers must be destroyed.**
 - No test infrastructure artifacts may persist after completion.
 
-# Non-Negotiable Principles
+# Principles
 
 - Tests **must be deterministic**.
 - Tests **must be isolated**.
 - Tests **must be parallel-safe**.
+- GIVEN / WHEN / THEN comments MUST be used inside each it block only.
 
 # Commands
 

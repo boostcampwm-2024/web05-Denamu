@@ -15,6 +15,7 @@ Test case names MUST follow this format: `~가 ~일 경우 유효성 검사에 {
 
 DTO tests exist to validate input contracts, not business logic.
 Each test MUST assert exactly one validation outcome.
+GIVEN / WHEN / THEN comments MUST be used inside each it block only.
 
 # E2E Tests
 
@@ -42,11 +43,12 @@ Each test case name MUST follow this format: `[{HTTP_STATUS}] {action} 할 경�
 ALL temporary test containers MUST be destroyed.
 No test infrastructure artifacts may persist after test completion.
 
-# Non-Negotiable Principles
+# Principles
 
 Tests MUST be deterministic.
 Tests MUST be isolated.
 Tests MUST be parallel-safe.
+GIVEN / WHEN / THEN comments MUST be used inside each it block only.
 
 # Commands
 
