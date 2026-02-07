@@ -6,14 +6,12 @@ services:
       - '$MYSQL_PORT:3306'
     volumes:
       - denamu-mysql:/var/lib/mysql
+      - ./db/my.cnf:/etc/mysql/conf.d/my.cnf:ro
+      - denamu-mysql-logs:/var/log/mysql
     networks:
       - Denamu
     env_file:
       - /var/prod_config/infra/.env.prod
-    command:
-      - --character-set-server=utf8mb4
-      - --collation-server=utf8mb4_unicode_ci
-      - --skip-character-set-client-handshake
     healthcheck:
       test:
         [
@@ -152,6 +150,7 @@ services:
 
 volumes:
   denamu-mysql:
+  denamu-mysql-logs:
   denamu-redis:
   denamu-rabbitmq:
   denamu-prometheus:
