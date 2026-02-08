@@ -1,4 +1,17 @@
-# DTO Validation Tests
+# Principles
+
+Tests MUST be deterministic.
+Tests MUST be isolated.
+Tests MUST be parallel-safe.
+GIVEN / WHEN / THEN comments MUST be used inside each it block only.
+
+# Test Utilities
+
+Server test utilities are located under `test/config/common`.
+
+- fixture: Returns predefined data objects to be inserted into the database.
+
+# DTO Tests
 
 Test Structure Rules
 A DTO instance MUST be created in beforeEach.
@@ -6,16 +19,16 @@ In the given phase of each test, inject invalid data explicitly.
 The success case MUST be executed first.
 Failure cases MUST be grouped under a separate describe block.
 
-## Naming Convention
-
-The top-level describe block MUST follow this naming format: `${DTO-CLASS.name} Test`
-Test case names MUST follow this format: `~가 ~일 경우 유효성 검사에 {실패/성공}한다.`
-
 ## Principle
 
 DTO tests exist to validate input contracts, not business logic.
 Each test MUST assert exactly one validation outcome.
 GIVEN / WHEN / THEN comments MUST be used inside each it block only.
+
+## Naming Convention
+
+The top-level describe block MUST follow this naming format: `${DTO-CLASS.name} Test`
+Test case names MUST follow this format: `~가 ~일 경우 유효성 검사에 {실패/성공}한다.`
 
 # E2E Tests
 
@@ -42,13 +55,6 @@ Each test case name MUST follow this format: `[{HTTP_STATUS}] {action} 할 경�
 
 ALL temporary test containers MUST be destroyed.
 No test infrastructure artifacts may persist after test completion.
-
-# Principles
-
-Tests MUST be deterministic.
-Tests MUST be isolated.
-Tests MUST be parallel-safe.
-GIVEN / WHEN / THEN comments MUST be used inside each it block only.
 
 # Commands
 
