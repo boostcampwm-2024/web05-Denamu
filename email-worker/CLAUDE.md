@@ -11,19 +11,6 @@ Email sending MUST be processed asynchronously to:
 
 Embedding SMTP logic inside the server is forbidden due to poor failure visibility and debugging complexity.
 
-# Architectural Role
-
-The Email Worker is a **message-driven infrastructure component** responsible for reliable email dispatch.
-
-Design goals:
-
-- failure containment
-- retry-safe processing
-- deterministic logging
-- operational clarity
-
-The API MUST never send emails directly.
-
 # Processing Workflow
 
 1. Listen to RabbitMQ queues continuously.
@@ -33,10 +20,23 @@ The API MUST never send emails directly.
    - emit structured error logs (Winston)
    - route the message to a RabbitMQ Dead Letter Queue (DLQ)
 
-# Environment & Stack
+# Stack
 
-Stack: Node.js 22, RabbitMQ, Winston.
-Infra: Docker, AWS EC2.
+[Core]
+
+- Node.js 22
+- tsyringe
+- Winston.
+
+[Infra]
+
+- Docker
+- AWS EC2
+- RabbitMQ
+
+[Test]
+
+- Jest
 
 # Reference Docs
 
@@ -47,6 +47,7 @@ Infra: Docker, AWS EC2.
 
 # Commands
 
-npm run build - Production build
-npm run start - Production start
-npm run start:dev - Development start
+npm run \*
+build - Production build
+start - Production start
+start:dev - Development start

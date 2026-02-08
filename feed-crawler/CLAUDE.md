@@ -17,15 +17,24 @@ The system MUST prioritize correctness, determinism, and operational safety.
 8. If parsing succeeds:
    - persist summaries and tags to the database.
 
-# Reliability Requirements
+# Stack
 
-- Failures MUST be observable via structured logging (Winston).
-- Database writes MUST be atomic where consistency is required.
+[Core]
 
-# Environment & Stack
+- Node.js 22
+- tsyringe
+- Winston
 
-Stack: Node.js 22, MySQL, Redis, Winston.
-Infra: Docker, AWS EC2.
+[Infra]
+
+- Docker
+- MySQL
+- Redis
+- AWS EC2
+
+[Test]
+
+- Jest
 
 # Reference Docs
 

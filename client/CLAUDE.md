@@ -2,31 +2,39 @@
 
 The client is the user-facing React SPA for Denamu. It consumes the server API and renders RSS-aggregated blog content with features including trending feeds, search, developer chat, and user authentication.
 
-# Architecture
+# Stack
 
-- **Framework**: React 18 + Vite (SWC)
-- **Routing**: React Router v6 with code splitting (lazy + Suspense)
-- **State**: Zustand v5 (global UI state), TanStack React Query v5 (server state + caching)
-- **HTTP**: Axios with credentials
-- **Real-time**: Socket.io-client (chat, trending)
-- **UI**: Tailwind CSS + shadcn/ui (Radix UI) + Framer Motion
-- **Testing**: Vitest + Testing Library
+[Core]
+
+- React 18
+- Vite(SWC)
+- Zustand v5 (global UI state)
+- TanStack React Query v5 (server state + caching)
+- Axios with credentials
+- Socket.io-client (chat, trending)
+- Tailwind CSS
+- shadcn/ui (Radix UI)
+- Framer Motion
+
+[Test]
+
+- Vitest
 
 # Directory Structure
 
-| Directory | Role |
-| --- | --- |
-| src/pages/ | Page-level components, one per route |
-| src/routes/ | React Router route definitions |
-| src/components/ | Feature components (auth, admin, chat, common, ui) |
-| src/store/ | Zustand stores (auth, search, sidebar, chat, filter, etc.) |
-| src/hooks/ | Custom hooks: auth/, queries/, common/ |
-| src/api/services/ | Axios service layer per domain |
-| src/api/mocks/ | MSW handlers for development |
-| src/constants/ | API endpoint constants |
-| src/types/ | TypeScript type definitions |
-| src/providers/ | React context providers (TanStack Query) |
-| src/components/ui/ | shadcn/ui base components |
+| Directory          | Role                                                       |
+| ------------------ | ---------------------------------------------------------- |
+| src/pages/         | Page-level components, one per route                       |
+| src/routes/        | React Router route definitions                             |
+| src/components/    | Feature components (auth, admin, chat, common, ui)         |
+| src/store/         | Zustand stores (auth, search, sidebar, chat, filter, etc.) |
+| src/hooks/         | Custom hooks: auth/, queries/, common/                     |
+| src/api/services/  | Axios service layer per domain                             |
+| src/api/mocks/     | MSW handlers for development                               |
+| src/constants/     | API endpoint constants                                     |
+| src/types/         | TypeScript type definitions                                |
+| src/providers/     | React context providers (TanStack Query)                   |
+| src/components/ui/ | shadcn/ui base components                                  |
 
 # Routing
 
@@ -36,14 +44,14 @@ Pages are lazy-loaded via React.lazy() for code splitting.
 
 # State Management
 
-| Store | Purpose |
-| --- | --- |
-| useAuthStore | User role (guest / user / admin), token state |
-| useSearchStore | Search params, filter type, pagination |
-| useSidebarStore | Sidebar visibility |
-| useChatStore | WebSocket chat state |
-| useRegisterModalStore | RSS registration modal |
-| React Query | Server data fetching, caching, refetch |
+| Store                 | Purpose                                       |
+| --------------------- | --------------------------------------------- |
+| useAuthStore          | User role (guest / user / admin), token state |
+| useSearchStore        | Search params, filter type, pagination        |
+| useSidebarStore       | Sidebar visibility                            |
+| useChatStore          | WebSocket chat state                          |
+| useRegisterModalStore | RSS registration modal                        |
+| React Query           | Server data fetching, caching, refetch        |
 
 # Build Configuration
 
