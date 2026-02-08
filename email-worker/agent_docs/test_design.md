@@ -2,7 +2,7 @@
 
 ## Structure Rules
 
-- Tests are **mock-based** and follow the **Arrange-Act-Assert** pattern.
+- Tests are **mock-based** and follow the **Given-When-Then** pattern.
 - `EmailConsumer`, `EmailService`, and `RabbitMQService` are tested **independently**.
 
 ## Test Targets
