@@ -142,9 +142,11 @@ export class FeedService {
     request: Request,
     response: Response,
   ) {
+    const feedId = viewUpdateParamDto.feedId;
+    await this.getFeed(feedId);
+
     const cookie = request.headers.cookie;
     const ip = this.getIp(request);
-    const feedId = viewUpdateParamDto.feedId;
 
     if (!ip || !this.isString(ip)) {
       return;
