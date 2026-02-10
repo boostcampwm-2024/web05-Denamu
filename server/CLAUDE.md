@@ -27,6 +27,16 @@ It provides APIs over HTTP, WebSocket (via Socket.IO), and Server-Sent Events (S
 
 - Jest
 
+# Data Flow
+
+See `/ARCHITECTURE.md` for complete system communication topology.
+
+This service communicates with:
+
+- feed-crawler via Redis queues (feed:full-crawl:queue, feed:ai:queue)
+- email-worker via RabbitMQ (EmailExchange)
+- client via HTTP/WebSocket/SSE
+
 # Reference Docs
 
 | File                          | Authority      |

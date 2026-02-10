@@ -11,6 +11,18 @@ Email sending MUST be processed asynchronously to:
 
 Embedding SMTP logic inside the server is forbidden due to poor failure visibility and debugging complexity.
 
+# Data Flow
+
+See `/ARCHITECTURE.md` for complete system communication topology.
+
+Consumes RabbitMQ messages from server:
+
+- Exchange: EmailExchange (topic exchange)
+- Routing Key: email.send
+- DLQ: DeadLetterExchange (3 retries with exponential backoff)
+
+Triggers: signup verification, RSS accept/reject, password reset, account deletion, RSS removal
+
 # Processing Workflow
 
 1. Listen to RabbitMQ queues continuously.
