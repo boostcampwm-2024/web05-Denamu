@@ -142,38 +142,43 @@ export class FeedService {
     request: Request,
     response: Response,
   ) {
+    const feedId = viewUpdateParamDto.feedId;
+    await this.getFeed(feedId);
+
     const cookie = request.headers.cookie;
     const ip = this.getIp(request);
-    const feedId = viewUpdateParamDto.feedId;
-    if (ip && this.isString(ip)) {
-      const hasCookie = Boolean(
-        cookie?.includes(`View_count_${feedId}=${feedId}`),
-      );
-      const [, hasIpFlag] = await Promise.all([
-        this.getFeed(feedId),
-        this.redisService.sismember(`feed:${feedId}:ip`, ip),
-      ]);
 
-      if (!hasCookie) {
-        this.createCookie(response, feedId);
-      }
-
-      if (hasCookie || hasIpFlag) {
-        return;
-      }
-
-      await Promise.all([
-        this.redisService.sadd(`feed:${feedId}:ip`, ip),
-        this.feedRepository.update(feedId, {
-          viewCount: () => 'view_count + 1',
-        }),
-        this.redisService.zincrby(
-          REDIS_KEYS.FEED_TREND_KEY,
-          1,
-          feedId.toString(),
-        ),
-      ]);
+    if (!ip || !this.isString(ip)) {
+      return;
     }
+
+    const cookieKey = `View_count_${feedId}=${feedId}`;
+    const hasCookie = Boolean(cookie?.includes(cookieKey));
+
+    if (hasCookie) {
+      return;
+    }
+
+    const hasIpFlag = await this.redisService.sismember(`feed:${feedId}:ip`, ip);
+
+    if (hasIpFlag) {
+      this.createCookie(response, feedId);
+      return;
+    }
+
+    this.createCookie(response, feedId);
+
+    await Promise.all([
+      this.redisService.sadd(`feed:${feedId}:ip`, ip),
+      this.feedRepository.update(feedId, {
+        viewCount: () => 'view_count + 1',
+      }),
+      this.redisService.zincrby(
+        REDIS_KEYS.FEED_TREND_KEY,
+        1,
+        feedId.toString(),
+      ),
+    ]);
   }
 
   private isString(ip: string | string[]): ip is string {
