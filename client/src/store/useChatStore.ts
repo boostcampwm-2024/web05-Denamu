@@ -3,49 +3,66 @@ import { create } from "zustand";
 
 import { CHAT_SERVER_URL } from "@/constants/endpoints";
 
-import { ChatType } from "@/types/chat";
+import { ChatType, SendChatType } from "@/types/chat";
 
-interface ChatStore {
+let socket: Socket | null = null;
+const pendingTimeouts: Record<string, NodeJS.Timeout> = {};
+
+type State = {
   chatHistory: ChatType[];
   userCount: number;
   isLoading: boolean;
+  isConnected: boolean;
+};
+type Action = {
   connect: () => void;
   disconnect: () => void;
   getHistory: () => void;
-  sendMessage: (message: string) => void;
-}
+  sendMessage: (message: SendChatType) => void;
+  resendMessage: (data: ChatType) => void;
+  deleteMessage: (messageId: string) => void;
+  chatLength: () => number;
+};
 
-export const useChatStore = create<ChatStore>((set) => {
-  let socket: Socket | null = null;
-  // 소켓 초기화 함수
+export const useChatStore = create<State & Action>((set, get) => {
   const initializeSocket = () => {
-    if (socket) return socket; // 이미 존재하면 그대로 반환
-
+    if (socket) return socket;
     socket = io(CHAT_SERVER_URL, {
       path: "/chat",
       transports: ["websocket"],
-      reconnection: true, // 자동 재연결 활성화
-      reconnectionAttempts: 5, // 최대 5번 재시도
-      reconnectionDelay: 1000, // 1초 간격으로 재시도
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      autoConnect: false,
     });
 
-    // 서버 연결 성공 시
-    socket.on("connect", () => {});
-
-    // 서버로부터 메시지 받기
     socket.on("message", (data) => {
-      set((state) => ({
-        chatHistory: [...state.chatHistory, data],
-      }));
+      if (pendingTimeouts[data.messageId]) {
+        clearTimeout(pendingTimeouts[data.messageId]);
+        delete pendingTimeouts[data.messageId];
+      }
+
+      set((state) => {
+        const index = state.chatHistory.findIndex((msg) => msg.messageId === data.messageId);
+        if (index !== -1) {
+          const newHistory = [...state.chatHistory];
+          newHistory[index] = { ...data, isSend: true, isFailed: false };
+          return { chatHistory: newHistory };
+        }
+        return { chatHistory: [...state.chatHistory, { ...data, isSend: true, isFailed: false }] };
+      });
     });
 
-    // 사용자 수 업데이트 받기
     socket.on("updateUserCount", (data) => {
       set({ userCount: data.userCount });
     });
+    socket.on("connect", () => {
+      useChatStore.setState({ isConnected: true });
+    });
 
-    // 서버 연결 해제 시
-    socket.on("disconnect", () => {});
+    socket.on("disconnect", () => {
+      useChatStore.setState({ isConnected: false });
+    });
 
     return socket;
   };
@@ -54,55 +71,109 @@ export const useChatStore = create<ChatStore>((set) => {
     chatHistory: [],
     userCount: 0,
     isLoading: true,
-    // Socket 연결 함수
+    isConnected: false,
     connect: () => {
-      if (socket) return; // 이미 연결된 경우 중복 방지
-      initializeSocket();
+      const s = initializeSocket();
+      if (!s.connected) {
+        s.connect();
+      }
     },
 
-    // Socket 연결 해제 함수
     disconnect: () => {
       socket?.disconnect();
-      socket = null;
     },
 
-    // 이전 채팅 기록 받아오기
     getHistory: () => {
-      if (socket) {
-        socket.emit("getHistory");
-        socket.on("chatHistory", (data) => {
-          set(() => ({
-            chatHistory: data,
-            isLoading: false,
-          }));
-        });
+      const s = initializeSocket();
+
+      const requestHistory = () => {
+        s.emit("getHistory");
+        s.off("connect", requestHistory);
+      };
+      if (s.connected) {
+        requestHistory();
       } else {
-        const newSocket = initializeSocket();
-        newSocket.emit("getHistory");
+        s.on("connect", requestHistory);
+        s.connect();
+      }
+
+      s.on("chatHistory", (data) => {
+        useChatStore.setState((state) => {
+          const failedMessages = state.chatHistory.filter((chat) => chat.isFailed || !chat.isSend);
+          return {
+            chatHistory: [...data, ...failedMessages],
+            isLoading: false,
+          };
+        });
+      });
+    },
+
+    sendMessage: (message: SendChatType) => {
+      const s = initializeSocket();
+
+      useChatStore.setState((state) => ({
+        chatHistory: [
+          ...state.chatHistory,
+          {
+            timestamp: "전송중",
+            username: "나",
+            isMidNight: false,
+            message: message.message,
+            messageId: message.messageId,
+            userId: localStorage.getItem("userID"),
+          } as ChatType,
+        ],
+      }));
+
+      pendingTimeouts[message.messageId] = setTimeout(() => {
+        useChatStore.setState((state) => ({
+          chatHistory: state.chatHistory.map((m) => (m.messageId === message.messageId ? { ...m, isFailed: true } : m)),
+        }));
+        delete pendingTimeouts[message.messageId];
+      }, 5000);
+
+      if (s.connected) {
+        s.emit("message", message);
+      } else {
+        s.connect();
       }
     },
 
-    // 메시지 전송 함수
-    sendMessage: (message: string) => {
-      if (socket) {
-        socket.emit("message", { message });
-      } else {
-        // 소켓이 없으면 연결 후 메시지 전송
-        const newSocket = initializeSocket();
-        newSocket.on("connect", () => {
-          newSocket.emit("message", { message });
+    resendMessage: (data: ChatType) => {
+      const s = initializeSocket();
+      if (s.connected) {
+        s.emit("message", {
+          message: data.message,
+          messageId: data.messageId,
+          userId: data.userId,
         });
+        useChatStore.setState((state) => ({
+          chatHistory: state.chatHistory.map((m) =>
+            m.messageId === data.messageId ? { ...m, isFailed: false, timestamp: "전송중", isSend: false } : m
+          ),
+        }));
+
+        pendingTimeouts[data.messageId as string] = setTimeout(() => {
+          useChatStore.setState((state) => ({
+            chatHistory: state.chatHistory.map((m) => (m.messageId === data.messageId ? { ...m, isFailed: true } : m)),
+          }));
+          delete pendingTimeouts[data.messageId as string];
+        }, 5000);
+      } else {
+        console.error("소켓이 끊겼습니다. 재전송할 수 없습니다.");
+        alert("지금은 연결이 끊겨 재전송할 수 없습니다.");
       }
     },
+    deleteMessage: (messageId: string) => {
+      if (pendingTimeouts[messageId]) {
+        clearTimeout(pendingTimeouts[messageId]);
+        delete pendingTimeouts[messageId];
+      }
+      useChatStore.setState((state) => ({
+        chatHistory: state.chatHistory.filter((m) => m.messageId !== messageId),
+      }));
+      alert("메시지가 삭제되었습니다");
+    },
+    chatLength: () => get().chatHistory.length,
   };
 });
-
-interface ChatValue {
-  message: string;
-  setMessage: (newMessage: string) => void;
-}
-
-export const useChatValueStore = create<ChatValue>((set) => ({
-  message: "",
-  setMessage: (newMessage: string) => set({ message: newMessage }),
-}));
