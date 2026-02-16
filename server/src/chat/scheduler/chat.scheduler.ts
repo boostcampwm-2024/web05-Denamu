@@ -41,9 +41,7 @@ export class ChatScheduler {
     return broadcastPayload;
   }
 
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, {
-    timeZone: 'Asia/Seoul',
-  })
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   private async midnightInitializer() {
     await this.chatService.saveMidnightStatus();
   }
