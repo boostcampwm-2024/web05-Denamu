@@ -2,13 +2,13 @@ export const cookieConfig = {
   PROD: {
     httpOnly: true,
     secure: true,
-    sameSite: 'none',
+    sameSite: 'lax',
     path: '/',
   },
   LOCAL: {
     httpOnly: true,
     secure: true,
-    sameSite: 'none',
+    sameSite: 'lax',
     path: '/',
   },
   DEV: {
