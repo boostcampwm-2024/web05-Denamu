@@ -29,6 +29,16 @@ export const login = async (data: UserSignInRequest): Promise<UserSignInResponse
   }
 };
 
+export const refreshAccessToken = async (config = {}): Promise<UserSignInResponse> => {
+  const response = await axiosInstance.post<UserSignInResponse>(USER.REFRESH_TOKEN, null, config);
+  return response.data;
+};
+
+export const logout = async (): Promise<{ message: string }> => {
+  const response = await axiosInstance.post<{ message: string }>(USER.LOGOUT);
+  return response.data;
+};
+
 export const certificateUser = async (token: string): Promise<{ message: string }> => {
   try {
     const response = await axiosInstance.post<{ message: string }>(USER.CERTIFICATE, { uuid: token });

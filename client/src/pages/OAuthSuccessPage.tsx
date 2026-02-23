@@ -1,24 +1,20 @@
 import { useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import { useAuthStore } from "@/store/useAuthStore.ts";
 
 export default function OAuthSuccessPage() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { setUserFromToken } = useAuthStore();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const isInitialized = useAuthStore((s) => s.isInitialized);
 
   useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    const accessToken = searchParams.get("token");
-
-    if (accessToken) {
-      setUserFromToken(accessToken);
-      navigate("/", { replace: true });
-    } else {
-      navigate("/signin", { replace: true });
+    if (!isInitialized) {
+      return;
     }
-  }, [location, navigate, setUserFromToken]);
+
+    navigate(isAuthenticated ? "/" : "/signin", { replace: true });
+  }, [isAuthenticated, isInitialized, navigate]);
 
   return (
     <div className="flex h-screen items-center justify-center">
