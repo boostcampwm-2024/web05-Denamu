@@ -1,17 +1,18 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 
 import { Response } from 'express';
+import { DataSource } from 'typeorm';
 
 import { cookieConfig } from '@common/cookie/cookie.config';
 import { Payload } from '@common/guard/jwt.guard';
 import { WinstonLoggerService } from '@common/logger/logger.service';
 
-import {
-  OAuthType,
-  ProviderData,
-  StateData,
-  UserInfo,
-} from '@user/constant/oauth.constant';
+import { OAuthType, StateData } from '@user/constant/oauth.constant';
 import { REFRESH_TOKEN_TTL } from '@user/constant/user.constants';
 import { OAuthCallbackRequestDto } from '@user/dto/request/oAuthCallbackDto';
 import { Provider } from '@user/entity/provider.entity';
@@ -30,6 +31,7 @@ export class OAuthService {
     private readonly userService: UserService,
     @Inject('OAUTH_PROVIDERS')
     private readonly providers: Record<string, OAuthProvider>,
+    private readonly dataSource: DataSource,
   ) {}
 
   getAuthUrl(providerType: OAuthType) {
@@ -49,15 +51,64 @@ export class OAuthService {
 
     const userInfo = await this.providers[providerType].getUserInfo(tokenData);
 
-    await this.saveOAuthUser(userInfo, {
+    const existingProvider = await this.findExistingProvider(
       providerType,
-      refreshToken: tokenData.refresh_token || null,
+      userInfo.id,
+    );
+
+    if (existingProvider) {
+      await this.updateProviderTokens(
+        existingProvider,
+        tokenData.refresh_token || null,
+      );
+    }
+
+    let user = await this.userRepository.findOne({
+      where: { email: userInfo.email },
     });
 
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      if (!user) {
+        user = await queryRunner.manager.getRepository(User).save({
+          email: userInfo.email,
+          userName: userInfo.name,
+          profileImage: userInfo.picture || null,
+          provider: providerType,
+        });
+        this.logger.log(`새로운 사용자 가입 완료: ${userInfo.email}`);
+      }
+
+      if (!existingProvider) {
+        await queryRunner.manager.getRepository(Provider).save({
+          providerType,
+          providerUserId: userInfo.id,
+          refreshToken: tokenData.refresh_token || null,
+          user,
+        });
+
+        this.logger.log(
+          `새로운 사용자 인증 정보 저장 완료: ${providerType} ${user.email}`,
+        );
+      }
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      this.logger.error(`OAuth 사용자 저장 중 에러 발생: `, error);
+      throw new InternalServerErrorException(
+        `로그인 처리 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.`,
+      );
+    } finally {
+      await queryRunner.release();
+    }
+
     const jwtPayload: Payload = {
-      id: Number(userInfo.id),
-      email: userInfo.email,
-      userName: userInfo.name,
+      id: user.id,
+      email: user.email,
+      userName: user.userName,
       role: 'user',
     };
 
@@ -80,21 +131,6 @@ export class OAuthService {
     }
   }
 
-  private async saveOAuthUser(userInfo: UserInfo, providerData: ProviderData) {
-    const { providerType, refreshToken } = providerData;
-    const existingProvider = await this.findExistingProvider(
-      providerType,
-      userInfo.id,
-    );
-
-    if (existingProvider) {
-      await this.updateProviderTokens(existingProvider, refreshToken);
-      return;
-    }
-    const user = await this.findOrCreateUser(userInfo, providerType);
-    await this.createProvider(providerType, userInfo.id, refreshToken, user);
-  }
-
   private async findExistingProvider(
     providerType: string,
     providerUserId: string,
@@ -113,44 +149,6 @@ export class OAuthService {
     await this.providerRepository.save(provider);
     this.logger.log(
       `기존 사용자 인증 정보 업데이트 완료: ${provider.user.email}`,
-    );
-  }
-
-  //User Entity
-  private async findOrCreateUser(userInfo: UserInfo, providerType: string) {
-    let user = await this.userRepository.findOne({
-      where: { email: userInfo.email },
-    });
-
-    if (!user) {
-      user = await this.userRepository.save({
-        email: userInfo.email,
-        userName: userInfo.name,
-        profileImage: userInfo.picture || null,
-        provider: providerType,
-      });
-      this.logger.log(`새로운 사용자 가입 완료: ${userInfo.email}`);
-    }
-
-    return user;
-  }
-
-  //Provider Entity
-  private async createProvider(
-    providerType: string,
-    providerUserId: string,
-    refreshToken: string,
-    user: User,
-  ) {
-    await this.providerRepository.save({
-      providerType,
-      providerUserId,
-      refreshToken,
-      user,
-    });
-
-    this.logger.log(
-      `새로운 사용자 인증 정보 저장 완료: ${providerType} ${user.email}`,
     );
   }
 }
