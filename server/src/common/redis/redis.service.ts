@@ -144,4 +144,16 @@ export class RedisService {
   ): Promise<'OK' | null> {
     return this.redisClient.setex(key, seconds, value);
   }
+
+  async time(): Promise<number[]> {
+    return this.redisClient.time();
+  }
+
+  async eval(
+    script: string,
+    keys: string[],
+    args: string[] = [],
+  ): Promise<any> {
+    return this.redisClient.eval(script, keys.length, ...keys, ...args);
+  }
 }

@@ -4,28 +4,36 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import type { BroadcastPayload } from '@chat/constant/chat.constant';
 import { ChatService } from '@chat/service/chat.service';
 
+import { WinstonLoggerService } from '@common/logger/logger.service';
+
 const CHAT_MIDNIGHT_CLIENT_NAME = 'system';
 
 @Injectable()
 export class ChatScheduler {
-  private dayInit: boolean = false;
-
-  constructor(private readonly chatService: ChatService) {}
+  constructor(
+    private readonly chatService: ChatService,
+    private readonly logger: WinstonLoggerService,
+  ) {}
 
   async handleDateMessage() {
-    if (this.dayInit) {
-      this.dayInit = false;
-      return await this.saveDateMessage();
+    const dateString = await this.chatService.getMidnightStatus();
+    if (!dateString) return;
+    const date = new Date(dateString);
+
+    if (!Number.isNaN(date.getTime())) {
+      return await this.saveDateMessage(date);
     }
+
+    this.logger.warn(`Invalid date format이 저장되었습니다: ${dateString}`);
   }
 
-  private async saveDateMessage() {
+  private async saveDateMessage(date: Date) {
     const broadcastPayload: BroadcastPayload = {
       userId: CHAT_MIDNIGHT_CLIENT_NAME,
       messageId: CHAT_MIDNIGHT_CLIENT_NAME,
       username: CHAT_MIDNIGHT_CLIENT_NAME,
       message: '',
-      timestamp: new Date(),
+      timestamp: date,
     };
 
     await this.chatService.saveMessageToRedis(broadcastPayload);
@@ -34,7 +42,7 @@ export class ChatScheduler {
   }
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
-  private midnightInitializer() {
-    this.dayInit = true;
+  private async midnightInitializer() {
+    await this.chatService.saveMidnightStatus();
   }
 }
