@@ -153,4 +153,26 @@ describe(`DELETE ${URL}/{code} E2E Test`, () => {
     expect(savedRss).toBeNull();
     expect(savedRssRemoveURL).toBeNull();
   });
+
+  it('[404] 이미 삭제된 RSS에 대해 삭제 인증 요청 시 실패한다.', async () => {
+    // given - 존재하지 않는 RSS URL로 Redis에 삭제 코드 등록
+    const nonExistentRssUrl = 'https://deleted-blog.com/rss';
+    await redisService.set(redisKeyMake(rssDeleteCode), nonExistentRssUrl);
+
+    // Http when
+    const response = await agent.delete(`${URL}/${rssDeleteCode}`);
+
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    expect(data).toBeUndefined();
+
+    // DB, Redis when - Redis 키는 삭제되어야 함
+    const savedRssRemoveURL = await redisService.get(
+      redisKeyMake(rssDeleteCode),
+    );
+
+    // DB, Redis then
+    expect(savedRssRemoveURL).toBeNull();
+  });
 });
