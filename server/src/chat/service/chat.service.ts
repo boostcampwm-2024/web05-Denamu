@@ -105,12 +105,10 @@ export class ChatService {
     end
     return value
   `;
-
-    return JSON.parse(
-      await this.redisService.eval(script, [
-        REDIS_KEYS.CHAT_SYSTEM_MIDNIGHT_KEY,
-      ]),
-    );
+    const result = await this.redisService.eval(script, [
+      REDIS_KEYS.CHAT_SYSTEM_MIDNIGHT_KEY,
+    ]);
+    return result ? JSON.parse(result) : null;
   }
 
   private getTTLNextMidnight(
