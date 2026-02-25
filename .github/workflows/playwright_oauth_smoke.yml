@@ -1,9 +1,8 @@
-name: FE Auth E2E Test
+name: FE OAuth Real Smoke Test
 
 on:
-  pull_request:
-    branches: [main]
-    paths: ['client/**', 'server/**', '.github/workflows/playwright.yml', '.github/workflows/playwright_oauth_smoke.yml']
+  schedule:
+    - cron: '0 0 * * *'
   workflow_dispatch:
 
 jobs:
@@ -30,14 +29,18 @@ jobs:
         working-directory: ./client
         run: npx playwright install --with-deps
 
-      - name: Run Always Auth E2E Tests
+      - name: Run Real OAuth Smoke Tests
         working-directory: ./client
-        run: npm run test:e2e:always
+        env:
+          E2E_BASE_URL: ${{ secrets.E2E_BASE_URL }}
+          E2E_GOOGLE_TEST_EMAIL: ${{ secrets.E2E_GOOGLE_TEST_EMAIL }}
+          E2E_GOOGLE_TEST_PASSWORD: ${{ secrets.E2E_GOOGLE_TEST_PASSWORD }}
+        run: npm run test:e2e:oauth-smoke
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
-          name: playwright-report
+          name: playwright-oauth-smoke-report
           path: client/playwright-report/
           retention-days: 30
