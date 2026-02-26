@@ -22,6 +22,20 @@ jobs:
           cache: 'npm'
           cache-dependency-path: client/package-lock.json
 
+      - name: Build and start local stack
+        run: |
+          docker compose -f docker-compose/docker-compose.local.yml up -d --build mysql-db redis rabbitmq app nginx
+
+      - name: Wait for app readiness
+        run: |
+          for i in {1..60}; do
+            if curl -ksSf https://localhost/signin > /dev/null; then
+              break
+            fi
+            sleep 5
+          done
+          curl -ksSf https://localhost/signin > /dev/null
+
       - name: Install dependencies
         working-directory: ./client
         run: npm ci
@@ -32,6 +46,10 @@ jobs:
 
       - name: Run Always Auth E2E Tests
         working-directory: ./client
+        env:
+          E2E_BASE_URL: https://localhost
+          E2E_USER_EMAIL: test@test.com
+          E2E_USER_PASSWORD: test1234!
         run: npm run test:e2e:always
 
       - name: Upload Playwright report
@@ -41,3 +59,11 @@ jobs:
           name: playwright-report
           path: client/playwright-report/
           retention-days: 30
+
+      - name: Show docker logs on failure
+        if: ${{ failure() }}
+        run: docker compose -f docker-compose/docker-compose.local.yml logs --tail=300
+
+      - name: Shutdown docker stack
+        if: ${{ always() }}
+        run: docker compose -f docker-compose/docker-compose.local.yml down -v
