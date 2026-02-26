@@ -58,8 +58,8 @@ jobs:
 
       - name: Show docker logs on failure
         if: ${{ failure() }}
-        run: docker compose -f docker-compose/docker-compose.local.yml logs --tail=300
+        run: docker compose -f docker-compose/docker-compose.local.yml --profile default logs --tail=300
 
       - name: Shutdown docker stack
         if: ${{ always() }}
-        run: docker compose -f docker-compose/docker-compose.local.yml down -v
+        run: docker compose -f docker-compose/docker-compose.local.yml --profile default down -v
