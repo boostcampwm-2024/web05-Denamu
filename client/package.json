@@ -13,7 +13,7 @@
     "test:coverage": "vitest run --coverage && (open coverage/index.html || start coverage/index.html)",
     "test:e2e": "playwright test",
     "test:e2e:always": "playwright test --grep-invert @oauth-real --pass-with-no-tests",
-    "test:e2e:oauth-smoke": "playwright test --grep @oauth-real --pass-with-no-tests"
+    "test:e2e:oauth-smoke": "playwright test --project=chromium --workers=1 --grep @oauth-real --pass-with-no-tests"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.1",
