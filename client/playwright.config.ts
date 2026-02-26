@@ -6,9 +6,7 @@ import { defineConfig, devices } from "@playwright/test";
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
  */
-if (!process.env.CI) {
-  loadEnv({ path: ".env.e2e" });
-}
+loadEnv({ path: ".env.e2e" });
 
 /**
  * See https://playwright.dev/docs/test-configuration.
