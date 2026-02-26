@@ -36,8 +36,9 @@ export class OAuthService {
 
   getAuthUrl(providerType: OAuthType) {
     const oauth = this.providers[providerType];
-    if (!oauth)
-      throw new BadRequestException('지원하지 않는 인증 제공자입니다.');
+    if (!oauth) {
+      throw new BadRequestException('Unsupported OAuth provider.');
+    }
     return oauth.getAuthUrl();
   }
 
@@ -51,20 +52,67 @@ export class OAuthService {
 
     const userInfo = await this.providers[providerType].getUserInfo(tokenData);
 
+    await this.completeOAuthSignIn(
+      {
+        providerType,
+        providerUserId: userInfo.id,
+        email: userInfo.email,
+        userName: userInfo.name,
+        profileImage: userInfo.picture || null,
+        providerRefreshToken: tokenData.refresh_token || null,
+      },
+      res,
+    );
+  }
+
+  async e2eCallback(providerType: OAuthType, res: Response) {
+    const normalizedProvider =
+      providerType === OAuthType.Github ? OAuthType.Github : OAuthType.Google;
+
+    await this.completeOAuthSignIn(
+      {
+        providerType: normalizedProvider,
+        providerUserId: `e2e-${normalizedProvider}-provider-user`,
+        email: `e2e-${normalizedProvider}@denamu.local`,
+        userName: `e2e-${normalizedProvider}-user`,
+        profileImage: null,
+        providerRefreshToken: `e2e-${normalizedProvider}-provider-refresh-token`,
+      },
+      res,
+    );
+  }
+
+  private async completeOAuthSignIn(
+    payload: {
+      providerType: string;
+      providerUserId: string;
+      email: string;
+      userName: string;
+      profileImage: string | null;
+      providerRefreshToken: string | null;
+    },
+    res: Response,
+  ) {
+    const {
+      providerType,
+      providerUserId,
+      email,
+      userName,
+      profileImage,
+      providerRefreshToken,
+    } = payload;
+
     const existingProvider = await this.findExistingProvider(
       providerType,
-      userInfo.id,
+      providerUserId,
     );
 
     if (existingProvider) {
-      await this.updateProviderTokens(
-        existingProvider,
-        tokenData.refresh_token || null,
-      );
+      await this.updateProviderTokens(existingProvider, providerRefreshToken);
     }
 
     let user = await this.userRepository.findOne({
-      where: { email: userInfo.email },
+      where: { email },
     });
 
     const queryRunner = this.dataSource.createQueryRunner();
@@ -74,19 +122,19 @@ export class OAuthService {
     try {
       if (!user) {
         user = await queryRunner.manager.getRepository(User).save({
-          email: userInfo.email,
-          userName: userInfo.name,
-          profileImage: userInfo.picture || null,
+          email,
+          userName,
+          profileImage,
           provider: providerType,
         });
-        this.logger.log(`새로운 사용자 가입 완료: ${userInfo.email}`);
+        this.logger.log(`새로운 사용자 가입 완료: ${email}`);
       }
 
       if (!existingProvider) {
         await queryRunner.manager.getRepository(Provider).save({
           providerType,
-          providerUserId: userInfo.id,
-          refreshToken: tokenData.refresh_token || null,
+          providerUserId,
+          refreshToken: providerRefreshToken,
           user,
         });
 
@@ -94,12 +142,13 @@ export class OAuthService {
           `새로운 사용자 인증 정보 저장 완료: ${providerType} ${user.email}`,
         );
       }
+
       await queryRunner.commitTransaction();
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      this.logger.error(`OAuth 사용자 저장 중 에러 발생: `, error);
+      this.logger.error('OAuth 사용자 저장 중 에러 발생: ', error);
       throw new InternalServerErrorException(
-        `로그인 처리 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.`,
+        '로그인 처리 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.',
       );
     } finally {
       await queryRunner.release();
@@ -141,7 +190,10 @@ export class OAuthService {
     );
   }
 
-  private async updateProviderTokens(provider: Provider, refreshToken: string) {
+  private async updateProviderTokens(
+    provider: Provider,
+    refreshToken: string | null,
+  ) {
     if (refreshToken) {
       provider.refreshToken = refreshToken;
     }
