@@ -24,7 +24,7 @@ jobs:
 
       - name: Build and start local stack
         run: |
-          docker compose -f docker-compose/docker-compose.local.yml up -d --build mysql-db redis rabbitmq app nginx
+          docker compose -f docker-compose/docker-compose.local.yml --profile default up -d --build mysql-db redis rabbitmq app nginx
 
       - name: Wait for app readiness
         run: |
