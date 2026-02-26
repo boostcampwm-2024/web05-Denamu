@@ -46,10 +46,6 @@ jobs:
 
       - name: Run Always Auth E2E Tests
         working-directory: ./client
-        env:
-          E2E_BASE_URL: https://localhost
-          E2E_USER_EMAIL: test@test.com
-          E2E_USER_PASSWORD: test1234!
         run: npm run test:e2e:always
 
       - name: Upload Playwright report
