@@ -42,6 +42,7 @@ jobs:
           done
           curl -ksSf https://denamu.dev/signin > /dev/null
           curl -ksI https://denamu.dev/api/oauth?type=google | grep -E "302|303" > /dev/null
+          curl -ksI https://denamu.dev/api/oauth?type=github | grep -E "302|303" > /dev/null
 
       - name: Install dependencies
         working-directory: ./client
