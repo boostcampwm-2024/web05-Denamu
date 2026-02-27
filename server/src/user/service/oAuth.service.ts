@@ -42,6 +42,7 @@ export class OAuthService {
     return oauth.getAuthUrl();
   }
 
+  // TODO: OAuth CSRF 공격 방지를 위한 CSRF 토큰 추가 필요
   async callback(callbackDto: OAuthCallbackRequestDto, res: Response) {
     const stateData = this.parseStateData(callbackDto.state);
     const { provider: providerType } = stateData;
