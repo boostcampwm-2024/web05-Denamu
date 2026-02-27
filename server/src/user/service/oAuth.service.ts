@@ -33,10 +33,7 @@ export class OAuthService {
   ) {}
 
   getAuthUrl(providerType: OAuthType) {
-    const oauth = this.providers[providerType];
-    if (!oauth)
-      throw new BadRequestException('지원하지 않는 인증 제공자입니다.');
-    return oauth.getAuthUrl();
+    return this.providers[providerType].getAuthUrl();
   }
 
   async callback(callbackDto: OAuthCallbackRequestDto, res: Response) {
