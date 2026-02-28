@@ -17,19 +17,3 @@ export const decodeToken = (token: string): DecodedToken | null => {
     return null;
   }
 };
-
-export const isTokenExpired = (token: string): boolean => {
-  const decoded = decodeToken(token);
-  if (!decoded) return true;
-
-  const currentTime = Date.now() / 1000;
-  return decoded.exp < currentTime;
-};
-
-export const getStoredToken = (): string | null => {
-  return localStorage.getItem("accessToken");
-};
-
-export const removeStoredToken = (): void => {
-  localStorage.removeItem("accessToken");
-};

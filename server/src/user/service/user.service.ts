@@ -137,7 +137,9 @@ export class UserService {
       expiresIn: this.configService.get(
         `${mode === 'access' ? 'JWT_ACCESS_TOKEN_EXPIRE' : 'JWT_REFRESH_TOKEN_EXPIRE'}`,
       ),
-      secret: this.configService.get('JWT_ACCESS_SECRET'),
+      secret: this.configService.get(
+        mode === 'access' ? 'JWT_ACCESS_SECRET' : 'JWT_REFRESH_SECRET',
+      ),
     });
   }
 

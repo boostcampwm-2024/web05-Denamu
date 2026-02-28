@@ -32,7 +32,6 @@ export function useSignIn() {
   };
 
   const saveTokens = (accessToken: string) => {
-    localStorage.setItem("accessToken", accessToken);
     setUserFromToken(accessToken);
   };
 
