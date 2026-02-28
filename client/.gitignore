@@ -34,3 +34,10 @@ vite.config.js
 vite.config.d.ts
 *.tsbuildinfo
 stats.html
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/

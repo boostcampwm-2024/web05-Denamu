@@ -10,7 +10,10 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest",
-    "test:coverage": "vitest run --coverage && (open coverage/index.html || start coverage/index.html)"
+    "test:coverage": "vitest run --coverage && (open coverage/index.html || start coverage/index.html)",
+    "test:e2e": "playwright test",
+    "test:e2e:always": "playwright test --grep-invert @oauth-real --pass-with-no-tests",
+    "test:e2e:oauth-smoke": "playwright test --project=chromium --workers=1 --grep @oauth-real --pass-with-no-tests"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.1",
@@ -54,6 +57,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",
+    "@playwright/test": "^1.58.2",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.0.1",
@@ -75,6 +79,7 @@
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.14",
     "globals": "^15.11.0",
+    "dotenv": "^16.4.6",
     "jsdom": "^25.0.1",
     "postcss": "^8.4.47",
     "prettier": "^3.3.3",

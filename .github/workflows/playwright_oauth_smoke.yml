@@ -1,0 +1,67 @@
+name: FE OAuth Real Smoke Test
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+  workflow_run:
+    workflows:
+      - Client Deployment
+      - BE Deployment
+      - Nginx Configuration Deployment
+    types: [completed]
+
+jobs:
+  tests:
+    if: >-
+      ${{
+        github.event_name != 'workflow_run' ||
+        (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main')
+      }}
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: client/package-lock.json
+
+      - name: Wait for denamu.dev readiness
+        run: |
+          for i in {1..30}; do
+            if curl -ksSf https://denamu.dev/signin > /dev/null; then
+              break
+            fi
+            sleep 10
+          done
+          curl -ksSf https://denamu.dev/signin > /dev/null
+          curl -ksI https://denamu.dev/api/oauth?type=google | grep -E "302|303" > /dev/null
+          curl -ksI https://denamu.dev/api/oauth?type=github | grep -E "302|303" > /dev/null
+
+      - name: Install dependencies
+        working-directory: ./client
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        working-directory: ./client
+        run: npx playwright install --with-deps
+
+      - name: Run Real OAuth Smoke Tests
+        working-directory: ./client
+        env:
+          E2E_BASE_URL: https://denamu.dev
+        run: npm run test:e2e:oauth-smoke
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-oauth-smoke-report
+          path: client/playwright-report/
+          retention-days: 30
