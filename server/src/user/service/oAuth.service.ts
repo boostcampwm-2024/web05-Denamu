@@ -116,44 +116,37 @@ export class OAuthService {
       where: { email },
     });
 
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+    await this.dataSource.transaction(async (entityManager) => {
+      try {
+        if (!user) {
+          user = await entityManager.save(User, {
+            email,
+            userName,
+            profileImage,
+            provider: providerType,
+          });
+          this.logger.log(`새로운 사용자 가입 완료: ${email}`);
+        }
 
-    try {
-      if (!user) {
-        user = await queryRunner.manager.getRepository(User).save({
-          email,
-          userName,
-          profileImage,
-          provider: providerType,
-        });
-        this.logger.log(`새로운 사용자 가입 완료: ${email}`);
-      }
+        if (!existingProvider) {
+          await entityManager.save(Provider, {
+            providerType,
+            providerUserId,
+            refreshToken: providerRefreshToken,
+            user,
+          });
 
-      if (!existingProvider) {
-        await queryRunner.manager.getRepository(Provider).save({
-          providerType,
-          providerUserId,
-          refreshToken: providerRefreshToken,
-          user,
-        });
-
-        this.logger.log(
-          `새로운 사용자 인증 정보 저장 완료: ${providerType} ${user.email}`,
+          this.logger.log(
+            `새로운 사용자 인증 정보 저장 완료: ${providerType} ${user.email}`,
+          );
+        }
+      } catch (error) {
+        this.logger.error('OAuth 사용자 저장 중 에러 발생: ', error);
+        throw new InternalServerErrorException(
+          '로그인 처리 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.',
         );
       }
-
-      await queryRunner.commitTransaction();
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      this.logger.error('OAuth 사용자 저장 중 에러 발생: ', error);
-      throw new InternalServerErrorException(
-        '로그인 처리 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.',
-      );
-    } finally {
-      await queryRunner.release();
-    }
+    });
 
     const jwtPayload: Payload = {
       id: user.id,
