@@ -35,11 +35,7 @@ export class OAuthService {
   ) {}
 
   getAuthUrl(providerType: OAuthType) {
-    const oauth = this.providers[providerType];
-    if (!oauth) {
-      throw new BadRequestException('Unsupported OAuth provider.');
-    }
-    return oauth.getAuthUrl();
+    return this.providers[providerType].getAuthUrl();
   }
 
   // TODO: OAuth CSRF 공격 방지를 위한 CSRF 토큰 추가 필요

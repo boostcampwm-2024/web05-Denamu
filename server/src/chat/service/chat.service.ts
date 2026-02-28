@@ -12,6 +12,7 @@ import {
 
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
+import { TIMEZONE_OFFSET_MS } from '@common/util/time.constant';
 
 @Injectable()
 export class ChatService {
@@ -80,5 +81,57 @@ export class ChatService {
       0,
       CHAT_HISTORY_LIMIT - 1,
     );
+  }
+
+  async saveMidnightStatus() {
+    const [second] = await this.redisService.time();
+    const time = second * 1000;
+    const ttlSeconds = this.getTTLNextMidnight(time);
+
+    await this.redisService.set(
+      REDIS_KEYS.CHAT_SYSTEM_MIDNIGHT_KEY,
+      JSON.stringify(new Date(time + TIMEZONE_OFFSET_MS.KST).toISOString()),
+      'NX',
+      'EX',
+      ttlSeconds,
+    );
+  }
+
+  async getMidnightStatus() {
+    const script = `
+    local value = redis.call("GET", KEYS[1])
+    if value then
+      redis.call("DEL", KEYS[1])
+    end
+    return value
+  `;
+    const result = await this.redisService.eval(script, [
+      REDIS_KEYS.CHAT_SYSTEM_MIDNIGHT_KEY,
+    ]);
+    return result ? JSON.parse(result) : null;
+  }
+
+  private getTTLNextMidnight(
+    now: number,
+    millis = TIMEZONE_OFFSET_MS.KST,
+  ): number {
+    const kstNow = new Date(now + millis);
+
+    const nextMidnightByKSTMs = Date.UTC(
+      kstNow.getUTCFullYear(),
+      kstNow.getUTCMonth(),
+      kstNow.getUTCDate() + 1,
+      0,
+      0,
+      0,
+      0,
+    );
+
+    const nextMidnightUTC = nextMidnightByKSTMs - millis;
+
+    const diffMs = nextMidnightUTC - now;
+    const ttl = Math.floor(diffMs / 1000);
+
+    return Math.max(ttl, 1);
   }
 }

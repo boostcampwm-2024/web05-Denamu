@@ -112,4 +112,52 @@ describe(`GET ${URL} E2E Test`, () => {
     // DB, Redis then
     expect(savedProvider).not.toBeNull();
   });
+
+  it('[502] GitHub 토큰 API 호출 실패 시 BadGatewayException을 반환한다.', async () => {
+    // given - GitHub OAuth
+    const requestDto = new OAuthCallbackRequestDto({
+      code: 'invalid_code',
+      state: Buffer.from(
+        JSON.stringify({ provider: OAuthType.Github }),
+      ).toString('base64'),
+    });
+
+    // GitHub API가 에러를 던지도록 mock
+    jest.spyOn(axios, 'post').mockRejectedValueOnce(new Error('Network Error'));
+
+    // when
+    const response = await agent.get(URL).query(requestDto);
+
+    // then - 502 Bad Gateway
+    expect(response.status).toBe(HttpStatus.BAD_GATEWAY);
+  });
+
+  it('[502] Google 사용자 정보 API 호출 실패 시 BadGatewayException을 반환한다.', async () => {
+    // given - Google OAuth
+    const requestDto = new OAuthCallbackRequestDto({
+      code: 'test_code',
+      state: Buffer.from(
+        JSON.stringify({ provider: OAuthType.Google }),
+      ).toString('base64'),
+    });
+
+    // 토큰은 성공하지만 사용자 정보 조회 실패
+    jest.spyOn(axios, 'post').mockResolvedValueOnce({
+      data: {
+        id_token: 'valid_token',
+        access_token: 'test_access_token',
+        expires_in: 3600,
+      },
+    });
+
+    jest
+      .spyOn(axios, 'get')
+      .mockRejectedValueOnce(new Error('API Unavailable'));
+
+    // when
+    const response = await agent.get(URL).query(requestDto);
+
+    // then - 502 Bad Gateway
+    expect(response.status).toBe(HttpStatus.BAD_GATEWAY);
+  });
 });
