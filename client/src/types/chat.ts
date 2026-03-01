@@ -4,4 +4,14 @@ export type ChatType = {
   timestamp: string;
   message: string;
   isMidNight?: boolean;
+  userId?: string;
+  messageId?: string;
+  isSend?: boolean;
+  isFailed?: boolean;
+};
+
+export type SendChatType = {
+  message: string;
+  userId: string;
+  messageId: string;
 };
