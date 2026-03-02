@@ -1,0 +1,226 @@
+version: 2
+
+updates:
+  # ──────────────────────────────────────────
+  # GitHub Actions
+  # ──────────────────────────────────────────
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+      timezone: 'Asia/Seoul'
+    open-pull-requests-limit: 10
+    labels:
+      - '🤖 Dependency'
+
+  # ──────────────────────────────────────────
+  # npm — root (commitizen, lefthook, artillery)
+  # ──────────────────────────────────────────
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+      timezone: 'Asia/Seoul'
+    open-pull-requests-limit: 10
+    ignore:
+      - dependency-name: '*'
+        update-types:
+          - 'version-update:semver-major'
+    labels:
+      - '🤖 Dependency'
+    groups:
+      dev-dependencies:
+        dependency-type: 'development'
+
+  # ──────────────────────────────────────────
+  # npm — server (NestJS)
+  # ──────────────────────────────────────────
+  - package-ecosystem: 'npm'
+    directory: '/server'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+      timezone: 'Asia/Seoul'
+    open-pull-requests-limit: 10
+    ignore:
+      - dependency-name: '*'
+        update-types:
+          - 'version-update:semver-major'
+    labels:
+      - '🤖 Dependency'
+    groups:
+      nestjs:
+        patterns:
+          - '@nestjs/*'
+      typeorm:
+        patterns:
+          - 'typeorm'
+          - '@nestjs/typeorm'
+      dev-dependencies:
+        dependency-type: 'development'
+
+  # ──────────────────────────────────────────
+  # npm — client (React + Vite)
+  # ──────────────────────────────────────────
+  - package-ecosystem: 'npm'
+    directory: '/client'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+      timezone: 'Asia/Seoul'
+    open-pull-requests-limit: 10
+    ignore:
+      - dependency-name: '*'
+        update-types:
+          - 'version-update:semver-major'
+    labels:
+      - '🤖 Dependency'
+    groups:
+      react:
+        patterns:
+          - 'react'
+          - 'react-dom'
+          - 'react-*'
+          - '@types/react*'
+          - 'eslint-plugin-react*'
+          - '@vitejs/plugin-react-swc'
+      radix-ui:
+        patterns:
+          - '@radix-ui/*'
+      tanstack:
+        patterns:
+          - '@tanstack/*'
+      dev-dependencies:
+        dependency-type: 'development'
+
+  # ──────────────────────────────────────────
+  # npm — feed-crawler
+  # ──────────────────────────────────────────
+  - package-ecosystem: 'npm'
+    directory: '/feed-crawler'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+      timezone: 'Asia/Seoul'
+    open-pull-requests-limit: 10
+    ignore:
+      - dependency-name: '*'
+        update-types:
+          - 'version-update:semver-major'
+    labels:
+      - '🤖 Dependency'
+    groups:
+      dev-dependencies:
+        dependency-type: 'development'
+
+  # ──────────────────────────────────────────
+  # npm — email-worker
+  # ──────────────────────────────────────────
+  - package-ecosystem: 'npm'
+    directory: '/email-worker'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+      timezone: 'Asia/Seoul'
+    open-pull-requests-limit: 10
+    ignore:
+      - dependency-name: '*'
+        update-types:
+          - 'version-update:semver-major'
+    labels:
+      - '🤖 Dependency'
+    groups:
+      dev-dependencies:
+        dependency-type: 'development'
+
+  # ──────────────────────────────────────────
+  # Docker — server
+  # ──────────────────────────────────────────
+  - package-ecosystem: 'docker'
+    directory: '/server/docker'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+      timezone: 'Asia/Seoul'
+    open-pull-requests-limit: 10
+    labels:
+      - '🤖 Dependency'
+
+  # ──────────────────────────────────────────
+  # Docker — client
+  # ──────────────────────────────────────────
+  - package-ecosystem: 'docker'
+    directory: '/client/docker'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+      timezone: 'Asia/Seoul'
+    open-pull-requests-limit: 10
+    labels:
+      - '🤖 Dependency'
+
+  # ──────────────────────────────────────────
+  # Docker — feed-crawler
+  # ──────────────────────────────────────────
+  - package-ecosystem: 'docker'
+    directory: '/feed-crawler/docker'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+      timezone: 'Asia/Seoul'
+    open-pull-requests-limit: 10
+    labels:
+      - '🤖 Dependency'
+
+  # ──────────────────────────────────────────
+  # Docker — email-worker
+  # ──────────────────────────────────────────
+  - package-ecosystem: 'docker'
+    directory: '/email-worker/docker'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+      timezone: 'Asia/Seoul'
+    open-pull-requests-limit: 10
+    labels:
+      - '🤖 Dependency'
+
+  # ──────────────────────────────────────────
+  # Docker — nginx
+  # ──────────────────────────────────────────
+  - package-ecosystem: 'docker'
+    directory: '/nginx'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+      timezone: 'Asia/Seoul'
+    open-pull-requests-limit: 10
+    labels:
+      - '🤖 Dependency'
+
+  # ──────────────────────────────────────────
+  # Docker Compose — docker-compose/
+  # ──────────────────────────────────────────
+  - package-ecosystem: 'docker'
+    directory: '/docker-compose'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+      timezone: 'Asia/Seoul'
+    open-pull-requests-limit: 10
+    labels:
+      - '🤖 Dependency'
