@@ -12,7 +12,7 @@ export const OAUTH_URL_PATH = {
   REDIRECT_PATH: {
     CALLBACK: `api/oauth/callback`,
   },
-  BASE_URL: `https://denamu.dev`,
+  BASE_URL: process.env.OAUTH_BASE_URL || 'https://localhost',
 };
 
 export const OAUTH_CONSTANT = {

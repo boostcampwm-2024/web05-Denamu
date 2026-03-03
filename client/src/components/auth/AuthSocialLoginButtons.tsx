@@ -32,11 +32,21 @@ export const AuthSocialLoginButtons = () => {
       </div>
 
       <div className="grid gap-2">
-        <Button variant="outline" className="w-full" onClick={() => handleSocialLogin("github")}>
+        <Button
+          variant="outline"
+          className="w-full"
+          data-testid="oauth-github-button"
+          onClick={() => handleSocialLogin("github")}
+        >
           <GitHub />
           <span className="text-muted-foreground">Github로 계속하기</span>
         </Button>
-        <Button variant="outline" className="w-full" onClick={() => handleSocialLogin("google")}>
+        <Button
+          variant="outline"
+          className="w-full"
+          data-testid="oauth-google-button"
+          onClick={() => handleSocialLogin("google")}
+        >
           <Google />
           <span className="text-muted-foreground">Google로 계속하기</span>
         </Button>

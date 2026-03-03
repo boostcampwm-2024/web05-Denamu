@@ -3,6 +3,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  NotFoundException,
   Query,
   Res,
 } from '@nestjs/common';
@@ -12,7 +13,7 @@ import { Response } from 'express';
 
 import { ApiOAuth } from '@user/api-docs/oAuth.api-docs';
 import { ApiOAuthCallback } from '@user/api-docs/oAuthCallback.api-docs';
-import { OAUTH_URL_PATH } from '@user/constant/oauth.constant';
+import { OAUTH_URL_PATH, OAuthType } from '@user/constant/oauth.constant';
 import { OAuthCallbackRequestDto } from '@user/dto/request/oAuthCallbackDto';
 import { OAuthTypeRequestDto } from '@user/dto/request/oAuthType.dto';
 import { OAuthService } from '@user/service/oAuth.service';
@@ -37,6 +38,20 @@ export class OAuthController {
     @Res() res: Response,
   ) {
     await this.oauthService.callback(callbackDto, res);
+    return res.redirect(`${OAUTH_URL_PATH.BASE_URL}/oauth-success`);
+  }
+
+  @Get('e2e/callback')
+  @HttpCode(HttpStatus.FOUND)
+  async e2eCallback(
+    @Query('provider') provider: OAuthType = OAuthType.Google,
+    @Res() res: Response,
+  ) {
+    if (!['LOCAL', 'TEST'].includes(process.env.NODE_ENV ?? '')) {
+      throw new NotFoundException();
+    }
+
+    await this.oauthService.e2eCallback(provider, res);
     return res.redirect(`${OAUTH_URL_PATH.BASE_URL}/oauth-success`);
   }
 }
