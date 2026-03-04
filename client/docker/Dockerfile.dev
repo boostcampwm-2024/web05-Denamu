@@ -1,4 +1,4 @@
-FROM node:22-alpine AS builder
+FROM node:25-alpine AS builder
 
 # 작업 디렉토리 생성 및 설정
 WORKDIR /var/web05-Denamu/client
@@ -11,7 +11,7 @@ RUN npm ci
 
 # Runtime
 # 실제 앱을 실행할 최종 이미지
-FROM node:22-alpine
+FROM node:25-alpine
 
 # 작업 디렉토리 설정
 WORKDIR /var/web05-Denamu/client
