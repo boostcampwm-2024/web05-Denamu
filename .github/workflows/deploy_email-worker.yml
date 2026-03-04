@@ -32,7 +32,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: QEMU 멀티 아키텍쳐 에뮬레이터
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
 
       - name: Buildx 멀티 아키텍쳐 빌더
         uses: docker/setup-buildx-action@v3
