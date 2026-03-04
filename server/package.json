@@ -58,7 +58,7 @@
     "html-escaper": "^3.0.3",
     "ioredis": "^5.4.1",
     "lodash": "^4.17.21",
-    "mysql2": "^3.11.3",
+    "mysql2": "^3.18.2",
     "nest-winston": "^1.9.7",
     "node-cron": "^3.0.3",
     "node-html-parser": "^7.0.1",
