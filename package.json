@@ -1,12 +1,12 @@
 {
   "devDependencies": {
-    "@commitlint/cli": "^19.5.0",
+    "@commitlint/cli": "^19.8.1",
     "@types/multer": "^1.4.13",
-    "artillery": "^2.0.21",
+    "artillery": "^2.0.30",
     "commitizen": "^4.3.1",
     "cz-cli": "^1.0.0",
-    "cz-customizable": "^7.2.1",
-    "lefthook": "^1.8.2"
+    "cz-customizable": "^7.5.1",
+    "lefthook": "^1.13.6"
   },
   "scripts": {
     "prepare": "lefthook install",
