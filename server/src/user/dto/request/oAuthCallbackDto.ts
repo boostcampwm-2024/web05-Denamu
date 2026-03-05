@@ -8,6 +8,9 @@ export class OAuthCallbackRequestDto {
     description: 'Access Token 갱신 토큰',
   })
   @IsOptional()
+  @IsNotEmpty({
+    message: 'code는 빈 문자열일 수 없습니다.',
+  })
   @IsString({
     message: '문자열로 입력해주세요.',
   })
@@ -30,6 +33,9 @@ export class OAuthCallbackRequestDto {
     description: 'OAuth 서버 로그인 중 실패 발생 시 반환되는 값',
   })
   @IsOptional()
+  @IsNotEmpty({
+    message: 'error는 빈 문자열일 수 없습니다.',
+  })
   @IsString({
     message: '문자열로 입력해주세요.',
   })
