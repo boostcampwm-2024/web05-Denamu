@@ -12,7 +12,11 @@ import { cookieConfig } from '@common/cookie/cookie.config';
 import { Payload } from '@common/guard/jwt.guard';
 import { WinstonLoggerService } from '@common/logger/logger.service';
 
-import { OAuthType, StateData } from '@user/constant/oauth.constant';
+import {
+  OAUTH_URL_PATH,
+  OAuthType,
+  StateData,
+} from '@user/constant/oauth.constant';
 import { REFRESH_TOKEN_TTL } from '@user/constant/user.constants';
 import { OAuthCallbackRequestDto } from '@user/dto/request/oAuthCallbackDto';
 import { Provider } from '@user/entity/provider.entity';
@@ -43,6 +47,10 @@ export class OAuthService {
     const stateData = this.parseStateData(callbackDto.state);
     const { provider: providerType } = stateData;
 
+    if (callbackDto.error || !callbackDto.code) {
+      return res.redirect(`${OAUTH_URL_PATH.BASE_URL}/signin`);
+    }
+
     const tokenData = await this.providers[providerType].getTokens(
       callbackDto.code,
     );
@@ -60,6 +68,8 @@ export class OAuthService {
       },
       res,
     );
+
+    return res.redirect(`${OAUTH_URL_PATH.BASE_URL}/oauth-success`);
   }
 
   async e2eCallback(providerType: OAuthType, res: Response) {
