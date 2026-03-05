@@ -8,9 +8,6 @@ export class OAuthCallbackRequestDto {
     description: 'Access Token 갱신 토큰',
   })
   @IsOptional()
-  // @IsNotEmpty({
-  //   message: 'code는 필수 입력 값입니다.',
-  // })
   @IsString({
     message: '문자열로 입력해주세요.',
   })
