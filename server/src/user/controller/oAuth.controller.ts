@@ -38,7 +38,7 @@ export class OAuthController {
     @Res() res: Response,
   ) {
     await this.oauthService.callback(callbackDto, res);
-    return res.redirect(`${OAUTH_URL_PATH.BASE_URL}/oauth-success`);
+    return res;
   }
 
   @Get('e2e/callback')
