@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 import { Type } from 'class-transformer';
 import {
@@ -42,7 +42,7 @@ export class SearchFeedRequestDto {
   })
   type: SearchType;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: 1,
     description: '페이지 번호 입력',
     required: false,
@@ -55,7 +55,7 @@ export class SearchFeedRequestDto {
   @Type(() => Number)
   page?: number = 1;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: 1,
     description: '받아올 게시글 최대 개수',
     required: false,

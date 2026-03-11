@@ -1,9 +1,9 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 
 import { IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class UpdateUserRequestDto {
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: '김개발',
     description: '변경할 사용자 이름',
     required: false,
@@ -17,7 +17,7 @@ export class UpdateUserRequestDto {
   })
   userName?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: 'https://denamu.dev/objects/PROFILE_IMAGE/20250816/uuid.png',
     description: '변경할 프로필 이미지 path',
     required: false,
@@ -28,7 +28,7 @@ export class UpdateUserRequestDto {
   })
   profileImage?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: '안녕하세요! 김개발입니다.',
     description: '변경할 자기소개',
     required: false,
