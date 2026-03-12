@@ -5,14 +5,21 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 
-import { Response } from 'express';
+import * as uuid from 'uuid';
+import { Request, Response } from 'express';
 import { DataSource } from 'typeorm';
 
 import { cookieConfig } from '@common/cookie/cookie.config';
 import { Payload } from '@common/guard/jwt.guard';
 import { WinstonLoggerService } from '@common/logger/logger.service';
+import { RedisService } from '@common/redis/redis.service';
 
-import { OAuthType, StateData } from '@user/constant/oauth.constant';
+import {
+  OAUTH_CSRF_TOKEN_TTL,
+  OAUTH_URL_PATH,
+  OAuthType,
+  StateData,
+} from '@user/constant/oauth.constant';
 import { REFRESH_TOKEN_TTL } from '@user/constant/user.constants';
 import { OAuthCallbackRequestDto } from '@user/dto/request/oAuthCallbackDto';
 import { Provider } from '@user/entity/provider.entity';
@@ -29,19 +36,46 @@ export class OAuthService {
     private readonly providerRepository: ProviderRepository,
     private readonly logger: WinstonLoggerService,
     private readonly userService: UserService,
+    private readonly redisService: RedisService,
     @Inject('OAUTH_PROVIDERS')
     private readonly providers: Record<string, OAuthProvider>,
     private readonly dataSource: DataSource,
   ) {}
 
-  getAuthUrl(providerType: OAuthType) {
-    return this.providers[providerType].getAuthUrl();
+  async getAuthUrl(providerType: OAuthType, res: Response) {
+    const csrfToken = uuid.v4();
+    res.cookie('oauth_csrf_token', csrfToken, {
+      ...cookieConfig[process.env.NODE_ENV],
+      maxAge: OAUTH_CSRF_TOKEN_TTL,
+    });
+    return await this.providers[providerType].getAuthUrl(csrfToken);
   }
 
   // TODO: OAuth CSRF 공격 방지를 위한 CSRF 토큰 추가 필요
-  async callback(callbackDto: OAuthCallbackRequestDto, res: Response) {
+  async callback(
+    callbackDto: OAuthCallbackRequestDto,
+    res: Response,
+    req: Request,
+  ) {
     const stateData = this.parseStateData(callbackDto.state);
-    const { provider: providerType } = stateData;
+    const { provider: providerType, csrfToken: csrfTokenKey } = stateData;
+    const cookieCsrfToken = req.cookies['oauth_csrf_token'];
+
+    if (!csrfTokenKey || !cookieCsrfToken || cookieCsrfToken !== csrfTokenKey) {
+      return res.redirect(`${OAUTH_URL_PATH.BASE_URL}/signin`);
+    }
+
+    const script = `
+    local value = redis.call("GET", KEYS[1])
+    if value then
+      redis.call("DEL", KEYS[1])
+    end
+    return value
+  `;
+    const csrfTokenValue = await this.redisService.eval(script, [csrfTokenKey]);
+    if (!csrfTokenValue || csrfTokenValue !== `${providerType}-CSRF`) {
+      return res.redirect(`${OAUTH_URL_PATH.BASE_URL}/signin`);
+    }
 
     const tokenData = await this.providers[providerType].getTokens(
       callbackDto.code,
