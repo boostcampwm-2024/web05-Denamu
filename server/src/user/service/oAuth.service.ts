@@ -51,7 +51,6 @@ export class OAuthService {
     return await this.providers[providerType].getAuthUrl(csrfToken);
   }
 
-  // TODO: OAuth CSRF 공격 방지를 위한 CSRF 토큰 추가 필요
   async callback(
     callbackDto: OAuthCallbackRequestDto,
     res: Response,
