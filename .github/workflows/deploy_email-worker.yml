@@ -45,7 +45,7 @@ jobs:
           password: ${{ secrets.GHCR_GITHUB_TOKEN }}
 
       - name: Docker 이미지 Build 및 Push
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ./email-worker
           file: ./email-worker/docker/Dockerfile.prod
