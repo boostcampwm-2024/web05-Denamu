@@ -4,6 +4,7 @@ import * as querystring from 'node:querystring';
 import axios from 'axios';
 
 import { WinstonLoggerService } from '@common/logger/logger.service';
+import { RedisService } from '@common/redis/redis.service';
 
 import {
   OAUTH_CONSTANT,
@@ -11,18 +12,29 @@ import {
   OAuthTokenResponse,
   UserInfo,
 } from '@user/constant/oauth.constant';
+import { OAUTH_CSRF_TOKEN_TTL } from '@user/constant/user.constants';
 import { OAuthProvider } from '@user/provider/oauth-provider.interface';
 
 @Injectable()
 export class GoogleOAuthProvider implements OAuthProvider {
-  constructor(private readonly logger: WinstonLoggerService) {}
+  constructor(
+    private readonly logger: WinstonLoggerService,
+    private readonly redisService: RedisService,
+  ) {}
 
-  getAuthUrl() {
+  async getAuthUrl(csrfToken: string) {
     const googleOAuthUrl = OAUTH_URL_PATH.GOOGLE.AUTH_URL;
 
     const stateData = {
       provider: OAUTH_CONSTANT.PROVIDER_TYPE.GOOGLE,
+      csrfToken: csrfToken,
     };
+
+    await this.redisService.setex(
+      stateData.csrfToken,
+      OAUTH_CSRF_TOKEN_TTL,
+      `${OAUTH_CONSTANT.PROVIDER_TYPE.GOOGLE}-CSRF`,
+    );
 
     const state = Buffer.from(JSON.stringify(stateData)).toString('base64');
 

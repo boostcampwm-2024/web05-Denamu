@@ -4,6 +4,7 @@ import * as querystring from 'node:querystring';
 import axios from 'axios';
 
 import { WinstonLoggerService } from '@common/logger/logger.service';
+import { RedisService } from '@common/redis/redis.service';
 
 import {
   OAUTH_CONSTANT,
@@ -11,16 +12,27 @@ import {
   OAuthTokenResponse,
   UserInfo,
 } from '@user/constant/oauth.constant';
+import { OAUTH_CSRF_TOKEN_TTL } from '@user/constant/user.constants';
 import { OAuthProvider } from '@user/provider/oauth-provider.interface';
 
 @Injectable()
 export class GithubOAuthProvider implements OAuthProvider {
-  constructor(private readonly logger: WinstonLoggerService) {}
+  constructor(
+    private readonly logger: WinstonLoggerService,
+    private readonly redisService: RedisService,
+  ) {}
 
-  getAuthUrl() {
+  async getAuthUrl(csrfToken: string) {
     const stateData = {
       provider: OAUTH_CONSTANT.PROVIDER_TYPE.GITHUB,
+      csrfToken: csrfToken,
     };
+
+    await this.redisService.setex(
+      stateData.csrfToken,
+      OAUTH_CSRF_TOKEN_TTL,
+      `${OAUTH_CONSTANT.PROVIDER_TYPE.GITHUB}-CSRF`,
+    );
 
     const state = Buffer.from(JSON.stringify(stateData)).toString('base64');
 
