@@ -44,6 +44,7 @@ export type ProviderData = {
 
 export type StateData = {
   provider: string;
+  csrfToken: string;
 };
 
 export enum OAuthType {
