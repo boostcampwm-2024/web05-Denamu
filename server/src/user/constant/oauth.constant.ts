@@ -51,3 +51,5 @@ export enum OAuthType {
   Google = 'google',
   Github = 'github',
 }
+
+export const OAUTH_CSRF_TOKEN_TTL = 60 * 2;
