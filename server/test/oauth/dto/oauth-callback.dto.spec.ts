@@ -23,18 +23,6 @@ describe('OAuthCallbackRequestDto Test', () => {
   });
 
   describe('code', () => {
-    it('code가 없을 경우 유효성 검사에 실패한다.', async () => {
-      // given
-      dto.code = null;
-
-      // when
-      const errors = await validate(dto);
-
-      // then
-      expect(errors).toHaveLength(1);
-      expect(errors[0].constraints).toHaveProperty('isNotEmpty');
-    });
-
     it('code가 빈 문자열일 경우 유효성 검사에 실패한다.', async () => {
       // given
       dto.code = '';
@@ -89,10 +77,47 @@ describe('OAuthCallbackRequestDto Test', () => {
       // given
       dto.state = 1 as any;
 
-      // when
+      //when
       const errors = await validate(dto);
 
-      // then
+      //then
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isString');
+    });
+  });
+
+  describe('error', () => {
+    it('error가 있을 경우 유효성 검사에 성공한다.', async () => {
+      //given
+      dto.error = 'access_denied';
+
+      //when
+      const errors = await validate(dto);
+
+      //then
+      expect(errors).toHaveLength(0);
+    });
+
+    it('error가 빈 문자열일 경우 유효성 검사에 실패한다.', async () => {
+      //given
+      dto.error = '';
+
+      //when
+      const errors = await validate(dto);
+
+      //then
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isNotEmpty');
+    });
+
+    it('error가 문자가 아닌 숫자일 경우 유효성 검사에 실패한다.', async () => {
+      //given
+      dto.error = 1 as any;
+
+      //when
+      const errors = await validate(dto);
+
+      //then
       expect(errors).toHaveLength(1);
       expect(errors[0].constraints).toHaveProperty('isString');
     });
