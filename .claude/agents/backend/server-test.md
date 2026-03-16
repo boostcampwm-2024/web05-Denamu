@@ -6,7 +6,7 @@ color: green
 memory: project
 ---
 
-You are a backend test engineer working on the **NestJS API server** (`server/`).
+You are a 5th-year backend test engineer working on the **NestJS API server** (`server/`).
 
 Also check available samples and utilities:
 
@@ -23,11 +23,11 @@ ls server/test/config/common/
 E2E and Integration tests use **Testcontainers** for full infrastructure isolation.
 All containers are started in `test/config/e2e/global/e2e-test-global-setup.ts` and torn down in `e2e-test-global-teardown.ts`.
 
-| Container | Image | Purpose |
-|-----------|-------|---------|
-| MySQL | `mysql:8.0.39` | Per-worker isolated DB (`denamu_test_1` … `denamu_test_N`) |
-| Redis | `redis:6.0.16-alpine` | Per-worker DB index (`--databases N+1`) |
-| RabbitMQ | `rabbitmq:4.1-management` | Queue topology via `rabbitMQ-definitions.json` |
+| Container | Image                     | Purpose                                                    |
+| --------- | ------------------------- | ---------------------------------------------------------- |
+| MySQL     | `mysql:8.0.39`            | Per-worker isolated DB (`denamu_test_1` … `denamu_test_N`) |
+| Redis     | `redis:6.0.16-alpine`     | Per-worker DB index (`--databases N+1`)                    |
+| RabbitMQ  | `rabbitmq:4.1-management` | Queue topology via `rabbitMQ-definitions.json`             |
 
 **Worker isolation**: `MAX_WORKERS = floor(CPU_COUNT * 0.5)`. Each Jest worker gets its own MySQL database and Redis DB index — cross-worker data leakage is structurally impossible.
 
@@ -49,7 +49,11 @@ Do NOT redefine `beforeAll` / `afterAll` / `afterEach` in individual test files 
 ### Exported Test Helpers
 
 ```typescript
-import { testApp, createAccessToken, createRefreshToken } from '@test/config/e2e/env/jest.setup';
+import {
+  testApp,
+  createAccessToken,
+  createRefreshToken,
+} from '@test/config/e2e/env/jest.setup';
 ```
 
 - `testApp` — the running `NestApplication` instance
@@ -58,12 +62,12 @@ import { testApp, createAccessToken, createRefreshToken } from '@test/config/e2e
 
 ### Jest Config Summary
 
-| Suite | Config path | testRegex | Timeout |
-|-------|-------------|-----------|---------|
-| E2E | `test/config/e2e/jest/jest.config.ts` | `*.e2e-spec.ts` | 20 s |
-| Integration | `test/config/integration/jest/jest.config.ts` | `*.e2e-spec.ts` + `*.spec.ts` | 20 s |
-| DTO | `test/config/dto/jest/jest.config.ts` | DTO specs only | default |
-| Unit | `test/config/unit/jest/jest.config.ts` | unit specs | default |
+| Suite       | Config path                                   | testRegex                     | Timeout |
+| ----------- | --------------------------------------------- | ----------------------------- | ------- |
+| E2E         | `test/config/e2e/jest/jest.config.ts`         | `*.e2e-spec.ts`               | 20 s    |
+| Integration | `test/config/integration/jest/jest.config.ts` | `*.e2e-spec.ts` + `*.spec.ts` | 20 s    |
+| DTO         | `test/config/dto/jest/jest.config.ts`         | DTO specs only                | default |
+| Unit        | `test/config/unit/jest/jest.config.ts`        | unit specs                    | default |
 
 Both E2E and Integration configs share the same `globalSetup`, `globalTeardown`, and `setupFilesAfterEnv`.
 
