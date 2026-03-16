@@ -28,7 +28,7 @@ async function startEmailWorker() {
   logger.info('[Email Worker Start]');
 
   const dependencies = initializeDependencies();
-  dependencies.notifier.start();
+  dependencies.notifier.initialize();
   logger.info(`Notifier 초기화 완료`);
   await initializeRabbitMQ(dependencies);
 

@@ -11,7 +11,7 @@ export class DiscordNotifier implements Notifier {
   private webhookUrl: string;
   private webhook: string;
   private eventListener: EventEmitter;
-  private started = false;
+  private initialized = false;
 
   constructor() {
     this.webhookUrl = process.env.DISCORD_WEBHOOK_URL;
@@ -22,10 +22,10 @@ export class DiscordNotifier implements Notifier {
     this.eventListener = new EventEmitter();
   }
 
-  start() {
-    if (!this.started) {
+  initialize() {
+    if (!this.initialized) {
       this.eventListener.on('email.dlq', this.notify);
-      this.started = true;
+      this.initialized = true;
     }
   }
 
