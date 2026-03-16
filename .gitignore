@@ -48,3 +48,6 @@ certificate.crt
 .ionide
 
 PRD.md
+
+# CLAUDE
+.claude/**/*.local.*
