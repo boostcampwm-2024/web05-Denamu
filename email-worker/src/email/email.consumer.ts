@@ -27,7 +27,7 @@ export class EmailConsumer {
     @inject(DEPENDENCY_SYMBOLS.EmailService)
     private readonly emailService: EmailService,
     @inject(DEPENDENCY_SYMBOLS.Notifier)
-    private readonly discordNotifier: Notifier,
+    private readonly notifier: Notifier,
   ) {}
 
   async start() {
@@ -186,7 +186,6 @@ export class EmailConsumer {
       },
     };
 
-    const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL;
     // Node.js 네트워크 레벨의 에러
     const isNetworkError =
       error.code === 'ESOCKET' ||
@@ -210,7 +209,7 @@ export class EmailConsumer {
         logger.info(
           `${error.message}에러에 대한 메시지 발행 소요 시간: ${Date.now() - rabbitmqStartTime}`,
         );
-        this.discordNotifier.callEvent('email.dlq', {
+        this.notifier.callEvent('email.dlq', {
           error,
           dlqMessage: `retry count 초과로`,
         });
@@ -242,7 +241,7 @@ export class EmailConsumer {
         logger.info(
           `${error.message}에러에 대한 메시지 발행 소요 시간: ${Date.now() - rabbitmqStartTime}`,
         );
-        this.discordNotifier.callEvent('email.dlq', {
+        this.notifier.callEvent('email.dlq', {
           error,
           dlqMessage: `SMTP 500 에러 발생으로`,
         });
@@ -266,7 +265,7 @@ export class EmailConsumer {
           logger.info(
             `${error.message}에러에 대한 메시지 발행 소요 시간: ${Date.now() - rabbitmqStartTime}`,
           );
-          this.discordNotifier.callEvent('email.dlq', {
+          this.notifier.callEvent('email.dlq', {
             error,
             dlqMessage: `retry count 초과로`,
           });
@@ -299,7 +298,7 @@ export class EmailConsumer {
     logger.info(
       `${error.message}에러에 대한 메시지 발행 소요 시간: ${Date.now() - rabbitmqStartTime}`,
     );
-    this.discordNotifier.callEvent('email.dlq', {
+    this.notifier.callEvent('email.dlq', {
       error,
       dlqMessage: `알 수 없는 에러로`,
     });
