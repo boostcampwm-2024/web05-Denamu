@@ -29,10 +29,7 @@ export class DiscordNotifier implements Notifier {
     }
   }
 
-  notify = async (
-    payload: { error: Error; dlqMessage: string },
-    temp: DiscordNotifier,
-  ) => {
+  notify = async (payload: { error: Error; dlqMessage: string }) => {
     const { error, dlqMessage } = payload;
     const discordStartTime = Date.now();
     try {
