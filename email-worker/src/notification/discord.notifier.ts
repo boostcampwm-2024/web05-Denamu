@@ -10,7 +10,7 @@ import { Notifier } from '@src/notification/notifier.interface';
 export class DiscordNotifier implements Notifier {
   private webhookUrl: string;
   private webhook: string;
-  private eventListener: EventEmitter;
+  private eventEmitter: EventEmitter;
   private initialized = false;
 
   constructor() {
@@ -19,12 +19,12 @@ export class DiscordNotifier implements Notifier {
     if (!this.webhookUrl) {
       throw new Error(`${this.webhook} Webhook url이 설정되지 않았습니다.`);
     }
-    this.eventListener = new EventEmitter();
+    this.eventEmitter = new EventEmitter();
   }
 
   initialize() {
     if (!this.initialized) {
-      this.eventListener.on('email.dlq', this.notify);
+      this.eventEmitter.on('email.dlq', this.notify);
       this.initialized = true;
     }
   }
@@ -43,6 +43,6 @@ export class DiscordNotifier implements Notifier {
   };
 
   publish(eventName: string, payload: { error: Error; dlqMessage: string }) {
-    this.eventListener.emit(eventName, payload);
+    this.eventEmitter.emit(eventName, payload);
   }
 }
