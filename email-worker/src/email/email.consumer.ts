@@ -4,6 +4,7 @@ import { Options } from 'amqplib/properties';
 import axios from 'axios';
 
 import logger from '@src/logger';
+import { Notifier } from '@src/notification/notifier.interface';
 
 import { EmailService } from '@email/email.service';
 
@@ -25,6 +26,8 @@ export class EmailConsumer {
     private readonly rabbitmqService: RabbitMQService,
     @inject(DEPENDENCY_SYMBOLS.EmailService)
     private readonly emailService: EmailService,
+    @inject(DEPENDENCY_SYMBOLS.Notifier)
+    private readonly discordNotifier: Notifier,
   ) {}
 
   async start() {
@@ -207,15 +210,10 @@ export class EmailConsumer {
         logger.info(
           `${error.message}에러에 대한 메시지 발행 소요 시간: ${Date.now() - rabbitmqStartTime}`,
         );
-        const discordStartTime = Date.now();
-        try {
-          await axios.post(DISCORD_WEBHOOK_URL, {
-            content: `[EmailConsumer] retry count 초과로 DLQ 메시지 발행 - 오류 메시지: \`\`\`${error.message}\`\`\``,
-          });
-        } catch (e) {
-          logger.error('Discord 알림 전송 실패:', e);
-        }
-        logger.info(`알림 소요 시간: ${Date.now() - discordStartTime}`);
+        this.discordNotifier.callEvent('email.dlq', {
+          error,
+          dlqMessage: `retry count 초과로`,
+        });
         return;
       }
 
@@ -244,15 +242,10 @@ export class EmailConsumer {
         logger.info(
           `${error.message}에러에 대한 메시지 발행 소요 시간: ${Date.now() - rabbitmqStartTime}`,
         );
-        const discordStartTime = Date.now();
-        try {
-          await axios.post(DISCORD_WEBHOOK_URL, {
-            content: `[EmailConsumer] SMTP 500 에러 발생으로 DLQ 메시지 발행 - 오류 메시지: \`\`\`${error.message}\`\`\``,
-          });
-        } catch (e) {
-          logger.error('Discord 알림 전송 실패:', e);
-        }
-        logger.info(`알림 소요 시간: ${Date.now() - discordStartTime}`);
+        this.discordNotifier.callEvent('email.dlq', {
+          error,
+          dlqMessage: `SMTP 500 에러 발생으로`,
+        });
         return;
       }
 
@@ -273,15 +266,10 @@ export class EmailConsumer {
           logger.info(
             `${error.message}에러에 대한 메시지 발행 소요 시간: ${Date.now() - rabbitmqStartTime}`,
           );
-          const discordStartTime = Date.now();
-          try {
-            await axios.post(DISCORD_WEBHOOK_URL, {
-              content: `[EmailConsumer] retry count 초과로 DLQ 메시지 발행 - 오류 메시지: \`\`\`${error.message}\`\`\``,
-            });
-          } catch (e) {
-            logger.error('Discord 알림 전송 실패:', e);
-          }
-          logger.info(`알림 소요 시간: ${Date.now() - discordStartTime}`);
+          this.discordNotifier.callEvent('email.dlq', {
+            error,
+            dlqMessage: `retry count 초과로`,
+          });
           return;
         }
         await this.rabbitmqService.sendMessageToQueue(
@@ -298,8 +286,8 @@ export class EmailConsumer {
       오류 메시지: ${error.message} 
       스택 트레이스: ${error.stack}`,
     );
+
     // 즉시 DLQ로 메시지 발행
-    // todo: Slack 이나 Discord 연동을 통한 새로운 에러에 대한 알림 구현
     const rabbitmqStartTime = Date.now();
     await this.rabbitmqService.sendMessageToQueue(
       RMQ_QUEUES.EMAIL_DEAD_LETTER,
@@ -311,15 +299,10 @@ export class EmailConsumer {
     logger.info(
       `${error.message}에러에 대한 메시지 발행 소요 시간: ${Date.now() - rabbitmqStartTime}`,
     );
-    const discordStartTime = Date.now();
-    try {
-      await axios.post(DISCORD_WEBHOOK_URL, {
-        content: `[EmailConsumer] 알 수 없는 에러로 DLQ 메시지 발행 - 오류 메시지: \`\`\`${error.message}\`\`\``,
-      });
-    } catch (e) {
-      logger.error('Discord 알림 전송 실패:', e);
-    }
-    logger.info(`알림 소요 시간: ${Date.now() - discordStartTime}`);
+    this.discordNotifier.callEvent('email.dlq', {
+      error,
+      dlqMessage: `알 수 없는 에러로`,
+    });
   }
 
   private createDLQHeaders(
