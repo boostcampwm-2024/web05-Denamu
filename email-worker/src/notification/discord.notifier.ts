@@ -42,7 +42,7 @@ export class DiscordNotifier implements Notifier {
     logger.info(`알림 소요 시간: ${Date.now() - discordStartTime}`);
   };
 
-  callEvent(eventName: string, payload: { error: Error; dlqMessage: string }) {
+  publish(eventName: string, payload: { error: Error; dlqMessage: string }) {
     this.eventListener.emit(eventName, payload);
   }
 }
