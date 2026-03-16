@@ -24,12 +24,12 @@ export class DiscordNotifier implements Notifier {
 
   initialize() {
     if (!this.initialized) {
-      this.eventEmitter.on('email.dlq', this.notify);
+      this.eventEmitter.on('email.dlq', this.sendEmailDlqAlert);
       this.initialized = true;
     }
   }
 
-  notify = async (payload: { error: Error; dlqMessage: string }) => {
+  sendEmailDlqAlert = async (payload: { error: Error; dlqMessage: string }) => {
     const { error, dlqMessage } = payload;
     const discordStartTime = Date.now();
     try {
