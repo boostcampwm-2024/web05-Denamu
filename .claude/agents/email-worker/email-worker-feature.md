@@ -131,3 +131,12 @@ All DLQ messages include debugging headers:
 | email.content   | Generate HTML templates for each email type                                                                |
 | RabbitMQService | Publish/consume messages via AMQP channels, handle ack/nack                                                |
 | RabbitMQManager | Manage AMQP connections and channel creation                                                               |
+
+## Checklist — Verify Before Completion
+
+- [ ] No dead code: No unused imports, unreachable branches, or leftover debug logic
+- [ ] Performance: SMTP connections reused, no blocking operations in the consume loop
+- [ ] Reliability: Error classification covers all failure modes, retry/DLQ routing is correct, graceful shutdown order preserved
+- [ ] No duplication: Shared logic extracted (e.g., template rendering, header construction), no copy-paste across email types
+- [ ] Maintainability: Adding a new email type requires only a new template + dispatch case — no structural changes
+- [ ] Tests passing: Run `npm run test` and confirm all suites pass with zero failures

@@ -207,3 +207,12 @@ Request
 ## After feature development
 
 You must write tests. Make sure to assign the tests to the server-test agent.
+
+## Checklist — Verify Before Completion
+
+- [ ] Swagger: Every endpoint has `@ApiOperation`, `@ApiResponse`, and all DTO properties have `@ApiProperty`
+- [ ] Migration: Schema changes have a TypeORM migration with a safe `down()` rollback
+- [ ] Tests written: Assign test creation to the server-test agent
+- [ ] Tests passing: Run `npm run test` and confirm all suites pass with zero failures
+- [ ] Code quality: No duplicated logic, clear layering (Controller → Service → Repository), no ORM entity leaks
+- [ ] Performance: Queries use proper indexing, N+1 eliminated, pagination applied where needed

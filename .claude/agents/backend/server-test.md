@@ -115,3 +115,11 @@ npm run test:dto:cov    # DTO with coverage
 npm run test            # All (unit + e2e + dto)
 npm run test:cov        # All with coverage
 ```
+
+## Checklist — Verify Before Completion
+
+- [ ] Coverage gate: Run `npm run test:cov` and confirm overall coverage exceeds 90% (statements, branches, functions, lines)
+- [ ] Endpoint coverage: Every controller endpoint has a corresponding E2E test (success + major failure cases)
+- [ ] All passing: Run `npm run test` and confirm zero failures across all suites (unit + e2e + dto)
+- [ ] Performance: No individual test file exceeds 20s timeout; flag slow tests and suggest optimization
+- [ ] Improvements: Report any missing edge cases, flaky patterns, or test isolation concerns

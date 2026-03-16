@@ -156,3 +156,12 @@ sequenceDiagram
 | `ClaudeEventWorker`        | Consume AI queue, call `claude-3-5-haiku-latest`, manage retries |
 | `FullFeedCrawlEventWorker` | Consume full-crawl queue, trigger `FeedCrawler`                  |
 | Repository layer           | mysql2 connection pool — silently ignore `ER_DUP_ENTRY`          |
+
+## Checklist — Verify Before Completion
+
+- [ ] No dead code: No unused imports, unreachable branches, or leftover debug logic
+- [ ] Performance: RSS fetches run in parallel (`Promise.all`), no unnecessary DB round-trips, AI queue batching respected
+- [ ] Reliability: AI retry policy enforced (requeue vs discard), `deathCount` properly incremented, cron jobs idempotent
+- [ ] No duplication: Parser logic shared via `ParserUtil`, no copy-paste between RSS2.0 and Atom1.0 parsers
+- [ ] Maintainability: Adding a new feed format requires only a new parser class — no changes to `FeedCrawler` or workers
+- [ ] Tests passing: Run `npm run test` and confirm all suites pass with zero failures

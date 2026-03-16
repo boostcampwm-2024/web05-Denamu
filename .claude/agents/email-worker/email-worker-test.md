@@ -62,3 +62,10 @@ npm run test:unit:cov   # Unit with coverage
 npm run test:e2e        # E2E tests
 npm run test:e2e:cov    # E2E with coverage
 ```
+
+## Checklist — Verify Before Completion
+
+- [ ] Coverage gate: Run `npm run test:unit:cov` and `npm run test:e2e:cov`, confirm overall coverage exceeds 90% (statements, branches, functions, lines)
+- [ ] All passing: Run `npm run test:unit && npm run test:e2e` and confirm zero failures
+- [ ] Performance: No individual test file exceeds 20s timeout; flag slow tests and suggest optimization
+- [ ] Improvements: Report any missing edge cases, flaky patterns, or test isolation concerns
