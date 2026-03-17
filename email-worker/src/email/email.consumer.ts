@@ -211,7 +211,7 @@ export class EmailConsumer {
         );
         this.notifier.publish(NOTIFICATION_EVENT.EMAIL_DLQ, {
           error,
-          dlqMessage: `retry count 초과로`,
+          dlqMessage: `[retry count 초과]`,
         });
         return;
       }
@@ -243,7 +243,7 @@ export class EmailConsumer {
         );
         this.notifier.publish(NOTIFICATION_EVENT.EMAIL_DLQ, {
           error,
-          dlqMessage: `SMTP 500 에러 발생으로`,
+          dlqMessage: `[SMTP 500 에러 발생]`,
         });
         return;
       }
@@ -267,7 +267,7 @@ export class EmailConsumer {
           );
           this.notifier.publish(NOTIFICATION_EVENT.EMAIL_DLQ, {
             error,
-            dlqMessage: `retry count 초과로`,
+            dlqMessage: `[retry count 초과]`,
           });
           return;
         }
@@ -300,7 +300,7 @@ export class EmailConsumer {
     );
     this.notifier.publish(NOTIFICATION_EVENT.EMAIL_DLQ, {
       error,
-      dlqMessage: `알 수 없는 에러로`,
+      dlqMessage: `[알 수 없는 에러 발생]`,
     });
   }
 
