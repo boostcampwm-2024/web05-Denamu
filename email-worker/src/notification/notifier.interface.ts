@@ -1,5 +1,9 @@
+import { NotificationEventPayloadMap } from '@src/notification/notification-event.constant';
+
 export interface Notifier {
   initialize(): void;
-  //todo: eventName을 constant로 관리하기
-  publish(eventName: string, payload: unknown): void;
+  publish<K extends keyof NotificationEventPayloadMap>(
+    eventName: K,
+    payload: NotificationEventPayloadMap[K],
+  ): void;
 }
