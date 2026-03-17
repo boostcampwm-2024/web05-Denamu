@@ -3,6 +3,7 @@ import { inject, injectable } from 'tsyringe';
 import { Options } from 'amqplib/properties';
 
 import logger from '@src/logger';
+import { NOTIFICATION_EVENT } from '@src/notification/notification-event.constant';
 import { Notifier } from '@src/notification/notifier.interface';
 
 import { EmailService } from '@email/email.service';
@@ -208,7 +209,7 @@ export class EmailConsumer {
         logger.info(
           `${error.message}에러에 대한 메시지 발행 소요 시간: ${Date.now() - rabbitmqStartTime}`,
         );
-        this.notifier.publish('email.dlq', {
+        this.notifier.publish(NOTIFICATION_EVENT.EMAIL_DLQ, {
           error,
           dlqMessage: `retry count 초과로`,
         });
@@ -240,7 +241,7 @@ export class EmailConsumer {
         logger.info(
           `${error.message}에러에 대한 메시지 발행 소요 시간: ${Date.now() - rabbitmqStartTime}`,
         );
-        this.notifier.publish('email.dlq', {
+        this.notifier.publish(NOTIFICATION_EVENT.EMAIL_DLQ, {
           error,
           dlqMessage: `SMTP 500 에러 발생으로`,
         });
@@ -264,7 +265,7 @@ export class EmailConsumer {
           logger.info(
             `${error.message}에러에 대한 메시지 발행 소요 시간: ${Date.now() - rabbitmqStartTime}`,
           );
-          this.notifier.publish('email.dlq', {
+          this.notifier.publish(NOTIFICATION_EVENT.EMAIL_DLQ, {
             error,
             dlqMessage: `retry count 초과로`,
           });
@@ -297,7 +298,7 @@ export class EmailConsumer {
     logger.info(
       `${error.message}에러에 대한 메시지 발행 소요 시간: ${Date.now() - rabbitmqStartTime}`,
     );
-    this.notifier.publish('email.dlq', {
+    this.notifier.publish(NOTIFICATION_EVENT.EMAIL_DLQ, {
       error,
       dlqMessage: `알 수 없는 에러로`,
     });
