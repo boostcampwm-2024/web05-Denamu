@@ -139,7 +139,12 @@ export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
     const message = error.message.toLowerCase();
 
     // 재시도하면 안 되는 케이스 (영구적 에러)
-    if (message.includes('invalid') || message.includes('401')) return false;
+    if (
+      message.includes('invalid') ||
+      message.includes('401') ||
+      message.includes('404')
+    )
+      return false;
     if (message.includes('json') || message.includes('parse')) return false;
 
     // 재시도해야 하는 케이스 (일시적 에러)
