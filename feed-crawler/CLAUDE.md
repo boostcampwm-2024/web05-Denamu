@@ -34,7 +34,7 @@ Consumer pattern: Redis rpop polling (blocking read with timeout)
 
 - Node.js 22
 - tsyringe
-- Winston
+- Winston Logger
 
 [Infra]
 
@@ -46,13 +46,6 @@ Consumer pattern: Redis rpop polling (blocking read with timeout)
 [Test]
 
 - Jest
-
-# Reference Docs
-
-| File                               | Authority        |
-| ---------------------------------- | ---------------- |
-| agent_docs/service_architecture.md | Service patterns |
-| agent_docs/test_design.md          | Test contracts   |
 
 # Commands
 
