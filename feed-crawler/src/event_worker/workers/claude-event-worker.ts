@@ -80,7 +80,7 @@ export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
       max_tokens: 8192,
       system: PROMPT_CONTENT,
       messages: [{ role: 'user', content: feed.content }],
-      model: 'claude-3-5-haiku-latest',
+      model: 'claude-haiku-4-5',
     };
     const message = await this.client.messages.create(params);
     const responseText: string = message.content[0]['text'].replace(
