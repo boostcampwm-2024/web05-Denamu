@@ -211,7 +211,7 @@ describe('ClaudeEventWorker', () => {
         max_tokens: 8192,
         system: expect.any(String),
         messages: [{ role: 'user', content: mockFeedAIQueueItem.content }],
-        model: 'claude-3-5-haiku-latest',
+        model: 'claude-haiku-4-5',
       });
       expect(result.summary).toBe(mockClaudeResponse.summary);
       expect(result.tagList).toEqual(Object.keys(mockClaudeResponse.tags));
