@@ -19,7 +19,7 @@ export class DiscordNotifier implements Notifier {
   private initialized = false;
 
   constructor() {
-    this.webhookUrl = process.env.DISCORD_WEBHOOK_URL;
+    this.webhookUrl = process.env.EMAIL_WORKER_DISCORD_WEBHOOK_URL;
     this.webhook = `DISCORD`;
     if (!this.webhookUrl) {
       throw new Error(`${this.webhook} Webhook url이 설정되지 않았습니다.`);

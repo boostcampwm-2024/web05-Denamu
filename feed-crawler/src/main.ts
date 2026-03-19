@@ -8,6 +8,7 @@ import { container } from '@src/container';
 import { FeedCrawler } from '@src/feed-crawler';
 
 import logger from '@common/logger';
+import { Notifier } from '@common/notification/notifier.interface';
 import { RedisConnection } from '@common/redis-access';
 
 import { ClaudeEventWorker } from '@event_worker/workers/claude-event-worker';
@@ -31,6 +32,7 @@ function initializeDependencies() {
     fullFeedCrawlEventWorker: container.resolve<FullFeedCrawlEventWorker>(
       DEPENDENCY_SYMBOLS.FullFeedCrawlEventWorker,
     ),
+    notifier: container.resolve<Notifier>(DEPENDENCY_SYMBOLS.Notifier),
   };
 }
 
@@ -73,6 +75,7 @@ async function startScheduler() {
   logger.info('[Feed Crawler Scheduler Start]');
 
   const dependencies = initializeDependencies();
+  dependencies.notifier.initialize();
   registerSchedulers(dependencies);
 
   process.on('SIGINT', () => void handleShutdown(dependencies, 'SIGINT'));

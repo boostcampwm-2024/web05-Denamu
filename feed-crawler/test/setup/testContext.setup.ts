@@ -6,6 +6,8 @@ import { DependencyContainer } from 'tsyringe';
 import { FeedCrawler } from '@src/feed-crawler';
 
 import { MySQLConnection } from '@common/mysql-access';
+import { DiscordNotifier } from '@common/notification/discord.notifier';
+import { Notifier } from '@common/notification/notifier.interface';
 import { FeedParserManager } from '@common/parser/feed-parser-manager';
 import { Atom10Parser } from '@common/parser/formats/atom10-parser';
 import { Rss20Parser } from '@common/parser/formats/rss20-parser';
@@ -34,6 +36,7 @@ export interface TestContext {
   rss20Parser: Rss20Parser;
   atom10Parser: Atom10Parser;
   feedCrawler: FeedCrawler;
+  notifier: Notifier;
 }
 
 declare global {
@@ -99,6 +102,11 @@ export function setupTestContainer(): TestContext {
       FeedCrawler,
     );
 
+    testContainer.registerSingleton<Notifier>(
+      DEPENDENCY_SYMBOLS.Notifier,
+      DiscordNotifier,
+    );
+
     global.testContext = {
       container: testContainer,
       tagMapRepository: testContainer.resolve<TagMapRepository>(
@@ -134,6 +142,7 @@ export function setupTestContainer(): TestContext {
       feedCrawler: testContainer.resolve<FeedCrawler>(
         DEPENDENCY_SYMBOLS.FeedCrawler,
       ),
+      notifier: testContainer.resolve<Notifier>(DEPENDENCY_SYMBOLS.Notifier),
     };
   }
 

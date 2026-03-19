@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 
+import { Notifier } from '@common/notification/notifier.interface';
 import { FeedParserManager } from '@common/parser/feed-parser-manager';
 import { Atom10Parser } from '@common/parser/formats/atom10-parser';
 import { Rss20Parser } from '@common/parser/formats/rss20-parser';
@@ -13,6 +14,7 @@ describe('FeedParserManager', () => {
   let mockRss20Parser: jest.Mocked<Rss20Parser>;
   let mockAtom10Parser: jest.Mocked<Atom10Parser>;
   let mockFetch: jest.MockedFunction<typeof fetch>;
+  let mockNotifier: jest.Mocked<Notifier>;
 
   const mockRssObj: RssObj = {
     id: 1,
@@ -52,9 +54,15 @@ describe('FeedParserManager', () => {
       parseAllFeeds: jest.fn(),
     } as any;
 
+    mockNotifier = {
+      initialize: jest.fn(),
+      publish: jest.fn(),
+    };
+
     feedParserManager = new FeedParserManager(
       mockRss20Parser,
       mockAtom10Parser,
+      mockNotifier,
     );
   });
 
