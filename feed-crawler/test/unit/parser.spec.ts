@@ -8,6 +8,7 @@ import {
   RSS_20_SAMPLE,
 } from '@test/config/constant/parser-fixtures';
 
+import { Notifier } from '@common/notification/notifier.interface';
 import { FeedParserManager } from '@common/parser/feed-parser-manager';
 import { Atom10Parser } from '@common/parser/formats/atom10-parser';
 import { Rss20Parser } from '@common/parser/formats/rss20-parser';
@@ -18,12 +19,17 @@ describe('Parser 모듈 테스트', () => {
   let rss20Parser: Rss20Parser;
   let atom10Parser: Atom10Parser;
   let feedParserManager: FeedParserManager;
+  let notifier: Notifier;
 
   beforeEach(() => {
     parserUtil = new ParserUtil();
     rss20Parser = new Rss20Parser(parserUtil);
     atom10Parser = new Atom10Parser(parserUtil);
-    feedParserManager = new FeedParserManager(rss20Parser, atom10Parser);
+    feedParserManager = new FeedParserManager(
+      rss20Parser,
+      atom10Parser,
+      notifier,
+    );
 
     // URL 기반 조건부 fetch 모킹 (순서 의존성 제거)
     global.fetch = jest.fn().mockImplementation((url: string) => {

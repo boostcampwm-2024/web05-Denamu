@@ -7,6 +7,8 @@ const globalAny: any = global;
 
 export default async function globalSetup() {
   console.log('Starting global setup...');
+  process.env.FEED_CRAWLER_DISCORD_WEBHOOK_URL ??=
+    'http://127.0.0.1:9/test-discord-webhook';
   await createMysqlContainer();
   await createDatabaseTable();
   console.log('Global setup completed.');
