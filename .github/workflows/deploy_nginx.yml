@@ -11,7 +11,7 @@ jobs:
     runs-on: [self-hosted, prod]
     steps:
       - name: 코드 체크아웃
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: nginx 설정 검사 및 reload
         run: |
