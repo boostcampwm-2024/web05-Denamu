@@ -14,5 +14,5 @@ export const REDIS_KEYS = {
   USER_DELETE_ACCOUNT_KEY: 'user:delete-account',
   USER_RESET_PASSWORD_KEY: 'user:password_reset',
   USER_BLACKLIST_JWT_PREFIX: 'blacklist',
-  CHAT_SYSTEM_MIDNIGHT_KEY: 'chat:system:midnight',
+  CHAT_SYSTEM_MIDNIGHT_PREFIX: 'chat:system:midnight',
 };
