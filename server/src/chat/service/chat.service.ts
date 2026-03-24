@@ -11,7 +11,6 @@ import {
   MAX_CLIENTS,
 } from '@chat/constant/chat.constant';
 
-import { WinstonLoggerService } from '@common/logger/logger.service';
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
 import { TIMEZONE_OFFSET_MS } from '@common/util/time.constant';
