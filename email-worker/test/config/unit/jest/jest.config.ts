@@ -7,6 +7,7 @@ const config: Config.InitialOptions = {
   moduleFileExtensions: ['js', 'json', 'ts'],
   testEnvironment: 'node',
   rootDir: '../../../../',
+  setupFiles: ['<rootDir>/test/config/common/test-env.setup.ts'],
   testRegex: 'test/.*\\.spec.ts$',
   transform: {
     '^.+\\.(t|j)s$': 'ts-jest',

@@ -1,19 +1,20 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class OAuthCallbackRequestDto {
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: 'testCode',
     description: 'Access Token 갱신 토큰',
   })
+  @IsOptional()
   @IsNotEmpty({
-    message: 'code는 필수 입력 값입니다.',
+    message: 'code는 빈 문자열일 수 없습니다.',
   })
   @IsString({
     message: '문자열로 입력해주세요.',
   })
-  code: string;
+  code?: string;
 
   @ApiProperty({
     example: '{ provider: {플랫폼 종류}}',
@@ -26,6 +27,19 @@ export class OAuthCallbackRequestDto {
     message: '문자열로 입력해주세요.',
   })
   state: string;
+
+  @ApiPropertyOptional({
+    example: 'error=access_denied',
+    description: 'OAuth 서버 로그인 중 실패 발생 시 반환되는 값',
+  })
+  @IsOptional()
+  @IsNotEmpty({
+    message: 'error는 빈 문자열일 수 없습니다.',
+  })
+  @IsString({
+    message: '문자열로 입력해주세요.',
+  })
+  error?: string;
 
   constructor(partial: Partial<OAuthCallbackRequestDto>) {
     Object.assign(this, partial);

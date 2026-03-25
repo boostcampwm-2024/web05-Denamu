@@ -3,4 +3,5 @@ export const DEPENDENCY_SYMBOLS = {
   RabbitMQManager: Symbol.for('RabbitMQManager'),
   EmailConsumer: Symbol.for('EmailConsumer'),
   EmailService: Symbol.for('EmailService'),
+  Notifier: Symbol.for('Notifier'),
 };

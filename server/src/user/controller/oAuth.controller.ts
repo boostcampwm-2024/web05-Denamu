@@ -45,6 +45,8 @@ export class OAuthController {
     await this.oauthService.callback(callbackDto, res, req);
     res.clearCookie('oauth_csrf_token');
     return res.redirect(`${OAUTH_URL_PATH.BASE_URL}/oauth-success`);
+    await this.oauthService.callback(callbackDto, res);
+    return res;
   }
 
   @Get('e2e/callback')

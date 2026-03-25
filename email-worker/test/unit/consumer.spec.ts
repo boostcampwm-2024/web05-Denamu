@@ -1,5 +1,7 @@
 import 'reflect-metadata';
 
+import { Notifier } from '@src/notification/notifier.interface';
+
 import { EmailConsumer } from '@email/email.consumer';
 import { EmailService } from '@email/email.service';
 
@@ -18,6 +20,7 @@ describe('email consumer unit test', () => {
   let emailConsumer: EmailConsumer;
   let rabbitmqService: jest.Mocked<RabbitMQService>;
   let emailService: jest.Mocked<EmailService>;
+  let notifier: jest.Mocked<Notifier>;
 
   afterEach(() => {
     jest.clearAllMocks();
@@ -35,7 +38,15 @@ describe('email consumer unit test', () => {
       rabbitmqService = {
         sendMessageToQueue: jest.fn().mockResolvedValue(null),
       } as any;
-      emailConsumer = new EmailConsumer(rabbitmqService, emailService);
+      notifier = {
+        initialize: jest.fn(),
+        publish: jest.fn(),
+      } as any;
+      emailConsumer = new EmailConsumer(
+        rabbitmqService,
+        emailService,
+        notifier,
+      );
     });
 
     it('USER_CERTIFICATION 타입일 때 sendUserCertificationMail을 호출한다', async () => {
@@ -181,7 +192,15 @@ describe('email consumer unit test', () => {
       rabbitmqService = {
         sendMessageToQueue: jest.fn().mockResolvedValue(null),
       } as any;
-      emailConsumer = new EmailConsumer(rabbitmqService, emailService);
+      notifier = {
+        initialize: jest.fn(),
+        publish: jest.fn(),
+      } as any;
+      emailConsumer = new EmailConsumer(
+        rabbitmqService,
+        emailService,
+        notifier,
+      );
     });
 
     describe('Transient Error test', () => {

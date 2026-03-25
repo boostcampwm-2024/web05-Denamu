@@ -36,7 +36,6 @@ export class OAuthService {
     private readonly providerRepository: ProviderRepository,
     private readonly logger: WinstonLoggerService,
     private readonly userService: UserService,
-    private readonly redisService: RedisService,
     @Inject('OAUTH_PROVIDERS')
     private readonly providers: Record<string, OAuthProvider>,
     private readonly dataSource: DataSource,
@@ -76,6 +75,10 @@ export class OAuthService {
       return res.redirect(`${OAUTH_URL_PATH.BASE_URL}/signin`);
     }
 
+    if (callbackDto.error || !callbackDto.code) {
+      return res.redirect(`${OAUTH_URL_PATH.BASE_URL}/signin`);
+    }
+
     const tokenData = await this.providers[providerType].getTokens(
       callbackDto.code,
     );
@@ -93,6 +96,8 @@ export class OAuthService {
       },
       res,
     );
+
+    return res.redirect(`${OAUTH_URL_PATH.BASE_URL}/oauth-success`);
   }
 
   async e2eCallback(providerType: OAuthType, res: Response) {
