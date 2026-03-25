@@ -75,8 +75,13 @@ describe(`GET ${URL} E2E Test`, () => {
 
     // Http then
     const { data } = response.body;
+    const setCookieHeader = response.headers['set-cookie'];
+    const setCookies = getSetCookies(setCookieHeader);
+
     expect(response.status).toBe(HttpStatus.FOUND);
-    expect(response.headers['set-cookie'][0]).toContain('refresh_token=');
+    expect(
+      setCookies.some((cookie) => cookie.startsWith('refresh_token=')),
+    ).toBe(true);
     expect(response.headers['location']).toContain('/oauth-success');
     expect(data).toBeUndefined();
 
@@ -123,8 +128,13 @@ describe(`GET ${URL} E2E Test`, () => {
 
     // Http then
     const { data } = response.body;
+    const setCookieHeader = response.headers['set-cookie'];
+    const setCookies = getSetCookies(setCookieHeader);
+
     expect(response.status).toBe(HttpStatus.FOUND);
-    expect(response.headers['set-cookie'][0]).toContain('refresh_token=');
+    expect(
+      setCookies.some((cookie) => cookie.startsWith('refresh_token=')),
+    ).toBe(true);
     expect(response.headers['location']).toContain('/oauth-success');
     expect(data).toBeUndefined();
 
@@ -189,4 +199,14 @@ describe(`GET ${URL} E2E Test`, () => {
     // then - 502 Bad Gateway
     expect(response.status).toBe(HttpStatus.BAD_GATEWAY);
   });
+
+  const getSetCookies = (header: string | string[] | undefined): string[] => {
+    if (Array.isArray(header)) {
+      return header;
+    }
+    if (typeof header === 'string') {
+      return [header];
+    }
+    return [];
+  };
 });
