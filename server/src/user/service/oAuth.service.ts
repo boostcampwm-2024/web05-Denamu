@@ -35,6 +35,7 @@ export class OAuthService {
     private readonly userRepository: UserRepository,
     private readonly providerRepository: ProviderRepository,
     private readonly logger: WinstonLoggerService,
+    private readonly redisService: RedisService,
     private readonly userService: UserService,
     @Inject('OAUTH_PROVIDERS')
     private readonly providers: Record<string, OAuthProvider>,
@@ -45,7 +46,7 @@ export class OAuthService {
     const csrfToken = uuid.v4();
     res.cookie('oauth_csrf_token', csrfToken, {
       ...cookieConfig[process.env.NODE_ENV],
-      maxAge: OAUTH_CSRF_TOKEN_TTL,
+      maxAge: OAUTH_CSRF_TOKEN_TTL * 1000,
     });
     return await this.providers[providerType].getAuthUrl(csrfToken);
   }
@@ -59,24 +60,26 @@ export class OAuthService {
     const { provider: providerType, csrfToken: csrfTokenKey } = stateData;
     const cookieCsrfToken = req.cookies['oauth_csrf_token'];
 
+    if (callbackDto.error || !callbackDto.code) {
+      return `${OAUTH_URL_PATH.BASE_URL}/signin`;
+    }
+
     if (!csrfTokenKey || !cookieCsrfToken || cookieCsrfToken !== csrfTokenKey) {
-      return res.redirect(`${OAUTH_URL_PATH.BASE_URL}/signin`);
+      return `${OAUTH_URL_PATH.BASE_URL}/signin`;
     }
 
     const script = `
-    local value = redis.call("GET", KEYS[1])
-    if value then
-      redis.call("DEL", KEYS[1])
-    end
-    return value
-  `;
-    const csrfTokenValue = await this.redisService.eval(script, [csrfTokenKey]);
-    if (!csrfTokenValue || csrfTokenValue !== `${providerType}-CSRF`) {
-      return res.redirect(`${OAUTH_URL_PATH.BASE_URL}/signin`);
-    }
+      local value = redis.call("GET", KEYS[1])
+      if value then
+        redis.call("DEL", KEYS[1])
+      end
+      return value
+    `;
 
-    if (callbackDto.error || !callbackDto.code) {
-      return res.redirect(`${OAUTH_URL_PATH.BASE_URL}/signin`);
+    const csrfTokenValue = await this.redisService.eval(script, [csrfTokenKey]);
+    res.clearCookie('oauth_csrf_token');
+    if (!csrfTokenValue || csrfTokenValue !== `${providerType}-CSRF`) {
+      return `${OAUTH_URL_PATH.BASE_URL}/signin`;
     }
 
     const tokenData = await this.providers[providerType].getTokens(
@@ -97,7 +100,7 @@ export class OAuthService {
       res,
     );
 
-    return res.redirect(`${OAUTH_URL_PATH.BASE_URL}/oauth-success`);
+    return `${OAUTH_URL_PATH.BASE_URL}/oauth-success`;
   }
 
   async e2eCallback(providerType: OAuthType, res: Response) {
