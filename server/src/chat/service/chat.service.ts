@@ -84,7 +84,7 @@ export class ChatService {
     );
   }
 
-  async setMidnightMessageReady() {
+  async setDateMessageReady() {
     const [second] = await this.redisService.time();
     const time = second * 1000;
     const ttlSeconds = this.getTTLNextMidnight(time);

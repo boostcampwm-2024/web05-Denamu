@@ -9,6 +9,6 @@ export class ChatScheduler {
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   private async midnightInitializer() {
-    await this.chatService.setMidnightMessageReady();
+    await this.chatService.setDateMessageReady();
   }
 }
