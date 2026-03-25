@@ -6,6 +6,7 @@ import { Socket } from 'socket.io';
 import {
   BroadcastPayload,
   CHAT_HISTORY_LIMIT,
+  CHAT_MIDNIGHT_CLIENT_NAME,
   CLIENT_KEY_PREFIX,
   MAX_CLIENTS,
 } from '@chat/constant/chat.constant';
@@ -83,32 +84,86 @@ export class ChatService {
     );
   }
 
-  async saveMidnightStatus() {
+  async setDateMessageReady() {
     const [second] = await this.redisService.time();
     const time = second * 1000;
     const ttlSeconds = this.getTTLNextMidnight(time);
+    const kstDate = this.formatKstDateString(time);
 
     await this.redisService.set(
-      REDIS_KEYS.CHAT_SYSTEM_MIDNIGHT_KEY,
-      JSON.stringify(new Date(time + TIMEZONE_OFFSET_MS.KST).toISOString()),
+      `${REDIS_KEYS.CHAT_SYSTEM_MIDNIGHT_PREFIX}:ready:${kstDate}`,
+      1,
       'NX',
       'EX',
       ttlSeconds,
     );
   }
 
-  async getMidnightStatus() {
+  async publishDateMessageOnce() {
+    const [second] = await this.redisService.time();
+    const time = second * 1000;
+    const ttlSeconds = this.getTTLNextMidnight(time);
+    const kstDate = this.formatKstDateString(time);
+
+    const readyKey = `${REDIS_KEYS.CHAT_SYSTEM_MIDNIGHT_PREFIX}:ready:${kstDate}`;
+    const publishedKey = `${REDIS_KEYS.CHAT_SYSTEM_MIDNIGHT_PREFIX}:published:${kstDate}`;
+
+    const broadcastPayload: BroadcastPayload = {
+      userId: CHAT_MIDNIGHT_CLIENT_NAME,
+      messageId: CHAT_MIDNIGHT_CLIENT_NAME,
+      username: CHAT_MIDNIGHT_CLIENT_NAME,
+      message: '',
+      timestamp: new Date(time + TIMEZONE_OFFSET_MS.KST),
+    };
+
     const script = `
-    local value = redis.call("GET", KEYS[1])
-    if value then
-      redis.call("DEL", KEYS[1])
-    end
-    return value
-  `;
-    const result = await this.redisService.eval(script, [
-      REDIS_KEYS.CHAT_SYSTEM_MIDNIGHT_KEY,
-    ]);
+      local readyKey = KEYS[1]
+      local publishedKey = KEYS[2]
+      local chatHistoryKey = KEYS[3]
+
+      local ttl = tonumber(ARGV[1])
+      local payload = ARGV[2]
+      local historyLimit = tonumber(ARGV[3])
+
+      if redis.call("EXISTS", publishedKey) == 1 then
+        return nil
+      end
+
+      if redis.call("EXISTS", readyKey) == 0 then
+        return nil
+      end
+
+      redis.call("LPUSH", chatHistoryKey, payload)
+      redis.call("LTRIM", chatHistoryKey, 0, historyLimit - 1)
+      redis.call("SET", publishedKey, "1", "EX", ttl)
+
+      return payload
+    `;
+
+    const result = await this.redisService.eval(
+      script,
+      [readyKey, publishedKey, REDIS_KEYS.CHAT_HISTORY_KEY],
+      [
+        String(ttlSeconds),
+        JSON.stringify(broadcastPayload),
+        String(CHAT_HISTORY_LIMIT),
+      ],
+    );
+
     return result ? JSON.parse(result) : null;
+  }
+
+  private formatKstDateString(
+    now: number,
+    timezoneOffsetMs = TIMEZONE_OFFSET_MS.KST,
+  ): string {
+    const kstDate = new Date(now + timezoneOffsetMs);
+
+    const year = kstDate.getUTCFullYear();
+    const month = String(kstDate.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(kstDate.getUTCDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
   }
 
   private getTTLNextMidnight(
