@@ -8,11 +8,11 @@ import { RedisService } from '@common/redis/redis.service';
 
 import {
   OAUTH_CONSTANT,
+  OAUTH_CSRF_TOKEN_TTL,
   OAUTH_URL_PATH,
   OAuthTokenResponse,
   UserInfo,
 } from '@user/constant/oauth.constant';
-import { OAUTH_CSRF_TOKEN_TTL } from '@user/constant/user.constants';
 import { OAuthProvider } from '@user/provider/oauth-provider.interface';
 
 @Injectable()
