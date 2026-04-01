@@ -1,13 +1,12 @@
 import { Injectable } from '@nestjs/common';
 
 import { getRandomNickname } from '@woowa-babble/random-nickname';
-import { Socket } from 'socket.io';
 
 import {
-  BroadcastPayload,
   CHAT_HISTORY_LIMIT,
   CLIENT_KEY_PREFIX,
   MAX_CLIENTS,
+  RedisMessagePayload,
 } from '@chat/constant/chat.constant';
 
 import { REDIS_KEYS } from '@common/redis/redis.constant';
@@ -22,39 +21,33 @@ export class ChatService {
     return userCount > MAX_CLIENTS;
   }
 
-  private getClientIp(client: Socket) {
-    const forwardedFor = client.handshake.headers['x-forwarded-for'] as string;
-    const ip = forwardedFor
-      ? forwardedFor.split(',')[0].trim()
-      : client.handshake.address;
-
-    return ip;
-  }
-
-  async getClientNameByIp(client: Socket) {
-    const ip = this.getClientIp(client);
-    const redisKey = CLIENT_KEY_PREFIX + ip;
-    const clientName: string = await this.getClientName(redisKey);
-    if (clientName) {
-      return clientName;
+  async getOrCreateUserName(
+    userId: string | null,
+  ): Promise<{ userId: string; userName: string; isNew: boolean }> {
+    if (userId) {
+      const redisKey = CLIENT_KEY_PREFIX + userId;
+      const existing = await this.redisService.get(redisKey);
+      if (existing) {
+        return { userId, userName: existing, isNew: false };
+      }
+      const userName = this.generateRandomUsername();
+      await this.redisService.set(redisKey, userName, 'EX', 3600 * 24);
+      return { userId, userName, isNew: false };
     }
-    const createdClientName = await this.setClientName(redisKey);
-    return createdClientName;
-  }
 
-  private async getClientName(redisKey: string) {
-    return await this.redisService.get(redisKey);
-  }
-
-  private async setClientName(redisKey: string) {
-    const clientName = this.generateRandomUsername();
-    await this.redisService.set(redisKey, clientName, 'EX', 3600 * 24);
-    return clientName;
+    const newUserId = crypto.randomUUID();
+    const userName = this.generateRandomUsername();
+    await this.redisService.set(
+      CLIENT_KEY_PREFIX + newUserId,
+      userName,
+      'EX',
+      3600 * 24,
+    );
+    return { userId: newUserId, userName, isNew: true };
   }
 
   private generateRandomUsername(): string {
-    const type = 'animals';
-    return getRandomNickname(type);
+    return getRandomNickname('animals');
   }
 
   async getChatHistory() {
@@ -71,10 +64,11 @@ export class ChatService {
     );
   }
 
-  async saveMessageToRedis(payload: BroadcastPayload) {
+  async saveMessageToRedis(payload: RedisMessagePayload) {
+    const { userId, userName, message, timestamp } = payload;
     await this.redisService.lpush(
       REDIS_KEYS.CHAT_HISTORY_KEY,
-      JSON.stringify(payload),
+      JSON.stringify({ userId, userName, message, timestamp }),
     );
     await this.redisService.ltrim(
       REDIS_KEYS.CHAT_HISTORY_KEY,
@@ -116,7 +110,6 @@ export class ChatService {
     millis = TIMEZONE_OFFSET_MS.KST,
   ): number {
     const kstNow = new Date(now + millis);
-
     const nextMidnightByKSTMs = Date.UTC(
       kstNow.getUTCFullYear(),
       kstNow.getUTCMonth(),
@@ -126,12 +119,8 @@ export class ChatService {
       0,
       0,
     );
-
     const nextMidnightUTC = nextMidnightByKSTMs - millis;
-
     const diffMs = nextMidnightUTC - now;
-    const ttl = Math.floor(diffMs / 1000);
-
-    return Math.max(ttl, 1);
+    return Math.max(Math.floor(diffMs / 1000), 1);
   }
 }

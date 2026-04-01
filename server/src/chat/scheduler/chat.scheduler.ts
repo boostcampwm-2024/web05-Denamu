@@ -31,7 +31,7 @@ export class ChatScheduler {
     const broadcastPayload: BroadcastPayload = {
       userId: CHAT_MIDNIGHT_CLIENT_NAME,
       messageId: CHAT_MIDNIGHT_CLIENT_NAME,
-      username: CHAT_MIDNIGHT_CLIENT_NAME,
+      userName: CHAT_MIDNIGHT_CLIENT_NAME,
       message: '',
       timestamp: date,
     };

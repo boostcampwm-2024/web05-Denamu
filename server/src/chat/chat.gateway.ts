@@ -11,7 +11,10 @@ import { InjectMetric } from '@willsoto/nestjs-prometheus';
 import { Counter, Gauge } from 'prom-client';
 import { Server, Socket } from 'socket.io';
 
-import type { BroadcastPayload } from '@chat/constant/chat.constant';
+import type {
+  BroadcastPayload,
+  RedisMessagePayload,
+} from '@chat/constant/chat.constant';
 import { ChatScheduler } from '@chat/scheduler/chat.scheduler';
 import { ChatService } from '@chat/service/chat.service';
 
@@ -45,27 +48,28 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       return;
     }
 
-    const clientName = await this.chatService.getClientNameByIp(client);
     const chatHistory = await this.chatService.getChatHistory();
-
     client.emit('chatHistory', chatHistory);
 
-    this.chatUserMetricCount.inc({
-      room: 'anonymous',
-    });
-    this.server.emit('updateUserCount', {
-      userCount: userCount,
-      name: clientName,
-    });
+    this.chatUserMetricCount.inc({ room: 'anonymous' });
+    this.server.emit('updateUserCount', { userCount });
   }
 
   handleDisconnect() {
-    this.chatUserMetricCount.dec({
-      room: 'anonymous',
-    });
+    this.chatUserMetricCount.dec({ room: 'anonymous' });
     this.server.emit('updateUserCount', {
       userCount: this.server.engine.clientsCount,
     });
+  }
+
+  @SubscribeMessage('register')
+  async handleRegister(client: Socket, payload: { userId: string | null }) {
+    const result = await this.chatService.getOrCreateUserName(
+      payload?.userId ?? null,
+    );
+    if (result.isNew) {
+      client.emit('assignUserId', { userId: result.userId });
+    }
   }
 
   @SubscribeMessage('message')
@@ -73,26 +77,30 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     client: Socket,
     payload: { messageId: string; userId: string; message: string },
   ) {
-    const clientName = await this.chatService.getClientNameByIp(client);
-    const broadcastPayload: BroadcastPayload = {
+    const { userName } = await this.chatService.getOrCreateUserName(
+      payload.userId,
+    );
+
+    const redisPayload: RedisMessagePayload = {
       userId: payload.userId,
-      messageId: payload.messageId,
-      username: clientName,
+      userName,
       message: payload.message,
       timestamp: new Date(),
     };
 
-    const midnightMessage = await this.chatScheduler.handleDateMessage();
+    const broadcastPayload: BroadcastPayload = {
+      ...redisPayload,
+      messageId: payload.messageId,
+    };
 
+    const midnightMessage = await this.chatScheduler.handleDateMessage();
     if (midnightMessage) {
       this.server.emit('message', midnightMessage);
     }
 
-    this.chatMetricCount.inc({
-      room: 'anonymous',
-    });
+    this.chatMetricCount.inc({ room: 'anonymous' });
 
-    await this.chatService.saveMessageToRedis(broadcastPayload);
+    await this.chatService.saveMessageToRedis(redisPayload);
     this.server.emit('message', broadcastPayload);
   }
 }
