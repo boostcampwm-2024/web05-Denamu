@@ -3,6 +3,8 @@ import { container } from 'tsyringe';
 import { FeedCrawler } from '@src/feed-crawler';
 
 import { MySQLConnection } from '@common/mysql-access';
+import { DiscordNotifier } from '@common/notification/discord.notifier';
+import { Notifier } from '@common/notification/notifier.interface';
 import { FeedParserManager } from '@common/parser/feed-parser-manager';
 import { Atom10Parser } from '@common/parser/formats/atom10-parser';
 import { Rss20Parser } from '@common/parser/formats/rss20-parser';
@@ -77,6 +79,11 @@ container.registerSingleton<FeedCrawler>(
 container.registerSingleton<FullFeedCrawlEventWorker>(
   DEPENDENCY_SYMBOLS.FullFeedCrawlEventWorker,
   FullFeedCrawlEventWorker,
+);
+
+container.registerSingleton<Notifier>(
+  DEPENDENCY_SYMBOLS.Notifier,
+  DiscordNotifier,
 );
 
 export { container };
