@@ -12,7 +12,6 @@ import { Counter, Gauge } from 'prom-client';
 import { Server, Socket } from 'socket.io';
 
 import type { BroadcastPayload } from '@chat/constant/chat.constant';
-import { ChatScheduler } from '@chat/scheduler/chat.scheduler';
 import { ChatService } from '@chat/service/chat.service';
 
 @Injectable()
@@ -28,7 +27,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   constructor(
     private readonly chatService: ChatService,
-    private readonly chatScheduler: ChatScheduler,
     @InjectMetric('anonymous_chat_user_count')
     private readonly chatUserMetricCount: Gauge,
     @InjectMetric('anonymous_chat_message_count')
@@ -82,7 +80,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       timestamp: new Date(),
     };
 
-    const midnightMessage = await this.chatScheduler.handleDateMessage();
+    const midnightMessage = await this.chatService.publishDateMessageOnce();
 
     if (midnightMessage) {
       this.server.emit('message', midnightMessage);
