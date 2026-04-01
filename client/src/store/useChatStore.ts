@@ -53,6 +53,10 @@ export const useChatStore = create<State & Action>((set, get) => {
       });
     });
 
+    socket.on('assignUserId', ({ userId }: { userId: string }) => {
+      localStorage.setItem('userID', userId);
+    });
+
     socket.on("updateUserCount", (data) => {
       set({ userCount: data.userCount });
     });
@@ -77,6 +81,9 @@ export const useChatStore = create<State & Action>((set, get) => {
       if (!s.connected) {
         s.connect();
       }
+      s.on('connect', () => {
+        s.emit('register', { userId: localStorage.getItem('userID') });
+      });
     },
 
     disconnect: () => {
@@ -115,8 +122,8 @@ export const useChatStore = create<State & Action>((set, get) => {
         chatHistory: [
           ...state.chatHistory,
           {
-            timestamp: "전송중",
-            username: "나",
+            timestamp: '전송중',
+            userName: '나',
             isMidNight: false,
             message: message.message,
             messageId: message.messageId,
