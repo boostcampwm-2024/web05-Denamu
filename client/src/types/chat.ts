@@ -1,6 +1,6 @@
 export type ChatType = {
   chatImg?: string;
-  username: string;
+  userName: string;
   timestamp: string;
   message: string;
   isMidNight?: boolean;

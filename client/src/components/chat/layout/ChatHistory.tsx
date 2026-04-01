@@ -18,7 +18,7 @@ export default function ChatHistory({ isFull, isConnected }: { isFull: boolean; 
   return (
     <span className="flex flex-col gap-3 px-3">
       {chatHistory.map((item, index) => {
-        const isSameUser = index > 0 && chatHistory[index - 1]?.username === item.username;
+        const isSameUser = index > 0 && chatHistory[index - 1]?.userName === item.userName;
         return <ChatItem key={index} chatItem={item} isSameUser={isSameUser} />;
       })}
     </span>

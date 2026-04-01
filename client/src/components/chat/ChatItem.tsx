@@ -15,11 +15,13 @@ type ChatItemProps = {
 };
 
 const chatStyle = "p-3 bg-gray-200 text-black break-words whitespace-pre-wrap rounded-md inline-block max-w-[90%]";
+
 export default function ChatItem({ chatItem, isSameUser }: ChatItemProps) {
   const isUser = localStorage.getItem("userID") === chatItem.userId;
   const resendMessage = useChatStore((state) => state.resendMessage);
   const deleteMessage = useChatStore((state) => state.deleteMessage);
-  if (chatItem.username === "system")
+
+  if (chatItem.userName === "system")
     return <div className="flex justify-center">{formatDate(chatItem.timestamp)}</div>;
 
   return (
@@ -28,12 +30,11 @@ export default function ChatItem({ chatItem, isSameUser }: ChatItemProps) {
         <span className={clsx("flex gap-1 items-center", isUser ? "justify-end" : "justify-start")}>
           {!isUser && (
             <Avatar>
-              <Avvvatars value={chatItem.username} style="shape" />
+              <Avvvatars value={chatItem.userName} style="shape" />
             </Avatar>
           )}
-
           <span className="flex gap-2 items-center">
-            <span className="text-sm">{isUser ? "나" : chatItem.username}</span>
+            <span className="text-sm">{isUser ? "나" : chatItem.userName}</span>
             <span className="text-xs">{chatItem.isFailed ? "전송실패" : formatTime(chatItem.timestamp)}</span>
           </span>
         </span>
