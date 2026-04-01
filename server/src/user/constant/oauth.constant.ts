@@ -44,9 +44,12 @@ export type ProviderData = {
 
 export type StateData = {
   provider: string;
+  csrfToken: string;
 };
 
 export enum OAuthType {
   Google = 'google',
   Github = 'github',
 }
+
+export const OAUTH_CSRF_TOKEN_TTL = 60 * 2;

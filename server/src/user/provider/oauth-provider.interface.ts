@@ -1,7 +1,7 @@
 import { OAuthTokenResponse, UserInfo } from '@user/constant/oauth.constant';
 
 export interface OAuthProvider {
-  getAuthUrl(): string;
+  getAuthUrl(csrfToken: string): Promise<string>;
   getTokens(code: string): Promise<OAuthTokenResponse>;
   getUserInfo(tokenResponse: OAuthTokenResponse): Promise<UserInfo>;
 }
