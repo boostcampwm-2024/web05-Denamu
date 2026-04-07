@@ -5,7 +5,7 @@
     "dotenv": "^16.4.5",
     "fast-xml-parser": "^4.5.0",
     "html-escaper": "^3.0.3",
-    "ioredis": "^5.4.1",
+    "ioredis": "^5.10.1",
     "mysql2": "^3.11.3",
     "node-html-parser": "^6.1.13",
     "node-schedule": "^2.1.1",
