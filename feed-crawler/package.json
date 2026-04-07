@@ -10,7 +10,7 @@
     "node-html-parser": "^6.1.13",
     "node-schedule": "^2.1.1",
     "reflect-metadata": "^0.2.2",
-    "tsyringe": "^4.8.0",
+    "tsyringe": "^4.10.0",
     "winston": "^3.16.0",
     "winston-daily-rotate-file": "^5.0.0"
   },
