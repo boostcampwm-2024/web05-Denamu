@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "axios": "^1.8.4",
     "@anthropic-ai/sdk": "^0.79.0",
     "cross-env": "^7.0.3",
     "dotenv": "^16.4.5",
