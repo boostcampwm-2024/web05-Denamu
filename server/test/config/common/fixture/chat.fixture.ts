@@ -12,7 +12,7 @@ export class ChatFixture {
 
   static createChatHistory(count = 1) {
     return Array.from({ length: count }, (_, i) => ({
-      username: `testUser${i + 1}`,
+      userName: `testUser${i + 1}`,
       message: `Message ${i + 1}`,
       timestamp: new Date().toISOString(),
     }));

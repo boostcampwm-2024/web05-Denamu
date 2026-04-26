@@ -88,6 +88,7 @@ jobs:
             echo "REDIS_USER=${{ secrets.REDIS_USER }}"
             echo "TIME_INTERVAL=${{ vars.FEED_CRAWLER_TIME_INTERVAL }}"
             echo "AI_RATE_LIMIT_COUNT=${{ vars.AI_RATE_LIMIT_COUNT }}"
+            echo "FEED_CRAWLER_DISCORD_WEBHOOK_URL=${{ secrets.FEED_CRAWLER_DISCORD_WEBHOOK_URL }}"
             } | sudo tee "${{env.FEED-CRAWLER_ENV_FILE}}" >/dev/null
 
       - name: Docker 이미지 Pull & 서비스 재시작

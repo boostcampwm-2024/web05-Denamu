@@ -3,6 +3,7 @@ import 'reflect-metadata';
 import Anthropic from '@anthropic-ai/sdk';
 
 import { redisConstant } from '@common/constant';
+import { Notifier } from '@common/notification/notifier.interface';
 import { RedisConnection } from '@common/redis-access';
 import { ClaudeResponse, FeedAIQueueItem } from '@common/types';
 
@@ -21,6 +22,7 @@ describe('ClaudeEventWorker', () => {
   let mockFeedRepository: jest.Mocked<FeedRepository>;
   let mockRedisConnection: jest.Mocked<RedisConnection>;
   let mockAnthropicClient: jest.Mocked<Anthropic>;
+  let mockNotifier: jest.Mocked<Notifier>;
 
   const mockFeedAIQueueItem: FeedAIQueueItem = {
     id: 1,
@@ -65,12 +67,18 @@ describe('ClaudeEventWorker', () => {
       },
     } as any;
 
+    mockNotifier = {
+      initialize: jest.fn(),
+      publish: jest.fn(),
+    } as any;
+
     MockedAnthropic.mockImplementation(() => mockAnthropicClient);
 
     claudeEventWorker = new ClaudeEventWorker(
       mockTagMapRepository,
       mockFeedRepository,
       mockRedisConnection,
+      mockNotifier,
     );
   });
 
