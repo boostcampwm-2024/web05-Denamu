@@ -1,6 +1,7 @@
 export const MAX_CLIENTS = 500;
 export const CLIENT_KEY_PREFIX = 'socket_client:';
 export const CHAT_HISTORY_LIMIT = 20;
+export const CHAT_MIDNIGHT_CLIENT_NAME = 'system';
 
 /** Redis에 저장되는 메시지 타입 (messageId 없음) */
 export type RedisMessagePayload = {

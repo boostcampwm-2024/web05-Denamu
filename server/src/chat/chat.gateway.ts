@@ -31,7 +31,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   constructor(
     private readonly chatService: ChatService,
-    private readonly chatScheduler: ChatScheduler,
     @InjectMetric('anonymous_chat_user_count')
     private readonly chatUserMetricCount: Gauge,
     @InjectMetric('anonymous_chat_message_count')
@@ -49,6 +48,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     const chatHistory = await this.chatService.getChatHistory();
+
     client.emit('chatHistory', chatHistory);
 
     this.chatUserMetricCount.inc({ room: 'anonymous' });
@@ -93,7 +93,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       messageId: payload.messageId,
     };
 
-    const midnightMessage = await this.chatScheduler.handleDateMessage();
+    const midnightMessage = await this.chatService.publishDateMessageOnce();
     if (midnightMessage) {
       this.server.emit('message', midnightMessage);
     }
