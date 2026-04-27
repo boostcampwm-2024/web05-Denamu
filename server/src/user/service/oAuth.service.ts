@@ -60,11 +60,13 @@ export class OAuthService {
     const { provider: providerType, csrfToken: csrfTokenKey } = stateData;
     const cookieCsrfToken = req.cookies['oauth_csrf_token'];
 
-    if (callbackDto.error || !callbackDto.code) {
-      return `${OAUTH_URL_PATH.BASE_URL}/signin`;
-    }
-
-    if (!csrfTokenKey || !cookieCsrfToken || cookieCsrfToken !== csrfTokenKey) {
+    if (
+      callbackDto.error ||
+      !callbackDto.code ||
+      !csrfTokenKey ||
+      !cookieCsrfToken ||
+      cookieCsrfToken !== csrfTokenKey
+    ) {
       return `${OAUTH_URL_PATH.BASE_URL}/signin`;
     }
 
