@@ -16,6 +16,7 @@ describe('Claude AI e2e-test', () => {
       testContext.tagMapRepository,
       testContext.feedRepository,
       testContext.redisConnection,
+      testContext.notifier,
     );
 
     const rssData = (await testContext.dbConnection.executeQuery(

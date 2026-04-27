@@ -4,6 +4,8 @@ import Anthropic from '@anthropic-ai/sdk';
 
 import { PROMPT_CONTENT, redisConstant } from '@common/constant';
 import logger from '@common/logger';
+import { NOTIFICATION_EVENT } from '@common/notification/notification-event.constant';
+import { Notifier } from '@common/notification/notifier.interface';
 import { RedisConnection } from '@common/redis-access';
 import { ClaudeResponse, FeedAIQueueItem } from '@common/types';
 
@@ -25,6 +27,8 @@ export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
     private readonly feedRepository: FeedRepository,
     @inject(DEPENDENCY_SYMBOLS.RedisConnection)
     redisConnection: RedisConnection,
+    @inject(DEPENDENCY_SYMBOLS.Notifier)
+    private readonly notifier: Notifier,
   ) {
     super('[AI Service]', redisConnection);
     this.client = new Anthropic({
@@ -51,6 +55,11 @@ export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
       await this.saveAIResult(aiData);
     } catch (error) {
       await this.handleFailure(feed, error);
+      this.notifier.publish(NOTIFICATION_EVENT.AI_SUMMARY, {
+        error,
+        feedId: feed.id,
+        errorSource: '[AI 요약 요청]',
+      });
     }
   }
 
