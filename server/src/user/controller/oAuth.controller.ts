@@ -5,11 +5,12 @@ import {
   HttpStatus,
   NotFoundException,
   Query,
+  Req,
   Res,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
-import { Response } from 'express';
+import { Request, Response } from 'express';
 
 import { ApiOAuth } from '@user/api-docs/oAuth.api-docs';
 import { ApiOAuthCallback } from '@user/api-docs/oAuthCallback.api-docs';
@@ -26,8 +27,11 @@ export class OAuthController {
   @Get()
   @ApiOAuth()
   @HttpCode(HttpStatus.FOUND)
-  getProvider(@Query() provider: OAuthTypeRequestDto, @Res() res: Response) {
-    return res.redirect(this.oauthService.getAuthUrl(provider.type));
+  async getProvider(
+    @Query() provider: OAuthTypeRequestDto,
+    @Res() res: Response,
+  ) {
+    return res.redirect(await this.oauthService.getAuthUrl(provider.type, res));
   }
 
   @Get('callback')
@@ -36,9 +40,11 @@ export class OAuthController {
   async callback(
     @Query() callbackDto: OAuthCallbackRequestDto,
     @Res() res: Response,
+    @Req() req: Request,
   ) {
-    await this.oauthService.callback(callbackDto, res);
-    return res;
+    return res.redirect(
+      await this.oauthService.callback(callbackDto, res, req),
+    );
   }
 
   @Get('e2e/callback')
