@@ -16,10 +16,15 @@ psd
 thumb
 sketch
 
-loadtest/BE_Report
-loadtest/FE_Report
-loadtest/BE_Report.html
-loadtest/FE_Report.html
+### LOAD TEST ###
+
+loadtest/BE_Report.json
+loadtest/FE_Report.json
+loadtest/Chat_Report.json
+
+loadtest/BE_Report.json.html
+loadtest/FE_Report.json.html
+loadtest/Chat_Report.json.html
 
 ### HTTPS ###
 private.key
