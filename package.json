@@ -1,4 +1,7 @@
 {
+  "name": "web05-denamu",
+  "version": "0.0.1",
+  "private": true,
   "devDependencies": {
     "@commitlint/cli": "^19.5.0",
     "@types/multer": "^1.4.13",
