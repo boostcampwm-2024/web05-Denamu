@@ -1,15 +1,29 @@
-import { ArgumentsHost, Catch } from '@nestjs/common';
+import { ArgumentsHost, BadRequestException, Catch } from '@nestjs/common';
+
+import { Socket } from 'socket.io';
 
 @Catch()
-export class WsExceptionFilter implements WsExceptionFilter {
-  catch(exception: any, host: ArgumentsHost) {
-    const client = host.switchToWs().getClient();
+export class ChatWsExceptionFilter implements ChatWsExceptionFilter {
+  catch(exception: unknown, host: ArgumentsHost) {
+    const client = host.switchToWs().getClient<Socket>();
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    if (exception instanceof BadRequestException) {
+      const response = exception.getResponse();
+
+      client.emit('error_chat', {
+        type: 'VALIDATION_ERROR',
+        message: response,
+      });
+
+      return;
+    }
+
     client.emit('error_chat', {
-      type: 'VALIDATION_ERROR',
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      message: exception?.response || exception.message,
+      type: 'UNKNOWN_ERROR',
+      message:
+        exception instanceof Error
+          ? exception.message
+          : JSON.stringify(exception),
     });
   }
 }
