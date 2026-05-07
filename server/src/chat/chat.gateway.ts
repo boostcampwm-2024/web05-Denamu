@@ -17,13 +17,12 @@ import type {
   BroadcastPayload,
   RedisMessagePayload,
 } from '@chat/constant/type';
+import { ChatWsExceptionFilter } from '@chat/filter/ws.exception.filter';
 import { ChatService } from '@chat/service/chat.service';
-
-import { WsExceptionFilter } from '@chat/filter/ws.exception.filter';
 
 import { SendMessageDto } from './dto/sendMessage.dto';
 
-@UseFilters(new WsExceptionFilter())
+@UseFilters(new ChatWsExceptionFilter())
 @Injectable()
 @WebSocketGateway({
   cors: {
