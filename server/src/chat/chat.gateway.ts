@@ -15,7 +15,6 @@ import type {
   BroadcastPayload,
   RedisMessagePayload,
 } from '@chat/constant/chat.constant';
-import { ChatScheduler } from '@chat/scheduler/chat.scheduler';
 import { ChatService } from '@chat/service/chat.service';
 
 @Injectable()
