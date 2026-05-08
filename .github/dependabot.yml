@@ -6,6 +6,7 @@ updates:
   # ──────────────────────────────────────────
   - package-ecosystem: 'github-actions'
     directory: '/'
+    target-branch: 'develop'
     schedule:
       interval: 'weekly'
       day: 'monday'
@@ -20,6 +21,7 @@ updates:
   # ──────────────────────────────────────────
   - package-ecosystem: 'npm'
     directory: '/'
+    target-branch: 'develop'
     schedule:
       interval: 'weekly'
       day: 'monday'
@@ -41,6 +43,7 @@ updates:
   # ──────────────────────────────────────────
   - package-ecosystem: 'npm'
     directory: '/server'
+    target-branch: 'develop'
     schedule:
       interval: 'weekly'
       day: 'monday'
@@ -69,6 +72,7 @@ updates:
   # ──────────────────────────────────────────
   - package-ecosystem: 'npm'
     directory: '/client'
+    target-branch: 'develop'
     schedule:
       interval: 'weekly'
       day: 'monday'
@@ -104,6 +108,7 @@ updates:
   # ──────────────────────────────────────────
   - package-ecosystem: 'npm'
     directory: '/feed-crawler'
+    target-branch: 'develop'
     schedule:
       interval: 'weekly'
       day: 'monday'
@@ -125,6 +130,7 @@ updates:
   # ──────────────────────────────────────────
   - package-ecosystem: 'npm'
     directory: '/email-worker'
+    target-branch: 'develop'
     schedule:
       interval: 'weekly'
       day: 'monday'
