@@ -2,8 +2,14 @@ name: FE Auth E2E Test
 
 on:
   pull_request:
-    branches: [main]
-    paths: ['client/**', 'server/**', '.github/workflows/playwright.yml', '.github/workflows/playwright_oauth_smoke.yml']
+    branches: [main, develop]
+    paths:
+      [
+        'client/**',
+        'server/**',
+        '.github/workflows/playwright.yml',
+        '.github/workflows/playwright_oauth_smoke.yml',
+      ]
   workflow_dispatch:
 
 jobs:
