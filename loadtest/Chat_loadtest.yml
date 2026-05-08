@@ -1,0 +1,45 @@
+config:
+  target: 'http://172.30.1.90:8080'
+
+  socketio:
+    path: '/chat'
+    transports: ['websocket']
+
+  phases:
+    - duration: 60
+      arrivalRate: 10
+      name: 'Warm-up'
+
+    - duration: 120
+      arrivalRate: 30
+      name: 'Ramp-up'
+
+    - duration: 180
+      arrivalRate: 50
+      name: 'Sustained'
+
+scenarios:
+  - name: 'Socket Chat Load'
+    engine: 'socketio'
+    flow:
+      # 1. register (응답 기다리지 않음)
+      - emit:
+          channel: 'register'
+          data:
+            userId: null
+
+      # 2. wait (서버 처리 시간 흉내)
+      - think: 1
+
+      # 3. 메시지 반복 (핵심 부하)
+      - loop:
+          - emit:
+              channel: 'message'
+              data:
+                messageId: '{{ $uuid }}'
+                userId: '{{ $uuid }}'
+                message: 'load-test-message'
+
+          - think: 1
+
+        count: 30

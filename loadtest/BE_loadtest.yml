@@ -1,0 +1,237 @@
+config:
+  target: 'http://172.30.1.90:8080'
+
+  phases:
+    - duration: 30
+      arrivalRate: 10
+      name: 'Warm-up'
+
+    - duration: 60
+      arrivalRate: 10
+      rampTo: 150
+      name: 'Ramp-up'
+
+    - duration: 120
+      arrivalRate: 150
+      name: 'Sustained Load'
+
+    - duration: 30
+      arrivalRate: 300
+      name: 'Spike'
+
+    - duration: 30
+      arrivalRate: 30
+      name: 'Cool-down'
+
+  variables:
+    feedId: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+    searchKeyword:
+      - NestJS
+      - React
+      - TypeScript
+      - Docker
+      - AWS
+      - Kubernetes
+      - Redis
+      - MySQL
+      - Spring
+      - Java
+      - Python
+      - Go
+      - GraphQL
+      - Vite
+      - Next.js
+
+    userId: [1, 2, 3, 4, 5]
+    statsLimit: [5, 10, 20]
+    statsYear: [2024, 2025, 2026]
+    feedPage: [1, 2, 3, 4, 5]
+
+    emailToCheck:
+      - check1@loadtest.com
+      - check2@loadtest.com
+      - check3@loadtest.com
+
+    loadtestEmail:
+      - loadtest@denamu.dev
+
+    loadtestPassword:
+      - LoadTest1234!
+
+  defaults:
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+
+scenarios:
+  - name: 'Feed 메인 피드 목록 브라우징'
+    weight: 20
+    flow:
+      - get:
+          url: '/api/feed?page=1&limit=12'
+          expect:
+            - statusCode: 200
+
+      - think: 2
+
+      - get:
+          url: '/api/feed?page={{ feedPage }}&limit=12'
+          expect:
+            - statusCode: 200
+
+      - think: 1
+
+      - get:
+          url: '/api/feed/recent'
+          expect:
+            - statusCode: 200
+
+  - name: 'Feed 피드 검색'
+    weight: 15
+    flow:
+      - get:
+          url: '/api/feed/search?keyword={{ searchKeyword }}&page=1&limit=12'
+          expect:
+            - statusCode: 200
+
+      - think: 3
+
+      - get:
+          url: '/api/feed/search?keyword={{ searchKeyword }}&page=2&limit=12'
+          expect:
+            - statusCode: 200
+
+  - name: 'Feed 상세 조회 + 조회수'
+    weight: 18
+    flow:
+      - get:
+          url: '/api/feed/detail/{{ feedId }}'
+          expect:
+            - statusCode: 200
+
+      - think: 1
+
+      - post:
+          url: '/api/feed/{{ feedId }}'
+          expect:
+            - statusCode: 200
+
+  - name: '댓글 조회'
+    weight: 10
+    flow:
+      - get:
+          url: '/api/comment/{{ feedId }}'
+          expect:
+            - statusCode: 200
+
+  - name: '좋아요 조회'
+    weight: 8
+    flow:
+      - get:
+          url: '/api/like/{{ feedId }}'
+          expect:
+            - statusCode: 200
+
+  - name: '통계 조회'
+    weight: 8
+    flow:
+      - get:
+          url: '/api/statistic/platform'
+          expect:
+            - statusCode: 200
+
+      - think: 1
+
+      - get:
+          url: '/api/statistic/today?limit={{ statsLimit }}'
+          expect:
+            - statusCode: 200
+
+      - think: 1
+
+      - get:
+          url: '/api/statistic/all?limit={{ statsLimit }}'
+          expect:
+            - statusCode: 200
+
+  - name: '활동 조회'
+    weight: 5
+    flow:
+      - get:
+          url: '/api/activity/{{ userId }}?year={{ statsYear }}'
+          expect:
+            - statusCode: 200
+
+  - name: '이메일 중복 체크'
+    weight: 2
+    flow:
+      - get:
+          url: '/api/user/email-check?email={{ emailToCheck }}'
+          expect:
+            - statusCode: 200
+
+  - name: '인증 사용자 액션'
+    weight: 5
+    flow:
+      - post:
+          url: '/api/user/login'
+          json:
+            email: '{{ loadtestEmail }}'
+            password: '{{ loadtestPassword }}'
+          capture:
+            - json: '$.data.accessToken'
+              as: accessToken
+          expect:
+            - statusCode: 200
+
+      - think: 1
+
+      - get:
+          url: '/api/feed/detail/{{ feedId }}'
+          expect:
+            - statusCode: 200
+
+      - think: 1
+
+      - post:
+          url: '/api/like'
+          json:
+            feedId: '{{ feedId }}'
+          headers:
+            Authorization: 'Bearer {{ accessToken }}'
+          expect:
+            - statusCode: 201
+
+      - think: 2
+
+      - post:
+          url: '/api/comment'
+          json:
+            feedId: '{{ feedId }}'
+            content: '부하 테스트 댓글입니다.'
+          headers:
+            Authorization: 'Bearer {{ accessToken }}'
+          capture:
+            - json: '$.data.commentId'
+              as: createdCommentId
+          expect:
+            - statusCode: 201
+
+      - think: 1
+
+      - delete:
+          url: '/api/like/{{ feedId }}'
+          headers:
+            Authorization: 'Bearer {{ accessToken }}'
+          expect:
+            - statusCode: 200
+
+      - think: 1
+
+      - post:
+          url: '/api/user/logout'
+          headers:
+            Authorization: 'Bearer {{ accessToken }}'
+          expect:
+            - statusCode: 200
