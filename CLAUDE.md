@@ -64,6 +64,10 @@ start:dev:was # Start backend services only
 start:dev:feed # Start feed crawler services only
 start:dev:email # Start email worker services only
 commit # Commitizen for structured commits
+stress-fe # Load Test Using Artillery - Frontend (./client)
+stress-be # Load Test Using Artillery - Backend (./server)
+stress-fe-html # Conversion of load test results to HTML (./client)
+stress-be-html # Conversion of load test results to HTML (./server)
 
 # Commit Message
 
