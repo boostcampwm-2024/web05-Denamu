@@ -3,13 +3,12 @@ import { Injectable } from '@nestjs/common';
 import { getRandomNickname } from '@woowa-babble/random-nickname';
 
 import {
-  BroadcastPayload,
   CHAT_HISTORY_LIMIT,
   CHAT_MIDNIGHT_CLIENT_NAME,
   CLIENT_KEY_PREFIX,
   MAX_CLIENTS,
-  RedisMessagePayload,
-} from '@chat/constant/chat.constant';
+} from '@chat/constant/constant';
+import { BroadcastPayload, RedisMessagePayload } from '@chat/constant/type';
 
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
@@ -54,7 +53,7 @@ export class ChatService {
 
   async getChatHistory() {
     return (await this.getRecentChatMessages())
-      .map((msg) => JSON.parse(msg))
+      .map((msg) => JSON.parse(msg) as RedisMessagePayload)
       .reverse();
   }
 
@@ -66,11 +65,10 @@ export class ChatService {
     );
   }
 
-  async saveMessageToRedis(payload: RedisMessagePayload) {
-    const { userId, userName, message, timestamp } = payload;
+  async saveMessageToRedis(message: RedisMessagePayload) {
     await this.redisService.lpush(
       REDIS_KEYS.CHAT_HISTORY_KEY,
-      JSON.stringify({ userId, userName, message, timestamp }),
+      JSON.stringify(message),
     );
     await this.redisService.ltrim(
       REDIS_KEYS.CHAT_HISTORY_KEY,
@@ -108,7 +106,7 @@ export class ChatService {
       messageId: CHAT_MIDNIGHT_CLIENT_NAME,
       userName: CHAT_MIDNIGHT_CLIENT_NAME,
       message: '',
-      timestamp: new Date(time + TIMEZONE_OFFSET_MS.KST),
+      timestamp: new Date(time + TIMEZONE_OFFSET_MS.KST).toISOString(),
     };
 
     const script = `
