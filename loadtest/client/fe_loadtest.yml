@@ -1,5 +1,5 @@
 config:
-  target: 'http://localhost'
+  target: 'http://localhost:80'
 
   phases:
     - duration: 60
@@ -8,4 +8,4 @@ config:
 scenarios:
   - flow:
       - get:
-          url: '/#'
+          url: '/'
