@@ -1,0 +1,107 @@
+# BE_Bottleneck.yml
+
+config:
+  target: 'http://172.30.1.90:8080'
+
+  http:
+    pool: 2000
+    timeout: 60
+
+  phases:
+    - duration: 60
+      arrivalRate: 100
+      rampTo: 1000
+      name: 'Rapid Ramp'
+
+    - duration: 180
+      arrivalRate: 1000
+      rampTo: 3000
+      name: 'Bottleneck Discovery'
+
+    - duration: 180
+      arrivalRate: 3000
+      name: 'Saturation'
+
+    - duration: 60
+      arrivalRate: 5000
+      name: 'Extreme Spike'
+
+  defaults:
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+      Cache-Control: no-cache
+
+  variables:
+    feedId: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+    keyword:
+      - NestJS
+      - React
+      - Redis
+      - MySQL
+
+scenarios:
+  #
+  # 인증 필요한 시나리오만 before 사용
+  #
+
+  - name: 'Comment Write Bottleneck'
+    weight: 10
+
+    flow:
+      - post:
+          url: '/api/user/login'
+
+          json:
+            email: 'loadtest@test.com'
+            password: 'test1234!'
+
+          capture:
+            - json: '$.data.accessToken'
+              as: 'accessToken'
+
+      - post:
+          url: '/api/comment'
+
+          headers:
+            Authorization: 'Bearer {{ accessToken }}'
+
+          json:
+            comment: 'load-test-comment'
+            feedId: 1
+
+  #
+  # READ 병목
+  #
+
+  - name: 'Feed Detail Bottleneck'
+    weight: 45
+
+    flow:
+      - get:
+          url: '/api/feed/detail/{{ feedId }}'
+
+  - name: 'Feed List Bottleneck'
+    weight: 20
+
+    flow:
+      - get:
+          url: '/api/feed?lastId=1&limit=20'
+
+  - name: 'Search Bottleneck'
+    weight: 15
+
+    flow:
+      - get:
+          url: '/api/feed/search?find={{ keyword }}&type=title&page=1&limit=20'
+
+  - name: 'Statistics Bottleneck'
+    weight: 10
+
+    flow:
+      - get:
+          url: '/api/statistic/all?limit=50'
+
+      - get:
+          url: '/api/statistic/platform'

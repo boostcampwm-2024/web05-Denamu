@@ -1,0 +1,124 @@
+# BE_Client.yml
+
+config:
+  target: 'http://172.30.1.90:8080'
+
+  http:
+    pool: 300
+    timeout: 30
+
+  phases:
+    - duration: 60
+      arrivalRate: 20
+      name: 'Warm-up'
+
+    - duration: 120
+      arrivalRate: 20
+      rampTo: 200
+      name: 'Ramp-up'
+
+    - duration: 180
+      arrivalRate: 200
+      name: 'Sustained Load'
+
+    - duration: 60
+      arrivalRate: 400
+      name: 'Spike'
+
+    - duration: 60
+      arrivalRate: 50
+      name: 'Cool-down'
+
+  defaults:
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+
+  variables:
+    feedId: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    userId: [1, 2, 3, 4, 5]
+    year: [2024, 2025]
+    limit: [10, 20, 30]
+
+    keyword:
+      - NestJS
+      - React
+      - Redis
+      - MySQL
+
+    email:
+      - user1@test.com
+      - user2@test.com
+      - user3@test.com
+
+scenarios:
+  # 메인 피드 조회
+  - name: 'Feed Read'
+    weight: 40
+
+    flow:
+      - get:
+          url: '/api/feed?lastId=1&limit=12'
+
+      - get:
+          url: '/api/feed/detail/{{ feedId }}'
+
+      - get:
+          url: '/api/comment/{{ feedId }}'
+
+      - get:
+          url: '/api/like/{{ feedId }}'
+
+  # 검색
+  - name: 'Feed Search'
+    weight: 20
+
+    flow:
+      - get:
+          url: '/api/feed/search?find={{ keyword }}&type=title&page=1&limit=10'
+
+  # 통계
+  - name: 'Statistics'
+    weight: 5
+
+    flow:
+      - get:
+          url: '/api/statistic/platform'
+
+      - get:
+          url: '/api/statistic/today?limit={{ limit }}'
+
+      - get:
+          url: '/api/statistic/all?limit={{ limit }}'
+
+  # 사용자 활동
+  - name: 'User Activity'
+    weight: 10
+
+    flow:
+      - get:
+          url: '/api/activity/{{ userId }}?year={{ year }}'
+
+  # 이메일 체크
+  - name: 'Email Check'
+    weight: 5
+
+    flow:
+      - get:
+          url: '/api/user/email-check?email={{ email }}'
+
+  # 좋아요
+  - name: 'Like Action'
+    weight: 10
+
+    flow:
+      - get:
+          url: '/api/like/{{ feedId }}'
+
+  # 댓글 조회
+  - name: 'Comment Read'
+    weight: 10
+
+    flow:
+      - get:
+          url: '/api/comment/{{ feedId }}'
