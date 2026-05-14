@@ -1,0 +1,93 @@
+config:
+  target: 'http://172.30.1.90:8080'
+
+  socketio:
+    path: '/chat'
+    transports: ['websocket']
+
+  phases:
+    - duration: 30
+      arrivalRate: 20
+      rampTo: 100
+      name: 'Rapid Ramp'
+
+    - duration: 120
+      arrivalRate: 100
+      rampTo: 300
+      name: 'Socket Saturation'
+
+    - duration: 120
+      arrivalRate: 300
+      rampTo: 500
+      name: 'Redis Pressure'
+
+    - duration: 60
+      arrivalRate: 700
+      name: 'Extreme Spike'
+
+  processor: './chat-helper.js'
+
+  variables:
+    chatMessages:
+      - 'hello'
+      - 'nestjs'
+      - 'redis'
+      - 'socket'
+      - 'message'
+      - 'stress-test'
+
+scenarios:
+  - name: 'Aggressive Chat Flood'
+    weight: 70
+    engine: 'socketio'
+
+    flow:
+      - function: 'generatePersistentUserId'
+
+      - emit:
+          channel: 'register'
+          data:
+            userId: '{{ persistentUserId }}'
+
+      - loop:
+          - emit:
+              channel: 'message'
+              data:
+                messageId: '{{ $uuid }}'
+                userId: '{{ persistentUserId }}'
+                message: '{{ chatMessages }}'
+
+        count: 30
+
+  - name: 'Reconnect Storm'
+    weight: 20
+    engine: 'socketio'
+
+    flow:
+      - function: 'generatePersistentUserId'
+
+      - emit:
+          channel: 'register'
+          data:
+            userId: '{{ persistentUserId }}'
+
+      - emit:
+          channel: 'message'
+          data:
+            messageId: '{{ $uuid }}'
+            userId: '{{ persistentUserId }}'
+            message: 'reconnect-test'
+
+  - name: 'Validation Attack'
+    weight: 10
+    engine: 'socketio'
+
+    flow:
+      - function: 'generatePersistentUserId'
+
+      - emit:
+          channel: 'message'
+          data:
+            messageId: 'invalid'
+            userId: '{{ persistentUserId }}'
+            message: ''
