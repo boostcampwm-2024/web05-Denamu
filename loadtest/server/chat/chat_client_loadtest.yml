@@ -53,6 +53,8 @@ scenarios:
                 messageId: '{{ $uuid }}'
                 userId: '{{ persistentUserId }}'
                 message: '{{ chatMessages }}'
+            response:
+              channel: 'message'
 
           - think: 5
 
@@ -93,6 +95,8 @@ scenarios:
                 messageId: '{{ $uuid }}'
                 userId: '{{ persistentUserId }}'
                 message: '{{ chatMessages }}'
+            response:
+              channel: 'message'
 
           - think: 2
 
