@@ -1,5 +1,5 @@
 config:
-  target: 'http://192.168.56.103:8080'
+  target: 'http://10.0.0.2:8080'
 
   socketio:
     path: '/chat'
@@ -7,22 +7,22 @@ config:
 
   phases:
     - duration: 30
-      arrivalRate: 20
-      rampTo: 100
+      arrivalRate: 5
+      rampTo: 30
       name: 'Rapid Ramp'
 
     - duration: 120
-      arrivalRate: 100
-      rampTo: 300
+      arrivalRate: 30
+      rampTo: 100
       name: 'Socket Saturation'
 
     - duration: 120
-      arrivalRate: 300
-      rampTo: 500
+      arrivalRate: 100
+      rampTo: 200
       name: 'Redis Pressure'
 
     - duration: 60
-      arrivalRate: 700
+      arrivalRate: 300
       name: 'Extreme Spike'
 
   processor: './chat-helper.js'
@@ -57,7 +57,9 @@ scenarios:
                 userId: '{{ persistentUserId }}'
                 message: '{{ chatMessages }}'
 
-        count: 30
+          - think: 1
+
+        count: 10
 
   - name: 'Reconnect Storm'
     weight: 20

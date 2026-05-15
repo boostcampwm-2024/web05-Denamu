@@ -1,32 +1,33 @@
-# BE_Client.yml
+# 목적: 실사용 패턴 시뮬레이션
+# 사양 기준: Machine A 2Core/2GB, 목표 TPS 50 (Spike 120)
 
 config:
-  target: 'http://192.168.56.103:8080'
+  target: 'http://10.0.0.2:8080'
 
   http:
-    pool: 300
+    pool: 100
     timeout: 30
 
   phases:
     - duration: 60
-      arrivalRate: 20
+      arrivalRate: 5
       name: 'Warm-up'
 
     - duration: 120
-      arrivalRate: 20
-      rampTo: 200
+      arrivalRate: 5
+      rampTo: 50
       name: 'Ramp-up'
 
     - duration: 180
-      arrivalRate: 200
+      arrivalRate: 50
       name: 'Sustained Load'
 
     - duration: 60
-      arrivalRate: 400
+      arrivalRate: 120
       name: 'Spike'
 
     - duration: 60
-      arrivalRate: 50
+      arrivalRate: 10
       name: 'Cool-down'
 
   defaults:
@@ -36,6 +37,7 @@ config:
 
   variables:
     feedId: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    lastId: [1, 2, 3, 4, 5]
     userId: [1, 2, 3, 4, 5]
     year: [2024, 2025]
     limit: [10, 20, 30]
@@ -58,10 +60,14 @@ scenarios:
 
     flow:
       - get:
-          url: '/api/feed?lastId=1&limit=12'
+          url: '/api/feed?lastId={{ lastId }}&limit=12'
+
+      - think: 1
 
       - get:
           url: '/api/feed/detail/{{ feedId }}'
+
+      - think: 1
 
       - get:
           url: '/api/comment/{{ feedId }}'
@@ -85,6 +91,8 @@ scenarios:
       - get:
           url: '/api/statistic/platform'
 
+      - think: 1
+
       - get:
           url: '/api/statistic/today?limit={{ limit }}'
 
@@ -99,7 +107,7 @@ scenarios:
       - get:
           url: '/api/activity/{{ userId }}?year={{ year }}'
 
-  # 이메일 체크
+  # 이메일 중복 체크
   - name: 'Email Check'
     weight: 5
 
@@ -107,7 +115,7 @@ scenarios:
       - get:
           url: '/api/user/email-check?email={{ email }}'
 
-  # 좋아요
+  # 좋아요 조회
   - name: 'Like Action'
     weight: 10
 

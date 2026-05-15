@@ -1,5 +1,8 @@
+# 목적: 실사용 패턴 시뮬레이션
+# 사양 기준: Machine A 2Core/2GB, 목표 TPS 50 (Spike 120)
+
 config:
-  target: 'http://192.168.56.103:8080'
+  target: 'http://10.0.0.2:8080'
 
   socketio:
     path: '/chat'
