@@ -1,7 +1,7 @@
 # BE_Client.yml
 
 config:
-  target: 'http://172.30.1.90:8080'
+  target: 'http://192.168.56.103:8080'
 
   http:
     pool: 300
