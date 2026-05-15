@@ -70,12 +70,11 @@ export class CommentService {
       await this.userService.getUser(userInformation.id);
       feed.commentCount++;
       await queryRunner.manager.save(feed);
-      const comment = queryRunner.manager.create(Comment, {
+      await queryRunner.manager.save(Comment, {
         comment: commentDto.comment,
         feed: { id: commentDto.feedId },
         user: { id: userInformation.id },
       });
-      await queryRunner.manager.save(comment);
 
       await queryRunner.commitTransaction();
     } catch (error) {
