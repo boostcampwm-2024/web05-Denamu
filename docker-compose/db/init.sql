@@ -116,7 +116,7 @@ CREATE TABLE `tag_map` (
 CREATE TABLE `comment` (
   `id` int NOT NULL AUTO_INCREMENT,
   `comment` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `date` datetime NOT NULL,
+  `date` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   `feed_id` int NOT NULL,
   `user_id` int NOT NULL,
   PRIMARY KEY (`id`),
@@ -308,7 +308,7 @@ Jest 설정 파일 커스터마이징
 
 🤔 흥미로운 점: GitHub Actions에서 실행 시간이 sqlite + 병렬 실행보다 약 2배 느려졌지만, 실제 프로덕션 환경과 동일한 테스트가 가능해졌습니다!
 테스트 안정성과 신뢰도를 높이고 싶은 NestJS 개발자라면 꼭 도입해볼 만한 구성입니다! 🚀',1),
-	 ('2025-01-18 07:12:05','자바 vs 노드 당신의 선택은?!',4,'https://asn6878.tistory.com/15','https://img1.daumcdn.net/thumb/R800x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FdofQSP%2FbtsLKJyhso1%2FREdhKR9vDlzDYREytkK0v1%2Fimg.png',4,'**Node.js와 Spring 프레임워크 비교 분석: 개발자의 선택은? 🤔**
+	 ('2025-01-18 07:12:05.575811','자바 vs 노드 당신의 선택은?!',4,'https://asn6878.tistory.com/15','https://img1.daumcdn.net/thumb/R800x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FdofQSP%2FbtsLKJyhso1%2FREdhKR9vDlzDYREytkK0v1%2Fimg.png',4,'**Node.js와 Spring 프레임워크 비교 분석: 개발자의 선택은? 🤔**
 현재 TypeScript와 NestJS로 프로젝트를 진행 중인 개발자가 Java/Spring과 Node.js 생태계의 차이점을 깊이 있게 분석했습니다.
 채용 시장 현황 📊
 
@@ -332,7 +332,7 @@ TypeScript 등으로 단점 극복 노력
 결국 상황에 맞는 도구를 선택하는 문제 해결력이 중요하다는 개발자의 통찰력 있는 회고입니다! 💡',1);
 
 -- denamu.user insert data
-
+-- id: test@test.com, password: test1234!
 INSERT INTO user (email, password, user_name, profile_image, introduction) VALUES
 	('test@test.com', '$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정', NULL, '안녕하세요 테스트입니다.');
 
@@ -378,21 +378,21 @@ INSERT INTO tag_map (feed_id, tag_id) VALUES
 -- denamu.comment insert data
 
 INSERT INTO comment(comment, date, feed_id, user_id) VALUES
-	('유익한 글 감사합니다~','2025-05-01 02:24:02',94,1),
-	('글이 정말 유익해요~','2025-05-01 02:26:05',95,1);
+	('유익한 글 감사합니다~','2025-05-01 02:24:02.575811',94,1),
+	('글이 정말 유익해요~','2025-05-01 02:26:05.575811',95,1);
 
 -- denamu.activity insert data
 
 INSERT INTO activity (activity_date, view_count, user_id) VALUES
-	('2025-07-01 11:48:00', 1, 1);
+	('2025-07-01 11:48:00.575811', 1, 1);
 
 -- denamu.like insert data
 
 INSERT INTO likes(feed_id, user_id, like_date) VALUES
-	(94,1,'2025-06-13 17:47:05'),
-	(95,1,'2025-06-13 17:47:07');
+	(94,1,'2025-06-13 17:47:05.575811'),
+	(95,1,'2025-06-13 17:47:07.575811');
 
 -- denamu.rss_remove insert data
 
 INSERT INTO rss_remove(request_date, reason, blog_id) VALUES
-	('2025-07-01 11:48:00', 'example reason', 1);
+	('2025-07-01 11:48:00.575811', 'example reason', 1);
