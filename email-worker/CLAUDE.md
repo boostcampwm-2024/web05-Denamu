@@ -38,7 +38,7 @@ Triggers: signup verification, RSS accept/reject, password reset, account deleti
 
 - Node.js 22
 - tsyringe
-- Winston.
+- Winston Logger
 
 [Infra]
 
@@ -49,13 +49,6 @@ Triggers: signup verification, RSS accept/reject, password reset, account deleti
 [Test]
 
 - Jest
-
-# Reference Docs
-
-| File                               | Authority        |
-| ---------------------------------- | ---------------- |
-| agent_docs/service_architecture.md | Service patterns |
-| agent_docs/test_design.md          | Test contracts   |
 
 # Commands
 

@@ -30,7 +30,14 @@ export class RabbitMQService {
 
           channel.ack(message);
         } catch (error) {
-          this.logger.error('메시지 처리 중 오류 발생:', error);
+          if (error instanceof Error) {
+            this.logger.error('메시지 처리 중 오류 발생: ', error.stack);
+          } else {
+            this.logger.error(
+              `메시지 처리 중 오류 발생: ${JSON.stringify(error)}`,
+            );
+          }
+
           channel.nack(message, false, false);
         }
       })();

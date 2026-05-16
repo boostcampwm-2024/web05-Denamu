@@ -1,3 +1,4 @@
+import { Server } from 'http';
 import { Socket } from 'socket.io-client';
 import { io } from 'socket.io-client';
 
@@ -20,8 +21,17 @@ describe('Socket.IO Anonymous Chat E2E Test', () => {
   beforeAll(async () => {
     redisService = testApp.get(RedisService);
     chatService = testApp.get(ChatService);
-    const httpServer = await testApp.listen(0);
-    const port = httpServer.address().port;
+    await testApp.listen(0);
+    const httpServer = testApp.getHttpServer() as Server;
+
+    const address = httpServer.address();
+
+    if (!address || typeof address === 'string') {
+      throw new Error('Invalid address');
+    }
+
+    const port = address.port;
+
     serverUrl = `http://localhost:${port}`;
   });
 
@@ -94,7 +104,7 @@ describe('Socket.IO Anonymous Chat E2E Test', () => {
     expect(data).toStrictEqual(mockChatHistory.reverse());
   });
 
-  it('[Connect] 클라이언트가 연결될 경우 닉네임과 현재 접속중인 유저 수 정보를 받는다.', async () => {
+  it('[Connect] 클라이언트가 연결될 경우 현재 접속중인 유저 수 정보를 받는다.', async () => {
     // given
     clientSocket = io(serverUrl, {
       forceNew: true,
@@ -118,11 +128,78 @@ describe('Socket.IO Anonymous Chat E2E Test', () => {
     // Socket.IO then
     expect(data).toStrictEqual({
       userCount: 1,
-      name: expect.any(String),
     });
   });
 
-  it('[Connect] 클라이언트가 메시지를 보낼 경우 다른 클라이언트에 메시지가 브로드캐스트된다.', async () => {
+  it('[Register] 신규 클라이언트가 register 이벤트를 발행하면 assignUserId 이벤트로 UUID를 발급받는다.', async () => {
+    // given
+    clientSocket = io(serverUrl, {
+      forceNew: true,
+      reconnection: false,
+      path: URL,
+    });
+
+    // Socket.IO when
+    const data = await new Promise((resolve, reject) => {
+      clientSocket.on('connect', () => {
+        clientSocket.emit('register', { userId: null });
+      });
+
+      clientSocket.on('assignUserId', (payload) => {
+        try {
+          clientSocket.close();
+          resolve(payload);
+        } catch {
+          clientSocket.close();
+          reject(new Error(`Socket.IO 채팅 오류: ${JSON.stringify(payload)}`));
+        }
+      });
+    });
+
+    // Socket.IO then
+    expect(data).toStrictEqual({
+      userId: expect.any(String),
+    });
+  });
+
+  it('[Register] 기존 UUID로 register 이벤트를 발행하면 assignUserId 이벤트가 발생하지 않는다.', async () => {
+    // given
+    const existingChat = ChatFixture.createChat();
+    await redisService.set(
+      `socket_client:${existingChat.userId}`,
+      'existingNickname',
+      'EX',
+      3600 * 24,
+    );
+
+    clientSocket = io(serverUrl, {
+      forceNew: true,
+      reconnection: false,
+      path: URL,
+    });
+
+    // Socket.IO when
+    const data = await new Promise<'no_assign'>((resolve) => {
+      clientSocket.on('connect', () => {
+        clientSocket.emit('register', { userId: existingChat.userId });
+      });
+
+      clientSocket.on('assignUserId', () => {
+        clientSocket.close();
+        resolve('no_assign');
+      });
+
+      setTimeout(() => {
+        clientSocket.close();
+        resolve('no_assign' as const);
+      }, 500);
+    });
+
+    // Socket.IO then
+    expect(data).toBe('no_assign');
+  });
+
+  it('[Message] 클라이언트가 메시지를 보낼 경우 다른 클라이언트에 메시지가 브로드캐스트된다.', async () => {
     // given
     const chat = ChatFixture.createChat();
 
@@ -151,7 +228,7 @@ describe('Socket.IO Anonymous Chat E2E Test', () => {
       userId: chat.userId,
       messageId: chat.messageId,
       message: chat.message,
-      username: expect.any(String),
+      userName: expect.any(String),
       timestamp: expect.any(String),
     });
   });

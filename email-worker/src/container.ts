@@ -1,5 +1,8 @@
 import { container } from 'tsyringe';
 
+import { DiscordNotifier } from '@src/notification/discord.notifier';
+import { Notifier } from '@src/notification/notifier.interface';
+
 import { EmailConsumer } from '@email/email.consumer';
 import { EmailService } from '@email/email.service';
 
@@ -26,6 +29,11 @@ container.registerSingleton<EmailConsumer>(
 container.registerSingleton<EmailService>(
   DEPENDENCY_SYMBOLS.EmailService,
   EmailService,
+);
+
+container.registerSingleton<Notifier>(
+  DEPENDENCY_SYMBOLS.Notifier,
+  DiscordNotifier,
 );
 
 export { container };

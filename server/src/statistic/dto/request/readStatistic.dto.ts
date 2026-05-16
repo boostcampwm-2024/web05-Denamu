@@ -1,10 +1,10 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 
 import { Type } from 'class-transformer';
 import { IsInt, IsOptional, Min } from 'class-validator';
 
 export class ReadStatisticRequestDto {
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: 1,
     description: '최대로 가져올 데이터 개수를 입력하세요.',
     required: false,
