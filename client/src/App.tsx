@@ -9,7 +9,6 @@ import { AppRouter } from "@/routes";
 
 export default function App() {
   const { state, location, shouldRedirectToAbout, setVisited } = useAppInitialization();
-
   if (shouldRedirectToAbout) {
     setVisited();
     return <Navigate to="/about" replace />;

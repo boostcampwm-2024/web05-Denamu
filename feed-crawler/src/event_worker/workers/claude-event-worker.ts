@@ -4,6 +4,8 @@ import Anthropic from '@anthropic-ai/sdk';
 
 import { PROMPT_CONTENT, redisConstant } from '@common/constant';
 import logger from '@common/logger';
+import { NOTIFICATION_EVENT } from '@common/notification/notification-event.constant';
+import { Notifier } from '@common/notification/notifier.interface';
 import { RedisConnection } from '@common/redis-access';
 import { ClaudeResponse, FeedAIQueueItem } from '@common/types';
 
@@ -25,6 +27,8 @@ export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
     private readonly feedRepository: FeedRepository,
     @inject(DEPENDENCY_SYMBOLS.RedisConnection)
     redisConnection: RedisConnection,
+    @inject(DEPENDENCY_SYMBOLS.Notifier)
+    private readonly notifier: Notifier,
   ) {
     super('[AI Service]', redisConnection);
     this.client = new Anthropic({
@@ -51,6 +55,11 @@ export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
       await this.saveAIResult(aiData);
     } catch (error) {
       await this.handleFailure(feed, error);
+      this.notifier.publish(NOTIFICATION_EVENT.AI_SUMMARY, {
+        error,
+        feedId: feed.id,
+        errorSource: '[AI 요약 요청]',
+      });
     }
   }
 
@@ -80,19 +89,37 @@ export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
       max_tokens: 8192,
       system: PROMPT_CONTENT,
       messages: [{ role: 'user', content: feed.content }],
-      model: 'claude-3-5-haiku-latest',
+      model: 'claude-haiku-4-5',
     };
     const message = await this.client.messages.create(params);
-    const responseText: string = message.content[0]['text'].replace(
-      /[\n\r\t\s]+/g,
-      ' ',
-    );
+    const responseText = message.content[0]['text'];
     logger.info(`${this.nameTag} ${feed.id} AI 요청 응답: ${responseText}`);
-    const responseObject: ClaudeResponse = JSON.parse(responseText);
+
+    const responseObject = this.parseClaudeResponse(responseText);
     feed.summary = responseObject.summary;
     feed.tagList = Object.keys(responseObject.tags);
 
     return feed;
+  }
+
+  private parseClaudeResponse(responseText: string): ClaudeResponse {
+    const cleanedText = responseText
+      .trim()
+      .replace(/^```json\s*/i, '')
+      .replace(/^```\s*/i, '')
+      .replace(/\s*```$/i, '')
+      .trim();
+    const jsonStart = cleanedText.indexOf('{');
+    const jsonEnd = cleanedText.lastIndexOf('}');
+
+    if (jsonStart === -1 || jsonEnd === -1 || jsonStart > jsonEnd) {
+      throw new Error(
+        `AI 응답이 json으로 반환되지 않았습니다: ${cleanedText.slice(0, 200)}`,
+      );
+    }
+
+    const jsonText = cleanedText.slice(jsonStart, jsonEnd + 1);
+    return JSON.parse(jsonText) as ClaudeResponse;
   }
 
   private async saveAIResult(feed: FeedAIQueueItem) {
@@ -139,12 +166,24 @@ export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
     const message = error.message.toLowerCase();
 
     // 재시도하면 안 되는 케이스 (영구적 에러)
-    if (message.includes('invalid') || message.includes('401')) return false;
-    if (message.includes('json') || message.includes('parse')) return false;
+    if (
+      message.includes('invalid') ||
+      message.includes('401') ||
+      message.includes('404')
+    ) {
+      return false;
+    }
+    if (message.includes('json') || message.includes('parse')) {
+      return false;
+    }
 
     // 재시도해야 하는 케이스 (일시적 에러)
-    if (message.includes('rate limit') || message.includes('429')) return true;
-    if (message.includes('timeout') || message.includes('503')) return true;
+    if (message.includes('rate limit') || message.includes('429')) {
+      return true;
+    }
+    if (message.includes('timeout') || message.includes('503')) {
+      return true;
+    }
 
     // 기본값: 재시도
     return true;

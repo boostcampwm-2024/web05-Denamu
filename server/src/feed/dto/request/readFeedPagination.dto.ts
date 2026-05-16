@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 
 import { Type } from 'class-transformer';
 import { IsIn, IsInt, IsOptional, Min } from 'class-validator';
@@ -6,7 +6,7 @@ import { IsIn, IsInt, IsOptional, Min } from 'class-validator';
 import { ALLOWED_TAGS, AllowedTag } from '@feed/constant/tagType.constants';
 
 export class ReadFeedPaginationRequestDto {
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: 1,
     description: '마지막 피드 ID',
     required: false,
@@ -19,7 +19,7 @@ export class ReadFeedPaginationRequestDto {
   @Type(() => Number)
   lastId?: number;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: 1,
     description: '받아올 최대 게시글 개수',
     required: false,
@@ -32,7 +32,7 @@ export class ReadFeedPaginationRequestDto {
   @Type(() => Number)
   limit?: number = 12;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: 'example1,example2,example3',
     description: '필터링할 태그(쿼리 배열)',
     required: false,

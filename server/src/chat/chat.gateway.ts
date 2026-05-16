@@ -1,5 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UseFilters, ValidationPipe } from '@nestjs/common';
 import {
+  ConnectedSocket,
+  MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
   SubscribeMessage,
@@ -11,10 +13,16 @@ import { InjectMetric } from '@willsoto/nestjs-prometheus';
 import { Counter, Gauge } from 'prom-client';
 import { Server, Socket } from 'socket.io';
 
-import type { BroadcastPayload } from '@chat/constant/chat.constant';
-import { ChatScheduler } from '@chat/scheduler/chat.scheduler';
+import type {
+  BroadcastPayload,
+  RedisMessagePayload,
+} from '@chat/constant/type';
+import { ChatWsExceptionFilter } from '@chat/filter/ws.exception.filter';
 import { ChatService } from '@chat/service/chat.service';
 
+import { SendMessageDto } from './dto/sendMessage.dto';
+
+@UseFilters(new ChatWsExceptionFilter())
 @Injectable()
 @WebSocketGateway({
   cors: {
@@ -28,14 +36,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   constructor(
     private readonly chatService: ChatService,
-    private readonly chatScheduler: ChatScheduler,
     @InjectMetric('anonymous_chat_user_count')
     private readonly chatUserMetricCount: Gauge,
     @InjectMetric('anonymous_chat_message_count')
     private readonly chatMetricCount: Counter,
   ) {}
 
-  async handleConnection(client: Socket) {
+  async handleConnection(@ConnectedSocket() client: Socket) {
     const userCount = this.server.engine.clientsCount;
     if (this.chatService.isMaxClientExceeded(userCount)) {
       client.emit('maximum_exceeded', {
@@ -45,54 +52,64 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       return;
     }
 
-    const clientName = await this.chatService.getClientNameByIp(client);
     const chatHistory = await this.chatService.getChatHistory();
 
     client.emit('chatHistory', chatHistory);
 
-    this.chatUserMetricCount.inc({
-      room: 'anonymous',
-    });
-    this.server.emit('updateUserCount', {
-      userCount: userCount,
-      name: clientName,
-    });
+    this.chatUserMetricCount.inc({ room: 'anonymous' });
+    this.server.emit('updateUserCount', { userCount });
   }
 
   handleDisconnect() {
-    this.chatUserMetricCount.dec({
-      room: 'anonymous',
-    });
+    this.chatUserMetricCount.dec({ room: 'anonymous' });
     this.server.emit('updateUserCount', {
       userCount: this.server.engine.clientsCount,
     });
   }
 
+  @SubscribeMessage('register')
+  async handleRegister(
+    @ConnectedSocket() client: Socket,
+    @MessageBody()
+    payload: { userId: string | null },
+  ) {
+    const result = await this.chatService.getOrCreateUserName(
+      payload?.userId ?? null,
+    );
+    if (result.isNew) {
+      client.emit('assignUserId', { userId: result.userId });
+    }
+  }
+
   @SubscribeMessage('message')
   async handleMessage(
-    client: Socket,
-    payload: { messageId: string; userId: string; message: string },
+    @MessageBody(new ValidationPipe({ transform: true }))
+    payload: SendMessageDto,
   ) {
-    const clientName = await this.chatService.getClientNameByIp(client);
-    const broadcastPayload: BroadcastPayload = {
+    const { userName } = await this.chatService.getOrCreateUserName(
+      payload.userId,
+    );
+
+    const redisPayload: RedisMessagePayload = {
       userId: payload.userId,
-      messageId: payload.messageId,
-      username: clientName,
+      userName,
       message: payload.message,
-      timestamp: new Date(),
+      timestamp: new Date().toISOString(),
     };
 
-    const midnightMessage = await this.chatScheduler.handleDateMessage();
+    const broadcastPayload: BroadcastPayload = {
+      ...redisPayload,
+      messageId: payload.messageId,
+    };
 
+    const midnightMessage = await this.chatService.publishDateMessageOnce();
     if (midnightMessage) {
       this.server.emit('message', midnightMessage);
     }
 
-    this.chatMetricCount.inc({
-      room: 'anonymous',
-    });
+    this.chatMetricCount.inc({ room: 'anonymous' });
 
-    await this.chatService.saveMessageToRedis(broadcastPayload);
+    await this.chatService.saveMessageToRedis(redisPayload);
     this.server.emit('message', broadcastPayload);
   }
 }

@@ -11,33 +11,32 @@ fi
 
 echo "REDIS_USER: $REDIS_USER"
 
+ACL_FILE=/data/users.acl
+
 # ACL파일이 없으면 생성
 if [ ! -f /data/users.acl ]; then
-    echo "Creating empty ACL file..."
-    touch /data/users.acl
+  cat > "$ACL_FILE" <<EOF
+user default off
+user ${REDIS_USER} on >${REDIS_PASSWORD} ~* +@all
+EOF
+  echo "ACL file created at $ACL_FILE"
+else
+  echo "ACL file is already existed"
 fi
 
-# Redis를 설정 파일과 함께 백그라운드 시작
-redis-server --daemonize yes --dir /data --aclfile /data/users.acl
+CONF_FILE=/data/redis.conf
 
-# 시작 대기
-sleep 8
+# CONF 파일이 없으면 생성
+if [ ! -f "$CONF_FILE" ]; then
+  cat > "$CONF_FILE" <<EOF
+aclfile /data/users.acl
+save 3600 1
+save 300 100
+save 60 10000
+EOF
+ echo "CONF file created at $CONF_FILE"
+else
+  echo "CONF file is already existed"
+fi
 
-# ACL 사용자 생성
-echo "Creating ACL user..."
-redis-cli ACL SETUSER "$REDIS_USER" on ">$REDIS_PASSWORD" allkeys allcommands
-
-# ACL 설정을 파일에 저장 (이제 가능!)
-redis-cli ACL SAVE
-echo "ACL saved to /data/users.acl"
-
-# 확인
-redis-cli ACL LIST
-
-# Redis 종료
-redis-cli shutdown
-sleep 2
-
-# 재시작 시에도 ACL 파일 사용
-echo "Starting Redis with ACL configuration..."
-exec redis-server --dir /data --aclfile /data/users.acl
+exec docker-entrypoint.sh redis-server /data/redis.conf

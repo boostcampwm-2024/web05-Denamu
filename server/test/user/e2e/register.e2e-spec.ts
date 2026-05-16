@@ -9,6 +9,7 @@ import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
 
 import { RegisterUserRequestDto } from '@user/dto/request/registerUser.dto';
+import { User } from '@user/entity/user.entity';
 import { UserRepository } from '@user/repository/user.repository';
 
 import { UserFixture } from '@test/config/common/fixture/user.fixture';
@@ -78,7 +79,7 @@ describe(`POST ${URL} E2E Test`, () => {
     // DB, Redis when
     const savedRegisterCode = JSON.parse(
       await redisService.get(redisKeyMake(userRegisterCode)),
-    );
+    ) as User;
 
     // DB, Redis then
     expect(

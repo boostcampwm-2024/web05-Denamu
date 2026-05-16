@@ -3,6 +3,8 @@ import { inject, injectable } from 'tsyringe';
 import { Options } from 'amqplib/properties';
 
 import logger from '@src/logger';
+import { NOTIFICATION_EVENT } from '@src/notification/notification-event.constant';
+import { Notifier } from '@src/notification/notifier.interface';
 
 import { EmailService } from '@email/email.service';
 
@@ -24,6 +26,8 @@ export class EmailConsumer {
     private readonly rabbitmqService: RabbitMQService,
     @inject(DEPENDENCY_SYMBOLS.EmailService)
     private readonly emailService: EmailService,
+    @inject(DEPENDENCY_SYMBOLS.Notifier)
+    private readonly notifier: Notifier,
   ) {}
 
   async start() {
@@ -190,6 +194,7 @@ export class EmailConsumer {
       error.message?.includes('Unexpected socket close');
     if (isNetworkError) {
       if (retryCount >= RETRY_CONFIG.MAX_RETRY) {
+        const rabbitmqStartTime = Date.now();
         await this.rabbitmqService.sendMessageToQueue(
           RMQ_QUEUES.EMAIL_DEAD_LETTER,
           stringifiedMessage,
@@ -201,6 +206,13 @@ export class EmailConsumer {
             ),
           },
         );
+        logger.info(
+          `${error.message}에러에 대한 메시지 발행 소요 시간: ${Date.now() - rabbitmqStartTime}`,
+        );
+        this.notifier.publish(NOTIFICATION_EVENT.EMAIL_DLQ, {
+          error,
+          dlqMessage: `[retry count 초과]`,
+        });
         return;
       }
 
@@ -214,6 +226,7 @@ export class EmailConsumer {
     // SMTP 레벨의 에러
     if (error.responseCode) {
       if (error.responseCode >= 500) {
+        const rabbitmqStartTime = Date.now();
         await this.rabbitmqService.sendMessageToQueue(
           RMQ_QUEUES.EMAIL_DEAD_LETTER,
           stringifiedMessage,
@@ -225,11 +238,19 @@ export class EmailConsumer {
             ),
           },
         );
+        logger.info(
+          `${error.message}에러에 대한 메시지 발행 소요 시간: ${Date.now() - rabbitmqStartTime}`,
+        );
+        this.notifier.publish(NOTIFICATION_EVENT.EMAIL_DLQ, {
+          error,
+          dlqMessage: `[SMTP 500 에러 발생]`,
+        });
         return;
       }
 
       if (error.responseCode >= 400) {
         if (retryCount >= RETRY_CONFIG.MAX_RETRY) {
+          const rabbitmqStartTime = Date.now();
           await this.rabbitmqService.sendMessageToQueue(
             RMQ_QUEUES.EMAIL_DEAD_LETTER,
             stringifiedMessage,
@@ -241,6 +262,13 @@ export class EmailConsumer {
               ),
             },
           );
+          logger.info(
+            `${error.message}에러에 대한 메시지 발행 소요 시간: ${Date.now() - rabbitmqStartTime}`,
+          );
+          this.notifier.publish(NOTIFICATION_EVENT.EMAIL_DLQ, {
+            error,
+            dlqMessage: `[retry count 초과]`,
+          });
           return;
         }
         await this.rabbitmqService.sendMessageToQueue(
@@ -257,8 +285,9 @@ export class EmailConsumer {
       오류 메시지: ${error.message} 
       스택 트레이스: ${error.stack}`,
     );
+
     // 즉시 DLQ로 메시지 발행
-    // todo: Slack 이나 Discord 연동을 통한 새로운 에러에 대한 알림 구현
+    const rabbitmqStartTime = Date.now();
     await this.rabbitmqService.sendMessageToQueue(
       RMQ_QUEUES.EMAIL_DEAD_LETTER,
       stringifiedMessage,
@@ -266,6 +295,13 @@ export class EmailConsumer {
         headers: this.createDLQHeaders(error, retryCount, 'UNKNOWN_ERROR'),
       },
     );
+    logger.info(
+      `${error.message}에러에 대한 메시지 발행 소요 시간: ${Date.now() - rabbitmqStartTime}`,
+    );
+    this.notifier.publish(NOTIFICATION_EVENT.EMAIL_DLQ, {
+      error,
+      dlqMessage: `[알 수 없는 에러 발생]`,
+    });
   }
 
   private createDLQHeaders(
