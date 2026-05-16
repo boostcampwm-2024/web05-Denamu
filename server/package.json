@@ -31,7 +31,7 @@
     "local:migration:generate": "npm run typeorm -- migration:generate -d dataSource.ts"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.36.3",
+    "@anthropic-ai/sdk": "^0.96.0",
     "@nestjs/axios": "^4.0.1",
     "@nestjs/common": "^10.4.22",
     "@nestjs/config": "^3.3.0",
