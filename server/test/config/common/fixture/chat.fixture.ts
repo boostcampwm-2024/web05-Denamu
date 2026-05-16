@@ -3,7 +3,7 @@ import * as uuid from 'uuid';
 export class ChatFixture {
   static createChat(overwrites = {}) {
     return {
-      messageId: '123',
+      messageId: uuid.v4(),
       userId: uuid.v4(),
       message: 'Hello, World!',
       ...overwrites,

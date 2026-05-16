@@ -180,7 +180,14 @@ export class OAuthService {
           );
         }
       } catch (error) {
-        this.logger.error('OAuth 사용자 저장 중 에러 발생: ', error);
+        if (error instanceof Error) {
+          this.logger.error('OAuth 사용자 저장 중 에러 발생', error.stack);
+        } else {
+          this.logger.error(
+            `OAuth 사용자 저장 중 알 수 없는 에러 발생: ${JSON.stringify(error)}`,
+          );
+        }
+
         throw new InternalServerErrorException(
           '로그인 처리 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.',
         );

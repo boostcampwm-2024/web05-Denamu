@@ -1,0 +1,22 @@
+name: Branch Guard
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  check-source-branch:
+    name: develop / hotfix → main 브랜치 검증
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify PR source branch
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          if [[ "$HEAD_REF" != "develop" && "$HEAD_REF" != hotfix/* ]]; then
+            echo "❌ main 브랜치는 develop 또는 hotfix/* 브랜치에서의 PR만 허용합니다."
+            echo "현재 소스 브랜치: $HEAD_REF"
+            exit 1
+          fi
+
+          echo "✅ 허용된 브랜치 → main PR 확인 완료"
