@@ -1,4 +1,4 @@
-Create a Pull Request from the current branch to `boostcampwm-2024:main`.
+Create a Pull Request from the current branch to `boostcampwm-2024:develop`.
 
 > Upstream repository: https://github.com/boostcampwm-2024/web05-Denamu
 
@@ -10,8 +10,8 @@ Run these commands:
 
 ```bash
 git branch --show-current
-git log upstream/main..HEAD --oneline
-git diff upstream/main..HEAD --stat
+git log upstream/develop..HEAD --oneline
+git diff upstream/develop..HEAD --stat
 gh issue list -R boostcampwm-2024/web05-Denamu --state open --json number,title,labels --limit 50
 ```
 
@@ -56,7 +56,7 @@ BRANCH=$(git branch --show-current)
 GH_USER=$(gh api user --jq '.login')
 gh pr create \
   --repo boostcampwm-2024/web05-Denamu \
-  --base main \
+  --base develop \
   --head $GH_USER:$BRANCH \
   --title "[PREFIX] [concise title]" \
   --label "[selected label]" \

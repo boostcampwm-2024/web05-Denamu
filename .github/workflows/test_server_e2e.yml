@@ -2,7 +2,7 @@ name: BE E2E Test
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, develop]
     paths: ['server/**', '.github/workflows/test_server_e2e.yml']
   workflow_dispatch:
 
@@ -13,11 +13,11 @@ jobs:
     steps:
       # 1. 현재 PR 브랜치로 체크아웃 하기
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       # 2. Node.js 환경 설정
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '22'
           cache: 'npm'

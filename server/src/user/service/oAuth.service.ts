@@ -5,14 +5,17 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 
-import { Response } from 'express';
+import * as uuid from 'uuid';
+import { Request, Response } from 'express';
 import { DataSource } from 'typeorm';
 
 import { cookieConfig } from '@common/cookie/cookie.config';
 import { Payload } from '@common/guard/jwt.guard';
 import { WinstonLoggerService } from '@common/logger/logger.service';
+import { RedisService } from '@common/redis/redis.service';
 
 import {
+  OAUTH_CSRF_TOKEN_TTL,
   OAUTH_URL_PATH,
   OAuthType,
   StateData,
@@ -32,23 +35,53 @@ export class OAuthService {
     private readonly userRepository: UserRepository,
     private readonly providerRepository: ProviderRepository,
     private readonly logger: WinstonLoggerService,
+    private readonly redisService: RedisService,
     private readonly userService: UserService,
     @Inject('OAUTH_PROVIDERS')
     private readonly providers: Record<string, OAuthProvider>,
     private readonly dataSource: DataSource,
   ) {}
 
-  getAuthUrl(providerType: OAuthType) {
-    return this.providers[providerType].getAuthUrl();
+  async getAuthUrl(providerType: OAuthType, res: Response) {
+    const csrfToken = uuid.v4();
+    res.cookie('oauth_csrf_token', csrfToken, {
+      ...cookieConfig[process.env.NODE_ENV],
+      maxAge: OAUTH_CSRF_TOKEN_TTL * 1000,
+    });
+    return await this.providers[providerType].getAuthUrl(csrfToken);
   }
 
-  // TODO: OAuth CSRF 공격 방지를 위한 CSRF 토큰 추가 필요
-  async callback(callbackDto: OAuthCallbackRequestDto, res: Response) {
+  async callback(
+    callbackDto: OAuthCallbackRequestDto,
+    res: Response,
+    req: Request,
+  ) {
     const stateData = this.parseStateData(callbackDto.state);
-    const { provider: providerType } = stateData;
+    const { provider: providerType, csrfToken: csrfTokenKey } = stateData;
+    const cookieCsrfToken = req.cookies['oauth_csrf_token'];
 
-    if (callbackDto.error || !callbackDto.code) {
-      return res.redirect(`${OAUTH_URL_PATH.BASE_URL}/signin`);
+    if (
+      callbackDto.error ||
+      !callbackDto.code ||
+      !csrfTokenKey ||
+      !cookieCsrfToken ||
+      cookieCsrfToken !== csrfTokenKey
+    ) {
+      return `${OAUTH_URL_PATH.BASE_URL}/signin`;
+    }
+
+    const script = `
+      local value = redis.call("GET", KEYS[1])
+      if value then
+        redis.call("DEL", KEYS[1])
+      end
+      return value
+    `;
+
+    const csrfTokenValue = await this.redisService.eval(script, [csrfTokenKey]);
+    res.clearCookie('oauth_csrf_token');
+    if (!csrfTokenValue || csrfTokenValue !== `${providerType}-CSRF`) {
+      return `${OAUTH_URL_PATH.BASE_URL}/signin`;
     }
 
     const tokenData = await this.providers[providerType].getTokens(
@@ -69,7 +102,7 @@ export class OAuthService {
       res,
     );
 
-    return res.redirect(`${OAUTH_URL_PATH.BASE_URL}/oauth-success`);
+    return `${OAUTH_URL_PATH.BASE_URL}/oauth-success`;
   }
 
   async e2eCallback(providerType: OAuthType, res: Response) {
@@ -147,7 +180,14 @@ export class OAuthService {
           );
         }
       } catch (error) {
-        this.logger.error('OAuth 사용자 저장 중 에러 발생: ', error);
+        if (error instanceof Error) {
+          this.logger.error('OAuth 사용자 저장 중 에러 발생', error.stack);
+        } else {
+          this.logger.error(
+            `OAuth 사용자 저장 중 알 수 없는 에러 발생: ${JSON.stringify(error)}`,
+          );
+        }
+
         throw new InternalServerErrorException(
           '로그인 처리 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.',
         );
