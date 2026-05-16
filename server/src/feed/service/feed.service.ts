@@ -159,7 +159,10 @@ export class FeedService {
       return;
     }
 
-    const hasIpFlag = await this.redisService.sismember(`feed:${feedId}:ip`, ip);
+    const hasIpFlag = await this.redisService.sismember(
+      `feed:${feedId}:ip`,
+      ip,
+    );
 
     if (hasIpFlag) {
       this.createCookie(response, feedId);
@@ -215,19 +218,19 @@ export class FeedService {
       }
     });
 
-    let recentFeedList: FeedRecentRedis[] = recentFeeds.map(
-      ([, feed]: [any, FeedRecentRedis]) => {
-        const redisTagList = feed.tagList as string;
-        feed.tagList = redisTagList ? redisTagList.split(',') : [];
-        return { ...feed, isNew: true };
-      },
-    );
-
-    recentFeedList = recentFeedList.sort((currentFeed, nextFeed) => {
-      const dateCurrent = new Date(currentFeed.createdAt);
-      const dateNext = new Date(nextFeed.createdAt);
-      return dateNext.getTime() - dateCurrent.getTime();
-    });
+    const recentFeedList = recentFeeds
+      .filter(([err]) => !err)
+      .map(([, feed]) => feed as FeedRecentRedis)
+      .map((feed) => ({
+        ...feed,
+        tagList:
+          typeof feed.tagList === 'string' ? feed.tagList.split(',') : [],
+        isNew: true,
+      }))
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
 
     return ReadFeedRecentResponseDto.toResponseDtoArray(recentFeedList);
   }

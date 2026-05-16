@@ -1,5 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UseFilters, ValidationPipe } from '@nestjs/common';
 import {
+  ConnectedSocket,
+  MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
   SubscribeMessage,
@@ -14,10 +16,13 @@ import { Server, Socket } from 'socket.io';
 import type {
   BroadcastPayload,
   RedisMessagePayload,
-} from '@chat/constant/chat.constant';
-import { ChatScheduler } from '@chat/scheduler/chat.scheduler';
+} from '@chat/constant/type';
+import { ChatWsExceptionFilter } from '@chat/filter/ws.exception.filter';
 import { ChatService } from '@chat/service/chat.service';
 
+import { SendMessageDto } from './dto/sendMessage.dto';
+
+@UseFilters(new ChatWsExceptionFilter())
 @Injectable()
 @WebSocketGateway({
   cors: {
@@ -37,7 +42,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly chatMetricCount: Counter,
   ) {}
 
-  async handleConnection(client: Socket) {
+  async handleConnection(@ConnectedSocket() client: Socket) {
     const userCount = this.server.engine.clientsCount;
     if (this.chatService.isMaxClientExceeded(userCount)) {
       client.emit('maximum_exceeded', {
@@ -63,7 +68,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('register')
-  async handleRegister(client: Socket, payload: { userId: string | null }) {
+  async handleRegister(
+    @ConnectedSocket() client: Socket,
+    @MessageBody()
+    payload: { userId: string | null },
+  ) {
     const result = await this.chatService.getOrCreateUserName(
       payload?.userId ?? null,
     );
@@ -74,8 +83,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('message')
   async handleMessage(
-    client: Socket,
-    payload: { messageId: string; userId: string; message: string },
+    @MessageBody(new ValidationPipe({ transform: true }))
+    payload: SendMessageDto,
   ) {
     const { userName } = await this.chatService.getOrCreateUserName(
       payload.userId,
@@ -85,7 +94,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       userId: payload.userId,
       userName,
       message: payload.message,
-      timestamp: new Date(),
+      timestamp: new Date().toISOString(),
     };
 
     const broadcastPayload: BroadcastPayload = {
