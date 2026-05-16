@@ -11,7 +11,6 @@ module.exports = {
   importOrder: [
     '^@nestjs/(.*)?$',
     '<THIRD_PARTY_MODULES>',
-    '^@src/(.*)?$',
     '^@activity/(.*)?$',
     '^@admin/(.*)?$',
     '^@chat/(.*)?$',

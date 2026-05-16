@@ -4,6 +4,7 @@ import '@src/env-load';
 
 import { container } from '@src/container';
 import logger from '@src/logger';
+import { Notifier } from '@src/notification/notifier.interface';
 
 import { EmailConsumer } from '@email/email.consumer';
 
@@ -19,6 +20,7 @@ function initializeDependencies() {
     emailConsumer: container.resolve<EmailConsumer>(
       DEPENDENCY_SYMBOLS.EmailConsumer,
     ),
+    notifier: container.resolve<Notifier>(DEPENDENCY_SYMBOLS.Notifier),
   };
 }
 
@@ -26,6 +28,8 @@ async function startEmailWorker() {
   logger.info('[Email Worker Start]');
 
   const dependencies = initializeDependencies();
+  dependencies.notifier.initialize();
+  logger.info(`Notifier 초기화 완료`);
   await initializeRabbitMQ(dependencies);
 
   process.on('SIGINT', () => void handleShutdown(dependencies, 'SIGINT'));
