@@ -48,7 +48,7 @@
     "react-dom": "^18.3.1",
     "react-helmet": "^6.1.0",
     "react-markdown": "^9.0.3",
-    "react-router-dom": "^6.27.0",
+    "react-router-dom": "^6.30.3",
     "recharts": "^2.13.3",
     "socket.io-client": "^4.8.1",
     "tailwind-merge": "^2.5.4",

@@ -1,3 +1,4 @@
+import { Server } from 'http';
 import { Socket } from 'socket.io-client';
 import { io } from 'socket.io-client';
 
@@ -20,8 +21,17 @@ describe('Socket.IO Anonymous Chat E2E Test', () => {
   beforeAll(async () => {
     redisService = testApp.get(RedisService);
     chatService = testApp.get(ChatService);
-    const httpServer = await testApp.listen(0);
-    const port = httpServer.address().port;
+    await testApp.listen(0);
+    const httpServer = testApp.getHttpServer() as Server;
+
+    const address = httpServer.address();
+
+    if (!address || typeof address === 'string') {
+      throw new Error('Invalid address');
+    }
+
+    const port = address.port;
+
     serverUrl = `http://localhost:${port}`;
   });
 
@@ -141,9 +151,7 @@ describe('Socket.IO Anonymous Chat E2E Test', () => {
           resolve(payload);
         } catch {
           clientSocket.close();
-          reject(
-            new Error(`Socket.IO 채팅 오류: ${JSON.stringify(payload)}`),
-          );
+          reject(new Error(`Socket.IO 채팅 오류: ${JSON.stringify(payload)}`));
         }
       });
     });

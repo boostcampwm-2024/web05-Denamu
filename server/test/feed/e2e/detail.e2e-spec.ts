@@ -3,8 +3,9 @@ import { HttpStatus } from '@nestjs/common';
 import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 
-import { ActivityRepository } from '@src/activity/repository/activity.repository';
-import { RedisService } from '@src/common/redis/redis.service';
+import { ActivityRepository } from '@activity/repository/activity.repository';
+
+import { RedisService } from '@common/redis/redis.service';
 
 import { ManageFeedRequestDto } from '@feed/dto/request/manageFeed.dto';
 import { Feed } from '@feed/entity/feed.entity';
