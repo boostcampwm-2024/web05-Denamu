@@ -1,14 +1,19 @@
 {
   "mcpServers": {
     "TalkToFigma": {
-      "command": "bunx",
-      "args": ["cursor-talk-to-figma-mcp@latest"],
+      "command": "npx",
+      "args": ["caveman-shrink", "bunx", "cursor-talk-to-figma-mcp@latest"],
       "disabled": true
     },
     "serena": {
-      "type": "stdio",
-      "command": "serena",
-      "args": ["start-mcp-server", "--context", "claude-code"],
+      "command": "npx",
+      "args": [
+        "caveman-shrink",
+        "serena",
+        "start-mcp-server",
+        "--context",
+        "claude-code"
+      ],
       "env": {}
     }
   }
