@@ -1,0 +1,103 @@
+# 목적: 서버 포화점(saturation knee) 발견
+
+config:
+  target: 'http://10.0.0.2:8080'
+
+  http:
+    pool: 100
+    timeout: 30
+
+  phases:
+    - duration: 60
+      arrivalRate: 10
+      rampTo: 30
+      name: 'Warm-up'
+
+    - duration: 180
+      arrivalRate: 30
+      rampTo: 150
+      name: 'Bottleneck Discovery'
+
+    - duration: 120
+      arrivalRate: 150
+      name: 'Saturation Observation'
+
+    - duration: 60
+      arrivalRate: 300
+      name: 'Extreme Spike'
+
+  defaults:
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+      Cache-Control: no-cache
+
+  variables:
+    feedId: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+    keyword:
+      - NestJS
+      - React
+      - Redis
+      - MySQL
+
+scenarios:
+  # Login + Comment Write E2E: 로그인~댓글 작성 전체 흐름 측정
+  # (bcrypt 포함 — auth가 병목이면 이 시나리오에서 먼저 드러남)
+  - name: 'Login + Comment Write E2E'
+    weight: 10
+
+    flow:
+      - post:
+          url: '/api/user/login'
+
+          json:
+            email: 'loadtest@test.com'
+            password: 'test1234!'
+
+          capture:
+            - json: '$.data.accessToken'
+              as: 'accessToken'
+
+      - post:
+          url: '/api/comment'
+
+          headers:
+            Authorization: 'Bearer {{ accessToken }}'
+
+          json:
+            comment: 'load-test-comment'
+            feedId: 1
+
+  - name: 'Feed Detail Bottleneck'
+    weight: 45
+
+    flow:
+      - get:
+          url: '/api/feed/detail/{{ feedId }}'
+
+  - name: 'Feed List Bottleneck'
+    weight: 20
+
+    flow:
+      - get:
+          url: '/api/feed?lastId=1&limit=20'
+
+  - name: 'Search Bottleneck'
+    weight: 15
+
+    flow:
+      - get:
+          url: '/api/feed/search?find={{ keyword }}&type=title&page=1&limit=20'
+
+  - name: 'Statistics Bottleneck'
+    weight: 10
+
+    flow:
+      - get:
+          url: '/api/statistic/all?limit=50'
+
+      - think: 1
+
+      - get:
+          url: '/api/statistic/platform'

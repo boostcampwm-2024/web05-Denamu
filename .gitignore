@@ -16,10 +16,14 @@ psd
 thumb
 sketch
 
-loadtest/BE_Report
-loadtest/FE_Report
-loadtest/BE_Report.html
-loadtest/FE_Report.html
+### LOAD TEST ###
+loadtest/client/FE_Report.*
+
+loadtest/server/api/be_client_report.*
+loadtest/server/api/be_bottleneck_report.*
+
+loadtest/server/chat/chat_client_report.*
+loadtest/server/chat/chat_bottleneck_report.*
 
 ### HTTPS ###
 private.key
