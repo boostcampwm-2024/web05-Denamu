@@ -25,6 +25,7 @@
       "@test/*": ["./test/*"]
     },
     "resolveJsonModule": true,
+    "types": ["node", "jest"],
     "esModuleInterop": true
   }
 }
