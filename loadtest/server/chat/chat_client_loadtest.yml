@@ -1,0 +1,103 @@
+# 목적: 실사용 패턴 시뮬레이션
+# 사양 기준: Machine A 2Core/2GB, 목표 TPS 50 (Spike 120)
+
+config:
+  target: 'http://10.0.0.2:8080'
+
+  socketio:
+    path: '/chat'
+    transports: ['websocket']
+
+  phases:
+    - duration: 60
+      arrivalRate: 5
+      name: 'Warm-up'
+
+    - duration: 300
+      arrivalRate: 20
+      name: 'Normal Traffic'
+
+    - duration: 120
+      arrivalRate: 40
+      name: 'Peak Traffic'
+
+  processor: './chat-helper.js'
+
+  variables:
+    chatMessages:
+      - '안녕하세요'
+      - '오늘도 화이팅'
+      - '좋은 하루네요'
+      - '배포 완료했습니다'
+      - '리뷰 부탁드립니다'
+
+scenarios:
+  - name: 'Normal User'
+    weight: 50
+    engine: 'socketio'
+
+    flow:
+      - function: 'generatePersistentUserId'
+
+      - emit:
+          channel: 'register'
+          data:
+            userId: '{{ persistentUserId }}'
+
+      - think: 3
+
+      - loop:
+          - emit:
+              channel: 'message'
+              data:
+                messageId: '{{ $uuid }}'
+                userId: '{{ persistentUserId }}'
+                message: '{{ chatMessages }}'
+            response:
+              channel: 'message'
+
+          - think: 5
+
+        count: 3
+
+      - think: 10
+
+  - name: 'Lurker'
+    weight: 40
+    engine: 'socketio'
+
+    flow:
+      - function: 'generatePersistentUserId'
+
+      - emit:
+          channel: 'register'
+          data:
+            userId: '{{ persistentUserId }}'
+
+      - think: 30
+
+  - name: 'Active User'
+    weight: 10
+    engine: 'socketio'
+
+    flow:
+      - function: 'generatePersistentUserId'
+
+      - emit:
+          channel: 'register'
+          data:
+            userId: '{{ persistentUserId }}'
+
+      - loop:
+          - emit:
+              channel: 'message'
+              data:
+                messageId: '{{ $uuid }}'
+                userId: '{{ persistentUserId }}'
+                message: '{{ chatMessages }}'
+            response:
+              channel: 'message'
+
+          - think: 2
+
+        count: 10
