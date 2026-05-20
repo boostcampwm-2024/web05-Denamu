@@ -15,8 +15,10 @@ import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
 import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
 import { EmailPayload, EmailPayloadConstant } from '@app-types/types';
 
-interface EmailSendError extends Error {
+export interface NodeMailerError extends Error {
   code?: string;
+  command?: string;
+  response?: string;
   responseCode?: number;
 }
 
@@ -57,7 +59,7 @@ export class EmailConsumer {
           logger.info('[EmailConsumer] 이메일 전송 완료');
         } catch (error) {
           await this.handleEmailByError(
-            error as EmailSendError,
+            error as NodeMailerError,
             payload,
             retryCount,
           );
@@ -160,7 +162,7 @@ export class EmailConsumer {
    *
    * 3. 알 수 없는 에러: 즉시 DLQ로 발행 (UNKNOWN_ERROR)
    *
-   * @param {any} error - 발생한 에러 객체 (네트워크 에러, SMTP 에러 등)
+   * @param {NodeMailerError} error - 발생한 에러 객체 (네트워크 에러, SMTP 에러 등)
    * @param {EmailPayload} payload - 전송 실패한 이메일 페이로드
    * @param {number} retryCount - 현재까지의 재시도 횟수 (0부터 시작)
    *
@@ -185,7 +187,7 @@ export class EmailConsumer {
    * // -> 즉시 DLQ로 발행됨 (SMTP_PERMANENT_FAILURE)
    */
   async handleEmailByError(
-    error: EmailSendError,
+    error: NodeMailerError,
     payload: EmailPayload,
     retryCount: number,
   ): Promise<void> {
@@ -315,7 +317,7 @@ export class EmailConsumer {
   }
 
   private createDLQHeaders(
-    error: EmailSendError,
+    error: NodeMailerError,
     retryCount: number,
     failureType:
       | 'SMTP_PERMANENT_FAILURE'

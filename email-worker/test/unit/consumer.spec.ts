@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 
-import { EmailConsumer } from '@email/email.consumer';
+import { EmailConsumer, NodeMailerError } from '@email/email.consumer';
 import { EmailService } from '@email/email.service';
 
 import { Notifier } from '@notification/notifier.interface';
@@ -214,10 +214,7 @@ describe('email consumer unit test', () => {
       networkErrors.forEach((errorName) => {
         it(`Node.js 네트워크 레벨의 ${errorName} 에러가 발생하면 재시도한다.`, async () => {
           //given
-          const error = new Error(`${errorName}`) as Error & {
-            code?: string;
-            responseCode?: number;
-          };
+          const error = new Error(`${errorName}`) as NodeMailerError;
           if (errorName === 'ESOCKET') {
             error.code = 'ESOCKET';
           }
@@ -255,10 +252,7 @@ describe('email consumer unit test', () => {
       commonSmtp4xxErrors.forEach(({ responseCode, message }) => {
         it(`SMTP ${responseCode} 에러가 발생하면 재시도한다.`, async () => {
           //given
-          const error = new Error(`${message}`) as Error & {
-            code?: string;
-            responseCode?: number;
-          };
+          const error = new Error(`${message}`) as NodeMailerError;
           error.responseCode = responseCode;
           const emailPayload: EmailPayload = {
             type: EmailPayloadConstant.USER_CERTIFICATION,
@@ -346,10 +340,7 @@ describe('email consumer unit test', () => {
 
             it(`SMTP 4xx 에러 발생 시 retryCount=${retryCount}이면 ${description}(${expectedQueue})로 메시지를 발행한다.`, async () => {
               //given
-              const error = new Error('Mailbox unavailable') as Error & {
-                code?: string;
-                responseCode?: number;
-              };
+              const error = new Error('Mailbox unavailable') as NodeMailerError;
               error.responseCode = 450;
               const emailPayload: EmailPayload = {
                 type: EmailPayloadConstant.USER_CERTIFICATION,
@@ -389,10 +380,7 @@ describe('email consumer unit test', () => {
       commonSmtp5xxErrors.forEach(({ responseCode, message }) => {
         it(`SMTP ${responseCode} 에러가 발생하면 DLQ로 메시지를 발행한다.`, async () => {
           //given
-          const error = new Error(`${message}`) as Error & {
-            code?: string;
-            responseCode?: number;
-          };
+          const error = new Error(`${message}`) as NodeMailerError;
           error.responseCode = responseCode;
           const emailPayload: EmailPayload = {
             type: EmailPayloadConstant.USER_CERTIFICATION,
@@ -469,20 +457,14 @@ describe('email consumer unit test', () => {
             : `SMTP ${targetError.responseCode}`;
         it(`${errorName} 에러에 대해 재시도 횟수가 ${RETRY_CONFIG.MAX_RETRY}회 이상이면 DLQ로 메시지를 발행한다.`, async () => {
           //given
-          let error;
+          let error: NodeMailerError;
           if (typeof targetError === 'string') {
-            error = new Error(`${targetError}`) as Error & {
-              code?: string;
-              responseCode?: number;
-            };
+            error = new Error(`${targetError}`);
             if (targetError === 'ESOCKET') {
               error.code = 'ESOCKET';
             }
           } else {
-            error = new Error(`${targetError.message}`) as Error & {
-              code?: string;
-              responseCode?: number;
-            };
+            error = new Error(`${targetError.message}`);
             error.responseCode = targetError.responseCode;
           }
           const emailPayload: EmailPayload = {

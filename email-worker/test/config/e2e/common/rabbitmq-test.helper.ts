@@ -192,6 +192,6 @@ export async function getMailpitMessages(): Promise<any[]> {
   const webPort = mailpitContainer.getMappedPort(8025);
   const baseUrl = `http://${mailpitContainer.getHost()}:${webPort}`;
   const response = await fetch(`${baseUrl}/api/v1/messages`);
-  const data = await response.json();
-  return data.messages || [];
+  const data = (await response.json()) as { messages?: unknown[] };
+  return data.messages ?? [];
 }

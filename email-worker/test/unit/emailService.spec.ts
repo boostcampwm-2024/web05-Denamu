@@ -85,7 +85,7 @@ describe('EmailService unit test', () => {
         }),
       );
 
-      const callArgs = mockSendMail.mock.calls[0][0] as { html: string };
+      const callArgs = (mockSendMail.mock.calls[0] as [{ html: string }])[0];
       expect(callArgs.html).toContain(user.userName);
       expect(callArgs.html).toContain(
         `${PRODUCT_DOMAIN}/user/certificate?token=${user.uuid}`,
@@ -131,7 +131,7 @@ describe('EmailService unit test', () => {
         }),
       );
 
-      const callArgs = mockSendMail.mock.calls[0][0] as { html: string };
+      const callArgs = (mockSendMail.mock.calls[0] as [{ html: string }])[0];
       expect(callArgs.html).toContain(rssRegistration.rss.name);
       expect(callArgs.html).toContain(rssRegistration.rss.rssUrl);
     });
@@ -157,7 +157,7 @@ describe('EmailService unit test', () => {
         }),
       );
 
-      const callArgs = mockSendMail.mock.calls[0][0] as { html: string };
+      const callArgs = (mockSendMail.mock.calls[0] as [{ html: string }])[0];
       expect(callArgs.html).toContain(rssRegistration.description);
     });
   });
@@ -182,7 +182,7 @@ describe('EmailService unit test', () => {
         }),
       );
 
-      const callArgs = mockSendMail.mock.calls[0][0] as { html: string };
+      const callArgs = (mockSendMail.mock.calls[0] as [{ html: string }])[0];
       expect(callArgs.html).toContain(rssRemoval.userName);
       expect(callArgs.html).toContain(rssRemoval.certificateCode);
       expect(callArgs.html).toContain(rssRemoval.rssUrl);
@@ -208,7 +208,7 @@ describe('EmailService unit test', () => {
         }),
       );
 
-      const callArgs = mockSendMail.mock.calls[0][0] as { html: string };
+      const callArgs = (mockSendMail.mock.calls[0] as [{ html: string }])[0];
       expect(callArgs.html).toContain(user.userName);
       expect(callArgs.html).toContain(
         `${PRODUCT_DOMAIN}/user/password?token=${user.uuid}`,
@@ -235,7 +235,7 @@ describe('EmailService unit test', () => {
         }),
       );
 
-      const callArgs = mockSendMail.mock.calls[0][0] as { html: string };
+      const callArgs = (mockSendMail.mock.calls[0] as [{ html: string }])[0];
       expect(callArgs.html).toContain(user.userName);
       expect(callArgs.html).toContain(
         `${PRODUCT_DOMAIN}/user/delete-account?token=${user.uuid}`,
