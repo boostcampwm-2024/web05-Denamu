@@ -1,16 +1,16 @@
 import 'reflect-metadata';
 
-import '@src/env-load';
-
-import { container } from '@src/container';
-import logger from '@src/logger';
-import { Notifier } from '@src/notification/notifier.interface';
+import '@common/env/env-load';
+import logger from '@common/logger/logger';
+import { Notifier } from '@notification/notifier.interface';
 
 import { EmailConsumer } from '@email/email.consumer';
 
 import { RabbitMQManager } from '@rabbitmq/rabbitmq.manager';
 
 import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
+
+import { container } from './container';
 
 function initializeDependencies() {
   return {

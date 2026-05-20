@@ -1,4 +1,4 @@
-import { NotificationEventPayloadMap } from '@src/notification/notification-event.constant';
+import { NotificationEventPayloadMap } from '@notification/notification-event.constant';
 
 export interface Notifier {
   initialize(): void;

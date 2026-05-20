@@ -1,6 +1,15 @@
 import { Channel } from 'amqplib';
 import { StartedTestContainer } from 'testcontainers';
 
+import {
+  RMQ_EXCHANGES,
+  RMQ_QUEUES,
+  RMQ_ROUTING_KEYS,
+} from '@rabbitmq/rabbitmq.constant';
+import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
+
+import { EmailPayload } from '@app-types/types';
+
 interface RabbitMQRawMessage {
   payload: string;
   properties?: { headers?: Record<string, unknown> };
@@ -10,13 +19,6 @@ interface RabbitMQRawMessage {
 interface MailpitContainerGlobal {
   __MAILPIT_CONTAINER__?: StartedTestContainer;
 }
-import {
-  RMQ_EXCHANGES,
-  RMQ_QUEUES,
-  RMQ_ROUTING_KEYS,
-} from '@rabbitmq/rabbitmq.constant';
-import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
-import { EmailPayload } from '@src/types/types';
 
 /**
  * RabbitMQ Management API를 통해 조회한 메시지 형식
@@ -170,7 +172,8 @@ export async function purgeAllEmailQueues(channel: Channel): Promise<void> {
  * Mailpit의 모든 이메일을 삭제합니다.
  */
 export async function clearMailpit(): Promise<void> {
-  const mailpitContainer = (global as unknown as MailpitContainerGlobal).__MAILPIT_CONTAINER__;
+  const mailpitContainer = (global as unknown as MailpitContainerGlobal)
+    .__MAILPIT_CONTAINER__;
   if (!mailpitContainer) return;
 
   const webPort = mailpitContainer.getMappedPort(8025);
@@ -182,7 +185,8 @@ export async function clearMailpit(): Promise<void> {
  * Mailpit에서 이메일 목록을 조회합니다.
  */
 export async function getMailpitMessages(): Promise<any[]> {
-  const mailpitContainer = (global as unknown as MailpitContainerGlobal).__MAILPIT_CONTAINER__;
+  const mailpitContainer = (global as unknown as MailpitContainerGlobal)
+    .__MAILPIT_CONTAINER__;
   if (!mailpitContainer) return [];
 
   const webPort = mailpitContainer.getMappedPort(8025);

@@ -1,9 +1,9 @@
 import 'reflect-metadata';
 
-import { Notifier } from '@src/notification/notifier.interface';
-
 import { EmailConsumer } from '@email/email.consumer';
 import { EmailService } from '@email/email.service';
+
+import { Notifier } from '@notification/notifier.interface';
 
 import { RETRY_CONFIG, RMQ_QUEUES } from '@rabbitmq/rabbitmq.constant';
 import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
@@ -75,9 +75,7 @@ describe('email consumer unit test', () => {
       await emailConsumer.handleEmailByType(payload);
 
       expect(sendUserCertificationMail).toHaveBeenCalledTimes(1);
-      expect(sendUserCertificationMail).toHaveBeenCalledWith(
-        userData,
-      );
+      expect(sendUserCertificationMail).toHaveBeenCalledWith(userData);
     });
 
     it('RSS_REGISTRATION 타입일 때 sendRssMail을 호출한다', async () => {
@@ -116,9 +114,7 @@ describe('email consumer unit test', () => {
 
       await emailConsumer.handleEmailByType(payload);
 
-      expect(sendRssRemoveCertificationMail).toHaveBeenCalledTimes(
-        1,
-      );
+      expect(sendRssRemoveCertificationMail).toHaveBeenCalledTimes(1);
       expect(sendRssRemoveCertificationMail).toHaveBeenCalledWith(
         rssRemovalData,
       );
@@ -138,9 +134,7 @@ describe('email consumer unit test', () => {
       await emailConsumer.handleEmailByType(payload);
 
       expect(sendPasswordResetEmail).toHaveBeenCalledTimes(1);
-      expect(sendPasswordResetEmail).toHaveBeenCalledWith(
-        userData,
-      );
+      expect(sendPasswordResetEmail).toHaveBeenCalledWith(userData);
     });
 
     it('ACCOUNT_DELETION 타입일 때 sendDeleteAccountMail을 호출한다', async () => {
@@ -220,7 +214,10 @@ describe('email consumer unit test', () => {
       networkErrors.forEach((errorName) => {
         it(`Node.js 네트워크 레벨의 ${errorName} 에러가 발생하면 재시도한다.`, async () => {
           //given
-          const error = new Error(`${errorName}`) as Error & { code?: string; responseCode?: number };
+          const error = new Error(`${errorName}`) as Error & {
+            code?: string;
+            responseCode?: number;
+          };
           if (errorName === 'ESOCKET') {
             error.code = 'ESOCKET';
           }
@@ -258,7 +255,10 @@ describe('email consumer unit test', () => {
       commonSmtp4xxErrors.forEach(({ responseCode, message }) => {
         it(`SMTP ${responseCode} 에러가 발생하면 재시도한다.`, async () => {
           //given
-          const error = new Error(`${message}`) as Error & { code?: string; responseCode?: number };
+          const error = new Error(`${message}`) as Error & {
+            code?: string;
+            responseCode?: number;
+          };
           error.responseCode = responseCode;
           const emailPayload: EmailPayload = {
             type: EmailPayloadConstant.USER_CERTIFICATION,
@@ -332,9 +332,7 @@ describe('email consumer unit test', () => {
               );
 
               //then
-              expect(sendMessageToQueue).toHaveBeenCalledTimes(
-                1,
-              );
+              expect(sendMessageToQueue).toHaveBeenCalledTimes(1);
               expect(sendMessageToQueue).toHaveBeenCalledWith(
                 expectedQueue,
                 JSON.stringify(emailPayload),
@@ -348,7 +346,10 @@ describe('email consumer unit test', () => {
 
             it(`SMTP 4xx 에러 발생 시 retryCount=${retryCount}이면 ${description}(${expectedQueue})로 메시지를 발행한다.`, async () => {
               //given
-              const error = new Error('Mailbox unavailable') as Error & { code?: string; responseCode?: number };
+              const error = new Error('Mailbox unavailable') as Error & {
+                code?: string;
+                responseCode?: number;
+              };
               error.responseCode = 450;
               const emailPayload: EmailPayload = {
                 type: EmailPayloadConstant.USER_CERTIFICATION,
@@ -367,9 +368,7 @@ describe('email consumer unit test', () => {
               );
 
               //then
-              expect(sendMessageToQueue).toHaveBeenCalledTimes(
-                1,
-              );
+              expect(sendMessageToQueue).toHaveBeenCalledTimes(1);
               expect(sendMessageToQueue).toHaveBeenCalledWith(
                 expectedQueue,
                 JSON.stringify(emailPayload),
@@ -390,7 +389,10 @@ describe('email consumer unit test', () => {
       commonSmtp5xxErrors.forEach(({ responseCode, message }) => {
         it(`SMTP ${responseCode} 에러가 발생하면 DLQ로 메시지를 발행한다.`, async () => {
           //given
-          const error = new Error(`${message}`) as Error & { code?: string; responseCode?: number };
+          const error = new Error(`${message}`) as Error & {
+            code?: string;
+            responseCode?: number;
+          };
           error.responseCode = responseCode;
           const emailPayload: EmailPayload = {
             type: EmailPayloadConstant.USER_CERTIFICATION,
@@ -469,12 +471,18 @@ describe('email consumer unit test', () => {
           //given
           let error;
           if (typeof targetError === 'string') {
-            error = new Error(`${targetError}`) as Error & { code?: string; responseCode?: number };
+            error = new Error(`${targetError}`) as Error & {
+              code?: string;
+              responseCode?: number;
+            };
             if (targetError === 'ESOCKET') {
               error.code = 'ESOCKET';
             }
           } else {
-            error = new Error(`${targetError.message}`) as Error & { code?: string; responseCode?: number };
+            error = new Error(`${targetError.message}`) as Error & {
+              code?: string;
+              responseCode?: number;
+            };
             error.responseCode = targetError.responseCode;
           }
           const emailPayload: EmailPayload = {

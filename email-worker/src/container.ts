@@ -1,7 +1,7 @@
 import { container } from 'tsyringe';
 
-import { DiscordNotifier } from '@src/notification/discord.notifier';
-import { Notifier } from '@src/notification/notifier.interface';
+import { DiscordNotifier } from '@notification/discord.notifier';
+import { Notifier } from '@notification/notifier.interface';
 
 import { EmailConsumer } from '@email/email.consumer';
 import { EmailService } from '@email/email.service';
@@ -15,6 +15,9 @@ container.registerSingleton(RabbitMQService);
 container.registerSingleton(RabbitMQManager);
 container.registerSingleton(EmailConsumer);
 container.registerSingleton(EmailService);
-container.registerSingleton<Notifier>(DEPENDENCY_SYMBOLS.Notifier, DiscordNotifier);
+container.registerSingleton<Notifier>(
+  DEPENDENCY_SYMBOLS.Notifier,
+  DiscordNotifier,
+);
 
 export { container };

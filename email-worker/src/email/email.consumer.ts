@@ -2,11 +2,12 @@ import { inject, injectable } from 'tsyringe';
 
 import { Options } from 'amqplib/properties';
 
-import logger from '@src/logger';
-import { NOTIFICATION_EVENT } from '@src/notification/notification-event.constant';
-import { Notifier } from '@src/notification/notifier.interface';
+import logger from '@common/logger/logger';
 
 import { EmailService } from '@email/email.service';
+
+import { NOTIFICATION_EVENT } from '@notification/notification-event.constant';
+import { Notifier } from '@notification/notifier.interface';
 
 import { RETRY_CONFIG, RMQ_QUEUES } from '@rabbitmq/rabbitmq.constant';
 import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
@@ -55,7 +56,11 @@ export class EmailConsumer {
           await this.handleEmailByType(payload);
           logger.info('[EmailConsumer] 이메일 전송 완료');
         } catch (error) {
-          await this.handleEmailByError(error as EmailSendError, payload, retryCount);
+          await this.handleEmailByError(
+            error as EmailSendError,
+            payload,
+            retryCount,
+          );
         } finally {
           this.pendingTasks--;
           logger.info(`[EmailConsumer] 남은 작업: ${this.pendingTasks}`);

@@ -1,8 +1,7 @@
 import { inject, injectable } from 'tsyringe';
 
+import logger from '@common/logger/logger';
 import { Options } from 'amqplib/properties';
-
-import logger from '@src/logger';
 
 import { RabbitMQManager } from '@rabbitmq/rabbitmq.manager';
 

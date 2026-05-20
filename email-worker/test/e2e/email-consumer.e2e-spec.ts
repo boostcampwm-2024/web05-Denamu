@@ -1,11 +1,15 @@
 import 'reflect-metadata';
-import { EmailConsumer } from '@email/email.consumer';
-import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
-import { EmailPayloadConstant } from '@src/types/types';
-import { RMQ_EXCHANGES, RMQ_ROUTING_KEYS } from '@rabbitmq/rabbitmq.constant';
+
 import { setupTestContainer } from '@test/config/e2e/common/testContext.setup';
-import { RabbitMQManager } from '@rabbitmq/rabbitmq.manager';
 import { StartedTestContainer } from 'testcontainers';
+
+import { EmailConsumer } from '@email/email.consumer';
+
+import { RMQ_EXCHANGES, RMQ_ROUTING_KEYS } from '@rabbitmq/rabbitmq.constant';
+import { RabbitMQManager } from '@rabbitmq/rabbitmq.manager';
+import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
+
+import { EmailPayloadConstant } from '@app-types/types';
 
 interface MailpitResponse {
   messages: Array<{ To: Array<{ Address: string }>; Subject: string }>;
@@ -61,7 +65,8 @@ describe(`Email Normal Scenario E2E Test`, () => {
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
     //then
-    const mailpitContainer = (global as unknown as MailpitGlobal).__MAILPIT_CONTAINER__;
+    const mailpitContainer = (global as unknown as MailpitGlobal)
+      .__MAILPIT_CONTAINER__;
     const webPort = mailpitContainer.getMappedPort(8025);
     const baseUrl = `http://${mailpitContainer.getHost()}:${webPort}`;
 
@@ -100,7 +105,8 @@ describe(`Email Normal Scenario E2E Test`, () => {
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
     //then
-    const mailpitContainer = (global as unknown as MailpitGlobal).__MAILPIT_CONTAINER__;
+    const mailpitContainer = (global as unknown as MailpitGlobal)
+      .__MAILPIT_CONTAINER__;
     const webPort = mailpitContainer.getMappedPort(8025);
     const baseUrl = `http://${mailpitContainer.getHost()}:${webPort}`;
 
@@ -142,7 +148,8 @@ describe(`Email Normal Scenario E2E Test`, () => {
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
     //then
-    const mailpitContainer = (global as unknown as MailpitGlobal).__MAILPIT_CONTAINER__;
+    const mailpitContainer = (global as unknown as MailpitGlobal)
+      .__MAILPIT_CONTAINER__;
     const webPort = mailpitContainer.getMappedPort(8025);
     const baseUrl = `http://${mailpitContainer.getHost()}:${webPort}`;
 
@@ -185,7 +192,8 @@ describe(`Email Normal Scenario E2E Test`, () => {
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
     //then
-    const mailpitContainer = (global as unknown as MailpitGlobal).__MAILPIT_CONTAINER__;
+    const mailpitContainer = (global as unknown as MailpitGlobal)
+      .__MAILPIT_CONTAINER__;
     const webPort = mailpitContainer.getMappedPort(8025);
     const baseUrl = `http://${mailpitContainer.getHost()}:${webPort}`;
 
@@ -222,7 +230,8 @@ describe(`Email Normal Scenario E2E Test`, () => {
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
     //then
-    const mailpitContainer = (global as unknown as MailpitGlobal).__MAILPIT_CONTAINER__;
+    const mailpitContainer = (global as unknown as MailpitGlobal)
+      .__MAILPIT_CONTAINER__;
     const webPort = mailpitContainer.getMappedPort(8025);
     const baseUrl = `http://${mailpitContainer.getHost()}:${webPort}`;
 
@@ -259,7 +268,8 @@ describe(`Email Normal Scenario E2E Test`, () => {
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
     //then
-    const mailpitContainer = (global as unknown as MailpitGlobal).__MAILPIT_CONTAINER__;
+    const mailpitContainer = (global as unknown as MailpitGlobal)
+      .__MAILPIT_CONTAINER__;
     const webPort = mailpitContainer.getMappedPort(8025);
     const baseUrl = `http://${mailpitContainer.getHost()}:${webPort}`;
 

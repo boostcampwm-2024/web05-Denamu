@@ -1,9 +1,8 @@
 import { injectable } from 'tsyringe';
 
 import * as nodemailer from 'nodemailer';
+import logger from '@common/logger/logger';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
-
-import logger from '@src/logger';
 
 import {
   createDeleteAccountContent,

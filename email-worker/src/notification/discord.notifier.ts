@@ -3,13 +3,14 @@ import { injectable } from 'tsyringe';
 import axios from 'axios';
 import { EventEmitter } from 'node:events';
 
-import logger from '@src/logger';
+import logger from '@common/logger/logger';
+
 import {
   EmailDlqPayload,
   NOTIFICATION_EVENT,
   NotificationEventPayloadMap,
-} from '@src/notification/notification-event.constant';
-import { Notifier } from '@src/notification/notifier.interface';
+} from '@notification/notification-event.constant';
+import { Notifier } from '@notification/notifier.interface';
 
 @injectable()
 export class DiscordNotifier implements Notifier {
