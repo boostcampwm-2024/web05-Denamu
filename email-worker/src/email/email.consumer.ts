@@ -4,7 +4,9 @@ import { Options } from 'amqplib/properties';
 
 import logger from '@common/logger/logger';
 
+import { EmailPayloadConstant } from '@email/constant';
 import { EmailService } from '@email/email.service';
+import { EmailPayload } from '@email/type';
 
 import { NOTIFICATION_EVENT } from '@notification/notification-event.constant';
 import { Notifier } from '@notification/notifier.interface';
@@ -14,7 +16,6 @@ import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
 
 import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
 import { NodeMailerError } from '@app-types/nodemailer';
-import { EmailPayload, EmailPayloadConstant } from '@app-types/types';
 
 @injectable()
 export class EmailConsumer {

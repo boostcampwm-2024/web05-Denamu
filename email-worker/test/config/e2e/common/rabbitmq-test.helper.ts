@@ -1,14 +1,14 @@
 import { Channel } from 'amqplib';
 import { StartedTestContainer } from 'testcontainers';
 
+import { EmailPayload } from '@email/type';
+
 import {
   RMQ_EXCHANGES,
   RMQ_QUEUES,
   RMQ_ROUTING_KEYS,
 } from '@rabbitmq/rabbitmq.constant';
 import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
-
-import { EmailPayload } from '@app-types/types';
 
 interface RabbitMQRawMessage {
   payload: string;

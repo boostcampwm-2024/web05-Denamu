@@ -3,13 +3,12 @@ import 'reflect-metadata';
 import { setupTestContainer } from '@test/config/e2e/common/testContext.setup';
 import { StartedTestContainer } from 'testcontainers';
 
+import { EmailPayloadConstant } from '@email/constant';
 import { EmailConsumer } from '@email/email.consumer';
 
 import { RMQ_EXCHANGES, RMQ_ROUTING_KEYS } from '@rabbitmq/rabbitmq.constant';
 import { RabbitMQManager } from '@rabbitmq/rabbitmq.manager';
 import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
-
-import { EmailPayloadConstant } from '@app-types/types';
 
 interface MailpitResponse {
   messages: Array<{ To: Array<{ Address: string }>; Subject: string }>;

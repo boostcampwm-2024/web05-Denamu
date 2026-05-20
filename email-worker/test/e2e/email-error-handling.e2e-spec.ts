@@ -12,14 +12,14 @@ import {
 import { setupTestContainer } from '@test/config/e2e/common/testContext.setup';
 import { Channel } from 'amqplib';
 
+import { EmailPayloadConstant } from '@email/constant';
 import { EmailConsumer } from '@email/email.consumer';
 import { EmailService } from '@email/email.service';
+import { EmailPayload } from '@email/type';
 
 import { RETRY_CONFIG, RMQ_QUEUES } from '@rabbitmq/rabbitmq.constant';
 import { RabbitMQManager } from '@rabbitmq/rabbitmq.manager';
 import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
-
-import { EmailPayload, EmailPayloadConstant } from '@app-types/types';
 
 describe('Email Error Handling E2E Test', () => {
   let emailConsumer: EmailConsumer;
