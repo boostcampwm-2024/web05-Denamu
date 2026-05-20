@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 
-import { EmailConsumer, NodeMailerError } from '@email/email.consumer';
+import { EmailConsumer } from '@email/email.consumer';
 import { EmailService } from '@email/email.service';
 
 import { Notifier } from '@notification/notifier.interface';
@@ -8,6 +8,7 @@ import { Notifier } from '@notification/notifier.interface';
 import { RETRY_CONFIG, RMQ_QUEUES } from '@rabbitmq/rabbitmq.constant';
 import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
 
+import { NodeMailerError } from '@app-types/nodemailer';
 import {
   EmailPayload,
   EmailPayloadConstant,

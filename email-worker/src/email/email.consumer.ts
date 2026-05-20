@@ -13,14 +13,8 @@ import { RETRY_CONFIG, RMQ_QUEUES } from '@rabbitmq/rabbitmq.constant';
 import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
 
 import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
+import { NodeMailerError } from '@app-types/nodemailer';
 import { EmailPayload, EmailPayloadConstant } from '@app-types/types';
-
-export interface NodeMailerError extends Error {
-  code?: string;
-  command?: string;
-  response?: string;
-  responseCode?: number;
-}
 
 @injectable()
 export class EmailConsumer {
