@@ -18,8 +18,9 @@
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
-      "@src/*": ["./src/*"],
+      "@common/*": ["./src/common/*"],
       "@email/*": ["./src/email/*"],
+      "@notification/*": ["./src/notification/*"],
       "@rabbitmq/*": ["./src/rabbitmq/*"],
       "@app-types/*": ["./src/types/*"],
       "@test/*": ["./test/*"]
