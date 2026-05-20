@@ -14,12 +14,8 @@ import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
 
 function initializeDependencies() {
   return {
-    rabbitMQManager: container.resolve<RabbitMQManager>(
-      DEPENDENCY_SYMBOLS.RabbitMQManager,
-    ),
-    emailConsumer: container.resolve<EmailConsumer>(
-      DEPENDENCY_SYMBOLS.EmailConsumer,
-    ),
+    rabbitMQManager: container.resolve(RabbitMQManager),
+    emailConsumer: container.resolve(EmailConsumer),
     notifier: container.resolve<Notifier>(DEPENDENCY_SYMBOLS.Notifier),
   };
 }

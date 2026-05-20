@@ -14,6 +14,11 @@ import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
 import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
 import { EmailPayload, EmailPayloadConstant } from '@app-types/types';
 
+interface EmailSendError extends Error {
+  code?: string;
+  responseCode?: number;
+}
+
 @injectable()
 export class EmailConsumer {
   private consumerTag: string | null;
@@ -22,9 +27,9 @@ export class EmailConsumer {
   private shutdownResolver: (() => void) | null = null;
 
   constructor(
-    @inject(DEPENDENCY_SYMBOLS.RabbitMQService)
+    @inject(RabbitMQService)
     private readonly rabbitmqService: RabbitMQService,
-    @inject(DEPENDENCY_SYMBOLS.EmailService)
+    @inject(EmailService)
     private readonly emailService: EmailService,
     @inject(DEPENDENCY_SYMBOLS.Notifier)
     private readonly notifier: Notifier,
@@ -50,7 +55,7 @@ export class EmailConsumer {
           await this.handleEmailByType(payload);
           logger.info('[EmailConsumer] 이메일 전송 완료');
         } catch (error) {
-          await this.handleEmailByError(error, payload, retryCount);
+          await this.handleEmailByError(error as EmailSendError, payload, retryCount);
         } finally {
           this.pendingTasks--;
           logger.info(`[EmailConsumer] 남은 작업: ${this.pendingTasks}`);
@@ -175,7 +180,7 @@ export class EmailConsumer {
    * // -> 즉시 DLQ로 발행됨 (SMTP_PERMANENT_FAILURE)
    */
   async handleEmailByError(
-    error: any,
+    error: EmailSendError,
     payload: EmailPayload,
     retryCount: number,
   ): Promise<void> {
@@ -305,7 +310,7 @@ export class EmailConsumer {
   }
 
   private createDLQHeaders(
-    error: any,
+    error: EmailSendError,
     retryCount: number,
     failureType:
       | 'SMTP_PERMANENT_FAILURE'

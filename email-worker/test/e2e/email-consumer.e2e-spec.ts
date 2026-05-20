@@ -5,6 +5,14 @@ import { EmailPayloadConstant } from '@src/types/types';
 import { RMQ_EXCHANGES, RMQ_ROUTING_KEYS } from '@rabbitmq/rabbitmq.constant';
 import { setupTestContainer } from '@test/config/e2e/common/testContext.setup';
 import { RabbitMQManager } from '@rabbitmq/rabbitmq.manager';
+import { StartedTestContainer } from 'testcontainers';
+
+interface MailpitResponse {
+  messages: Array<{ To: Array<{ Address: string }>; Subject: string }>;
+}
+interface MailpitGlobal {
+  __MAILPIT_CONTAINER__: StartedTestContainer;
+}
 
 describe(`Email Normal Scenario E2E Test`, () => {
   let emailConsumer: EmailConsumer;
@@ -12,7 +20,7 @@ describe(`Email Normal Scenario E2E Test`, () => {
   let rabbitmqManager: RabbitMQManager;
   const testContext = setupTestContainer();
 
-  beforeAll(async () => {
+  beforeAll(() => {
     emailConsumer = testContext.emailConsumer;
     rabbitmqService = testContext.rabbitmqService;
     rabbitmqManager = testContext.rabbitmqManager;
@@ -53,12 +61,12 @@ describe(`Email Normal Scenario E2E Test`, () => {
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
     //then
-    const mailpitContainer = global.__MAILPIT_CONTAINER__;
+    const mailpitContainer = (global as unknown as MailpitGlobal).__MAILPIT_CONTAINER__;
     const webPort = mailpitContainer.getMappedPort(8025);
     const baseUrl = `http://${mailpitContainer.getHost()}:${webPort}`;
 
     const response = await fetch(`${baseUrl}/api/v1/messages`);
-    const data = await response.json();
+    const data = (await response.json()) as MailpitResponse;
 
     await fetch(`${baseUrl}/api/v1/messages`, {
       method: 'DELETE',
@@ -92,12 +100,12 @@ describe(`Email Normal Scenario E2E Test`, () => {
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
     //then
-    const mailpitContainer = global.__MAILPIT_CONTAINER__;
+    const mailpitContainer = (global as unknown as MailpitGlobal).__MAILPIT_CONTAINER__;
     const webPort = mailpitContainer.getMappedPort(8025);
     const baseUrl = `http://${mailpitContainer.getHost()}:${webPort}`;
 
     const response = await fetch(`${baseUrl}/api/v1/messages`);
-    const data = await response.json();
+    const data = (await response.json()) as MailpitResponse;
 
     await fetch(`${baseUrl}/api/v1/messages`, {
       method: 'DELETE',
@@ -134,12 +142,12 @@ describe(`Email Normal Scenario E2E Test`, () => {
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
     //then
-    const mailpitContainer = global.__MAILPIT_CONTAINER__;
+    const mailpitContainer = (global as unknown as MailpitGlobal).__MAILPIT_CONTAINER__;
     const webPort = mailpitContainer.getMappedPort(8025);
     const baseUrl = `http://${mailpitContainer.getHost()}:${webPort}`;
 
     const response = await fetch(`${baseUrl}/api/v1/messages`);
-    const data = await response.json();
+    const data = (await response.json()) as MailpitResponse;
 
     await fetch(`${baseUrl}/api/v1/messages`, {
       method: 'DELETE',
@@ -177,12 +185,12 @@ describe(`Email Normal Scenario E2E Test`, () => {
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
     //then
-    const mailpitContainer = global.__MAILPIT_CONTAINER__;
+    const mailpitContainer = (global as unknown as MailpitGlobal).__MAILPIT_CONTAINER__;
     const webPort = mailpitContainer.getMappedPort(8025);
     const baseUrl = `http://${mailpitContainer.getHost()}:${webPort}`;
 
     const response = await fetch(`${baseUrl}/api/v1/messages`);
-    const data = await response.json();
+    const data = (await response.json()) as MailpitResponse;
 
     await fetch(`${baseUrl}/api/v1/messages`, {
       method: 'DELETE',
@@ -214,12 +222,12 @@ describe(`Email Normal Scenario E2E Test`, () => {
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
     //then
-    const mailpitContainer = global.__MAILPIT_CONTAINER__;
+    const mailpitContainer = (global as unknown as MailpitGlobal).__MAILPIT_CONTAINER__;
     const webPort = mailpitContainer.getMappedPort(8025);
     const baseUrl = `http://${mailpitContainer.getHost()}:${webPort}`;
 
     const response = await fetch(`${baseUrl}/api/v1/messages`);
-    const data = await response.json();
+    const data = (await response.json()) as MailpitResponse;
 
     await fetch(`${baseUrl}/api/v1/messages`, {
       method: 'DELETE',
@@ -251,12 +259,12 @@ describe(`Email Normal Scenario E2E Test`, () => {
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
     //then
-    const mailpitContainer = global.__MAILPIT_CONTAINER__;
+    const mailpitContainer = (global as unknown as MailpitGlobal).__MAILPIT_CONTAINER__;
     const webPort = mailpitContainer.getMappedPort(8025);
     const baseUrl = `http://${mailpitContainer.getHost()}:${webPort}`;
 
     const response = await fetch(`${baseUrl}/api/v1/messages`);
-    const data = await response.json();
+    const data = (await response.json()) as MailpitResponse;
 
     await fetch(`${baseUrl}/api/v1/messages`, {
       method: 'DELETE',

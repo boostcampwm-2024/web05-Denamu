@@ -11,29 +11,10 @@ import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
 
 import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
 
-container.registerSingleton<RabbitMQService>(
-  DEPENDENCY_SYMBOLS.RabbitMQService,
-  RabbitMQService,
-);
-
-container.registerSingleton<RabbitMQManager>(
-  DEPENDENCY_SYMBOLS.RabbitMQManager,
-  RabbitMQManager,
-);
-
-container.registerSingleton<EmailConsumer>(
-  DEPENDENCY_SYMBOLS.EmailConsumer,
-  EmailConsumer,
-);
-
-container.registerSingleton<EmailService>(
-  DEPENDENCY_SYMBOLS.EmailService,
-  EmailService,
-);
-
-container.registerSingleton<Notifier>(
-  DEPENDENCY_SYMBOLS.Notifier,
-  DiscordNotifier,
-);
+container.registerSingleton(RabbitMQService);
+container.registerSingleton(RabbitMQManager);
+container.registerSingleton(EmailConsumer);
+container.registerSingleton(EmailService);
+container.registerSingleton<Notifier>(DEPENDENCY_SYMBOLS.Notifier, DiscordNotifier);
 
 export { container };

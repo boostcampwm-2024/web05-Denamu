@@ -4,7 +4,12 @@ import {
   StartedRabbitMQContainer,
 } from '@testcontainers/rabbitmq';
 import { GenericContainer, StartedTestContainer } from 'testcontainers';
-const globalAny: any = global;
+
+interface TestGlobal {
+  __RABBITMQ_CONTAINER__?: StartedRabbitMQContainer;
+  __MAILPIT_CONTAINER__?: StartedTestContainer;
+}
+const globalAny = global as unknown as TestGlobal;
 
 export default async function globalSetup() {
   console.log('Starting global setup...');
