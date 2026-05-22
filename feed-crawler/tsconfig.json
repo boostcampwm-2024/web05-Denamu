@@ -18,7 +18,6 @@
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
-      "@src/*": ["./src/*"],
       "@common/*": ["./src/common/*"],
       "@event_worker/*": ["./src/event_worker/*"],
       "@repository/*": ["./src/repository/*"],

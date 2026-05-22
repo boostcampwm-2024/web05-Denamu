@@ -1,12 +1,12 @@
 import 'reflect-metadata';
 
-import { FeedCrawler } from '@src/feed-crawler';
-
 import { FeedParserManager } from '@common/parser/feed-parser-manager';
 import { FeedDetail, RssObj } from '@common/types';
 
 import { FeedRepository } from '@repository/feed.repository';
 import { RssRepository } from '@repository/rss.repository';
+
+import { FeedCrawler } from '../../src/feed-crawler';
 
 describe('FeedCrawler', () => {
   let feedCrawler: FeedCrawler;

@@ -4,9 +4,6 @@ import * as schedule from 'node-schedule';
 
 import '@common/env-load';
 
-import { container } from '@src/container';
-import { FeedCrawler } from '@src/feed-crawler';
-
 import logger from '@common/logger';
 import { Notifier } from '@common/notification/notifier.interface';
 import { RedisConnection } from '@common/redis-access';
@@ -16,6 +13,9 @@ import { FullFeedCrawlEventWorker } from '@event_worker/workers/full-feed-crawl-
 
 import { DatabaseConnection } from '@app-types/database-connection';
 import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
+
+import { container } from './container';
+import { FeedCrawler } from './feed-crawler';
 
 function initializeDependencies() {
   return {
