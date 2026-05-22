@@ -36,9 +36,9 @@ export class EmailConsumer {
   async start() {
     logger.info('[EmailConsumer] 시작 중...');
 
-    this.consumerTag = await this.rabbitmqService.consumeMessage(
+    this.consumerTag = await this.rabbitmqService.consumeMessage<EmailPayload>(
       RMQ_QUEUES.EMAIL_SEND,
-      async (payload: EmailPayload, retryCount: number) => {
+      async (payload, retryCount) => {
         if (this.shuttingDownFlag) {
           logger.warn('[EmailConsumer] Shutdown 중, 메시지 처리 건너뜀');
           throw new Error('SHUTDOWN_IN_PROGRESS');
@@ -201,7 +201,13 @@ export class EmailConsumer {
       error.message?.includes('Unexpected socket close');
     if (isNetworkError) {
       if (retryCount >= RETRY_CONFIG.MAX_RETRY) {
-        await this.sendToDLQ(error, stringifiedMessage, retryCount, 'MAX_RETRIES_EXCEEDED', '[retry count 초과]');
+        await this.sendToDLQ(
+          error,
+          stringifiedMessage,
+          retryCount,
+          'MAX_RETRIES_EXCEEDED',
+          '[retry count 초과]',
+        );
         return;
       }
       await this.rabbitmqService.sendMessageToQueue(
@@ -215,13 +221,25 @@ export class EmailConsumer {
     // SMTP 레벨의 에러
     if (error.responseCode) {
       if (error.responseCode >= 500) {
-        await this.sendToDLQ(error, stringifiedMessage, retryCount, 'SMTP_PERMANENT_FAILURE', '[SMTP 500 에러 발생]');
+        await this.sendToDLQ(
+          error,
+          stringifiedMessage,
+          retryCount,
+          'SMTP_PERMANENT_FAILURE',
+          '[SMTP 500 에러 발생]',
+        );
         return;
       }
 
       if (error.responseCode >= 400) {
         if (retryCount >= RETRY_CONFIG.MAX_RETRY) {
-          await this.sendToDLQ(error, stringifiedMessage, retryCount, 'MAX_RETRIES_EXCEEDED', '[retry count 초과]');
+          await this.sendToDLQ(
+            error,
+            stringifiedMessage,
+            retryCount,
+            'MAX_RETRIES_EXCEEDED',
+            '[retry count 초과]',
+          );
           return;
         }
         await this.rabbitmqService.sendMessageToQueue(
@@ -239,7 +257,13 @@ export class EmailConsumer {
       스택 트레이스: ${error.stack}`,
     );
 
-    await this.sendToDLQ(error, stringifiedMessage, retryCount, 'UNKNOWN_ERROR', '[알 수 없는 에러 발생]');
+    await this.sendToDLQ(
+      error,
+      stringifiedMessage,
+      retryCount,
+      'UNKNOWN_ERROR',
+      '[알 수 없는 에러 발생]',
+    );
   }
 
   private createDLQHeaders(
@@ -273,7 +297,10 @@ export class EmailConsumer {
     error: NodeMailerError,
     stringifiedMessage: string,
     retryCount: number,
-    failureType: 'SMTP_PERMANENT_FAILURE' | 'MAX_RETRIES_EXCEEDED' | 'UNKNOWN_ERROR',
+    failureType:
+      | 'SMTP_PERMANENT_FAILURE'
+      | 'MAX_RETRIES_EXCEEDED'
+      | 'UNKNOWN_ERROR',
     dlqMessage: string,
   ): Promise<void> {
     const startTime = Date.now();
