@@ -201,28 +201,9 @@ export class EmailConsumer {
       error.message?.includes('Unexpected socket close');
     if (isNetworkError) {
       if (retryCount >= RETRY_CONFIG.MAX_RETRY) {
-        const rabbitmqStartTime = Date.now();
-        await this.rabbitmqService.sendMessageToQueue(
-          RMQ_QUEUES.EMAIL_DEAD_LETTER,
-          stringifiedMessage,
-          {
-            headers: this.createDLQHeaders(
-              error,
-              retryCount,
-              'MAX_RETRIES_EXCEEDED',
-            ),
-          },
-        );
-        logger.info(
-          `${error.message}에러에 대한 메시지 발행 소요 시간: ${Date.now() - rabbitmqStartTime}`,
-        );
-        this.notifier.publish(NOTIFICATION_EVENT.EMAIL_DLQ, {
-          error,
-          dlqMessage: `[retry count 초과]`,
-        });
+        await this.sendToDLQ(error, stringifiedMessage, retryCount, 'MAX_RETRIES_EXCEEDED', '[retry count 초과]');
         return;
       }
-
       await this.rabbitmqService.sendMessageToQueue(
         RETRY_CONFIG.WAITING_QUEUE[retryCount],
         stringifiedMessage,
@@ -230,52 +211,17 @@ export class EmailConsumer {
       );
       return;
     }
+
     // SMTP 레벨의 에러
     if (error.responseCode) {
       if (error.responseCode >= 500) {
-        const rabbitmqStartTime = Date.now();
-        await this.rabbitmqService.sendMessageToQueue(
-          RMQ_QUEUES.EMAIL_DEAD_LETTER,
-          stringifiedMessage,
-          {
-            headers: this.createDLQHeaders(
-              error,
-              retryCount,
-              'SMTP_PERMANENT_FAILURE',
-            ),
-          },
-        );
-        logger.info(
-          `${error.message}에러에 대한 메시지 발행 소요 시간: ${Date.now() - rabbitmqStartTime}`,
-        );
-        this.notifier.publish(NOTIFICATION_EVENT.EMAIL_DLQ, {
-          error,
-          dlqMessage: `[SMTP 500 에러 발생]`,
-        });
+        await this.sendToDLQ(error, stringifiedMessage, retryCount, 'SMTP_PERMANENT_FAILURE', '[SMTP 500 에러 발생]');
         return;
       }
 
       if (error.responseCode >= 400) {
         if (retryCount >= RETRY_CONFIG.MAX_RETRY) {
-          const rabbitmqStartTime = Date.now();
-          await this.rabbitmqService.sendMessageToQueue(
-            RMQ_QUEUES.EMAIL_DEAD_LETTER,
-            stringifiedMessage,
-            {
-              headers: this.createDLQHeaders(
-                error,
-                retryCount,
-                'MAX_RETRIES_EXCEEDED',
-              ),
-            },
-          );
-          logger.info(
-            `${error.message}에러에 대한 메시지 발행 소요 시간: ${Date.now() - rabbitmqStartTime}`,
-          );
-          this.notifier.publish(NOTIFICATION_EVENT.EMAIL_DLQ, {
-            error,
-            dlqMessage: `[retry count 초과]`,
-          });
+          await this.sendToDLQ(error, stringifiedMessage, retryCount, 'MAX_RETRIES_EXCEEDED', '[retry count 초과]');
           return;
         }
         await this.rabbitmqService.sendMessageToQueue(
@@ -293,22 +239,7 @@ export class EmailConsumer {
       스택 트레이스: ${error.stack}`,
     );
 
-    // 즉시 DLQ로 메시지 발행
-    const rabbitmqStartTime = Date.now();
-    await this.rabbitmqService.sendMessageToQueue(
-      RMQ_QUEUES.EMAIL_DEAD_LETTER,
-      stringifiedMessage,
-      {
-        headers: this.createDLQHeaders(error, retryCount, 'UNKNOWN_ERROR'),
-      },
-    );
-    logger.info(
-      `${error.message}에러에 대한 메시지 발행 소요 시간: ${Date.now() - rabbitmqStartTime}`,
-    );
-    this.notifier.publish(NOTIFICATION_EVENT.EMAIL_DLQ, {
-      error,
-      dlqMessage: `[알 수 없는 에러 발생]`,
-    });
+    await this.sendToDLQ(error, stringifiedMessage, retryCount, 'UNKNOWN_ERROR', '[알 수 없는 에러 발생]');
   }
 
   private createDLQHeaders(
@@ -336,5 +267,26 @@ export class EmailConsumer {
     }
 
     return headers;
+  }
+
+  private async sendToDLQ(
+    error: NodeMailerError,
+    stringifiedMessage: string,
+    retryCount: number,
+    failureType: 'SMTP_PERMANENT_FAILURE' | 'MAX_RETRIES_EXCEEDED' | 'UNKNOWN_ERROR',
+    dlqMessage: string,
+  ): Promise<void> {
+    const startTime = Date.now();
+    await this.rabbitmqService.sendMessageToQueue(
+      RMQ_QUEUES.EMAIL_DEAD_LETTER,
+      stringifiedMessage,
+      {
+        headers: this.createDLQHeaders(error, retryCount, failureType),
+      },
+    );
+    logger.info(
+      `${error.message}에러에 대한 메시지 발행 소요 시간: ${Date.now() - startTime}`,
+    );
+    this.notifier.publish(NOTIFICATION_EVENT.EMAIL_DLQ, { error, dlqMessage });
   }
 }
