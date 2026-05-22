@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "commit": "npm run commit --prefix ..",
     "dev": "vite --mode dev",
     "build": "tsc -b && vite build --mode prod",
     "build:local": "tsc -b && vite build",
