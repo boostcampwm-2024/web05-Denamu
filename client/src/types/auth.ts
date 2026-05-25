@@ -52,3 +52,13 @@ export interface SignInResult {
   accessToken?: string;
   status?: number;
 }
+
+export interface ForgotPasswordResult {
+  success: boolean;
+  message: string;
+}
+export interface ResetPasswordResult {
+  success: boolean;
+  message: string;
+  status?: number;
+}
