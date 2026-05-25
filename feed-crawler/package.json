@@ -38,6 +38,7 @@
     "typescript-eslint": "^8.59.3"
   },
   "scripts": {
+    "commit": "npm run commit --prefix ..",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

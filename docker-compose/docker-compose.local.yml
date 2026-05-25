@@ -79,7 +79,7 @@ services:
       rabbitmq:
         condition: service_healthy
     volumes:
-      - ../feed-crawler/logs:/var/web05-Denamu/email-worker/logs
+      - ../email-worker/logs:/var/web05-Denamu/email-worker/logs
     environment:
       NODE_ENV: 'LOCAL'
       TZ: 'Asia/Seoul'
