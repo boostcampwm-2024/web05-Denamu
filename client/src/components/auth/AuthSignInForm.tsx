@@ -59,35 +59,31 @@ export const AuthSignInForm = () => {
               value={form.password}
               onChange={(e) => updateField("password", e.target.value)}
             />
+            <div className="flex justify-end">
+              <Button
+                type="button"
+                variant="link"
+                className="h-auto p-0 text-muted-foreground underline underline-offset-4"
+                onClick={() => navigate("/forgot-password")}
+              >
+                비밀번호를 잊으셨나요?
+              </Button>
+            </div>
           </div>
           <Button className="w-full" type="submit" disabled={isLoading}>
             {isLoading ? "로그인 중..." : "로그인"}
           </Button>
         </form>
         <AuthSocialLoginButtons />
-        <div className="mt-4 flex justify-between">
+        <div className="mt-4 flex items-center justify-center gap-1.5">
+          <p className="text-sm text-muted-foreground/60">계정이 없으신가요?</p>
           <Button
+            type="button"
             variant="link"
-            className="text-muted-foreground underline underline-offset-4 h-auto p-0"
+            className="h-auto p-0 text-sm font-medium text-foreground"
             onClick={() => navigate("/signup", { state: { from: location.pathname } })}
           >
-            계정이 없으신가요?
-          </Button>
-          <Button
-            variant="link"
-            className="text-muted-foreground underline underline-offset-4 h-auto p-0"
-            onClick={() => navigate("/")}
-          >
-            메인 페이지로 돌아가기
-          </Button>
-        </div>
-        <div className="mt-2">
-          <Button
-            variant="link"
-            className="text-muted-foreground underline underline-offset-4 h-auto p-0"
-            onClick={() => navigate("/forgot-password")}
-          >
-            비밀번호를 잊으셨나요?
+            회원가입
           </Button>
         </div>
       </AuthCard>
