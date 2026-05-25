@@ -14,6 +14,8 @@ const SignIn = lazy(() => import("@/pages/SignIn"));
 const SignUp = lazy(() => import("@/pages/SignUp"));
 const UserCertificate = lazy(() => import("@/pages/UserCertificate"));
 const OAuthSuccessPage = lazy(() => import("@/pages/OAuthSuccessPage"));
+const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
 
 interface RouterProps {
   location: Location;
@@ -85,6 +87,22 @@ export const AppRouter = ({ location, state }: RouterProps) => {
           element={
             <Suspense fallback={<Loading />}>
               <Profile />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/forgot-password"
+          element={
+            <Suspense fallback={<Loading />}>
+              <ForgotPassword />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/user/password"
+          element={
+            <Suspense fallback={<Loading />}>
+              <ResetPassword />
             </Suspense>
           }
         />
