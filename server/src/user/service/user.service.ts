@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -204,10 +205,17 @@ export class UserService {
   async forgotPassword(email: string) {
     const user = await this.userRepository.findOne({
       where: { email: email },
+      relations: ['providers'],
     });
 
     if (!user) {
       return;
+    }
+
+    if (user.providers.length > 0) {
+      throw new BadRequestException(
+        '소셜 로그인 계정은 비밀번호를 변경할 수 없습니다. 소셜 로그인을 이용해주세요.',
+      );
     }
 
     const forgotPasswordCode = uuid.v4();
