@@ -15,8 +15,8 @@ export class FeedParserManager {
   private readonly parsers: BaseFeedParser[];
 
   constructor(
-    @inject(DEPENDENCY_SYMBOLS.Rss20Parser) rss20Parser: Rss20Parser,
-    @inject(DEPENDENCY_SYMBOLS.Atom10Parser) atom10Parser: Atom10Parser,
+    @inject(Rss20Parser) rss20Parser: Rss20Parser,
+    @inject(Atom10Parser) atom10Parser: Atom10Parser,
     @inject(DEPENDENCY_SYMBOLS.Notifier) private readonly notifier: Notifier,
   ) {
     this.parsers = [rss20Parser, atom10Parser];

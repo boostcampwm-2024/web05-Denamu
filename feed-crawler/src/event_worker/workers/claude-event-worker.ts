@@ -21,11 +21,11 @@ export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
   private readonly client: Anthropic;
 
   constructor(
-    @inject(DEPENDENCY_SYMBOLS.TagMapRepository)
+    @inject(TagMapRepository)
     private readonly tagMapRepository: TagMapRepository,
-    @inject(DEPENDENCY_SYMBOLS.FeedRepository)
+    @inject(FeedRepository)
     private readonly feedRepository: FeedRepository,
-    @inject(DEPENDENCY_SYMBOLS.RedisConnection)
+    @inject(RedisConnection)
     redisConnection: RedisConnection,
     @inject(DEPENDENCY_SYMBOLS.Notifier)
     private readonly notifier: Notifier,

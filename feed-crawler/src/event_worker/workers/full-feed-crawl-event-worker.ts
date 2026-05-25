@@ -9,18 +9,16 @@ import { AbstractQueueWorker } from '@event_worker/abstract-queue-worker';
 
 import { RssRepository } from '@repository/rss.repository';
 
-import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
-
 import { FeedCrawler } from '../../feed-crawler';
 
 @injectable()
 export class FullFeedCrawlEventWorker extends AbstractQueueWorker<FullFeedCrawlMessage> {
   constructor(
-    @inject(DEPENDENCY_SYMBOLS.RedisConnection)
+    @inject(RedisConnection)
     redisConnection: RedisConnection,
-    @inject(DEPENDENCY_SYMBOLS.RssRepository)
+    @inject(RssRepository)
     private readonly rssRepository: RssRepository,
-    @inject(DEPENDENCY_SYMBOLS.FeedCrawler)
+    @inject(FeedCrawler)
     private readonly feedCrawler: FeedCrawler,
   ) {
     super('[Full Feed Crawler]', redisConnection);

@@ -7,16 +7,14 @@ import { FeedDetail, RssObj } from '@common/types';
 import { FeedRepository } from '@repository/feed.repository';
 import { RssRepository } from '@repository/rss.repository';
 
-import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
-
 @injectable()
 export class FeedCrawler {
   constructor(
-    @inject(DEPENDENCY_SYMBOLS.RssRepository)
+    @inject(RssRepository)
     private readonly rssRepository: RssRepository,
-    @inject(DEPENDENCY_SYMBOLS.FeedRepository)
+    @inject(FeedRepository)
     private readonly feedRepository: FeedRepository,
-    @inject(DEPENDENCY_SYMBOLS.FeedParserManager)
+    @inject(FeedParserManager)
     private readonly feedParserManager: FeedParserManager,
   ) {}
 

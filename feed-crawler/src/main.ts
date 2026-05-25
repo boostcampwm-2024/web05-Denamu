@@ -22,16 +22,10 @@ function initializeDependencies() {
     dbConnection: container.resolve<DatabaseConnection>(
       DEPENDENCY_SYMBOLS.DatabaseConnection,
     ),
-    redisConnection: container.resolve<RedisConnection>(
-      DEPENDENCY_SYMBOLS.RedisConnection,
-    ),
-    feedCrawler: container.resolve<FeedCrawler>(DEPENDENCY_SYMBOLS.FeedCrawler),
-    claudeEventWorker: container.resolve<ClaudeEventWorker>(
-      DEPENDENCY_SYMBOLS.ClaudeEventWorker,
-    ),
-    fullFeedCrawlEventWorker: container.resolve<FullFeedCrawlEventWorker>(
-      DEPENDENCY_SYMBOLS.FullFeedCrawlEventWorker,
-    ),
+    redisConnection: container.resolve(RedisConnection),
+    feedCrawler: container.resolve(FeedCrawler),
+    claudeEventWorker: container.resolve(ClaudeEventWorker),
+    fullFeedCrawlEventWorker: container.resolve(FullFeedCrawlEventWorker),
     notifier: container.resolve<Notifier>(DEPENDENCY_SYMBOLS.Notifier),
   };
 }

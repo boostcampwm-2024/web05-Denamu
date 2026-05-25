@@ -13,7 +13,7 @@ export class FeedRepository {
   constructor(
     @inject(DEPENDENCY_SYMBOLS.DatabaseConnection)
     private readonly dbConnection: DatabaseConnection,
-    @inject(DEPENDENCY_SYMBOLS.RedisConnection)
+    @inject(RedisConnection)
     private readonly redisConnection: RedisConnection,
   ) {}
 
