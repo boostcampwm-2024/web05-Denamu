@@ -41,6 +41,8 @@ export const USER = {
   REFRESH_TOKEN: "/api/user/refresh-token",
   LOGOUT: "/api/user/logout",
   CERTIFICATE: "/api/user/certificate",
+  PASSWORD_RESET: "/api/user/password-reset",
+  PASSWORD_CHANGE: "/api/user/password",
 };
 
 export const OAUTH = {
