@@ -3,6 +3,7 @@ import { inject, injectable } from 'tsyringe';
 import Anthropic from '@anthropic-ai/sdk';
 
 import { PROMPT_CONTENT, redisConstant } from '@common/constant';
+import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
 import logger from '@common/logger';
 import { NOTIFICATION_EVENT } from '@common/notification/notification-event.constant';
 import { Notifier } from '@common/notification/notifier.interface';
@@ -13,8 +14,6 @@ import { AbstractQueueWorker } from '@event_worker/abstract-queue-worker';
 
 import { FeedRepository } from '@repository/feed.repository';
 import { TagMapRepository } from '@repository/tag-map.repository';
-
-import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
 
 @injectable()
 export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {

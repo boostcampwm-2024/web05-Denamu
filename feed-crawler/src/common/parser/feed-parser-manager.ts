@@ -1,5 +1,6 @@
 import { inject, injectable } from 'tsyringe';
 
+import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
 import logger from '@common/logger';
 import { NOTIFICATION_EVENT } from '@common/notification/notification-event.constant';
 import { Notifier } from '@common/notification/notifier.interface';
@@ -7,8 +8,6 @@ import { BaseFeedParser } from '@common/parser/base-feed-parser';
 import { Atom10Parser } from '@common/parser/formats/atom10-parser';
 import { Rss20Parser } from '@common/parser/formats/rss20-parser';
 import { FeedDetail, RssObj } from '@common/types';
-
-import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
 
 @injectable()
 export class FeedParserManager {

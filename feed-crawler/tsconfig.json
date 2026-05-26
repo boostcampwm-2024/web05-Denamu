@@ -21,7 +21,6 @@
       "@common/*": ["./src/common/*"],
       "@event_worker/*": ["./src/event_worker/*"],
       "@repository/*": ["./src/repository/*"],
-      "@app-types/*": ["./src/types/*"],
       "@test/*": ["./test/*"]
     },
     "resolveJsonModule": true,

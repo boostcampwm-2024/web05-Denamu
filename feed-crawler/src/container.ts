@@ -1,5 +1,7 @@
 import { container } from 'tsyringe';
 
+import { DatabaseConnection } from '@common/database-connection';
+import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
 import { MySQLConnection } from '@common/mysql-access';
 import { DiscordNotifier } from '@common/notification/discord.notifier';
 import { Notifier } from '@common/notification/notifier.interface';
@@ -15,9 +17,6 @@ import { FullFeedCrawlEventWorker } from '@event_worker/workers/full-feed-crawl-
 import { FeedRepository } from '@repository/feed.repository';
 import { RssRepository } from '@repository/rss.repository';
 import { TagMapRepository } from '@repository/tag-map.repository';
-
-import { DatabaseConnection } from '@app-types/database-connection';
-import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
 
 import { FeedCrawler } from './feed-crawler';
 

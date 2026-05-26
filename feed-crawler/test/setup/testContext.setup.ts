@@ -3,6 +3,8 @@ import 'reflect-metadata';
 import { container } from 'tsyringe';
 import { DependencyContainer } from 'tsyringe';
 
+import { DatabaseConnection } from '@common/database-connection';
+import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
 import { MySQLConnection } from '@common/mysql-access';
 import { DiscordNotifier } from '@common/notification/discord.notifier';
 import { Notifier } from '@common/notification/notifier.interface';
@@ -17,9 +19,6 @@ import { ClaudeEventWorker } from '@event_worker/workers/claude-event-worker';
 import { FeedRepository } from '@repository/feed.repository';
 import { RssRepository } from '@repository/rss.repository';
 import { TagMapRepository } from '@repository/tag-map.repository';
-
-import { DatabaseConnection } from '@app-types/database-connection';
-import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
 
 import { FeedCrawler } from '../../src/feed-crawler';
 

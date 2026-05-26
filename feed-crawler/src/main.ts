@@ -4,15 +4,14 @@ import * as schedule from 'node-schedule';
 
 import '@common/env-load';
 
+import { DatabaseConnection } from '@common/database-connection';
+import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
 import logger from '@common/logger';
 import { Notifier } from '@common/notification/notifier.interface';
 import { RedisConnection } from '@common/redis-access';
 
 import { ClaudeEventWorker } from '@event_worker/workers/claude-event-worker';
 import { FullFeedCrawlEventWorker } from '@event_worker/workers/full-feed-crawl-event-worker';
-
-import { DatabaseConnection } from '@app-types/database-connection';
-import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
 
 import { container } from './container';
 import { FeedCrawler } from './feed-crawler';
