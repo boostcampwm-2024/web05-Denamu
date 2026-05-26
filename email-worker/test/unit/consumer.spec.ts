@@ -1,17 +1,16 @@
 import 'reflect-metadata';
 
+import { RssRegistration, RssRemoval, User } from '@common/types';
+
 import { EmailPayloadConstant } from '@email/constant';
 import { EmailConsumer } from '@email/email.consumer';
 import { EmailService } from '@email/email.service';
-import { EmailPayload } from '@email/type';
+import { EmailPayload, NodeMailerError } from '@email/types';
 
 import { Notifier } from '@notification/notifier.interface';
 
 import { RETRY_CONFIG, RMQ_QUEUES } from '@rabbitmq/rabbitmq.constant';
 import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
-
-import { NodeMailerError } from '@app-types/nodemailer';
-import { RssRegistration, RssRemoval, User } from '@app-types/types';
 
 describe('email consumer unit test', () => {
   let emailConsumer: EmailConsumer;

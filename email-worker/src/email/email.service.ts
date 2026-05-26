@@ -4,6 +4,7 @@ import * as nodemailer from 'nodemailer';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
 
 import logger from '@common/logger/logger';
+import { Rss, RssRegistration, RssRemoval, User } from '@common/types';
 
 import {
   createDeleteAccountContent,
@@ -13,8 +14,6 @@ import {
   createVerificationMailContent,
   PRODUCT_DOMAIN,
 } from '@email/email.content';
-
-import { Rss, RssRegistration, RssRemoval, User } from '@app-types/types';
 
 @injectable()
 export class EmailService {

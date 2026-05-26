@@ -15,7 +15,7 @@ import { Channel } from 'amqplib';
 import { EmailPayloadConstant } from '@email/constant';
 import { EmailConsumer } from '@email/email.consumer';
 import { EmailService } from '@email/email.service';
-import { EmailPayload } from '@email/type';
+import { EmailPayload } from '@email/types';
 
 import { RETRY_CONFIG, RMQ_QUEUES } from '@rabbitmq/rabbitmq.constant';
 import { RabbitMQManager } from '@rabbitmq/rabbitmq.manager';

@@ -1,7 +1,7 @@
 import { Channel } from 'amqplib';
 import { StartedTestContainer } from 'testcontainers';
 
-import { EmailPayload } from '@email/type';
+import { EmailPayload } from '@email/types';
 
 import {
   RMQ_EXCHANGES,

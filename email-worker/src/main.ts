@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 
+import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
 import '@common/env/env-load';
 import logger from '@common/logger/logger';
 
@@ -8,8 +9,6 @@ import { EmailConsumer } from '@email/email.consumer';
 import { Notifier } from '@notification/notifier.interface';
 
 import { RabbitMQManager } from '@rabbitmq/rabbitmq.manager';
-
-import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
 
 import { container } from './container';
 

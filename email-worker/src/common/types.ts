@@ -23,4 +23,3 @@ export interface RssRemoval {
   rssUrl: string;
   certificateCode: string;
 }
-
