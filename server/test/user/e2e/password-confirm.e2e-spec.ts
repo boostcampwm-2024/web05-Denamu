@@ -1,6 +1,7 @@
 import { HttpStatus } from '@nestjs/common';
 
 import * as bcrypt from 'bcrypt';
+import * as uuid from 'uuid';
 import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 
@@ -14,14 +15,14 @@ import { UserRepository } from '@user/repository/user.repository';
 import { UserFixture } from '@test/config/common/fixture/user.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = '/api/users/password';
+const makeURL = (uuid: string) => `/api/users/password-resets/${uuid}`;
 
-describe(`PATCH ${URL} E2E Test`, () => {
+describe(`PATCH /api/users/password-resets/:uuid E2E Test`, () => {
   let agent: TestAgent;
   let redisService: RedisService;
   let userRepository: UserRepository;
   let user: User;
-  const passwordPatchCode = 'user-password-confirm';
+  const passwordPatchCode = uuid.v4();
   const redisKeyMake = (data: string) =>
     `${REDIS_KEYS.USER_RESET_PASSWORD_KEY}:${data}`;
 
@@ -37,13 +38,13 @@ describe(`PATCH ${URL} E2E Test`, () => {
 
   it('[404] 존재하지 않는 비밀번호 세션 ID를 통해 비밀번호 변경 요청을 할 경우 비밀번호 변경을 실패한다.', async () => {
     // given
-    const requestDto = new ResetPasswordRequestDto({
-      uuid: `Wrong${passwordPatchCode}`,
-      password: 'test1234@',
-    });
+    const nonExistentCode = uuid.v4();
+    const requestDto = new ResetPasswordRequestDto({ password: 'test1234@' });
 
     // Http when
-    const response = await agent.patch(URL).send(requestDto);
+    const response = await agent
+      .patch(makeURL(nonExistentCode))
+      .send(requestDto);
 
     // Http then
     const { data } = response.body;
@@ -52,7 +53,7 @@ describe(`PATCH ${URL} E2E Test`, () => {
 
     // DB, Redis when
     const savedPasswordCode = await redisService.get(
-      redisKeyMake(passwordPatchCode),
+      redisKeyMake(nonExistentCode),
     );
 
     // DB, Redis then
@@ -63,7 +64,6 @@ describe(`PATCH ${URL} E2E Test`, () => {
     // given
     const updatedPassword = 'test1234@';
     const requestDto = new ResetPasswordRequestDto({
-      uuid: passwordPatchCode,
       password: updatedPassword,
     });
     await redisService.set(
@@ -72,7 +72,9 @@ describe(`PATCH ${URL} E2E Test`, () => {
     );
 
     // Http when
-    const response = await agent.patch(URL).send(requestDto);
+    const response = await agent
+      .patch(makeURL(passwordPatchCode))
+      .send(requestDto);
 
     // Http then
     const { data } = response.body;

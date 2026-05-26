@@ -10,7 +10,7 @@ import { UserFixture } from '@test/config/common/fixture/user.fixture';
 import { createRefreshToken } from '@test/config/e2e/env/jest.setup';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = '/api/users/refresh-token';
+const URL = '/api/users/tokens';
 
 describe(`POST ${URL} E2E Test`, () => {
   let agent: TestAgent;

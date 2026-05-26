@@ -4,15 +4,6 @@ import { IsNotEmpty, Matches } from 'class-validator';
 
 export class ResetPasswordRequestDto {
   @ApiProperty({
-    example: 'd2ba0d98-95ce-4905-87fc-384965ffe7c9',
-    description: '인증 코드를 입력해주세요.',
-  })
-  @IsNotEmpty({
-    message: '인증 코드를 입력해주세요.',
-  })
-  uuid: string;
-
-  @ApiProperty({
     example: 'example1234!',
     description: '비밀번호를 입력해주세요.',
   })

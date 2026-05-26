@@ -3,9 +3,9 @@ export const CHAT_SERVER_URL = import.meta.env.VITE_DENAMU_URL;
 
 export const ADMIN = {
   LOGIN: "/api/admins/login",
-  CHECK: "/api/admins/session-id",
+  CHECK: "/api/admins/sessions",
   LOGOUT: "/api/admins/logout",
-  REGISTER: "/api/admins/register",
+  REGISTER: "/api/admins",
   GET: {
     RSS: "/api/rss",
     ACCEPT: "/api/rss/history/accept",
@@ -36,11 +36,11 @@ export const SEARCH = {
 };
 
 export const USER = {
-  REGISTER: "/api/users/register",
+  REGISTER: "/api/users/registrations",
   LOGIN: "/api/users/login",
-  REFRESH_TOKEN: "/api/users/refresh-token",
+  REFRESH_TOKEN: "/api/users/tokens",
   LOGOUT: "/api/users/logout",
-  CERTIFICATE: "/api/users/certificate",
+  CERTIFICATE: "/api/users/email-verifications",
 };
 
 export const OAUTH = {

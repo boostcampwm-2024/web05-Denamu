@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
   Patch,
   Post,
   Query,
@@ -32,11 +33,12 @@ import { ApiResetPassword } from '@user/api-docs/resetPassword.api-docs';
 import { ApiUpdateUser } from '@user/api-docs/updateUser.api-docs';
 import { CertificateUserRequestDto } from '@user/dto/request/certificateUser.dto';
 import { CheckEmailDuplicationRequestDto } from '@user/dto/request/checkEmailDuplication.dto';
-import { ConfirmDeleteAccountDto } from '@user/dto/request/confirmDeleteAccount.dto';
 import { ForgotPasswordRequestDto } from '@user/dto/request/forgotPassword.dto';
 import { LoginUserRequestDto } from '@user/dto/request/loginUser.dto';
 import { RegisterUserRequestDto } from '@user/dto/request/registerUser.dto';
+import { ConfirmDeleteAccountParamRequestDto } from '@user/dto/request/confirmDeleteAccountParam.dto';
 import { ResetPasswordRequestDto } from '@user/dto/request/resetPassword.dto';
+import { ResetPasswordParamRequestDto } from '@user/dto/request/resetPasswordParam.dto';
 import { UpdateUserRequestDto } from '@user/dto/request/updateUser.dto';
 import { UserService } from '@user/service/user.service';
 
@@ -46,7 +48,7 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @ApiCheckEmailDuplication()
-  @Get('/email-check')
+  @Get('/email-availability')
   @HttpCode(HttpStatus.OK)
   async checkEmailDuplication(
     @Query()
@@ -61,7 +63,7 @@ export class UserController {
   }
 
   @ApiRegisterUser()
-  @Post('/register')
+  @Post('/registrations')
   @HttpCode(HttpStatus.CREATED)
   async registerUser(@Body() registerDto: RegisterUserRequestDto) {
     await this.userService.registerUser(registerDto);
@@ -71,7 +73,7 @@ export class UserController {
   }
 
   @ApiCertificateUser()
-  @Post('/certificate')
+  @Post('/email-verifications')
   @HttpCode(HttpStatus.OK)
   async certificateUser(@Body() certificateDto: CertificateUserRequestDto) {
     await this.userService.certificateUser(certificateDto.uuid);
@@ -94,7 +96,7 @@ export class UserController {
   }
 
   @ApiRefreshToken()
-  @Post('/refresh-token')
+  @Post('/tokens')
   @HttpCode(HttpStatus.OK)
   @UseGuards(RefreshJwtGuard)
   refreshAccessToken(@CurrentUser() user: Payload) {
@@ -128,7 +130,7 @@ export class UserController {
   }
 
   @ApiRequestDeleteAccount()
-  @Post('/delete-account/request')
+  @Post('/deletion-requests')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtGuard)
   async requestDeleteAccount(
@@ -148,15 +150,15 @@ export class UserController {
   }
 
   @ApiConfirmDeleteAccount()
-  @Post('/delete-account/confirm')
+  @Patch('/deletion-requests/:token')
   @HttpCode(HttpStatus.OK)
-  async confirmDeleteAccount(@Body() confirmDto: ConfirmDeleteAccountDto) {
-    await this.userService.confirmDeleteAccount(confirmDto.token);
+  async confirmDeleteAccount(@Param() paramDto: ConfirmDeleteAccountParamRequestDto) {
+    await this.userService.confirmDeleteAccount(paramDto.token);
     return ApiResponse.responseWithNoContent('회원탈퇴가 완료되었습니다.');
   }
 
   @ApiForgotPassword()
-  @Post('/password-reset')
+  @Post('/password-resets')
   @HttpCode(HttpStatus.OK)
   async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordRequestDto) {
     await this.userService.forgotPassword(forgotPasswordDto.email);
@@ -166,15 +168,13 @@ export class UserController {
   }
 
   @ApiResetPassword()
-  @Patch('/password')
+  @Patch('/password-resets/:uuid')
   @HttpCode(HttpStatus.OK)
   async resetPassword(
+    @Param() paramDto: ResetPasswordParamRequestDto,
     @Body() resetPasswordRequestDto: ResetPasswordRequestDto,
   ) {
-    await this.userService.resetPassword(
-      resetPasswordRequestDto.uuid,
-      resetPasswordRequestDto.password,
-    );
+    await this.userService.resetPassword(paramDto.uuid, resetPasswordRequestDto.password);
     return ApiResponse.responseWithNoContent(
       '비밀번호가 성공적으로 수정되었습니다.',
     );

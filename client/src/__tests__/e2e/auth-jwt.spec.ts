@@ -72,7 +72,7 @@ test("oauth callback sets refresh cookie and issues JWT through refresh endpoint
   await markAsVisited(page);
   const refreshResponsePromise = page.waitForResponse(
     (response) =>
-      response.url().includes("/api/users/refresh-token") &&
+      response.url().includes("/api/users/tokens") &&
       response.request().method() === "POST",
   );
 
