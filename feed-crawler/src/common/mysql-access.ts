@@ -37,8 +37,8 @@ export class MySQLConnection implements DatabaseConnection {
     } catch (error) {
       logger.error(
         `${this.nameTag} 쿼리 ${query} 실행 중 오류 발생
-          오류 메시지: ${error.message}
-          스택 트레이스: ${error.stack}`,
+          오류 메시지: ${error instanceof Error ? error.message : String(error)}
+          스택 트레이스: ${error instanceof Error ? error.stack : ''}`,
       );
     } finally {
       if (connection) {
@@ -47,8 +47,8 @@ export class MySQLConnection implements DatabaseConnection {
         } catch (error) {
           logger.error(
             `${this.nameTag} connection release 중 오류 발생
-            오류 메시지: ${error.message}
-            스택 트레이스: ${error.stack}`,
+            오류 메시지: ${error instanceof Error ? error.message : String(error)}
+            스택 트레이스: ${error instanceof Error ? error.stack : ''}`,
           );
         }
       }
@@ -64,8 +64,8 @@ export class MySQLConnection implements DatabaseConnection {
     } catch (error) {
       logger.error(
         `${this.nameTag} 쿼리 ${query} 실행 중 오류 발생
-          오류 메시지: ${error.message}
-          스택 트레이스: ${error.stack}`,
+          오류 메시지: ${error instanceof Error ? error.message : String(error)}
+          스택 트레이스: ${error instanceof Error ? error.stack : ''}`,
       );
       throw error;
     } finally {
@@ -75,8 +75,8 @@ export class MySQLConnection implements DatabaseConnection {
         } catch (error) {
           logger.error(
             `${this.nameTag} connection release 중 오류 발생
-            오류 메시지: ${error.message}
-            스택 트레이스: ${error.stack}`,
+            오류 메시지: ${error instanceof Error ? error.message : String(error)}
+            스택 트레이스: ${error instanceof Error ? error.stack : ''}`,
           );
         }
       }

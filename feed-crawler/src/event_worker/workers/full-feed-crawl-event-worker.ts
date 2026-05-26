@@ -65,7 +65,7 @@ export class FullFeedCrawlEventWorker extends AbstractQueueWorker<FullFeedCrawlM
         `${this.nameTag} RSS ID ${rssId}에서 ${insertedFeeds.length}개의 피드를 처리했습니다.`,
       );
     } catch (error) {
-      await this.handleFailure(crawlMessage, error);
+      await this.handleFailure(crawlMessage, error as Error);
     }
   }
 

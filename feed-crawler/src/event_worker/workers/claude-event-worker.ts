@@ -45,8 +45,8 @@ export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
     return redisConstant.FEED_AI_QUEUE;
   }
 
-  protected parseQueueMessage(message: string): FeedAIQueueItem {
-    return JSON.parse(message);
+  protected parseQueueMessage(message: string) {
+    return JSON.parse(message) as FeedAIQueueItem;
   }
 
   protected async processItem(feed: FeedAIQueueItem): Promise<void> {
@@ -54,9 +54,9 @@ export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
       const aiData = await this.requestAI(feed);
       await this.saveAIResult(aiData);
     } catch (error) {
-      await this.handleFailure(feed, error);
+      await this.handleFailure(feed, error as Error);
       this.notifier.publish(NOTIFICATION_EVENT.AI_SUMMARY, {
-        error,
+        error: error as Error,
         feedId: feed.id,
         errorSource: '[AI 요약 요청]',
       });
@@ -65,20 +65,20 @@ export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
 
   private async loadFeeds() {
     try {
-      const redisSearchResult = await this.redisConnection.executePipeline(
+      const redisSearchResult = (await this.redisConnection.executePipeline(
         (pipeline) => {
           for (let i = 0; i < parseInt(process.env.AI_RATE_LIMIT_COUNT); i++) {
             pipeline.rpop(redisConstant.FEED_AI_QUEUE);
           }
         },
-      );
+      )) as [error: Error, result: string | null][];
       return redisSearchResult
-        .map((result) => JSON.parse(result[1] as string))
+        .map((result) => JSON.parse(result[1]))
         .filter((value) => value !== null);
     } catch (error) {
       logger.error(`${this.nameTag} Redis 로드한 데이터 JSON Parse 중 오류 발생:
-        메시지: ${error.message}
-        스택 트레이스: ${error.stack}
+        메시지: ${error instanceof Error ? error.message : String(error)}
+        스택 트레이스: ${error instanceof Error ? error.stack : ''}
       `);
     }
   }
@@ -102,7 +102,7 @@ export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
     return feed;
   }
 
-  private parseClaudeResponse(responseText: string): ClaudeResponse {
+  private parseClaudeResponse(responseText: string) {
     const cleanedText = responseText
       .trim()
       .replace(/^```json\s*/i, '')

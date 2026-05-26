@@ -92,7 +92,7 @@ export abstract class BaseFeedParser {
           content: content,
           summary: FEED_AI_SUMMARY_IN_PROGRESS_MESSAGE,
           deathCount: 0,
-        } as FeedDetail;
+        };
       }),
     );
   }

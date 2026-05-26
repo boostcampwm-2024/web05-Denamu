@@ -11,7 +11,7 @@ export class TagMapRepository {
   ) {}
 
   public async insertTags(feedId: number, tags: string[]) {
-    if (!tags?.length) {
+    if (tags == null || tags.length === 0) {
       return;
     }
 

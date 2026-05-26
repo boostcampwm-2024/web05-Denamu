@@ -35,7 +35,8 @@ export class FeedRepository {
         ]);
         return { result, index, success: true };
       } catch (error) {
-        if (error.code === 'ER_DUP_ENTRY') {
+        const mysqlError = error as { code?: string };
+        if (mysqlError.code === 'ER_DUP_ENTRY') {
           logger.info(`중복 피드 스킵: ${feed.title} (${feed.link})`);
           return { result: null, index, success: false, duplicate: true };
         }
@@ -49,7 +50,7 @@ export class FeedRepository {
       .filter((result) => result.success)
       .map((result) => ({
         ...resultData[result.index],
-        id: result.result.insertId,
+        id: (result.result as unknown as { insertId: number }).insertId,
       }));
 
     const duplicateCount = promiseResults.filter(
@@ -88,8 +89,8 @@ export class FeedRepository {
     } catch (error) {
       logger.error(
         `[Redis] 최근 게시글 캐시를 삭제하는 도중 에러가 발생했습니다.
-        에러 메시지: ${error.message}
-        스택 트레이스: ${error.stack}`,
+        에러 메시지: ${error instanceof Error ? error.message : String(error)}
+        스택 트레이스: ${error instanceof Error ? error.stack : ''}`,
       );
     }
   }
@@ -117,8 +118,8 @@ export class FeedRepository {
     } catch (error) {
       logger.error(
         `[Redis] 최근 게시글 캐시를 저장하는 도중 에러가 발생했습니다.
-        에러 메시지: ${error.message}
-        스택 트레이스: ${error.stack}`,
+        에러 메시지: ${error instanceof Error ? error.message : String(error)}
+        스택 트레이스: ${error instanceof Error ? error.stack : ''}`,
       );
     }
   }
@@ -155,13 +156,13 @@ export class FeedRepository {
           );
         }
       });
+      logger.info(`[Redis] AI Queue 데이터 삽입이 정상적으로 수행되었습니다.`);
     } catch (error) {
       logger.error(
         `[Redis] AI Queue 데이터 삽입 중 에러가 발생했습니다.
-        에러 메시지: ${error.message}
-        스택 트레이스: ${error.stack}`,
+        에러 메시지: ${error instanceof Error ? error.message : String(error)}
+        스택 트레이스: ${error instanceof Error ? error.stack : ''}`,
       );
     }
-    logger.info(`[Redis] AI Queue 데이터 삽입이 정상적으로 수행되었습니다.`);
   }
 }

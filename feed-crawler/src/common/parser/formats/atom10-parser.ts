@@ -10,7 +10,7 @@ export class Atom10Parser extends BaseFeedParser {
   }
   canParse(xmlData: string): boolean {
     try {
-      const parsed = this.xmlParser.parse(xmlData);
+      const parsed = this.xmlParser.parse(xmlData) as { feed?: { entry?: unknown } };
       return !!parsed.feed?.entry;
     } catch {
       return false;
@@ -18,14 +18,16 @@ export class Atom10Parser extends BaseFeedParser {
   }
 
   protected extractRawFeeds(xmlData: string): RawFeed[] {
-    const parsed = this.xmlParser.parse(xmlData);
+    type Atom10Entry = { title: any; link: any; published?: any; updated?: any; summary?: any; content?: any };
+    type Atom10Parsed = { feed: { entry: Atom10Entry | Atom10Entry[] } };
+    const parsed = this.xmlParser.parse(xmlData) as unknown as Atom10Parsed;
 
-    let entries = parsed.feed.entry;
+    let entries: Atom10Entry[] = parsed.feed.entry as Atom10Entry[];
     if (!Array.isArray(entries)) {
-      entries = [entries];
+      entries = [parsed.feed.entry as Atom10Entry];
     }
 
-    return entries.map((entry: any) => ({
+    return entries.map((entry) => ({
       title: this.parserUtil.customUnescape(entry.title),
       link: this.extractLink(entry.link),
       pubDate: entry.published || entry.updated,
@@ -33,18 +35,18 @@ export class Atom10Parser extends BaseFeedParser {
     }));
   }
 
-  private extractLink(linkData: any): string {
-    // link 태그가 속성없이 문자 형태 그대로일 경우
+  private extractLink(linkData: unknown): string {
     if (typeof linkData === 'string') {
       return linkData;
     }
 
-    // link 태그가 여러개인 경우
     if (Array.isArray(linkData)) {
-      const alternateLink = linkData.find((l) => l['@_rel'] === 'alternate');
-      return alternateLink['@_href'] || '';
+      const items = linkData as { '@_rel'?: string; '@_href'?: string }[];
+      const alternateLink = items.find((l) => l['@_rel'] === 'alternate');
+      return alternateLink?.['@_href'] ?? '';
     }
 
-    return linkData['@_href'] || linkData?.href || '';
+    const link = linkData as { '@_href'?: string; href?: string };
+    return link['@_href'] ?? link.href ?? '';
   }
 }

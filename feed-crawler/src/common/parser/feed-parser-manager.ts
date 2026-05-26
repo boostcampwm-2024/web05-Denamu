@@ -46,7 +46,7 @@ export class FeedParserManager {
     } catch (error) {
       logger.warn(`[${rssObj.rssUrl}] 피드 파싱 중 오류 발생: ${error}`);
       this.notifier.publish(NOTIFICATION_EVENT.FEED_CRAWLING_SCHEDULED, {
-        error,
+        error: error as Error,
         blogUrl: rssObj.rssUrl,
         errorSource: '[Scheduled FeedCrawling]',
       });
@@ -81,7 +81,7 @@ export class FeedParserManager {
     } catch (error) {
       logger.warn(`[${rssObj.rssUrl}] 전체 피드 파싱 중 오류 발생: ${error}`);
       this.notifier.publish(NOTIFICATION_EVENT.FEED_CRAWLING_FULL, {
-        error,
+        error: error as Error,
         blogUrl: rssObj.rssUrl,
         errorSource: '[Full FeedCrawling]',
       });
