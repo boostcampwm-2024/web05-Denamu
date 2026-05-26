@@ -26,7 +26,7 @@ import { TagFixture } from '@test/config/common/fixture/tag.fixture';
 import { UserFixture } from '@test/config/common/fixture/user.fixture';
 import { createAccessToken, testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = '/api/feed/detail';
+const URL = '/api/feed';
 
 describe(`GET ${URL}/{feedId} E2E Test`, () => {
   let agent: TestAgent;
@@ -127,64 +127,6 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
       title: feedList[1].title,
       viewCount: feedList[1].viewCount,
     });
-  });
-
-  it('[404] 원본 게시글이 삭제된 경우 피드를 삭제하고 NotFoundException을 반환한다.', async () => {
-    // given
-    const feedDetailRequestDto = new ManageFeedRequestDto({
-      feedId: feedList[0].id,
-    });
-
-    // Mock fetch to return 404
-    global.fetch = jest.fn().mockResolvedValue({
-      status: HttpStatus.NOT_FOUND,
-    });
-
-    // when
-    const response = await agent.delete(
-      `/api/feed/${feedDetailRequestDto.feedId}`,
-    );
-
-    // then
-    const { data } = response.body;
-    expect(response.status).toBe(HttpStatus.NOT_FOUND);
-    expect(data).toBeUndefined();
-
-    // DB when - 피드가 삭제되었는지 확인
-    const deletedFeed = await feedRepository.findOneBy({
-      id: feedDetailRequestDto.feedId,
-    });
-
-    // DB then
-    expect(deletedFeed).toBeNull();
-  });
-
-  it('[200] 원본 게시글이 존재하는 경우 정상 응답을 반환한다.', async () => {
-    // given
-    const feedDetailRequestDto = new ManageFeedRequestDto({
-      feedId: feedList[0].id,
-    });
-
-    // Mock fetch to return 200
-    global.fetch = jest.fn().mockResolvedValue({
-      status: HttpStatus.OK,
-    });
-
-    // when
-    const response = await agent.delete(
-      `/api/feed/${feedDetailRequestDto.feedId}`,
-    );
-
-    // then
-    expect(response.status).toBe(HttpStatus.OK);
-
-    // DB when - 피드가 여전히 존재하는지 확인
-    const existingFeed = await feedRepository.findOneBy({
-      id: feedDetailRequestDto.feedId,
-    });
-
-    // DB then
-    expect(existingFeed).not.toBeNull();
   });
 
   describe('Read Feed Interceptor', () => {

@@ -1,7 +1,7 @@
 import {
   Controller,
-  Delete,
   Get,
+  Head,
   HttpCode,
   HttpStatus,
   Param,
@@ -123,24 +123,24 @@ export class FeedController {
     );
   }
 
+  @ApiDeleteCheckFeed()
+  @Head(':feedId')
+  @HttpCode(HttpStatus.OK)
+  async deleteCheckFeed(@Param() feedDeleteCheckDto: ManageFeedRequestDto) {
+    await this.feedService.deleteCheckFeed(feedDeleteCheckDto);
+    return ApiResponse.responseWithNoContent(
+      '게시글 삭제 확인 요청을 성공했습니다.',
+    );
+  }
+
   @ApiGetFeedDetail()
-  @Get('/detail/:feedId')
+  @Get(':feedId')
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(ReadFeedInterceptor)
   async getFeedDetail(@Param() feedDetailRequestDto: ManageFeedRequestDto) {
     return ApiResponse.responseWithData(
       '요청이 성공적으로 처리되었습니다.',
       await this.feedService.getFeedDetail(feedDetailRequestDto),
-    );
-  }
-
-  @ApiDeleteCheckFeed()
-  @Delete('/:feedId')
-  @HttpCode(HttpStatus.OK)
-  async deleteCheckFeed(@Param() feedDeleteCheckDto: ManageFeedRequestDto) {
-    await this.feedService.deleteCheckFeed(feedDeleteCheckDto);
-    return ApiResponse.responseWithNoContent(
-      '게시글 삭제 확인 요청을 성공했습니다.',
     );
   }
 }

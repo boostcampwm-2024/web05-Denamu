@@ -255,7 +255,7 @@ export class FeedService {
     const feed = await this.getFeed(feedDeleteCheckDto.feedId);
     const response = await fetch(feed.path);
 
-    if (response.status === (HttpStatus.NOT_FOUND as number)) {
+    if (response.status === Number(HttpStatus.NOT_FOUND)) {
       await this.feedRepository.delete({ id: feedDeleteCheckDto.feedId });
       throw new NotFoundException('원본 게시글이 삭제되었습니다.');
     }
