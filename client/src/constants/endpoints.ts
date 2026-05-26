@@ -2,10 +2,10 @@ export const BASE_URL = import.meta.env.VITE_DENAMU_URL;
 export const CHAT_SERVER_URL = import.meta.env.VITE_DENAMU_URL;
 
 export const ADMIN = {
-  LOGIN: "/api/admin/login",
-  CHECK: "/api/admin/sessionId",
-  LOGOUT: "/api/admin/logout",
-  REGISTER: "/api/admin/register",
+  LOGIN: "/api/admins/login",
+  CHECK: "/api/admins/session-id",
+  LOGOUT: "/api/admins/logout",
+  REGISTER: "/api/admins/register",
   GET: {
     RSS: "/api/rss",
     ACCEPT: "/api/rss/history/accept",
@@ -18,29 +18,29 @@ export const ADMIN = {
 };
 
 export const BLOG = {
-  POST: "/api/feed",
-  Trend: "/api/feed/trend/sse",
+  POST: "/api/feeds",
+  Trend: "/api/feeds/trend/sse",
   RSS: {
     REGISTRER_RSS: "/api/rss",
   },
 };
 
 export const CHART = {
-  TODAY: "/api/statistic/today?limit=5",
-  ALL: "/api/statistic/all?limit=5",
-  PLATFORM: "/api/statistic/platform",
+  TODAY: "/api/statistics/today?limit=5",
+  ALL: "/api/statistics/all?limit=5",
+  PLATFORM: "/api/statistics/platform",
 };
 
 export const SEARCH = {
-  GET_RESULT: "/api/feed/search",
+  GET_RESULT: "/api/feeds/search",
 };
 
 export const USER = {
-  REGISTER: "/api/user/register",
-  LOGIN: "/api/user/login",
-  REFRESH_TOKEN: "/api/user/refresh-token",
-  LOGOUT: "/api/user/logout",
-  CERTIFICATE: "/api/user/certificate",
+  REGISTER: "/api/users/register",
+  LOGIN: "/api/users/login",
+  REFRESH_TOKEN: "/api/users/refresh-token",
+  LOGOUT: "/api/users/logout",
+  CERTIFICATE: "/api/users/certificate",
 };
 
 export const OAUTH = {

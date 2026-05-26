@@ -27,7 +27,7 @@ import { JwtGuard, Payload } from '@common/guard/jwt.guard';
 import { ApiResponse } from '@common/response/common.response';
 
 @ApiTags('Comment')
-@Controller('feed/:feedId/comments')
+@Controller('feeds/:feedId/comments')
 export class CommentController {
   constructor(private readonly commentService: CommentService) {}
 

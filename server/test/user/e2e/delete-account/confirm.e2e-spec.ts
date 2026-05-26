@@ -35,7 +35,7 @@ import {
 } from '@test/config/e2e/env/jest.setup';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = '/api/user/delete-account/confirm';
+const URL = '/api/users/delete-account/confirm';
 
 describe(`POST ${URL} E2E Test`, () => {
   let agent: TestAgent;

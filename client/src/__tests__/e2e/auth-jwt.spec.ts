@@ -45,7 +45,7 @@ test("normal login issues JWT and sets refresh cookie", async ({ context, page }
 
   const loginResponsePromise = page.waitForResponse(
     (response) =>
-      response.url().includes("/api/user/login") &&
+      response.url().includes("/api/users/login") &&
       response.request().method() === "POST",
   );
 
@@ -72,7 +72,7 @@ test("oauth callback sets refresh cookie and issues JWT through refresh endpoint
   await markAsVisited(page);
   const refreshResponsePromise = page.waitForResponse(
     (response) =>
-      response.url().includes("/api/user/refresh-token") &&
+      response.url().includes("/api/users/refresh-token") &&
       response.request().method() === "POST",
   );
 

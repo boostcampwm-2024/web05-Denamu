@@ -9,7 +9,7 @@ import { ReadStatisticRequestDto } from '@statistic/dto/request/readStatistic.dt
 import { StatisticService } from '@statistic/service/statistic.service';
 
 @ApiTags('Statistic')
-@Controller('statistic')
+@Controller('statistics')
 export class StatisticController {
   constructor(private readonly statisticService: StatisticService) {}
 

@@ -21,7 +21,7 @@ import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture
 import { UserFixture } from '@test/config/common/fixture/user.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
-const BASE_URL = '/api/feed';
+const BASE_URL = '/api/feeds';
 
 describe(`GET ${BASE_URL}/:feedId/comments E2E Test`, () => {
   let agent: TestAgent;

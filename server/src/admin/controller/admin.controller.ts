@@ -25,7 +25,7 @@ import { AdminAuthGuard } from '@common/guard/auth.guard';
 import { ApiResponse } from '@common/response/common.response';
 
 @ApiTags('Admin')
-@Controller('admin')
+@Controller('admins')
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
@@ -69,7 +69,7 @@ export class AdminController {
   }
 
   @ApiGetSessionIdAdmin()
-  @Get('/sessionId')
+  @Get('/session-id')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AdminAuthGuard)
   getSessionIdAdmin() {

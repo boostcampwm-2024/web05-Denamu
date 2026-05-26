@@ -13,7 +13,7 @@ import { FeedFixture } from '@test/config/common/fixture/feed.fixture';
 import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = '/api/feed';
+const URL = '/api/feeds';
 
 describe(`HEAD ${URL}/{feedId} E2E Test`, () => {
   let feed: Feed;

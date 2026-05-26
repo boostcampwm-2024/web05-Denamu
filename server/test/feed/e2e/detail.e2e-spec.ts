@@ -26,7 +26,7 @@ import { TagFixture } from '@test/config/common/fixture/tag.fixture';
 import { UserFixture } from '@test/config/common/fixture/user.fixture';
 import { createAccessToken, testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = '/api/feed';
+const URL = '/api/feeds';
 
 describe(`GET ${URL}/{feedId} E2E Test`, () => {
   let agent: TestAgent;

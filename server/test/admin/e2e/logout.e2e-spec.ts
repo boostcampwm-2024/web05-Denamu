@@ -8,7 +8,7 @@ import { RedisService } from '@common/redis/redis.service';
 
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = '/api/admin/logout';
+const URL = '/api/admins/logout';
 
 describe(`POST ${URL} E2E Test`, () => {
   let agent: TestAgent;

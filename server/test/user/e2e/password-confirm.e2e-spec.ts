@@ -14,7 +14,7 @@ import { UserRepository } from '@user/repository/user.repository';
 import { UserFixture } from '@test/config/common/fixture/user.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = '/api/user/password';
+const URL = '/api/users/password';
 
 describe(`PATCH ${URL} E2E Test`, () => {
   let agent: TestAgent;

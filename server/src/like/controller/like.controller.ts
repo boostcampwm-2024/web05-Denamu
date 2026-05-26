@@ -23,7 +23,7 @@ import { ManageLikeRequestDto } from '@like/dto/request/manageLike.dto';
 import { LikeService } from '@like/service/like.service';
 
 @ApiTags('Like')
-@Controller('feed/:feedId/likes')
+@Controller('feeds/:feedId/likes')
 export class LikeController {
   constructor(private readonly likeService: LikeService) {}
 

@@ -22,7 +22,7 @@ import { UserFixture } from '@test/config/common/fixture/user.fixture';
 import { createAccessToken } from '@test/config/e2e/env/jest.setup';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
-const BASE_URL = '/api/feed';
+const BASE_URL = '/api/feeds';
 
 describe(`POST ${BASE_URL}/:feedId/comments E2E Test`, () => {
   let agent: TestAgent;

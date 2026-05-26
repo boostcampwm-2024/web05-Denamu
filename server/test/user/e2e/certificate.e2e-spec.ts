@@ -17,7 +17,7 @@ import {
 } from '@test/config/common/fixture/user.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = '/api/user/certificate';
+const URL = '/api/users/certificate';
 
 describe(`POST ${URL} E2E Test`, () => {
   let agent: TestAgent;

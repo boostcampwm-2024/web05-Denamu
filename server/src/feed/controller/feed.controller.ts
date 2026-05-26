@@ -35,7 +35,7 @@ import { ReadFeedInterceptor } from '@feed/interceptor/read-feed.interceptor';
 import { FeedService } from '@feed/service/feed.service';
 
 @ApiTags('Feed')
-@Controller('feed')
+@Controller('feeds')
 export class FeedController {
   constructor(
     private readonly feedService: FeedService,
