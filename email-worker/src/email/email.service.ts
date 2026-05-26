@@ -1,8 +1,9 @@
 import { injectable } from 'tsyringe';
 
 import * as nodemailer from 'nodemailer';
-import logger from '@common/logger/logger';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
+
+import logger from '@common/logger/logger';
 
 import {
   createDeleteAccountContent,
@@ -51,13 +52,11 @@ export class EmailService {
       await this.transporter.sendMail(mailOptions);
       logger.info(`${mailOptions.to as string} 이메일 전송 성공`);
     } catch (error) {
-      if (error instanceof Error) {
-        logger.error(
-          `${mailOptions.to as string} 이메일 전송 실패 - 오류 메시지: ${
-            error.message
-          }, 스택 트레이스: ${error.stack}`,
-        );
-      }
+      logger.error(
+        `${mailOptions.to as string} 이메일 전송 실패 - 오류 메시지: ${
+          error instanceof Error ? error.message : String(error)
+        }, 스택 트레이스: ${error instanceof Error ? error.stack : ''}`,
+      );
       throw error;
     }
   }

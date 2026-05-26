@@ -45,10 +45,13 @@ export class DiscordNotifier implements Notifier {
       await axios.post(this.webhookUrl, {
         content: `${dlqMessage} DLQ 메시지 발행 - 오류 메시지: \`\`\`${error.message}\`\`\``,
       });
-    } catch (e) {
-      logger.error('Discord 알림 전송 실패:', e);
+      logger.info(`알림 소요 시간: ${Date.now() - discordStartTime}`);
+    } catch (error) {
+      logger.error(
+        'Discord 알림 전송 실패:',
+        error instanceof Error ? error.message : String(error),
+      );
     }
-    logger.info(`알림 소요 시간: ${Date.now() - discordStartTime}`);
   };
 
   publish<K extends keyof NotificationEventPayloadMap>(

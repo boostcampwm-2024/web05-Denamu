@@ -1,7 +1,8 @@
 import { inject, injectable } from 'tsyringe';
 
-import logger from '@common/logger/logger';
 import { Options } from 'amqplib/properties';
+
+import logger from '@common/logger/logger';
 
 import { RabbitMQManager } from '@rabbitmq/rabbitmq.manager';
 
@@ -59,7 +60,7 @@ export class RabbitMQService {
             );
           } else {
             logger.error(`${this.nameTag} 메시지 처리 중 알 수 없는 오류 발생
-         오류 내용: ${error}`);
+         오류 내용: ${String(error)}`);
           }
           channel.nack(message, false, false);
         }

@@ -33,7 +33,9 @@ async function startEmailWorker() {
     process.on('SIGINT', () => void handleShutdown(dependencies, 'SIGINT'));
     process.on('SIGTERM', () => void handleShutdown(dependencies, 'SIGTERM'));
   } catch (error) {
-    logger.error(`Email Worker 시작 실패: ${error}`);
+    logger.error(
+      `Email Worker 시작 실패: ${error instanceof Error ? error.message : error}`,
+    );
     process.exit(1);
   }
 }
@@ -60,7 +62,9 @@ async function handleShutdown(
     logger.info('Email Worker 정상 종료');
     process.exit(0);
   } catch (error) {
-    logger.error(`Email Worker 종료 중 에러 발생: ${error}`);
+    logger.error(
+      `Email Worker 종료 중 에러 발생: ${error instanceof Error ? error.message : error}`,
+    );
     process.exit(1);
   }
 }
@@ -77,7 +81,9 @@ async function initializeRabbitMQ(
     await dependencies.emailConsumer.start();
     logger.info(`RabbitMQ Email Consumer 시작 완료`);
   } catch (error) {
-    logger.error(`RabbitMQ 초기화 실패: ${error}`);
+    logger.error(
+      `RabbitMQ 초기화 실패: ${error instanceof Error ? error.message : error}`,
+    );
     throw error;
   }
 }
