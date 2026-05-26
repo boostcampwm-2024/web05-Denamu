@@ -13,6 +13,13 @@ describe('FeedCrawler', () => {
   let mockFeedRepository: jest.Mocked<FeedRepository>;
   let mockRssRepository: jest.Mocked<RssRepository>;
   let mockFeedParserManager: jest.Mocked<FeedParserManager>;
+  let deleteRecentFeedMock: jest.Mock;
+  let insertFeedsMock: jest.Mock;
+  let saveAiQueueMock: jest.Mock;
+  let setRecentFeedListMock: jest.Mock;
+  let selectAllRssMock: jest.Mock;
+  let fetchAndParseMock: jest.Mock;
+  let fetchAndParseAllMock: jest.Mock;
 
   const mockRssObjects: RssObj[] = [
     {
@@ -60,23 +67,32 @@ describe('FeedCrawler', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+
+    deleteRecentFeedMock = jest.fn();
+    insertFeedsMock = jest.fn();
+    saveAiQueueMock = jest.fn();
+    setRecentFeedListMock = jest.fn();
+    selectAllRssMock = jest.fn();
+    fetchAndParseMock = jest.fn();
+    fetchAndParseAllMock = jest.fn();
+
     mockFeedRepository = {
-      deleteRecentFeed: jest.fn(),
-      insertFeeds: jest.fn(),
-      saveAiQueue: jest.fn(),
-      setRecentFeedList: jest.fn(),
+      deleteRecentFeed: deleteRecentFeedMock,
+      insertFeeds: insertFeedsMock,
+      saveAiQueue: saveAiQueueMock,
+      setRecentFeedList: setRecentFeedListMock,
       updateSummary: jest.fn(),
       updateNullSummary: jest.fn(),
     } as any;
 
     mockRssRepository = {
-      selectAllRss: jest.fn(),
+      selectAllRss: selectAllRssMock,
       selectRssById: jest.fn(),
     } as any;
 
     mockFeedParserManager = {
-      fetchAndParse: jest.fn(),
-      fetchAndParseAll: jest.fn(),
+      fetchAndParse: fetchAndParseMock,
+      fetchAndParseAll: fetchAndParseAllMock,
     } as any;
 
     feedCrawler = new FeedCrawler(
@@ -90,83 +106,77 @@ describe('FeedCrawler', () => {
     it('정상적인 크롤링 플로우를 실행해야 한다', async () => {
       // Given
       const startTime = new Date('2024-01-01T12:00:00Z');
-      mockRssRepository.selectAllRss.mockResolvedValue(mockRssObjects);
-      mockFeedParserManager.fetchAndParse
+      selectAllRssMock.mockResolvedValue(mockRssObjects);
+      fetchAndParseMock
         .mockResolvedValueOnce([mockFeedDetails[0]])
         .mockResolvedValueOnce([mockFeedDetails[1]]);
-      mockFeedRepository.insertFeeds.mockResolvedValue(mockFeedDetails);
+      insertFeedsMock.mockResolvedValue(mockFeedDetails);
 
       // When
       await feedCrawler.start(startTime);
 
       // Then
-      expect(mockFeedRepository.deleteRecentFeed).toHaveBeenCalledTimes(1);
-      expect(mockRssRepository.selectAllRss).toHaveBeenCalledTimes(1);
-      expect(mockFeedParserManager.fetchAndParse).toHaveBeenCalledTimes(2);
-      expect(mockFeedParserManager.fetchAndParse).toHaveBeenNthCalledWith(
+      expect(deleteRecentFeedMock).toHaveBeenCalledTimes(1);
+      expect(selectAllRssMock).toHaveBeenCalledTimes(1);
+      expect(fetchAndParseMock).toHaveBeenCalledTimes(2);
+      expect(fetchAndParseMock).toHaveBeenNthCalledWith(
         1,
         mockRssObjects[0],
         startTime,
       );
-      expect(mockFeedParserManager.fetchAndParse).toHaveBeenNthCalledWith(
+      expect(fetchAndParseMock).toHaveBeenNthCalledWith(
         2,
         mockRssObjects[1],
         startTime,
       );
-      expect(mockFeedRepository.insertFeeds).toHaveBeenCalledWith(
-        mockFeedDetails,
-      );
-      expect(mockFeedRepository.saveAiQueue).toHaveBeenCalledWith(
-        mockFeedDetails,
-      );
-      expect(mockFeedRepository.setRecentFeedList).toHaveBeenCalledWith(
-        mockFeedDetails,
-      );
+      expect(insertFeedsMock).toHaveBeenCalledWith(mockFeedDetails);
+      expect(saveAiQueueMock).toHaveBeenCalledWith(mockFeedDetails);
+      expect(setRecentFeedListMock).toHaveBeenCalledWith(mockFeedDetails);
     });
 
     it('등록된 RSS가 없을 때 조기 종료해야 한다', async () => {
       // Given
       const startTime = new Date('2024-01-01T12:00:00Z');
-      mockRssRepository.selectAllRss.mockResolvedValue([]);
+      selectAllRssMock.mockResolvedValue([]);
 
       // When
       await feedCrawler.start(startTime);
 
       // Then
-      expect(mockFeedRepository.deleteRecentFeed).toHaveBeenCalledTimes(1);
-      expect(mockRssRepository.selectAllRss).toHaveBeenCalledTimes(1);
-      expect(mockFeedParserManager.fetchAndParse).not.toHaveBeenCalled();
-      expect(mockFeedRepository.insertFeeds).not.toHaveBeenCalled();
+      expect(deleteRecentFeedMock).toHaveBeenCalledTimes(1);
+      expect(selectAllRssMock).toHaveBeenCalledTimes(1);
+      expect(fetchAndParseMock).not.toHaveBeenCalled();
+      expect(insertFeedsMock).not.toHaveBeenCalled();
     });
 
     it('새로운 피드가 없을 때 조기 종료해야 한다', async () => {
       // Given
       const startTime = new Date('2024-01-01T12:00:00Z');
-      mockRssRepository.selectAllRss.mockResolvedValue(mockRssObjects);
-      mockFeedParserManager.fetchAndParse.mockResolvedValue([]);
+      selectAllRssMock.mockResolvedValue(mockRssObjects);
+      fetchAndParseMock.mockResolvedValue([]);
 
       // When
       await feedCrawler.start(startTime);
 
       // Then
-      expect(mockFeedRepository.deleteRecentFeed).toHaveBeenCalledTimes(1);
-      expect(mockRssRepository.selectAllRss).toHaveBeenCalledTimes(1);
-      expect(mockFeedParserManager.fetchAndParse).toHaveBeenCalledTimes(2);
-      expect(mockFeedRepository.insertFeeds).not.toHaveBeenCalled();
+      expect(deleteRecentFeedMock).toHaveBeenCalledTimes(1);
+      expect(selectAllRssMock).toHaveBeenCalledTimes(1);
+      expect(fetchAndParseMock).toHaveBeenCalledTimes(2);
+      expect(insertFeedsMock).not.toHaveBeenCalled();
     });
 
     it('RSS 객체가 null일 때 조기 종료해야 한다', async () => {
       // Given
       const startTime = new Date('2024-01-01T12:00:00Z');
-      mockRssRepository.selectAllRss.mockResolvedValue(null);
+      selectAllRssMock.mockResolvedValue(null);
 
       // When
       await feedCrawler.start(startTime);
 
       // Then
-      expect(mockFeedRepository.deleteRecentFeed).toHaveBeenCalledTimes(1);
-      expect(mockRssRepository.selectAllRss).toHaveBeenCalledTimes(1);
-      expect(mockFeedParserManager.fetchAndParse).not.toHaveBeenCalled();
+      expect(deleteRecentFeedMock).toHaveBeenCalledTimes(1);
+      expect(selectAllRssMock).toHaveBeenCalledTimes(1);
+      expect(fetchAndParseMock).not.toHaveBeenCalled();
     });
   });
 
@@ -175,39 +185,31 @@ describe('FeedCrawler', () => {
       // Given
       const rssObj = mockRssObjects[0];
       const expectedFeeds = [mockFeedDetails[0]];
-      mockFeedParserManager.fetchAndParseAll.mockResolvedValue(expectedFeeds);
-      mockFeedRepository.insertFeeds.mockResolvedValue(expectedFeeds);
+      fetchAndParseAllMock.mockResolvedValue(expectedFeeds);
+      insertFeedsMock.mockResolvedValue(expectedFeeds);
 
       // When
       const result = await feedCrawler.startFullCrawl(rssObj);
 
       // Then
-      expect(mockFeedParserManager.fetchAndParseAll).toHaveBeenCalledWith(
-        rssObj,
-      );
-      expect(mockFeedRepository.insertFeeds).toHaveBeenCalledWith(
-        expectedFeeds,
-      );
-      expect(mockFeedRepository.saveAiQueue).toHaveBeenCalledWith(
-        expectedFeeds,
-      );
+      expect(fetchAndParseAllMock).toHaveBeenCalledWith(rssObj);
+      expect(insertFeedsMock).toHaveBeenCalledWith(expectedFeeds);
+      expect(saveAiQueueMock).toHaveBeenCalledWith(expectedFeeds);
       expect(result).toEqual(expectedFeeds);
     });
 
     it('가져올 피드가 없을 때 빈 배열을 반환해야 한다', async () => {
       // Given
       const rssObj = mockRssObjects[0];
-      mockFeedParserManager.fetchAndParseAll.mockResolvedValue([]);
+      fetchAndParseAllMock.mockResolvedValue([]);
 
       // When
       const result = await feedCrawler.startFullCrawl(rssObj);
 
       // Then
-      expect(mockFeedParserManager.fetchAndParseAll).toHaveBeenCalledWith(
-        rssObj,
-      );
-      expect(mockFeedRepository.insertFeeds).not.toHaveBeenCalled();
-      expect(mockFeedRepository.saveAiQueue).not.toHaveBeenCalled();
+      expect(fetchAndParseAllMock).toHaveBeenCalledWith(rssObj);
+      expect(insertFeedsMock).not.toHaveBeenCalled();
+      expect(saveAiQueueMock).not.toHaveBeenCalled();
       expect(result).toEqual([]);
     });
   });
@@ -219,15 +221,15 @@ describe('FeedCrawler', () => {
       const callOrder: number[] = [];
 
       // 병렬 실행 검증: 첫 번째 호출에 지연을 주어 병렬 실행 시 순서가 뒤바뀌는지 확인
-      mockFeedParserManager.fetchAndParse
+      fetchAndParseMock
         .mockImplementationOnce(async () => {
           await new Promise((resolve) => setTimeout(resolve, 50));
           callOrder.push(1);
           return [mockFeedDetails[0]];
         })
-        .mockImplementationOnce(async () => {
+        .mockImplementationOnce(() => {
           callOrder.push(2);
-          return [mockFeedDetails[1]];
+          return Promise.resolve([mockFeedDetails[1]]);
         });
 
       // When
@@ -237,7 +239,7 @@ describe('FeedCrawler', () => {
       );
 
       // Then
-      expect(mockFeedParserManager.fetchAndParse).toHaveBeenCalledTimes(2);
+      expect(fetchAndParseMock).toHaveBeenCalledTimes(2);
       expect(result).toEqual([[mockFeedDetails[0]], [mockFeedDetails[1]]]);
       // 병렬 실행이면 지연이 없는 두 번째가 먼저 완료됨
       expect(callOrder).toEqual([2, 1]);
@@ -251,7 +253,7 @@ describe('FeedCrawler', () => {
       const result = await feedCrawler['feedGroupByRss']([], startTime);
 
       // Then
-      expect(mockFeedParserManager.fetchAndParse).not.toHaveBeenCalled();
+      expect(fetchAndParseMock).not.toHaveBeenCalled();
       expect(result).toEqual([]);
     });
   });

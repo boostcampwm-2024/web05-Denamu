@@ -1,4 +1,5 @@
-const globalAny: any = global;
+type GlobalWithContainer = typeof global & { __MYSQL_CONTAINER__?: { stop: () => Promise<void> } };
+const globalAny = global as GlobalWithContainer;
 
 export default async function globalTeardown() {
   console.log('Stopping MySQL container...');

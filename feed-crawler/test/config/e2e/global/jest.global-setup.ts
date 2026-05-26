@@ -3,7 +3,7 @@ import 'tsconfig-paths/register';
 import { setupTestContainer } from '@test/setup/testContext.setup';
 import { MySqlContainer } from '@testcontainers/mysql';
 
-const globalAny: any = global;
+const globalAny = global as typeof global & { __MYSQL_CONTAINER__: unknown };
 
 export default async function globalSetup() {
   console.log('Starting global setup...');
