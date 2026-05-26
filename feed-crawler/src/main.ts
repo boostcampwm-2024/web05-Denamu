@@ -70,7 +70,9 @@ async function handleShutdown(
     logger.info('Feed Crawler 정상 종료');
     process.exit(0);
   } catch (error) {
-    logger.error(`Feed Crawler 종료 중 오류 발생: ${(error as Error).message}`);
+    logger.error(
+      `Feed Crawler 종료 중 오류 발생: ${error instanceof Error ? error.message : String(error)}`,
+    );
     process.exit(1);
   }
 }
