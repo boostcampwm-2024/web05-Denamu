@@ -22,7 +22,6 @@
       "@email/*": ["./src/email/*"],
       "@notification/*": ["./src/notification/*"],
       "@rabbitmq/*": ["./src/rabbitmq/*"],
-      "@app-types/*": ["./src/types/*"],
       "@test/*": ["./test/*"]
     },
     "resolveJsonModule": true,
