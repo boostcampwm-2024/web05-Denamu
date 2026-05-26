@@ -13,7 +13,7 @@ import { RedisService } from '@common/redis/redis.service';
 import { AdminFixture } from '@test/config/common/fixture/admin.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = '/api/admins/register';
+const URL = '/api/admins';
 
 describe(`POST ${URL} E2E Test`, () => {
   let agent: TestAgent;

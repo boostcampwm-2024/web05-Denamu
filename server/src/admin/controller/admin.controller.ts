@@ -59,7 +59,7 @@ export class AdminController {
 
   @ApiCreateAdmin()
   @UseGuards(AdminAuthGuard)
-  @Post('/register')
+  @Post()
   @HttpCode(HttpStatus.CREATED)
   async createAdmin(@Body() registerAdminBodyDto: RegisterAdminRequestDto) {
     await this.adminService.createAdmin(registerAdminBodyDto);
@@ -69,7 +69,7 @@ export class AdminController {
   }
 
   @ApiGetSessionIdAdmin()
-  @Get('/session-id')
+  @Get('/sessions')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AdminAuthGuard)
   getSessionIdAdmin() {
