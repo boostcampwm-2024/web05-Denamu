@@ -2,6 +2,7 @@ import { inject, injectable } from 'tsyringe';
 
 import { redisConstant } from '@common/constant';
 import logger from '@common/logger';
+import { FeedMetrics } from '@common/metrics/feed-metrics';
 import { RedisConnection } from '@common/redis-access';
 import { FullFeedCrawlMessage } from '@common/types';
 
@@ -20,11 +21,15 @@ export class FullFeedCrawlEventWorker extends AbstractQueueWorker<FullFeedCrawlM
     private readonly rssRepository: RssRepository,
     @inject(FeedCrawler)
     private readonly feedCrawler: FeedCrawler,
+    @inject(FeedMetrics)
+    private readonly feedMetrics: FeedMetrics,
   ) {
     super('[Full Feed Crawler]', redisConnection);
   }
 
   protected async processQueue(): Promise<void> {
+    const depth = await this.redisConnection.llen(this.getQueueKey());
+    this.feedMetrics.fullCrawlQueueDepth.set(depth);
     const rssIdMessage = await this.redisConnection.rpop(this.getQueueKey());
 
     if (!rssIdMessage) {
@@ -97,6 +102,7 @@ export class FullFeedCrawlEventWorker extends AbstractQueueWorker<FullFeedCrawlM
       logger.error(
         `${this.nameTag} RSS ID ${crawlMessage.rssId} 영구 실패 - ${reason}`,
       );
+      this.feedMetrics.fullCrawlPermanentFailure.inc();
     }
   }
 

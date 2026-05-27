@@ -7,6 +7,7 @@ import '@common/env-load';
 import { DatabaseConnection } from '@common/database-connection';
 import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
 import logger from '@common/logger';
+import { FeedMetrics } from '@common/metrics/feed-metrics';
 import { Notifier } from '@common/notification/notifier.interface';
 import { RedisConnection } from '@common/redis-access';
 
@@ -26,6 +27,7 @@ function initializeDependencies() {
     claudeEventWorker: container.resolve(ClaudeEventWorker),
     fullFeedCrawlEventWorker: container.resolve(FullFeedCrawlEventWorker),
     notifier: container.resolve<Notifier>(DEPENDENCY_SYMBOLS.Notifier),
+    metrics: container.resolve(FeedMetrics),
   };
 }
 
@@ -80,7 +82,11 @@ function startScheduler() {
   try {
     logger.info('[Feed Crawler Scheduler Start]');
 
+    const metricsPort = Number(process.env.FEED_CRAWLER_METRICS_PORT) || 9092;
+
     const dependencies = initializeDependencies();
+    dependencies.metrics.startMetricsServer(metricsPort);
+    logger.info(`Metrics server started on port ${metricsPort}`);
     dependencies.notifier.initialize();
     registerSchedulers(dependencies);
 

@@ -5,6 +5,8 @@ import Anthropic from '@anthropic-ai/sdk';
 import { PROMPT_CONTENT, redisConstant } from '@common/constant';
 import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
 import logger from '@common/logger';
+import { AiMetrics } from '@common/metrics/ai-metrics';
+import { RedisMetrics } from '@common/metrics/redis-metrics';
 import { NOTIFICATION_EVENT } from '@common/notification/notification-event.constant';
 import { Notifier } from '@common/notification/notifier.interface';
 import { RedisConnection } from '@common/redis-access';
@@ -28,6 +30,10 @@ export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
     redisConnection: RedisConnection,
     @inject(DEPENDENCY_SYMBOLS.Notifier)
     private readonly notifier: Notifier,
+    @inject(AiMetrics)
+    private readonly aiMetrics: AiMetrics,
+    @inject(RedisMetrics)
+    private readonly redisMetrics: RedisMetrics,
   ) {
     super('[AI Service]', redisConnection);
     this.client = new Anthropic({
@@ -36,6 +42,8 @@ export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
   }
 
   protected async processQueue(): Promise<void> {
+    const depth = await this.redisConnection.llen(redisConstant.FEED_AI_QUEUE);
+    this.aiMetrics.queueDepth.set(depth);
     const feeds = await this.loadFeeds();
     await Promise.all(feeds.map((feed) => this.processItem(feed)));
   }
@@ -63,6 +71,7 @@ export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
   }
 
   private async loadFeeds() {
+    this.redisMetrics.total.inc({ operation: 'load_feeds' });
     try {
       const redisSearchResult = (await this.redisConnection.executePipeline(
         (pipeline) => {
@@ -71,10 +80,13 @@ export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
           }
         },
       )) as [error: Error, result: string | null][];
-      return redisSearchResult
+      const result = redisSearchResult
         .map((result) => JSON.parse(result[1]))
         .filter((value) => value !== null);
+      this.redisMetrics.success.inc({ operation: 'load_feeds' });
+      return result;
     } catch (error) {
+      this.redisMetrics.failure.inc({ operation: 'load_feeds' });
       logger.error(`${this.nameTag} Redis 로드한 데이터 JSON Parse 중 오류 발생:
         메시지: ${error instanceof Error ? error.message : String(error)}
         스택 트레이스: ${error instanceof Error ? error.stack : ''}
@@ -84,21 +96,31 @@ export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
 
   private async requestAI(feed: FeedAIQueueItem) {
     logger.info(`${this.nameTag} AI 요청: ${JSON.stringify(feed)}`);
-    const params: Anthropic.MessageCreateParams = {
-      max_tokens: 8192,
-      system: PROMPT_CONTENT,
-      messages: [{ role: 'user', content: feed.content }],
-      model: 'claude-haiku-4-5',
-    };
-    const message = await this.client.messages.create(params);
-    const responseText = message.content[0]['text'];
-    logger.info(`${this.nameTag} ${feed.id} AI 요청 응답: ${responseText}`);
+    this.aiMetrics.total.inc();
+    const endTimer = this.aiMetrics.duration.startTimer();
+    try {
+      const params: Anthropic.MessageCreateParams = {
+        max_tokens: 8192,
+        system: PROMPT_CONTENT,
+        messages: [{ role: 'user', content: feed.content }],
+        model: 'claude-haiku-4-5',
+      };
+      const message = await this.client.messages.create(params);
+      const responseText = message.content[0]['text'];
+      logger.info(`${this.nameTag} ${feed.id} AI 요청 응답: ${responseText}`);
 
-    const responseObject = this.parseClaudeResponse(responseText);
-    feed.summary = responseObject.summary;
-    feed.tagList = Object.keys(responseObject.tags);
+      const responseObject = this.parseClaudeResponse(responseText);
+      feed.summary = responseObject.summary;
+      feed.tagList = Object.keys(responseObject.tags);
 
-    return feed;
+      this.aiMetrics.success.inc();
+      endTimer();
+      return feed;
+    } catch (error) {
+      this.aiMetrics.failure.inc();
+      endTimer();
+      throw error;
+    }
   }
 
   private parseClaudeResponse(responseText: string) {
@@ -123,11 +145,18 @@ export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
 
   private async saveAIResult(feed: FeedAIQueueItem) {
     await this.tagMapRepository.insertTags(feed.id, feed.tagList);
-    await this.redisConnection.hset(
-      `feed:recent:${feed.id}`,
-      'tag',
-      feed.tagList.join(','),
-    );
+    this.redisMetrics.total.inc({ operation: 'save_ai_result' });
+    try {
+      await this.redisConnection.hset(
+        `feed:recent:${feed.id}`,
+        'tag',
+        feed.tagList.join(','),
+      );
+      this.redisMetrics.success.inc({ operation: 'save_ai_result' });
+    } catch (error) {
+      this.redisMetrics.failure.inc({ operation: 'save_ai_result' });
+      throw error;
+    }
     await this.feedRepository.updateSummary(feed.id, feed.summary);
   }
 
@@ -146,9 +175,16 @@ export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
 
     if (shouldRetry && feed.deathCount < 3) {
       feed.deathCount++;
-      await this.redisConnection.rpush(redisConstant.FEED_AI_QUEUE, [
-        JSON.stringify(feed),
-      ]);
+      this.redisMetrics.total.inc({ operation: 'retry_queue' });
+      try {
+        await this.redisConnection.rpush(redisConstant.FEED_AI_QUEUE, [
+          JSON.stringify(feed),
+        ]);
+        this.redisMetrics.success.inc({ operation: 'retry_queue' });
+      } catch (error) {
+        this.redisMetrics.failure.inc({ operation: 'retry_queue' });
+        throw error;
+      }
       logger.warn(
         `${this.nameTag} ${feed.id} 재시도 예약 (${feed.deathCount}/3)`,
       );
@@ -157,6 +193,7 @@ export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
         ? `Death Count 3회 초과`
         : `재시도 불가능한 에러 (${error.name})`;
       logger.error(`${this.nameTag} ${feed.id} 영구 실패 - ${reason}`);
+      this.aiMetrics.permanentFailure.inc();
       await this.feedRepository.updateNullSummary(feed.id);
     }
   }
