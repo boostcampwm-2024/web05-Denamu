@@ -3,6 +3,7 @@ import 'reflect-metadata';
 import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
 import '@common/env/env-load';
 import logger from '@common/logger/logger';
+import { EmailMetrics } from '@common/metrics/email-metrics';
 
 import { EmailConsumer } from '@email/email.consumer';
 
@@ -17,6 +18,7 @@ function initializeDependencies() {
     rabbitMQManager: container.resolve(RabbitMQManager),
     emailConsumer: container.resolve(EmailConsumer),
     notifier: container.resolve<Notifier>(DEPENDENCY_SYMBOLS.Notifier),
+    metrics: container.resolve(EmailMetrics),
   };
 }
 
@@ -24,7 +26,11 @@ async function startEmailWorker() {
   try {
     logger.info('[Email Worker Start]');
 
+    const metricsPort = Number(process.env.EMAIL_METRICS_PORT) || 9091;
+
     const dependencies = initializeDependencies();
+    dependencies.metrics.startMetricsServer(metricsPort);
+    logger.info(`Metrics server started on port ${metricsPort}`);
     dependencies.notifier.initialize();
     logger.info(`Notifier 초기화 완료`);
     await initializeRabbitMQ(dependencies);
