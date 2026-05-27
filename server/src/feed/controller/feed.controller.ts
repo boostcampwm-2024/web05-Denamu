@@ -20,6 +20,10 @@ import { Observable } from 'rxjs';
 
 import { ApiResponse } from '@common/response/common.response';
 
+import { InjectUserInterceptor } from '@common/auth/jwt.interceptor';
+import { CurrentUser } from '@common/decorator/current-user.decorator';
+import { Payload } from '@common/guard/jwt.guard';
+
 import { ApiDeleteCheckFeed } from '@feed/api-docs/deleteCheckFeed.api-docs';
 import { ApiGetFeedDetail } from '@feed/api-docs/getFeedDetail.api-docs';
 import { ApiReadFeedPagination } from '@feed/api-docs/readFeedPagination.api-docs';
@@ -31,7 +35,7 @@ import { ManageFeedRequestDto } from '@feed/dto/request/manageFeed.dto';
 import { ReadFeedPaginationRequestDto } from '@feed/dto/request/readFeedPagination.dto';
 import { SearchFeedRequestDto } from '@feed/dto/request/searchFeed.dto';
 import { FeedTrendResponseDto } from '@feed/dto/response/readFeedPagination.dto';
-import { ReadFeedInterceptor } from '@feed/interceptor/read-feed.interceptor';
+import { FeedViewedEvent } from '@feed/event/feed-viewed.event';
 import { FeedService } from '@feed/service/feed.service';
 
 @ApiTags('Feed')
@@ -136,8 +140,17 @@ export class FeedController {
   @ApiGetFeedDetail()
   @Get(':feedId')
   @HttpCode(HttpStatus.OK)
-  @UseInterceptors(ReadFeedInterceptor)
-  async getFeedDetail(@Param() feedDetailRequestDto: ManageFeedRequestDto) {
+  @UseInterceptors(InjectUserInterceptor)
+  async getFeedDetail(
+    @Param() feedDetailRequestDto: ManageFeedRequestDto,
+    @CurrentUser() user: Payload | null,
+  ) {
+    if (user) {
+      this.eventService.emit(
+        'feed.viewed',
+        new FeedViewedEvent(feedDetailRequestDto.feedId, user.id),
+      );
+    }
     return ApiResponse.responseWithData(
       '요청이 성공적으로 처리되었습니다.',
       await this.feedService.getFeedDetail(feedDetailRequestDto),

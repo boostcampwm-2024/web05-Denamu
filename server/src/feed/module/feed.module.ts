@@ -9,7 +9,7 @@ import { CommentModule } from '@comment/module/comment.module';
 import { JwtAuthModule } from '@common/auth/jwt.module';
 
 import { FeedController } from '@feed/controller/feed.controller';
-import { ReadFeedInterceptor } from '@feed/interceptor/read-feed.interceptor';
+import { FeedViewedListener } from '@feed/listener/feed-viewed.listener';
 import {
   FeedRepository,
   FeedViewRepository,
@@ -40,7 +40,7 @@ import { UserModule } from '@user/module/user.module';
     FeedRepository,
     FeedViewRepository,
     FeedScheduler,
-    ReadFeedInterceptor,
+    FeedViewedListener,
   ],
   exports: [FeedRepository, FeedService],
 })
