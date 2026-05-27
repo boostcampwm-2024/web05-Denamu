@@ -1,7 +1,5 @@
 import { inject, injectable } from 'tsyringe';
 
-import { FeedCrawler } from '@src/feed-crawler';
-
 import { redisConstant } from '@common/constant';
 import logger from '@common/logger';
 import { RedisConnection } from '@common/redis-access';
@@ -11,16 +9,16 @@ import { AbstractQueueWorker } from '@event_worker/abstract-queue-worker';
 
 import { RssRepository } from '@repository/rss.repository';
 
-import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
+import { FeedCrawler } from '../../feed-crawler';
 
 @injectable()
 export class FullFeedCrawlEventWorker extends AbstractQueueWorker<FullFeedCrawlMessage> {
   constructor(
-    @inject(DEPENDENCY_SYMBOLS.RedisConnection)
+    @inject(RedisConnection)
     redisConnection: RedisConnection,
-    @inject(DEPENDENCY_SYMBOLS.RssRepository)
+    @inject(RssRepository)
     private readonly rssRepository: RssRepository,
-    @inject(DEPENDENCY_SYMBOLS.FeedCrawler)
+    @inject(FeedCrawler)
     private readonly feedCrawler: FeedCrawler,
   ) {
     super('[Full Feed Crawler]', redisConnection);
@@ -67,7 +65,7 @@ export class FullFeedCrawlEventWorker extends AbstractQueueWorker<FullFeedCrawlM
         `${this.nameTag} RSS ID ${rssId}에서 ${insertedFeeds.length}개의 피드를 처리했습니다.`,
       );
     } catch (error) {
-      await this.handleFailure(crawlMessage, error);
+      await this.handleFailure(crawlMessage, error as Error);
     }
   }
 

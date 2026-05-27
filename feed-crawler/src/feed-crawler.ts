@@ -7,16 +7,14 @@ import { FeedDetail, RssObj } from '@common/types';
 import { FeedRepository } from '@repository/feed.repository';
 import { RssRepository } from '@repository/rss.repository';
 
-import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
-
 @injectable()
 export class FeedCrawler {
   constructor(
-    @inject(DEPENDENCY_SYMBOLS.RssRepository)
+    @inject(RssRepository)
     private readonly rssRepository: RssRepository,
-    @inject(DEPENDENCY_SYMBOLS.FeedRepository)
+    @inject(FeedRepository)
     private readonly feedRepository: FeedRepository,
-    @inject(DEPENDENCY_SYMBOLS.FeedParserManager)
+    @inject(FeedParserManager)
     private readonly feedParserManager: FeedParserManager,
   ) {}
 
@@ -44,8 +42,7 @@ export class FeedCrawler {
     await this.feedRepository.saveAiQueue(insertedData);
     await this.feedRepository.setRecentFeedList(insertedData);
 
-    const endTime = Date.now();
-    const executionTime = endTime - startTime.getTime();
+    const executionTime = Date.now() - startTime.getTime();
 
     logger.info(`실행 시간: ${executionTime / 1000}seconds`);
     logger.info('==========작업 완료==========');
@@ -80,7 +77,7 @@ export class FeedCrawler {
         logger.info(
           `${rssObj.blogName}(${rssObj.rssUrl}) 에서 데이터 조회하는 중...`,
         );
-        return await this.feedParserManager.fetchAndParse(rssObj, startTime);
+        return this.feedParserManager.fetchAndParse(rssObj, startTime);
       }),
     );
   }

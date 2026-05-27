@@ -34,8 +34,8 @@ export class RedisConnection {
     } catch (error) {
       logger.error(
         `${this.nameTag} rpop 실행 중 오류 발생:
-        메시지: ${error.message}
-        스택 트레이스: ${error.stack}`,
+        메시지: ${error instanceof Error ? error.message : String(error)}
+        스택 트레이스: ${error instanceof Error ? error.stack : ''}`,
       );
       throw error;
     }
@@ -47,8 +47,8 @@ export class RedisConnection {
     } catch (error) {
       logger.error(
         `${this.nameTag} rpush 실행 중 오류 발생:
-        메시지: ${error.message}
-        스택 트레이스: ${error.stack}`,
+        메시지: ${error instanceof Error ? error.message : String(error)}
+        스택 트레이스: ${error instanceof Error ? error.stack : ''}`,
       );
     }
   }
@@ -60,8 +60,8 @@ export class RedisConnection {
       } catch (error) {
         logger.error(
           `${this.nameTag} connection quit 중 오류 발생:
-          메시지: ${error.message}
-          스택 트레이스: ${error.stack}`,
+          메시지: ${error instanceof Error ? error.message : String(error)}
+          스택 트레이스: ${error instanceof Error ? error.stack : ''}`,
         );
       }
     }
@@ -94,8 +94,8 @@ export class RedisConnection {
     } catch (error) {
       logger.error(
         `${this.nameTag} 파이프라인 실행 중 오류 발생:
-        메시지: ${error.message}
-        스택 트레이스: ${error.stack}`,
+        메시지: ${error instanceof Error ? error.message : String(error)}
+        스택 트레이스: ${error instanceof Error ? error.stack : ''}`,
       );
       throw error;
     }

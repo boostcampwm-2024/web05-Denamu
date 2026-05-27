@@ -5,7 +5,7 @@ import { ClaudeEventWorker } from '@event_worker/workers/claude-event-worker';
 
 describe('Claude AI e2e-test', () => {
   const testContext = setupTestContainer();
-  let claudeEventWorker: ClaudeEventWorker, feedData;
+  let claudeEventWorker: ClaudeEventWorker, feedData: ResultSetHeader;
   const feedRedisAiQueueData: any = {
     content: 'test',
     deathCount: 0,
@@ -28,7 +28,7 @@ describe('Claude AI e2e-test', () => {
       `INSERT INTO feed (created_at, title, path, thumbnail, blog_id) VALUES (?, ?, ?, ?, ?)
       `,
       [new Date(), 'test', 'test', 'test', rssData.insertId],
-    )) as any;
+    )) as any as ResultSetHeader;
 
     await testContext.dbConnection.executeQuery(
       `INSERT INTO tag (name) VALUES (?), (?), (?)`,
@@ -57,13 +57,15 @@ describe('Claude AI e2e-test', () => {
       `SELECT * FROM feed WHERE feed.id = ?`,
       [feedData.insertId],
     );
-    const tagList = await testContext.dbConnection.executeQuery(
+    const tagList = await testContext.dbConnection.executeQuery<{
+      name: string;
+    }>(
       `SELECT name FROM tag, tag_map WHERE tag.id = tag_map.tag_id AND tag_map.feed_id = ?`,
       [feedData.insertId],
     );
 
     expect(searchSummary['summary']).toStrictEqual(null);
-    expect(tagList.map((t: any) => t.name)).toStrictEqual([]);
+    expect(tagList.map((t) => t.name)).toStrictEqual([]);
   });
 
   it('피드의 데이터를 요약하고 요약한 내용을 받아왔을 때, 알맞은 태그가 없다.', async () => {
@@ -87,13 +89,15 @@ describe('Claude AI e2e-test', () => {
       `SELECT * FROM feed WHERE feed.id = ?`,
       [feedData.insertId],
     );
-    const tagList = await testContext.dbConnection.executeQuery(
+    const tagList = await testContext.dbConnection.executeQuery<{
+      name: string;
+    }>(
       `SELECT name FROM tag, tag_map WHERE tag.id = tag_map.tag_id AND tag_map.feed_id = ?`,
       [feedData.insertId],
     );
 
     expect(searchSummary['summary']).toStrictEqual('test summary');
-    expect(tagList.map((t: any) => t.name)).toStrictEqual([]);
+    expect(tagList.map((t) => t.name)).toStrictEqual([]);
   });
 
   it('피드의 데이터를 요약하고 요약한 내용을 받아왔을 때, 요약 내용이 없다.', async () => {
@@ -117,13 +121,15 @@ describe('Claude AI e2e-test', () => {
       `SELECT * FROM feed WHERE feed.id = ?`,
       [feedData.insertId],
     );
-    const tagList = await testContext.dbConnection.executeQuery(
+    const tagList = await testContext.dbConnection.executeQuery<{
+      name: string;
+    }>(
       `SELECT name FROM tag, tag_map WHERE tag.id = tag_map.tag_id AND tag_map.feed_id = ?`,
       [feedData.insertId],
     );
 
     expect(searchSummary['summary']).toStrictEqual(null);
-    expect(tagList.map((t: any) => t.name)).toStrictEqual([
+    expect(tagList.map((t) => t.name)).toStrictEqual([
       'test1',
       'test2',
       'test3',
@@ -151,13 +157,15 @@ describe('Claude AI e2e-test', () => {
       `SELECT * FROM feed WHERE feed.id = ?`,
       [feedData.insertId],
     );
-    const tagList = await testContext.dbConnection.executeQuery(
+    const tagList = await testContext.dbConnection.executeQuery<{
+      name: string;
+    }>(
       `SELECT name FROM tag, tag_map WHERE tag.id = tag_map.tag_id AND tag_map.feed_id = ?`,
       [feedData.insertId],
     );
 
     expect(searchSummary['summary']).toStrictEqual('test summary');
-    expect(tagList.map((t: any) => t.name)).toStrictEqual([
+    expect(tagList.map((t) => t.name)).toStrictEqual([
       'test1',
       'test2',
       'test3',

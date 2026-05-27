@@ -61,11 +61,9 @@ class TestQueueWorker extends AbstractQueueWorker<TestQueueItem> {
     }
   }
 
-  protected async handleFailure(
-    item: TestQueueItem,
-    error: Error,
-  ): Promise<void> {
+  protected handleFailure(item: TestQueueItem, error: Error): Promise<void> {
     this.failedItems.push({ item, error });
+    return Promise.resolve();
   }
 }
 
@@ -115,7 +113,7 @@ describe('AbstractQueueWorker', () => {
       // Given
       const errorWorker =
         new (class extends AbstractQueueWorker<TestQueueItem> {
-          protected async processQueue(): Promise<void> {
+          protected processQueue(): Promise<void> {
             throw new Error('Queue processing failed');
           }
 
@@ -127,15 +125,12 @@ describe('AbstractQueueWorker', () => {
             return JSON.parse(message);
           }
 
-          protected async processItem(item: TestQueueItem): Promise<void> {
-            // 아무것도 하지 않음
+          protected processItem(): Promise<void> {
+            return Promise.resolve();
           }
 
-          protected async handleFailure(
-            item: TestQueueItem,
-            error: Error,
-          ): Promise<void> {
-            // 아무것도 하지 않음
+          protected handleFailure(): Promise<void> {
+            return Promise.resolve();
           }
         })('[ERROR WORKER]', mockRedisConnection);
 

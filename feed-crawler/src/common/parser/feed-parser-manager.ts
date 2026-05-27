@@ -1,5 +1,6 @@
 import { inject, injectable } from 'tsyringe';
 
+import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
 import logger from '@common/logger';
 import { NOTIFICATION_EVENT } from '@common/notification/notification-event.constant';
 import { Notifier } from '@common/notification/notifier.interface';
@@ -8,15 +9,13 @@ import { Atom10Parser } from '@common/parser/formats/atom10-parser';
 import { Rss20Parser } from '@common/parser/formats/rss20-parser';
 import { FeedDetail, RssObj } from '@common/types';
 
-import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
-
 @injectable()
 export class FeedParserManager {
   private readonly parsers: BaseFeedParser[];
 
   constructor(
-    @inject(DEPENDENCY_SYMBOLS.Rss20Parser) rss20Parser: Rss20Parser,
-    @inject(DEPENDENCY_SYMBOLS.Atom10Parser) atom10Parser: Atom10Parser,
+    @inject(Rss20Parser) rss20Parser: Rss20Parser,
+    @inject(Atom10Parser) atom10Parser: Atom10Parser,
     @inject(DEPENDENCY_SYMBOLS.Notifier) private readonly notifier: Notifier,
   ) {
     this.parsers = [rss20Parser, atom10Parser];
@@ -46,7 +45,7 @@ export class FeedParserManager {
     } catch (error) {
       logger.warn(`[${rssObj.rssUrl}] 피드 파싱 중 오류 발생: ${error}`);
       this.notifier.publish(NOTIFICATION_EVENT.FEED_CRAWLING_SCHEDULED, {
-        error,
+        error: error as Error,
         blogUrl: rssObj.rssUrl,
         errorSource: '[Scheduled FeedCrawling]',
       });
@@ -81,7 +80,7 @@ export class FeedParserManager {
     } catch (error) {
       logger.warn(`[${rssObj.rssUrl}] 전체 피드 파싱 중 오류 발생: ${error}`);
       this.notifier.publish(NOTIFICATION_EVENT.FEED_CRAWLING_FULL, {
-        error,
+        error: error as Error,
         blogUrl: rssObj.rssUrl,
         errorSource: '[Full FeedCrawling]',
       });

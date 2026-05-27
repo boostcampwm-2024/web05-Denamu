@@ -1,7 +1,7 @@
 import { container } from 'tsyringe';
 
-import { FeedCrawler } from '@src/feed-crawler';
-
+import { DatabaseConnection } from '@common/database-connection';
+import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
 import { MySQLConnection } from '@common/mysql-access';
 import { DiscordNotifier } from '@common/notification/discord.notifier';
 import { Notifier } from '@common/notification/notifier.interface';
@@ -18,68 +18,34 @@ import { FeedRepository } from '@repository/feed.repository';
 import { RssRepository } from '@repository/rss.repository';
 import { TagMapRepository } from '@repository/tag-map.repository';
 
-import { DatabaseConnection } from '@app-types/database-connection';
-import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
+import { FeedCrawler } from './feed-crawler';
 
 container.registerSingleton<DatabaseConnection>(
   DEPENDENCY_SYMBOLS.DatabaseConnection,
   MySQLConnection,
 );
 
-container.registerSingleton<RedisConnection>(
-  DEPENDENCY_SYMBOLS.RedisConnection,
-  RedisConnection,
-);
+container.registerSingleton(RedisConnection);
 
-container.registerSingleton<RssRepository>(
-  DEPENDENCY_SYMBOLS.RssRepository,
-  RssRepository,
-);
+container.registerSingleton(RssRepository);
 
-container.registerSingleton<FeedRepository>(
-  DEPENDENCY_SYMBOLS.FeedRepository,
-  FeedRepository,
-);
+container.registerSingleton(FeedRepository);
 
-container.registerSingleton<TagMapRepository>(
-  DEPENDENCY_SYMBOLS.TagMapRepository,
-  TagMapRepository,
-);
+container.registerSingleton(TagMapRepository);
 
-container.registerSingleton<ClaudeEventWorker>(
-  DEPENDENCY_SYMBOLS.ClaudeEventWorker,
-  ClaudeEventWorker,
-);
+container.registerSingleton(ClaudeEventWorker);
 
-container.registerSingleton<ParserUtil>(
-  DEPENDENCY_SYMBOLS.ParserUtil,
-  ParserUtil,
-);
+container.registerSingleton(ParserUtil);
 
-container.registerSingleton<Rss20Parser>(
-  DEPENDENCY_SYMBOLS.Rss20Parser,
-  Rss20Parser,
-);
+container.registerSingleton(Rss20Parser);
 
-container.registerSingleton<Atom10Parser>(
-  DEPENDENCY_SYMBOLS.Atom10Parser,
-  Atom10Parser,
-);
+container.registerSingleton(Atom10Parser);
 
-container.registerSingleton<FeedParserManager>(
-  DEPENDENCY_SYMBOLS.FeedParserManager,
-  FeedParserManager,
-);
+container.registerSingleton(FeedParserManager);
 
-container.registerSingleton<FeedCrawler>(
-  DEPENDENCY_SYMBOLS.FeedCrawler,
-  FeedCrawler,
-);
+container.registerSingleton(FeedCrawler);
 
-container.registerSingleton<FullFeedCrawlEventWorker>(
-  DEPENDENCY_SYMBOLS.FullFeedCrawlEventWorker,
-  FullFeedCrawlEventWorker,
-);
+container.registerSingleton(FullFeedCrawlEventWorker);
 
 container.registerSingleton<Notifier>(
   DEPENDENCY_SYMBOLS.Notifier,

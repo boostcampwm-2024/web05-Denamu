@@ -1,7 +1,7 @@
 import { inject, injectable } from 'tsyringe';
 
-import { DatabaseConnection } from '@app-types/database-connection';
-import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
+import { DatabaseConnection } from '@common/database-connection';
+import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
 
 @injectable()
 export class TagMapRepository {
@@ -11,7 +11,7 @@ export class TagMapRepository {
   ) {}
 
   public async insertTags(feedId: number, tags: string[]) {
-    if (!tags?.length) {
+    if (tags == null || tags.length === 0) {
       return;
     }
 

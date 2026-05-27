@@ -4,9 +4,8 @@ import * as schedule from 'node-schedule';
 
 import '@common/env-load';
 
-import { container } from '@src/container';
-import { FeedCrawler } from '@src/feed-crawler';
-
+import { DatabaseConnection } from '@common/database-connection';
+import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
 import logger from '@common/logger';
 import { Notifier } from '@common/notification/notifier.interface';
 import { RedisConnection } from '@common/redis-access';
@@ -14,24 +13,18 @@ import { RedisConnection } from '@common/redis-access';
 import { ClaudeEventWorker } from '@event_worker/workers/claude-event-worker';
 import { FullFeedCrawlEventWorker } from '@event_worker/workers/full-feed-crawl-event-worker';
 
-import { DatabaseConnection } from '@app-types/database-connection';
-import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
+import { container } from './container';
+import { FeedCrawler } from './feed-crawler';
 
 function initializeDependencies() {
   return {
     dbConnection: container.resolve<DatabaseConnection>(
       DEPENDENCY_SYMBOLS.DatabaseConnection,
     ),
-    redisConnection: container.resolve<RedisConnection>(
-      DEPENDENCY_SYMBOLS.RedisConnection,
-    ),
-    feedCrawler: container.resolve<FeedCrawler>(DEPENDENCY_SYMBOLS.FeedCrawler),
-    claudeEventWorker: container.resolve<ClaudeEventWorker>(
-      DEPENDENCY_SYMBOLS.ClaudeEventWorker,
-    ),
-    fullFeedCrawlEventWorker: container.resolve<FullFeedCrawlEventWorker>(
-      DEPENDENCY_SYMBOLS.FullFeedCrawlEventWorker,
-    ),
+    redisConnection: container.resolve(RedisConnection),
+    feedCrawler: container.resolve(FeedCrawler),
+    claudeEventWorker: container.resolve(ClaudeEventWorker),
+    fullFeedCrawlEventWorker: container.resolve(FullFeedCrawlEventWorker),
     notifier: container.resolve<Notifier>(DEPENDENCY_SYMBOLS.Notifier),
   };
 }
@@ -64,25 +57,41 @@ async function handleShutdown(
   dependencies: ReturnType<typeof initializeDependencies>,
   signal: string,
 ) {
-  logger.info(`${signal} 신호 수신, feed-crawler 종료 중...`);
-  await dependencies.dbConnection.end();
-  await dependencies.redisConnection.quit();
-  logger.info('DB, Redis 연결 종료');
-  process.exit(0);
+  try {
+    logger.info(`${signal} 신호 수신, feed-crawler 종료 중...`);
+
+    logger.info('데이터 베이스 연결 종료 중...');
+    await dependencies.dbConnection.end();
+
+    logger.info('Redis 연결 종료 중...');
+    await dependencies.redisConnection.quit();
+
+    logger.info('Feed Crawler 정상 종료');
+    process.exit(0);
+  } catch (error) {
+    logger.error(
+      `Feed Crawler 종료 중 오류 발생: ${error instanceof Error ? error.message : String(error)}`,
+    );
+    process.exit(1);
+  }
 }
 
-async function startScheduler() {
-  logger.info('[Feed Crawler Scheduler Start]');
+function startScheduler() {
+  try {
+    logger.info('[Feed Crawler Scheduler Start]');
 
-  const dependencies = initializeDependencies();
-  dependencies.notifier.initialize();
-  registerSchedulers(dependencies);
+    const dependencies = initializeDependencies();
+    dependencies.notifier.initialize();
+    registerSchedulers(dependencies);
 
-  process.on('SIGINT', () => void handleShutdown(dependencies, 'SIGINT'));
-  process.on('SIGTERM', () => void handleShutdown(dependencies, 'SIGTERM'));
+    process.on('SIGINT', () => void handleShutdown(dependencies, 'SIGINT'));
+    process.on('SIGTERM', () => void handleShutdown(dependencies, 'SIGTERM'));
+
+    logger.info('[Feed Crawler Scheduler Complete]');
+  } catch (error) {
+    logger.error(`Feed Crawler 스케줄러 시작 실패: ${error}`);
+    process.exit(1);
+  }
 }
 
-startScheduler().catch((error) => {
-  logger.error(`스케줄러 시작 실패: `, error);
-  process.exit(1);
-});
+startScheduler();

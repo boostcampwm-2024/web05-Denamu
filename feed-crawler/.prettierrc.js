@@ -14,7 +14,6 @@ module.exports = {
     '^tsyringe$',
     '<THIRD_PARTY_MODULES>',
     '^@common/env-load$',
-    '^@src/(.*)?$',
     '^@common/(.*)?$',
     '^@event_worker/(.*)?$',
     '^@repository/(.*)?$',
