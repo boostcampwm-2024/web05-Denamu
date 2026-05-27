@@ -1,4 +1,8 @@
-const globalAny: any = global;
+interface TestGlobal {
+  __RABBITMQ_CONTAINER__?: { stop(): Promise<unknown> };
+  __MAILPIT_CONTAINER__?: { stop(): Promise<unknown> };
+}
+const globalAny = global as unknown as TestGlobal;
 
 export default async () => {
   console.log('Stopping RabbitMQ container...');

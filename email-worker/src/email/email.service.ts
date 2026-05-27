@@ -3,7 +3,8 @@ import { injectable } from 'tsyringe';
 import * as nodemailer from 'nodemailer';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
 
-import logger from '@src/logger';
+import logger from '@common/logger/logger';
+import { Rss, RssRegistration, RssRemoval, User } from '@common/types';
 
 import {
   createDeleteAccountContent,
@@ -13,8 +14,6 @@ import {
   createVerificationMailContent,
   PRODUCT_DOMAIN,
 } from '@email/email.content';
-
-import { Rss, RssRegistration, RssRemoval, User } from '@app-types/types';
 
 @injectable()
 export class EmailService {
@@ -54,8 +53,8 @@ export class EmailService {
     } catch (error) {
       logger.error(
         `${mailOptions.to as string} 이메일 전송 실패 - 오류 메시지: ${
-          error.message
-        }, 스택 트레이스: ${error.stack}`,
+          error instanceof Error ? error.message : String(error)
+        }, 스택 트레이스: ${error instanceof Error ? error.stack : ''}`,
       );
       throw error;
     }

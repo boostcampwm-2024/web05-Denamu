@@ -1,20 +1,16 @@
 import 'reflect-metadata';
 
-import { Notifier } from '@src/notification/notifier.interface';
+import { RssRegistration, RssRemoval, User } from '@common/types';
 
+import { EmailPayloadConstant } from '@email/constant';
 import { EmailConsumer } from '@email/email.consumer';
 import { EmailService } from '@email/email.service';
+import { EmailPayload, NodeMailerError } from '@email/types';
+
+import { Notifier } from '@notification/notifier.interface';
 
 import { RETRY_CONFIG, RMQ_QUEUES } from '@rabbitmq/rabbitmq.constant';
 import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
-
-import {
-  EmailPayload,
-  EmailPayloadConstant,
-  RssRegistration,
-  RssRemoval,
-  User,
-} from '@app-types/types';
 
 describe('email consumer unit test', () => {
   let emailConsumer: EmailConsumer;
@@ -27,13 +23,25 @@ describe('email consumer unit test', () => {
   });
 
   describe('handleEmailByType unit test', () => {
+    let sendUserCertificationMail: jest.Mock;
+    let sendRssMail: jest.Mock;
+    let sendRssRemoveCertificationMail: jest.Mock;
+    let sendPasswordResetEmail: jest.Mock;
+    let sendDeleteAccountMail: jest.Mock;
+
     beforeEach(() => {
+      sendUserCertificationMail = jest.fn().mockResolvedValue(undefined);
+      sendRssMail = jest.fn().mockResolvedValue(undefined);
+      sendRssRemoveCertificationMail = jest.fn().mockResolvedValue(undefined);
+      sendPasswordResetEmail = jest.fn().mockResolvedValue(undefined);
+      sendDeleteAccountMail = jest.fn().mockResolvedValue(undefined);
+
       emailService = {
-        sendUserCertificationMail: jest.fn().mockResolvedValue(undefined),
-        sendRssMail: jest.fn().mockResolvedValue(undefined),
-        sendRssRemoveCertificationMail: jest.fn().mockResolvedValue(undefined),
-        sendPasswordResetEmail: jest.fn().mockResolvedValue(undefined),
-        sendDeleteAccountMail: jest.fn().mockResolvedValue(undefined),
+        sendUserCertificationMail,
+        sendRssMail,
+        sendRssRemoveCertificationMail,
+        sendPasswordResetEmail,
+        sendDeleteAccountMail,
       } as any;
       rabbitmqService = {
         sendMessageToQueue: jest.fn().mockResolvedValue(null),
@@ -41,7 +49,7 @@ describe('email consumer unit test', () => {
       notifier = {
         initialize: jest.fn(),
         publish: jest.fn(),
-      } as any;
+      };
       emailConsumer = new EmailConsumer(
         rabbitmqService,
         emailService,
@@ -62,10 +70,8 @@ describe('email consumer unit test', () => {
 
       await emailConsumer.handleEmailByType(payload);
 
-      expect(emailService.sendUserCertificationMail).toHaveBeenCalledTimes(1);
-      expect(emailService.sendUserCertificationMail).toHaveBeenCalledWith(
-        userData,
-      );
+      expect(sendUserCertificationMail).toHaveBeenCalledTimes(1);
+      expect(sendUserCertificationMail).toHaveBeenCalledWith(userData);
     });
 
     it('RSS_REGISTRATION 타입일 때 sendRssMail을 호출한다', async () => {
@@ -86,8 +92,8 @@ describe('email consumer unit test', () => {
 
       await emailConsumer.handleEmailByType(payload);
 
-      expect(emailService.sendRssMail).toHaveBeenCalledTimes(1);
-      expect(emailService.sendRssMail).toHaveBeenCalledWith(rssData);
+      expect(sendRssMail).toHaveBeenCalledTimes(1);
+      expect(sendRssMail).toHaveBeenCalledWith(rssData);
     });
 
     it('RSS_REMOVAL 타입일 때 sendRssRemoveCertificationMail을 호출한다', async () => {
@@ -104,10 +110,8 @@ describe('email consumer unit test', () => {
 
       await emailConsumer.handleEmailByType(payload);
 
-      expect(emailService.sendRssRemoveCertificationMail).toHaveBeenCalledTimes(
-        1,
-      );
-      expect(emailService.sendRssRemoveCertificationMail).toHaveBeenCalledWith(
+      expect(sendRssRemoveCertificationMail).toHaveBeenCalledTimes(1);
+      expect(sendRssRemoveCertificationMail).toHaveBeenCalledWith(
         rssRemovalData,
       );
     });
@@ -125,10 +129,8 @@ describe('email consumer unit test', () => {
 
       await emailConsumer.handleEmailByType(payload);
 
-      expect(emailService.sendPasswordResetEmail).toHaveBeenCalledTimes(1);
-      expect(emailService.sendPasswordResetEmail).toHaveBeenCalledWith(
-        userData,
-      );
+      expect(sendPasswordResetEmail).toHaveBeenCalledTimes(1);
+      expect(sendPasswordResetEmail).toHaveBeenCalledWith(userData);
     });
 
     it('ACCOUNT_DELETION 타입일 때 sendDeleteAccountMail을 호출한다', async () => {
@@ -144,8 +146,8 @@ describe('email consumer unit test', () => {
 
       await emailConsumer.handleEmailByType(payload);
 
-      expect(emailService.sendDeleteAccountMail).toHaveBeenCalledTimes(1);
-      expect(emailService.sendDeleteAccountMail).toHaveBeenCalledWith(userData);
+      expect(sendDeleteAccountMail).toHaveBeenCalledTimes(1);
+      expect(sendDeleteAccountMail).toHaveBeenCalledWith(userData);
     });
 
     it('알 수 없는 타입일 때 아무 메서드도 호출하지 않는다', async () => {
@@ -156,17 +158,17 @@ describe('email consumer unit test', () => {
 
       await emailConsumer.handleEmailByType(payload);
 
-      expect(emailService.sendUserCertificationMail).not.toHaveBeenCalled();
-      expect(emailService.sendRssMail).not.toHaveBeenCalled();
-      expect(
-        emailService.sendRssRemoveCertificationMail,
-      ).not.toHaveBeenCalled();
-      expect(emailService.sendPasswordResetEmail).not.toHaveBeenCalled();
-      expect(emailService.sendDeleteAccountMail).not.toHaveBeenCalled();
+      expect(sendUserCertificationMail).not.toHaveBeenCalled();
+      expect(sendRssMail).not.toHaveBeenCalled();
+      expect(sendRssRemoveCertificationMail).not.toHaveBeenCalled();
+      expect(sendPasswordResetEmail).not.toHaveBeenCalled();
+      expect(sendDeleteAccountMail).not.toHaveBeenCalled();
     });
   });
 
   describe('handleEmailByError unit test', () => {
+    let sendMessageToQueue: jest.Mock;
+
     const networkErrors = [
       `ESOCKET`,
       `ECONNREFUSED`,
@@ -189,13 +191,14 @@ describe('email consumer unit test', () => {
     ];
     beforeEach(() => {
       emailService = {} as any;
+      sendMessageToQueue = jest.fn().mockResolvedValue(null);
       rabbitmqService = {
-        sendMessageToQueue: jest.fn().mockResolvedValue(null),
+        sendMessageToQueue,
       } as any;
       notifier = {
         initialize: jest.fn(),
         publish: jest.fn(),
-      } as any;
+      };
       emailConsumer = new EmailConsumer(
         rabbitmqService,
         emailService,
@@ -207,7 +210,7 @@ describe('email consumer unit test', () => {
       networkErrors.forEach((errorName) => {
         it(`Node.js 네트워크 레벨의 ${errorName} 에러가 발생하면 재시도한다.`, async () => {
           //given
-          const error = new Error(`${errorName}`) as any;
+          const error = new Error(`${errorName}`) as NodeMailerError;
           if (errorName === 'ESOCKET') {
             error.code = 'ESOCKET';
           }
@@ -229,8 +232,8 @@ describe('email consumer unit test', () => {
           );
 
           //then
-          expect(rabbitmqService.sendMessageToQueue).toHaveBeenCalledTimes(1);
-          expect(rabbitmqService.sendMessageToQueue).toHaveBeenCalledWith(
+          expect(sendMessageToQueue).toHaveBeenCalledTimes(1);
+          expect(sendMessageToQueue).toHaveBeenCalledWith(
             RETRY_CONFIG.WAITING_QUEUE[0],
             JSON.stringify(emailPayload),
             {
@@ -245,7 +248,7 @@ describe('email consumer unit test', () => {
       commonSmtp4xxErrors.forEach(({ responseCode, message }) => {
         it(`SMTP ${responseCode} 에러가 발생하면 재시도한다.`, async () => {
           //given
-          const error = new Error(`${message}`) as any;
+          const error = new Error(`${message}`) as NodeMailerError;
           error.responseCode = responseCode;
           const emailPayload: EmailPayload = {
             type: EmailPayloadConstant.USER_CERTIFICATION,
@@ -265,8 +268,8 @@ describe('email consumer unit test', () => {
           );
 
           //then
-          expect(rabbitmqService.sendMessageToQueue).toHaveBeenCalledTimes(1);
-          expect(rabbitmqService.sendMessageToQueue).toHaveBeenCalledWith(
+          expect(sendMessageToQueue).toHaveBeenCalledTimes(1);
+          expect(sendMessageToQueue).toHaveBeenCalledWith(
             RETRY_CONFIG.WAITING_QUEUE[0],
             JSON.stringify(emailPayload),
             {
@@ -319,10 +322,8 @@ describe('email consumer unit test', () => {
               );
 
               //then
-              expect(rabbitmqService.sendMessageToQueue).toHaveBeenCalledTimes(
-                1,
-              );
-              expect(rabbitmqService.sendMessageToQueue).toHaveBeenCalledWith(
+              expect(sendMessageToQueue).toHaveBeenCalledTimes(1);
+              expect(sendMessageToQueue).toHaveBeenCalledWith(
                 expectedQueue,
                 JSON.stringify(emailPayload),
                 {
@@ -335,7 +336,7 @@ describe('email consumer unit test', () => {
 
             it(`SMTP 4xx 에러 발생 시 retryCount=${retryCount}이면 ${description}(${expectedQueue})로 메시지를 발행한다.`, async () => {
               //given
-              const error = new Error('Mailbox unavailable') as any;
+              const error = new Error('Mailbox unavailable') as NodeMailerError;
               error.responseCode = 450;
               const emailPayload: EmailPayload = {
                 type: EmailPayloadConstant.USER_CERTIFICATION,
@@ -354,10 +355,8 @@ describe('email consumer unit test', () => {
               );
 
               //then
-              expect(rabbitmqService.sendMessageToQueue).toHaveBeenCalledTimes(
-                1,
-              );
-              expect(rabbitmqService.sendMessageToQueue).toHaveBeenCalledWith(
+              expect(sendMessageToQueue).toHaveBeenCalledTimes(1);
+              expect(sendMessageToQueue).toHaveBeenCalledWith(
                 expectedQueue,
                 JSON.stringify(emailPayload),
                 {
@@ -377,7 +376,7 @@ describe('email consumer unit test', () => {
       commonSmtp5xxErrors.forEach(({ responseCode, message }) => {
         it(`SMTP ${responseCode} 에러가 발생하면 DLQ로 메시지를 발행한다.`, async () => {
           //given
-          const error = new Error(`${message}`) as any;
+          const error = new Error(`${message}`) as NodeMailerError;
           error.responseCode = responseCode;
           const emailPayload: EmailPayload = {
             type: EmailPayloadConstant.USER_CERTIFICATION,
@@ -397,8 +396,8 @@ describe('email consumer unit test', () => {
           );
 
           //then
-          expect(rabbitmqService.sendMessageToQueue).toHaveBeenCalledTimes(1);
-          expect(rabbitmqService.sendMessageToQueue).toHaveBeenCalledWith(
+          expect(sendMessageToQueue).toHaveBeenCalledTimes(1);
+          expect(sendMessageToQueue).toHaveBeenCalledWith(
             RMQ_QUEUES.EMAIL_DEAD_LETTER,
             JSON.stringify(emailPayload),
             expect.objectContaining({
@@ -429,8 +428,8 @@ describe('email consumer unit test', () => {
         await emailConsumer.handleEmailByError(error, emailPayload, retryCount);
 
         //then
-        expect(rabbitmqService.sendMessageToQueue).toHaveBeenCalledTimes(1);
-        expect(rabbitmqService.sendMessageToQueue).toHaveBeenCalledWith(
+        expect(sendMessageToQueue).toHaveBeenCalledTimes(1);
+        expect(sendMessageToQueue).toHaveBeenCalledWith(
           RMQ_QUEUES.EMAIL_DEAD_LETTER,
           JSON.stringify(emailPayload),
           expect.objectContaining({
@@ -454,14 +453,14 @@ describe('email consumer unit test', () => {
             : `SMTP ${targetError.responseCode}`;
         it(`${errorName} 에러에 대해 재시도 횟수가 ${RETRY_CONFIG.MAX_RETRY}회 이상이면 DLQ로 메시지를 발행한다.`, async () => {
           //given
-          let error;
+          let error: NodeMailerError;
           if (typeof targetError === 'string') {
-            error = new Error(`${targetError}`) as any;
+            error = new Error(`${targetError}`);
             if (targetError === 'ESOCKET') {
               error.code = 'ESOCKET';
             }
           } else {
-            error = new Error(`${targetError.message}`) as any;
+            error = new Error(`${targetError.message}`);
             error.responseCode = targetError.responseCode;
           }
           const emailPayload: EmailPayload = {
@@ -482,8 +481,8 @@ describe('email consumer unit test', () => {
           );
 
           //then
-          expect(rabbitmqService.sendMessageToQueue).toHaveBeenCalledTimes(1);
-          expect(rabbitmqService.sendMessageToQueue).toHaveBeenCalledWith(
+          expect(sendMessageToQueue).toHaveBeenCalledTimes(1);
+          expect(sendMessageToQueue).toHaveBeenCalledWith(
             RMQ_QUEUES.EMAIL_DEAD_LETTER,
             JSON.stringify(emailPayload),
             expect.objectContaining({

@@ -1,36 +1,20 @@
 import { container } from 'tsyringe';
 
-import { DiscordNotifier } from '@src/notification/discord.notifier';
-import { Notifier } from '@src/notification/notifier.interface';
+import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
 
 import { EmailConsumer } from '@email/email.consumer';
 import { EmailService } from '@email/email.service';
 
+import { DiscordNotifier } from '@notification/discord.notifier';
+import { Notifier } from '@notification/notifier.interface';
+
 import { RabbitMQManager } from '@rabbitmq/rabbitmq.manager';
 import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
 
-import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
-
-container.registerSingleton<RabbitMQService>(
-  DEPENDENCY_SYMBOLS.RabbitMQService,
-  RabbitMQService,
-);
-
-container.registerSingleton<RabbitMQManager>(
-  DEPENDENCY_SYMBOLS.RabbitMQManager,
-  RabbitMQManager,
-);
-
-container.registerSingleton<EmailConsumer>(
-  DEPENDENCY_SYMBOLS.EmailConsumer,
-  EmailConsumer,
-);
-
-container.registerSingleton<EmailService>(
-  DEPENDENCY_SYMBOLS.EmailService,
-  EmailService,
-);
-
+container.registerSingleton(RabbitMQService);
+container.registerSingleton(RabbitMQManager);
+container.registerSingleton(EmailConsumer);
+container.registerSingleton(EmailService);
 container.registerSingleton<Notifier>(
   DEPENDENCY_SYMBOLS.Notifier,
   DiscordNotifier,
