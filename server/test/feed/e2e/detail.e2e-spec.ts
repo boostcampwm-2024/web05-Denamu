@@ -3,6 +3,7 @@ import { HttpStatus } from '@nestjs/common';
 import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 
+import { Activity } from '@activity/entity/activity.entity';
 import { ActivityRepository } from '@activity/repository/activity.repository';
 
 import { RedisService } from '@common/redis/redis.service';
@@ -184,14 +185,17 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
       // Http then
       expect(response.status).toBe(HttpStatus.OK);
 
-      // Interceptor 내부의 tap()은 fire-and-forget이므로 DB 업데이트 완료까지 폴링 대기 (최대 2초)
       const deadline = Date.now() + 2000;
       let updatedUser: User;
+      let activities: Activity[];
       do {
         await new Promise<void>((resolve) => setTimeout(resolve, 50));
-        updatedUser = await userRepository.findOneBy({ id: user.id });
+        [updatedUser, activities] = await Promise.all([
+          userRepository.findOneBy({ id: user.id }),
+          activityRepository.find({ where: { user: { id: user.id } } }),
+        ]);
       } while (
-        updatedUser.totalViews === user.totalViews &&
+        (updatedUser.totalViews === user.totalViews || activities.length === 0) &&
         Date.now() < deadline
       );
 
@@ -200,9 +204,6 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
         `feed:${feedDetailRequestDto.feedId}:userId`,
         user.id,
       );
-      const activities = await activityRepository.find({
-        where: { user: { id: user.id } },
-      });
       expect(updatedUser.totalViews).toBe(user.totalViews + 1);
       expect(hasUserFlag).toBe(1);
       expect(activities.length).toBeGreaterThan(0);
