@@ -26,7 +26,7 @@ async function startEmailWorker() {
   try {
     logger.info('[Email Worker Start]');
 
-    const metricsPort = Number(process.env.EMAIL_METRICS_PORT) || 9091;
+    const metricsPort = Number(process.env.EMAIL_WORKER_METRICS_PORT) || 9091;
 
     const dependencies = initializeDependencies();
     dependencies.metrics.startMetricsServer(metricsPort);
