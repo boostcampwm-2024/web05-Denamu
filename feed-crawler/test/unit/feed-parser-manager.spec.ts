@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 
+import { FeedMetrics } from '@common/metrics/feed-metrics';
 import { Notifier } from '@common/notification/notifier.interface';
 import { FeedParserManager } from '@common/parser/feed-parser-manager';
 import { Atom10Parser } from '@common/parser/formats/atom10-parser';
@@ -15,6 +16,7 @@ describe('FeedParserManager', () => {
   let mockAtom10Parser: jest.Mocked<Atom10Parser>;
   let mockFetch: jest.MockedFunction<typeof fetch>;
   let mockNotifier: jest.Mocked<Notifier>;
+  let mockFeedMetrics: jest.Mocked<FeedMetrics>;
   let rss20CanParseMock: jest.Mock;
   let rss20ParseFeedMock: jest.Mock;
   let atom10CanParseMock: jest.Mock;
@@ -68,10 +70,20 @@ describe('FeedParserManager', () => {
       publish: jest.fn(),
     };
 
+    mockFeedMetrics = {
+      total: { inc: jest.fn() },
+      success: { inc: jest.fn() },
+      failure: { inc: jest.fn() },
+      fullCrawlQueueDepth: { set: jest.fn() },
+      fullCrawlPermanentFailure: { inc: jest.fn() },
+      startMetricsServer: jest.fn(),
+    } as any;
+
     feedParserManager = new FeedParserManager(
       mockRss20Parser,
       mockAtom10Parser,
       mockNotifier,
+      mockFeedMetrics,
     );
   });
 

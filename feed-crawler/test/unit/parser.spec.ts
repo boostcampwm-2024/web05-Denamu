@@ -8,6 +8,7 @@ import {
   RSS_20_SAMPLE,
 } from '@test/config/constant/parser-fixtures';
 
+import { FeedMetrics } from '@common/metrics/feed-metrics';
 import { Notifier } from '@common/notification/notifier.interface';
 import { FeedParserManager } from '@common/parser/feed-parser-manager';
 import { Atom10Parser } from '@common/parser/formats/atom10-parser';
@@ -21,6 +22,15 @@ describe('Parser 모듈 테스트', () => {
   let feedParserManager: FeedParserManager;
   let notifier: Notifier;
 
+  const mockFeedMetrics = {
+    total: { inc: jest.fn() },
+    success: { inc: jest.fn() },
+    failure: { inc: jest.fn() },
+    fullCrawlQueueDepth: { set: jest.fn() },
+    fullCrawlPermanentFailure: { inc: jest.fn() },
+    startMetricsServer: jest.fn(),
+  } as unknown as FeedMetrics;
+
   beforeEach(() => {
     parserUtil = new ParserUtil();
     rss20Parser = new Rss20Parser(parserUtil);
@@ -29,6 +39,7 @@ describe('Parser 모듈 테스트', () => {
       rss20Parser,
       atom10Parser,
       notifier,
+      mockFeedMetrics,
     );
 
     // URL 기반 조건부 fetch 모킹 (순서 의존성 제거)

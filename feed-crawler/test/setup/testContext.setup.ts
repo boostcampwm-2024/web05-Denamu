@@ -5,6 +5,10 @@ import { DependencyContainer } from 'tsyringe';
 
 import { DatabaseConnection } from '@common/database-connection';
 import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
+import { AiMetrics } from '@common/metrics/ai-metrics';
+import { DbMetrics } from '@common/metrics/db-metrics';
+import { FeedMetrics } from '@common/metrics/feed-metrics';
+import { RedisMetrics } from '@common/metrics/redis-metrics';
 import { MySQLConnection } from '@common/mysql-access';
 import { DiscordNotifier } from '@common/notification/discord.notifier';
 import { Notifier } from '@common/notification/notifier.interface';
@@ -51,26 +55,20 @@ export function setupTestContainer(): TestContext {
       MySQLConnection,
     );
 
+    testContainer.registerSingleton(DbMetrics);
+    testContainer.registerSingleton(RedisMetrics);
+    testContainer.registerSingleton(AiMetrics);
+    testContainer.registerSingleton(FeedMetrics);
     testContainer.registerSingleton(RedisConnection);
-
     testContainer.registerSingleton(RssRepository);
-
     testContainer.registerSingleton(FeedRepository);
-
     testContainer.registerSingleton(ClaudeEventWorker);
-
     testContainer.registerSingleton(TagMapRepository);
-
     testContainer.registerSingleton(ParserUtil);
-
     testContainer.registerSingleton(Rss20Parser);
-
     testContainer.registerSingleton(Atom10Parser);
-
     testContainer.registerSingleton(FeedParserManager);
-
     testContainer.registerSingleton(FeedCrawler);
-
     testContainer.registerSingleton<Notifier>(
       DEPENDENCY_SYMBOLS.Notifier,
       DiscordNotifier,
@@ -79,7 +77,6 @@ export function setupTestContainer(): TestContext {
     global.testContext = {
       container: testContainer,
       tagMapRepository: testContainer.resolve(TagMapRepository),
-
       claudeEventWorker: testContainer.resolve(ClaudeEventWorker),
       rssRepository: testContainer.resolve(RssRepository),
       feedRepository: testContainer.resolve(FeedRepository),

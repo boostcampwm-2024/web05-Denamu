@@ -3,6 +3,8 @@ import 'reflect-metadata';
 import Anthropic from '@anthropic-ai/sdk';
 
 import { redisConstant } from '@common/constant';
+import { AiMetrics } from '@common/metrics/ai-metrics';
+import { RedisMetrics } from '@common/metrics/redis-metrics';
 import { Notifier } from '@common/notification/notifier.interface';
 import { RedisConnection } from '@common/redis-access';
 import { ClaudeResponse, FeedAIQueueItem } from '@common/types';
@@ -74,6 +76,7 @@ describe('ClaudeEventWorker', () => {
       executePipeline: executePipelineMock,
       hset: hsetMock,
       rpush: rpushMock,
+      llen: jest.fn().mockResolvedValue(0),
     } as any;
 
     mockAnthropicClient = {
@@ -89,11 +92,28 @@ describe('ClaudeEventWorker', () => {
 
     MockedAnthropic.mockImplementation(() => mockAnthropicClient);
 
+    const mockAiMetrics = {
+      total: { inc: jest.fn() },
+      success: { inc: jest.fn() },
+      failure: { inc: jest.fn() },
+      permanentFailure: { inc: jest.fn() },
+      queueDepth: { set: jest.fn() },
+      duration: { startTimer: jest.fn().mockReturnValue(jest.fn()) },
+    } as unknown as AiMetrics;
+
+    const mockRedisMetrics = {
+      total: { inc: jest.fn() },
+      success: { inc: jest.fn() },
+      failure: { inc: jest.fn() },
+    } as unknown as RedisMetrics;
+
     claudeEventWorker = new ClaudeEventWorker(
       mockTagMapRepository,
       mockFeedRepository,
       mockRedisConnection,
       mockNotifier,
+      mockAiMetrics,
+      mockRedisMetrics,
     );
   });
 
