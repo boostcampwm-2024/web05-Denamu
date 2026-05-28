@@ -6,9 +6,15 @@ export type RedisMessagePayload = {
   userName: string;
   message: string;
   timestamp: ISOstring;
+  room: string;
 };
 
 /** 소켓 broadcast 타입 (messageId 포함 ＊ 클라이언트 측 메세지 전달 여부 ACK) */
 export type BroadcastPayload = RedisMessagePayload & {
   messageId: string;
+};
+
+export type AssignRoomPayload = {
+  roomId: string;
+  roomName: string;
 };

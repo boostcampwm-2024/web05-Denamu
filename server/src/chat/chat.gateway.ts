@@ -9,8 +9,6 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 
-import { InjectMetric } from '@willsoto/nestjs-prometheus';
-import { Counter, Gauge } from 'prom-client';
 import { Server, Socket } from 'socket.io';
 
 import type {
@@ -18,6 +16,7 @@ import type {
   RedisMessagePayload,
 } from '@chat/constant/type';
 import { ChatWsExceptionFilter } from '@chat/filter/ws.exception.filter';
+import { AnonymousRoomManager } from '@chat/room/anonymous-room.manager';
 import { ChatService } from '@chat/service/chat.service';
 
 import { SendMessageDto } from './dto/sendMessage.dto';
@@ -28,7 +27,6 @@ import { SendMessageDto } from './dto/sendMessage.dto';
   cors: {
     origin: '*', // TODO: 연동 할때 보고 확인 후 설정 해보기
   },
-  path: '/chat',
 })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
@@ -36,35 +34,61 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   constructor(
     private readonly chatService: ChatService,
-    @InjectMetric('anonymous_chat_user_count')
-    private readonly chatUserMetricCount: Gauge,
-    @InjectMetric('anonymous_chat_message_count')
-    private readonly chatMetricCount: Counter,
+    private readonly anonymousRoomManager: AnonymousRoomManager,
   ) {}
 
-  async handleConnection(@ConnectedSocket() client: Socket) {
-    const userCount = this.server.engine.clientsCount;
-    if (this.chatService.isMaxClientExceeded(userCount)) {
-      client.emit('maximum_exceeded', {
-        message: '채팅 서버의 한계에 도달했습니다. 잠시후 재시도 해주세요.',
-      });
-      client.disconnect(true);
-      return;
-    }
-
-    const chatHistory = await this.chatService.getChatHistory();
-
-    client.emit('chatHistory', chatHistory);
-
-    this.chatUserMetricCount.inc({ room: 'anonymous' });
-    this.server.emit('updateUserCount', { userCount });
+  private getClientRoomId(client: Socket): string | undefined {
+    return (client.data as { roomId?: string }).roomId;
   }
 
-  handleDisconnect() {
-    this.chatUserMetricCount.dec({ room: 'anonymous' });
-    this.server.emit('updateUserCount', {
-      userCount: this.server.engine.clientsCount,
-    });
+  async handleConnection(@ConnectedSocket() client: Socket) {
+    const requestedRoom = client.handshake.query.room as string | undefined;
+    let roomId: string;
+    let roomName: string;
+
+    if (!requestedRoom || requestedRoom.startsWith('anonymous')) {
+      const assignment = this.anonymousRoomManager.assignRoom(
+        this.server,
+        requestedRoom,
+      );
+      if (!assignment) {
+        client.emit('maximum_exceeded', {
+          message: '채팅 서버의 한계에 도달했습니다. 잠시후 재시도 해주세요.',
+        });
+        client.disconnect(true);
+        return;
+      }
+      roomId = assignment.roomId;
+      roomName = assignment.roomName;
+    } else {
+      roomId = requestedRoom;
+      roomName = requestedRoom;
+    }
+
+    await client.join(roomId);
+    (client.data as { roomId?: string }).roomId = roomId;
+
+    client.emit('assignRoom', { roomId, roomName });
+
+    const chatHistory = await this.chatService.getChatHistory(roomId);
+    client.emit('chatHistory', chatHistory);
+
+    const roomSize =
+      this.server.sockets.adapter.rooms.get(roomId)?.size ?? 0;
+    this.server.to(roomId).emit('updateUserCount', { userCount: roomSize });
+
+    this.anonymousRoomManager.trackUserConnected(roomId);
+  }
+
+  handleDisconnect(@ConnectedSocket() client: Socket) {
+    const roomId = this.getClientRoomId(client);
+    if (!roomId) return;
+
+    const roomSize =
+      this.server.sockets.adapter.rooms.get(roomId)?.size ?? 0;
+    this.server.to(roomId).emit('updateUserCount', { userCount: roomSize });
+
+    this.anonymousRoomManager.trackUserDisconnected(roomId);
   }
 
   @SubscribeMessage('register')
@@ -73,7 +97,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody()
     payload: { userId: string | null },
   ) {
-    const result = await this.chatService.getOrCreateUserName(
+    const roomId = this.getClientRoomId(client);
+    if (!roomId || !this.anonymousRoomManager.isAnonymousRoom(roomId)) return;
+
+    const result = await this.anonymousRoomManager.getOrCreateUserName(
       payload?.userId ?? null,
     );
     if (result.isNew) {
@@ -83,10 +110,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('message')
   async handleMessage(
+    @ConnectedSocket() client: Socket,
     @MessageBody(new ValidationPipe({ transform: true }))
     payload: SendMessageDto,
   ) {
-    const { userName } = await this.chatService.getOrCreateUserName(
+    const roomId = this.getClientRoomId(client);
+    if (!roomId) return;
+
+    const { userName } = await this.anonymousRoomManager.getOrCreateUserName(
       payload.userId,
     );
 
@@ -95,6 +126,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       userName,
       message: payload.message,
       timestamp: new Date().toISOString(),
+      room: roomId,
     };
 
     const broadcastPayload: BroadcastPayload = {
@@ -102,9 +134,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       messageId: payload.messageId,
     };
 
-    this.chatMetricCount.inc({ room: 'anonymous' });
+    this.anonymousRoomManager.trackMessageSent(roomId);
 
     await this.chatService.saveMessageToRedis(redisPayload);
-    this.server.emit('message', broadcastPayload);
+    this.server.to(roomId).emit('message', broadcastPayload);
   }
 }
