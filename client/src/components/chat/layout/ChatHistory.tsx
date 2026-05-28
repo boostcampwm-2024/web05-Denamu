@@ -6,12 +6,7 @@ import ChatSkeleton from "@/components/chat/layout/ChatSkeleton";
 import Empty from "@/assets/empty-panda.svg";
 
 import { useChatStore } from "@/store/useChatStore";
-
-const getLocalDateString = (timestamp: string): string | null => {
-  const date = new Date(timestamp);
-  if (isNaN(date.getTime())) return null;
-  return date.toLocaleDateString("en-CA");
-};
+import { getLocalDateString, getLocalMinuteKey } from "@/utils/date";
 
 export default function ChatHistory({ isFull, isConnected }: { isFull: boolean; isConnected: boolean }) {
   const { chatHistory, isLoading } = useChatStore();
@@ -28,7 +23,11 @@ export default function ChatHistory({ isFull, isConnected }: { isFull: boolean; 
         const currentDate = getLocalDateString(item.timestamp);
         const prevDate = prevItem ? getLocalDateString(prevItem.timestamp) : null;
         const showDateSeparator = currentDate !== null && currentDate !== prevDate;
-        const isSameUser = !showDateSeparator && index > 0 && prevItem?.userName === item.userName;
+        const isSameUser =
+          !showDateSeparator &&
+          index > 0 &&
+          prevItem?.userName === item.userName &&
+          getLocalMinuteKey(item.timestamp) === getLocalMinuteKey(prevItem?.timestamp ?? "");
         return (
           <span key={index}>
             {showDateSeparator && <div className="flex justify-center">{currentDate}</div>}
