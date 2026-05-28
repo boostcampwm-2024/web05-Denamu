@@ -17,7 +17,7 @@ export default function ChatHistory({ isFull, isConnected }: { isFull: boolean; 
   if (chatHistory.length === 0) return <EmptyChatHistory />;
 
   return (
-    <span className="flex flex-col gap-3 px-3">
+    <span className="flex flex-col gap-3 px-3 py-3">
       {chatHistory.map((item, index) => {
         const prevItem = chatHistory[index - 1];
         const currentDate = getLocalDateString(item.timestamp);
@@ -43,7 +43,7 @@ const FullChatWarning = () => (
   <div className="flex flex-col justify-center items-center h-[70vh] gap-3">
     <CircleAlert color="red" size={200} />
     <div className="flex flex-col items-center gap-1">
-      <p className="font-bold">채팅창 인원이 500명 이상입니다</p>
+      <p className="font-bold">모든 채팅방이 가득 찼습니다</p>
       <p>잠시 기다렸다가 새로고침을 해주세요</p>
     </div>
   </div>

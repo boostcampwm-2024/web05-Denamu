@@ -65,8 +65,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       roomName = requestedRoom;
     }
 
-    await client.join(roomId);
     (client.data as { roomId?: string }).roomId = roomId;
+    await client.join(roomId);
 
     client.emit('assignRoom', { roomId, roomName });
 
@@ -97,8 +97,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody()
     payload: { userId: string | null },
   ) {
-    const roomId = this.getClientRoomId(client);
-    if (!roomId || !this.anonymousRoomManager.isAnonymousRoom(roomId)) return;
+    const requestedRoom = client.handshake.query.room as string | undefined;
+    if (requestedRoom && !this.anonymousRoomManager.isAnonymousRoom(requestedRoom)) return;
 
     const result = await this.anonymousRoomManager.getOrCreateUserName(
       payload?.userId ?? null,
@@ -106,6 +106,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (result.isNew) {
       client.emit('assignUserId', { userId: result.userId });
     }
+    client.emit('assignUserName', { userName: result.userName });
   }
 
   @SubscribeMessage('message')

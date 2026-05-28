@@ -30,7 +30,9 @@ export default function ChatItem({ chatItem, isSameUser }: ChatItemProps) {
             </Avatar>
           )}
           <span className="flex gap-2 items-center">
-            <span className="text-sm">{isUser ? "나" : chatItem.userName}</span>
+            <span className="text-sm">
+              {isUser ? (chatItem.userName ? `나 (${chatItem.userName})` : "나") : chatItem.userName}
+            </span>
             <span className="text-xs">{chatItem.isFailed ? "전송실패" : formatTime(chatItem.timestamp)}</span>
           </span>
         </span>

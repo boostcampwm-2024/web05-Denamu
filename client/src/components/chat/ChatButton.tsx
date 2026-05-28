@@ -43,7 +43,7 @@ export function CloseChat() {
         if (isOpen) setIsOpen();
       }}
     >
-      <X size={16} />
+      <X size={18} />
     </button>
   );
 }
