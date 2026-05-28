@@ -5,6 +5,12 @@
 html {
   font-family: "Pretendard Variable", sans-serif;
   letter-spacing: -0.02em;
+  overflow-y: scroll;
+}
+
+html body[data-scroll-locked] {
+  padding-right: 0 !important;
+  margin-right: 0 !important;
 }
 
 .bg-primary {

@@ -1,12 +1,32 @@
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { Home, ArrowUp, ChartArea } from "lucide-react";
 
 import { Chat } from "@/components/chat/Chat";
 import { OpenChat } from "@/components/chat/ChatButton";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { useSidebar, SidebarProvider } from "@/components/ui/sidebar";
 
 import { useTapStore } from "@/store/useTapStore";
+
+function ChatSidebarEffects() {
+  const { open, isMobile, toggleSidebar } = useSidebar();
+
+  useEffect(() => {
+    if (open && !isMobile) {
+      document.body.style.overflowY = "hidden";
+    } else {
+      document.body.style.overflowY = "";
+    }
+    return () => {
+      document.body.style.overflowY = "";
+    };
+  }, [open, isMobile]);
+
+  if (!open || isMobile) return null;
+
+  return <div className="fixed inset-0 z-[9]" onClick={toggleSidebar} />;
+}
 
 export default function SideButton() {
   const scrollToTop = () => {
@@ -21,6 +41,7 @@ export default function SideButton() {
   return (
     <div className="flex h-full items-center">
       <SidebarProvider defaultOpen={false}>
+        <ChatSidebarEffects />
         <Chat />
         <OpenChat />
       </SidebarProvider>
