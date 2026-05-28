@@ -124,7 +124,6 @@ export const useChatStore = create<State & Action>((set, get) => {
           {
             timestamp: '전송중',
             userName: '나',
-            isMidNight: false,
             message: message.message,
             messageId: message.messageId,
             userId: localStorage.getItem("userID"),

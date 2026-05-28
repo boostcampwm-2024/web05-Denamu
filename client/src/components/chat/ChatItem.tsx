@@ -3,7 +3,6 @@ import clsx from "clsx";
 
 import { Avatar } from "@/components/ui/avatar";
 
-import { formatDate } from "@/utils/date";
 import { formatTime } from "@/utils/time";
 
 import { useChatStore } from "@/store/useChatStore";
@@ -20,9 +19,6 @@ export default function ChatItem({ chatItem, isSameUser }: ChatItemProps) {
   const isUser = localStorage.getItem("userID") === chatItem.userId;
   const resendMessage = useChatStore((state) => state.resendMessage);
   const deleteMessage = useChatStore((state) => state.deleteMessage);
-
-  if (chatItem.userName === "system")
-    return <div className="flex justify-center">{formatDate(chatItem.timestamp)}</div>;
 
   return (
     <div className="flex flex-col ">
