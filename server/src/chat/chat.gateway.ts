@@ -102,11 +102,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       messageId: payload.messageId,
     };
 
-    const midnightMessage = await this.chatService.publishDateMessageOnce();
-    if (midnightMessage) {
-      this.server.emit('message', midnightMessage);
-    }
-
     this.chatMetricCount.inc({ room: 'anonymous' });
 
     await this.chatService.saveMessageToRedis(redisPayload);
