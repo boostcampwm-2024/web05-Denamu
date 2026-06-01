@@ -54,7 +54,7 @@
     "class-validator": "^0.15.1",
     "cookie-parser": "^1.4.7",
     "cross-env": "^7.0.3",
-    "ioredis": "^5.10.1",
+    "ioredis": "^5.11.0",
     "lodash": "^4.17.21",
     "mysql2": "^3.22.3",
     "nest-winston": "^1.9.7",
