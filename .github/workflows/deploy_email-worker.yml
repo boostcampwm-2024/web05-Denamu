@@ -83,7 +83,8 @@ jobs:
             echo "RABBITMQ_PORT=${{ secrets.RABBITMQ_PORT }}"
             echo "RABBITMQ_USER=${{ secrets.RABBITMQ_USER }}"
             echo "EMAIL_WORKER_DISCORD_WEBHOOK_URL=${{ secrets.EMAIL_WORKER_DISCORD_WEBHOOK_URL }}"
-          } | sudo tee "${{env.EMAIL-WORKER_ENV_FILE}}" >/dev/null
+            echo "EMAIL_WORKER_METRICS_PORT=${{ secrets.EMAIL_WORKER_METRICS_PORT }}"
+            } | sudo tee "${{env.EMAIL-WORKER_ENV_FILE}}" >/dev/null
 
       - name: Graceful Shutdown & 서비스 재시작
         run: |

@@ -2,12 +2,19 @@ import 'reflect-metadata';
 
 import * as nodemailer from 'nodemailer';
 
+import { EmailMetrics } from '@common/metrics/email-metrics';
 import { RssRegistration, RssRemoval, User } from '@common/types';
 
 import { PRODUCT_DOMAIN } from '@email/email.content';
 import { EmailService } from '@email/email.service';
 
 jest.mock('nodemailer');
+
+const mockEmailMetrics = {
+  total: { inc: jest.fn() },
+  success: { inc: jest.fn() },
+  startMetricsServer: jest.fn(),
+} as unknown as EmailMetrics;
 
 describe('EmailService unit test', () => {
   let emailService: EmailService;
@@ -33,7 +40,7 @@ describe('EmailService unit test', () => {
       sendMail: mockSendMail,
     });
 
-    emailService = new EmailService();
+    emailService = new EmailService(mockEmailMetrics);
   });
 
   afterEach(() => {
@@ -52,7 +59,7 @@ describe('EmailService unit test', () => {
     it('EMAIL_USER 환경 변수가 없으면 에러를 던진다', () => {
       delete process.env.EMAIL_USER;
 
-      expect(() => new EmailService()).toThrow(
+      expect(() => new EmailService(mockEmailMetrics)).toThrow(
         'EMAIL_USER 환경 변수가 설정되지 않았습니다.',
       );
     });
@@ -60,7 +67,7 @@ describe('EmailService unit test', () => {
     it('EMAIL_PASSWORD 환경 변수가 없으면 에러를 던진다', () => {
       delete process.env.EMAIL_PASSWORD;
 
-      expect(() => new EmailService()).toThrow(
+      expect(() => new EmailService(mockEmailMetrics)).toThrow(
         'EMAIL_PASSWORD 환경 변수가 설정되지 않았습니다.',
       );
     });

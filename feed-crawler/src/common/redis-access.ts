@@ -105,6 +105,10 @@ export class RedisConnection {
     await this.redis.hset(key, fieldValues);
   }
 
+  async llen(key: string): Promise<number> {
+    return this.redis.llen(key);
+  }
+
   async flushall() {
     await this.redis.flushall();
   }

@@ -23,3 +23,11 @@ scrape_configs:
   - job_name: 'rabbitMQ_exporter'
     static_configs:
       - targets: ['rabbitmq:15692']
+
+  - job_name: 'email_worker'
+    static_configs:
+      - targets: ['email-worker:9091']
+
+  - job_name: 'feed_crawler'
+    static_configs:
+      - targets: ['feed-crawler:9092']

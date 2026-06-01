@@ -2,6 +2,10 @@ import { container } from 'tsyringe';
 
 import { DatabaseConnection } from '@common/database-connection';
 import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
+import { AiMetrics } from '@common/metrics/ai-metrics';
+import { DbMetrics } from '@common/metrics/db-metrics';
+import { FeedMetrics } from '@common/metrics/feed-metrics';
+import { RedisMetrics } from '@common/metrics/redis-metrics';
 import { MySQLConnection } from '@common/mysql-access';
 import { DiscordNotifier } from '@common/notification/discord.notifier';
 import { Notifier } from '@common/notification/notifier.interface';
@@ -24,29 +28,21 @@ container.registerSingleton<DatabaseConnection>(
   DEPENDENCY_SYMBOLS.DatabaseConnection,
   MySQLConnection,
 );
-
+container.registerSingleton(FeedMetrics);
+container.registerSingleton(AiMetrics);
+container.registerSingleton(DbMetrics);
+container.registerSingleton(RedisMetrics);
 container.registerSingleton(RedisConnection);
-
 container.registerSingleton(RssRepository);
-
 container.registerSingleton(FeedRepository);
-
 container.registerSingleton(TagMapRepository);
-
 container.registerSingleton(ClaudeEventWorker);
-
 container.registerSingleton(ParserUtil);
-
 container.registerSingleton(Rss20Parser);
-
 container.registerSingleton(Atom10Parser);
-
 container.registerSingleton(FeedParserManager);
-
 container.registerSingleton(FeedCrawler);
-
 container.registerSingleton(FullFeedCrawlEventWorker);
-
 container.registerSingleton<Notifier>(
   DEPENDENCY_SYMBOLS.Notifier,
   DiscordNotifier,
