@@ -30,12 +30,12 @@
     "nodemon": "^3.1.14",
     "supertest": "^7.2.2",
     "testcontainers": "^10.25.0",
-    "ts-jest": "^29.4.9",
+    "ts-jest": "^29.4.11",
     "ts-node": "^10.9.2",
     "tsc-alias": "^1.8.17",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.59.3"
+    "typescript-eslint": "^8.60.0"
   },
   "scripts": {
     "commit": "npm run commit --prefix ..",
