@@ -84,8 +84,6 @@ describe('ClaudeEventWorker', () => {
       publish: jest.fn(),
     };
 
-    MockedAnthropic.mockImplementation(() => mockAnthropicClient);
-
     const mockAiMetrics = {
       total: { inc: jest.fn() },
       success: { inc: jest.fn() },
