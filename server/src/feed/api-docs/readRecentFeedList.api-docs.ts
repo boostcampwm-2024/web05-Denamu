@@ -1,67 +1,12 @@
 import { applyDecorators } from '@nestjs/common';
-import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
+import { ApiOperation } from '@nestjs/swagger';
+
+import { ApiDataResponse } from '@common/swagger/swagger.helper';
+import { ReadFeedRecentResponseDto } from '@feed/dto/response/readFeedRecent.dto';
 
 export function ApiReadRecentFeedList() {
   return applyDecorators(
-    ApiOperation({
-      summary: '최신 피드 업데이트 API',
-    }),
-    ApiOkResponse({
-      description: 'Ok',
-      schema: {
-        properties: {
-          message: {
-            type: 'string',
-          },
-          data: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                id: { type: 'number' },
-                author: { type: 'string' },
-                blogPlatform: { type: 'string' },
-                title: { type: 'string' },
-                path: { type: 'string' },
-                createdAt: {
-                  type: 'string',
-                  format: 'date-time',
-                },
-                thumbnail: { type: 'string' },
-                viewCount: { type: 'number' },
-                isNew: { type: 'boolean' },
-                tag: {
-                  type: 'array',
-                  items: {
-                    type: 'string',
-                  },
-                },
-                likes: { type: 'number' },
-                comments: { type: 'number' },
-              },
-            },
-          },
-        },
-      },
-      example: {
-        message: '최신 피드 업데이트 완료',
-        data: [
-          {
-            id: 1,
-            author: '블로그 이름',
-            blogPlatform: 'etc',
-            title: '게시글 제목',
-            path: 'https://test1.com/1',
-            createdAt: '2024-11-24T01:00:00.000Z',
-            thumbnail: 'https://test1.com/test.png',
-            viewCount: 0,
-            isNew: true,
-            tag: ['tag1', 'tag2'],
-            likes: 0,
-            comments: 0,
-          },
-        ],
-      },
-    }),
+    ApiOperation({ summary: '최신 피드 업데이트 API' }),
+    ApiDataResponse(ReadFeedRecentResponseDto, true, '최신 피드 목록 조회 성공'),
   );
 }
