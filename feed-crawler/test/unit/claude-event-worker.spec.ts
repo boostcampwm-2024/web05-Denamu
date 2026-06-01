@@ -1,7 +1,5 @@
 import 'reflect-metadata';
 
-import Anthropic from '@anthropic-ai/sdk';
-
 import { redisConstant } from '@common/constant';
 import { AiMetrics } from '@common/metrics/ai-metrics';
 import { RedisMetrics } from '@common/metrics/redis-metrics';
@@ -13,10 +11,6 @@ import { ClaudeEventWorker } from '@event_worker/workers/claude-event-worker';
 
 import { FeedRepository } from '@repository/feed.repository';
 import { TagMapRepository } from '@repository/tag-map.repository';
-
-// Anthropic 모킹
-jest.mock('@anthropic-ai/sdk');
-const MockedAnthropic = Anthropic as jest.MockedClass<typeof Anthropic>;
 
 describe('ClaudeEventWorker', () => {
   let claudeEventWorker: ClaudeEventWorker;
@@ -115,6 +109,7 @@ describe('ClaudeEventWorker', () => {
       mockAiMetrics,
       mockRedisMetrics,
     );
+    Object.assign(claudeEventWorker, { client: mockAnthropicClient });
   });
 
   afterEach(() => {
