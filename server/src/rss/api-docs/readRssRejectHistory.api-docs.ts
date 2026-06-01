@@ -1,5 +1,5 @@
 import { applyDecorators } from '@nestjs/common';
-import { ApiOperation } from '@nestjs/swagger';
+import { ApiCookieAuth, ApiOperation } from '@nestjs/swagger';
 
 import {
   ApiDataResponse,
@@ -9,6 +9,7 @@ import { ReadRssRejectHistoryResponseDto } from '@rss/dto/response/readRssReject
 
 export function ApiReadRssRejectHistory() {
   return applyDecorators(
+    ApiCookieAuth('sessionId'),
     ApiOperation({ summary: 'RSS 거절 기록 API' }),
     ApiDataResponse(ReadRssRejectHistoryResponseDto, true, 'RSS 거절 기록 조회 성공'),
     ApiUnauthorizedDoc('유효한 사용자 세션이 존재하지 않는 경우'),

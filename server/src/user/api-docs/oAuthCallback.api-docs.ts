@@ -4,6 +4,7 @@ import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import {
   ApiBadGatewayDoc,
   ApiBadRequestDoc,
+  ApiNotFoundDoc,
 } from '@common/swagger/swagger.helper';
 
 export function ApiOAuthCallback() {
@@ -12,5 +13,6 @@ export function ApiOAuthCallback() {
     ApiResponse({ status: 302, description: '인증 처리 후 메인 페이지 리디렉션' }),
     ApiBadGatewayDoc('현재 외부 서비스와의 연결에 실패했습니다.'),
     ApiBadRequestDoc('잘못된 state 형식입니다.'),
+    ApiNotFoundDoc('존재하지 않는 사용자입니다.'),
   );
 }

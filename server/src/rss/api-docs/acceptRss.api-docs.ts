@@ -1,5 +1,5 @@
 import { applyDecorators } from '@nestjs/common';
-import { ApiOperation, ApiParam } from '@nestjs/swagger';
+import { ApiCookieAuth, ApiOperation, ApiParam } from '@nestjs/swagger';
 
 import {
   ApiBadRequestDoc,
@@ -10,6 +10,7 @@ import {
 
 export function ApiAcceptRss() {
   return applyDecorators(
+    ApiCookieAuth('sessionId'),
     ApiOperation({ summary: 'RSS 승인 API' }),
     ApiParam({ name: 'id', type: Number, description: '승인할 RSS의 ID', example: 1 }),
     ApiCreatedDoc('RSS 승인 완료'),

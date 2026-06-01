@@ -1,5 +1,5 @@
 import { applyDecorators } from '@nestjs/common';
-import { ApiBody, ApiOperation, ApiParam } from '@nestjs/swagger';
+import { ApiBody, ApiCookieAuth, ApiOperation, ApiParam } from '@nestjs/swagger';
 
 import {
   ApiBadRequestDoc,
@@ -11,6 +11,7 @@ import { RejectRssRequestDto } from '@rss/dto/request/rejectRss';
 
 export function ApiRejectRss() {
   return applyDecorators(
+    ApiCookieAuth('sessionId'),
     ApiOperation({ summary: 'RSS 거부 API' }),
     ApiParam({ name: 'id', type: Number, description: '거절할 RSS의 ID', example: 1 }),
     ApiBody({ type: RejectRssRequestDto }),
