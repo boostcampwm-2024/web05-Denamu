@@ -12,12 +12,7 @@ describe('Claude AI e2e-test', () => {
   };
 
   beforeAll(async () => {
-    claudeEventWorker = new ClaudeEventWorker(
-      testContext.tagMapRepository,
-      testContext.feedRepository,
-      testContext.redisConnection,
-      testContext.notifier,
-    );
+    claudeEventWorker = testContext.claudeEventWorker;
 
     const rssData = (await testContext.dbConnection.executeQuery(
       `INSERT INTO rss_accept (name, user_name, email, rss_url, blog_platform) VALUES (?, ?, ?, ?, ?)`,

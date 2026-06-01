@@ -2,6 +2,7 @@ import 'reflect-metadata';
 
 import * as nodemailer from 'nodemailer';
 
+import { EmailMetrics } from '@common/metrics/email-metrics';
 import { RssRegistration, RssRemoval, User } from '@common/types';
 
 import { PRODUCT_DOMAIN } from '@email/email.content';
@@ -9,13 +10,25 @@ import { EmailService } from '@email/email.service';
 
 jest.mock('nodemailer');
 
+const mockEmailMetrics = {
+  total: { inc: jest.fn() },
+  success: { inc: jest.fn() },
+  startMetricsServer: jest.fn(),
+} as unknown as EmailMetrics;
+
 describe('EmailService unit test', () => {
   let emailService: EmailService;
   let mockSendMail: jest.Mock;
   const mockEmailUser = 'test@denamu.dev';
   const mockEmailPassword = 'test-password';
+  let originalSmtpHost: string | undefined;
+  let originalSmtpPort: string | undefined;
 
   beforeEach(() => {
+    originalSmtpHost = process.env.SMTP_HOST;
+    originalSmtpPort = process.env.SMTP_PORT;
+    delete process.env.SMTP_HOST;
+    delete process.env.SMTP_PORT;
     process.env.EMAIL_USER = mockEmailUser;
     process.env.EMAIL_PASSWORD = mockEmailPassword;
 
@@ -27,20 +40,26 @@ describe('EmailService unit test', () => {
       sendMail: mockSendMail,
     });
 
-    emailService = new EmailService();
+    emailService = new EmailService(mockEmailMetrics);
   });
 
   afterEach(() => {
     jest.clearAllMocks();
     delete process.env.EMAIL_USER;
     delete process.env.EMAIL_PASSWORD;
+    if (originalSmtpHost !== undefined) {
+      process.env.SMTP_HOST = originalSmtpHost;
+    }
+    if (originalSmtpPort !== undefined) {
+      process.env.SMTP_PORT = originalSmtpPort;
+    }
   });
 
   describe('EmailService 생성자 unit test', () => {
     it('EMAIL_USER 환경 변수가 없으면 에러를 던진다', () => {
       delete process.env.EMAIL_USER;
 
-      expect(() => new EmailService()).toThrow(
+      expect(() => new EmailService(mockEmailMetrics)).toThrow(
         'EMAIL_USER 환경 변수가 설정되지 않았습니다.',
       );
     });
@@ -48,7 +67,7 @@ describe('EmailService unit test', () => {
     it('EMAIL_PASSWORD 환경 변수가 없으면 에러를 던진다', () => {
       delete process.env.EMAIL_PASSWORD;
 
-      expect(() => new EmailService()).toThrow(
+      expect(() => new EmailService(mockEmailMetrics)).toThrow(
         'EMAIL_PASSWORD 환경 변수가 설정되지 않았습니다.',
       );
     });
@@ -88,7 +107,7 @@ describe('EmailService unit test', () => {
       const callArgs = (mockSendMail.mock.calls[0] as [{ html: string }])[0];
       expect(callArgs.html).toContain(user.userName);
       expect(callArgs.html).toContain(
-        `${PRODUCT_DOMAIN}/user/certificate?token=${user.uuid}`,
+        `${PRODUCT_DOMAIN}/users/email-verifications?token=${user.uuid}`,
       );
     });
 
@@ -211,7 +230,7 @@ describe('EmailService unit test', () => {
       const callArgs = (mockSendMail.mock.calls[0] as [{ html: string }])[0];
       expect(callArgs.html).toContain(user.userName);
       expect(callArgs.html).toContain(
-        `${PRODUCT_DOMAIN}/user/password?token=${user.uuid}`,
+        `${PRODUCT_DOMAIN}/users/password-resets/confirm?token=${user.uuid}`,
       );
     });
   });
@@ -238,7 +257,7 @@ describe('EmailService unit test', () => {
       const callArgs = (mockSendMail.mock.calls[0] as [{ html: string }])[0];
       expect(callArgs.html).toContain(user.userName);
       expect(callArgs.html).toContain(
-        `${PRODUCT_DOMAIN}/user/delete-account?token=${user.uuid}`,
+        `${PRODUCT_DOMAIN}/users/deletion-requests/confirm?token=${user.uuid}`,
       );
     });
   });

@@ -3,18 +3,12 @@ import { RedisConnection } from '@common/redis-access';
 
 import { AbstractQueueWorker } from '@event_worker/abstract-queue-worker';
 
-// logger 모킹
-jest.mock('@common/logger', () => ({
-  default: {
-    info: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn(),
-    debug: jest.fn(),
-  },
-  __esModule: true,
-}));
-
-const mockLogger = logger as jest.Mocked<typeof logger>;
+const mockLogger = {
+  info: jest.fn(),
+  error: jest.fn(),
+  warn: jest.fn(),
+  debug: jest.fn(),
+};
 
 // 테스트용 구체 클래스
 interface TestQueueItem {
@@ -72,6 +66,15 @@ describe('AbstractQueueWorker', () => {
   let mockRedisConnection: jest.Mocked<RedisConnection>;
 
   beforeEach(() => {
+    mockLogger.info = jest.fn();
+    mockLogger.error = jest.fn();
+    mockLogger.warn = jest.fn();
+    mockLogger.debug = jest.fn();
+    jest.spyOn(logger, 'info').mockImplementation(mockLogger.info);
+    jest.spyOn(logger, 'error').mockImplementation(mockLogger.error);
+    jest.spyOn(logger, 'warn').mockImplementation(mockLogger.warn);
+    jest.spyOn(logger, 'debug').mockImplementation(mockLogger.debug);
+
     mockRedisConnection = {
       executePipeline: jest.fn(),
       hset: jest.fn(),

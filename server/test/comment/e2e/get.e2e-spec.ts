@@ -3,7 +3,6 @@ import { HttpStatus } from '@nestjs/common';
 import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 
-import { GetCommentRequestDto } from '@comment/dto/request/getComment.dto';
 import { Comment } from '@comment/entity/comment.entity';
 import { CommentRepository } from '@comment/repository/comment.repository';
 
@@ -22,9 +21,9 @@ import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture
 import { UserFixture } from '@test/config/common/fixture/user.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = '/api/comment';
+const BASE_URL = '/api/feeds';
 
-describe(`GET ${URL}/{feedId} E2E Test`, () => {
+describe(`GET ${BASE_URL}/:feedId/comments E2E Test`, () => {
   let agent: TestAgent;
   let feed: Feed;
   let commentRepository: CommentRepository;
@@ -58,7 +57,9 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
 
   it('[404] 게시글이 존재하지 않을 경우 댓글 조회를 실패한다.', async () => {
     // Http when
-    const response = await agent.get(`${URL}/${Number.MAX_SAFE_INTEGER}`);
+    const response = await agent.get(
+      `${BASE_URL}/${Number.MAX_SAFE_INTEGER}/comments`,
+    );
 
     // Http then
     const { data } = response.body;
@@ -67,13 +68,8 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
   });
 
   it('[200] 게시글이 존재할 경우 댓글 조회를 성공한다.', async () => {
-    // given
-    const requestDto = new GetCommentRequestDto({
-      feedId: feed.id,
-    });
-
     // Http when
-    const response = await agent.get(`${URL}/${requestDto.feedId}`);
+    const response = await agent.get(`${BASE_URL}/${feed.id}/comments`);
 
     // Http then
     const { data } = response.body;

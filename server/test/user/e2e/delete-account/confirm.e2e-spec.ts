@@ -1,5 +1,6 @@
 import { HttpStatus } from '@nestjs/common';
 
+import * as uuid from 'uuid';
 import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 
@@ -20,7 +21,6 @@ import { LikeRepository } from '@like/repository/like.repository';
 import { RssAccept } from '@rss/entity/rss.entity';
 import { RssAcceptRepository } from '@rss/repository/rss.repository';
 
-import { ConfirmDeleteAccountDto } from '@user/dto/request/confirmDeleteAccount.dto';
 import { User } from '@user/entity/user.entity';
 import { UserRepository } from '@user/repository/user.repository';
 
@@ -35,9 +35,9 @@ import {
 } from '@test/config/e2e/env/jest.setup';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = '/api/user/delete-account/confirm';
+const makeURL = (token: string) => `/api/users/deletion-requests/${token}`;
 
-describe(`POST ${URL} E2E Test`, () => {
+describe(`PATCH /api/users/deletion-requests/:token E2E Test`, () => {
   let agent: TestAgent;
   let redisService: RedisService;
   let userRepository: UserRepository;
@@ -50,7 +50,7 @@ describe(`POST ${URL} E2E Test`, () => {
   let user: User;
   let rssAccept: RssAccept;
   let feed: Feed;
-  const userDeleteCode = 'user-delete-confirm';
+  const userDeleteCode = uuid.v4();
   const redisKeyMake = (data: string) =>
     `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${data}`;
 
@@ -84,12 +84,10 @@ describe(`POST ${URL} E2E Test`, () => {
 
   it('[404] 회원 탈퇴 인증 코드가 만료되었거나 잘 못된 경우 회원 탈퇴를 실패한다.', async () => {
     // given
-    const requestDto = new ConfirmDeleteAccountDto({
-      token: `Wrong${userDeleteCode}`,
-    });
+    const nonExistentCode = uuid.v4();
 
     // Http when
-    const response = await agent.post(URL).send(requestDto);
+    const response = await agent.patch(makeURL(nonExistentCode));
 
     // Http then
     const { data } = response.body;
@@ -99,17 +97,16 @@ describe(`POST ${URL} E2E Test`, () => {
     // DB, Redis when
     const [savedUser, savedDeleteCode] = await Promise.all([
       userRepository.findOneBy({ id: user.id }),
-      redisService.get(redisKeyMake(userDeleteCode)),
+      redisService.get(redisKeyMake(nonExistentCode)),
     ]);
 
     // DB, Redis then
     expect(savedUser).not.toBeNull();
-    expect(savedDeleteCode).toBe(user.id.toString());
+    expect(savedDeleteCode).toBeNull();
   });
 
   it('[200] 회원 탈퇴 인증 코드가 있을 경우 회원 탈퇴를 성공한다.', async () => {
     // given
-    const requestDto = new ConfirmDeleteAccountDto({ token: userDeleteCode });
     const user = await userRepository.save(
       await UserFixture.createUserCryptFixture(),
     );
@@ -123,7 +120,7 @@ describe(`POST ${URL} E2E Test`, () => {
     );
 
     // Http when
-    const response = await agent.post(URL).send(requestDto);
+    const response = await agent.patch(makeURL(userDeleteCode));
 
     // Http then
     const { data } = response.body;

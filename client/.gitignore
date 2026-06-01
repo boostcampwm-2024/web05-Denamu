@@ -41,3 +41,7 @@ stats.html
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+
+# Lighthouse
+lhci_reports
+.lighthouseci

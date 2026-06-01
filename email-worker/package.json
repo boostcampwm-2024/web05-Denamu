@@ -4,6 +4,7 @@
     "axios": "^1.16.0",
     "dotenv": "^16.4.5",
     "nodemailer": "^6.9.16",
+    "prom-client": "^15.1.3",
     "reflect-metadata": "^0.2.2",
     "tsyringe": "^4.8.0",
     "winston": "^3.19.0",
@@ -37,9 +38,11 @@
     "build": "tsc --project tsconfig.build.json && tsc-alias",
     "start": "node dist/src/main.js",
     "start:dev": "nodemon",
+    "test": "cross-env NODE_ENV=TEST jest --config test/config/integration/jest/jest.config.ts",
+    "test:coverage": "cross-env NODE_ENV=TEST jest --config test/config/integration/jest/jest.config.ts --coverage",
     "test:unit": "cross-env NODE_ENV=TEST jest --config test/config/unit/jest/jest.config.ts",
-    "test:unit:cov": "cross-env NODE_ENV=TEST jest --coverage --config test/config/unit/jest/jest.config.ts",
+    "test:unit:coverage": "cross-env NODE_ENV=TEST jest --coverage --config test/config/unit/jest/jest.config.ts",
     "test:e2e": "cross-env NODE_ENV=TEST jest --config test/config/e2e/jest/jest.config.ts",
-    "test:e2e:cov": "cross-env NODE_ENV=TEST jest --coverage --config test/config/e2e/jest/jest.config.ts"
+    "test:e2e:coverage": "cross-env NODE_ENV=TEST jest --coverage --config test/config/e2e/jest/jest.config.ts"
   }
 }

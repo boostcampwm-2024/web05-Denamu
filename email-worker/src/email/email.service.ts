@@ -1,9 +1,10 @@
-import { injectable } from 'tsyringe';
+import { inject, injectable } from 'tsyringe';
 
 import * as nodemailer from 'nodemailer';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
 
 import logger from '@common/logger/logger';
+import { EmailMetrics } from '@common/metrics/email-metrics';
 import { Rss, RssRegistration, RssRemoval, User } from '@common/types';
 
 import {
@@ -23,7 +24,9 @@ export class EmailService {
   >;
   private emailUser: string;
 
-  constructor() {
+  constructor(
+    @inject(EmailMetrics) private readonly metrics: EmailMetrics,
+  ) {
     this.emailUser = process.env.EMAIL_USER;
     const emailPassword = process.env.EMAIL_PASSWORD;
     if (!this.emailUser) {
@@ -47,8 +50,10 @@ export class EmailService {
   private async sendMail(
     mailOptions: nodemailer.SendMailOptions,
   ): Promise<void> {
+    this.metrics.total.inc();
     try {
       await this.transporter.sendMail(mailOptions);
+      this.metrics.success.inc();
       logger.info(`${mailOptions.to as string} 이메일 전송 성공`);
     } catch (error) {
       logger.error(
@@ -77,7 +82,7 @@ export class EmailService {
   }
 
   private createCertificationMail(user: User): nodemailer.SendMailOptions {
-    const redirectUrl = `${PRODUCT_DOMAIN}/user/certificate?token=${user.uuid}`;
+    const redirectUrl = `${PRODUCT_DOMAIN}/users/email-verifications?token=${user.uuid}`;
 
     return {
       from: `Denamu<${this.emailUser}>`,
@@ -146,7 +151,7 @@ export class EmailService {
   }
 
   private createPasswordResetEmail(user: User): nodemailer.SendMailOptions {
-    const redirectUrl = `${PRODUCT_DOMAIN}/user/password?token=${user.uuid}`;
+    const redirectUrl = `${PRODUCT_DOMAIN}/users/password-resets/confirm?token=${user.uuid}`;
     return {
       from: `Denamu<${this.emailUser}>`,
       to: user.email,
@@ -166,7 +171,7 @@ export class EmailService {
   }
 
   private createDeleteAccountMail(user: User): nodemailer.SendMailOptions {
-    const redirectUrl = `${PRODUCT_DOMAIN}/user/delete-account?token=${user.uuid}`;
+    const redirectUrl = `${PRODUCT_DOMAIN}/users/deletion-requests/confirm?token=${user.uuid}`;
 
     return {
       from: `Denamu<${this.emailUser}>`,

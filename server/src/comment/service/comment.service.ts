@@ -6,8 +6,8 @@ import {
 
 import { DataSource } from 'typeorm';
 
+import { CommentParamRequestDto } from '@comment/dto/request/commentParam.dto';
 import { CreateCommentRequestDto } from '@comment/dto/request/createComment.dto';
-import { DeleteCommentRequestDto } from '@comment/dto/request/deleteComment.dto';
 import { GetCommentRequestDto } from '@comment/dto/request/getComment.dto';
 import { UpdateCommentRequestDto } from '@comment/dto/request/updateComment.dto';
 import { GetCommentResponseDto } from '@comment/dto/response/getComment.dto';
@@ -60,19 +60,23 @@ export class CommentService {
     return GetCommentResponseDto.toResponseDtoArray(comments);
   }
 
-  async create(userInformation: Payload, commentDto: CreateCommentRequestDto) {
+  async create(
+    userInformation: Payload,
+    feedId: number,
+    commentDto: CreateCommentRequestDto,
+  ) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
-      const feed = await this.feedService.getFeed(commentDto.feedId);
+      const feed = await this.feedService.getFeed(feedId);
       await this.userService.getUser(userInformation.id);
       feed.commentCount++;
       await queryRunner.manager.save(feed);
       await queryRunner.manager.save(Comment, {
         comment: commentDto.comment,
-        feed: { id: commentDto.feedId },
+        feed: { id: feedId },
         user: { id: userInformation.id },
       });
 
@@ -85,7 +89,7 @@ export class CommentService {
     }
   }
 
-  async delete(userInformation: Payload, commentDto: DeleteCommentRequestDto) {
+  async delete(userInformation: Payload, commentDto: CommentParamRequestDto) {
     const comment = await this.getValidatedComment(
       userInformation,
       commentDto.commentId,
@@ -110,10 +114,14 @@ export class CommentService {
     }
   }
 
-  async update(userInformation: Payload, commentDto: UpdateCommentRequestDto) {
+  async update(
+    userInformation: Payload,
+    commentId: number,
+    commentDto: UpdateCommentRequestDto,
+  ) {
     const commentObj = await this.getValidatedComment(
       userInformation,
-      commentDto.commentId,
+      commentId,
     );
     commentObj.comment = commentDto.newComment;
     await this.commentRepository.save(commentObj);
