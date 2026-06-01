@@ -1,47 +1,21 @@
 import { applyDecorators } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiParam } from '@nestjs/swagger';
+
 import {
-  ApiBadRequestResponse,
-  ApiNotFoundResponse,
-  ApiOkResponse,
-  ApiOperation,
-  ApiUnauthorizedResponse,
-} from '@nestjs/swagger';
+  ApiBadRequestDoc,
+  ApiMessageResponse,
+  ApiNotFoundDoc,
+  ApiUnauthorizedDoc,
+} from '@common/swagger/swagger.helper';
 
 export function ApiDeleteLike() {
   return applyDecorators(
-    ApiOperation({
-      summary: '게시글 좋아요 취소 API',
-    }),
-    ApiOkResponse({
-      description: 'Ok',
-      schema: {
-        properties: {
-          message: {
-            type: 'string',
-          },
-        },
-      },
-      example: {
-        message: '좋아요 삭제를 성공했습니다.',
-      },
-    }),
-    ApiBadRequestResponse({
-      description: 'Bad Request',
-      example: {
-        message: '오류 메세지',
-      },
-    }),
-    ApiUnauthorizedResponse({
-      description: 'Unauthorized',
-      example: {
-        message: '인증되지 않은 요청입니다.',
-      },
-    }),
-    ApiNotFoundResponse({
-      description: '해당 ID의 게시글이 존재하지 않는 경우',
-      example: {
-        message: '해당 피드를 찾을 수 없습니다.',
-      },
-    }),
+    ApiOperation({ summary: '게시글 좋아요 취소 API' }),
+    ApiBearerAuth(),
+    ApiParam({ name: 'feedId', type: Number, description: '게시글 ID', example: 1 }),
+    ApiMessageResponse('좋아요 취소 성공'),
+    ApiBadRequestDoc('요청 데이터 검증에 실패했습니다.'),
+    ApiUnauthorizedDoc('인증되지 않은 요청입니다.'),
+    ApiNotFoundDoc('해당 ID의 게시글이 존재하지 않는 경우'),
   );
 }
