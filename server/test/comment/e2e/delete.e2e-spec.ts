@@ -27,7 +27,7 @@ const BASE_URL = '/api/feeds';
 describe(`DELETE ${BASE_URL}/:feedId/comments/:commentId E2E Test`, () => {
   let agent: TestAgent;
   let comment: Comment;
-  let user: User;
+  let user: User, user2: User;
   let rssAccept: RssAccept;
   let feed: Feed;
   let commentRepository: CommentRepository;
@@ -48,7 +48,8 @@ describe(`DELETE ${BASE_URL}/:feedId/comments/:commentId E2E Test`, () => {
     rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
-    [user, feed] = await Promise.all([
+    [user, user2, feed] = await Promise.all([
+      userRepository.save(await UserFixture.createUserCryptFixture()),
       userRepository.save(await UserFixture.createUserCryptFixture()),
       feedRepository.save(FeedFixture.createFeedFixture(rssAccept)),
     ]);
@@ -90,9 +91,32 @@ describe(`DELETE ${BASE_URL}/:feedId/comments/:commentId E2E Test`, () => {
     expect(data).toBeUndefined();
   });
 
-  it('[401] 본인이 작성한 댓글이 아닐 경우 댓글 삭제를 실패한다.', async () => {
+  it('[404] 본인의 계정 정보가 삭제됐을 경우 댓글 삭제를 실패한다.', async () => {
     // given
     accessToken = createAccessToken({ id: Number.MAX_SAFE_INTEGER });
+
+    // Http when
+    const response = await agent
+      .delete(`${BASE_URL}/${feed.id}/comments/${comment.id}`)
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedComment = await commentRepository.findOneBy({
+      id: comment.id,
+    });
+
+    // DB, Redis then
+    expect(savedComment.comment).toBe(comment.comment);
+  });
+
+  it('[401] 본인이 작성한 댓글이 아닐 경우 댓글 삭제를 실패한다.', async () => {
+    // given
+    accessToken = createAccessToken({ id: user2.id });
 
     // Http when
     const response = await agent
