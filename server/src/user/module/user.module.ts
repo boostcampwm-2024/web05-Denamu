@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 
 import { AdminModule } from '@admin/module/admin.module';
@@ -18,7 +18,7 @@ import { OAuthService } from '@user/service/oAuth.service';
 import { UserService } from '@user/service/user.service';
 
 @Module({
-  imports: [JwtAuthModule, AdminModule, FileModule, ScheduleModule.forRoot()],
+  imports: [JwtAuthModule, AdminModule, forwardRef(() => FileModule), ScheduleModule.forRoot()],
   controllers: [UserController, OAuthController],
   providers: [
     UserService,

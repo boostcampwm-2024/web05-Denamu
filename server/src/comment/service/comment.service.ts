@@ -33,6 +33,7 @@ export class CommentService {
     userInformation: Payload,
     commentId: number,
   ) {
+    await this.userService.getUser(userInformation.id);
     const commentObj = await this.commentRepository.findOne({
       where: {
         id: commentId,
