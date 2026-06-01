@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import * as fs from 'fs';
@@ -68,6 +70,8 @@ const exists = !!chosen && fs.existsSync(chosen);
       useFactory: (configService: ConfigService) =>
         loadDBSetting(configService),
     }),
+    ScheduleModule.forRoot(),
+    EventEmitterModule.forRoot(),
     WinstonLoggerModule,
     RedisModule,
     EmailModule,

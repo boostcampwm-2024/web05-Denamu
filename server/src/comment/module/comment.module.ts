@@ -1,4 +1,3 @@
-import { forwardRef } from '@nestjs/common';
 import { Module } from '@nestjs/common';
 
 import { CommentController } from '@comment/controller/comment.controller';
@@ -10,9 +9,9 @@ import { FeedModule } from '@feed/module/feed.module';
 import { UserModule } from '@user/module/user.module';
 
 @Module({
-  imports: [UserModule, forwardRef(() => FeedModule)],
+  imports: [UserModule, FeedModule],
   controllers: [CommentController],
   providers: [CommentRepository, CommentService],
-  exports: [CommentRepository],
+  exports: [],
 })
 export class CommentModule {}

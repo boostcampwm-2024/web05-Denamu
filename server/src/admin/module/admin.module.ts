@@ -8,6 +8,6 @@ import { AdminService } from '@admin/service/admin.service';
   imports: [],
   controllers: [AdminController],
   providers: [AdminService, AdminRepository],
-  exports: [AdminRepository],
+  exports: [],
 })
 export class AdminModule {}
