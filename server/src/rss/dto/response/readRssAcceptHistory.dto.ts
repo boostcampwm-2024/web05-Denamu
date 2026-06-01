@@ -39,7 +39,7 @@ export class ReadRssAcceptHistoryResponseDto {
   })
   blogPlatform: string;
 
-  private constructor(partial: Partial<ReadRssAcceptHistoryResponseDto>) {
+  constructor(partial: Partial<ReadRssAcceptHistoryResponseDto>) {
     Object.assign(this, partial);
   }
 
