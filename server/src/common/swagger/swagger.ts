@@ -18,6 +18,9 @@ export function setupSwagger(app: INestApplication) {
     .addTag('OAuth', 'OAuth 관련 API')
     .addTag('File', '파일 업로드 및 관리 API')
     .setLicense('MIT License', 'https://opensource.org/licenses/MIT')
+    .addBearerAuth()
+    .addCookieAuth('refresh_token', undefined, 'refresh_token')
+    .addCookieAuth('sessionId', undefined, 'sessionId')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
