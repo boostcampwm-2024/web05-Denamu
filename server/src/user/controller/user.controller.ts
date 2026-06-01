@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -33,10 +34,10 @@ import { ApiResetPassword } from '@user/api-docs/resetPassword.api-docs';
 import { ApiUpdateUser } from '@user/api-docs/updateUser.api-docs';
 import { CertificateUserRequestDto } from '@user/dto/request/certificateUser.dto';
 import { CheckEmailDuplicationRequestDto } from '@user/dto/request/checkEmailDuplication.dto';
+import { ConfirmDeleteAccountParamRequestDto } from '@user/dto/request/confirmDeleteAccountParam.dto';
 import { ForgotPasswordRequestDto } from '@user/dto/request/forgotPassword.dto';
 import { LoginUserRequestDto } from '@user/dto/request/loginUser.dto';
 import { RegisterUserRequestDto } from '@user/dto/request/registerUser.dto';
-import { ConfirmDeleteAccountParamRequestDto } from '@user/dto/request/confirmDeleteAccountParam.dto';
 import { ResetPasswordRequestDto } from '@user/dto/request/resetPassword.dto';
 import { ResetPasswordParamRequestDto } from '@user/dto/request/resetPasswordParam.dto';
 import { UpdateUserRequestDto } from '@user/dto/request/updateUser.dto';
@@ -150,9 +151,11 @@ export class UserController {
   }
 
   @ApiConfirmDeleteAccount()
-  @Patch('/deletion-requests/:token')
+  @Delete('/deletion-requests/:token')
   @HttpCode(HttpStatus.OK)
-  async confirmDeleteAccount(@Param() paramDto: ConfirmDeleteAccountParamRequestDto) {
+  async confirmDeleteAccount(
+    @Param() paramDto: ConfirmDeleteAccountParamRequestDto,
+  ) {
     await this.userService.confirmDeleteAccount(paramDto.token);
     return ApiResponse.responseWithNoContent('회원탈퇴가 완료되었습니다.');
   }
@@ -174,7 +177,10 @@ export class UserController {
     @Param() paramDto: ResetPasswordParamRequestDto,
     @Body() resetPasswordRequestDto: ResetPasswordRequestDto,
   ) {
-    await this.userService.resetPassword(paramDto.uuid, resetPasswordRequestDto.password);
+    await this.userService.resetPassword(
+      paramDto.uuid,
+      resetPasswordRequestDto.password,
+    );
     return ApiResponse.responseWithNoContent(
       '비밀번호가 성공적으로 수정되었습니다.',
     );
