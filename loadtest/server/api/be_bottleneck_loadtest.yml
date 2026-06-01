@@ -60,21 +60,20 @@ scenarios:
               as: 'accessToken'
 
       - post:
-          url: '/api/comment'
+          url: '/api/feed/1/comments'
 
           headers:
             Authorization: 'Bearer {{ accessToken }}'
 
           json:
             comment: 'load-test-comment'
-            feedId: 1
 
   - name: 'Feed Detail Bottleneck'
     weight: 45
 
     flow:
       - get:
-          url: '/api/feed/detail/{{ feedId }}'
+          url: '/api/feed/{{ feedId }}'
 
   - name: 'Feed List Bottleneck'
     weight: 20

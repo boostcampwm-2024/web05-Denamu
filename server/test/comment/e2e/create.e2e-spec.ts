@@ -22,9 +22,9 @@ import { UserFixture } from '@test/config/common/fixture/user.fixture';
 import { createAccessToken } from '@test/config/e2e/env/jest.setup';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = '/api/comment';
+const BASE_URL = '/api/feeds';
 
-describe(`POST ${URL} E2E Test`, () => {
+describe(`POST ${BASE_URL}/:feedId/comments E2E Test`, () => {
   let agent: TestAgent;
   let user: User;
   let feed: Feed;
@@ -58,11 +58,12 @@ describe(`POST ${URL} E2E Test`, () => {
     // given
     const requestDto = new CreateCommentRequestDto({
       comment: COMMENT_DEFAULT_TEXT,
-      feedId: feed.id,
     });
 
     // Http when
-    const response = await agent.post(URL).send(requestDto);
+    const response = await agent
+      .post(`${BASE_URL}/${feed.id}/comments`)
+      .send(requestDto);
 
     // Http then
     const { data } = response.body;
@@ -83,12 +84,11 @@ describe(`POST ${URL} E2E Test`, () => {
     // given
     const requestDto = new CreateCommentRequestDto({
       comment: COMMENT_DEFAULT_TEXT,
-      feedId: Number.MAX_SAFE_INTEGER,
     });
 
     // Http when
     const response = await agent
-      .post(URL)
+      .post(`${BASE_URL}/${Number.MAX_SAFE_INTEGER}/comments`)
       .set('Authorization', `Bearer ${accessToken}`)
       .send(requestDto);
 
@@ -96,15 +96,6 @@ describe(`POST ${URL} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
     expect(data).toBeUndefined();
-
-    // DB, Redis when
-    const savedComment = await commentRepository.findOneBy({
-      comment: requestDto.comment,
-      feed: { id: requestDto.feedId },
-    });
-
-    // DB, Redis then
-    expect(savedComment).toBeNull();
   });
 
   it('[404] 회원 정보가 없을 경우 댓글 등록을 실패한다.', async () => {
@@ -112,12 +103,11 @@ describe(`POST ${URL} E2E Test`, () => {
     accessToken = createAccessToken({ id: Number.MAX_SAFE_INTEGER });
     const requestDto = new CreateCommentRequestDto({
       comment: COMMENT_DEFAULT_TEXT,
-      feedId: feed.id,
     });
 
     // Http when
     const response = await agent
-      .post(URL)
+      .post(`${BASE_URL}/${feed.id}/comments`)
       .set('Authorization', `Bearer ${accessToken}`)
       .send(requestDto);
 
@@ -140,12 +130,11 @@ describe(`POST ${URL} E2E Test`, () => {
     // given
     const requestDto = new CreateCommentRequestDto({
       comment: COMMENT_DEFAULT_TEXT,
-      feedId: feed.id,
     });
 
     // Http when
     const response = await agent
-      .post(URL)
+      .post(`${BASE_URL}/${feed.id}/comments`)
       .set('Authorization', `Bearer ${accessToken}`)
       .send(requestDto);
 
@@ -156,7 +145,7 @@ describe(`POST ${URL} E2E Test`, () => {
 
     // DB, Redis when
     const savedComment = await commentRepository.findOneBy({
-      feed: { id: requestDto.feedId },
+      feed: { id: feed.id },
       user: { id: user.id },
     });
 

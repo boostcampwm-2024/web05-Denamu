@@ -14,7 +14,7 @@ import { ActivityFixture } from '@test/config/common/fixture/activity.fixture';
 import { UserFixture } from '@test/config/common/fixture/user.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = '/api/activity';
+const URL = '/api/activities';
 
 describe(`GET ${URL}/{userId} E2E Test`, () => {
   let user: User;

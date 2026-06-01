@@ -14,6 +14,6 @@ import { JwtGuard, RefreshJwtGuard } from '@common/guard/jwt.guard';
     JwtRefreshStrategy,
     InjectUserInterceptor,
   ],
-  exports: [JwtService],
+  exports: [JwtService, InjectUserInterceptor],
 })
 export class JwtAuthModule {}

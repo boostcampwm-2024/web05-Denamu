@@ -28,7 +28,7 @@ import { UploadFileQueryRequestDto } from '@file/dto/request/uploadFile.dto';
 import { FileService } from '@file/service/file.service';
 
 @ApiTags('File')
-@Controller('file')
+@Controller('files')
 @UseGuards(JwtGuard)
 export class FileController {
   constructor(private readonly fileService: FileService) {}

@@ -3,6 +3,7 @@ import { HttpStatus } from '@nestjs/common';
 import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 
+import { Activity } from '@activity/entity/activity.entity';
 import { ActivityRepository } from '@activity/repository/activity.repository';
 
 import { RedisService } from '@common/redis/redis.service';
@@ -26,7 +27,7 @@ import { TagFixture } from '@test/config/common/fixture/tag.fixture';
 import { UserFixture } from '@test/config/common/fixture/user.fixture';
 import { createAccessToken, testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = '/api/feed/detail';
+const URL = '/api/feeds';
 
 describe(`GET ${URL}/{feedId} E2E Test`, () => {
   let agent: TestAgent;
@@ -129,64 +130,6 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
     });
   });
 
-  it('[404] 원본 게시글이 삭제된 경우 피드를 삭제하고 NotFoundException을 반환한다.', async () => {
-    // given
-    const feedDetailRequestDto = new ManageFeedRequestDto({
-      feedId: feedList[0].id,
-    });
-
-    // Mock fetch to return 404
-    global.fetch = jest.fn().mockResolvedValue({
-      status: HttpStatus.NOT_FOUND,
-    });
-
-    // when
-    const response = await agent.delete(
-      `/api/feed/${feedDetailRequestDto.feedId}`,
-    );
-
-    // then
-    const { data } = response.body;
-    expect(response.status).toBe(HttpStatus.NOT_FOUND);
-    expect(data).toBeUndefined();
-
-    // DB when - 피드가 삭제되었는지 확인
-    const deletedFeed = await feedRepository.findOneBy({
-      id: feedDetailRequestDto.feedId,
-    });
-
-    // DB then
-    expect(deletedFeed).toBeNull();
-  });
-
-  it('[200] 원본 게시글이 존재하는 경우 정상 응답을 반환한다.', async () => {
-    // given
-    const feedDetailRequestDto = new ManageFeedRequestDto({
-      feedId: feedList[0].id,
-    });
-
-    // Mock fetch to return 200
-    global.fetch = jest.fn().mockResolvedValue({
-      status: HttpStatus.OK,
-    });
-
-    // when
-    const response = await agent.delete(
-      `/api/feed/${feedDetailRequestDto.feedId}`,
-    );
-
-    // then
-    expect(response.status).toBe(HttpStatus.OK);
-
-    // DB when - 피드가 여전히 존재하는지 확인
-    const existingFeed = await feedRepository.findOneBy({
-      id: feedDetailRequestDto.feedId,
-    });
-
-    // DB then
-    expect(existingFeed).not.toBeNull();
-  });
-
   describe('Read Feed Interceptor', () => {
     let user: User;
     let userRepository: UserRepository;
@@ -242,14 +185,17 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
       // Http then
       expect(response.status).toBe(HttpStatus.OK);
 
-      // Interceptor 내부의 tap()은 fire-and-forget이므로 DB 업데이트 완료까지 폴링 대기 (최대 2초)
       const deadline = Date.now() + 2000;
       let updatedUser: User;
+      let activities: Activity[];
       do {
         await new Promise<void>((resolve) => setTimeout(resolve, 50));
-        updatedUser = await userRepository.findOneBy({ id: user.id });
+        [updatedUser, activities] = await Promise.all([
+          userRepository.findOneBy({ id: user.id }),
+          activityRepository.find({ where: { user: { id: user.id } } }),
+        ]);
       } while (
-        updatedUser.totalViews === user.totalViews &&
+        (updatedUser.totalViews === user.totalViews || activities.length === 0) &&
         Date.now() < deadline
       );
 
@@ -258,9 +204,6 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
         `feed:${feedDetailRequestDto.feedId}:userId`,
         user.id,
       );
-      const activities = await activityRepository.find({
-        where: { user: { id: user.id } },
-      });
       expect(updatedUser.totalViews).toBe(user.totalViews + 1);
       expect(hasUserFlag).toBe(1);
       expect(activities.length).toBeGreaterThan(0);

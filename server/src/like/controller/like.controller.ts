@@ -1,5 +1,4 @@
 import {
-  Body,
   Controller,
   Delete,
   Get,
@@ -24,12 +23,12 @@ import { ManageLikeRequestDto } from '@like/dto/request/manageLike.dto';
 import { LikeService } from '@like/service/like.service';
 
 @ApiTags('Like')
-@Controller('like')
+@Controller('feeds/:feedId/likes')
 export class LikeController {
   constructor(private readonly likeService: LikeService) {}
 
   @ApiGetLike()
-  @Get('/:feedId')
+  @Get()
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(InjectUserInterceptor)
   async getLike(
@@ -48,14 +47,14 @@ export class LikeController {
   @HttpCode(HttpStatus.CREATED)
   async createLike(
     @CurrentUser() user: Payload,
-    @Body() feedLikeDto: ManageLikeRequestDto,
+    @Param() feedLikeDto: ManageLikeRequestDto,
   ) {
     await this.likeService.create(user, feedLikeDto);
     return ApiResponse.responseWithNoContent('좋아요 등록을 성공했습니다.');
   }
 
   @ApiDeleteLike()
-  @Delete('/:feedId')
+  @Delete()
   @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.OK)
   async deleteLike(

@@ -100,7 +100,7 @@ describe('EmailService unit test', () => {
       const callArgs = (mockSendMail.mock.calls[0] as [{ html: string }])[0];
       expect(callArgs.html).toContain(user.userName);
       expect(callArgs.html).toContain(
-        `${PRODUCT_DOMAIN}/user/certificate?token=${user.uuid}`,
+        `${PRODUCT_DOMAIN}/users/email-verifications?token=${user.uuid}`,
       );
     });
 
@@ -223,7 +223,7 @@ describe('EmailService unit test', () => {
       const callArgs = (mockSendMail.mock.calls[0] as [{ html: string }])[0];
       expect(callArgs.html).toContain(user.userName);
       expect(callArgs.html).toContain(
-        `${PRODUCT_DOMAIN}/user/password?token=${user.uuid}`,
+        `${PRODUCT_DOMAIN}/users/password-resets/confirm?token=${user.uuid}`,
       );
     });
   });
@@ -250,7 +250,7 @@ describe('EmailService unit test', () => {
       const callArgs = (mockSendMail.mock.calls[0] as [{ html: string }])[0];
       expect(callArgs.html).toContain(user.userName);
       expect(callArgs.html).toContain(
-        `${PRODUCT_DOMAIN}/user/delete-account?token=${user.uuid}`,
+        `${PRODUCT_DOMAIN}/users/deletion-requests/confirm?token=${user.uuid}`,
       );
     });
   });

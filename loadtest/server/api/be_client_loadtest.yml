@@ -65,15 +65,15 @@ scenarios:
       - think: 1
 
       - get:
-          url: '/api/feed/detail/{{ feedId }}'
+          url: '/api/feed/{{ feedId }}'
 
       - think: 1
 
       - get:
-          url: '/api/comment/{{ feedId }}'
+          url: '/api/feed/{{ feedId }}/comments'
 
       - get:
-          url: '/api/like/{{ feedId }}'
+          url: '/api/feed/{{ feedId }}/likes'
 
   # 검색
   - name: 'Feed Search'
@@ -121,7 +121,7 @@ scenarios:
 
     flow:
       - get:
-          url: '/api/like/{{ feedId }}'
+          url: '/api/feed/{{ feedId }}/likes'
 
   # 댓글 조회
   - name: 'Comment Read'
@@ -129,4 +129,4 @@ scenarios:
 
     flow:
       - get:
-          url: '/api/comment/{{ feedId }}'
+          url: '/api/feed/{{ feedId }}/comments'

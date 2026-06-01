@@ -8,7 +8,7 @@ import { RssAcceptRepository } from '@rss/repository/rss.repository';
 import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = '/api/statistic/platform';
+const URL = '/api/statistics/platform';
 
 describe(`GET ${URL} E2E Test`, () => {
   let agent: TestAgent;

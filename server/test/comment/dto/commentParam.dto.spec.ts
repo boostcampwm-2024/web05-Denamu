@@ -1,12 +1,12 @@
 import { validate } from 'class-validator';
 
-import { DeleteCommentRequestDto } from '@comment/dto/request/deleteComment.dto';
+import { CommentParamRequestDto } from '@comment/dto/request/commentParam.dto';
 
-describe(`${DeleteCommentRequestDto.name} Test`, () => {
-  let dto: DeleteCommentRequestDto;
+describe(`${CommentParamRequestDto.name} Test`, () => {
+  let dto: CommentParamRequestDto;
 
   beforeEach(() => {
-    dto = new DeleteCommentRequestDto({
+    dto = new CommentParamRequestDto({
       commentId: 1,
     });
   });

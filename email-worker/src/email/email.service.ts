@@ -77,7 +77,7 @@ export class EmailService {
   }
 
   private createCertificationMail(user: User): nodemailer.SendMailOptions {
-    const redirectUrl = `${PRODUCT_DOMAIN}/user/certificate?token=${user.uuid}`;
+    const redirectUrl = `${PRODUCT_DOMAIN}/users/email-verifications?token=${user.uuid}`;
 
     return {
       from: `Denamu<${this.emailUser}>`,
@@ -146,7 +146,7 @@ export class EmailService {
   }
 
   private createPasswordResetEmail(user: User): nodemailer.SendMailOptions {
-    const redirectUrl = `${PRODUCT_DOMAIN}/user/password?token=${user.uuid}`;
+    const redirectUrl = `${PRODUCT_DOMAIN}/users/password-resets/confirm?token=${user.uuid}`;
     return {
       from: `Denamu<${this.emailUser}>`,
       to: user.email,
@@ -166,7 +166,7 @@ export class EmailService {
   }
 
   private createDeleteAccountMail(user: User): nodemailer.SendMailOptions {
-    const redirectUrl = `${PRODUCT_DOMAIN}/user/delete-account?token=${user.uuid}`;
+    const redirectUrl = `${PRODUCT_DOMAIN}/users/deletion-requests/confirm?token=${user.uuid}`;
 
     return {
       from: `Denamu<${this.emailUser}>`,
