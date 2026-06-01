@@ -7,11 +7,13 @@ const globalAny = global as typeof global & { __MYSQL_CONTAINER__: unknown };
 
 export default async function globalSetup() {
   console.log('Starting global setup...');
+  const startTime = process.hrtime.bigint();
   process.env.FEED_CRAWLER_DISCORD_WEBHOOK_URL ??=
     'http://127.0.0.1:9/test-discord-webhook';
   await createMysqlContainer();
   await createDatabaseTable();
-  console.log('Global setup completed.');
+  const elapsedMs = Number(process.hrtime.bigint() - startTime) / 1_000_000;
+  console.log(`Global setup completed. Elapsed time: ${elapsedMs.toFixed(2)} ms`);
 }
 
 const createMysqlContainer = async () => {

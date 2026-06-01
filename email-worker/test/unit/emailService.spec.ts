@@ -14,8 +14,14 @@ describe('EmailService unit test', () => {
   let mockSendMail: jest.Mock;
   const mockEmailUser = 'test@denamu.dev';
   const mockEmailPassword = 'test-password';
+  let originalSmtpHost: string | undefined;
+  let originalSmtpPort: string | undefined;
 
   beforeEach(() => {
+    originalSmtpHost = process.env.SMTP_HOST;
+    originalSmtpPort = process.env.SMTP_PORT;
+    delete process.env.SMTP_HOST;
+    delete process.env.SMTP_PORT;
     process.env.EMAIL_USER = mockEmailUser;
     process.env.EMAIL_PASSWORD = mockEmailPassword;
 
@@ -34,6 +40,12 @@ describe('EmailService unit test', () => {
     jest.clearAllMocks();
     delete process.env.EMAIL_USER;
     delete process.env.EMAIL_PASSWORD;
+    if (originalSmtpHost !== undefined) {
+      process.env.SMTP_HOST = originalSmtpHost;
+    }
+    if (originalSmtpPort !== undefined) {
+      process.env.SMTP_PORT = originalSmtpPort;
+    }
   });
 
   describe('EmailService 생성자 unit test', () => {
