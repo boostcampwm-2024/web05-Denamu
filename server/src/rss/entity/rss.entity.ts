@@ -5,7 +5,6 @@ import {
   Index,
   OneToMany,
   PrimaryGeneratedColumn,
-  Unique,
 } from 'typeorm';
 
 import { Feed } from '@feed/entity/feed.entity';
@@ -44,9 +43,13 @@ export class RssInformation extends BaseEntity {
 @Entity({
   name: 'rss',
 })
-@Unique(['name'])
-@Unique(['rssUrl'])
-export class Rss extends RssInformation {}
+export class Rss extends RssInformation {
+  @Column({ name: 'name', nullable: false, unique: true })
+  name: string;
+
+  @Column({ name: 'rss_url', length: 255, nullable: false, unique: true })
+  rssUrl: string;
+}
 
 @Entity({
   name: 'rss_reject',
@@ -62,15 +65,16 @@ export class RssReject extends RssInformation {
 @Entity({
   name: 'rss_accept',
 })
-@Unique(['name'])
-@Unique(['rssUrl'])
 export class RssAccept extends RssInformation {
   @OneToMany(() => Feed, (feed) => feed.blog)
   feeds: Feed[];
 
-  @Index({ fulltext: true, parser: 'ngram' })
-  @Column({ name: 'name', nullable: false })
+  @Index('FT_rss_accept_name', { fulltext: true, parser: 'ngram' })
+  @Column({ name: 'name', nullable: false, unique: true })
   name: string;
+
+  @Column({ name: 'rss_url', length: 255, nullable: false, unique: true })
+  rssUrl: string;
 
   @Column({ name: 'blog_platform', default: 'etc', nullable: false })
   blogPlatform: string;
