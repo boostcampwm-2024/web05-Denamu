@@ -1,4 +1,4 @@
-import { Rss } from '@app-types/types';
+import { Rss } from '@common/types';
 
 export const PRODUCT_DOMAIN = 'https://denamu.dev';
 

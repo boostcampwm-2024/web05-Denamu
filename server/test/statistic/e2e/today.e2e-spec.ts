@@ -18,7 +18,7 @@ import { FeedFixture } from '@test/config/common/fixture/feed.fixture';
 import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = '/api/statistic/today';
+const URL = '/api/statistics/today';
 
 describe(`GET ${URL}?limit={} E2E Test`, () => {
   let agent: TestAgent;

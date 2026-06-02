@@ -13,7 +13,7 @@ import { FeedFixture } from '@test/config/common/fixture/feed.fixture';
 import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = '/api/feed/trend/sse';
+const URL = '/api/feeds/trend/sse';
 
 describe(`SSE ${URL} E2E Test`, () => {
   let serverUrl: string;

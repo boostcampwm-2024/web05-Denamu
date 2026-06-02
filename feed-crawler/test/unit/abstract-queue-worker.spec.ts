@@ -3,18 +3,12 @@ import { RedisConnection } from '@common/redis-access';
 
 import { AbstractQueueWorker } from '@event_worker/abstract-queue-worker';
 
-// logger 모킹
-jest.mock('@common/logger', () => ({
-  default: {
-    info: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn(),
-    debug: jest.fn(),
-  },
-  __esModule: true,
-}));
-
-const mockLogger = logger as jest.Mocked<typeof logger>;
+const mockLogger = {
+  info: jest.fn(),
+  error: jest.fn(),
+  warn: jest.fn(),
+  debug: jest.fn(),
+};
 
 // 테스트용 구체 클래스
 interface TestQueueItem {
@@ -61,11 +55,9 @@ class TestQueueWorker extends AbstractQueueWorker<TestQueueItem> {
     }
   }
 
-  protected async handleFailure(
-    item: TestQueueItem,
-    error: Error,
-  ): Promise<void> {
+  protected handleFailure(item: TestQueueItem, error: Error): Promise<void> {
     this.failedItems.push({ item, error });
+    return Promise.resolve();
   }
 }
 
@@ -74,6 +66,15 @@ describe('AbstractQueueWorker', () => {
   let mockRedisConnection: jest.Mocked<RedisConnection>;
 
   beforeEach(() => {
+    mockLogger.info = jest.fn();
+    mockLogger.error = jest.fn();
+    mockLogger.warn = jest.fn();
+    mockLogger.debug = jest.fn();
+    jest.spyOn(logger, 'info').mockImplementation(mockLogger.info);
+    jest.spyOn(logger, 'error').mockImplementation(mockLogger.error);
+    jest.spyOn(logger, 'warn').mockImplementation(mockLogger.warn);
+    jest.spyOn(logger, 'debug').mockImplementation(mockLogger.debug);
+
     mockRedisConnection = {
       executePipeline: jest.fn(),
       hset: jest.fn(),
@@ -115,7 +116,7 @@ describe('AbstractQueueWorker', () => {
       // Given
       const errorWorker =
         new (class extends AbstractQueueWorker<TestQueueItem> {
-          protected async processQueue(): Promise<void> {
+          protected processQueue(): Promise<void> {
             throw new Error('Queue processing failed');
           }
 
@@ -127,15 +128,12 @@ describe('AbstractQueueWorker', () => {
             return JSON.parse(message);
           }
 
-          protected async processItem(item: TestQueueItem): Promise<void> {
-            // 아무것도 하지 않음
+          protected processItem(): Promise<void> {
+            return Promise.resolve();
           }
 
-          protected async handleFailure(
-            item: TestQueueItem,
-            error: Error,
-          ): Promise<void> {
-            // 아무것도 하지 않음
+          protected handleFailure(): Promise<void> {
+            return Promise.resolve();
           }
         })('[ERROR WORKER]', mockRedisConnection);
 

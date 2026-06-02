@@ -3,7 +3,6 @@ import { HttpStatus } from '@nestjs/common';
 import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 
-import { DeleteCommentRequestDto } from '@comment/dto/request/deleteComment.dto';
 import { Comment } from '@comment/entity/comment.entity';
 import { CommentRepository } from '@comment/repository/comment.repository';
 
@@ -23,9 +22,9 @@ import { UserFixture } from '@test/config/common/fixture/user.fixture';
 import { createAccessToken } from '@test/config/e2e/env/jest.setup';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = '/api/comment';
+const BASE_URL = '/api/feeds';
 
-describe(`DELETE ${URL} E2E Test`, () => {
+describe(`DELETE ${BASE_URL}/:feedId/comments/:commentId E2E Test`, () => {
   let agent: TestAgent;
   let comment: Comment;
   let user: User;
@@ -60,13 +59,10 @@ describe(`DELETE ${URL} E2E Test`, () => {
   });
 
   it('[401] 로그인이 되어 있지 않을 경우 댓글 삭제를 실패한다.', async () => {
-    // given
-    const requestDto = new DeleteCommentRequestDto({
-      commentId: comment.id,
-    });
-
     // Http when
-    const response = await agent.delete(URL).send(requestDto);
+    const response = await agent.delete(
+      `${BASE_URL}/${feed.id}/comments/${comment.id}`,
+    );
 
     // Http then
     const { data } = response.body;
@@ -75,7 +71,7 @@ describe(`DELETE ${URL} E2E Test`, () => {
 
     // DB, Redis when
     const savedComment = await commentRepository.findOneBy({
-      id: requestDto.commentId,
+      id: comment.id,
     });
 
     // DB, Redis then
@@ -83,43 +79,25 @@ describe(`DELETE ${URL} E2E Test`, () => {
   });
 
   it('[404] 삭제하고자 하는 댓글이 존재하지 않을 경우 댓글 삭제를 실패한다.', async () => {
-    // given
-    const requestDto = new DeleteCommentRequestDto({
-      commentId: Number.MAX_SAFE_INTEGER,
-    });
-
     // Http when
     const response = await agent
-      .delete(URL)
-      .set('Authorization', `Bearer ${accessToken}`)
-      .send(requestDto);
+      .delete(`${BASE_URL}/${feed.id}/comments/${Number.MAX_SAFE_INTEGER}`)
+      .set('Authorization', `Bearer ${accessToken}`);
 
     // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
     expect(data).toBeUndefined();
-
-    // DB, Redis when
-    const savedComment = await commentRepository.findOneBy({
-      id: requestDto.commentId,
-    });
-
-    // DB, Redis then
-    expect(savedComment).toBeNull();
   });
 
   it('[401] 본인이 작성한 댓글이 아닐 경우 댓글 삭제를 실패한다.', async () => {
     // given
     accessToken = createAccessToken({ id: Number.MAX_SAFE_INTEGER });
-    const requestDto = new DeleteCommentRequestDto({
-      commentId: comment.id,
-    });
 
     // Http when
     const response = await agent
-      .delete(URL)
-      .set('Authorization', `Bearer ${accessToken}`)
-      .send(requestDto);
+      .delete(`${BASE_URL}/${feed.id}/comments/${comment.id}`)
+      .set('Authorization', `Bearer ${accessToken}`);
 
     // Http then
     const { data } = response.body;
@@ -128,7 +106,7 @@ describe(`DELETE ${URL} E2E Test`, () => {
 
     // DB, Redis when
     const savedComment = await commentRepository.findOneBy({
-      id: requestDto.commentId,
+      id: comment.id,
     });
 
     // DB, Redis then
@@ -136,16 +114,10 @@ describe(`DELETE ${URL} E2E Test`, () => {
   });
 
   it('[200] 본인이 작성한 댓글일 경우 댓글 삭제를 성공한다.', async () => {
-    // given
-    const requestDto = new DeleteCommentRequestDto({
-      commentId: comment.id,
-    });
-
     // Http when
     const response = await agent
-      .delete(URL)
-      .set('Authorization', `Bearer ${accessToken}`)
-      .send(requestDto);
+      .delete(`${BASE_URL}/${feed.id}/comments/${comment.id}`)
+      .set('Authorization', `Bearer ${accessToken}`);
 
     // Http then
     const { data } = response.body;
@@ -154,7 +126,7 @@ describe(`DELETE ${URL} E2E Test`, () => {
 
     // DB, Redis when
     const savedComment = await commentRepository.findOneBy({
-      id: requestDto.commentId,
+      id: comment.id,
     });
 
     // DB, Redis then

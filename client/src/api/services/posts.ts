@@ -19,7 +19,7 @@ export const posts = {
     };
   },
   detail: async (postId: number): Promise<PostDetailType> => {
-    const response = await axiosInstance.get<PostDetailType>(`${BLOG.POST}/detail/${postId}`);
+    const response = await axiosInstance.get<PostDetailType>(`${BLOG.POST}/${postId}`);
     return response.data;
   },
 };

@@ -4,6 +4,7 @@ import { WinstonModule } from 'nest-winston';
 
 import { getLogTransport } from '@common/logger/logger.config';
 import { WinstonLoggerService } from '@common/logger/logger.service';
+import { NotifierModule } from '@common/notification/notifier.module';
 
 @Global()
 @Module({
@@ -12,6 +13,7 @@ import { WinstonLoggerService } from '@common/logger/logger.service';
       transports: getLogTransport(),
       silent: process.env.NODE_ENV === 'TEST',
     }),
+    NotifierModule,
   ],
   providers: [WinstonLoggerService],
   exports: [WinstonLoggerService],

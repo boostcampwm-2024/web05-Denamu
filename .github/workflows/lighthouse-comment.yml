@@ -1,0 +1,131 @@
+name: Lighthouse CI Comment
+
+on:
+  workflow_run:
+    workflows: [Lighthouse CI]
+    types: [completed]
+
+jobs:
+  comment:
+    name: Post Lighthouse Comment
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.actor.login != 'dependabot[bot]'
+    permissions:
+      pull-requests: write
+      issues: write
+
+    steps:
+      - name: Download results
+        uses: actions/download-artifact@v8
+        with:
+          name: lighthouse-results
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Post PR Comment
+        uses: actions/github-script@v9
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            const prNumber = parseInt(fs.readFileSync('pr_number.txt', 'utf8').trim());
+            const ws = process.env.GITHUB_WORKSPACE;
+            const fmt = (val) => Math.round((val ?? 0) * 100);
+            const badge = (s) => s >= 90 ? '🟢' : s >= 50 ? '🟠' : '🔴';
+
+            function buildSection(manifestPath, linksPath) {
+              console.log(`Checking: ${manifestPath} → exists=${fs.existsSync(manifestPath)}`);
+              if (!fs.existsSync(manifestPath)) return null;
+
+              const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+              const run = manifest.find((r) => r.isRepresentativeRun);
+              if (!run) return null;
+
+              const { summary, jsonPath } = run;
+              const audits = JSON.parse(fs.readFileSync(jsonPath, 'utf8')).audits;
+
+              const perf = fmt(summary.performance);
+              const a11y = fmt(summary.accessibility);
+              const bp   = fmt(summary['best-practices']);
+              const seo  = fmt(summary.seo);
+
+              const fcp  = audits['first-contentful-paint'].displayValue;
+              const lcp  = audits['largest-contentful-paint'].displayValue;
+              const tbt  = audits['total-blocking-time'].displayValue;
+              const cls  = audits['cumulative-layout-shift'].displayValue;
+              const si   = audits['speed-index'].displayValue;
+
+              let section = '';
+              section += `| Category | Score |\n`;
+              section += `| --- | --- |\n`;
+              section += `| ${badge(perf)} Performance | **${perf}** |\n`;
+              section += `| ${badge(a11y)} Accessibility | **${a11y}** |\n`;
+              section += `| ${badge(bp)} Best Practices | **${bp}** |\n`;
+              section += `| ${badge(seo)} SEO | **${seo}** |\n\n`;
+
+              section += `| Metric | Value |\n`;
+              section += `| --- | --- |\n`;
+              section += `| First Contentful Paint | ${fcp} |\n`;
+              section += `| Largest Contentful Paint | ${lcp} |\n`;
+              section += `| Total Blocking Time | ${tbt} |\n`;
+              section += `| Cumulative Layout Shift | ${cls} |\n`;
+              section += `| Speed Index | ${si} |\n\n`;
+
+              if (fs.existsSync(linksPath)) {
+                const links = JSON.parse(fs.readFileSync(linksPath, 'utf8'));
+                const reportUrls = Object.values(links);
+                if (reportUrls.length > 0) {
+                  section += `[📄 Full Report](${reportUrls[0]})\n\n`;
+                }
+              }
+
+              return section;
+            }
+
+            const mobile = buildSection(
+              path.join(ws, 'client/lhci_reports/mobile/manifest.json'),
+              path.join(ws, 'client/lhci_reports/mobile/links.json')
+            );
+            const desktop = buildSection(
+              path.join(ws, 'client/lhci_reports/desktop/manifest.json'),
+              path.join(ws, 'client/lhci_reports/desktop/links.json')
+            );
+
+            if (!mobile && !desktop) {
+              console.log('No results found, skipping comment');
+              return;
+            }
+
+            let body = '## ⚡ Lighthouse CI Results\n\n';
+            if (mobile) body += '### 📱 Mobile\n\n' + mobile;
+            if (desktop) body += '### 🖥️ Desktop\n\n' + desktop;
+            body += `> 🤖 Powered by [Lighthouse CI](https://github.com/GoogleChrome/lighthouse-ci)`;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+            });
+
+            const marker = '## ⚡ Lighthouse CI Results';
+            const existing = comments.find(
+              (c) => c.user.type === 'Bot' && c.body.includes(marker)
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body,
+              });
+            }

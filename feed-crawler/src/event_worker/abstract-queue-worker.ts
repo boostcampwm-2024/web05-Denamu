@@ -17,7 +17,7 @@ export abstract class AbstractQueueWorker<T> {
     try {
       await this.processQueue();
     } catch (error) {
-      logger.error(`${this.nameTag} 처리 중 오류 발생: ${error.message}`);
+      logger.error(`${this.nameTag} 처리 중 오류 발생: ${error instanceof Error ? error.message : String(error)}`);
     }
 
     const endTime = Date.now();

@@ -3,16 +3,14 @@ import { inject, injectable } from 'tsyringe';
 import { BaseFeedParser, RawFeed } from '@common/parser/base-feed-parser';
 import { ParserUtil } from '@common/parser/utils/parser-util';
 
-import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
-
 @injectable()
 export class Rss20Parser extends BaseFeedParser {
-  constructor(@inject(DEPENDENCY_SYMBOLS.ParserUtil) parserUtil: ParserUtil) {
+  constructor(@inject(ParserUtil) parserUtil: ParserUtil) {
     super(parserUtil);
   }
   canParse(xmlData: string): boolean {
     try {
-      const parsed = this.xmlParser.parse(xmlData);
+      const parsed = this.xmlParser.parse(xmlData) as { rss?: { channel?: { item?: unknown } } };
       return !!parsed.rss?.channel?.item;
     } catch {
       return false;
@@ -20,13 +18,16 @@ export class Rss20Parser extends BaseFeedParser {
   }
 
   protected extractRawFeeds(xmlData: string): RawFeed[] {
-    const parsed = this.xmlParser.parse(xmlData);
+    type RssItem = { title: any; link: any; pubDate: any; description: any };
+    type Rss20Parsed = { rss: { channel: { item: RssItem | RssItem[] } } };
+    const parsed = this.xmlParser.parse(xmlData) as unknown as Rss20Parsed;
 
-    if (!Array.isArray(parsed.rss.channel.item)) {
-      parsed.rss.channel.item = [parsed.rss.channel.item];
+    let items: RssItem[] = parsed.rss.channel.item as RssItem[];
+    if (!Array.isArray(items)) {
+      items = [parsed.rss.channel.item as RssItem];
     }
 
-    return parsed.rss.channel.item.map((feed: any) => ({
+    return items.map((feed) => ({
       title: this.parserUtil.customUnescape(feed.title),
       link: feed.link,
       pubDate: feed.pubDate,

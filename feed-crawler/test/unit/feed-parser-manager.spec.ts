@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 
+import { FeedMetrics } from '@common/metrics/feed-metrics';
 import { Notifier } from '@common/notification/notifier.interface';
 import { FeedParserManager } from '@common/parser/feed-parser-manager';
 import { Atom10Parser } from '@common/parser/formats/atom10-parser';
@@ -15,6 +16,11 @@ describe('FeedParserManager', () => {
   let mockAtom10Parser: jest.Mocked<Atom10Parser>;
   let mockFetch: jest.MockedFunction<typeof fetch>;
   let mockNotifier: jest.Mocked<Notifier>;
+  let mockFeedMetrics: jest.Mocked<FeedMetrics>;
+  let rss20CanParseMock: jest.Mock;
+  let rss20ParseFeedMock: jest.Mock;
+  let atom10CanParseMock: jest.Mock;
+  let atom10ParseFeedMock: jest.Mock;
 
   const mockRssObj: RssObj = {
     id: 1,
@@ -42,15 +48,20 @@ describe('FeedParserManager', () => {
   beforeEach(() => {
     mockFetch = global.fetch as jest.MockedFunction<typeof fetch>;
 
+    rss20CanParseMock = jest.fn();
+    rss20ParseFeedMock = jest.fn();
+    atom10CanParseMock = jest.fn();
+    atom10ParseFeedMock = jest.fn();
+
     mockRss20Parser = {
-      canParse: jest.fn(),
-      parseFeed: jest.fn(),
+      canParse: rss20CanParseMock,
+      parseFeed: rss20ParseFeedMock,
       parseAllFeeds: jest.fn(),
     } as any;
 
     mockAtom10Parser = {
-      canParse: jest.fn(),
-      parseFeed: jest.fn(),
+      canParse: atom10CanParseMock,
+      parseFeed: atom10ParseFeedMock,
       parseAllFeeds: jest.fn(),
     } as any;
 
@@ -59,10 +70,20 @@ describe('FeedParserManager', () => {
       publish: jest.fn(),
     };
 
+    mockFeedMetrics = {
+      total: { inc: jest.fn() },
+      success: { inc: jest.fn() },
+      failure: { inc: jest.fn() },
+      fullCrawlQueueDepth: { set: jest.fn() },
+      fullCrawlPermanentFailure: { inc: jest.fn() },
+      startMetricsServer: jest.fn(),
+    } as any;
+
     feedParserManager = new FeedParserManager(
       mockRss20Parser,
       mockAtom10Parser,
       mockNotifier,
+      mockFeedMetrics,
     );
   });
 
@@ -80,9 +101,9 @@ describe('FeedParserManager', () => {
         ok: true,
         text: () => Promise.resolve(rssXmlData),
       } as any);
-      mockRss20Parser.canParse.mockReturnValue(true);
-      mockAtom10Parser.canParse.mockReturnValue(false);
-      mockRss20Parser.parseFeed.mockResolvedValue(mockFeedDetails);
+      rss20CanParseMock.mockReturnValue(true);
+      atom10CanParseMock.mockReturnValue(false);
+      rss20ParseFeedMock.mockResolvedValue(mockFeedDetails);
 
       // When
       const result = await feedParserManager.fetchAndParse(
@@ -97,8 +118,8 @@ describe('FeedParserManager', () => {
             'application/rss+xml, application/xml, text/xml, application/atom+xml',
         },
       });
-      expect(mockRss20Parser.canParse).toHaveBeenCalledWith(rssXmlData);
-      expect(mockRss20Parser.parseFeed).toHaveBeenCalledWith(
+      expect(rss20CanParseMock).toHaveBeenCalledWith(rssXmlData);
+      expect(rss20ParseFeedMock).toHaveBeenCalledWith(
         mockRssObj,
         rssXmlData,
         startTime,
@@ -114,9 +135,9 @@ describe('FeedParserManager', () => {
         ok: true,
         text: () => Promise.resolve(atomXmlData),
       } as any);
-      mockRss20Parser.canParse.mockReturnValue(false);
-      mockAtom10Parser.canParse.mockReturnValue(true);
-      mockAtom10Parser.parseFeed.mockResolvedValue(mockFeedDetails);
+      rss20CanParseMock.mockReturnValue(false);
+      atom10CanParseMock.mockReturnValue(true);
+      atom10ParseFeedMock.mockResolvedValue(mockFeedDetails);
 
       // When
       const result = await feedParserManager.fetchAndParse(
@@ -125,8 +146,8 @@ describe('FeedParserManager', () => {
       );
 
       // Then
-      expect(mockAtom10Parser.canParse).toHaveBeenCalledWith(atomXmlData);
-      expect(mockAtom10Parser.parseFeed).toHaveBeenCalledWith(
+      expect(atom10CanParseMock).toHaveBeenCalledWith(atomXmlData);
+      expect(atom10ParseFeedMock).toHaveBeenCalledWith(
         mockRssObj,
         atomXmlData,
         startTime,
@@ -158,8 +179,8 @@ describe('FeedParserManager', () => {
         ok: true,
         text: () => Promise.resolve(invalidXmlData),
       } as any);
-      mockRss20Parser.canParse.mockReturnValue(false);
-      mockAtom10Parser.canParse.mockReturnValue(false);
+      rss20CanParseMock.mockReturnValue(false);
+      atom10CanParseMock.mockReturnValue(false);
 
       // When
       const result = await feedParserManager.fetchAndParse(
@@ -178,10 +199,8 @@ describe('FeedParserManager', () => {
         ok: true,
         text: () => Promise.resolve(rssXmlData),
       } as any);
-      mockRss20Parser.canParse.mockReturnValue(true);
-      mockRss20Parser.parseFeed.mockRejectedValueOnce(
-        new Error('Parser error'),
-      );
+      rss20CanParseMock.mockReturnValue(true);
+      rss20ParseFeedMock.mockRejectedValueOnce(new Error('Parser error'));
 
       // When
       const result = await feedParserManager.fetchAndParse(
@@ -202,8 +221,8 @@ describe('FeedParserManager', () => {
         ok: true,
         text: () => Promise.resolve(''),
       } as any);
-      mockRss20Parser.canParse.mockReturnValue(false);
-      mockAtom10Parser.canParse.mockReturnValue(false);
+      rss20CanParseMock.mockReturnValue(false);
+      atom10CanParseMock.mockReturnValue(false);
 
       // When
       const result = await feedParserManager.fetchAndParse(
@@ -225,8 +244,8 @@ describe('FeedParserManager', () => {
         ok: true,
         text: () => Promise.resolve(largeXmlData),
       } as any);
-      mockRss20Parser.canParse.mockReturnValue(true);
-      mockRss20Parser.parseFeed.mockResolvedValue(mockFeedDetails);
+      rss20CanParseMock.mockReturnValue(true);
+      rss20ParseFeedMock.mockResolvedValue(mockFeedDetails);
 
       // When
       const result = await feedParserManager.fetchAndParse(
@@ -236,7 +255,7 @@ describe('FeedParserManager', () => {
 
       // Then
       expect(result).toEqual(mockFeedDetails);
-      expect(mockRss20Parser.parseFeed).toHaveBeenCalledWith(
+      expect(rss20ParseFeedMock).toHaveBeenCalledWith(
         mockRssObj,
         largeXmlData,
         startTime,
