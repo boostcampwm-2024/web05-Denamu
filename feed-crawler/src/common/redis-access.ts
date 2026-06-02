@@ -101,6 +101,10 @@ export class RedisConnection {
     }
   }
 
+  async smembers(key: string): Promise<string[]> {
+    return this.redis.smembers(key);
+  }
+
   async hset(key: string, ...fieldValues: (string | Buffer | number)[]) {
     await this.redis.hset(key, fieldValues);
   }
