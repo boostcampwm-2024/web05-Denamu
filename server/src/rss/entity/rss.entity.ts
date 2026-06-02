@@ -5,6 +5,7 @@ import {
   Index,
   OneToMany,
   PrimaryGeneratedColumn,
+  Unique,
 } from 'typeorm';
 
 import { Feed } from '@feed/entity/feed.entity';
@@ -43,6 +44,8 @@ export class RssInformation extends BaseEntity {
 @Entity({
   name: 'rss',
 })
+@Unique(['name'])
+@Unique(['rssUrl'])
 export class Rss extends RssInformation {}
 
 @Entity({
@@ -59,6 +62,8 @@ export class RssReject extends RssInformation {
 @Entity({
   name: 'rss_accept',
 })
+@Unique(['name'])
+@Unique(['rssUrl'])
 export class RssAccept extends RssInformation {
   @OneToMany(() => Feed, (feed) => feed.blog)
   feeds: Feed[];
