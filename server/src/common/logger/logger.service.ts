@@ -4,10 +4,13 @@ import { Inject } from '@nestjs/common';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 
+import { NotifierRegistry } from '@common/notification/notifier-registry';
+
 @Injectable()
 export class WinstonLoggerService implements LoggerService {
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
+    private readonly notifierRegistry: NotifierRegistry,
   ) {}
 
   log(message: string, context?: string) {
@@ -16,6 +19,9 @@ export class WinstonLoggerService implements LoggerService {
 
   error(message: string, trace?: string, context?: string) {
     this.logger.error(message, { context, trace });
+    void this.notifierRegistry.sendAlert(
+      `🚨 [Server Error] ${message}${trace ? `\n\`\`\`${trace.slice(0, 1500)}\`\`\`` : ''}`,
+    );
   }
 
   warn(message: string, context?: string) {

@@ -1,21 +1,25 @@
 import 'reflect-metadata';
-import { EmailConsumer } from '@email/email.consumer';
-import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
-import { EmailService } from '@email/email.service';
-import { EmailPayload, EmailPayloadConstant } from '@src/types/types';
-import { RMQ_QUEUES, RETRY_CONFIG } from '@rabbitmq/rabbitmq.constant';
-import { setupTestContainer } from '@test/config/e2e/common/testContext.setup';
-import { RabbitMQManager } from '@rabbitmq/rabbitmq.manager';
-import { Channel } from 'amqplib';
+
 import {
+  clearMailpit,
+  getMailpitMessages,
   getMessagesFromQueue,
   getQueueMessageCount,
   publishEmailMessage,
-  waitForQueueMessage,
   purgeAllEmailQueues,
-  clearMailpit,
-  getMailpitMessages,
+  waitForQueueMessage,
 } from '@test/config/e2e/common/rabbitmq-test.helper';
+import { setupTestContainer } from '@test/config/e2e/common/testContext.setup';
+import { Channel } from 'amqplib';
+
+import { EmailPayloadConstant } from '@email/constant';
+import { EmailConsumer } from '@email/email.consumer';
+import { EmailService } from '@email/email.service';
+import { EmailPayload } from '@email/types';
+
+import { RETRY_CONFIG, RMQ_QUEUES } from '@rabbitmq/rabbitmq.constant';
+import { RabbitMQManager } from '@rabbitmq/rabbitmq.manager';
+import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
 
 describe('Email Error Handling E2E Test', () => {
   let emailConsumer: EmailConsumer;

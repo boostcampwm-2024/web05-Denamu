@@ -12,6 +12,7 @@ const config: Config.InitialOptions = {
     '^.+\\.(t|j)s$': 'ts-jest',
   },
   coverageDirectory: './coverage/integration',
+  coverageReporters: ['json-summary', 'text', 'lcov'],
   setupFilesAfterEnv: ['./test/config/e2e/env/jest.setup.ts'],
   globalSetup: './test/config/e2e/global/e2e-test-global-setup.ts',
   globalTeardown: './test/config/e2e/global/e2e-test-global-teardown.ts',

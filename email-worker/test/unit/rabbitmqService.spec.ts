@@ -9,21 +9,35 @@ describe('RabbitmqService unit test', () => {
   let rabbitmqService: RabbitMQService;
   let mockRabbitMQManager: jest.Mocked<RabbitMQManager>;
   let mockChannel: jest.Mocked<Channel>;
+  let publish: jest.Mock;
+  let sendToQueue: jest.Mock;
+  let consume: jest.Mock;
+  let ack: jest.Mock;
+  let nack: jest.Mock;
+  let cancel: jest.Mock;
+  let getChannel: jest.Mock;
 
   beforeEach(() => {
+    publish = jest.fn().mockReturnValue(true);
+    sendToQueue = jest.fn().mockReturnValue(true);
+    consume = jest.fn().mockResolvedValue({ consumerTag: 'test-consumer-tag' });
+    ack = jest.fn();
+    nack = jest.fn();
+    cancel = jest.fn().mockResolvedValue({});
+
     mockChannel = {
-      publish: jest.fn().mockReturnValue(true),
-      sendToQueue: jest.fn().mockReturnValue(true),
-      consume: jest
-        .fn()
-        .mockResolvedValue({ consumerTag: 'test-consumer-tag' }),
-      ack: jest.fn(),
-      nack: jest.fn(),
-      cancel: jest.fn().mockResolvedValue({}),
+      publish,
+      sendToQueue,
+      consume,
+      ack,
+      nack,
+      cancel,
     } as Partial<Channel> as jest.Mocked<Channel>;
 
+    getChannel = jest.fn().mockResolvedValue(mockChannel);
+
     mockRabbitMQManager = {
-      getChannel: jest.fn().mockResolvedValue(mockChannel),
+      getChannel,
     } as any;
 
     rabbitmqService = new RabbitMQService(mockRabbitMQManager);
@@ -41,9 +55,9 @@ describe('RabbitmqService unit test', () => {
 
       await rabbitmqService.sendMessage(exchange, routingKey, message);
 
-      expect(mockRabbitMQManager.getChannel).toHaveBeenCalledTimes(1);
-      expect(mockChannel.publish).toHaveBeenCalledTimes(1);
-      expect(mockChannel.publish).toHaveBeenCalledWith(
+      expect(getChannel).toHaveBeenCalledTimes(1);
+      expect(publish).toHaveBeenCalledTimes(1);
+      expect(publish).toHaveBeenCalledWith(
         exchange,
         routingKey,
         Buffer.from(message),
@@ -58,9 +72,9 @@ describe('RabbitmqService unit test', () => {
 
       await rabbitmqService.sendMessageToQueue(queue, message);
 
-      expect(mockRabbitMQManager.getChannel).toHaveBeenCalledTimes(1);
-      expect(mockChannel.sendToQueue).toHaveBeenCalledTimes(1);
-      expect(mockChannel.sendToQueue).toHaveBeenCalledWith(
+      expect(getChannel).toHaveBeenCalledTimes(1);
+      expect(sendToQueue).toHaveBeenCalledTimes(1);
+      expect(sendToQueue).toHaveBeenCalledWith(
         queue,
         Buffer.from(message),
         undefined,
@@ -78,7 +92,7 @@ describe('RabbitmqService unit test', () => {
 
       await rabbitmqService.sendMessageToQueue(queue, message, options);
 
-      expect(mockChannel.sendToQueue).toHaveBeenCalledWith(
+      expect(sendToQueue).toHaveBeenCalledWith(
         queue,
         Buffer.from(message),
         options,
@@ -96,9 +110,9 @@ describe('RabbitmqService unit test', () => {
         onMessage,
       );
 
-      expect(mockRabbitMQManager.getChannel).toHaveBeenCalledTimes(1);
-      expect(mockChannel.consume).toHaveBeenCalledTimes(1);
-      expect(mockChannel.consume).toHaveBeenCalledWith(
+      expect(getChannel).toHaveBeenCalledTimes(1);
+      expect(consume).toHaveBeenCalledTimes(1);
+      expect(consume).toHaveBeenCalledWith(
         queue,
         expect.any(Function),
       );
@@ -110,7 +124,7 @@ describe('RabbitmqService unit test', () => {
       const testPayload = { type: 'test', data: 'test-data' };
       const onMessage = jest.fn().mockResolvedValue(undefined);
 
-      mockChannel.consume.mockImplementation(async (q, callback) => {
+      mockChannel.consume.mockImplementation((q, callback) => {
         const mockMessage: ConsumeMessage = {
           content: Buffer.from(JSON.stringify(testPayload)),
           properties: {
@@ -119,7 +133,7 @@ describe('RabbitmqService unit test', () => {
         } as any;
 
         callback(mockMessage);
-        return { consumerTag: 'test-consumer-tag' };
+        return Promise.resolve({ consumerTag: 'test-consumer-tag' });
       });
 
       await rabbitmqService.consumeMessage(queue, onMessage);
@@ -128,16 +142,16 @@ describe('RabbitmqService unit test', () => {
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(onMessage).toHaveBeenCalledWith(testPayload, 2);
-      expect(mockChannel.ack).toHaveBeenCalledTimes(1);
+      expect(ack).toHaveBeenCalledTimes(1);
     });
 
     it('메시지가 null이면 아무 작업도 하지 않는다', async () => {
       const queue = 'test.queue';
       const onMessage = jest.fn();
 
-      mockChannel.consume.mockImplementation(async (q, callback) => {
+      mockChannel.consume.mockImplementation((q, callback) => {
         callback(null);
-        return { consumerTag: 'test-consumer-tag' };
+        return Promise.resolve({ consumerTag: 'test-consumer-tag' });
       });
 
       await rabbitmqService.consumeMessage(queue, onMessage);
@@ -145,7 +159,7 @@ describe('RabbitmqService unit test', () => {
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(onMessage).not.toHaveBeenCalled();
-      expect(mockChannel.ack).not.toHaveBeenCalled();
+      expect(ack).not.toHaveBeenCalled();
     });
 
     it('x-retry-count 헤더가 없으면 0으로 처리한다', async () => {
@@ -153,7 +167,7 @@ describe('RabbitmqService unit test', () => {
       const testPayload = { type: 'test' };
       const onMessage = jest.fn().mockResolvedValue(undefined);
 
-      mockChannel.consume.mockImplementation(async (q, callback) => {
+      mockChannel.consume.mockImplementation((q, callback) => {
         const mockMessage: ConsumeMessage = {
           content: Buffer.from(JSON.stringify(testPayload)),
           properties: {
@@ -162,7 +176,7 @@ describe('RabbitmqService unit test', () => {
         } as any;
 
         callback(mockMessage);
-        return { consumerTag: 'test-consumer-tag' };
+        return Promise.resolve({ consumerTag: 'test-consumer-tag' });
       });
 
       await rabbitmqService.consumeMessage(queue, onMessage);
@@ -180,7 +194,7 @@ describe('RabbitmqService unit test', () => {
         .mockRejectedValue(new Error('SHUTDOWN_IN_PROGRESS'));
 
       let capturedMessage: ConsumeMessage;
-      mockChannel.consume.mockImplementation(async (q, callback) => {
+      mockChannel.consume.mockImplementation((q, callback) => {
         capturedMessage = {
           content: Buffer.from(JSON.stringify(testPayload)),
           properties: {
@@ -189,19 +203,19 @@ describe('RabbitmqService unit test', () => {
         } as any;
 
         callback(capturedMessage);
-        return { consumerTag: 'test-consumer-tag' };
+        return Promise.resolve({ consumerTag: 'test-consumer-tag' });
       });
 
       await rabbitmqService.consumeMessage(queue, onMessage);
 
       await new Promise((resolve) => setImmediate(resolve));
 
-      expect(mockChannel.nack).toHaveBeenCalledWith(
+      expect(nack).toHaveBeenCalledWith(
         capturedMessage,
         false,
         true,
       );
-      expect(mockChannel.ack).not.toHaveBeenCalled();
+      expect(ack).not.toHaveBeenCalled();
     });
 
     it('일반 에러 발생 시 메시지를 nack 처리한다 (requeue false)', async () => {
@@ -210,7 +224,7 @@ describe('RabbitmqService unit test', () => {
       const onMessage = jest.fn().mockRejectedValue(new Error('Some error'));
 
       let capturedMessage: ConsumeMessage;
-      mockChannel.consume.mockImplementation(async (q, callback) => {
+      mockChannel.consume.mockImplementation((q, callback) => {
         capturedMessage = {
           content: Buffer.from(JSON.stringify(testPayload)),
           properties: {
@@ -219,19 +233,19 @@ describe('RabbitmqService unit test', () => {
         } as any;
 
         callback(capturedMessage);
-        return { consumerTag: 'test-consumer-tag' };
+        return Promise.resolve({ consumerTag: 'test-consumer-tag' });
       });
 
       await rabbitmqService.consumeMessage(queue, onMessage);
 
       await new Promise((resolve) => setImmediate(resolve));
 
-      expect(mockChannel.nack).toHaveBeenCalledWith(
+      expect(nack).toHaveBeenCalledWith(
         capturedMessage,
         false,
         false,
       );
-      expect(mockChannel.ack).not.toHaveBeenCalled();
+      expect(ack).not.toHaveBeenCalled();
     });
   });
 
@@ -241,9 +255,9 @@ describe('RabbitmqService unit test', () => {
 
       await rabbitmqService.closeConsumer(consumerTag);
 
-      expect(mockRabbitMQManager.getChannel).toHaveBeenCalledTimes(1);
-      expect(mockChannel.cancel).toHaveBeenCalledTimes(1);
-      expect(mockChannel.cancel).toHaveBeenCalledWith(consumerTag);
+      expect(getChannel).toHaveBeenCalledTimes(1);
+      expect(cancel).toHaveBeenCalledTimes(1);
+      expect(cancel).toHaveBeenCalledWith(consumerTag);
     });
   });
 });

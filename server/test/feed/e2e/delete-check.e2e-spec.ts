@@ -13,9 +13,9 @@ import { FeedFixture } from '@test/config/common/fixture/feed.fixture';
 import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = '/api/feed';
+const URL = '/api/feeds';
 
-describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
+describe(`HEAD ${URL}/{feedId} E2E Test`, () => {
   let feed: Feed;
   let feedRepository: FeedRepository;
   let rssAccept: RssAccept;
@@ -37,7 +37,7 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
 
   it('[404] 존재하지 않는 게시글 ID에 요청을 보낼 경우 404를 응답한다.', async () => {
     // Http when
-    const response = await agent.delete(`${URL}/${Number.MAX_SAFE_INTEGER}`);
+    const response = await agent.head(`${URL}/${Number.MAX_SAFE_INTEGER}`);
 
     // Http then
     const { data } = response.body;
@@ -60,7 +60,7 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
       .mockResolvedValue({ ok: false, status: HttpStatus.NOT_FOUND });
 
     // Http when
-    const response = await agent.delete(`${URL}/${feed.id}`);
+    const response = await agent.head(`${URL}/${feed.id}`);
 
     // Http then
     const { data } = response.body;
@@ -83,7 +83,7 @@ describe(`DELETE ${URL}/{feedId} E2E Test`, () => {
       .mockResolvedValue({ ok: true, status: HttpStatus.OK });
 
     // Http when
-    const response = await agent.delete(`${URL}/${feed.id}`);
+    const response = await agent.head(`${URL}/${feed.id}`);
 
     // Http then
     const { data } = response.body;

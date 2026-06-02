@@ -1,0 +1,63 @@
+name: Lighthouse CI
+
+on:
+  pull_request:
+    branches: [develop, main]
+    paths:
+      - 'client/src/**'
+      - 'client/package.json'
+      - 'client/package-lock.json'
+      - 'client/vite.config.ts'
+      - 'client/.lighthouserc.*.cjs'
+  workflow_dispatch:
+
+jobs:
+  lighthouse:
+    if: github.actor != 'dependabot[bot]'
+    name: Lighthouse
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: 'npm'
+
+      - name: Install dependencies
+        working-directory: ./client
+        run: npm ci
+
+      - name: Build
+        working-directory: ./client
+        run: npm run build
+
+      - name: Run Lighthouse CI (Mobile)
+        working-directory: ./client
+        run: npx lhci autorun --config=.lighthouserc.mobile.cjs
+        continue-on-error: true
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+
+      - name: Run Lighthouse CI (Desktop)
+        working-directory: ./client
+        run: npx lhci autorun --config=.lighthouserc.desktop.cjs
+        continue-on-error: true
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+
+      - name: Save PR number
+        if: github.event_name == 'pull_request'
+        run: echo ${{ github.event.pull_request.number }} > pr_number.txt
+
+      - name: Upload results
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-results
+          path: |
+            client/lhci_reports/
+            pr_number.txt

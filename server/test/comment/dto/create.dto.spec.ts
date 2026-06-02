@@ -8,11 +8,10 @@ describe(`${CreateCommentRequestDto.name} Test`, () => {
   beforeEach(() => {
     dto = new CreateCommentRequestDto({
       comment: 'test',
-      feedId: 1,
     });
   });
 
-  it('댓글 내용과 피드 ID가 있을 경우 유효성 검사에 성공한다.', async () => {
+  it('댓글 내용이 있을 경우 유효성 검사에 성공한다.', async () => {
     // when
     const errors = await validate(dto);
 
@@ -55,32 +54,6 @@ describe(`${CreateCommentRequestDto.name} Test`, () => {
       // then
       expect(errors).toHaveLength(1);
       expect(errors[0].constraints).toHaveProperty('isNotEmpty');
-    });
-  });
-
-  describe('feedId', () => {
-    it('피드 ID가 없을 경우 유효성 검사에 실패한다.', async () => {
-      // given
-      dto.feedId = null;
-
-      // when
-      const errors = await validate(dto);
-
-      // then
-      expect(errors).toHaveLength(1);
-      expect(errors[0].constraints).toHaveProperty('isInt');
-    });
-
-    it('피드 ID가 정수가 아니고 문자열일 경우 유효성 검사에 실패한다.', async () => {
-      // given
-      dto.feedId = 'test' as any;
-
-      // when
-      const errors = await validate(dto);
-
-      // then
-      expect(errors).toHaveLength(1);
-      expect(errors[0].constraints).toHaveProperty('isInt');
     });
   });
 });

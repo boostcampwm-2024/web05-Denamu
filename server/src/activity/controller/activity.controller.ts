@@ -18,7 +18,7 @@ import { ActivityService } from '@activity/service/activity.service';
 import { ApiResponse } from '@common/response/common.response';
 
 @ApiTags('Activity')
-@Controller('activity')
+@Controller('activities')
 export class ActivityController {
   constructor(private readonly activityService: ActivityService) {}
 

@@ -1,0 +1,51 @@
+name: Feed Crawler Coverage Test
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      ['feed-crawler/**', '.github/workflows/test_feed-crawler_coverage.yml']
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. 현재 PR 브랜치로 체크아웃 하기
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      # 2. Node.js 환경 설정
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      # 3. 의존성 설치
+      - name: Install dependencies
+        working-directory: ./feed-crawler
+        run: npm ci
+
+      # 4. 커버리지 측정 실행
+      - name: Run Coverage
+        working-directory: ./feed-crawler
+        run: npm run test:coverage
+        env:
+          TEST_TIME_INTERVAL: ${{ vars.FEED_CRAWLER_TEST_TIME_INTERVAL }}
+
+      # 5. PR 번호 저장
+      - name: Save PR number
+        if: always() && github.event_name == 'pull_request'
+        run: echo "${{ github.event.pull_request.number }}" > pr_number.txt
+
+      # 6. PR 번호 및 커버리지 결과 업로드
+      - name: Upload coverage results
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v7
+        with:
+          name: feed-crawler-coverage-results
+          path: |
+            feed-crawler/coverage/
+            pr_number.txt

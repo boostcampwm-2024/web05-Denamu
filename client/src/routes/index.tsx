@@ -75,7 +75,7 @@ export const AppRouter = ({ location, state }: RouterProps) => {
           }
         />
         <Route
-          path="/user/certificate"
+          path="/users/email-verifications"
           element={
             <Suspense fallback={<Loading />}>
               <UserCertificate />

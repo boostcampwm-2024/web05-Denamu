@@ -1,8 +1,8 @@
 import 'reflect-metadata';
 
-import Anthropic from '@anthropic-ai/sdk';
-
 import { redisConstant } from '@common/constant';
+import { AiMetrics } from '@common/metrics/ai-metrics';
+import { RedisMetrics } from '@common/metrics/redis-metrics';
 import { Notifier } from '@common/notification/notifier.interface';
 import { RedisConnection } from '@common/redis-access';
 import { ClaudeResponse, FeedAIQueueItem } from '@common/types';
@@ -12,17 +12,20 @@ import { ClaudeEventWorker } from '@event_worker/workers/claude-event-worker';
 import { FeedRepository } from '@repository/feed.repository';
 import { TagMapRepository } from '@repository/tag-map.repository';
 
-// Anthropic 모킹
-jest.mock('@anthropic-ai/sdk');
-const MockedAnthropic = Anthropic as jest.MockedClass<typeof Anthropic>;
-
 describe('ClaudeEventWorker', () => {
   let claudeEventWorker: ClaudeEventWorker;
   let mockTagMapRepository: jest.Mocked<TagMapRepository>;
   let mockFeedRepository: jest.Mocked<FeedRepository>;
   let mockRedisConnection: jest.Mocked<RedisConnection>;
-  let mockAnthropicClient: jest.Mocked<Anthropic>;
+  let mockAnthropicClient: any;
   let mockNotifier: jest.Mocked<Notifier>;
+  let insertTagsMock: jest.Mock;
+  let updateSummaryMock: jest.Mock;
+  let updateNullSummaryMock: jest.Mock;
+  let executePipelineMock: jest.Mock;
+  let hsetMock: jest.Mock;
+  let rpushMock: jest.Mock;
+  let messagesCreateMock: jest.Mock;
 
   const mockFeedAIQueueItem: FeedAIQueueItem = {
     id: 1,
@@ -46,40 +49,65 @@ describe('ClaudeEventWorker', () => {
     process.env.AI_API_KEY = 'test-api-key';
     process.env.AI_RATE_LIMIT_COUNT = '5';
 
+    insertTagsMock = jest.fn();
+    updateSummaryMock = jest.fn();
+    updateNullSummaryMock = jest.fn();
+    executePipelineMock = jest.fn();
+    hsetMock = jest.fn();
+    rpushMock = jest.fn();
+    messagesCreateMock = jest.fn();
+
     mockTagMapRepository = {
-      insertTags: jest.fn(),
+      insertTags: insertTagsMock,
     } as any;
 
     mockFeedRepository = {
-      updateSummary: jest.fn(),
-      updateNullSummary: jest.fn(),
+      updateSummary: updateSummaryMock,
+      updateNullSummary: updateNullSummaryMock,
     } as any;
 
     mockRedisConnection = {
-      executePipeline: jest.fn(),
-      hset: jest.fn(),
-      rpush: jest.fn(),
+      executePipeline: executePipelineMock,
+      hset: hsetMock,
+      rpush: rpushMock,
+      llen: jest.fn().mockResolvedValue(0),
     } as any;
 
     mockAnthropicClient = {
       messages: {
-        create: jest.fn(),
+        create: messagesCreateMock,
       },
-    } as any;
+    };
 
     mockNotifier = {
       initialize: jest.fn(),
       publish: jest.fn(),
-    } as any;
+    };
 
-    MockedAnthropic.mockImplementation(() => mockAnthropicClient);
+    const mockAiMetrics = {
+      total: { inc: jest.fn() },
+      success: { inc: jest.fn() },
+      failure: { inc: jest.fn() },
+      permanentFailure: { inc: jest.fn() },
+      queueDepth: { set: jest.fn() },
+      duration: { startTimer: jest.fn().mockReturnValue(jest.fn()) },
+    } as unknown as AiMetrics;
+
+    const mockRedisMetrics = {
+      total: { inc: jest.fn() },
+      success: { inc: jest.fn() },
+      failure: { inc: jest.fn() },
+    } as unknown as RedisMetrics;
 
     claudeEventWorker = new ClaudeEventWorker(
       mockTagMapRepository,
       mockFeedRepository,
       mockRedisConnection,
       mockNotifier,
+      mockAiMetrics,
+      mockRedisMetrics,
     );
+    Object.assign(claudeEventWorker, { client: mockAnthropicClient });
   });
 
   afterEach(() => {
@@ -174,24 +202,20 @@ describe('ClaudeEventWorker', () => {
         [null, JSON.stringify(mockFeedAIQueueItem)],
         [null, null],
       ];
-      mockRedisConnection.executePipeline.mockResolvedValue(
-        mockRedisResults as any,
-      );
+      executePipelineMock.mockResolvedValue(mockRedisResults as any);
 
       // When
       const result = await claudeEventWorker['loadFeeds']();
 
       // Then
-      expect(mockRedisConnection.executePipeline).toHaveBeenCalledTimes(1);
+      expect(executePipelineMock).toHaveBeenCalledTimes(1);
       expect(result).toEqual([mockFeedAIQueueItem]);
     });
 
     it('JSON 파싱 에러를 처리해야 한다', async () => {
       // Given
       const mockRedisResults = [[null, 'invalid-json']];
-      mockRedisConnection.executePipeline.mockResolvedValue(
-        mockRedisResults as any,
-      );
+      executePipelineMock.mockResolvedValue(mockRedisResults as any);
 
       // When
       const result = await claudeEventWorker['loadFeeds']();
@@ -207,15 +231,13 @@ describe('ClaudeEventWorker', () => {
       const mockMessage = {
         content: [{ text: JSON.stringify(mockClaudeResponse) }],
       };
-      (mockAnthropicClient.messages.create as jest.Mock).mockResolvedValue(
-        mockMessage as any,
-      );
+      messagesCreateMock.mockResolvedValue(mockMessage as any);
 
       // When
       const result = await claudeEventWorker['requestAI'](mockFeedAIQueueItem);
 
       // Then
-      expect(mockAnthropicClient.messages.create).toHaveBeenCalledWith({
+      expect(messagesCreateMock).toHaveBeenCalledWith({
         max_tokens: 8192,
         system: expect.any(String),
         messages: [{ role: 'user', content: mockFeedAIQueueItem.content }],
@@ -233,9 +255,7 @@ describe('ClaudeEventWorker', () => {
       const mockMessage = {
         content: [{ text: responseWithWhitespace }],
       };
-      (mockAnthropicClient.messages.create as jest.Mock).mockResolvedValue(
-        mockMessage as any,
-      );
+      messagesCreateMock.mockResolvedValue(mockMessage as any);
 
       // When
       const result = await claudeEventWorker['requestAI'](mockFeedAIQueueItem);
@@ -259,16 +279,16 @@ describe('ClaudeEventWorker', () => {
       await claudeEventWorker['saveAIResult'](feedWithAIResult);
 
       // Then
-      expect(mockTagMapRepository.insertTags).toHaveBeenCalledWith(
+      expect(insertTagsMock).toHaveBeenCalledWith(
         feedWithAIResult.id,
         feedWithAIResult.tagList,
       );
-      expect(mockRedisConnection.hset).toHaveBeenCalledWith(
+      expect(hsetMock).toHaveBeenCalledWith(
         `feed:recent:${feedWithAIResult.id}`,
         'tag',
         feedWithAIResult.tagList.join(','),
       );
-      expect(mockFeedRepository.updateSummary).toHaveBeenCalledWith(
+      expect(updateSummaryMock).toHaveBeenCalledWith(
         feedWithAIResult.id,
         feedWithAIResult.summary,
       );
@@ -285,11 +305,10 @@ describe('ClaudeEventWorker', () => {
       await claudeEventWorker['handleFailure'](feedWithLowDeathCount, error);
 
       // Then
-      expect(mockRedisConnection.rpush).toHaveBeenCalledWith(
-        redisConstant.FEED_AI_QUEUE,
-        [JSON.stringify({ ...feedWithLowDeathCount, deathCount: 2 })],
-      );
-      expect(mockFeedRepository.updateNullSummary).not.toHaveBeenCalled();
+      expect(rpushMock).toHaveBeenCalledWith(redisConstant.FEED_AI_QUEUE, [
+        JSON.stringify({ ...feedWithLowDeathCount, deathCount: 2 }),
+      ]);
+      expect(updateNullSummaryMock).not.toHaveBeenCalled();
     });
 
     it('deathCount가 3 이상일 때 null summary로 업데이트해야 한다', async () => {
@@ -301,8 +320,8 @@ describe('ClaudeEventWorker', () => {
       await claudeEventWorker['handleFailure'](feedWithHighDeathCount, error);
 
       // Then
-      expect(mockRedisConnection.rpush).not.toHaveBeenCalled();
-      expect(mockFeedRepository.updateNullSummary).toHaveBeenCalledWith(
+      expect(rpushMock).not.toHaveBeenCalled();
+      expect(updateNullSummaryMock).toHaveBeenCalledWith(
         feedWithHighDeathCount.id,
       );
     });
@@ -316,8 +335,8 @@ describe('ClaudeEventWorker', () => {
       await claudeEventWorker['handleFailure'](feedWithExactDeathCount, error);
 
       // Then
-      expect(mockRedisConnection.rpush).not.toHaveBeenCalled();
-      expect(mockFeedRepository.updateNullSummary).toHaveBeenCalledWith(
+      expect(rpushMock).not.toHaveBeenCalled();
+      expect(updateNullSummaryMock).toHaveBeenCalledWith(
         feedWithExactDeathCount.id,
       );
     });
@@ -331,11 +350,10 @@ describe('ClaudeEventWorker', () => {
       await claudeEventWorker['handleFailure'](feedWithDeathCount2, error);
 
       // Then
-      expect(mockRedisConnection.rpush).toHaveBeenCalledWith(
-        redisConstant.FEED_AI_QUEUE,
-        [JSON.stringify({ ...feedWithDeathCount2, deathCount: 3 })],
-      );
-      expect(mockFeedRepository.updateNullSummary).not.toHaveBeenCalled();
+      expect(rpushMock).toHaveBeenCalledWith(redisConstant.FEED_AI_QUEUE, [
+        JSON.stringify({ ...feedWithDeathCount2, deathCount: 3 }),
+      ]);
+      expect(updateNullSummaryMock).not.toHaveBeenCalled();
     });
   });
 
@@ -350,7 +368,7 @@ describe('ClaudeEventWorker', () => {
       ];
 
       // loadFeeds가 환경 변수에 따라 제한된 개수만 반환하는지 확인
-      mockRedisConnection.executePipeline.mockResolvedValue(
+      executePipelineMock.mockResolvedValue(
         mockFeeds.map((feed) => [null, JSON.stringify(feed)]) as any,
       );
 
@@ -359,7 +377,7 @@ describe('ClaudeEventWorker', () => {
 
       // Then
       // AI_RATE_LIMIT_COUNT가 2이므로 최대 2개만 로드
-      expect(mockRedisConnection.executePipeline).toHaveBeenCalledTimes(1);
+      expect(executePipelineMock).toHaveBeenCalledTimes(1);
     });
   });
 });

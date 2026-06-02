@@ -1,11 +1,24 @@
 import { Channel } from 'amqplib';
+import { StartedTestContainer } from 'testcontainers';
+
+import { EmailPayload } from '@email/types';
+
 import {
   RMQ_EXCHANGES,
   RMQ_QUEUES,
   RMQ_ROUTING_KEYS,
 } from '@rabbitmq/rabbitmq.constant';
 import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
-import { EmailPayload } from '@src/types/types';
+
+interface RabbitMQRawMessage {
+  payload: string;
+  properties?: { headers?: Record<string, unknown> };
+  redelivered: boolean;
+}
+
+interface MailpitContainerGlobal {
+  __MAILPIT_CONTAINER__?: StartedTestContainer;
+}
 
 /**
  * RabbitMQ Management API를 통해 조회한 메시지 형식
@@ -57,11 +70,11 @@ export async function getMessagesFromQueue(
     );
   }
 
-  const messages = await response.json();
+  const messages = (await response.json()) as RabbitMQRawMessage[];
 
-  return messages.map((msg: any) => ({
-    content: JSON.parse(msg.payload),
-    headers: msg.properties?.headers || {},
+  return messages.map((msg) => ({
+    content: JSON.parse(msg.payload) as EmailPayload,
+    headers: msg.properties?.headers ?? {},
     redelivered: msg.redelivered,
   }));
 }
@@ -159,7 +172,8 @@ export async function purgeAllEmailQueues(channel: Channel): Promise<void> {
  * Mailpit의 모든 이메일을 삭제합니다.
  */
 export async function clearMailpit(): Promise<void> {
-  const mailpitContainer = (global as any).__MAILPIT_CONTAINER__;
+  const mailpitContainer = (global as unknown as MailpitContainerGlobal)
+    .__MAILPIT_CONTAINER__;
   if (!mailpitContainer) return;
 
   const webPort = mailpitContainer.getMappedPort(8025);
@@ -171,12 +185,13 @@ export async function clearMailpit(): Promise<void> {
  * Mailpit에서 이메일 목록을 조회합니다.
  */
 export async function getMailpitMessages(): Promise<any[]> {
-  const mailpitContainer = (global as any).__MAILPIT_CONTAINER__;
+  const mailpitContainer = (global as unknown as MailpitContainerGlobal)
+    .__MAILPIT_CONTAINER__;
   if (!mailpitContainer) return [];
 
   const webPort = mailpitContainer.getMappedPort(8025);
   const baseUrl = `http://${mailpitContainer.getHost()}:${webPort}`;
   const response = await fetch(`${baseUrl}/api/v1/messages`);
-  const data = await response.json();
-  return data.messages || [];
+  const data = (await response.json()) as { messages?: unknown[] };
+  return data.messages ?? [];
 }
