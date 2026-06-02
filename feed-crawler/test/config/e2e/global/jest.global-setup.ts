@@ -13,7 +13,9 @@ export default async function globalSetup() {
   await createMysqlContainer();
   await createDatabaseTable();
   const elapsedMs = Number(process.hrtime.bigint() - startTime) / 1_000_000;
-  console.log(`Global setup completed. Elapsed time: ${elapsedMs.toFixed(2)} ms`);
+  console.log(
+    `Global setup completed. Elapsed time: ${elapsedMs.toFixed(2)} ms`,
+  );
 }
 
 const createMysqlContainer = async () => {
@@ -43,6 +45,8 @@ const createDatabaseTable = async () => {
       rss_url varchar(255) NOT NULL,
       blog_platform varchar(255) NOT NULL DEFAULT 'etc',
       PRIMARY KEY (id),
+      UNIQUE KEY UK_rss_accept_name (name),
+      UNIQUE KEY UK_rss_accept_rss_url (rss_url),
       FULLTEXT KEY IDX_59f4be4de3817b3f975acff076 (name)
     ) ;
     `,
