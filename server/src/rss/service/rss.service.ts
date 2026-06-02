@@ -45,25 +45,21 @@ export class RssService {
   ) {}
 
   async createRss(rssRegisterBodyDto: RegisterRssRequestDto) {
-    const [alreadyURLRss, alreadyURLBlog] = await Promise.all([
+    const { blog, rssUrl } = rssRegisterBodyDto;
+    const [duplicateRss, duplicateBlog] = await Promise.all([
       this.rssRepository.findOne({
-        where: {
-          rssUrl: rssRegisterBodyDto.rssUrl,
-        },
+        where: [{ rssUrl }, { name: blog }],
       }),
       this.rssAcceptRepository.findOne({
-        where: {
-          rssUrl: rssRegisterBodyDto.rssUrl,
-        },
+        where: [{ rssUrl }, { name: blog }],
       }),
     ]);
 
-    if (alreadyURLRss || alreadyURLBlog) {
-      throw new ConflictException(
-        alreadyURLRss
-          ? '이미 신청된 RSS URL입니다.'
-          : '이미 등록된 RSS URL입니다.',
-      );
+    if (duplicateRss || duplicateBlog) {
+      const status = duplicateRss ? '신청' : '등록';
+      const duplicate = duplicateRss ?? duplicateBlog;
+      const field = duplicate.rssUrl === rssUrl ? 'RSS URL' : '블로그 이름';
+      throw new ConflictException(`이미 ${status}된 ${field}입니다.`);
     }
 
     await this.rssRepository.insert(rssRegisterBodyDto.toEntity());
