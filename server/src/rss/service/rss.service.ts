@@ -173,7 +173,7 @@ export class RssService {
       return rssAccept;
     });
 
-    void this.enqueueFullFeedCrawlMessage(rssAccept.id);
+    await this.enqueueFullFeedCrawlMessage(rssAccept.id);
     await this.emailProducer.produceRssRegistration(rssAccept, true);
   }
 
