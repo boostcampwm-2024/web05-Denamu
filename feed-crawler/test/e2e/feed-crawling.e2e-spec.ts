@@ -77,17 +77,9 @@ describe('feed crawling e2e-test', () => {
       'SELECT * FROM feed',
       [],
     );
-    const recentFeedsKeys = [];
-    let cursor = '0';
-    do {
-      const [newCursor, keys] = await testContext.redisConnection.scan(
-        cursor,
-        redisConstant.FEED_RECENT_ALL_KEY,
-        100,
-      );
-      recentFeedsKeys.push(...keys);
-      cursor = newCursor;
-    } while (cursor !== '0');
+    const recentFeedsKeys = await testContext.redisConnection.smembers(
+      redisConstant.FEED_RECENT_INDEX_KEY,
+    );
 
     const aiQueue = await testContext.redisConnection.executePipeline(
       (pipeline) => {
