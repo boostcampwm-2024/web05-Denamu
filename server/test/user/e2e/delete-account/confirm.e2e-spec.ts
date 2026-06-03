@@ -37,7 +37,7 @@ import { testApp } from '@test/config/e2e/env/jest.setup';
 
 const makeURL = (token: string) => `/api/users/deletion-requests/${token}`;
 
-describe(`PATCH /api/users/deletion-requests/:token E2E Test`, () => {
+describe(`DELETE /api/users/deletion-requests/:token E2E Test`, () => {
   let agent: TestAgent;
   let redisService: RedisService;
   let userRepository: UserRepository;
@@ -87,7 +87,7 @@ describe(`PATCH /api/users/deletion-requests/:token E2E Test`, () => {
     const nonExistentCode = uuid.v4();
 
     // Http when
-    const response = await agent.patch(makeURL(nonExistentCode));
+    const response = await agent.delete(makeURL(nonExistentCode));
 
     // Http then
     const { data } = response.body;
@@ -120,7 +120,7 @@ describe(`PATCH /api/users/deletion-requests/:token E2E Test`, () => {
     );
 
     // Http when
-    const response = await agent.patch(makeURL(userDeleteCode));
+    const response = await agent.delete(makeURL(userDeleteCode));
 
     // Http then
     const { data } = response.body;

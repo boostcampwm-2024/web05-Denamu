@@ -66,8 +66,11 @@ export class FileController {
   @Delete(':id')
   @ApiDeleteFile()
   @HttpCode(HttpStatus.OK)
-  async deleteFile(@Param() fileDeleteRequestDto: DeleteFileParamRequestDto) {
-    await this.fileService.deleteFile(fileDeleteRequestDto.id);
+  async deleteFile(
+    @Param() fileDeleteRequestDto: DeleteFileParamRequestDto,
+    @CurrentUser() user: Payload,
+  ) {
+    await this.fileService.deleteFile(fileDeleteRequestDto.id, user.id);
     return ApiResponse.responseWithNoContent(
       '파일이 성공적으로 삭제되었습니다.',
     );
