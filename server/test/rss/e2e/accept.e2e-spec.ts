@@ -1,5 +1,6 @@
 import { HttpStatus } from '@nestjs/common';
 
+import axios from 'axios';
 import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 
@@ -38,6 +39,10 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
       rssRepository.save(RssFixture.createRssFixture()),
       redisService.set(redisKeyMake(sessionKey), 'test1234'),
     ]);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   it('[401] 관리자 로그인 쿠키가 없을 경우 RSS 승인을 실패한다.', async () => {
@@ -118,10 +123,7 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
 
   it('[400] 잘못된 RSS URL을 승인할 경우 RSS 승인을 실패한다.', async () => {
     // given
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: false,
-      status: HttpStatus.BAD_REQUEST,
-    });
+    jest.spyOn(axios, 'get').mockRejectedValue(new Error('Request failed'));
 
     // Http when
     const response = await agent
@@ -150,10 +152,7 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
 
   it('[201] 관리자 로그인이 되어 있을 경우 RSS 승인을 성공한다.', async () => {
     // given
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      status: HttpStatus.OK,
-    });
+    jest.spyOn(axios, 'get').mockResolvedValue({ data: '', status: HttpStatus.OK });
 
     // Http when
     const response = await agent

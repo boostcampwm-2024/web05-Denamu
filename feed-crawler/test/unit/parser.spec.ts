@@ -7,6 +7,7 @@ import {
   MOCK_RSS_OBJ,
   RSS_20_SAMPLE,
 } from '@test/config/constant/parser-fixtures';
+import axios, { HttpStatusCode } from 'axios';
 
 import { FeedMetrics } from '@common/metrics/feed-metrics';
 import { Notifier } from '@common/notification/notifier.interface';
@@ -21,6 +22,7 @@ describe('Parser 모듈 테스트', () => {
   let atom10Parser: Atom10Parser;
   let feedParserManager: FeedParserManager;
   let notifier: Notifier;
+  let mockAxiosGet: jest.SpyInstance;
 
   const mockFeedMetrics = {
     total: { inc: jest.fn() },
@@ -42,24 +44,23 @@ describe('Parser 모듈 테스트', () => {
       mockFeedMetrics,
     );
 
-    // URL 기반 조건부 fetch 모킹 (순서 의존성 제거)
-    global.fetch = jest.fn().mockImplementation((url: string) => {
-      // RSS/Atom 피드 URL
-      if (url.includes('/rss') || url.includes('denamu.site')) {
+    // URL 기반 조건부 axios 모킹 (순서 의존성 제거)
+    mockAxiosGet = jest
+      .spyOn(axios, 'get')
+      .mockImplementation((url: string) => {
+        // RSS/Atom 피드 URL
+        if (url.includes('/rss') || url.includes('denamu.site')) {
+          return Promise.resolve({
+            data: RSS_20_SAMPLE,
+            status: HttpStatusCode.Ok,
+          });
+        }
+        // HTML 페이지 (og:image 추출용)
         return Promise.resolve({
-          ok: true,
-          text: () => Promise.resolve(RSS_20_SAMPLE),
+          data: '<html><head><meta property="og:image" content="https://example.com/image.jpg"></head></html>',
+          status: HttpStatusCode.Ok,
         });
-      }
-      // HTML 페이지 (og:image 추출용)
-      return Promise.resolve({
-        ok: true,
-        text: () =>
-          Promise.resolve(
-            '<html><head><meta property="og:image" content="https://example.com/image.jpg"></head></html>',
-          ),
       });
-    });
   });
 
   afterEach(() => {
@@ -88,19 +89,16 @@ describe('Parser 모듈 테스트', () => {
       describe('RSS 2.0 피드', () => {
         beforeEach(() => {
           // URL 기반 조건부 모킹으로 순서 의존성 제거
-          (global.fetch as jest.Mock).mockImplementation((url: string) => {
+          mockAxiosGet.mockImplementation((url: string) => {
             if (url.includes('/rss') || url.includes('denamu.dev')) {
               return Promise.resolve({
-                ok: true,
-                text: () => Promise.resolve(RSS_20_SAMPLE),
+                data: RSS_20_SAMPLE,
+                status: HttpStatusCode.Ok,
               });
             }
             return Promise.resolve({
-              ok: true,
-              text: () =>
-                Promise.resolve(
-                  '<html><head><meta property="og:image" content="https://example.com/image.jpg"></head></html>',
-                ),
+              data: '<html><head><meta property="og:image" content="https://example.com/image.jpg"></head></html>',
+              status: HttpStatusCode.Ok,
             });
           });
         });
@@ -130,19 +128,16 @@ describe('Parser 모듈 테스트', () => {
       describe('Atom 1.0 피드', () => {
         beforeEach(() => {
           // URL 기반 조건부 모킹으로 순서 의존성 제거
-          (global.fetch as jest.Mock).mockImplementation((url: string) => {
+          mockAxiosGet.mockImplementation((url: string) => {
             if (url.includes('/rss') || url.includes('denamu.dev')) {
               return Promise.resolve({
-                ok: true,
-                text: () => Promise.resolve(ATOM_10_SAMPLE),
+                data: ATOM_10_SAMPLE,
+                status: HttpStatusCode.Ok,
               });
             }
             return Promise.resolve({
-              ok: true,
-              text: () =>
-                Promise.resolve(
-                  '<html><head><meta property="og:image" content="https://example.com/image.jpg"></head></html>',
-                ),
+              data: '<html><head><meta property="og:image" content="https://example.com/image.jpg"></head></html>',
+              status: HttpStatusCode.Ok,
             });
           });
         });

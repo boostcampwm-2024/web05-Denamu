@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { injectable } from 'tsyringe';
 
 import { unescape } from 'html-escaper';
@@ -8,16 +9,18 @@ import logger from '@common/logger';
 @injectable()
 export class ParserUtil {
   async getThumbnailUrl(feedUrl: string) {
-    const response = await fetch(feedUrl, {
+    const response = await axios.get<string>(feedUrl, {
       headers: {
         Accept: 'text/html',
       },
+      responseType: 'text',
+      validateStatus: () => true,
     });
-    if (!response.ok) {
+    if (response.status < 200 || response.status >= 300) {
       throw new Error(`${feedUrl}에 GET 요청 실패`);
     }
 
-    const htmlData = await response.text();
+    const htmlData = response.data;
     const htmlRootElement = parse(htmlData);
     const metaImage = htmlRootElement.querySelector(
       'meta[property="og:image"]',

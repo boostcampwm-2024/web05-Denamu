@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
+import axios from 'axios';
 import * as uuid from 'uuid';
 import { DataSource } from 'typeorm';
 
@@ -84,13 +85,13 @@ export class RssService {
       throw new NotFoundException('신청 목록에서 사라진 등록 요청입니다.');
     }
 
-    const preFetchResponse = await fetch(rss.rssUrl, {
-      headers: {
-        Accept: 'application/rss+xml, application/xml, text/xml',
-      },
-    });
-
-    if (!preFetchResponse.ok) {
+    try {
+      await axios.get(rss.rssUrl, {
+        headers: {
+          Accept: 'application/rss+xml, application/xml, text/xml',
+        },
+      });
+    } catch {
       throw new BadRequestException(`${rss.rssUrl}이 올바른 RSS가 아닙니다.`);
     }
 

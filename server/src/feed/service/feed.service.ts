@@ -1,5 +1,6 @@
 import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 
+import axios from 'axios';
 import { Request, Response } from 'express';
 
 import { cookieConfig } from '@common/cookie/cookie.config';
@@ -253,7 +254,7 @@ export class FeedService {
 
   async deleteCheckFeed(feedDeleteCheckDto: ManageFeedRequestDto) {
     const feed = await this.getFeed(feedDeleteCheckDto.feedId);
-    const response = await fetch(feed.path);
+    const response = await axios.get(feed.path, { validateStatus: () => true });
 
     if (response.status === Number(HttpStatus.NOT_FOUND)) {
       await this.feedRepository.delete({ id: feedDeleteCheckDto.feedId });
