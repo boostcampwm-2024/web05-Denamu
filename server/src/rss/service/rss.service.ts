@@ -108,13 +108,11 @@ export class RssService {
     }
 
     const rejectRss = await this.dataSource.transaction(async (manager) => {
-      const [rejectRss] = await Promise.all([
-        manager.remove(rss),
-        manager.save(RssReject, {
-          ...rss,
-          description: rssRejectBodyDto.description,
-        }),
-      ]);
+      const rejectRss = await manager.remove(rss);
+      await manager.save(RssReject, {
+        ...rss,
+        description: rssRejectBodyDto.description,
+      });
       return rejectRss;
     });
     await this.emailProducer.produceRssRegistration(
@@ -165,14 +163,14 @@ export class RssService {
     const blogPlatform = this.identifyPlatformFromRssUrl(rss.rssUrl);
 
     const rssAccept = await this.dataSource.transaction(async (manager) => {
-      const [rssAccept] = await Promise.all([
-        manager.save(RssAccept.fromRss(rss, blogPlatform)),
-        manager.delete(Rss, rss.id),
-      ]);
+      const rssAccept = await manager.save(
+        RssAccept.fromRss(rss, blogPlatform),
+      );
+      await manager.delete(Rss, rss.id);
       return rssAccept;
     });
 
-    void this.enqueueFullFeedCrawlMessage(rssAccept.id);
+    await this.enqueueFullFeedCrawlMessage(rssAccept.id);
     await this.emailProducer.produceRssRegistration(rssAccept, true);
   }
 

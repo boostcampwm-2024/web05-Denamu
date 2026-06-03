@@ -40,45 +40,33 @@ export class AdminService {
       throw new UnauthorizedException('아이디 혹은 비밀번호가 잘못되었습니다.');
     }
 
-    const sessionId = uuid.v4();
-
+    const keysToInvalidate = new Set<string>();
     if (cookie) {
-      await this.redisService.del(`${REDIS_KEYS.ADMIN_AUTH_KEY}:${cookie}`);
+      keysToInvalidate.add(`${REDIS_KEYS.ADMIN_AUTH_KEY}:${cookie}`);
     }
 
-    let cursor = '0';
-    let scanFlag = false;
-    do {
-      const [newCursor, keys] = await this.redisService.scan(
-        cursor,
-        REDIS_KEYS.ADMIN_AUTH_ALL_KEY,
-        100,
-      );
+    const prevSessionId = await this.redisService.get(
+      `${REDIS_KEYS.ADMIN_SESSION_BY_LOGIN}:${loginId}`,
+    );
+    if (prevSessionId) {
+      keysToInvalidate.add(`${REDIS_KEYS.ADMIN_AUTH_KEY}:${prevSessionId}`);
+    }
 
-      cursor = newCursor;
+    if (keysToInvalidate.size > 0) {
+      await this.redisService.del(...keysToInvalidate);
+    }
 
-      if (!keys.length) {
-        break;
-      }
-
-      const values = await this.redisService.mget(...keys);
-
-      for (let i = 0; i < keys.length; i++) {
-        const sessionValue = values[i];
-        if (sessionValue === loginId) {
-          await this.redisService.del(keys[i]);
-          scanFlag = true;
-          break;
-        }
-      }
-      if (scanFlag) {
-        break;
-      }
-    } while (cursor !== '0');
+    const sessionId = uuid.v4();
 
     await this.redisService.set(
       `${REDIS_KEYS.ADMIN_AUTH_KEY}:${sessionId}`,
       admin.loginId,
+      `EX`,
+      SESSION_TTL,
+    );
+    await this.redisService.set(
+      `${REDIS_KEYS.ADMIN_SESSION_BY_LOGIN}:${loginId}`,
+      sessionId,
       `EX`,
       SESSION_TTL,
     );
@@ -88,7 +76,15 @@ export class AdminService {
 
   async logoutAdmin(request: Request, response: Response) {
     const sid = request.cookies['sessionId'];
+    const loginId = await this.redisService.get(
+      `${REDIS_KEYS.ADMIN_AUTH_KEY}:${sid}`,
+    );
     await this.redisService.del(`${REDIS_KEYS.ADMIN_AUTH_KEY}:${sid}`);
+    if (loginId) {
+      await this.redisService.del(
+        `${REDIS_KEYS.ADMIN_SESSION_BY_LOGIN}:${loginId}`,
+      );
+    }
     response.clearCookie('sessionId');
   }
 

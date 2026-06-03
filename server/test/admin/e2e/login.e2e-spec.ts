@@ -119,7 +119,7 @@ describe(`POST ${URL} E2E Test`, () => {
     // Http when
     const response = await agent
       .post(URL)
-      .set('Cookie', `admin-session-id=${oldSessionKey}`)
+      .set('Cookie', `sessionId=${oldSessionKey}`)
       .send(requestDto);
 
     // Http then
@@ -142,6 +142,10 @@ describe(`POST ${URL} E2E Test`, () => {
     // given
     const duplicateSessionKey = 'duplicate-session-key';
     await redisService.set(redisKeyMake(duplicateSessionKey), admin.loginId);
+    await redisService.set(
+      `${REDIS_KEYS.ADMIN_SESSION_BY_LOGIN}:${admin.loginId}`,
+      duplicateSessionKey,
+    );
     const requestDto = new LoginAdminRequestDto({
       loginId: admin.loginId,
       password: ADMIN_DEFAULT_PASSWORD,

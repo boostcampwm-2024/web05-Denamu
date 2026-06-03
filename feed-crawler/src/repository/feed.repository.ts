@@ -80,21 +80,17 @@ export class FeedRepository {
   async deleteRecentFeed() {
     this.redisMetrics.total.inc({ operation: 'delete_recent' });
     try {
-      const keysToDelete = [];
-      let cursor = '0';
-      do {
-        const [newCursor, keys] = await this.redisConnection.scan(
-          cursor,
-          redisConstant.FEED_RECENT_ALL_KEY,
-          100,
-        );
-        keysToDelete.push(...keys);
-        cursor = newCursor;
-      } while (cursor !== '0');
+      const trackedKeys = await this.redisConnection.smembers(
+        redisConstant.FEED_RECENT_INDEX_KEY,
+      );
 
-      if (keysToDelete.length > 0) {
-        await this.redisConnection.del(...keysToDelete);
+      if (trackedKeys.length > 0) {
+        await this.redisConnection.del(
+          ...trackedKeys,
+          redisConstant.FEED_RECENT_INDEX_KEY,
+        );
       }
+
       this.redisMetrics.success.inc({ operation: 'delete_recent' });
       logger.info(`[Redis] 최근 게시글 캐시가 정상적으로 삭제되었습니다.`);
     } catch (error) {
@@ -125,6 +121,10 @@ export class FeedRepository {
             likes: 0,
             comments: 0,
           });
+          pipeline.sadd(
+            redisConstant.FEED_RECENT_INDEX_KEY,
+            `feed:recent:${feed.id}`,
+          );
         }
       });
       this.redisMetrics.success.inc({ operation: 'cache_feeds' });

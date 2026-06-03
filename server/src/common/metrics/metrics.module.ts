@@ -1,5 +1,7 @@
 import { Global, Module } from '@nestjs/common';
 
+import { MetricsInterceptor } from './metrics.interceptor';
+
 import {
   makeCounterProvider,
   makeGaugeProvider,
@@ -61,6 +63,7 @@ const httpRequestDurationSecondsProvider = makeHistogramProvider({
     anonymousChatMessageCountProvider,
     anonymousChatUserCountProvider,
     httpRequestDurationSecondsProvider,
+    MetricsInterceptor,
   ],
   exports: [
     httpRequestsTotalProvider,
@@ -69,6 +72,7 @@ const httpRequestDurationSecondsProvider = makeHistogramProvider({
     anonymousChatMessageCountProvider,
     anonymousChatUserCountProvider,
     httpRequestDurationSecondsProvider,
+    MetricsInterceptor,
   ],
 })
 export class MetricsModule {}

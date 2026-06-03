@@ -1,7 +1,4 @@
-import { forwardRef, Module } from '@nestjs/common';
-import { ScheduleModule } from '@nestjs/schedule';
-
-import { AdminModule } from '@admin/module/admin.module';
+import { Module } from '@nestjs/common';
 
 import { JwtAuthModule } from '@common/auth/jwt.module';
 
@@ -18,7 +15,7 @@ import { OAuthService } from '@user/service/oAuth.service';
 import { UserService } from '@user/service/user.service';
 
 @Module({
-  imports: [JwtAuthModule, AdminModule, forwardRef(() => FileModule), ScheduleModule.forRoot()],
+  imports: [JwtAuthModule, FileModule],
   controllers: [UserController, OAuthController],
   providers: [
     UserService,
@@ -40,6 +37,6 @@ import { UserService } from '@user/service/user.service';
       inject: [GoogleOAuthProvider, GithubOAuthProvider],
     },
   ],
-  exports: [UserRepository, UserService],
+  exports: [UserService],
 })
 export class UserModule {}

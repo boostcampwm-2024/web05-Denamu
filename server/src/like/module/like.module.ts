@@ -1,4 +1,4 @@
-import { forwardRef, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 
 import { JwtAuthModule } from '@common/auth/jwt.module';
 
@@ -11,9 +11,9 @@ import { LikeService } from '@like/service/like.service';
 import { UserModule } from '@user/module/user.module';
 
 @Module({
-  imports: [forwardRef(() => FeedModule), JwtAuthModule, UserModule],
+  imports: [FeedModule, JwtAuthModule, UserModule],
   controllers: [LikeController],
   providers: [LikeService, LikeRepository],
-  exports: [LikeRepository],
+  exports: [],
 })
 export class LikeModule {}

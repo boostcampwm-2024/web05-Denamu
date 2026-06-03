@@ -7,7 +7,7 @@ export const REDIS_KEYS = {
   FEED_AI_QUEUE: `feed:ai:queue`,
   USER_AUTH_KEY: 'signup',
   ADMIN_AUTH_KEY: 'auth',
-  ADMIN_AUTH_ALL_KEY: 'auth:*',
+  ADMIN_SESSION_BY_LOGIN: 'auth:login',
   RSS_REMOVE_KEY: 'rss:remove',
   CHAT_HISTORY_KEY: (roomId: string) => `chat:history:${roomId}`,
   FULL_FEED_CRAWL_QUEUE: `feed:full-crawl:queue`,
