@@ -9,10 +9,9 @@ export const REDIS_KEYS = {
   ADMIN_AUTH_KEY: 'auth',
   ADMIN_AUTH_ALL_KEY: 'auth:*',
   RSS_REMOVE_KEY: 'rss:remove',
-  CHAT_HISTORY_KEY: 'chat:history',
+  CHAT_HISTORY_KEY: (roomId: string) => `chat:history:${roomId}`,
   FULL_FEED_CRAWL_QUEUE: `feed:full-crawl:queue`,
   USER_DELETE_ACCOUNT_KEY: 'user:delete-account',
   USER_RESET_PASSWORD_KEY: 'user:password_reset',
   USER_BLACKLIST_JWT_PREFIX: 'blacklist',
-  CHAT_SYSTEM_MIDNIGHT_PREFIX: 'chat:system:midnight',
 };
