@@ -11,7 +11,7 @@ import { LikeService } from '@like/service/like.service';
 import { UserModule } from '@user/module/user.module';
 
 @Module({
-  imports: [FeedModule, JwtAuthModule],
+  imports: [FeedModule, JwtAuthModule, UserModule],
   controllers: [LikeController],
   providers: [LikeService, LikeRepository],
   exports: [],
