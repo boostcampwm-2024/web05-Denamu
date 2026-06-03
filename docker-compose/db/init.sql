@@ -15,7 +15,9 @@ CREATE TABLE `rss` (
   `user_name` varchar(50) NOT NULL,
   `email` varchar(255) NOT NULL,
   `rss_url` varchar(255) NOT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UQ_21beac47feacb87e57c59d6958f` (`name`),
+  UNIQUE KEY `UQ_af1d102908727aa95ef09e16065` (`rss_url`)
 );
 
 -- denamu.rss_accept definition
@@ -28,6 +30,8 @@ CREATE TABLE `rss_accept` (
   `rss_url` varchar(255) NOT NULL,
   `blog_platform` varchar(255) NOT NULL DEFAULT 'etc',
   PRIMARY KEY (`id`),
+  UNIQUE KEY `UQ_59f4be4de3817b3f975acff0766` (`name`),
+  UNIQUE KEY `UQ_b3a5d4196368864d938dae4e9ff` (`rss_url`),
   FULLTEXT KEY (`name`)
 );
 
@@ -153,18 +157,6 @@ CREATE TABLE `provider` (
   PRIMARY KEY (`id`),
   KEY `FK_d3d18186b602240b93c9f1621ea` (`user_id`),
   CONSTRAINT `FK_d3d18186b602240b93c9f1621ea` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-);
-
--- denamu.rss_remove definition
-
-CREATE TABLE `rss_remove` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `request_date` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-  `reason` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `blog_id` int NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `REL_69e45fd3ff04dac43a89e1951e` (`blog_id`),
-  CONSTRAINT `FK_69e45fd3ff04dac43a89e1951e4` FOREIGN KEY (`blog_id`) REFERENCES `rss_accept` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- denamu.admin insert data
@@ -391,8 +383,3 @@ INSERT INTO activity (activity_date, view_count, user_id) VALUES
 INSERT INTO likes(feed_id, user_id, like_date) VALUES
 	(94,1,'2025-06-13 17:47:05.575811'),
 	(95,1,'2025-06-13 17:47:07.575811');
-
--- denamu.rss_remove insert data
-
-INSERT INTO rss_remove(request_date, reason, blog_id) VALUES
-	('2025-07-01 11:48:00.575811', 'example reason', 1);
