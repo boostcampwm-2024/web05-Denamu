@@ -1,5 +1,7 @@
 import 'reflect-metadata';
 
+import axios, { HttpStatusCode } from 'axios';
+
 import { FeedMetrics } from '@common/metrics/feed-metrics';
 import { Notifier } from '@common/notification/notifier.interface';
 import { FeedParserManager } from '@common/parser/feed-parser-manager';
@@ -7,14 +9,11 @@ import { Atom10Parser } from '@common/parser/formats/atom10-parser';
 import { Rss20Parser } from '@common/parser/formats/rss20-parser';
 import { FeedDetail, RssObj } from '@common/types';
 
-// fetch 모킹
-global.fetch = jest.fn();
-
 describe('FeedParserManager', () => {
   let feedParserManager: FeedParserManager;
   let mockRss20Parser: jest.Mocked<Rss20Parser>;
   let mockAtom10Parser: jest.Mocked<Atom10Parser>;
-  let mockFetch: jest.MockedFunction<typeof fetch>;
+  let mockAxiosGet: jest.SpyInstance;
   let mockNotifier: jest.Mocked<Notifier>;
   let mockFeedMetrics: jest.Mocked<FeedMetrics>;
   let rss20CanParseMock: jest.Mock;
@@ -46,7 +45,7 @@ describe('FeedParserManager', () => {
   ];
 
   beforeEach(() => {
-    mockFetch = global.fetch as jest.MockedFunction<typeof fetch>;
+    mockAxiosGet = jest.spyOn(axios, 'get');
 
     rss20CanParseMock = jest.fn();
     rss20ParseFeedMock = jest.fn();
@@ -97,10 +96,10 @@ describe('FeedParserManager', () => {
     it('RSS 2.0 피드를 성공적으로 파싱해야 한다', async () => {
       // Given
       const rssXmlData = '<?xml version="1.0"?><rss version="2.0">...</rss>';
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        text: () => Promise.resolve(rssXmlData),
-      } as any);
+      mockAxiosGet.mockResolvedValueOnce({
+        data: rssXmlData,
+        status: HttpStatusCode.Ok,
+      });
       rss20CanParseMock.mockReturnValue(true);
       atom10CanParseMock.mockReturnValue(false);
       rss20ParseFeedMock.mockResolvedValue(mockFeedDetails);
@@ -112,11 +111,12 @@ describe('FeedParserManager', () => {
       );
 
       // Then
-      expect(mockFetch).toHaveBeenCalledWith(mockRssObj.rssUrl, {
+      expect(mockAxiosGet).toHaveBeenCalledWith(mockRssObj.rssUrl, {
         headers: {
           Accept:
             'application/rss+xml, application/xml, text/xml, application/atom+xml',
         },
+        responseType: 'text',
       });
       expect(rss20CanParseMock).toHaveBeenCalledWith(rssXmlData);
       expect(rss20ParseFeedMock).toHaveBeenCalledWith(
@@ -131,10 +131,10 @@ describe('FeedParserManager', () => {
       // Given
       const atomXmlData =
         '<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom">...</feed>';
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        text: () => Promise.resolve(atomXmlData),
-      } as any);
+      mockAxiosGet.mockResolvedValueOnce({
+        data: atomXmlData,
+        status: HttpStatusCode.Ok,
+      });
       rss20CanParseMock.mockReturnValue(false);
       atom10CanParseMock.mockReturnValue(true);
       atom10ParseFeedMock.mockResolvedValue(mockFeedDetails);
@@ -157,10 +157,9 @@ describe('FeedParserManager', () => {
 
     it('HTTP 요청이 실패할 때 빈 배열을 반환해야 한다', async () => {
       // Given
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 404,
-      } as any);
+      mockAxiosGet.mockRejectedValueOnce(
+        new Error('Request failed with status code 404'),
+      );
 
       // When
       const result = await feedParserManager.fetchAndParse(
@@ -175,10 +174,10 @@ describe('FeedParserManager', () => {
     it('지원하지 않는 피드 형식일 때 빈 배열을 반환해야 한다', async () => {
       // Given
       const invalidXmlData = '<?xml version="1.0"?><invalid>...</invalid>';
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        text: () => Promise.resolve(invalidXmlData),
-      } as any);
+      mockAxiosGet.mockResolvedValueOnce({
+        data: invalidXmlData,
+        status: HttpStatusCode.Ok,
+      });
       rss20CanParseMock.mockReturnValue(false);
       atom10CanParseMock.mockReturnValue(false);
 
@@ -195,10 +194,10 @@ describe('FeedParserManager', () => {
     it('파서에서 에러가 발생할 때 빈 배열을 반환해야 한다', async () => {
       // Given
       const rssXmlData = '<?xml version="1.0"?><rss version="2.0">...</rss>';
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        text: () => Promise.resolve(rssXmlData),
-      } as any);
+      mockAxiosGet.mockResolvedValueOnce({
+        data: rssXmlData,
+        status: HttpStatusCode.Ok,
+      });
       rss20CanParseMock.mockReturnValue(true);
       rss20ParseFeedMock.mockRejectedValueOnce(new Error('Parser error'));
 
@@ -217,10 +216,10 @@ describe('FeedParserManager', () => {
     const startTime = new Date('2024-01-01T12:00:00Z');
     it('빈 응답을 처리해야 한다', async () => {
       // Given
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        text: () => Promise.resolve(''),
-      } as any);
+      mockAxiosGet.mockResolvedValueOnce({
+        data: '',
+        status: HttpStatusCode.Ok,
+      });
       rss20CanParseMock.mockReturnValue(false);
       atom10CanParseMock.mockReturnValue(false);
 
@@ -240,10 +239,10 @@ describe('FeedParserManager', () => {
         '<?xml version="1.0"?><rss version="2.0">' +
         'x'.repeat(10000) +
         '</rss>';
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        text: () => Promise.resolve(largeXmlData),
-      } as any);
+      mockAxiosGet.mockResolvedValueOnce({
+        data: largeXmlData,
+        status: HttpStatusCode.Ok,
+      });
       rss20CanParseMock.mockReturnValue(true);
       rss20ParseFeedMock.mockResolvedValue(mockFeedDetails);
 

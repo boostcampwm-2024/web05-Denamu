@@ -8,6 +8,8 @@ import { LikeController } from '@like/controller/like.controller';
 import { LikeRepository } from '@like/repository/like.repository';
 import { LikeService } from '@like/service/like.service';
 
+import { UserModule } from '@user/module/user.module';
+
 @Module({
   imports: [FeedModule, JwtAuthModule],
   controllers: [LikeController],

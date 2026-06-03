@@ -1,17 +1,16 @@
 import 'reflect-metadata';
 
-import { ParserUtil } from '@common/parser/utils/parser-util';
+import axios, { HttpStatusCode } from 'axios';
 
-// fetch 모킹
-global.fetch = jest.fn();
+import { ParserUtil } from '@common/parser/utils/parser-util';
 
 describe('ParserUtil', () => {
   let parserUtil: ParserUtil;
-  let mockFetch: jest.MockedFunction<typeof fetch>;
+  let mockAxiosGet: jest.SpyInstance;
 
   beforeEach(() => {
     parserUtil = new ParserUtil();
-    mockFetch = global.fetch as jest.MockedFunction<typeof fetch>;
+    mockAxiosGet = jest.spyOn(axios, 'get');
   });
 
   afterEach(() => {
@@ -31,17 +30,19 @@ describe('ParserUtil', () => {
           </head>
         </html>
       `;
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        text: () => Promise.resolve(htmlContent),
-      } as any);
+      mockAxiosGet.mockResolvedValueOnce({
+        data: htmlContent,
+        status: HttpStatusCode.Ok,
+      });
 
       // When
       const result = await parserUtil.getThumbnailUrl(feedUrl);
 
       // Then
-      expect(mockFetch).toHaveBeenCalledWith(feedUrl, {
+      expect(mockAxiosGet).toHaveBeenCalledWith(feedUrl, {
         headers: { Accept: 'text/html' },
+        responseType: 'text',
+        validateStatus: expect.any(Function),
       });
       expect(result).toBe(absoluteThumbnailUrl);
     });
@@ -57,10 +58,10 @@ describe('ParserUtil', () => {
           </head>
         </html>
       `;
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        text: () => Promise.resolve(htmlContent),
-      } as any);
+      mockAxiosGet.mockResolvedValueOnce({
+        data: htmlContent,
+        status: HttpStatusCode.Ok,
+      });
 
       // When
       const result = await parserUtil.getThumbnailUrl(feedUrl);
@@ -78,10 +79,10 @@ describe('ParserUtil', () => {
           </head>
         </html>
       `;
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        text: () => Promise.resolve(htmlContent),
-      } as any);
+      mockAxiosGet.mockResolvedValueOnce({
+        data: htmlContent,
+        status: HttpStatusCode.Ok,
+      });
 
       // When
       const result = await parserUtil.getThumbnailUrl(feedUrl);
@@ -99,10 +100,10 @@ describe('ParserUtil', () => {
           </head>
         </html>
       `;
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        text: () => Promise.resolve(htmlContent),
-      } as any);
+      mockAxiosGet.mockResolvedValueOnce({
+        data: htmlContent,
+        status: HttpStatusCode.Ok,
+      });
 
       // When
       const result = await parserUtil.getThumbnailUrl(feedUrl);
@@ -113,10 +114,10 @@ describe('ParserUtil', () => {
 
     it('HTTP 요청이 실패할 때 에러를 던져야 한다', async () => {
       // Given
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 404,
-      } as any);
+      mockAxiosGet.mockResolvedValueOnce({
+        data: null,
+        status: HttpStatusCode.NotFound,
+      });
 
       // When & Then
       await expect(parserUtil.getThumbnailUrl(feedUrl)).rejects.toThrow(
@@ -127,7 +128,7 @@ describe('ParserUtil', () => {
     it('fetch 자체가 실패할 때 에러를 던져야 한다', async () => {
       // Given
       const networkError = new Error('Network error');
-      mockFetch.mockRejectedValueOnce(networkError);
+      mockAxiosGet.mockRejectedValueOnce(networkError);
 
       // When & Then
       await expect(parserUtil.getThumbnailUrl(feedUrl)).rejects.toThrow(
@@ -156,10 +157,10 @@ describe('ParserUtil', () => {
           </body>
         </html>
       `;
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        text: () => Promise.resolve(complexHtmlContent),
-      } as any);
+      mockAxiosGet.mockResolvedValueOnce({
+        data: complexHtmlContent,
+        status: HttpStatusCode.Ok,
+      });
 
       // When
       const result = await parserUtil.getThumbnailUrl(feedUrl);
@@ -180,10 +181,10 @@ describe('ParserUtil', () => {
           </head>
         </html>
       `;
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        text: () => Promise.resolve(htmlContent),
-      } as any);
+      mockAxiosGet.mockResolvedValueOnce({
+        data: htmlContent,
+        status: HttpStatusCode.Ok,
+      });
 
       // When
       const result = await parserUtil.getThumbnailUrl(subdomainUrl);

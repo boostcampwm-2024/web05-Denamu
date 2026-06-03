@@ -87,7 +87,7 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(savedFile).toBeNull();
   });
 
-  it('[400] 파일 타입이 일치하지 않을 경우 파일 업로드를 실패한다. ', async () => {
+  it('[400] 파일 타입이 일치하지 않을 경우 파일 업로드를 실패한다.', async () => {
     // given
     const requestDto = new UploadFileQueryRequestDto({
       uploadType: FileUploadType.PROFILE_IMAGE,
@@ -111,7 +111,7 @@ describe(`POST ${URL} E2E Test`, () => {
     // DB, Redis then
     expect(savedFile).toBeNull();
   });
-  it('[400] 파일 크기가 일치하지 않을 경우 파일 업로드를 실패한다. ', async () => {
+  it('[400] 파일 크기가 일치하지 않을 경우 파일 업로드를 실패한다.', async () => {
     // given
     const requestDto = new UploadFileQueryRequestDto({
       uploadType: FileUploadType.PROFILE_IMAGE,
@@ -131,6 +131,34 @@ describe(`POST ${URL} E2E Test`, () => {
 
     // DB, Redis when
     const savedFile = await fileRepository.findOneBy({ user: { id: user.id } });
+
+    // DB, Redis then
+    expect(savedFile).toBeNull();
+  });
+
+  it('[404] 존재하지 않는 유저가 파일 업로드를 시도할 경우 파일 업로드를 실패한다.', async () => {
+    // given
+    const requestDto = new UploadFileQueryRequestDto({
+      uploadType: FileUploadType.PROFILE_IMAGE,
+    });
+    accessToken = createAccessToken({ id: Number.MAX_SAFE_INTEGER });
+
+    // Http when
+    const response = await agent
+      .post(URL)
+      .query(requestDto)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .attach('file', Buffer.alloc(1024, 0), 'test.png');
+
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedFile = await fileRepository.findOneBy({
+      user: { id: Number.MAX_SAFE_INTEGER },
+    });
 
     // DB, Redis then
     expect(savedFile).toBeNull();

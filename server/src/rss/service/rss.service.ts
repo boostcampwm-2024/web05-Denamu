@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
+import axios from 'axios';
 import * as uuid from 'uuid';
 import { DataSource } from 'typeorm';
 
@@ -45,25 +46,21 @@ export class RssService {
   ) {}
 
   async createRss(rssRegisterBodyDto: RegisterRssRequestDto) {
-    const [alreadyURLRss, alreadyURLBlog] = await Promise.all([
+    const { blog, rssUrl } = rssRegisterBodyDto;
+    const [duplicateRss, duplicateBlog] = await Promise.all([
       this.rssRepository.findOne({
-        where: {
-          rssUrl: rssRegisterBodyDto.rssUrl,
-        },
+        where: [{ rssUrl }, { name: blog }],
       }),
       this.rssAcceptRepository.findOne({
-        where: {
-          rssUrl: rssRegisterBodyDto.rssUrl,
-        },
+        where: [{ rssUrl }, { name: blog }],
       }),
     ]);
 
-    if (alreadyURLRss || alreadyURLBlog) {
-      throw new ConflictException(
-        alreadyURLRss
-          ? '이미 신청된 RSS URL입니다.'
-          : '이미 등록된 RSS URL입니다.',
-      );
+    if (duplicateRss || duplicateBlog) {
+      const status = duplicateRss ? '신청' : '등록';
+      const duplicate = duplicateRss ?? duplicateBlog;
+      const field = duplicate.rssUrl === rssUrl ? 'RSS URL' : '블로그 이름';
+      throw new ConflictException(`이미 ${status}된 ${field}입니다.`);
     }
 
     await this.rssRepository.insert(rssRegisterBodyDto.toEntity());
@@ -84,13 +81,13 @@ export class RssService {
       throw new NotFoundException('신청 목록에서 사라진 등록 요청입니다.');
     }
 
-    const preFetchResponse = await fetch(rss.rssUrl, {
-      headers: {
-        Accept: 'application/rss+xml, application/xml, text/xml',
-      },
-    });
-
-    if (!preFetchResponse.ok) {
+    try {
+      await axios.get(rss.rssUrl, {
+        headers: {
+          Accept: 'application/rss+xml, application/xml, text/xml',
+        },
+      });
+    } catch {
       throw new BadRequestException(`${rss.rssUrl}이 올바른 RSS가 아닙니다.`);
     }
 

@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { inject, injectable } from 'tsyringe';
 
 import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
@@ -26,18 +27,15 @@ export class FeedParserManager {
   async fetchAndParse(rssObj: RssObj, startTime: Date): Promise<FeedDetail[]> {
     this.metrics.total.inc({ type: 'scheduled' });
     try {
-      const response = await fetch(rssObj.rssUrl, {
+      const response = await axios.get<string>(rssObj.rssUrl, {
         headers: {
           Accept:
             'application/rss+xml, application/xml, text/xml, application/atom+xml',
         },
+        responseType: 'text',
       });
 
-      if (!response.ok) {
-        throw new Error(`${rssObj.rssUrl}에서 피드 데이터 가져오기 실패`);
-      }
-
-      const xmlData = await response.text();
+      const xmlData = response.data;
 
       const parser = this.findSuitableParser(xmlData);
       if (!parser) {
@@ -62,18 +60,15 @@ export class FeedParserManager {
   async fetchAndParseAll(rssObj: RssObj): Promise<FeedDetail[]> {
     this.metrics.total.inc({ type: 'full' });
     try {
-      const response = await fetch(rssObj.rssUrl, {
+      const response = await axios.get<string>(rssObj.rssUrl, {
         headers: {
           Accept:
             'application/rss+xml, application/xml, text/xml, application/atom+xml',
         },
+        responseType: 'text',
       });
 
-      if (!response.ok) {
-        throw new Error(`${rssObj.rssUrl}에서 피드 데이터 가져오기 실패`);
-      }
-
-      const xmlData = await response.text();
+      const xmlData = response.data;
 
       const parser = this.findSuitableParser(xmlData);
       if (!parser) {

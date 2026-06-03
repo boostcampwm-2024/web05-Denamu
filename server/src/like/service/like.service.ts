@@ -15,12 +15,15 @@ import { GetLikeResponseDto } from '@like/dto/response/getLike.dto';
 import { Like } from '@like/entity/like.entity';
 import { LikeRepository } from '@like/repository/like.repository';
 
+import { UserService } from '@user/service/user.service';
+
 @Injectable()
 export class LikeService {
   constructor(
     private readonly likeRepository: LikeRepository,
     private readonly feedService: FeedService,
     private readonly dataSource: DataSource,
+    private readonly userService: UserService,
   ) {}
 
   async get(
@@ -47,6 +50,7 @@ export class LikeService {
   ) {
     await this.dataSource.transaction(async (manager) => {
       const feed = await this.feedService.getFeed(feedLikeCreateDto.feedId);
+      await this.userService.getUser(userInformation.id);
       const existing = await this.likeRepository.findOneBy({
         user: { id: userInformation.id },
         feed: { id: feedLikeCreateDto.feedId },
@@ -70,6 +74,7 @@ export class LikeService {
   ) {
     await this.dataSource.transaction(async (manager) => {
       const feed = await this.feedService.getFeed(feedLikeDeleteDto.feedId);
+      await this.userService.getUser(userInformation.id);
       const existing = await this.likeRepository.findOneBy({
         user: { id: userInformation.id },
         feed: { id: feedLikeDeleteDto.feedId },

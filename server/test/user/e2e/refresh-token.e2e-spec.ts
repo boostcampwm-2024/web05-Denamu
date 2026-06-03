@@ -40,6 +40,21 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(data).toBeUndefined();
   });
 
+  it('[404] 유저 정보가 존재하지 않을 경우 Access Token 발급을 실패한다.', async () => {
+    // given
+    refreshToken = createRefreshToken({ id: Number.MAX_SAFE_INTEGER });
+
+    // Http when
+    const response = await agent
+      .post(URL)
+      .set('Cookie', `refresh_token=${refreshToken}`);
+
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    expect(data).toBeUndefined();
+  });
+
   it('[200] Refresh Token이 있을 경우 Access Token 발급을 성공한다.', async () => {
     // Http when
     const response = await agent

@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 
 import { ChatGateway } from '@chat/chat.gateway';
-import { ChatScheduler } from '@chat/scheduler/chat.scheduler';
+import { AnonymousRoomManager } from '@chat/room/anonymous-room.manager';
 import { ChatService } from '@chat/service/chat.service';
 
 @Module({
-  providers: [ChatGateway, ChatService, ChatScheduler],
+  providers: [ChatGateway, ChatService, AnonymousRoomManager],
 })
 export class ChatModule {}

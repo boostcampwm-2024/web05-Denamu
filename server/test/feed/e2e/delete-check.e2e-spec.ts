@@ -1,5 +1,6 @@
 import { HttpStatus } from '@nestjs/common';
 
+import axios from 'axios';
 import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 
@@ -35,6 +36,10 @@ describe(`HEAD ${URL}/{feedId} E2E Test`, () => {
     feed = await feedRepository.save(FeedFixture.createFeedFixture(rssAccept));
   });
 
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   it('[404] 존재하지 않는 게시글 ID에 요청을 보낼 경우 404를 응답한다.', async () => {
     // Http when
     const response = await agent.head(`${URL}/${Number.MAX_SAFE_INTEGER}`);
@@ -55,9 +60,7 @@ describe(`HEAD ${URL}/{feedId} E2E Test`, () => {
 
   it('[404] 원본 게시글이 존재하지 않을 경우 서비스에서 게시글 정보를 삭제하여 조회를 실패한다.', async () => {
     // given
-    global.fetch = jest
-      .fn()
-      .mockResolvedValue({ ok: false, status: HttpStatus.NOT_FOUND });
+    jest.spyOn(axios, 'get').mockResolvedValue({ data: null, status: HttpStatus.NOT_FOUND });
 
     // Http when
     const response = await agent.head(`${URL}/${feed.id}`);
@@ -78,9 +81,7 @@ describe(`HEAD ${URL}/{feedId} E2E Test`, () => {
 
   it('[200] 원본 게시글이 존재할 경우 조회를 성공한다.', async () => {
     // given
-    global.fetch = jest
-      .fn()
-      .mockResolvedValue({ ok: true, status: HttpStatus.OK });
+    jest.spyOn(axios, 'get').mockResolvedValue({ data: null, status: HttpStatus.OK });
 
     // Http when
     const response = await agent.head(`${URL}/${feed.id}`);
