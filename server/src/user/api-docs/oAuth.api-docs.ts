@@ -1,24 +1,12 @@
 import { applyDecorators } from '@nestjs/common';
-import {
-  ApiBadRequestResponse,
-  ApiOperation,
-  ApiResponse,
-} from '@nestjs/swagger';
+import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+
+import { ApiBadRequestDoc } from '@common/swagger/swagger.helper';
 
 export function ApiOAuth() {
   return applyDecorators(
-    ApiOperation({
-      summary: 'OAuth 로그인 리디렉션 API',
-    }),
-    ApiResponse({
-      status: 302,
-      description: 'Provider별 OAuth 로그인 페이지 리디렉션',
-    }),
-    ApiBadRequestResponse({
-      description: 'Bad Request',
-      example: {
-        message: '지원하지 않는 인증 제공자입니다.',
-      },
-    }),
+    ApiOperation({ summary: 'OAuth 로그인 리디렉션 API' }),
+    ApiResponse({ status: 302, description: 'Provider별 OAuth 로그인 페이지 리디렉션' }),
+    ApiBadRequestDoc('지원하지 않는 인증 제공자입니다.'),
   );
 }

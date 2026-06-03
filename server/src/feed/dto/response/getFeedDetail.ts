@@ -75,7 +75,7 @@ export class GetFeedDetailResponseDto {
   })
   tag: string[];
 
-  private constructor(partial: Partial<GetFeedDetailResponseDto>) {
+  constructor(partial: Partial<GetFeedDetailResponseDto>) {
     Object.assign(this, partial);
   }
 

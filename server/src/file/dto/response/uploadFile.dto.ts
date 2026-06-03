@@ -45,7 +45,7 @@ export class UploadFileResponseDto {
   })
   createdAt: Date;
 
-  private constructor(partial: Partial<UploadFileResponseDto>) {
+  constructor(partial: Partial<UploadFileResponseDto>) {
     Object.assign(this, partial);
   }
 

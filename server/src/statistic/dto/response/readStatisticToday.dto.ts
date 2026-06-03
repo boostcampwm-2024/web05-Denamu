@@ -21,7 +21,7 @@ export class ReadStatisticTodayResponseDto {
   })
   viewCount: number;
 
-  private constructor(partial: Partial<ReadStatisticTodayResponseDto>) {
+  constructor(partial: Partial<ReadStatisticTodayResponseDto>) {
     Object.assign(this, partial);
   }
 

@@ -15,7 +15,7 @@ export class ReadStatisticPlatformResponseDto {
   })
   count: number;
 
-  private constructor(partial: Partial<ReadStatisticPlatformResponseDto>) {
+  constructor(partial: Partial<ReadStatisticPlatformResponseDto>) {
     Object.assign(this, partial);
   }
 

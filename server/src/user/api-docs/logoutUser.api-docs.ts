@@ -1,40 +1,16 @@
 import { applyDecorators } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+
 import {
-  ApiOkResponse,
-  ApiOperation,
-  ApiUnauthorizedResponse,
-} from '@nestjs/swagger';
+  ApiMessageResponse,
+  ApiUnauthorizedDoc,
+} from '@common/swagger/swagger.helper';
 
 export function ApiLogoutUser() {
   return applyDecorators(
-    ApiOperation({
-      summary: '회원 로그아웃 API',
-    }),
-    ApiOkResponse({
-      description: 'Ok',
-      schema: {
-        properties: {
-          message: {
-            type: 'string',
-          },
-        },
-      },
-      example: {
-        message: '로그아웃을 성공했습니다.',
-      },
-    }),
-    ApiUnauthorizedResponse({
-      description: 'Unauthorized',
-      schema: {
-        properties: {
-          message: {
-            type: 'string',
-          },
-        },
-      },
-      example: {
-        message: 'Unauthorized',
-      },
-    }),
+    ApiOperation({ summary: '회원 로그아웃 API' }),
+    ApiBearerAuth(),
+    ApiMessageResponse('로그아웃 성공'),
+    ApiUnauthorizedDoc('로그인이 필요합니다.'),
   );
 }

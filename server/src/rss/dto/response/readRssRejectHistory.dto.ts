@@ -39,7 +39,7 @@ export class ReadRssRejectHistoryResponseDto {
   })
   description: string;
 
-  private constructor(partial: Partial<ReadRssRejectHistoryResponseDto>) {
+  constructor(partial: Partial<ReadRssRejectHistoryResponseDto>) {
     Object.assign(this, partial);
   }
 

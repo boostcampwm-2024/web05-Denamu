@@ -35,7 +35,7 @@ export class GetCommentResponseDto {
     profileImage: string;
   };
 
-  private constructor(partial: Partial<GetCommentResponseDto>) {
+  constructor(partial: Partial<GetCommentResponseDto>) {
     Object.assign(this, partial);
   }
 

@@ -33,7 +33,7 @@ export class ReadRssResponseDto {
   })
   rssUrl: string;
 
-  private constructor(partial: Partial<ReadRssResponseDto>) {
+  constructor(partial: Partial<ReadRssResponseDto>) {
     Object.assign(this, partial);
   }
 

@@ -1,40 +1,18 @@
 import { applyDecorators } from '@nestjs/common';
+import { ApiOperation, ApiParam } from '@nestjs/swagger';
+
 import {
-  ApiBadRequestResponse,
-  ApiNotFoundResponse,
-  ApiOkResponse,
-  ApiOperation,
-} from '@nestjs/swagger';
+  ApiBadRequestDoc,
+  ApiMessageResponse,
+  ApiNotFoundDoc,
+} from '@common/swagger/swagger.helper';
 
 export function ApiConfirmDeleteAccount() {
   return applyDecorators(
-    ApiOperation({
-      summary: '회원탈퇴 확정 API',
-    }),
-    ApiOkResponse({
-      description: 'Ok',
-      schema: {
-        properties: {
-          message: {
-            type: 'string',
-          },
-        },
-      },
-      example: {
-        message: '회원탈퇴가 완료되었습니다.',
-      },
-    }),
-    ApiBadRequestResponse({
-      description: 'Bad Request',
-      example: {
-        message: '오류 메세지',
-      },
-    }),
-    ApiNotFoundResponse({
-      description: 'Not Found',
-      example: {
-        message: '유효하지 않거나 만료된 토큰입니다.',
-      },
-    }),
+    ApiOperation({ summary: '회원탈퇴 확정 API' }),
+    ApiParam({ name: 'token', type: String, description: '회원탈퇴 인증 토큰', example: 'd2ba0d98-95ce-4905-87fc-384965ffe7c9' }),
+    ApiMessageResponse('회원탈퇴 완료'),
+    ApiBadRequestDoc('요청 데이터 검증에 실패했습니다.'),
+    ApiNotFoundDoc('유효하지 않거나 만료된 토큰입니다.'),
   );
 }

@@ -1,33 +1,20 @@
 import { applyDecorators } from '@nestjs/common';
+import { ApiBody, ApiOperation, ApiParam } from '@nestjs/swagger';
+
 import {
-  ApiNotFoundResponse,
-  ApiOkResponse,
-  ApiOperation,
-} from '@nestjs/swagger';
+  ApiBadRequestDoc,
+  ApiMessageResponse,
+  ApiNotFoundDoc,
+} from '@common/swagger/swagger.helper';
+import { ResetPasswordRequestDto } from '@user/dto/request/resetPassword.dto';
 
 export function ApiResetPassword() {
   return applyDecorators(
-    ApiOperation({
-      summary: '비밀번호 변경 API',
-    }),
-    ApiOkResponse({
-      description: 'Ok',
-      schema: {
-        properties: {
-          message: {
-            type: 'string',
-          },
-        },
-      },
-      example: {
-        message: '비밀번호가 성공적으로 수정되었습니다.',
-      },
-    }),
-    ApiNotFoundResponse({
-      description: 'Not Found',
-      example: {
-        message: '인증에 실패했습니다.',
-      },
-    }),
+    ApiOperation({ summary: '비밀번호 변경 API' }),
+    ApiParam({ name: 'uuid', type: String, description: '비밀번호 재설정 인증 코드', example: 'd2ba0d98-95ce-4905-87fc-384965ffe7c9' }),
+    ApiBody({ type: ResetPasswordRequestDto }),
+    ApiMessageResponse('비밀번호 변경 완료'),
+    ApiNotFoundDoc('인증에 실패했습니다.'),
+    ApiBadRequestDoc('요청 데이터 검증에 실패했습니다.'),
   );
 }
