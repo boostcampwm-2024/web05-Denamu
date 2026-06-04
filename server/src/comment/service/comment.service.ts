@@ -68,7 +68,7 @@ export class CommentService {
       await manager.save(feed);
       await manager.save(Comment, {
         comment: commentDto.comment,
-        feed: { id: feedId },
+        feed,
         user: { id: userInformation.id },
       });
     });

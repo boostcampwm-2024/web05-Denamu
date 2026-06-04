@@ -15,15 +15,12 @@ import { GetLikeResponseDto } from '@like/dto/response/getLike.dto';
 import { Like } from '@like/entity/like.entity';
 import { LikeRepository } from '@like/repository/like.repository';
 
-import { UserService } from '@user/service/user.service';
-
 @Injectable()
 export class LikeService {
   constructor(
     private readonly likeRepository: LikeRepository,
     private readonly feedService: FeedService,
     private readonly dataSource: DataSource,
-    private readonly userService: UserService,
   ) {}
 
   async get(
@@ -52,7 +49,7 @@ export class LikeService {
       const feed = await this.feedService.getFeed(feedLikeCreateDto.feedId);
       const existing = await this.likeRepository.findOneBy({
         user: { id: userInformation.id },
-        feed: { id: feedLikeCreateDto.feedId },
+        feed,
       });
       if (existing) {
         throw new ConflictException('이미 좋아요를 눌렀습니다.');
@@ -75,7 +72,7 @@ export class LikeService {
       const feed = await this.feedService.getFeed(feedLikeDeleteDto.feedId);
       const existing = await this.likeRepository.findOneBy({
         user: { id: userInformation.id },
-        feed: { id: feedLikeDeleteDto.feedId },
+        feed,
       });
       if (!existing) {
         throw new NotFoundException('좋아요를 누르지 않은 상태입니다.');

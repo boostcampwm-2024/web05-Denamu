@@ -4,42 +4,28 @@ import { PassportStrategy } from '@nestjs/passport';
 
 import { Request } from 'express';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { DataSource } from 'typeorm';
 
 import { Payload } from '@common/guard/jwt.guard';
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
-import { User } from '@user/entity/user.entity';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor(
     private readonly configService: ConfigService,
     private readonly redisService: RedisService,
-    private readonly dataSource: DataSource,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       secretOrKey: configService.get('JWT_ACCESS_SECRET'),
-      passReqToCallback: true,
     });
   }
 
-  async validate(req: Request, payload: Payload) {
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    if (token) {
-      const blacklistKey = `${REDIS_KEYS.USER_BLACKLIST_JWT_PREFIX}:${token}`;
-      const isBlacklisted = await this.redisService.get(blacklistKey);
-
-      if (isBlacklisted) {
-        throw new UnauthorizedException('인증되지 않은 요청입니다.');
-      }
-    }
-
-    const userExists = await this.dataSource
-      .getRepository(User)
-      .existsBy({ id: payload.id });
-    if (!userExists) {
+  async validate(payload: Payload) {
+    const isInvalidated = await this.redisService.get(
+      `${REDIS_KEYS.USER_INVALIDATED_PREFIX}:${payload.id}`,
+    );
+    if (isInvalidated) {
       throw new UnauthorizedException('인증되지 않은 요청입니다.');
     }
 
@@ -55,7 +41,6 @@ export class JwtRefreshStrategy extends PassportStrategy(
   constructor(
     private readonly configService: ConfigService,
     private readonly redisService: RedisService,
-    private readonly dataSource: DataSource,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
@@ -64,25 +49,14 @@ export class JwtRefreshStrategy extends PassportStrategy(
         },
       ]),
       secretOrKey: configService.get('JWT_REFRESH_SECRET'),
-      passReqToCallback: true,
     });
   }
 
-  async validate(req: Request, payload: Payload) {
-    const token = req.cookies['refresh_token'];
-    if (token) {
-      const blacklistKey = `${REDIS_KEYS.USER_BLACKLIST_JWT_PREFIX}:${token}`;
-      const isBlacklisted = await this.redisService.get(blacklistKey);
-
-      if (isBlacklisted) {
-        throw new UnauthorizedException('인증되지 않은 요청입니다.');
-      }
-    }
-
-    const userExists = await this.dataSource
-      .getRepository(User)
-      .existsBy({ id: payload.id });
-    if (!userExists) {
+  async validate(payload: Payload) {
+    const isInvalidated = await this.redisService.get(
+      `${REDIS_KEYS.USER_INVALIDATED_PREFIX}:${payload.id}`,
+    );
+    if (isInvalidated) {
       throw new UnauthorizedException('인증되지 않은 요청입니다.');
     }
 
