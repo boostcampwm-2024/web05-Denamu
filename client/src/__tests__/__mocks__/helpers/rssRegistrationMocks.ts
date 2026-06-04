@@ -6,6 +6,8 @@ const DEFAULT_VALUES = {
   bloggerName: "",
   rssUrl: "",
   urlUsername: "",
+  blogUrl: "",
+  platformValue: "",
 };
 
 const DEFAULT_SUCCESS_VALUES = {
@@ -14,10 +16,14 @@ const DEFAULT_SUCCESS_VALUES = {
   bloggerName: "블로그",
   rssUrl: "https://test.com/rss",
   urlUsername: "test",
+  blogUrl: "",
+  platformValue: "",
 };
 
 const DEFAULT_FORM_STATE = {
   platform: "tistory",
+  selectedPlatformValue: "",
+  blogPlatform: null,
   values: DEFAULT_VALUES,
   handlers: {
     handleEmail: vi.fn(),
@@ -25,6 +31,10 @@ const DEFAULT_FORM_STATE = {
     handleBloggerName: vi.fn(),
     handlePlatformChange: vi.fn(),
     handleUsernameChange: vi.fn(),
+    handleBlogUrlChange: vi.fn(),
+    handlePlatformSelection: vi.fn(),
+    handleBadgeClick: vi.fn(),
+    handleRssDirectInput: vi.fn(),
   },
   formState: {
     isValid: true,
@@ -32,8 +42,17 @@ const DEFAULT_FORM_STATE = {
   },
 };
 
+export const PLATFORM_OPTIONS = [
+  { value: "tistory", label: "Tistory" },
+  { value: "velog", label: "Velog" },
+  { value: "medium", label: "Medium" },
+  { value: "naver_blog", label: "네이버 블로그" },
+  { value: "other", label: "기타" },
+];
+
 export const mockUseRssRegistrationForm = {
   useRssRegistrationForm: vi.fn().mockReturnValue(DEFAULT_FORM_STATE),
+  PLATFORM_OPTIONS,
 };
 
 export const createFormMock = ({ values = DEFAULT_VALUES, isValid = true, reset = vi.fn() } = {}) => {
