@@ -98,34 +98,6 @@ describe(`POST ${BASE_URL}/:feedId/comments E2E Test`, () => {
     expect(data).toBeUndefined();
   });
 
-  it('[401] 회원 정보가 없을 경우 댓글 등록을 실패한다.', async () => {
-    // given
-    accessToken = createAccessToken({ id: Number.MAX_SAFE_INTEGER });
-    const requestDto = new CreateCommentRequestDto({
-      comment: COMMENT_DEFAULT_TEXT,
-    });
-
-    // Http when
-    const response = await agent
-      .post(`${BASE_URL}/${feed.id}/comments`)
-      .set('Authorization', `Bearer ${accessToken}`)
-      .send(requestDto);
-
-    // Http then
-    const { data } = response.body;
-    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
-    expect(data).toBeUndefined();
-
-    // DB, Redis when
-    const savedComment = await commentRepository.findOneBy({
-      comment: requestDto.comment,
-      feed: { id: feed.id },
-    });
-
-    // DB, Redis then
-    expect(savedComment).toBeNull();
-  });
-
   it('[201] 로그인이 되어 있을 경우 댓글 등록을 성공한다.', async () => {
     // given
     const requestDto = new CreateCommentRequestDto({

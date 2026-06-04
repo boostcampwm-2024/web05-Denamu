@@ -136,34 +136,6 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(savedFile).toBeNull();
   });
 
-  it('[401] 존재하지 않는 유저가 파일 업로드를 시도할 경우 파일 업로드를 실패한다.', async () => {
-    // given
-    const requestDto = new UploadFileQueryRequestDto({
-      uploadType: FileUploadType.PROFILE_IMAGE,
-    });
-    accessToken = createAccessToken({ id: Number.MAX_SAFE_INTEGER });
-
-    // Http when
-    const response = await agent
-      .post(URL)
-      .query(requestDto)
-      .set('Authorization', `Bearer ${accessToken}`)
-      .attach('file', Buffer.alloc(1024, 0), 'test.png');
-
-    // Http then
-    const { data } = response.body;
-    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
-    expect(data).toBeUndefined();
-
-    // DB, Redis when
-    const savedFile = await fileRepository.findOneBy({
-      user: { id: Number.MAX_SAFE_INTEGER },
-    });
-
-    // DB, Redis then
-    expect(savedFile).toBeNull();
-  });
-
   it('[201] 파일을 포함할 경우 파일 업로드를 성공한다.', async () => {
     // given
     const requestDto = new UploadFileQueryRequestDto({

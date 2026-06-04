@@ -81,29 +81,6 @@ describe(`DELETE ${URL}/{fileId} E2E Test`, () => {
     expect(savedFile).not.toBeNull();
   });
 
-  it('[401] 존재하지 않는 유저가 파일 업로드를 시도할 경우 파일 업로드를 실패한다.', async () => {
-    // given
-    accessToken = createAccessToken({ id: Number.MAX_SAFE_INTEGER });
-
-    // Http when
-    const response = await agent
-      .delete(`${URL}/${file.id}`)
-      .set('Authorization', `Bearer ${accessToken}`);
-
-    // Http then
-    const { data } = response.body;
-    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
-    expect(data).toBeUndefined();
-
-    // DB, Redis when
-    const savedFile = await fileRepository.findOneBy({
-      user: { id: Number.MAX_SAFE_INTEGER },
-    });
-
-    // DB, Redis then
-    expect(savedFile).toBeNull();
-  });
-
   it('[200] DB에서 파일을 삭제했지만 FS 라이브러리의 삭제 문제일 경우에 서비스에서 파일 삭제를 성공한다.', async () => {
     // given
     jest

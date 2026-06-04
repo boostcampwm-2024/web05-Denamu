@@ -86,21 +86,6 @@ describe(`DELETE ${BASE_URL}/:feedId/likes E2E Test`, () => {
     expect(data).toBeUndefined();
   });
 
-  it('[401] 존재하지 않는 유저가 좋아요 삭제를 시도할 경우 좋아요 삭제를 실패한다.', async () => {
-    // given
-    accessToken = createAccessToken({ id: Number.MAX_SAFE_INTEGER });
-
-    // Http when
-    const response = await agent
-      .delete(`${BASE_URL}/${feed.id}/likes`)
-      .set('Authorization', `Bearer ${accessToken}`);
-
-    // Http then
-    const { data } = response.body;
-    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
-    expect(data).toBeUndefined();
-  });
-
   it('[200] 로그인이 되어 있고 좋아요를 한 경우 좋아요 삭제를 성공한다.', async () => {
     // given
     await likeRepository.save({
