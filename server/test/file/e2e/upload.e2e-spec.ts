@@ -136,7 +136,7 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(savedFile).toBeNull();
   });
 
-  it('[404] 존재하지 않는 유저가 파일 업로드를 시도할 경우 파일 업로드를 실패한다.', async () => {
+  it('[401] 존재하지 않는 유저가 파일 업로드를 시도할 경우 파일 업로드를 실패한다.', async () => {
     // given
     const requestDto = new UploadFileQueryRequestDto({
       uploadType: FileUploadType.PROFILE_IMAGE,
@@ -152,7 +152,7 @@ describe(`POST ${URL} E2E Test`, () => {
 
     // Http then
     const { data } = response.body;
-    expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     expect(data).toBeUndefined();
 
     // DB, Redis when

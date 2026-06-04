@@ -100,7 +100,7 @@ describe(`PATCH ${BASE_URL}/:feedId/comments/:commentId E2E Test`, () => {
     expect(savedComment.comment).toBe(comment.comment);
   });
 
-  it('[404] 본인의 계정 정보가 삭제됐을 경우 댓글 수정을 실패한다.', async () => {
+  it('[401] 본인의 계정 정보가 삭제됐을 경우 댓글 수정을 실패한다.', async () => {
     // given
     accessToken = createAccessToken({ id: Number.MAX_SAFE_INTEGER });
 
@@ -112,7 +112,7 @@ describe(`PATCH ${BASE_URL}/:feedId/comments/:commentId E2E Test`, () => {
 
     // Http then
     const { data } = response.body;
-    expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     expect(data).toBeUndefined();
 
     // DB, Redis when

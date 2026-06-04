@@ -86,7 +86,7 @@ describe(`DELETE ${BASE_URL}/:feedId/likes E2E Test`, () => {
     expect(data).toBeUndefined();
   });
 
-  it('[404] 존재하지 않는 유저가 좋아요 삭제를 시도할 경우 좋아요 삭제를 실패한다.', async () => {
+  it('[401] 존재하지 않는 유저가 좋아요 삭제를 시도할 경우 좋아요 삭제를 실패한다.', async () => {
     // given
     accessToken = createAccessToken({ id: Number.MAX_SAFE_INTEGER });
 
@@ -97,7 +97,7 @@ describe(`DELETE ${BASE_URL}/:feedId/likes E2E Test`, () => {
 
     // Http then
     const { data } = response.body;
-    expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     expect(data).toBeUndefined();
   });
 

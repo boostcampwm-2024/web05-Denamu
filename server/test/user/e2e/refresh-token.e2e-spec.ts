@@ -40,7 +40,7 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(data).toBeUndefined();
   });
 
-  it('[404] 유저 정보가 존재하지 않을 경우 Access Token 발급을 실패한다.', async () => {
+  it('[401] 유저 정보가 존재하지 않을 경우 Access Token 발급을 실패한다.', async () => {
     // given
     refreshToken = createRefreshToken({ id: Number.MAX_SAFE_INTEGER });
 
@@ -51,7 +51,7 @@ describe(`POST ${URL} E2E Test`, () => {
 
     // Http then
     const { data } = response.body;
-    expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     expect(data).toBeUndefined();
   });
 

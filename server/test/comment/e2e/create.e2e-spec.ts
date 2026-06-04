@@ -98,7 +98,7 @@ describe(`POST ${BASE_URL}/:feedId/comments E2E Test`, () => {
     expect(data).toBeUndefined();
   });
 
-  it('[404] 회원 정보가 없을 경우 댓글 등록을 실패한다.', async () => {
+  it('[401] 회원 정보가 없을 경우 댓글 등록을 실패한다.', async () => {
     // given
     accessToken = createAccessToken({ id: Number.MAX_SAFE_INTEGER });
     const requestDto = new CreateCommentRequestDto({
@@ -113,7 +113,7 @@ describe(`POST ${BASE_URL}/:feedId/comments E2E Test`, () => {
 
     // Http then
     const { data } = response.body;
-    expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     expect(data).toBeUndefined();
 
     // DB, Redis when

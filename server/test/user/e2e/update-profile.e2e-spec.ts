@@ -65,7 +65,7 @@ describe(`PATCH ${URL} E2E Test`, () => {
     expect(savedUser.introduction).toBe(user.introduction);
   });
 
-  it('[404] 회원 데이터가 서비스에 없을 경우 회원 정보 수정을 실패한다.', async () => {
+  it('[401] 회원 데이터가 서비스에 없을 경우 회원 정보 수정을 실패한다.', async () => {
     // given
     const requestDto = new UpdateUserRequestDto({
       userName: '변경된이름',
@@ -82,7 +82,7 @@ describe(`PATCH ${URL} E2E Test`, () => {
 
     // Http then
     const { data } = response.body;
-    expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     expect(data).toBeUndefined();
 
     // DB, Redis when
