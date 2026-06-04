@@ -3,11 +3,14 @@ import { HttpStatus } from '@nestjs/common';
 import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 
+import { AdminRepository } from '@admin/repository/admin.repository';
+
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
 
 import { RssRepository } from '@rss/repository/rss.repository';
 
+import { AdminFixture } from '@test/config/common/fixture/admin.fixture';
 import { RssFixture } from '@test/config/common/fixture/rss.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
@@ -16,6 +19,7 @@ const URL = '/api/rss';
 describe(`GET ${URL} E2E Test`, () => {
   let agent: TestAgent;
   let rssRepository: RssRepository;
+  let adminRepository: AdminRepository;
   let redisService: RedisService;
   const redisKeyMake = (data: string) => `${REDIS_KEYS.ADMIN_AUTH_KEY}:${data}`;
   const sessionKey = 'admin-rss-get';
@@ -23,11 +27,15 @@ describe(`GET ${URL} E2E Test`, () => {
   beforeAll(() => {
     agent = supertest(testApp.getHttpServer());
     rssRepository = testApp.get(RssRepository);
+    adminRepository = testApp.get(AdminRepository);
     redisService = testApp.get(RedisService);
   });
 
   beforeEach(async () => {
-    await redisService.set(redisKeyMake(sessionKey), 'test1234');
+    const admin = await adminRepository.save(
+      await AdminFixture.createAdminCryptFixture({ loginId: 'testAdminId' }),
+    );
+    await redisService.set(redisKeyMake(sessionKey), admin.loginId);
   });
 
   it('[401] 관리자 로그인 쿠키가 없을 경우 RSS 조회를 실패한다.', async () => {

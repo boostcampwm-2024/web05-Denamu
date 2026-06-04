@@ -3,12 +3,15 @@ import { HttpStatus } from '@nestjs/common';
 import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 
+import { AdminRepository } from '@admin/repository/admin.repository';
+
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
 
 import { RssAccept } from '@rss/entity/rss.entity';
 import { RssAcceptRepository } from '@rss/repository/rss.repository';
 
+import { AdminFixture } from '@test/config/common/fixture/admin.fixture';
 import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
@@ -18,6 +21,7 @@ describe(`GET ${URL} E2E Test`, () => {
   let agent: TestAgent;
   let rssAcceptList: RssAccept[];
   let rssAcceptRepository: RssAcceptRepository;
+  let adminRepository: AdminRepository;
   let redisService: RedisService;
   const redisKeyMake = (data: string) => `${REDIS_KEYS.ADMIN_AUTH_KEY}:${data}`;
   const sessionKey = 'admin-rss-history-accept';
@@ -25,16 +29,20 @@ describe(`GET ${URL} E2E Test`, () => {
   beforeAll(() => {
     agent = supertest(testApp.getHttpServer());
     rssAcceptRepository = testApp.get(RssAcceptRepository);
+    adminRepository = testApp.get(AdminRepository);
     redisService = testApp.get(RedisService);
   });
 
   beforeEach(async () => {
+    const admin = await adminRepository.save(
+      await AdminFixture.createAdminCryptFixture({ loginId: 'testAdminId' }),
+    );
     const rssAccepts = Array.from({ length: 2 }).map(() =>
       RssAcceptFixture.createRssAcceptFixture(),
     );
     [rssAcceptList] = await Promise.all([
       rssAcceptRepository.save(rssAccepts),
-      redisService.set(redisKeyMake(sessionKey), 'test1234'),
+      redisService.set(redisKeyMake(sessionKey), admin.loginId),
     ]);
     rssAcceptList.reverse();
   });
