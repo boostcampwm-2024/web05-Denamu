@@ -1,7 +1,5 @@
 import {
   ConflictException,
-  forwardRef,
-  Inject,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -37,7 +35,6 @@ export class UserService {
     private readonly emailProducer: EmailProducer,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-    @Inject(forwardRef(() => FileService))
     private readonly fileService: FileService,
   ) {}
 
@@ -123,8 +120,7 @@ export class UserService {
     return CreateAccessTokenResponseDto.toResponseDto(accessToken);
   }
 
-  async refreshAccessToken(userInformation: Payload) {
-    await this.getUser(userInformation.id);
+  refreshAccessToken(userInformation: Payload) {
     const accessToken = this.createToken(userInformation, 'access');
     return CreateAccessTokenResponseDto.toResponseDto(accessToken);
   }

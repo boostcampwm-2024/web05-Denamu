@@ -18,14 +18,11 @@ import { Payload } from '@common/guard/jwt.guard';
 
 import { FeedService } from '@feed/service/feed.service';
 
-import { UserService } from '@user/service/user.service';
-
 @Injectable()
 export class CommentService {
   constructor(
     private readonly commentRepository: CommentRepository,
     private readonly dataSource: DataSource,
-    private readonly userService: UserService,
     private readonly feedService: FeedService,
   ) {}
 
@@ -33,7 +30,6 @@ export class CommentService {
     userInformation: Payload,
     commentId: number,
   ) {
-    await this.userService.getUser(userInformation.id);
     const commentObj = await this.commentRepository.findOne({
       where: {
         id: commentId,
@@ -68,7 +64,6 @@ export class CommentService {
   ) {
     await this.dataSource.transaction(async (manager) => {
       const feed = await this.feedService.getFeed(feedId);
-      await this.userService.getUser(userInformation.id);
       feed.commentCount++;
       await manager.save(feed);
       await manager.save(Comment, {

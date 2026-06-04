@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -12,8 +12,6 @@ import { UploadFileResponseDto } from '@file/dto/response/uploadFile.dto';
 import { File } from '@file/entity/file.entity';
 import { FileRepository } from '@file/repository/file.repository';
 
-import { UserService } from '@user/service/user.service';
-
 @Injectable()
 export class FileService {
   private readonly basePath = '/app/objects';
@@ -21,8 +19,6 @@ export class FileService {
   constructor(
     private readonly fileRepository: FileRepository,
     private readonly logger: WinstonLoggerService,
-    @Inject(forwardRef(() => UserService))
-    private readonly userService: UserService,
   ) {}
 
   async handleUpload(
@@ -30,7 +26,6 @@ export class FileService {
     uploadType: FileUploadType,
     userId: number,
   ) {
-    await this.userService.getUser(userId);
     const today = this.getDateString();
     const targetDir = path.join(this.basePath, uploadType, today);
 
@@ -76,8 +71,7 @@ export class FileService {
     return file;
   }
 
-  async deleteFile(id: number, userId: number): Promise<void> {
-    await this.userService.getUser(userId);
+  async deleteFile(id: number): Promise<void> {
     const file = await this.findById(id);
 
     try {
