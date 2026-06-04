@@ -35,7 +35,7 @@ describe("SearchResultItem", () => {
     render(<SearchResultItem {...mockResult} />);
 
     const link = screen.getByRole("link");
-    expect(link).toHaveAttribute("href", mockResult.path);
+    expect(link).toHaveAttribute("href", String(mockResult.id));
   });
 
   it("블로그명은 회색으로 표시되어야 한다", () => {
