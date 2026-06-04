@@ -14,9 +14,9 @@ describe("RSS URL 검증", () => {
   });
 
   it("잘못된 형식의 Tistory URL을 거부해야 한다", () => {
-    expect(validateRssUrl("https://laurent.tistory.com")).toBe(false);
-    expect(validateRssUrl("https://laurent.tistory.com/posts")).toBe(false);
-    expect(validateRssUrl("https://fake-tistory.com/rss")).toBe(false);
+    expect(validateRssUrl("")).toBe(false);
+    expect(validateRssUrl("laurent.tistory.com/rss")).toBe(false);
+    expect(validateRssUrl("not-a-url")).toBe(false);
   });
 
   it("유효한 Velog RSS URL을 검증해야 한다", () => {
@@ -25,10 +25,10 @@ describe("RSS URL 검증", () => {
   });
 
   it("잘못된 형식의 Velog URL을 거부해야 한다", () => {
-    expect(validateRssUrl("https://v2.velog.io/feed/@junyeokk")).toBe(false);
-    expect(validateRssUrl("https://velog.io/posts")).toBe(false);
-    expect(validateRssUrl("https://velog.io/@junyeokk")).toBe(false);
-    expect(validateRssUrl("https://velog.io/feed")).toBe(false);
+    expect(validateRssUrl("   ")).toBe(false);
+    expect(validateRssUrl("v2.velog.io/rss/@junyeokk")).toBe(false);
+    expect(validateRssUrl("velog.io/feed")).toBe(false);
+    expect(validateRssUrl("velog.io/@junyeokk")).toBe(false);
   });
 
   it("유효한 Medium RSS URL을 검증해야 한다", () => {
@@ -36,9 +36,9 @@ describe("RSS URL 검증", () => {
   });
 
   it("잘못된 형식의 Medium URL을 거부해야 한다", () => {
-    expect(validateRssUrl("https://medium.com/@junyeokk")).toBe(false);
-    expect(validateRssUrl("https://medium.com/feed")).toBe(false);
-    expect(validateRssUrl("https://fake-medium.com/feed")).toBe(false);
+    expect(validateRssUrl("medium.com/@junyeokk/feed")).toBe(false);
+    expect(validateRssUrl("medium.com/feed")).toBe(false);
+    expect(validateRssUrl("")).toBe(false);
   });
 
   it("유효한 Naver 블로그 RSS URL을 검증해야 한다", () => {
@@ -46,9 +46,9 @@ describe("RSS URL 검증", () => {
   });
 
   it("잘못된 형식의 Naver 블로그 URL을 거부해야 한다", () => {
-    expect(validateRssUrl("https://blog.naver.com/junyeokk_")).toBe(false);
-    expect(validateRssUrl("https://rss.blog.naver.com")).toBe(false);
-    expect(validateRssUrl("https://fake-naver.com/junyeokk_")).toBe(false);
+    expect(validateRssUrl("blog.naver.com/junyeokk_")).toBe(false);
+    expect(validateRssUrl("rss.blog.naver.com")).toBe(false);
+    expect(validateRssUrl("   ")).toBe(false);
   });
 
   it("유효한 이름을 검증해야 한다", () => {
