@@ -100,10 +100,10 @@ export class UserController {
   @Post('/tokens')
   @HttpCode(HttpStatus.OK)
   @UseGuards(RefreshJwtGuard)
-  async refreshAccessToken(@CurrentUser() user: Payload) {
+  refreshAccessToken(@CurrentUser() user: Payload) {
     return ApiResponse.responseWithData(
       '엑세스 토큰을 재발급했습니다.',
-      await this.userService.refreshAccessToken(user),
+      this.userService.refreshAccessToken(user),
     );
   }
 

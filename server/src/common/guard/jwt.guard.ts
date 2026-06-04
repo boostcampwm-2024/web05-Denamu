@@ -31,6 +31,22 @@ export class JwtGuard extends AuthGuard('jwt') {
 }
 
 @Injectable()
+export class OptionalJwtGuard extends AuthGuard('jwt') {
+  canActivate(
+    context: ExecutionContext,
+  ): boolean | Promise<boolean> | Observable<boolean> {
+    return super.canActivate(context);
+  }
+
+  handleRequest(err: any, user: any) {
+    if (err) {
+      throw new UnauthorizedException('인증되지 않은 요청입니다.');
+    }
+    return user || null;
+  }
+}
+
+@Injectable()
 export class RefreshJwtGuard extends AuthGuard('jwt-refresh') {
   canActivate(
     context: ExecutionContext,

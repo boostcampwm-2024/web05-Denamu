@@ -4,16 +4,19 @@ import { PassportStrategy } from '@nestjs/passport';
 
 import { Request } from 'express';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+import { DataSource } from 'typeorm';
 
 import { Payload } from '@common/guard/jwt.guard';
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
+import { User } from '@user/entity/user.entity';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor(
     private readonly configService: ConfigService,
     private readonly redisService: RedisService,
+    private readonly dataSource: DataSource,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -32,6 +35,14 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
         throw new UnauthorizedException('인증되지 않은 요청입니다.');
       }
     }
+
+    const userExists = await this.dataSource
+      .getRepository(User)
+      .existsBy({ id: payload.id });
+    if (!userExists) {
+      throw new UnauthorizedException('인증되지 않은 요청입니다.');
+    }
+
     return payload;
   }
 }
@@ -44,6 +55,7 @@ export class JwtRefreshStrategy extends PassportStrategy(
   constructor(
     private readonly configService: ConfigService,
     private readonly redisService: RedisService,
+    private readonly dataSource: DataSource,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
@@ -66,6 +78,14 @@ export class JwtRefreshStrategy extends PassportStrategy(
         throw new UnauthorizedException('인증되지 않은 요청입니다.');
       }
     }
+
+    const userExists = await this.dataSource
+      .getRepository(User)
+      .existsBy({ id: payload.id });
+    if (!userExists) {
+      throw new UnauthorizedException('인증되지 않은 요청입니다.');
+    }
+
     return payload;
   }
 }
