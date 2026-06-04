@@ -7,13 +7,11 @@ import {
   Param,
   Post,
   UseGuards,
-  UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
-import { InjectUserInterceptor } from '@common/auth/jwt.interceptor';
 import { CurrentUser } from '@common/decorator';
-import { JwtGuard, Payload } from '@common/guard/jwt.guard';
+import { JwtGuard, OptionalJwtGuard, Payload } from '@common/guard/jwt.guard';
 import { ApiResponse } from '@common/response/common.response';
 
 import { ApiCreateLike } from '@like/api-docs/createLike.api-docs';
@@ -30,7 +28,7 @@ export class LikeController {
   @ApiGetLike()
   @Get()
   @HttpCode(HttpStatus.OK)
-  @UseInterceptors(InjectUserInterceptor)
+  @UseGuards(OptionalJwtGuard)
   async getLike(
     @CurrentUser() user: Payload | null,
     @Param() feedLikeDto: ManageLikeRequestDto,

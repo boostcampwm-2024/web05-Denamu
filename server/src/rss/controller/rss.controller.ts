@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
-import { AdminAuthGuard } from '@common/guard/auth.guard';
+import { AdminAuthGuard } from '@common/guard/session.guard';
 import { ApiResponse } from '@common/response/common.response';
 
 import { ApiAcceptRss } from '@rss/api-docs/acceptRss.api-docs';

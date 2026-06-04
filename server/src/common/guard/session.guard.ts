@@ -24,6 +24,14 @@ export class AdminAuthGuard implements CanActivate {
       throw new UnauthorizedException('인증되지 않은 요청입니다.');
     }
 
+    const isInvalidated = await this.redisService.get(
+      `${REDIS_KEYS.ADMIN_INVALIDATED_PREFIX}:${loginId}`,
+    );
+
+    if (isInvalidated) {
+      throw new UnauthorizedException('인증되지 않은 요청입니다.');
+    }
+
     request['user'] = { loginId };
 
     return true;

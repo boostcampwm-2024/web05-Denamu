@@ -8,10 +8,11 @@ export const REDIS_KEYS = {
   USER_AUTH_KEY: 'signup',
   ADMIN_AUTH_KEY: 'auth',
   ADMIN_SESSION_BY_LOGIN: 'auth:login',
+  ADMIN_INVALIDATED_PREFIX: 'admin:invalidated',
   RSS_REMOVE_KEY: 'rss:remove',
   CHAT_HISTORY_KEY: (roomId: string) => `chat:history:${roomId}`,
   FULL_FEED_CRAWL_QUEUE: `feed:full-crawl:queue`,
   USER_DELETE_ACCOUNT_KEY: 'user:delete-account',
   USER_RESET_PASSWORD_KEY: 'user:password_reset',
-  USER_BLACKLIST_JWT_PREFIX: 'blacklist',
+  USER_INVALIDATED_PREFIX: 'user:invalidated',
 };

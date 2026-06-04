@@ -9,13 +9,12 @@ import {
   Patch,
   Post,
   Query,
-  Req,
   Res,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
-import { Request, Response } from 'express';
+import { Response } from 'express';
 
 import { CurrentUser } from '@common/decorator';
 import { JwtGuard, Payload, RefreshJwtGuard } from '@common/guard/jwt.guard';
@@ -100,10 +99,10 @@ export class UserController {
   @Post('/tokens')
   @HttpCode(HttpStatus.OK)
   @UseGuards(RefreshJwtGuard)
-  async refreshAccessToken(@CurrentUser() user: Payload) {
+  refreshAccessToken(@CurrentUser() user: Payload) {
     return ApiResponse.responseWithData(
       '엑세스 토큰을 재발급했습니다.',
-      await this.userService.refreshAccessToken(user),
+      this.userService.refreshAccessToken(user),
     );
   }
 
@@ -134,17 +133,8 @@ export class UserController {
   @Post('/deletion-requests')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtGuard)
-  async requestDeleteAccount(
-    @CurrentUser() user: Payload,
-    @Req() req: Request,
-  ) {
-    const accessToken = req.headers.authorization?.replace('Bearer ', '');
-    const refreshToken = req.cookies['refresh_token'];
-    await this.userService.requestDeleteAccount(
-      user.id,
-      accessToken,
-      refreshToken,
-    );
+  async requestDeleteAccount(@CurrentUser() user: Payload) {
+    await this.userService.requestDeleteAccount(user.id);
     return ApiResponse.responseWithNoContent(
       '회원탈퇴 신청이 성공적으로 처리되었습니다. 이메일을 확인해주세요.',
     );

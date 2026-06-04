@@ -29,7 +29,10 @@ describe(`POST ${URL} E2E Test`, () => {
   });
 
   beforeEach(async () => {
-    await redisService.set(redisKeyMake(sessionKey), 'testAdminId');
+    const admin = await adminRepository.save(
+      await AdminFixture.createAdminCryptFixture({ loginId: 'testAdminId' }),
+    );
+    await redisService.set(redisKeyMake(sessionKey), admin.loginId);
   });
 
   it('[401] 관리자 로그인 쿠키가 없을 경우 회원가입을 실패한다.', async () => {

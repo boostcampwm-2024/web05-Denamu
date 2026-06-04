@@ -6,10 +6,8 @@ import { CommentService } from '@comment/service/comment.service';
 
 import { FeedModule } from '@feed/module/feed.module';
 
-import { UserModule } from '@user/module/user.module';
-
 @Module({
-  imports: [UserModule, FeedModule],
+  imports: [FeedModule],
   controllers: [CommentController],
   providers: [CommentRepository, CommentService],
   exports: [],

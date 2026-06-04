@@ -92,30 +92,6 @@ describe(`POST ${BASE_URL}/:feedId/likes E2E Test`, () => {
     expect(savedLike).toBeNull();
   });
 
-  it('[404] 유저 정보가 존재하지 않을 경우 좋아요 등록을 실패한다.', async () => {
-    // given
-    accessToken = createAccessToken({ id: Number.MAX_SAFE_INTEGER });
-
-    // Http when
-    const response = await agent
-      .post(`${BASE_URL}/${Number.MAX_SAFE_INTEGER}/likes`)
-      .set('Authorization', `Bearer ${accessToken}`);
-
-    // Http then
-    const { data } = response.body;
-    expect(response.status).toBe(HttpStatus.NOT_FOUND);
-    expect(data).toBeUndefined();
-
-    // DB, Redis when
-    const savedLike = await likeRepository.findOneBy({
-      feed: { id: feed.id },
-      user: { id: Number.MAX_SAFE_INTEGER },
-    });
-
-    // DB, Redis then
-    expect(savedLike).toBeNull();
-  });
-
   it('[409] 이미 좋아요를 한 게시글일 경우 좋아요 등록을 실패한다.', async () => {
     // given
     await likeRepository.insert({ user, feed });
