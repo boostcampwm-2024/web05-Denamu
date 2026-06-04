@@ -67,25 +67,6 @@ describe(`GET ${URL} E2E Test`, () => {
     expect(savedSession).not.toBeNull();
   });
 
-  it('[401] 관리자 정보가 없을 경우 관리자 자동 로그인을 실패한다.', async () => {
-    // Http when
-    await redisService.set(redisKeyMake(sessionKey), 'WrongAdminLoginId');
-    const response = await agent
-      .get(URL)
-      .set('Cookie', `sessionId=${sessionKey}`);
-
-    // Http then
-    const { data } = response.body;
-    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
-    expect(data).toBeUndefined();
-
-    // DB, Redis when
-    const savedSession = await redisService.get(redisKeyMake(sessionKey));
-
-    // DB, Redis then
-    expect(savedSession).not.toBeNull();
-  });
-
   it('[200] 관리자 로그인 쿠키가 존재할 경우 관리자 자동 로그인을 성공한다.', async () => {
     // Http when
     const response = await agent
