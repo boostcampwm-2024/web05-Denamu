@@ -21,7 +21,7 @@ import { LoginAdminRequestDto } from '@admin/dto/request/loginAdmin.dto';
 import { RegisterAdminRequestDto } from '@admin/dto/request/registerAdmin.dto';
 import { AdminService } from '@admin/service/admin.service';
 
-import { AdminAuthGuard } from '@common/guard/auth.guard';
+import { AdminAuthGuard } from '@common/guard/session.guard';
 import { ApiResponse } from '@common/response/common.response';
 
 @ApiTags('Admin')
