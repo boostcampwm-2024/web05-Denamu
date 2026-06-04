@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -64,15 +68,22 @@ export class FileService {
   }
 
   async findById(id: number): Promise<File> {
-    const file = await this.fileRepository.findOne({ where: { id } });
+    const file = await this.fileRepository.findOne({
+      where: { id },
+      relations: ['user'],
+    });
     if (!file) {
       throw new NotFoundException('파일을 찾을 수 없습니다.');
     }
     return file;
   }
 
-  async deleteFile(id: number): Promise<void> {
+  async deleteFile(id: number, userId: number): Promise<void> {
     const file = await this.findById(id);
+
+    if (file.user.id !== userId) {
+      throw new UnauthorizedException('파일 삭제 권한이 없습니다.');
+    }
 
     try {
       await access(file.path);
