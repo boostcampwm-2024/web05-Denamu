@@ -14,13 +14,15 @@ import { ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 
 import { ApiCreateAdmin } from '@admin/api-docs/createAdmin.api-docs';
-import { ApiGetSessionIdAdmin } from '@admin/api-docs/getSessionIdAdmin.api-docs';
+import { ApiGetChildrenAdmin } from '@admin/api-docs/getChildrenAdmin.api-docs';
+import { ApiGetCurrentAdmin } from '@admin/api-docs/getCurrentAdmin.api-docs';
 import { ApiLoginAdmin } from '@admin/api-docs/loginAdmin.api-docs';
 import { ApiLogoutAdmin } from '@admin/api-docs/logoutAdmin.api-docs';
 import { LoginAdminRequestDto } from '@admin/dto/request/loginAdmin.dto';
 import { RegisterAdminRequestDto } from '@admin/dto/request/registerAdmin.dto';
 import { AdminService } from '@admin/service/admin.service';
 
+import { CurrentAdmin } from '@common/decorator/current-admin.decorator';
 import { AdminAuthGuard } from '@common/guard/session.guard';
 import { ApiResponse } from '@common/response/common.response';
 
@@ -61,24 +63,37 @@ export class AdminController {
   @UseGuards(AdminAuthGuard)
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async createAdmin(@Body() registerAdminBodyDto: RegisterAdminRequestDto) {
-    await this.adminService.createAdmin(registerAdminBodyDto);
+  async createAdmin(
+    @Body() registerAdminBodyDto: RegisterAdminRequestDto,
+    @CurrentAdmin() loginId: string,
+  ) {
+    await this.adminService.createAdmin(registerAdminBodyDto, loginId);
     return ApiResponse.responseWithNoContent(
       '성공적으로 관리자 계정이 생성되었습니다.',
     );
   }
 
-  @ApiGetSessionIdAdmin()
-  @Get('/sessions')
+  @ApiGetChildrenAdmin()
+  @UseGuards(AdminAuthGuard)
+  @Get('/children')
+  @HttpCode(HttpStatus.OK)
+  async getChildrenAdmin(@CurrentAdmin() loginId: string) {
+    const children = await this.adminService.getChildAdmins(loginId);
+    return ApiResponse.responseWithData(
+      '내가 생성한 관리자 계정 목록입니다.',
+      children,
+    );
+  }
+
+  @ApiGetCurrentAdmin()
+  @Get('/me')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AdminAuthGuard)
-  async getSessionIdAdmin(@Req() request: Request) {
-    const sessionAdmin = await this.adminService.getAdminProfile(
-      (request['user'] as { loginId: string }).loginId,
-    );
+  async getCurrentAdmin(@CurrentAdmin() loginId: string) {
+    const profile = await this.adminService.getAdminProfile(loginId);
     return ApiResponse.responseWithData(
-      '정상적인 sessionId 입니다.',
-      sessionAdmin,
+      '현재 로그인한 관리자 프로필입니다.',
+      profile,
     );
   }
 }
