@@ -87,4 +87,32 @@ describe(`GET ${URL} E2E Test`, () => {
     // DB, Redis then
     expect(savedSession).not.toBeNull();
   });
+
+  it('[200] 부모 관리자가 있을 경우 프로필에 부모 정보를 포함한다.', async () => {
+    // given
+    const parent = await adminRepository.save(
+      await AdminFixture.createAdminCryptFixture({ loginId: 'parentAdminId' }),
+    );
+    const child = await adminRepository.save(
+      await AdminFixture.createAdminCryptFixture({
+        loginId: 'childAdminId',
+        parentAdminId: parent.id,
+      }),
+    );
+    const childSessionKey = 'child-session-check-key';
+    await redisService.set(redisKeyMake(childSessionKey), child.loginId);
+
+    // Http when
+    const response = await agent
+      .get(URL)
+      .set('Cookie', `sessionId=${childSessionKey}`);
+
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.OK);
+    expect(data).toEqual({
+      name: child.name,
+      parent: { loginId: parent.loginId, name: parent.name },
+    });
+  });
 });
