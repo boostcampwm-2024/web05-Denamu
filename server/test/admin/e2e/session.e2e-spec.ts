@@ -26,10 +26,13 @@ describe(`GET ${URL} E2E Test`, () => {
     adminRepository = testApp.get(AdminRepository);
   });
 
+  let registeredName: string;
+
   beforeEach(async () => {
     const admin = await adminRepository.save(
       await AdminFixture.createAdminCryptFixture({ loginId: 'testAdminId' }),
     );
+    registeredName = admin.name;
     await redisService.set(redisKeyMake(sessionKey), admin.loginId);
   });
 
@@ -76,7 +79,7 @@ describe(`GET ${URL} E2E Test`, () => {
     // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
-    expect(data).toBeUndefined();
+    expect(data).toEqual({ name: registeredName });
 
     // DB, Redis when
     const savedSession = await redisService.get(redisKeyMake(sessionKey));

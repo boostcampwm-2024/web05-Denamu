@@ -19,4 +19,10 @@ export class Admin extends BaseEntity {
     nullable: false,
   })
   password: string;
+
+  @Column({
+    length: 255,
+    nullable: false,
+  })
+  name: string;
 }

@@ -7,6 +7,13 @@ export type AdminAuthResponse = {
   message: string;
 };
 
+export type AdminSessionResponse = {
+  message: string;
+  data: {
+    name: string;
+  };
+};
+
 export interface UserSignUpRequest {
   email: string;
   password: string;

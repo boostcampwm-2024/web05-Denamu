@@ -4,6 +4,7 @@ CREATE TABLE `admin` (
   `id` int NOT NULL AUTO_INCREMENT,
   `login_id` varchar(255) NOT NULL,
   `password` varchar(60) NOT NULL,
+  `name` varchar(255) NOT NULL,
   PRIMARY KEY (`id`)
 );
 
@@ -161,8 +162,8 @@ CREATE TABLE `provider` (
 
 -- denamu.admin insert data
 
-INSERT INTO admin (login_id, password) VALUES
-	('test1234','$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.');
+INSERT INTO admin (login_id, password, name) VALUES
+	('test1234','$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정');
 
 -- denamu.rss_accept insert data
 
