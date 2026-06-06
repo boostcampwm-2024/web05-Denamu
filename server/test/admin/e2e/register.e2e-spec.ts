@@ -28,10 +28,13 @@ describe(`POST ${URL} E2E Test`, () => {
     redisService = testApp.get(RedisService);
   });
 
+  let sessionAdminId: number;
+
   beforeEach(async () => {
     const admin = await adminRepository.save(
       await AdminFixture.createAdminCryptFixture({ loginId: 'testAdminId' }),
     );
+    sessionAdminId = admin.id;
     await redisService.set(redisKeyMake(sessionKey), admin.loginId);
   });
 
@@ -148,5 +151,6 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(
       await bcrypt.compare(newAdminDto.password, savedAdmin.password),
     ).toBeTruthy();
+    expect(savedAdmin.parentAdminId).toBe(sessionAdminId);
   });
 });

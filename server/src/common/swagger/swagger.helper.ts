@@ -5,6 +5,7 @@ import {
   ApiConflictResponse,
   ApiCreatedResponse,
   ApiExtraModels,
+  ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiUnauthorizedResponse,
@@ -108,6 +109,16 @@ export function ApiNotFoundDoc(description: string) {
   return applyDecorators(
     ApiExtraModels(ErrorResponseDto),
     ApiNotFoundResponse({
+      description,
+      schema: { $ref: getSchemaPath(ErrorResponseDto) },
+    }),
+  );
+}
+
+export function ApiForbiddenDoc(description: string) {
+  return applyDecorators(
+    ApiExtraModels(ErrorResponseDto),
+    ApiForbiddenResponse({
       description,
       schema: { $ref: getSchemaPath(ErrorResponseDto) },
     }),

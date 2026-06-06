@@ -5,7 +5,12 @@ CREATE TABLE `admin` (
   `login_id` varchar(255) NOT NULL,
   `password` varchar(60) NOT NULL,
   `name` varchar(255) NOT NULL,
-  PRIMARY KEY (`id`)
+  `parent_admin_id` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+    CONSTRAINT `FK_admin_parent_admin`
+    FOREIGN KEY (`parent_admin_id`)
+    REFERENCES `admin` (`id`)
+    ON DELETE CASCADE
 );
 
 -- denamu.rss definition
@@ -162,8 +167,9 @@ CREATE TABLE `provider` (
 
 -- denamu.admin insert data
 
-INSERT INTO admin (login_id, password, name) VALUES
-	('test1234','$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정');
+INSERT INTO admin (login_id, password, name, parent_admin_id) VALUES
+	('test1234','$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정', NULL),
+	('test5678','$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정의 자식', 1);
 
 -- denamu.rss_accept insert data
 

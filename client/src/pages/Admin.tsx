@@ -40,7 +40,7 @@ export default function Admin() {
 
   return isLogin ? (
     <main className="min-h-screen bg-background">
-      <AdminHeader setLogin={() => setIsLogin(false)} handleTap={setTap} name={data?.name} />
+      <AdminHeader setLogin={() => setIsLogin(false)} handleTap={setTap} name={data?.name} parent={data?.parent} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 h-full">{renderContent()} </div>
     </main>
   ) : (

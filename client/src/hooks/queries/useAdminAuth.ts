@@ -3,7 +3,7 @@ import { AxiosError } from "axios";
 import { auth } from "@/api/services/admin/auth";
 import { register } from "@/api/services/admin/register";
 import { useAuthStore } from "@/store/useAuthStore";
-import { RegisterRequest, RegisterResponse } from "@/types/admin";
+import { DeleteChildResponse, RegisterRequest, RegisterResponse } from "@/types/admin";
 import { AdminAuthRequest, AdminAuthResponse } from "@/types/auth";
 import { useMutation, UseMutationResult, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -29,7 +29,7 @@ export const useAdminAuth = (
 export const useAdminCheck = () => {
   const { status, isLoading, error, data } = useQuery({
     queryKey: ["adminCheck"],
-    queryFn: auth.check,
+    queryFn: auth.me,
     retry: 1,
   });
   return { status, isLoading, error, data };
@@ -39,12 +39,38 @@ export const useAdminRegister = (
   onSuccess: (data: RegisterResponse) => void,
   onError: (error: AxiosError<unknown, unknown>) => void
 ): UseMutationResult<RegisterResponse, AxiosError<unknown, unknown>, RegisterRequest, unknown> => {
+  const queryClient = useQueryClient();
   return useMutation<RegisterResponse, AxiosError<unknown, unknown>, RegisterRequest>({
     mutationFn: async (data) => {
       const response = await register.register(data);
       return response;
     },
-    onSuccess,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["adminChildren"] });
+      onSuccess(data);
+    },
+    onError,
+  });
+};
+
+export const useAdminChildren = () => {
+  return useQuery({
+    queryKey: ["adminChildren"],
+    queryFn: register.children,
+  });
+};
+
+export const useAdminChildDelete = (
+  onSuccess: (data: DeleteChildResponse) => void,
+  onError: (error: AxiosError<unknown, unknown>) => void
+): UseMutationResult<DeleteChildResponse, AxiosError<unknown, unknown>, number, unknown> => {
+  const queryClient = useQueryClient();
+  return useMutation<DeleteChildResponse, AxiosError<unknown, unknown>, number>({
+    mutationFn: (id) => register.deleteChild(id),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["adminChildren"] });
+      onSuccess(data);
+    },
     onError,
   });
 };

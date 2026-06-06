@@ -1,21 +1,21 @@
 import { applyDecorators } from '@nestjs/common';
 import { ApiCookieAuth, ApiOperation } from '@nestjs/swagger';
 
-import { GetSessionAdminResponseDto } from '@admin/dto/response/getSessionAdmin.dto';
+import { GetAdminProfileResponseDto } from '@admin/dto/response/getAdminProfile.dto';
 
 import {
   ApiDataResponse,
   ApiUnauthorizedDoc,
 } from '@common/swagger/swagger.helper';
 
-export function ApiGetSessionIdAdmin() {
+export function ApiGetCurrentAdmin() {
   return applyDecorators(
     ApiCookieAuth('sessionId'),
-    ApiOperation({ summary: '관리자 페이지 출력을 위한 sessionId 확인 API' }),
+    ApiOperation({ summary: '현재 로그인한 관리자 프로필 조회 API' }),
     ApiDataResponse(
-      GetSessionAdminResponseDto,
+      GetAdminProfileResponseDto,
       false,
-      '세션이 유효하며 관리자 이름을 반환합니다.',
+      '관리자 이름과 부모 계정 정보를 반환합니다.',
     ),
     ApiUnauthorizedDoc('인증되지 않은 요청입니다.'),
   );
