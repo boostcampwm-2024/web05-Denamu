@@ -1,0 +1,357 @@
+import { NotFoundException } from '@nestjs/common';
+
+import axios from 'axios';
+import { Request, Response } from 'express';
+
+import { REDIS_KEYS } from '@common/redis/redis.constant';
+import { RedisService } from '@common/redis/redis.service';
+
+import { ReadFeedPaginationRequestDto } from '@feed/dto/request/readFeedPagination.dto';
+import { SearchFeedRequestDto } from '@feed/dto/request/searchFeed.dto';
+import { GetFeedDetailResponseDto } from '@feed/dto/response/getFeedDetail';
+import {
+  FeedRepository,
+  FeedViewRepository,
+} from '@feed/repository/feed.repository';
+import { FeedService } from '@feed/service/feed.service';
+
+jest.mock('axios');
+const mockedAxios = axios as jest.Mocked<typeof axios>;
+
+describe(`${FeedService.name} Unit Test`, () => {
+  let feedService: FeedService;
+  let feedRepository: jest.Mocked<
+    Pick<FeedRepository, 'findOneBy' | 'searchFeedList' | 'update' | 'delete'>
+  >;
+  let feedViewRepository: jest.Mocked<
+    Pick<FeedViewRepository, 'findOneBy' | 'findFeedPagination'>
+  >;
+  let redisService: jest.Mocked<
+    Pick<
+      RedisService,
+      'keys' | 'lrange' | 'sismember' | 'sadd' | 'zincrby' | 'executePipeline'
+    >
+  >;
+
+  const createResponse = () => ({ cookie: jest.fn() }) as unknown as Response;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    feedRepository = {
+      findOneBy: jest.fn(),
+      searchFeedList: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+    };
+    feedViewRepository = {
+      findOneBy: jest.fn(),
+      findFeedPagination: jest.fn(),
+    };
+    redisService = {
+      keys: jest.fn(),
+      lrange: jest.fn(),
+      sismember: jest.fn(),
+      sadd: jest.fn(),
+      zincrby: jest.fn(),
+      executePipeline: jest.fn(),
+    };
+
+    feedService = new FeedService(
+      feedRepository as unknown as FeedRepository,
+      feedViewRepository as unknown as FeedViewRepository,
+      redisService as unknown as RedisService,
+    );
+  });
+
+  describe('getFeed', () => {
+    it('존재하지 않으면 NotFoundException을 던진다.', async () => {
+      feedRepository.findOneBy.mockResolvedValue(null);
+      await expect(feedService.getFeed(1)).rejects.toThrow(NotFoundException);
+    });
+
+    it('존재하면 피드를 반환한다.', async () => {
+      const feed = { id: 1 } as any;
+      feedRepository.findOneBy.mockResolvedValue(feed);
+      await expect(feedService.getFeed(1)).resolves.toBe(feed);
+    });
+  });
+
+  describe('getFeedByView', () => {
+    it('존재하지 않으면 NotFoundException을 던진다.', async () => {
+      feedViewRepository.findOneBy.mockResolvedValue(null);
+      await expect(feedService.getFeedByView(1)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+
+  describe('readFeedPagination', () => {
+    it('limit보다 많이 조회되면 hasMore=true로 마지막 1건을 잘라낸다.', async () => {
+      // given
+      const dto = { limit: 2 } as ReadFeedPaginationRequestDto;
+      const feedList = [{ feedId: 1 }, { feedId: 2 }, { feedId: 3 }] as any[];
+      feedViewRepository.findFeedPagination.mockResolvedValue(feedList);
+      redisService.keys.mockResolvedValue(['feed:recent:2']);
+
+      // when
+      const result = await feedService.readFeedPagination(dto);
+
+      // then
+      expect(result.hasMore).toBe(true);
+      expect(result.lastId).toBe(2);
+      expect(result.result).toHaveLength(2);
+      expect(result.result.find((f) => f.id === 2).isNew).toBe(true);
+      expect(result.result.find((f) => f.id === 1).isNew).toBe(false);
+    });
+
+    it('limit 이하면 hasMore=false이고 잘라내지 않는다.', async () => {
+      // given
+      const dto = { limit: 5 } as ReadFeedPaginationRequestDto;
+      feedViewRepository.findFeedPagination.mockResolvedValue([
+        { feedId: 1 },
+      ] as any);
+      redisService.keys.mockResolvedValue([]);
+
+      // when
+      const result = await feedService.readFeedPagination(dto);
+
+      // then
+      expect(result.hasMore).toBe(false);
+      expect(result.lastId).toBe(1);
+      expect(result.result).toHaveLength(1);
+    });
+  });
+
+  describe('readTrendFeedList', () => {
+    it('트렌드 ID 목록으로 피드를 조회하고 null을 제외한다.', async () => {
+      // given
+      redisService.lrange.mockResolvedValue(['1', '2']);
+      feedViewRepository.findOneBy.mockImplementation((where) =>
+        Promise.resolve(
+          (where as { feedId: number }).feedId === 1
+            ? ({ feedId: 1, tag: [] } as any)
+            : null,
+        ),
+      );
+
+      // when
+      const result = await feedService.readTrendFeedList();
+
+      // then
+      expect(redisService.lrange).toHaveBeenCalledWith(
+        REDIS_KEYS.FEED_ORIGIN_TREND_KEY,
+        0,
+        -1,
+      );
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe(1);
+    });
+  });
+
+  describe('searchFeedList', () => {
+    it('offset과 totalPages를 계산하고 검색을 위임한다.', async () => {
+      // given
+      const dto = {
+        find: 'nest',
+        page: 2,
+        limit: 10,
+        type: 'title',
+      } as SearchFeedRequestDto;
+      feedRepository.searchFeedList.mockResolvedValue([[], 25] as any);
+
+      // when
+      const result = await feedService.searchFeedList(dto);
+
+      // then
+      expect(feedRepository.searchFeedList).toHaveBeenCalledWith(
+        'nest',
+        10,
+        'title',
+        10, // offset = (2-1)*10
+      );
+      expect(result.totalCount).toBe(25);
+      expect(result.totalPages).toBe(3); // ceil(25/10)
+    });
+  });
+
+  describe('updateFeedViewCount', () => {
+    const dto = { feedId: 10 };
+
+    const createRequest = (
+      overwrites: Partial<{ cookie: string; xff: string }> = {},
+    ) =>
+      ({
+        headers: {
+          cookie: overwrites.cookie,
+          'x-forwarded-for': overwrites.xff ?? '1.2.3.4',
+        },
+        socket: { remoteAddress: '1.2.3.4' },
+      }) as unknown as Request;
+
+    it('이미 조회 쿠키가 있으면 조회수를 증가시키지 않는다.', async () => {
+      // given
+      feedRepository.findOneBy.mockResolvedValue({ id: 10 } as any);
+      const request = createRequest({ cookie: 'View_count_10=10' });
+
+      // when
+      await feedService.updateFeedViewCount(dto, request, createResponse());
+
+      // then
+      expect(feedRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('IP 플래그가 있으면 쿠키만 발급하고 조회수는 증가시키지 않는다.', async () => {
+      // given
+      feedRepository.findOneBy.mockResolvedValue({ id: 10 } as any);
+      redisService.sismember.mockResolvedValue(1);
+      const cookie = jest.fn();
+      const response = { cookie } as unknown as Response;
+
+      // when
+      await feedService.updateFeedViewCount(dto, createRequest(), response);
+
+      // then
+      expect(cookie).toHaveBeenCalled();
+      expect(feedRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('신규 조회면 IP를 등록하고 조회수와 트렌드 점수를 증가시킨다.', async () => {
+      // given
+      feedRepository.findOneBy.mockResolvedValue({ id: 10 } as any);
+      redisService.sismember.mockResolvedValue(0);
+      const response = createResponse();
+
+      // when
+      await feedService.updateFeedViewCount(dto, createRequest(), response);
+
+      // then
+      expect(redisService.sadd).toHaveBeenCalledWith('feed:10:ip', '1.2.3.4');
+      expect(feedRepository.update).toHaveBeenCalledWith(10, {
+        viewCount: expect.any(Function),
+      });
+      expect(redisService.zincrby).toHaveBeenCalledWith(
+        REDIS_KEYS.FEED_TREND_KEY,
+        1,
+        '10',
+      );
+    });
+  });
+
+  describe('readRecentFeedList', () => {
+    it('최근 피드 키가 없으면 빈 배열을 반환한다.', async () => {
+      // given
+      redisService.keys.mockResolvedValue([]);
+
+      // when
+      const result = await feedService.readRecentFeedList();
+
+      // then
+      expect(result).toStrictEqual([]);
+      expect(redisService.executePipeline).not.toHaveBeenCalled();
+    });
+
+    it('파이프라인 결과를 최신순으로 정렬하고 태그를 분리한다.', async () => {
+      // given
+      redisService.keys.mockResolvedValue(['feed:recent:1', 'feed:recent:2']);
+      redisService.executePipeline.mockResolvedValue([
+        [null, { id: '1', createdAt: '2025-01-01', tagList: 'a,b' }],
+        [null, { id: '2', createdAt: '2025-02-01', tagList: 'c' }],
+      ] as any);
+
+      // when
+      const result = await feedService.readRecentFeedList();
+
+      // then
+      expect(result).toHaveLength(2);
+      expect(result[0].id).toBe(2);
+    });
+  });
+
+  describe('getFeedDetail', () => {
+    it('피드 뷰를 조회하고 상세 응답으로 변환한다.', async () => {
+      // given
+      const feed = { feedId: 10, title: 'detail', tag: ['a'] } as any;
+      feedViewRepository.findOneBy.mockResolvedValue(feed);
+
+      // when
+      const result = await feedService.getFeedDetail({
+        feedId: 10,
+      });
+
+      // then
+      expect(feedViewRepository.findOneBy).toHaveBeenCalledWith({ feedId: 10 });
+      expect(result).toEqual(GetFeedDetailResponseDto.toResponseDto(feed));
+    });
+  });
+
+  describe('deleteCheckFeed', () => {
+    const dto = { feedId: 10 };
+
+    it('원본이 404면 피드를 삭제하고 NotFoundException을 던진다.', async () => {
+      // given
+      feedRepository.findOneBy.mockResolvedValue({
+        id: 10,
+        path: 'https://blog.test/post',
+      } as any);
+      mockedAxios.get.mockResolvedValue({ status: 404 });
+
+      // when & then
+      await expect(feedService.deleteCheckFeed(dto)).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(feedRepository.delete).toHaveBeenCalledWith({ id: 10 });
+    });
+
+    it('원본이 살아있으면 삭제하지 않는다.', async () => {
+      // given
+      feedRepository.findOneBy.mockResolvedValue({
+        id: 10,
+        path: 'https://blog.test/post',
+      } as any);
+      mockedAxios.get.mockResolvedValue({ status: 200 });
+
+      // when
+      await feedService.deleteCheckFeed(dto);
+
+      // then
+      expect(feedRepository.delete).not.toHaveBeenCalled();
+    });
+  });
+
+  // getIp는 헤더 문자열 파싱만 하는 순수 로직이라 e2e 대신 단위로 격리 검증한다.
+  // (실제 헤더가 Express→서비스로 흐르는지는 up-view-count e2e가 Redis 상태로 검증)
+  describe('getIp (private)', () => {
+    const getIp = (request: unknown) =>
+      (feedService as unknown as { getIp(request: unknown): string }).getIp(
+        request,
+      );
+
+    const createRequest = (
+      xff: string | string[] | undefined,
+      remoteAddress = '127.0.0.1',
+    ) => ({
+      headers: { 'x-forwarded-for': xff },
+      socket: { remoteAddress },
+    });
+
+    it('x-forwarded-for 단일 IP면 해당 IP를 반환한다.', () => {
+      expect(getIp(createRequest('203.0.113.1'))).toBe('203.0.113.1');
+    });
+
+    it('x-forwarded-for에 여러 IP가 있으면 첫 번째 IP를 trim해 반환한다.', () => {
+      expect(getIp(createRequest('203.0.113.1, 198.51.100.1'))).toBe(
+        '203.0.113.1',
+      );
+    });
+
+    it('x-forwarded-for가 없으면 socket.remoteAddress를 반환한다.', () => {
+      expect(getIp(createRequest(undefined, '10.0.0.5'))).toBe('10.0.0.5');
+    });
+
+    it('x-forwarded-for가 배열(문자열 아님)이면 socket.remoteAddress로 폴백한다.', () => {
+      expect(getIp(createRequest(['203.0.113.1'], '10.0.0.5'))).toBe(
+        '10.0.0.5',
+      );
+    });
+  });
+});
