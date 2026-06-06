@@ -1,4 +1,11 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity({
   name: 'admin',
@@ -25,4 +32,18 @@ export class Admin extends BaseEntity {
     nullable: false,
   })
   name: string;
+
+  @Column({
+    name: 'parent_admin_id',
+    type: 'int',
+    nullable: true,
+  })
+  parentAdminId: number | null;
+
+  @ManyToOne(() => Admin, {
+    onDelete: 'CASCADE',
+    nullable: true,
+  })
+  @JoinColumn({ name: 'parent_admin_id' })
+  parent: Admin | null;
 }
