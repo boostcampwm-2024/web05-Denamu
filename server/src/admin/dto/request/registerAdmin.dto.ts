@@ -42,6 +42,21 @@ export class RegisterAdminRequestDto {
   })
   password: string;
 
+  @ApiProperty({
+    example: '홍길동',
+    description: '관리자 이름을 입력해주세요.',
+  })
+  @IsNotEmpty({
+    message: '이름이 없습니다.',
+  })
+  @IsString({
+    message: '문자열을 입력해주세요',
+  })
+  @Length(1, 255, {
+    message: '이름의 길이는 1자 이상, 255자 이하로 작성해주세요.',
+  })
+  name: string;
+
   constructor(partial: Partial<RegisterAdminRequestDto>) {
     Object.assign(this, partial);
   }

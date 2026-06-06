@@ -12,6 +12,7 @@ export class AdminFixture {
     return {
       loginId: `test${uuid.v4()}`,
       password: ADMIN_DEFAULT_PASSWORD,
+      name: `name${uuid.v4()}`,
     };
   }
 
