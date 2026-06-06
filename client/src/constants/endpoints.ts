@@ -3,9 +3,10 @@ export const CHAT_SERVER_URL = import.meta.env.VITE_DENAMU_URL;
 
 export const ADMIN = {
   LOGIN: "/api/admins/login",
-  CHECK: "/api/admins/sessions",
+  ME: "/api/admins/me",
   LOGOUT: "/api/admins/logout",
   REGISTER: "/api/admins",
+  CHILDREN: "/api/admins/children",
   GET: {
     RSS: "/api/rss",
     ACCEPT: "/api/rss/history/accept",

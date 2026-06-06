@@ -7,10 +7,11 @@ export type AdminAuthResponse = {
   message: string;
 };
 
-export type AdminSessionResponse = {
+export type AdminProfileResponse = {
   message: string;
   data: {
     name: string;
+    parent: { loginId: string; name: string } | null;
   };
 };
 

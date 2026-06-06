@@ -1,6 +1,7 @@
 import { LogOut, User } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 import logo from "@/assets/logo-denamu-main.svg";
 
@@ -11,10 +12,12 @@ export const AdminHeader = ({
   setLogin,
   handleTap,
   name,
+  parent,
 }: {
   setLogin: () => void;
   handleTap: (tap: "RSS" | "MEMBER") => void;
   name?: string;
+  parent?: { loginId: string; name: string } | null;
 }) => {
   const handleLogout = () => {
     auth.logout();
@@ -34,10 +37,25 @@ export const AdminHeader = ({
 
           {/* Right Side Menu */}
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <User className="h-5 w-5" />
-              {name && <span className="text-sm font-medium">{name}</span>}
-            </div>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center space-x-2 cursor-help">
+                    <User className="h-5 w-5" />
+                    {name && <span className="text-sm font-medium">{name}</span>}
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {parent ? (
+                    <span>
+                      상위 계정: {parent.name} ({parent.loginId})
+                    </span>
+                  ) : (
+                    <span>Root 계정이라 부모 계정이 없습니다.</span>
+                  )}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             <Button variant="ghost" className="text-red-600" onClick={handleLogout}>
               <LogOut className="h-4 w-4" />
               로그아웃

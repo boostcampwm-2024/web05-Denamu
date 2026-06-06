@@ -29,7 +29,7 @@ export const useAdminAuth = (
 export const useAdminCheck = () => {
   const { status, isLoading, error, data } = useQuery({
     queryKey: ["adminCheck"],
-    queryFn: auth.check,
+    queryFn: auth.me,
     retry: 1,
   });
   return { status, isLoading, error, data };
@@ -39,12 +39,23 @@ export const useAdminRegister = (
   onSuccess: (data: RegisterResponse) => void,
   onError: (error: AxiosError<unknown, unknown>) => void
 ): UseMutationResult<RegisterResponse, AxiosError<unknown, unknown>, RegisterRequest, unknown> => {
+  const queryClient = useQueryClient();
   return useMutation<RegisterResponse, AxiosError<unknown, unknown>, RegisterRequest>({
     mutationFn: async (data) => {
       const response = await register.register(data);
       return response;
     },
-    onSuccess,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["adminChildren"] });
+      onSuccess(data);
+    },
     onError,
+  });
+};
+
+export const useAdminChildren = () => {
+  return useQuery({
+    queryKey: ["adminChildren"],
+    queryFn: register.children,
   });
 };

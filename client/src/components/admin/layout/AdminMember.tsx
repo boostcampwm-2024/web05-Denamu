@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Toggle } from "@/components/ui/toggle";
 
-import { useAdminRegister } from "@/hooks/queries/useAdminAuth";
+import { useAdminChildren, useAdminRegister } from "@/hooks/queries/useAdminAuth";
 
 import { RegisterResponse, RegisterRequest } from "@/types/admin";
 
@@ -37,6 +37,7 @@ export default function AdminMember() {
   };
 
   const { mutate } = useAdminRegister(onSuccess, onError);
+  const { data: children, isLoading: isChildrenLoading } = useAdminChildren();
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -44,8 +45,8 @@ export default function AdminMember() {
   };
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center ">
-      <Card className="shadow absolute top-[50%] transform -translate-y-1/2">
+    <div className="w-full h-full flex flex-col lg:flex-row items-center justify-center gap-8 py-8">
+      <Card className="shadow">
         <CardHeader>
           <CardTitle>관리자 계정 생성</CardTitle>
           <CardDescription>새로운 관리자 계정을 생성합니다.</CardDescription>
@@ -109,6 +110,29 @@ export default function AdminMember() {
             <Button type="submit">가입</Button>
           </CardFooter>
         </form>
+      </Card>
+
+      <Card className="shadow w-[30rem]">
+        <CardHeader>
+          <CardTitle>내가 만든 계정</CardTitle>
+          <CardDescription>내가 생성한 관리자 계정 목록입니다.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isChildrenLoading ? (
+            <p className="text-sm text-muted-foreground">불러오는 중...</p>
+          ) : !children || children.length === 0 ? (
+            <p className="text-sm text-muted-foreground">생성한 계정이 없습니다.</p>
+          ) : (
+            <ul className="flex flex-col divide-y">
+              {children.map((child) => (
+                <li key={child.id} className="flex items-center justify-between py-3">
+                  <span className="font-medium">{child.name}</span>
+                  <span className="text-sm text-muted-foreground">{child.loginId}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
       </Card>
     </div>
   );
