@@ -28,15 +28,21 @@ export default function AdminMember() {
   const [viewPassword, setViewPassword] = useState<boolean>(false);
   const [formData, setFormData] = useState<RegisterRequest>({ loginId: "", password: "", name: "" });
 
+  const extractErrorMessage = (error: AxiosError) => {
+    const data = error.response?.data as { message?: string | string[] } | string | undefined;
+    if (typeof data === "string") return data;
+    const message = data?.message;
+    if (Array.isArray(message)) return message.join("\n");
+    return message ?? error.message;
+  };
+
   const onSuccess = (data: RegisterResponse) => {
     alert(`관리자 등록 성공: ${data.message}`);
     setFormData({ loginId: "", password: "", name: "" });
   };
 
   const onError = (error: AxiosError) => {
-    const errorMessage =
-      typeof error.response?.data === "string" ? error.response.data : error.response?.data || error.message;
-    alert(`관리자 등록 실패: ${JSON.stringify(errorMessage)}`);
+    alert(`관리자 등록 실패: ${extractErrorMessage(error)}`);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>, name: string) => {
@@ -52,9 +58,7 @@ export default function AdminMember() {
   };
 
   const onDeleteError = (error: AxiosError) => {
-    const errorMessage =
-      typeof error.response?.data === "string" ? error.response.data : error.response?.data || error.message;
-    alert(`관리자 삭제 실패: ${JSON.stringify(errorMessage)}`);
+    alert(`관리자 삭제 실패: ${extractErrorMessage(error)}`);
   };
 
   const { mutate } = useAdminRegister(onSuccess, onError);
