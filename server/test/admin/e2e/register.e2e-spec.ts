@@ -40,6 +40,7 @@ describe(`POST ${URL} E2E Test`, () => {
     const newAdminDto = new RegisterAdminRequestDto({
       loginId: 'testNewAdminId',
       password: 'testNewAdminPassword!',
+      name: 'testNewAdminName',
     });
 
     // Http when
@@ -64,6 +65,7 @@ describe(`POST ${URL} E2E Test`, () => {
     const newAdminDto = new RegisterAdminRequestDto({
       loginId: 'testNewAdminId',
       password: 'testNewAdminPassword!',
+      name: 'testNewAdminName',
     });
 
     // Http when
@@ -94,6 +96,7 @@ describe(`POST ${URL} E2E Test`, () => {
     const newAdminDto = new RegisterAdminRequestDto({
       loginId: admin.loginId,
       password: 'testNewAdminPassword!',
+      name: 'testNewAdminName',
     });
 
     // Http when
@@ -121,6 +124,7 @@ describe(`POST ${URL} E2E Test`, () => {
     const newAdminDto = new RegisterAdminRequestDto({
       loginId: 'testNewAdminId',
       password: 'testNewAdminPassword!',
+      name: 'testNewAdminName',
     });
 
     // Http when
