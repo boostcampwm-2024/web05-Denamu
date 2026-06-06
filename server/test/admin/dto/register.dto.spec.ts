@@ -142,4 +142,54 @@ describe(`${RegisterAdminRequestDto.name} Test`, () => {
       expect(errors[0].constraints).toHaveProperty('isNotEmpty');
     });
   });
+
+  describe('name', () => {
+    it('이름의 길이가 255 초과일 경우 유효성 검사에 실패한다.', async () => {
+      //given
+      dto.name = 'a'.repeat(256);
+
+      //when
+      const errors = await validate(dto);
+
+      //then
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isLength');
+    });
+
+    it('이름이 없을 경우 유효성 검사에 실패한다.', async () => {
+      //given
+      dto.name = null;
+
+      //when
+      const errors = await validate(dto);
+
+      //then
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isNotEmpty');
+    });
+
+    it('이름이 빈 문자열일 경우 유효성 검사에 실패한다.', async () => {
+      //given
+      dto.name = '';
+
+      //when
+      const errors = await validate(dto);
+
+      //then
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isNotEmpty');
+    });
+
+    it('이름이 문자열이 아니고 정수일 경우 유효성 검사에 실패한다.', async () => {
+      //given
+      dto.name = 1 as any;
+
+      //when
+      const errors = await validate(dto);
+
+      //then
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isString');
+    });
+  });
 });
