@@ -11,7 +11,7 @@ import { RedisService } from '@common/redis/redis.service';
 import { AdminFixture } from '@test/config/common/fixture/admin.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = '/api/admins/sessions';
+const URL = '/api/admins/me';
 
 describe(`GET ${URL} E2E Test`, () => {
   let agent: TestAgent;
@@ -79,7 +79,7 @@ describe(`GET ${URL} E2E Test`, () => {
     // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
-    expect(data).toEqual({ name: registeredName });
+    expect(data).toEqual({ name: registeredName, parent: null });
 
     // DB, Redis when
     const savedSession = await redisService.get(redisKeyMake(sessionKey));

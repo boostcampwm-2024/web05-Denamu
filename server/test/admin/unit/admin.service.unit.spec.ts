@@ -18,7 +18,9 @@ import {
 
 describe(`${AdminService.name} Unit Test`, () => {
   let adminService: AdminService;
-  let adminRepository: jest.Mocked<Pick<AdminRepository, 'findOne' | 'save'>>;
+  let adminRepository: jest.Mocked<
+    Pick<AdminRepository, 'findOne' | 'save' | 'find'>
+  >;
   let redisService: jest.Mocked<Pick<RedisService, 'get' | 'set' | 'del'>>;
 
   const createResponse = () =>
@@ -31,7 +33,7 @@ describe(`${AdminService.name} Unit Test`, () => {
     ({ cookies }) as unknown as Request;
 
   beforeEach(() => {
-    adminRepository = { findOne: jest.fn(), save: jest.fn() };
+    adminRepository = { findOne: jest.fn(), save: jest.fn(), find: jest.fn() };
     redisService = { get: jest.fn(), set: jest.fn(), del: jest.fn() };
 
     adminService = new AdminService(
@@ -175,23 +177,61 @@ describe(`${AdminService.name} Unit Test`, () => {
       );
 
       // when & then
-      await expect(adminService.createAdmin(registerDto)).rejects.toThrow(
-        ConflictException,
-      );
+      await expect(
+        adminService.createAdmin(registerDto, 'parent-admin'),
+      ).rejects.toThrow(ConflictException);
       expect(adminRepository.save).not.toHaveBeenCalled();
     });
 
-    it('비밀번호를 해시한 뒤 저장한다.', async () => {
+    it('비밀번호를 해시한 뒤 생성자를 부모로 저장한다.', async () => {
       // given
-      adminRepository.findOne.mockResolvedValue(null);
+      const parent = await AdminFixture.createAdminCryptFixture({
+        loginId: 'parent-admin',
+      });
+      parent.id = 7;
+      adminRepository.findOne
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(parent);
 
       // when
-      await adminService.createAdmin(registerDto);
+      await adminService.createAdmin(registerDto, 'parent-admin');
 
       // then
-      const saved = adminRepository.save.mock.calls[0][0] as { password: string };
+      const saved = adminRepository.save.mock.calls[0][0] as {
+        password: string;
+        parentAdminId: number | null;
+      };
       expect(adminRepository.save).toHaveBeenCalledTimes(1);
       expect(saved.password).not.toBe(ADMIN_DEFAULT_PASSWORD);
+      expect(saved.parentAdminId).toBe(7);
+    });
+  });
+
+  describe('getChildAdmins', () => {
+    it('생성자의 ID를 부모로 가지는 관리자 목록을 반환한다.', async () => {
+      // given
+      const parent = await AdminFixture.createAdminCryptFixture({
+        loginId: 'parent-admin',
+      });
+      parent.id = 7;
+      const child = await AdminFixture.createAdminCryptFixture({
+        loginId: 'child-admin',
+      });
+      child.id = 8;
+      child.parentAdminId = 7;
+      adminRepository.findOne.mockResolvedValue(parent);
+      adminRepository.find.mockResolvedValue([child]);
+
+      // when
+      const result = await adminService.getChildAdmins('parent-admin');
+
+      // then
+      expect(adminRepository.find).toHaveBeenCalledWith({
+        where: { parentAdminId: 7 },
+      });
+      expect(result).toEqual([
+        { id: 8, loginId: 'child-admin', name: child.name },
+      ]);
     });
   });
 });
