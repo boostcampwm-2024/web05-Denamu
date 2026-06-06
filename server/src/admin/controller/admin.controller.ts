@@ -72,7 +72,13 @@ export class AdminController {
   @Get('/sessions')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AdminAuthGuard)
-  getSessionIdAdmin() {
-    return ApiResponse.responseWithNoContent('정상적인 sessionId 입니다.');
+  async getSessionIdAdmin(@Req() request: Request) {
+    const sessionAdmin = await this.adminService.getAdminProfile(
+      (request['user'] as { loginId: string }).loginId,
+    );
+    return ApiResponse.responseWithData(
+      '정상적인 sessionId 입니다.',
+      sessionAdmin,
+    );
   }
 }

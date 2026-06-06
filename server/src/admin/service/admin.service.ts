@@ -11,6 +11,7 @@ import { Request, Response } from 'express';
 import { SESSION_TTL } from '@admin/constant/admin.constant';
 import { LoginAdminRequestDto } from '@admin/dto/request/loginAdmin.dto';
 import { RegisterAdminRequestDto } from '@admin/dto/request/registerAdmin.dto';
+import { GetSessionAdminResponseDto } from '@admin/dto/response/getSessionAdmin.dto';
 import { AdminRepository } from '@admin/repository/admin.repository';
 
 import { cookieConfig } from '@common/cookie/cookie.config';
@@ -104,5 +105,13 @@ export class AdminService {
     );
 
     await this.adminRepository.save(registerAdminBodyDto.toEntity());
+  }
+
+  async getAdminProfile(loginId: string) {
+    const admin = await this.adminRepository.findOne({
+      where: { loginId },
+    });
+
+    return GetSessionAdminResponseDto.toResponseDto(admin.name);
   }
 }
