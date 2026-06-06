@@ -1,9 +1,12 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
+  Param,
+  ParseIntPipe,
   Post,
   Req,
   Res,
@@ -14,6 +17,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 
 import { ApiCreateAdmin } from '@admin/api-docs/createAdmin.api-docs';
+import { ApiDeleteChildAdmin } from '@admin/api-docs/deleteChildAdmin.api-docs';
 import { ApiGetChildrenAdmin } from '@admin/api-docs/getChildrenAdmin.api-docs';
 import { ApiGetCurrentAdmin } from '@admin/api-docs/getCurrentAdmin.api-docs';
 import { ApiLoginAdmin } from '@admin/api-docs/loginAdmin.api-docs';
@@ -82,6 +86,20 @@ export class AdminController {
     return ApiResponse.responseWithData(
       '내가 생성한 관리자 계정 목록입니다.',
       children,
+    );
+  }
+
+  @ApiDeleteChildAdmin()
+  @UseGuards(AdminAuthGuard)
+  @Delete('/children/:id')
+  @HttpCode(HttpStatus.OK)
+  async deleteChildAdmin(
+    @CurrentAdmin() loginId: string,
+    @Param('id', ParseIntPipe) targetAdminId: number,
+  ) {
+    await this.adminService.deleteChildAdmin(loginId, targetAdminId);
+    return ApiResponse.responseWithNoContent(
+      '관리자 계정이 성공적으로 삭제되었습니다.',
     );
   }
 

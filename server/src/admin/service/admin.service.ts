@@ -1,14 +1,18 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 
 import * as bcrypt from 'bcrypt';
 import * as uuid from 'uuid';
 import { Request, Response } from 'express';
+import { In } from 'typeorm';
 
 import { SESSION_TTL } from '@admin/constant/admin.constant';
+import { Admin } from '@admin/entity/admin.entity';
 import { LoginAdminRequestDto } from '@admin/dto/request/loginAdmin.dto';
 import { RegisterAdminRequestDto } from '@admin/dto/request/registerAdmin.dto';
 import { GetChildAdminResponseDto } from '@admin/dto/response/getChildAdmin.dto';
@@ -130,6 +134,58 @@ export class AdminService {
     return children.map((child) =>
       GetChildAdminResponseDto.toResponseDto(child),
     );
+  }
+
+  async deleteChildAdmin(loginId: string, targetAdminId: number) {
+    const admin = await this.adminRepository.findOne({
+      where: { loginId },
+    });
+
+    const target = await this.adminRepository.findOne({
+      where: { id: targetAdminId },
+    });
+
+    if (!target) {
+      throw new NotFoundException('존재하지 않는 관리자 계정입니다.');
+    }
+
+    if (target.parentAdminId !== admin.id) {
+      throw new ForbiddenException(
+        '본인이 생성한 관리자 계정만 삭제할 수 있습니다.',
+      );
+    }
+
+    const loginIdsToInvalidate = await this.collectSubtreeLoginIds(target);
+
+    await this.adminRepository.delete({ id: target.id });
+
+    await Promise.all(
+      loginIdsToInvalidate.map((id) =>
+        this.redisService.setex(
+          `${REDIS_KEYS.ADMIN_INVALIDATED_PREFIX}:${id}`,
+          SESSION_TTL,
+          '1',
+        ),
+      ),
+    );
+  }
+
+  private async collectSubtreeLoginIds(root: Admin): Promise<string[]> {
+    const loginIds = [root.loginId];
+    let frontier = [root.id];
+
+    while (frontier.length > 0) {
+      const children = await this.adminRepository.find({
+        where: { parentAdminId: In(frontier) },
+      });
+      if (children.length === 0) {
+        break;
+      }
+      loginIds.push(...children.map((child) => child.loginId));
+      frontier = children.map((child) => child.id);
+    }
+
+    return loginIds;
   }
 
   async getAdminProfile(loginId: string) {
