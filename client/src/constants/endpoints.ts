@@ -7,6 +7,7 @@ export const ADMIN = {
   LOGOUT: "/api/admins/logout",
   REGISTER: "/api/admins",
   CHILDREN: "/api/admins/children",
+  DELETE_CHILD: (id: number) => `/api/admins/children/${id}`,
   GET: {
     RSS: "/api/rss",
     ACCEPT: "/api/rss/history/accept",

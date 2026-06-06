@@ -1,17 +1,28 @@
 import { useState } from "react";
 
 import { AxiosError } from "axios";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Trash2 } from "lucide-react";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Toggle } from "@/components/ui/toggle";
 
-import { useAdminChildren, useAdminRegister } from "@/hooks/queries/useAdminAuth";
+import { useAdminChildDelete, useAdminChildren, useAdminRegister } from "@/hooks/queries/useAdminAuth";
 
-import { RegisterResponse, RegisterRequest } from "@/types/admin";
+import { DeleteChildResponse, RegisterResponse, RegisterRequest } from "@/types/admin";
 
 export default function AdminMember() {
   const [viewPassword, setViewPassword] = useState<boolean>(false);
@@ -36,8 +47,19 @@ export default function AdminMember() {
     }));
   };
 
+  const onDeleteSuccess = (data: DeleteChildResponse) => {
+    alert(`관리자 삭제 성공: ${data.message}`);
+  };
+
+  const onDeleteError = (error: AxiosError) => {
+    const errorMessage =
+      typeof error.response?.data === "string" ? error.response.data : error.response?.data || error.message;
+    alert(`관리자 삭제 실패: ${JSON.stringify(errorMessage)}`);
+  };
+
   const { mutate } = useAdminRegister(onSuccess, onError);
   const { data: children, isLoading: isChildrenLoading } = useAdminChildren();
+  const { mutate: deleteChild } = useAdminChildDelete(onDeleteSuccess, onDeleteError);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -126,8 +148,30 @@ export default function AdminMember() {
             <ul className="flex flex-col divide-y">
               {children.map((child) => (
                 <li key={child.id} className="flex items-center justify-between py-3">
-                  <span className="font-medium">{child.name}</span>
-                  <span className="text-sm text-muted-foreground">{child.loginId}</span>
+                  <div className="flex flex-col">
+                    <span className="font-medium">{child.name}</span>
+                    <span className="text-sm text-muted-foreground">{child.loginId}</span>
+                  </div>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="ghost" size="icon" aria-label={`${child.name} 삭제`}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>관리자 계정 삭제</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          <span className="font-medium">{child.name}</span> ({child.loginId}) 계정을 삭제하시겠습니까?
+                          <br />이 계정이 생성한 하위 관리자 계정도 함께 삭제되며, 되돌릴 수 없습니다.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>취소</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => deleteChild(child.id)}>삭제</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </li>
               ))}
             </ul>

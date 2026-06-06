@@ -18,3 +18,7 @@ export type ChildAdminResponse = {
   message: string;
   data: ChildAdmin[];
 };
+
+export type DeleteChildResponse = {
+  message: string;
+};
