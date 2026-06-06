@@ -15,11 +15,11 @@ import { RegisterResponse, RegisterRequest } from "@/types/admin";
 
 export default function AdminMember() {
   const [viewPassword, setViewPassword] = useState<boolean>(false);
-  const [formData, setFormData] = useState<RegisterRequest>({ loginId: "", password: "" });
+  const [formData, setFormData] = useState<RegisterRequest>({ loginId: "", password: "", name: "" });
 
   const onSuccess = (data: RegisterResponse) => {
     alert(`관리자 등록 성공: ${data.message}`);
-    setFormData({ loginId: "", password: "" });
+    setFormData({ loginId: "", password: "", name: "" });
   };
 
   const onError = (error: AxiosError) => {
@@ -61,6 +61,21 @@ export default function AdminMember() {
                 id="R-ID"
                 value={formData.loginId}
                 onChange={(e) => handleChange(e, "loginId")}
+                className="appearance-none"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck="false"
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="R-Name">이름</Label>
+              <Input
+                type="text"
+                required
+                autoComplete="off"
+                id="R-Name"
+                value={formData.name}
+                onChange={(e) => handleChange(e, "name")}
                 className="appearance-none"
                 autoCorrect="off"
                 autoCapitalize="off"
