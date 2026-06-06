@@ -1,0 +1,521 @@
+import {
+  ConflictException,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
+
+import { Response } from 'express';
+
+import { EmailProducer } from '@common/email/email.producer';
+import { Payload } from '@common/guard/jwt.guard';
+import { REDIS_KEYS } from '@common/redis/redis.constant';
+import { RedisService } from '@common/redis/redis.service';
+
+import { FileService } from '@file/service/file.service';
+
+import { RegisterUserRequestDto } from '@user/dto/request/registerUser.dto';
+import { CheckEmailDuplicationResponseDto } from '@user/dto/response/checkEmailDuplication.dto';
+import { CreateAccessTokenResponseDto } from '@user/dto/response/createAccessToken.dto';
+import { User } from '@user/entity/user.entity';
+import { UserRepository } from '@user/repository/user.repository';
+import { UserService } from '@user/service/user.service';
+
+import {
+  USER_DEFAULT_PASSWORD,
+  UserFixture,
+} from '@test/config/common/fixture/user.fixture';
+
+describe(`${UserService.name} Unit Test`, () => {
+  let userService: UserService;
+  let userRepository: jest.Mocked<
+    Pick<UserRepository, 'findOneBy' | 'findOne' | 'save' | 'remove'>
+  >;
+  let redisService: jest.Mocked<
+    Pick<RedisService, 'set' | 'get' | 'del' | 'setex'>
+  >;
+  let emailProducer: jest.Mocked<
+    Pick<
+      EmailProducer,
+      | 'produceUserCertification'
+      | 'producePasswordReset'
+      | 'produceAccountDeletion'
+    >
+  >;
+  let jwtService: jest.Mocked<Pick<JwtService, 'sign'>>;
+  let configService: jest.Mocked<Pick<ConfigService, 'get'>>;
+  let fileService: jest.Mocked<Pick<FileService, 'deleteByPath'>>;
+
+  const createResponse = () => ({ cookie: jest.fn() }) as unknown as Response;
+
+  const DAY_MS = 24 * 60 * 60 * 1000;
+  const midnightToday = () => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  };
+  const daysAgo = (days: number) =>
+    new Date(midnightToday().getTime() - days * DAY_MS);
+
+  beforeEach(() => {
+    userRepository = {
+      findOneBy: jest.fn(),
+      findOne: jest.fn(),
+      save: jest.fn(),
+      remove: jest.fn(),
+    };
+    redisService = {
+      set: jest.fn(),
+      get: jest.fn(),
+      del: jest.fn(),
+      setex: jest.fn(),
+    };
+    emailProducer = {
+      produceUserCertification: jest.fn(),
+      producePasswordReset: jest.fn(),
+      produceAccountDeletion: jest.fn(),
+    };
+    jwtService = { sign: jest.fn().mockReturnValue('signed-token') };
+    configService = { get: jest.fn().mockReturnValue('14d') };
+    fileService = { deleteByPath: jest.fn() };
+
+    userService = new UserService(
+      userRepository as unknown as UserRepository,
+      redisService as unknown as RedisService,
+      emailProducer as unknown as EmailProducer,
+      jwtService as unknown as JwtService,
+      configService as unknown as ConfigService,
+      fileService as unknown as FileService,
+    );
+  });
+
+  describe('getUser', () => {
+    it('존재하지 않으면 NotFoundException을 던진다.', async () => {
+      userRepository.findOneBy.mockResolvedValue(null);
+      await expect(userService.getUser(1)).rejects.toThrow(NotFoundException);
+    });
+
+    it('존재하면 사용자를 반환한다.', async () => {
+      const user = UserFixture.createUserFixture();
+      userRepository.findOneBy.mockResolvedValue(user);
+      await expect(userService.getUser(1)).resolves.toBe(user);
+    });
+  });
+
+  describe('updateUserActivity', () => {
+    const arrangeUser = (overwrites: Partial<User>) => {
+      const user = UserFixture.createUserFixture(overwrites);
+      userRepository.findOneBy.mockResolvedValue(user);
+      return user;
+    };
+
+    it('첫 활동(lastActiveDate 없음)이면 currentStreak을 1로 설정한다.', async () => {
+      const user = arrangeUser({
+        lastActiveDate: null,
+        currentStreak: 7,
+        maxStreak: 15,
+      });
+      await userService.updateUserActivity(user.id);
+      expect(user.currentStreak).toBe(1);
+      expect(user.maxStreak).toBe(15);
+    });
+
+    it('어제 활동(daysDiff === 1)이면 currentStreak을 1 증가시킨다.', async () => {
+      const user = arrangeUser({
+        lastActiveDate: daysAgo(1),
+        currentStreak: 7,
+        maxStreak: 15,
+      });
+      await userService.updateUserActivity(user.id);
+      expect(user.currentStreak).toBe(8);
+    });
+
+    it('같은 날 재활동(daysDiff === 0)이면 currentStreak을 유지한다.', async () => {
+      const user = arrangeUser({
+        lastActiveDate: daysAgo(0),
+        currentStreak: 7,
+        maxStreak: 15,
+      });
+      await userService.updateUserActivity(user.id);
+      expect(user.currentStreak).toBe(7);
+    });
+
+    it('하루를 건너뛰면(daysDiff > 1) currentStreak을 1로 초기화한다.', async () => {
+      const user = arrangeUser({
+        lastActiveDate: daysAgo(3),
+        currentStreak: 7,
+        maxStreak: 15,
+      });
+      await userService.updateUserActivity(user.id);
+      expect(user.currentStreak).toBe(1);
+    });
+
+    it('currentStreak이 maxStreak을 넘으면 maxStreak을 갱신한다.', async () => {
+      const user = arrangeUser({
+        lastActiveDate: daysAgo(1),
+        currentStreak: 15,
+        maxStreak: 15,
+      });
+      await userService.updateUserActivity(user.id);
+      expect(user.currentStreak).toBe(16);
+      expect(user.maxStreak).toBe(16);
+    });
+
+    it('스트릭이 끊겨도 maxStreak은 유지한다.', async () => {
+      const user = arrangeUser({
+        lastActiveDate: daysAgo(3),
+        currentStreak: 7,
+        maxStreak: 15,
+      });
+      await userService.updateUserActivity(user.id);
+      expect(user.currentStreak).toBe(1);
+      expect(user.maxStreak).toBe(15);
+    });
+
+    it('호출 시 totalViews를 1 증가시키고 lastActiveDate를 오늘로 갱신한 뒤 저장한다.', async () => {
+      const user = arrangeUser({
+        lastActiveDate: daysAgo(1),
+        totalViews: 120,
+      });
+      await userService.updateUserActivity(user.id);
+      expect(user.totalViews).toBe(121);
+      expect(user.lastActiveDate).toStrictEqual(midnightToday());
+      expect(userRepository.save).toHaveBeenCalledWith(user);
+    });
+
+    it('존재하지 않는 사용자면 NotFoundException을 던지고 저장하지 않는다.', async () => {
+      userRepository.findOneBy.mockResolvedValue(null);
+      await expect(
+        userService.updateUserActivity(Number.MAX_SAFE_INTEGER),
+      ).rejects.toThrow(NotFoundException);
+      expect(userRepository.save).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('checkEmailDuplication', () => {
+    it('이메일이 존재하면 exists=true 응답을 반환한다.', async () => {
+      userRepository.findOne.mockResolvedValue(UserFixture.createUserFixture());
+      const result = await userService.checkEmailDuplication('a@test.com');
+      expect(result).toEqual(CheckEmailDuplicationResponseDto.toResponseDto(true));
+    });
+
+    it('이메일이 없으면 exists=false 응답을 반환한다.', async () => {
+      userRepository.findOne.mockResolvedValue(null);
+      const result = await userService.checkEmailDuplication('a@test.com');
+      expect(result).toEqual(
+        CheckEmailDuplicationResponseDto.toResponseDto(false),
+      );
+    });
+  });
+
+  describe('registerUser', () => {
+    const dto = {
+      email: 'new@test.com',
+      password: USER_DEFAULT_PASSWORD,
+      toEntity: () => UserFixture.createUserFixture({ email: 'new@test.com' }),
+    } as unknown as RegisterUserRequestDto;
+
+    it('이미 존재하는 이메일이면 ConflictException을 던진다.', async () => {
+      userRepository.findOne.mockResolvedValue(UserFixture.createUserFixture());
+      await expect(userService.registerUser(dto)).rejects.toThrow(
+        ConflictException,
+      );
+    });
+
+    it('신규 이메일이면 인증 정보를 Redis에 저장하고 인증 메일을 발송한다.', async () => {
+      // given
+      userRepository.findOne.mockResolvedValue(null);
+
+      // when
+      await userService.registerUser(dto);
+
+      // then
+      expect(redisService.set).toHaveBeenCalledWith(
+        expect.stringContaining(REDIS_KEYS.USER_AUTH_KEY),
+        expect.any(String),
+        'EX',
+        600,
+      );
+      expect(emailProducer.produceUserCertification).toHaveBeenCalled();
+    });
+  });
+
+  describe('certificateUser', () => {
+    it('인증 정보가 없으면 NotFoundException을 던진다.', async () => {
+      redisService.get.mockResolvedValue(null);
+      await expect(userService.certificateUser('uuid')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('인증에 성공하면 Redis 키를 지우고 사용자를 저장한다.', async () => {
+      // given
+      redisService.get.mockResolvedValue(JSON.stringify({ email: 'a@test.com' }));
+
+      // when
+      await userService.certificateUser('uuid');
+
+      // then
+      expect(redisService.del).toHaveBeenCalled();
+      expect(userRepository.save).toHaveBeenCalledWith({ email: 'a@test.com' });
+    });
+  });
+
+  describe('loginUser', () => {
+    const dto = {
+      email: 'a@test.com',
+      password: USER_DEFAULT_PASSWORD,
+    };
+
+    it('비밀번호가 틀리면 UnauthorizedException을 던진다.', async () => {
+      const user = await UserFixture.createUserCryptFixture();
+      userRepository.findOne.mockResolvedValue(user);
+      await expect(
+        userService.loginUser(
+          { ...dto, password: 'wrong!' },
+          createResponse(),
+        ),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('로그인에 성공하면 refresh 쿠키를 설정하고 access token을 반환한다.', async () => {
+      // given
+      const user = await UserFixture.createUserCryptFixture();
+      userRepository.findOne.mockResolvedValue(user);
+      const cookie = jest.fn();
+      const response = { cookie } as unknown as Response;
+
+      // when
+      const result = await userService.loginUser(dto, response);
+
+      // then
+      expect(cookie).toHaveBeenCalledWith(
+        'refresh_token',
+        'signed-token',
+        expect.anything(),
+      );
+      expect(result).toEqual(
+        CreateAccessTokenResponseDto.toResponseDto('signed-token'),
+      );
+    });
+  });
+
+  describe('updateUser', () => {
+    const userId = 1;
+
+    it('프로필 이미지가 변경되면 기존 파일을 삭제하고 교체한다.', async () => {
+      // given
+      const user = UserFixture.createUserFixture({
+        profileImage: 'old.png',
+      });
+      userRepository.findOneBy.mockResolvedValue(user);
+
+      // when
+      await userService.updateUser(userId, {
+        profileImage: 'new.png',
+      });
+
+      // then
+      expect(fileService.deleteByPath).toHaveBeenCalledWith('old.png');
+      expect(user.profileImage).toBe('new.png');
+      expect(userRepository.save).toHaveBeenCalledWith(user);
+    });
+
+    it('동일한 프로필 이미지면 파일을 삭제하지 않는다.', async () => {
+      // given
+      const user = UserFixture.createUserFixture({ profileImage: 'same.png' });
+      userRepository.findOneBy.mockResolvedValue(user);
+
+      // when
+      await userService.updateUser(userId, {
+        profileImage: 'same.png',
+      });
+
+      // then
+      expect(fileService.deleteByPath).not.toHaveBeenCalled();
+    });
+
+    it('userName만 들어오면 이름만 변경한다.', async () => {
+      // given
+      const user = UserFixture.createUserFixture({ userName: 'old' });
+      userRepository.findOneBy.mockResolvedValue(user);
+
+      // when
+      await userService.updateUser(userId, {
+        userName: 'new',
+      });
+
+      // then
+      expect(user.userName).toBe('new');
+      expect(fileService.deleteByPath).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('forgotPassword', () => {
+    it('사용자가 없으면 조용히 종료한다.', async () => {
+      // given
+      userRepository.findOne.mockResolvedValue(null);
+
+      // when
+      await userService.forgotPassword('a@test.com');
+
+      // then
+      expect(redisService.set).not.toHaveBeenCalled();
+      expect(emailProducer.producePasswordReset).not.toHaveBeenCalled();
+    });
+
+    it('사용자가 있으면 인증 코드를 저장하고 메일을 발송한다.', async () => {
+      // given
+      userRepository.findOne.mockResolvedValue(
+        UserFixture.createUserFixture({ id: 1 }),
+      );
+
+      // when
+      await userService.forgotPassword('a@test.com');
+
+      // then
+      expect(redisService.set).toHaveBeenCalledWith(
+        expect.stringContaining(REDIS_KEYS.USER_RESET_PASSWORD_KEY),
+        expect.any(String),
+        'EX',
+        600,
+      );
+      expect(emailProducer.producePasswordReset).toHaveBeenCalled();
+    });
+  });
+
+  describe('resetPassword', () => {
+    it('인증 코드가 유효하지 않으면 NotFoundException을 던진다.', async () => {
+      redisService.get.mockResolvedValue(null);
+      await expect(
+        userService.resetPassword('uuid', 'newPass1!'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('인증에 성공하면 비밀번호를 해시해 저장하고 코드를 정리한다.', async () => {
+      // given
+      const user = UserFixture.createUserFixture();
+      redisService.get.mockResolvedValue('1');
+      userRepository.findOne.mockResolvedValue(user);
+
+      // when
+      await userService.resetPassword('uuid', 'newPass1!');
+
+      // then
+      expect(user.password).not.toBe('newPass1!');
+      expect(redisService.del).toHaveBeenCalled();
+      expect(userRepository.save).toHaveBeenCalledWith(user);
+    });
+  });
+
+  describe('refreshAccessToken', () => {
+    it('access token을 재발급해 응답으로 반환한다.', () => {
+      // given
+      const payload: Payload = {
+        id: 1,
+        email: 'a@test.com',
+        userName: 'tester',
+        role: 'user',
+      };
+
+      // when
+      const result = userService.refreshAccessToken(payload);
+
+      // then
+      expect(jwtService.sign).toHaveBeenCalled();
+      expect(result).toEqual(
+        CreateAccessTokenResponseDto.toResponseDto('signed-token'),
+      );
+    });
+  });
+
+  describe('requestDeleteAccount', () => {
+    it('존재하지 않는 사용자면 NotFoundException을 던진다.', async () => {
+      // given
+      userRepository.findOneBy.mockResolvedValue(null);
+
+      // when & then
+      await expect(userService.requestDeleteAccount(1)).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(redisService.set).not.toHaveBeenCalled();
+      expect(emailProducer.produceAccountDeletion).not.toHaveBeenCalled();
+    });
+
+    it('탈퇴 인증 코드를 저장하고 탈퇴 확인 메일을 발송한다.', async () => {
+      // given
+      const user = UserFixture.createUserFixture({ id: 1 });
+      userRepository.findOneBy.mockResolvedValue(user);
+
+      // when
+      await userService.requestDeleteAccount(1);
+
+      // then
+      expect(redisService.set).toHaveBeenCalledWith(
+        expect.stringContaining(REDIS_KEYS.USER_DELETE_ACCOUNT_KEY),
+        '1',
+        'EX',
+        600,
+      );
+      expect(emailProducer.produceAccountDeletion).toHaveBeenCalledWith(
+        user,
+        expect.any(String),
+      );
+    });
+  });
+
+  describe('confirmDeleteAccount', () => {
+    it('토큰이 유효하지 않으면 NotFoundException을 던진다.', async () => {
+      redisService.get.mockResolvedValue(null);
+      await expect(userService.confirmDeleteAccount('token')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('탈퇴를 확정하면 토큰을 무효화하고 사용자와 프로필을 제거한다.', async () => {
+      // given
+      const user = UserFixture.createUserFixture({
+        id: 1,
+        profileImage: 'avatar.png',
+      });
+      redisService.get.mockResolvedValue('1');
+      userRepository.findOneBy.mockResolvedValue(user);
+
+      // when
+      await userService.confirmDeleteAccount('token');
+
+      // then
+      expect(fileService.deleteByPath).toHaveBeenCalledWith('avatar.png');
+      expect(redisService.setex).toHaveBeenCalledWith(
+        `${REDIS_KEYS.USER_INVALIDATED_PREFIX}:1`,
+        14 * 86400, // parseTimeToSeconds('14d')
+        '1',
+      );
+      expect(userRepository.remove).toHaveBeenCalledWith(user);
+    });
+  });
+
+  describe('parseTimeToSeconds (private)', () => {
+    const parse = (time: string) =>
+      (
+        userService as unknown as {
+          parseTimeToSeconds(time: string): number;
+        }
+      ).parseTimeToSeconds(time);
+
+    it.each([
+      ['30s', 30],
+      ['15m', 15 * 60],
+      ['2h', 2 * 3600],
+      ['7d', 7 * 86400],
+    ])('%s를 %i초로 변환한다.', (input, expected) => {
+      expect(parse(input)).toBe(expected);
+    });
+
+    it('형식이 맞지 않고 fallback도 동일하면 기본값 3600을 반환한다.', () => {
+      configService.get.mockReturnValue('invalid');
+      expect(parse('invalid')).toBe(3600);
+    });
+  });
+});
