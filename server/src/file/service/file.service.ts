@@ -1,7 +1,7 @@
 import {
+  ForbiddenException,
   Injectable,
   NotFoundException,
-  UnauthorizedException,
 } from '@nestjs/common';
 
 import * as fs from 'fs/promises';
@@ -82,7 +82,7 @@ export class FileService {
     const file = await this.findById(id);
 
     if (file.user.id !== userId) {
-      throw new UnauthorizedException('파일 삭제 권한이 없습니다.');
+      throw new ForbiddenException('파일 삭제 권한이 없습니다.');
     }
 
     try {

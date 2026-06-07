@@ -1,4 +1,4 @@
-import { NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
 
 import * as fs from 'fs/promises';
 
@@ -99,7 +99,7 @@ describe(`${FileService.name} Unit Test`, () => {
   });
 
   describe('deleteFile', () => {
-    it('파일 주인이 아니면 UnauthorizedException을 던진다.', async () => {
+    it('파일 주인이 아니면 ForbiddenException을 던진다.', async () => {
       // given
       fileRepository.findOne.mockResolvedValue(
         FileFixture.createFileFixture({ id: 1, user: { id: 7 } as any }),
@@ -107,7 +107,7 @@ describe(`${FileService.name} Unit Test`, () => {
 
       // when & then
       await expect(fileService.deleteFile(1, 999)).rejects.toThrow(
-        UnauthorizedException,
+        ForbiddenException,
       );
       expect(fileRepository.delete).not.toHaveBeenCalled();
     });

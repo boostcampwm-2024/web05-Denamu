@@ -57,7 +57,7 @@ describe(`DELETE ${URL}/{fileId} E2E Test`, () => {
     expect(savedFile).not.toBeNull();
   });
 
-  it('[401] 파일 소유자가 아닌 다른 사용자가 삭제 요청할 경우 파일 삭제를 실패한다.', async () => {
+  it('[403] 파일 소유자가 아닌 다른 사용자가 삭제 요청할 경우 파일 삭제를 실패한다.', async () => {
     // given
     const otherUser = await userRepository.save(
       await UserFixture.createUserCryptFixture(),
@@ -71,7 +71,7 @@ describe(`DELETE ${URL}/{fileId} E2E Test`, () => {
 
     // Http then
     const { data } = response.body;
-    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(response.status).toBe(HttpStatus.FORBIDDEN);
     expect(data).toBeUndefined();
 
     // DB, Redis when

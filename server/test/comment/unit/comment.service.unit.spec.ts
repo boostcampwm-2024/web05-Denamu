@@ -1,4 +1,4 @@
-import { NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
 
 import { DataSource } from 'typeorm';
 
@@ -107,7 +107,7 @@ describe(`${CommentService.name} Unit Test`, () => {
       );
     });
 
-    it('본인 댓글이 아니면 UnauthorizedException을 던진다.', async () => {
+    it('본인 댓글이 아니면 ForbiddenException을 던진다.', async () => {
       // given
       commentRepository.findOne.mockResolvedValue({
         id: 5,
@@ -117,7 +117,7 @@ describe(`${CommentService.name} Unit Test`, () => {
 
       // when & then
       await expect(commentService.delete(user, dto)).rejects.toThrow(
-        UnauthorizedException,
+        ForbiddenException,
       );
     });
 
@@ -157,7 +157,7 @@ describe(`${CommentService.name} Unit Test`, () => {
       expect(commentRepository.save).toHaveBeenCalledWith(comment);
     });
 
-    it('본인 댓글이 아니면 UnauthorizedException을 던지고 저장하지 않는다.', async () => {
+    it('본인 댓글이 아니면 ForbiddenException을 던지고 저장하지 않는다.', async () => {
       // given
       commentRepository.findOne.mockResolvedValue({
         id: 5,
@@ -170,7 +170,7 @@ describe(`${CommentService.name} Unit Test`, () => {
         commentService.update(user, 5, {
           newComment: '수정됨',
         }),
-      ).rejects.toThrow(UnauthorizedException);
+      ).rejects.toThrow(ForbiddenException);
       expect(commentRepository.save).not.toHaveBeenCalled();
     });
   });
