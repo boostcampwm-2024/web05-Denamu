@@ -1,7 +1,7 @@
 import {
+  ForbiddenException,
   Injectable,
   NotFoundException,
-  UnauthorizedException,
 } from '@nestjs/common';
 
 import { DataSource } from 'typeorm';
@@ -42,7 +42,7 @@ export class CommentService {
     }
 
     if (userInformation.id !== commentObj.user.id) {
-      throw new UnauthorizedException('본인이 작성한 댓글이 아닙니다.');
+      throw new ForbiddenException('본인이 작성한 댓글이 아닙니다.');
     }
 
     return commentObj;

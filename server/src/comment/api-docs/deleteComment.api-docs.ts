@@ -3,6 +3,7 @@ import { ApiBearerAuth, ApiOperation, ApiParam } from '@nestjs/swagger';
 
 import {
   ApiBadRequestDoc,
+  ApiForbiddenDoc,
   ApiMessageResponse,
   ApiNotFoundDoc,
   ApiUnauthorizedDoc,
@@ -17,6 +18,7 @@ export function ApiDeleteComment() {
     ApiMessageResponse('댓글 삭제 성공'),
     ApiBadRequestDoc('요청 데이터 검증에 실패했습니다.'),
     ApiUnauthorizedDoc('인증되지 않은 요청입니다.'),
+    ApiForbiddenDoc('본인이 작성한 댓글이 아닙니다.'),
     ApiNotFoundDoc('존재하지 않는 댓글입니다.'),
   );
 }
