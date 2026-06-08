@@ -21,14 +21,8 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
   }
 
-  async validate(payload: Payload) {
-    const isInvalidated = await this.redisService.get(
-      `${REDIS_KEYS.USER_INVALIDATED_PREFIX}:${payload.id}`,
-    );
-    if (isInvalidated) {
-      throw new UnauthorizedException('인증되지 않은 요청입니다.');
-    }
-
+  async validate(payload: Payload & { iat: number }) {
+    await validateNotInvalidated(this.redisService, payload);
     return payload;
   }
 }
@@ -52,14 +46,20 @@ export class JwtRefreshStrategy extends PassportStrategy(
     });
   }
 
-  async validate(payload: Payload) {
-    const isInvalidated = await this.redisService.get(
-      `${REDIS_KEYS.USER_INVALIDATED_PREFIX}:${payload.id}`,
-    );
-    if (isInvalidated) {
-      throw new UnauthorizedException('인증되지 않은 요청입니다.');
-    }
-
+  async validate(payload: Payload & { iat: number }) {
+    await validateNotInvalidated(this.redisService, payload);
     return payload;
+  }
+}
+
+export async function validateNotInvalidated(
+  redisService: RedisService,
+  payload: Payload & { iat: number },
+) {
+  const invalidatedAt = await redisService.get(
+    `${REDIS_KEYS.USER_INVALIDATED_PREFIX}:${payload.id}`,
+  );
+  if (invalidatedAt && payload.iat < Number(invalidatedAt)) {
+    throw new UnauthorizedException('인증되지 않은 요청입니다.');
   }
 }

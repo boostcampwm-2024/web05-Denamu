@@ -420,7 +420,7 @@ describe(`${UserService.name} Unit Test`, () => {
       };
 
       // when
-      const result = userService.refreshAccessToken(payload);
+      const result = userService.refreshAccessToken(payload, createResponse());
 
       // then
       expect(jwtService.sign).toHaveBeenCalled();
@@ -490,7 +490,7 @@ describe(`${UserService.name} Unit Test`, () => {
       expect(redisService.setex).toHaveBeenCalledWith(
         `${REDIS_KEYS.USER_INVALIDATED_PREFIX}:1`,
         14 * 86400, // parseTimeToSeconds('14d')
-        '1',
+        expect.stringMatching(/^\d+$/), // invalidatedAt 타임스탬프(초)
       );
       expect(userRepository.remove).toHaveBeenCalledWith(user);
     });

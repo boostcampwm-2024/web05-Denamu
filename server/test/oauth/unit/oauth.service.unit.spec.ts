@@ -24,7 +24,7 @@ describe(`${OAuthService.name} Unit Test`, () => {
   >;
   let logger: jest.Mocked<Pick<WinstonLoggerService, 'log' | 'error'>>;
   let redisService: jest.Mocked<Pick<RedisService, 'eval'>>;
-  let userService: jest.Mocked<Pick<UserService, 'createToken'>>;
+  let userService: jest.Mocked<Pick<UserService, 'issueRefreshToken'>>;
   let googleProvider: {
     getAuthUrl: jest.Mock;
     getTokens: jest.Mock;
@@ -50,7 +50,7 @@ describe(`${OAuthService.name} Unit Test`, () => {
     };
     logger = { log: jest.fn(), error: jest.fn() };
     redisService = { eval: jest.fn() };
-    userService = { createToken: jest.fn().mockReturnValue('service-refresh') };
+    userService = { issueRefreshToken: jest.fn() };
     googleProvider = {
       getAuthUrl: jest.fn(),
       getTokens: jest.fn(),
@@ -167,18 +167,16 @@ describe(`${OAuthService.name} Unit Test`, () => {
       });
       providerRepository.findByProviderTypeAndId.mockResolvedValue(null);
       userRepository.findOne.mockResolvedValue(null);
-      const cookie = jest.fn();
-      const res = { cookie, clearCookie: jest.fn() } as unknown as Response;
+      const res = createResponse();
 
       // when
       const result = await oAuthService.callback(dto, res, createRequest('key-1'));
 
       // then
       expect(manager.save).toHaveBeenCalledTimes(2); // User + Provider
-      expect(cookie).toHaveBeenCalledWith(
-        'refresh_token',
-        'service-refresh',
-        expect.anything(),
+      expect(userService.issueRefreshToken).toHaveBeenCalledWith(
+        expect.objectContaining({ email: 'oauth@test.com', role: 'user' }),
+        res,
       );
       expect(result).toBe(`${OAUTH_URL_PATH.BASE_URL}/oauth-success`);
     });
@@ -189,17 +187,15 @@ describe(`${OAuthService.name} Unit Test`, () => {
       // given
       providerRepository.findByProviderTypeAndId.mockResolvedValue(null);
       userRepository.findOne.mockResolvedValue(null);
-      const cookie = jest.fn();
-      const res = { cookie } as unknown as Response;
+      const res = createResponse();
 
       // when
       await oAuthService.e2eCallback(OAuthType.Google, res);
 
       // then
-      expect(cookie).toHaveBeenCalledWith(
-        'refresh_token',
-        'service-refresh',
-        expect.anything(),
+      expect(userService.issueRefreshToken).toHaveBeenCalledWith(
+        expect.objectContaining({ role: 'user' }),
+        res,
       );
     });
   });
