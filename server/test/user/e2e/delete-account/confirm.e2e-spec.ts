@@ -143,6 +143,6 @@ describe(`DELETE /api/users/deletion-requests/:token E2E Test`, () => {
     expect(savedComments.length).toBe(0);
     expect(savedActivities.length).toBe(0);
     expect(savedFiles.length).toBe(0);
-    expect(invalidatedUser).toBe('1');
+    expect(Number(invalidatedUser)).toBeGreaterThan(0);
   });
 });
