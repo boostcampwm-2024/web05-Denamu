@@ -7,7 +7,7 @@
     "html-escaper": "^3.0.3",
     "ioredis": "^5.10.1",
     "ioredis-mock": "^8.13.1",
-    "mysql2": "^3.22.3",
+    "mysql2": "^3.22.5",
     "node-html-parser": "^6.1.13",
     "node-schedule": "^2.1.1",
     "prom-client": "^15.1.3",
