@@ -20,7 +20,6 @@ import {
   OAuthType,
   StateData,
 } from '@user/constant/oauth.constant';
-import { REFRESH_TOKEN_TTL } from '@user/constant/user.constants';
 import { OAuthCallbackRequestDto } from '@user/dto/request/oAuthCallbackDto';
 import { Provider } from '@user/entity/provider.entity';
 import { User } from '@user/entity/user.entity';
@@ -201,15 +200,7 @@ export class OAuthService {
       role: 'user',
     };
 
-    const serviceRefreshToken = this.userService.createToken(
-      jwtPayload,
-      'refresh',
-    );
-
-    res.cookie('refresh_token', serviceRefreshToken, {
-      ...cookieConfig[process.env.NODE_ENV],
-      maxAge: REFRESH_TOKEN_TTL,
-    });
+    this.userService.issueRefreshToken(jwtPayload, res);
   }
 
   private parseStateData(stateString: string): StateData {

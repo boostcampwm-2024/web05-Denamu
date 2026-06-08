@@ -110,19 +110,23 @@ export class UserService {
     };
 
     const accessToken = this.createToken(payload, 'access');
-    const refreshToken = this.createToken(payload, 'refresh');
-
-    response.cookie('refresh_token', refreshToken, {
-      ...cookieConfig[process.env.NODE_ENV],
-      maxAge: REFRESH_TOKEN_TTL,
-    });
+    this.issueRefreshToken(payload, response);
 
     return CreateAccessTokenResponseDto.toResponseDto(accessToken);
   }
 
-  refreshAccessToken(userInformation: Payload) {
+  refreshAccessToken(userInformation: Payload, response: Response) {
+    this.issueRefreshToken(userInformation, response);
     const accessToken = this.createToken(userInformation, 'access');
     return CreateAccessTokenResponseDto.toResponseDto(accessToken);
+  }
+
+  issueRefreshToken(userInformation: Payload, response: Response) {
+    const refreshToken = this.createToken(userInformation, 'refresh');
+    response.cookie('refresh_token', refreshToken, {
+      ...cookieConfig[process.env.NODE_ENV],
+      maxAge: REFRESH_TOKEN_TTL,
+    });
   }
 
   createToken(userInformation: Payload, mode: 'refresh' | 'access') {
@@ -240,6 +244,18 @@ export class UserService {
       `${REDIS_KEYS.USER_RESET_PASSWORD_KEY}:${uuid}`,
     );
     await this.userRepository.save(user);
+    await this.invalidateUserTokens(user.id);
+  }
+
+  private async invalidateUserTokens(userId: number) {
+    const ttlInSeconds = this.parseTimeToSeconds(
+      this.configService.get('JWT_REFRESH_TOKEN_EXPIRE'),
+    );
+    await this.redisService.setex(
+      `${REDIS_KEYS.USER_INVALIDATED_PREFIX}:${userId}`,
+      ttlInSeconds,
+      Math.floor(Date.now() / 1000).toString(),
+    );
   }
 
   async requestDeleteAccount(userId: number): Promise<void> {
@@ -272,17 +288,8 @@ export class UserService {
       await this.fileService.deleteByPath(user.profileImage);
     }
 
-    const refreshTokenExpire = this.configService.get(
-      'JWT_REFRESH_TOKEN_EXPIRE',
-    );
-    const ttlInSeconds = this.parseTimeToSeconds(refreshTokenExpire);
-
     await Promise.all([
-      this.redisService.setex(
-        `${REDIS_KEYS.USER_INVALIDATED_PREFIX}:${userId}`,
-        ttlInSeconds,
-        '1',
-      ),
+      this.invalidateUserTokens(userId),
       this.userRepository.remove(user),
       this.redisService.del(deleteRequestKey),
     ]);
