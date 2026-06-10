@@ -2,11 +2,12 @@
 
 CREATE TABLE `admin` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `login_id` varchar(255) NOT NULL,
+  `email` varchar(255) NOT NULL,
   `password` varchar(60) NOT NULL,
   `name` varchar(255) NOT NULL,
   `parent_admin_id` int DEFAULT NULL,
   PRIMARY KEY (`id`),
+  UNIQUE KEY `UQ_admin_email` (`email`),
     CONSTRAINT `FK_admin_parent_admin`
     FOREIGN KEY (`parent_admin_id`)
     REFERENCES `admin` (`id`)
@@ -167,9 +168,9 @@ CREATE TABLE `provider` (
 
 -- denamu.admin insert data
 
-INSERT INTO admin (login_id, password, name, parent_admin_id) VALUES
-	('test1234','$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정', NULL),
-	('test5678','$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정의 자식', 1);
+INSERT INTO admin (email,password, name, parent_admin_id) VALUES
+	('test1234@denamu.dev','$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정', NULL),
+	('test5678@denamu.dev','$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정의 자식', 1);
 
 -- denamu.rss_accept insert data
 
