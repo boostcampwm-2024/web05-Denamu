@@ -21,7 +21,7 @@ export default function ChatSection({ isFull, isConnected }: { isFull: boolean; 
     }
   }, [chatLength()]);
   return (
-    <ScrollArea ref={scrollRef} className="h-full">
+    <ScrollArea ref={scrollRef} className="h-full overscroll-contain">
       <ChatHistory isFull={isFull} isConnected={isConnected} />
     </ScrollArea>
   );

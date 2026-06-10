@@ -1,4 +1,5 @@
 import { Channel } from 'amqplib';
+import axios from 'axios';
 import { StartedTestContainer } from 'testcontainers';
 
 import { EmailPayload } from '@email/types';
@@ -47,30 +48,33 @@ export async function getMessagesFromQueue(
 
   const url = `http://${host}:${managementPort}/api/queues/%2f/${encodeURIComponent(queueName)}/get`;
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization:
-        'Basic ' + Buffer.from(`${user}:${pass}`).toString('base64'),
-    },
-    body: JSON.stringify({
+  const response = await axios.post<RabbitMQRawMessage[]>(
+    url,
+    {
       count,
       ackmode: 'ack_requeue_true', // 메시지를 다시 큐에 넣음 (소비하지 않음)
       encoding: 'auto',
-    }),
-  });
+    },
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization:
+          'Basic ' + Buffer.from(`${user}:${pass}`).toString('base64'),
+      },
+      validateStatus: () => true,
+    },
+  );
 
-  if (!response.ok) {
-    if (response.status === 404) {
-      return []; // 큐가 존재하지 않으면 빈 배열 반환
-    }
+  if (response.status === 404) {
+    return [];
+  }
+  if (response.status < 200 || response.status >= 300) {
     throw new Error(
       `Failed to get messages from queue: ${response.statusText}`,
     );
   }
 
-  const messages = (await response.json()) as RabbitMQRawMessage[];
+  const messages = response.data;
 
   return messages.map((msg) => ({
     content: JSON.parse(msg.payload) as EmailPayload,
@@ -178,7 +182,7 @@ export async function clearMailpit(): Promise<void> {
 
   const webPort = mailpitContainer.getMappedPort(8025);
   const baseUrl = `http://${mailpitContainer.getHost()}:${webPort}`;
-  await fetch(`${baseUrl}/api/v1/messages`, { method: 'DELETE' });
+  await axios.delete(`${baseUrl}/api/v1/messages`);
 }
 
 /**
@@ -191,7 +195,9 @@ export async function getMailpitMessages(): Promise<any[]> {
 
   const webPort = mailpitContainer.getMappedPort(8025);
   const baseUrl = `http://${mailpitContainer.getHost()}:${webPort}`;
-  const response = await fetch(`${baseUrl}/api/v1/messages`);
-  const data = (await response.json()) as { messages?: unknown[] };
+  const response = await axios.get<{ messages?: unknown[] }>(
+    `${baseUrl}/api/v1/messages`,
+  );
+  const data = response.data;
   return data.messages ?? [];
 }

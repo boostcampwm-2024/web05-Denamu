@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import * as fs from 'fs';
@@ -17,7 +18,6 @@ import { CommentModule } from '@comment/module/comment.module';
 import { loadDBSetting } from '@common/database/load.config';
 import { EmailModule } from '@common/email/email.module';
 import { WinstonLoggerModule } from '@common/logger/logger.module';
-import { MetricsInterceptor } from '@common/metrics/metrics.interceptor';
 import { MetricsModule } from '@common/metrics/metrics.module';
 import { RabbitMQModule } from '@common/rabbitmq/rabbitmq.module';
 import { RedisModule } from '@common/redis/redis.module';
@@ -70,6 +70,8 @@ const exists = !!chosen && fs.existsSync(chosen);
       useFactory: (configService: ConfigService) =>
         loadDBSetting(configService),
     }),
+    ScheduleModule.forRoot(),
+    EventEmitterModule.forRoot(),
     WinstonLoggerModule,
     RedisModule,
     EmailModule,
@@ -88,11 +90,5 @@ const exists = !!chosen && fs.existsSync(chosen);
     RabbitMQModule,
   ],
   controllers: [],
-  providers: [
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: MetricsInterceptor,
-    },
-  ],
 })
 export class AppModule {}

@@ -10,7 +10,7 @@ import {
   Req,
   Res,
   Sse,
-  UseInterceptors,
+  UseGuards,
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ApiTags } from '@nestjs/swagger';
@@ -18,11 +18,9 @@ import { ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { Observable } from 'rxjs';
 
-import { ApiResponse } from '@common/response/common.response';
-
-import { InjectUserInterceptor } from '@common/auth/jwt.interceptor';
 import { CurrentUser } from '@common/decorator/current-user.decorator';
-import { Payload } from '@common/guard/jwt.guard';
+import { OptionalJwtGuard, Payload } from '@common/guard/jwt.guard';
+import { ApiResponse } from '@common/response/common.response';
 
 import { ApiDeleteCheckFeed } from '@feed/api-docs/deleteCheckFeed.api-docs';
 import { ApiGetFeedDetail } from '@feed/api-docs/getFeedDetail.api-docs';
@@ -140,7 +138,7 @@ export class FeedController {
   @ApiGetFeedDetail()
   @Get(':feedId')
   @HttpCode(HttpStatus.OK)
-  @UseInterceptors(InjectUserInterceptor)
+  @UseGuards(OptionalJwtGuard)
   async getFeedDetail(
     @Param() feedDetailRequestDto: ManageFeedRequestDto,
     @CurrentUser() user: Payload | null,

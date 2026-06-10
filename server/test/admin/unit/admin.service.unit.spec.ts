@@ -1,0 +1,324 @@
+import {
+  ConflictException,
+  ForbiddenException,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
+
+import { Request, Response } from 'express';
+
+import { SESSION_TTL } from '@admin/constant/admin.constant';
+import { RegisterAdminRequestDto } from '@admin/dto/request/registerAdmin.dto';
+import { AdminRepository } from '@admin/repository/admin.repository';
+import { AdminService } from '@admin/service/admin.service';
+
+import { cookieConfig } from '@common/cookie/cookie.config';
+import { REDIS_KEYS } from '@common/redis/redis.constant';
+import { RedisService } from '@common/redis/redis.service';
+
+import {
+  ADMIN_DEFAULT_PASSWORD,
+  AdminFixture,
+} from '@test/config/common/fixture/admin.fixture';
+
+describe(`${AdminService.name} Unit Test`, () => {
+  let adminService: AdminService;
+  let adminRepository: jest.Mocked<
+    Pick<AdminRepository, 'findOne' | 'save' | 'find' | 'delete'>
+  >;
+  let redisService: jest.Mocked<
+    Pick<RedisService, 'get' | 'set' | 'del' | 'setex'>
+  >;
+
+  const createResponse = () =>
+    ({
+      cookie: jest.fn(),
+      clearCookie: jest.fn(),
+    }) as unknown as Response;
+
+  const createRequest = (cookies: Record<string, string> = {}) =>
+    ({ cookies }) as unknown as Request;
+
+  beforeEach(() => {
+    adminRepository = {
+      findOne: jest.fn(),
+      save: jest.fn(),
+      find: jest.fn(),
+      delete: jest.fn(),
+    };
+    redisService = {
+      get: jest.fn(),
+      set: jest.fn(),
+      del: jest.fn(),
+      setex: jest.fn(),
+    };
+
+    adminService = new AdminService(
+      adminRepository as unknown as AdminRepository,
+      redisService as unknown as RedisService,
+    );
+  });
+
+  describe('loginAdmin', () => {
+    const loginDto = {
+      loginId: 'admin-id',
+      password: ADMIN_DEFAULT_PASSWORD,
+    };
+
+    it('존재하지 않는 아이디면 UnauthorizedException을 던진다.', async () => {
+      // given
+      adminRepository.findOne.mockResolvedValue(null);
+
+      // when & then
+      await expect(
+        adminService.loginAdmin(loginDto, createResponse(), createRequest()),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('비밀번호가 일치하지 않으면 UnauthorizedException을 던진다.', async () => {
+      // given
+      const admin = await AdminFixture.createAdminCryptFixture({
+        loginId: loginDto.loginId,
+      });
+      adminRepository.findOne.mockResolvedValue(admin);
+
+      // when & then
+      await expect(
+        adminService.loginAdmin(
+          { ...loginDto, password: 'wrong-password!' },
+          createResponse(),
+          createRequest(),
+        ),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('로그인에 성공하면 세션을 발급하고 쿠키를 설정한다.', async () => {
+      // given
+      const admin = await AdminFixture.createAdminCryptFixture({
+        loginId: loginDto.loginId,
+      });
+      adminRepository.findOne.mockResolvedValue(admin);
+      redisService.get.mockResolvedValue(null);
+      const cookie = jest.fn();
+      const response = { cookie } as unknown as Response;
+
+      // when
+      await adminService.loginAdmin(loginDto, response, createRequest());
+
+      // then
+      expect(redisService.set).toHaveBeenCalledTimes(2);
+      expect(redisService.set).toHaveBeenCalledWith(
+        expect.stringContaining(REDIS_KEYS.ADMIN_AUTH_KEY),
+        admin.loginId,
+        'EX',
+        SESSION_TTL,
+      );
+      expect(cookie).toHaveBeenCalledWith(
+        'sessionId',
+        expect.any(String),
+        cookieConfig[process.env.NODE_ENV],
+      );
+    });
+
+    it('기존 세션과 쿠키 세션이 있으면 모두 무효화한다.', async () => {
+      // given
+      const admin = await AdminFixture.createAdminCryptFixture({
+        loginId: loginDto.loginId,
+      });
+      adminRepository.findOne.mockResolvedValue(admin);
+      redisService.get.mockResolvedValue('prev-session-id');
+
+      // when
+      await adminService.loginAdmin(
+        loginDto,
+        createResponse(),
+        createRequest({ sessionId: 'cookie-session-id' }),
+      );
+
+      // then
+      expect(redisService.del).toHaveBeenCalledWith(
+        `${REDIS_KEYS.ADMIN_AUTH_KEY}:cookie-session-id`,
+        `${REDIS_KEYS.ADMIN_AUTH_KEY}:prev-session-id`,
+      );
+    });
+  });
+
+  describe('logoutAdmin', () => {
+    it('세션과 로그인 매핑을 모두 삭제하고 쿠키를 제거한다.', async () => {
+      // given
+      redisService.get.mockResolvedValue('admin-id');
+      const clearCookie = jest.fn();
+      const response = { clearCookie } as unknown as Response;
+
+      // when
+      await adminService.logoutAdmin(
+        createRequest({ sessionId: 'sid-1' }),
+        response,
+      );
+
+      // then
+      expect(redisService.del).toHaveBeenCalledWith(
+        `${REDIS_KEYS.ADMIN_AUTH_KEY}:sid-1`,
+      );
+      expect(redisService.del).toHaveBeenCalledWith(
+        `${REDIS_KEYS.ADMIN_SESSION_BY_LOGIN}:admin-id`,
+      );
+      expect(clearCookie).toHaveBeenCalledWith('sessionId');
+    });
+
+    it('세션에 매핑된 로그인 아이디가 없으면 로그인 매핑은 삭제하지 않는다.', async () => {
+      // given
+      redisService.get.mockResolvedValue(null);
+
+      // when
+      await adminService.logoutAdmin(
+        createRequest({ sessionId: 'sid-1' }),
+        createResponse(),
+      );
+
+      // then
+      expect(redisService.del).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('createAdmin', () => {
+    const registerDto = new RegisterAdminRequestDto({
+      loginId: 'new-admin',
+      password: ADMIN_DEFAULT_PASSWORD,
+    });
+
+    it('이미 존재하는 아이디면 ConflictException을 던진다.', async () => {
+      // given
+      adminRepository.findOne.mockResolvedValue(
+        await AdminFixture.createAdminCryptFixture(),
+      );
+
+      // when & then
+      await expect(
+        adminService.createAdmin(registerDto, 'parent-admin'),
+      ).rejects.toThrow(ConflictException);
+      expect(adminRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('비밀번호를 해시한 뒤 생성자를 부모로 저장한다.', async () => {
+      // given
+      const parent = await AdminFixture.createAdminCryptFixture({
+        loginId: 'parent-admin',
+      });
+      parent.id = 7;
+      adminRepository.findOne
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(parent);
+
+      // when
+      await adminService.createAdmin(registerDto, 'parent-admin');
+
+      // then
+      const saved = adminRepository.save.mock.calls[0][0] as {
+        password: string;
+        parentAdminId: number | null;
+      };
+      expect(adminRepository.save).toHaveBeenCalledTimes(1);
+      expect(saved.password).not.toBe(ADMIN_DEFAULT_PASSWORD);
+      expect(saved.parentAdminId).toBe(7);
+    });
+  });
+
+  describe('getChildAdmins', () => {
+    it('생성자의 ID를 부모로 가지는 관리자 목록을 반환한다.', async () => {
+      // given
+      const parent = await AdminFixture.createAdminCryptFixture({
+        loginId: 'parent-admin',
+      });
+      parent.id = 7;
+      const child = await AdminFixture.createAdminCryptFixture({
+        loginId: 'child-admin',
+      });
+      child.id = 8;
+      child.parentAdminId = 7;
+      adminRepository.findOne.mockResolvedValue(parent);
+      adminRepository.find.mockResolvedValue([child]);
+
+      // when
+      const result = await adminService.getChildAdmins('parent-admin');
+
+      // then
+      expect(adminRepository.find).toHaveBeenCalledWith({
+        where: { parentAdminId: 7 },
+      });
+      expect(result).toEqual([
+        { id: 8, loginId: 'child-admin', name: child.name },
+      ]);
+    });
+  });
+
+  describe('deleteChildAdmin', () => {
+    it('대상 관리자가 존재하지 않으면 NotFoundException을 던진다.', async () => {
+      // given
+      const admin = await AdminFixture.createAdminCryptFixture({
+        loginId: 'parent-admin',
+      });
+      admin.id = 7;
+      adminRepository.findOne
+        .mockResolvedValueOnce(admin)
+        .mockResolvedValueOnce(null);
+
+      // when & then
+      await expect(
+        adminService.deleteChildAdmin('parent-admin', 999),
+      ).rejects.toThrow(NotFoundException);
+      expect(adminRepository.delete).not.toHaveBeenCalled();
+    });
+
+    it('본인이 생성한 계정이 아니면 ForbiddenException을 던진다.', async () => {
+      // given
+      const admin = await AdminFixture.createAdminCryptFixture({
+        loginId: 'parent-admin',
+      });
+      admin.id = 7;
+      const target = await AdminFixture.createAdminCryptFixture({
+        loginId: 'other-child',
+      });
+      target.id = 8;
+      target.parentAdminId = 99;
+      adminRepository.findOne
+        .mockResolvedValueOnce(admin)
+        .mockResolvedValueOnce(target);
+
+      // when & then
+      await expect(
+        adminService.deleteChildAdmin('parent-admin', 8),
+      ).rejects.toThrow(ForbiddenException);
+      expect(adminRepository.delete).not.toHaveBeenCalled();
+    });
+
+    it('본인이 생성한 계정이면 삭제하고 무효화 키를 등록한다.', async () => {
+      // given
+      const admin = await AdminFixture.createAdminCryptFixture({
+        loginId: 'parent-admin',
+      });
+      admin.id = 7;
+      const target = await AdminFixture.createAdminCryptFixture({
+        loginId: 'child-admin',
+      });
+      target.id = 8;
+      target.parentAdminId = 7;
+      adminRepository.findOne
+        .mockResolvedValueOnce(admin)
+        .mockResolvedValueOnce(target);
+      adminRepository.find.mockResolvedValue([]);
+
+      // when
+      await adminService.deleteChildAdmin('parent-admin', 8);
+
+      // then
+      expect(adminRepository.delete).toHaveBeenCalledWith({ id: 8 });
+      expect(redisService.setex).toHaveBeenCalledTimes(1);
+      expect(redisService.setex).toHaveBeenCalledWith(
+        `${REDIS_KEYS.ADMIN_INVALIDATED_PREFIX}:child-admin`,
+        SESSION_TTL,
+        '1',
+      );
+    });
+  });
+});

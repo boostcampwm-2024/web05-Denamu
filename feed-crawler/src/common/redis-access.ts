@@ -71,21 +71,6 @@ export class RedisConnection {
     return this.redis.del(...keys);
   }
 
-  async scan(
-    cursor: string | number,
-    match?: string,
-    count?: number,
-  ): Promise<[cursor: string, keys: string[]]> {
-    const result = await this.redis.scan(
-      cursor,
-      'MATCH',
-      match || '*',
-      'COUNT',
-      count || 10,
-    );
-    return [result[0], result[1]];
-  }
-
   async executePipeline(commands: (pipeline: ChainableCommander) => void) {
     const pipeline = this.redis.pipeline();
     try {
@@ -99,6 +84,10 @@ export class RedisConnection {
       );
       throw error;
     }
+  }
+
+  async smembers(key: string): Promise<string[]> {
+    return this.redis.smembers(key);
   }
 
   async hset(key: string, ...fieldValues: (string | Buffer | number)[]) {

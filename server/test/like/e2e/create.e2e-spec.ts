@@ -81,6 +81,15 @@ describe(`POST ${BASE_URL}/:feedId/likes E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
     expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedLike = await likeRepository.findOneBy({
+      feed: { id: feed.id },
+      user: { id: user.id },
+    });
+
+    // DB, Redis then
+    expect(savedLike).toBeNull();
   });
 
   it('[409] 이미 좋아요를 한 게시글일 경우 좋아요 등록을 실패한다.', async () => {

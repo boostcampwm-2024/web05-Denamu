@@ -45,67 +45,45 @@ export class LikeService {
     userInformation: Payload,
     feedLikeCreateDto: ManageLikeRequestDto,
   ) {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try {
+    await this.dataSource.transaction(async (manager) => {
       const feed = await this.feedService.getFeed(feedLikeCreateDto.feedId);
       const existing = await this.likeRepository.findOneBy({
         user: { id: userInformation.id },
-        feed: { id: feedLikeCreateDto.feedId },
+        feed,
       });
       if (existing) {
         throw new ConflictException('이미 좋아요를 눌렀습니다.');
       }
 
       feed.likeCount++;
-      await queryRunner.manager.save(feed);
-      await queryRunner.manager.save(Like, {
+      await manager.save(feed);
+      await manager.save(Like, {
         user: { id: userInformation.id },
         feed: { id: feedLikeCreateDto.feedId },
       });
-
-      await queryRunner.commitTransaction();
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      throw error;
-    } finally {
-      await queryRunner.release();
-    }
+    });
   }
 
   async delete(
     userInformation: Payload,
     feedLikeDeleteDto: ManageLikeRequestDto,
   ) {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try {
+    await this.dataSource.transaction(async (manager) => {
       const feed = await this.feedService.getFeed(feedLikeDeleteDto.feedId);
       const existing = await this.likeRepository.findOneBy({
         user: { id: userInformation.id },
-        feed: { id: feedLikeDeleteDto.feedId },
+        feed,
       });
       if (!existing) {
         throw new NotFoundException('좋아요를 누르지 않은 상태입니다.');
       }
 
       feed.likeCount--;
-      await queryRunner.manager.save(feed);
-      await queryRunner.manager.delete(Like, {
+      await manager.save(feed);
+      await manager.delete(Like, {
         user: { id: userInformation.id },
         feed: { id: feedLikeDeleteDto.feedId },
       });
-
-      await queryRunner.commitTransaction();
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      throw error;
-    } finally {
-      await queryRunner.release();
-    }
+    });
   }
 }

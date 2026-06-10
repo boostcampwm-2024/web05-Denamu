@@ -1,10 +1,6 @@
-import { forwardRef, Module } from '@nestjs/common';
-import { EventEmitterModule } from '@nestjs/event-emitter';
-import { ScheduleModule } from '@nestjs/schedule';
+import { Module } from '@nestjs/common';
 
 import { ActivityModule } from '@activity/module/activity.module';
-
-import { CommentModule } from '@comment/module/comment.module';
 
 import { JwtAuthModule } from '@common/auth/jwt.module';
 
@@ -17,23 +13,10 @@ import {
 import { FeedScheduler } from '@feed/scheduler/feed.scheduler';
 import { FeedService } from '@feed/service/feed.service';
 
-import { LikeModule } from '@like/module/like.module';
-
-import { RssModule } from '@rss/module/rss.module';
-
 import { UserModule } from '@user/module/user.module';
 
 @Module({
-  imports: [
-    ScheduleModule.forRoot(),
-    EventEmitterModule.forRoot(),
-    UserModule,
-    ActivityModule,
-    JwtAuthModule,
-    forwardRef(() => RssModule),
-    forwardRef(() => CommentModule),
-    forwardRef(() => LikeModule),
-  ],
+  imports: [UserModule, ActivityModule, JwtAuthModule],
   controllers: [FeedController],
   providers: [
     FeedService,

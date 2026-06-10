@@ -1,12 +1,7 @@
 import { LogOut, User } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 import logo from "@/assets/logo-denamu-main.svg";
 
@@ -16,9 +11,13 @@ import { auth } from "@/api/services/admin/auth";
 export const AdminHeader = ({
   setLogin,
   handleTap,
+  name,
+  parent,
 }: {
   setLogin: () => void;
   handleTap: (tap: "RSS" | "MEMBER") => void;
+  name?: string;
+  parent?: { loginId: string; name: string } | null;
 }) => {
   const handleLogout = () => {
     auth.logout();
@@ -38,20 +37,29 @@ export const AdminHeader = ({
 
           {/* Right Side Menu */}
           <div className="flex items-center space-x-4">
-            {/* Notifications */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <User className="h-5 w-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem className="text-red-600" onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  로그아웃
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center space-x-2 cursor-help">
+                    <User className="h-5 w-5" />
+                    {name && <span className="text-sm font-medium">{name}</span>}
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {parent ? (
+                    <span>
+                      상위 계정: {parent.name} ({parent.loginId})
+                    </span>
+                  ) : (
+                    <span>Root 계정이라 부모 계정이 없습니다.</span>
+                  )}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <Button variant="ghost" className="text-red-600" onClick={handleLogout}>
+              <LogOut className="h-4 w-4" />
+              로그아웃
+            </Button>
           </div>
         </div>
       </div>

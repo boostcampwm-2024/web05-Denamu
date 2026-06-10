@@ -1,5 +1,7 @@
 import 'reflect-metadata';
 
+import axios from 'axios';
+
 import { setupTestContainer } from '@test/config/e2e/common/testContext.setup';
 import { StartedTestContainer } from 'testcontainers';
 
@@ -69,12 +71,10 @@ describe(`Email Normal Scenario E2E Test`, () => {
     const webPort = mailpitContainer.getMappedPort(8025);
     const baseUrl = `http://${mailpitContainer.getHost()}:${webPort}`;
 
-    const response = await fetch(`${baseUrl}/api/v1/messages`);
-    const data = (await response.json()) as MailpitResponse;
+    const response = await axios.get<MailpitResponse>(`${baseUrl}/api/v1/messages`);
+    const data = response.data;
 
-    await fetch(`${baseUrl}/api/v1/messages`, {
-      method: 'DELETE',
-    });
+    await axios.delete(`${baseUrl}/api/v1/messages`);
 
     expect(data.messages).toHaveLength(1);
     expect(data.messages[0].To[0].Address).toBe('test@test.com');
@@ -109,12 +109,10 @@ describe(`Email Normal Scenario E2E Test`, () => {
     const webPort = mailpitContainer.getMappedPort(8025);
     const baseUrl = `http://${mailpitContainer.getHost()}:${webPort}`;
 
-    const response = await fetch(`${baseUrl}/api/v1/messages`);
-    const data = (await response.json()) as MailpitResponse;
+    const response = await axios.get<MailpitResponse>(`${baseUrl}/api/v1/messages`);
+    const data = response.data;
 
-    await fetch(`${baseUrl}/api/v1/messages`, {
-      method: 'DELETE',
-    });
+    await axios.delete(`${baseUrl}/api/v1/messages`);
 
     expect(data.messages).toHaveLength(1);
     expect(data.messages[0].To[0].Address).toBe('test@test.com');
@@ -152,12 +150,10 @@ describe(`Email Normal Scenario E2E Test`, () => {
     const webPort = mailpitContainer.getMappedPort(8025);
     const baseUrl = `http://${mailpitContainer.getHost()}:${webPort}`;
 
-    const response = await fetch(`${baseUrl}/api/v1/messages`);
-    const data = (await response.json()) as MailpitResponse;
+    const response = await axios.get<MailpitResponse>(`${baseUrl}/api/v1/messages`);
+    const data = response.data;
 
-    await fetch(`${baseUrl}/api/v1/messages`, {
-      method: 'DELETE',
-    });
+    await axios.delete(`${baseUrl}/api/v1/messages`);
 
     expect(data.messages).toHaveLength(1);
     expect(data.messages[0].To[0].Address).toBe('test@test.com');
@@ -196,12 +192,10 @@ describe(`Email Normal Scenario E2E Test`, () => {
     const webPort = mailpitContainer.getMappedPort(8025);
     const baseUrl = `http://${mailpitContainer.getHost()}:${webPort}`;
 
-    const response = await fetch(`${baseUrl}/api/v1/messages`);
-    const data = (await response.json()) as MailpitResponse;
+    const response = await axios.get<MailpitResponse>(`${baseUrl}/api/v1/messages`);
+    const data = response.data;
 
-    await fetch(`${baseUrl}/api/v1/messages`, {
-      method: 'DELETE',
-    });
+    await axios.delete(`${baseUrl}/api/v1/messages`);
 
     expect(data.messages).toHaveLength(1);
     expect(data.messages[0].To[0].Address).toBe('test@test.com');
@@ -234,12 +228,10 @@ describe(`Email Normal Scenario E2E Test`, () => {
     const webPort = mailpitContainer.getMappedPort(8025);
     const baseUrl = `http://${mailpitContainer.getHost()}:${webPort}`;
 
-    const response = await fetch(`${baseUrl}/api/v1/messages`);
-    const data = (await response.json()) as MailpitResponse;
+    const response = await axios.get<MailpitResponse>(`${baseUrl}/api/v1/messages`);
+    const data = response.data;
 
-    await fetch(`${baseUrl}/api/v1/messages`, {
-      method: 'DELETE',
-    });
+    await axios.delete(`${baseUrl}/api/v1/messages`);
 
     expect(data.messages).toHaveLength(1);
     expect(data.messages[0].To[0].Address).toBe('test@test.com');
@@ -272,12 +264,10 @@ describe(`Email Normal Scenario E2E Test`, () => {
     const webPort = mailpitContainer.getMappedPort(8025);
     const baseUrl = `http://${mailpitContainer.getHost()}:${webPort}`;
 
-    const response = await fetch(`${baseUrl}/api/v1/messages`);
-    const data = (await response.json()) as MailpitResponse;
+    const response = await axios.get<MailpitResponse>(`${baseUrl}/api/v1/messages`);
+    const data = response.data;
 
-    await fetch(`${baseUrl}/api/v1/messages`, {
-      method: 'DELETE',
-    });
+    await axios.delete(`${baseUrl}/api/v1/messages`);
 
     expect(data.messages).toHaveLength(1);
     expect(data.messages[0].To[0].Address).toBe('test@test.com');

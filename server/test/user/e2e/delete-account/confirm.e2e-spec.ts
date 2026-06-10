@@ -29,15 +29,11 @@ import { FeedFixture } from '@test/config/common/fixture/feed.fixture';
 import { FileFixture } from '@test/config/common/fixture/file.fixture';
 import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture';
 import { UserFixture } from '@test/config/common/fixture/user.fixture';
-import {
-  createAccessToken,
-  createRefreshToken,
-} from '@test/config/e2e/env/jest.setup';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
 const makeURL = (token: string) => `/api/users/deletion-requests/${token}`;
 
-describe(`PATCH /api/users/deletion-requests/:token E2E Test`, () => {
+describe(`DELETE /api/users/deletion-requests/:token E2E Test`, () => {
   let agent: TestAgent;
   let redisService: RedisService;
   let userRepository: UserRepository;
@@ -87,7 +83,7 @@ describe(`PATCH /api/users/deletion-requests/:token E2E Test`, () => {
     const nonExistentCode = uuid.v4();
 
     // Http when
-    const response = await agent.patch(makeURL(nonExistentCode));
+    const response = await agent.delete(makeURL(nonExistentCode));
 
     // Http then
     const { data } = response.body;
@@ -111,16 +107,10 @@ describe(`PATCH /api/users/deletion-requests/:token E2E Test`, () => {
       await UserFixture.createUserCryptFixture(),
     );
 
-    const accessToken = createAccessToken(user);
-    const refreshToken = createRefreshToken(user);
-
-    await redisService.set(
-      redisKeyMake(userDeleteCode),
-      `${user.id}:${accessToken}:${refreshToken}`,
-    );
+    await redisService.set(redisKeyMake(userDeleteCode), user.id.toString());
 
     // Http when
-    const response = await agent.patch(makeURL(userDeleteCode));
+    const response = await agent.delete(makeURL(userDeleteCode));
 
     // Http then
     const { data } = response.body;
@@ -135,24 +125,16 @@ describe(`PATCH /api/users/deletion-requests/:token E2E Test`, () => {
       savedComments,
       savedActivities,
       savedFiles,
+      invalidatedUser,
     ] = await Promise.all([
       userRepository.findOneBy({ id: user.id }),
       redisService.get(redisKeyMake(userDeleteCode)),
       likeRepository.findBy({ user: { id: user.id } }),
-      commentRepository.findBy({
-        user: { id: user.id },
-      }),
-      activityRepository.findBy({
-        user: { id: user.id },
-      }),
+      commentRepository.findBy({ user: { id: user.id } }),
+      activityRepository.findBy({ user: { id: user.id } }),
       fileRepository.findBy({ user: { id: user.id } }),
+      redisService.get(`${REDIS_KEYS.USER_INVALIDATED_PREFIX}:${user.id}`),
     ]);
-    const blacklistedAccessToken = await redisService.get(
-      `${REDIS_KEYS.USER_BLACKLIST_JWT_PREFIX}:${accessToken}`,
-    );
-    const blacklistedRefreshToken = await redisService.get(
-      `${REDIS_KEYS.USER_BLACKLIST_JWT_PREFIX}:${refreshToken}`,
-    );
 
     // DB, Redis then
     expect(savedUser).toBeNull();
@@ -161,7 +143,6 @@ describe(`PATCH /api/users/deletion-requests/:token E2E Test`, () => {
     expect(savedComments.length).toBe(0);
     expect(savedActivities.length).toBe(0);
     expect(savedFiles.length).toBe(0);
-    expect(blacklistedAccessToken).toBe('1');
-    expect(blacklistedRefreshToken).toBe('1');
+    expect(Number(invalidatedUser)).toBeGreaterThan(0);
   });
 });

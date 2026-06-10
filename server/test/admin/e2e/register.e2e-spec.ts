@@ -28,8 +28,14 @@ describe(`POST ${URL} E2E Test`, () => {
     redisService = testApp.get(RedisService);
   });
 
+  let sessionAdminId: number;
+
   beforeEach(async () => {
-    await redisService.set(redisKeyMake(sessionKey), 'testAdminId');
+    const admin = await adminRepository.save(
+      await AdminFixture.createAdminCryptFixture({ loginId: 'testAdminId' }),
+    );
+    sessionAdminId = admin.id;
+    await redisService.set(redisKeyMake(sessionKey), admin.loginId);
   });
 
   it('[401] 관리자 로그인 쿠키가 없을 경우 회원가입을 실패한다.', async () => {
@@ -37,6 +43,7 @@ describe(`POST ${URL} E2E Test`, () => {
     const newAdminDto = new RegisterAdminRequestDto({
       loginId: 'testNewAdminId',
       password: 'testNewAdminPassword!',
+      name: 'testNewAdminName',
     });
 
     // Http when
@@ -61,6 +68,7 @@ describe(`POST ${URL} E2E Test`, () => {
     const newAdminDto = new RegisterAdminRequestDto({
       loginId: 'testNewAdminId',
       password: 'testNewAdminPassword!',
+      name: 'testNewAdminName',
     });
 
     // Http when
@@ -91,6 +99,7 @@ describe(`POST ${URL} E2E Test`, () => {
     const newAdminDto = new RegisterAdminRequestDto({
       loginId: admin.loginId,
       password: 'testNewAdminPassword!',
+      name: 'testNewAdminName',
     });
 
     // Http when
@@ -118,6 +127,7 @@ describe(`POST ${URL} E2E Test`, () => {
     const newAdminDto = new RegisterAdminRequestDto({
       loginId: 'testNewAdminId',
       password: 'testNewAdminPassword!',
+      name: 'testNewAdminName',
     });
 
     // Http when
@@ -141,5 +151,6 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(
       await bcrypt.compare(newAdminDto.password, savedAdmin.password),
     ).toBeTruthy();
+    expect(savedAdmin.parentAdminId).toBe(sessionAdminId);
   });
 });

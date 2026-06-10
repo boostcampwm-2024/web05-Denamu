@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -8,13 +9,12 @@ import {
   Patch,
   Post,
   Query,
-  Req,
   Res,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
-import { Request, Response } from 'express';
+import { Response } from 'express';
 
 import { CurrentUser } from '@common/decorator';
 import { JwtGuard, Payload, RefreshJwtGuard } from '@common/guard/jwt.guard';
@@ -33,10 +33,10 @@ import { ApiResetPassword } from '@user/api-docs/resetPassword.api-docs';
 import { ApiUpdateUser } from '@user/api-docs/updateUser.api-docs';
 import { CertificateUserRequestDto } from '@user/dto/request/certificateUser.dto';
 import { CheckEmailDuplicationRequestDto } from '@user/dto/request/checkEmailDuplication.dto';
+import { ConfirmDeleteAccountParamRequestDto } from '@user/dto/request/confirmDeleteAccountParam.dto';
 import { ForgotPasswordRequestDto } from '@user/dto/request/forgotPassword.dto';
 import { LoginUserRequestDto } from '@user/dto/request/loginUser.dto';
 import { RegisterUserRequestDto } from '@user/dto/request/registerUser.dto';
-import { ConfirmDeleteAccountParamRequestDto } from '@user/dto/request/confirmDeleteAccountParam.dto';
 import { ResetPasswordRequestDto } from '@user/dto/request/resetPassword.dto';
 import { ResetPasswordParamRequestDto } from '@user/dto/request/resetPasswordParam.dto';
 import { UpdateUserRequestDto } from '@user/dto/request/updateUser.dto';
@@ -99,10 +99,13 @@ export class UserController {
   @Post('/tokens')
   @HttpCode(HttpStatus.OK)
   @UseGuards(RefreshJwtGuard)
-  refreshAccessToken(@CurrentUser() user: Payload) {
+  refreshAccessToken(
+    @CurrentUser() user: Payload,
+    @Res({ passthrough: true }) response: Response,
+  ) {
     return ApiResponse.responseWithData(
       '엑세스 토큰을 재발급했습니다.',
-      this.userService.refreshAccessToken(user),
+      this.userService.refreshAccessToken(user, response),
     );
   }
 
@@ -133,26 +136,19 @@ export class UserController {
   @Post('/deletion-requests')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtGuard)
-  async requestDeleteAccount(
-    @CurrentUser() user: Payload,
-    @Req() req: Request,
-  ) {
-    const accessToken = req.headers.authorization?.replace('Bearer ', '');
-    const refreshToken = req.cookies['refresh_token'];
-    await this.userService.requestDeleteAccount(
-      user.id,
-      accessToken,
-      refreshToken,
-    );
+  async requestDeleteAccount(@CurrentUser() user: Payload) {
+    await this.userService.requestDeleteAccount(user.id);
     return ApiResponse.responseWithNoContent(
       '회원탈퇴 신청이 성공적으로 처리되었습니다. 이메일을 확인해주세요.',
     );
   }
 
   @ApiConfirmDeleteAccount()
-  @Patch('/deletion-requests/:token')
+  @Delete('/deletion-requests/:token')
   @HttpCode(HttpStatus.OK)
-  async confirmDeleteAccount(@Param() paramDto: ConfirmDeleteAccountParamRequestDto) {
+  async confirmDeleteAccount(
+    @Param() paramDto: ConfirmDeleteAccountParamRequestDto,
+  ) {
     await this.userService.confirmDeleteAccount(paramDto.token);
     return ApiResponse.responseWithNoContent('회원탈퇴가 완료되었습니다.');
   }
@@ -174,7 +170,10 @@ export class UserController {
     @Param() paramDto: ResetPasswordParamRequestDto,
     @Body() resetPasswordRequestDto: ResetPasswordRequestDto,
   ) {
-    await this.userService.resetPassword(paramDto.uuid, resetPasswordRequestDto.password);
+    await this.userService.resetPassword(
+      paramDto.uuid,
+      resetPasswordRequestDto.password,
+    );
     return ApiResponse.responseWithNoContent(
       '비밀번호가 성공적으로 수정되었습니다.',
     );

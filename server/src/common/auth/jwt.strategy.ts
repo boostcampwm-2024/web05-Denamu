@@ -18,20 +18,11 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       secretOrKey: configService.get('JWT_ACCESS_SECRET'),
-      passReqToCallback: true,
     });
   }
 
-  async validate(req: Request, payload: Payload) {
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    if (token) {
-      const blacklistKey = `${REDIS_KEYS.USER_BLACKLIST_JWT_PREFIX}:${token}`;
-      const isBlacklisted = await this.redisService.get(blacklistKey);
-
-      if (isBlacklisted) {
-        throw new UnauthorizedException('인증되지 않은 요청입니다.');
-      }
-    }
+  async validate(payload: Payload & { iat: number }) {
+    await validateNotInvalidated(this.redisService, payload);
     return payload;
   }
 }
@@ -52,20 +43,23 @@ export class JwtRefreshStrategy extends PassportStrategy(
         },
       ]),
       secretOrKey: configService.get('JWT_REFRESH_SECRET'),
-      passReqToCallback: true,
     });
   }
 
-  async validate(req: Request, payload: Payload) {
-    const token = req.cookies['refresh_token'];
-    if (token) {
-      const blacklistKey = `${REDIS_KEYS.USER_BLACKLIST_JWT_PREFIX}:${token}`;
-      const isBlacklisted = await this.redisService.get(blacklistKey);
-
-      if (isBlacklisted) {
-        throw new UnauthorizedException('인증되지 않은 요청입니다.');
-      }
-    }
+  async validate(payload: Payload & { iat: number }) {
+    await validateNotInvalidated(this.redisService, payload);
     return payload;
+  }
+}
+
+export async function validateNotInvalidated(
+  redisService: RedisService,
+  payload: Payload & { iat: number },
+) {
+  const invalidatedAt = await redisService.get(
+    `${REDIS_KEYS.USER_INVALIDATED_PREFIX}:${payload.id}`,
+  );
+  if (invalidatedAt && payload.iat < Number(invalidatedAt)) {
+    throw new UnauthorizedException('인증되지 않은 요청입니다.');
   }
 }

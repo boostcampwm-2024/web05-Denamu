@@ -3,7 +3,6 @@ export type ChatType = {
   userName: string;
   timestamp: string;
   message: string;
-  isMidNight?: boolean;
   userId?: string;
   messageId?: string;
   isSend?: boolean;

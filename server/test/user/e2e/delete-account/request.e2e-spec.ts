@@ -75,8 +75,6 @@ describe(`POST ${URL} E2E Test`, () => {
     );
 
     // DB, Redis then
-    const [userId, savedAccessToken] = savedDeleteCode.split(':');
-    expect(userId).toBe(user.id.toString());
-    expect(savedAccessToken).toBe(accessToken);
+    expect(savedDeleteCode).toBe(user.id.toString());
   });
 });

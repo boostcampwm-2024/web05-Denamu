@@ -44,3 +44,15 @@ export const subtractDays = (date: Date, days: number): Date => {
 };
 
 export const getShortMonthName = (date: Date): string => date.toLocaleString("en-US", { month: "short" });
+
+export const getLocalDateString = (timestamp: string): string | null => {
+  const date = new Date(timestamp);
+  if (isNaN(date.getTime())) return null;
+  return date.toLocaleDateString("en-CA");
+};
+
+export const getLocalMinuteKey = (timestamp: string): string | null => {
+  const date = new Date(timestamp);
+  if (isNaN(date.getTime())) return null;
+  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}-${date.getHours()}-${date.getMinutes()}`;
+};

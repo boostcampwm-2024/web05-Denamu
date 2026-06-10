@@ -17,11 +17,11 @@ import "@testing-library/jest-dom";
 
 window.IntersectionObserver = mockIntersectionObserver;
 
-vi.mock("@/components/ui/Card", () => mockCard);
-vi.mock("@/components/ui/Avatar", () => mockAvatar);
-vi.mock("@/components/ui/Command", () => mockCommand);
+vi.mock("@/components/ui/card", () => mockCard);
+vi.mock("@/components/ui/avatar", () => mockAvatar);
+vi.mock("@/components/ui/command", () => mockCommand);
 vi.mock("@/components/ui/pagination", () => mockPagination);
-vi.mock("@/components/ui/Dialog", () => mockDialog);
+vi.mock("@/components/ui/dialog", () => mockDialog);
 vi.mock("@/components/common/LazyImage", () => mockLazyImage);
 vi.mock("@/components/RssRegistration/PlatformSelector", () => mockPlatformSelector);
 vi.mock("@/components/RssRegistration/RssUrlInput", () => mockRssUrlInput);

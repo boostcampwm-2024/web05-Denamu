@@ -1,17 +1,20 @@
 import { applyDecorators } from '@nestjs/common';
+import { ApiOperation, ApiQuery } from '@nestjs/swagger';
+
 import {
-  ApiBadRequestResponse,
-  ApiOkResponse,
-  ApiOperation,
-  ApiQuery,
-} from '@nestjs/swagger';
+  ApiBadRequestDoc,
+  ApiDataResponse,
+} from '@common/swagger/swagger.helper';
+import { ReadStatisticAllResponseDto } from '@statistic/dto/response/readStatisticAll.dto';
+import { ReadStatisticTodayResponseDto } from '@statistic/dto/response/readStatisticToday.dto';
 
 export function ApiReadStatistic(category: 'today' | 'all') {
   const type = category === 'all' ? '전체' : '금일';
+  const responseDto =
+    category === 'all' ? ReadStatisticAllResponseDto : ReadStatisticTodayResponseDto;
+
   return applyDecorators(
-    ApiOperation({
-      summary: `${type} 게시글 조회수 통계 API`,
-    }),
+    ApiOperation({ summary: `${type} 게시글 조회수 통계 API` }),
     ApiQuery({
       name: 'limit',
       required: false,
@@ -19,48 +22,7 @@ export function ApiReadStatistic(category: 'today' | 'all') {
       description: '가지고 올 게시글 수',
       example: 10,
     }),
-    ApiOkResponse({
-      description: 'Ok',
-      schema: {
-        properties: {
-          message: {
-            type: 'string',
-          },
-          data: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                id: {
-                  type: 'number',
-                },
-                title: {
-                  type: 'string',
-                },
-                viewCount: {
-                  type: 'number',
-                },
-              },
-            },
-          },
-        },
-      },
-      example: {
-        message: `${type} 조회수 통계 조회 완료`,
-        data: [
-          {
-            id: 1,
-            title: 'testTitle',
-            viewCount: 0,
-          },
-        ],
-      },
-    }),
-    ApiBadRequestResponse({
-      description: 'Bad Request',
-      example: {
-        message: '오류 메세지',
-      },
-    }),
+    ApiDataResponse(responseDto, true, `${type} 조회수 통계 조회 성공`),
+    ApiBadRequestDoc('요청 데이터 검증에 실패했습니다.'),
   );
 }

@@ -1,6 +1,6 @@
 export const CONNECTION_LIMIT = 50;
 export const redisConstant = {
-  FEED_RECENT_ALL_KEY: 'feed:recent:*',
+  FEED_RECENT_INDEX_KEY: 'feed:recent:index',
   FEED_AI_QUEUE: `feed:ai:queue`,
   FULL_FEED_CRAWL_QUEUE: `feed:full-crawl:queue`,
 };

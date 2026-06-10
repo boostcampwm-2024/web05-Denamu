@@ -4,7 +4,11 @@ export class ApiResponse<T> {
   @ApiProperty({ description: '응답 데이터', required: false })
   private readonly data?: T;
 
-  @ApiProperty({ description: '응답 메시지', required: true })
+  @ApiProperty({
+    description: '응답 메시지',
+    required: true,
+    example: '요청이 성공적으로 처리되었습니다.',
+  })
   private readonly message: string;
 
   private constructor(message: string, data?: T) {

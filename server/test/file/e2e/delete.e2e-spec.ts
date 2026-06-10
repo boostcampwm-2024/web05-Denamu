@@ -57,6 +57,32 @@ describe(`DELETE ${URL}/{fileId} E2E Test`, () => {
     expect(savedFile).not.toBeNull();
   });
 
+  it('[403] 파일 소유자가 아닌 다른 사용자가 삭제 요청할 경우 파일 삭제를 실패한다.', async () => {
+    // given
+    const otherUser = await userRepository.save(
+      await UserFixture.createUserCryptFixture(),
+    );
+    const otherAccessToken = createAccessToken(otherUser);
+
+    // Http when
+    const response = await agent
+      .delete(`${URL}/${file.id}`)
+      .set('Authorization', `Bearer ${otherAccessToken}`);
+
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.FORBIDDEN);
+    expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedFile = await fileRepository.findOneBy({
+      id: file.id,
+    });
+
+    // DB, Redis then
+    expect(savedFile).not.toBeNull();
+  });
+
   it('[404] 파일이 서비스에 존재하지 않을 경우 파일 삭제를 실패한다.', async () => {
     // given
     jest.spyOn(fs, 'access').mockResolvedValue(undefined);

@@ -31,21 +31,6 @@ export class RedisService {
     return this.redisClient.keys(pattern);
   }
 
-  async scan(
-    cursor: string | number,
-    match?: string,
-    count?: number,
-  ): Promise<[cursor: string, keys: string[]]> {
-    const result = await this.redisClient.scan(
-      cursor,
-      'MATCH',
-      match || '*',
-      'COUNT',
-      count || 10,
-    );
-    return [result[0], result[1]];
-  }
-
   async mget(...keys: string[]): Promise<(string | null)[]> {
     return this.redisClient.mget(...keys);
   }

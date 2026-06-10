@@ -1,7 +1,7 @@
 import {
+  ForbiddenException,
   Injectable,
   NotFoundException,
-  UnauthorizedException,
 } from '@nestjs/common';
 
 import { DataSource } from 'typeorm';
@@ -18,14 +18,11 @@ import { Payload } from '@common/guard/jwt.guard';
 
 import { FeedService } from '@feed/service/feed.service';
 
-import { UserService } from '@user/service/user.service';
-
 @Injectable()
 export class CommentService {
   constructor(
     private readonly commentRepository: CommentRepository,
     private readonly dataSource: DataSource,
-    private readonly userService: UserService,
     private readonly feedService: FeedService,
   ) {}
 
@@ -45,7 +42,7 @@ export class CommentService {
     }
 
     if (userInformation.id !== commentObj.user.id) {
-      throw new UnauthorizedException('본인이 작성한 댓글이 아닙니다.');
+      throw new ForbiddenException('본인이 작성한 댓글이 아닙니다.');
     }
 
     return commentObj;
@@ -65,28 +62,16 @@ export class CommentService {
     feedId: number,
     commentDto: CreateCommentRequestDto,
   ) {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try {
+    await this.dataSource.transaction(async (manager) => {
       const feed = await this.feedService.getFeed(feedId);
-      await this.userService.getUser(userInformation.id);
       feed.commentCount++;
-      await queryRunner.manager.save(feed);
-      await queryRunner.manager.save(Comment, {
+      await manager.save(feed);
+      await manager.save(Comment, {
         comment: commentDto.comment,
-        feed: { id: feedId },
+        feed,
         user: { id: userInformation.id },
       });
-
-      await queryRunner.commitTransaction();
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      throw error;
-    } finally {
-      await queryRunner.release();
-    }
+    });
   }
 
   async delete(userInformation: Payload, commentDto: CommentParamRequestDto) {
@@ -95,23 +80,12 @@ export class CommentService {
       commentDto.commentId,
     );
 
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try {
+    await this.dataSource.transaction(async (manager) => {
       const feed = comment.feed;
       feed.commentCount--;
-      await queryRunner.manager.save(feed);
-      await queryRunner.manager.remove(comment);
-
-      await queryRunner.commitTransaction();
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      throw error;
-    } finally {
-      await queryRunner.release();
-    }
+      await manager.save(feed);
+      await manager.remove(comment);
+    });
   }
 
   async update(

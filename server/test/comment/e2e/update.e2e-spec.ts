@@ -33,7 +33,7 @@ describe(`PATCH ${BASE_URL}/:feedId/comments/:commentId E2E Test`, () => {
   let feedRepository: FeedRepository;
   let rssAccept: RssAccept;
   let feed: Feed;
-  let user: User;
+  let user: User, user2: User;
   let accessToken: string;
 
   beforeAll(() => {
@@ -48,7 +48,8 @@ describe(`PATCH ${BASE_URL}/:feedId/comments/:commentId E2E Test`, () => {
     rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
-    [user, feed] = await Promise.all([
+    [user, user2, feed] = await Promise.all([
+      userRepository.save(await UserFixture.createUserCryptFixture()),
       userRepository.save(await UserFixture.createUserCryptFixture()),
       feedRepository.save(FeedFixture.createFeedFixture(rssAccept)),
     ]);
@@ -99,9 +100,9 @@ describe(`PATCH ${BASE_URL}/:feedId/comments/:commentId E2E Test`, () => {
     expect(savedComment.comment).toBe(comment.comment);
   });
 
-  it('[401] 본인이 작성한 댓글이 아닐 경우 댓글 수정을 실패한다.', async () => {
+  it('[403] 본인이 작성한 댓글이 아닐 경우 댓글 수정을 실패한다.', async () => {
     // given
-    accessToken = createAccessToken({ id: Number.MAX_SAFE_INTEGER });
+    accessToken = createAccessToken({ id: user2.id });
 
     // Http when
     const response = await agent
@@ -111,7 +112,7 @@ describe(`PATCH ${BASE_URL}/:feedId/comments/:commentId E2E Test`, () => {
 
     // Http then
     const { data } = response.body;
-    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(response.status).toBe(HttpStatus.FORBIDDEN);
     expect(data).toBeUndefined();
 
     // DB, Redis when

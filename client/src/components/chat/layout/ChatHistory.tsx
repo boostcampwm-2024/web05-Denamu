@@ -6,6 +6,7 @@ import ChatSkeleton from "@/components/chat/layout/ChatSkeleton";
 import Empty from "@/assets/empty-panda.svg";
 
 import { useChatStore } from "@/store/useChatStore";
+import { getLocalDateString, getLocalMinuteKey } from "@/utils/date";
 
 export default function ChatHistory({ isFull, isConnected }: { isFull: boolean; isConnected: boolean }) {
   const { chatHistory, isLoading } = useChatStore();
@@ -16,10 +17,23 @@ export default function ChatHistory({ isFull, isConnected }: { isFull: boolean; 
   if (chatHistory.length === 0) return <EmptyChatHistory />;
 
   return (
-    <span className="flex flex-col gap-3 px-3">
+    <span className="flex flex-col gap-3 px-3 py-3">
       {chatHistory.map((item, index) => {
-        const isSameUser = index > 0 && chatHistory[index - 1]?.userName === item.userName;
-        return <ChatItem key={index} chatItem={item} isSameUser={isSameUser} />;
+        const prevItem = chatHistory[index - 1];
+        const currentDate = getLocalDateString(item.timestamp);
+        const prevDate = prevItem ? getLocalDateString(prevItem.timestamp) : null;
+        const showDateSeparator = currentDate !== null && currentDate !== prevDate;
+        const isSameUser =
+          !showDateSeparator &&
+          index > 0 &&
+          prevItem?.userName === item.userName &&
+          getLocalMinuteKey(item.timestamp) === getLocalMinuteKey(prevItem?.timestamp ?? "");
+        return (
+          <span key={index}>
+            {showDateSeparator && <div className="flex justify-center">{currentDate}</div>}
+            <ChatItem chatItem={item} isSameUser={isSameUser} />
+          </span>
+        );
       })}
     </span>
   );
@@ -29,7 +43,7 @@ const FullChatWarning = () => (
   <div className="flex flex-col justify-center items-center h-[70vh] gap-3">
     <CircleAlert color="red" size={200} />
     <div className="flex flex-col items-center gap-1">
-      <p className="font-bold">채팅창 인원이 500명 이상입니다</p>
+      <p className="font-bold">모든 채팅방이 가득 찼습니다</p>
       <p>잠시 기다렸다가 새로고침을 해주세요</p>
     </div>
   </div>

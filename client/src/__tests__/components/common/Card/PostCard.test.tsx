@@ -6,6 +6,7 @@ import * as PostCardActions from "@/hooks/common/usePostCardActions";
 
 import { createLongTitlePost, createMinimalPost, createMockPost } from "@/__tests__/mocks/data/posts.ts";
 import { render, screen, fireEvent } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 
 vi.mock("@/hooks/common/usePostCardActions", () => ({
   usePostCardActions: vi.fn(() => ({
@@ -15,7 +16,7 @@ vi.mock("@/hooks/common/usePostCardActions", () => ({
 
 describe("PostCard", () => {
   it("PostCard가 올바른 내용으로 렌더링되는지 확인", () => {
-    render(<PostCard post={createMockPost()} />);
+    render(<MemoryRouter><PostCard post={createMockPost()} /></MemoryRouter>);
 
     const card = screen.getByRole("button");
     expect(card).toBeInTheDocument();
@@ -24,7 +25,7 @@ describe("PostCard", () => {
 
   it("custom className이 제공되었을 때 적용되는지 확인", () => {
     const customClass = "custom-test-class";
-    render(<PostCard post={createMinimalPost()} className={customClass} />);
+    render(<MemoryRouter><PostCard post={createMinimalPost()} className={customClass} /></MemoryRouter>);
 
     const card = screen.getByRole("button");
     expect(card).toHaveClass(customClass);
@@ -37,7 +38,7 @@ describe("PostCard", () => {
       openPost: vi.fn(),
     });
 
-    render(<PostCard post={createLongTitlePost()} />);
+    render(<MemoryRouter><PostCard post={createLongTitlePost()} /></MemoryRouter>);
 
     const card = screen.getByRole("button");
     fireEvent.click(card);
@@ -46,7 +47,7 @@ describe("PostCard", () => {
   });
 
   it("모든 필수 필드가 렌더링되는지 확인", () => {
-    render(<PostCard post={createMockPost()} />);
+    render(<MemoryRouter><PostCard post={createMockPost()} /></MemoryRouter>);
 
     expect(screen.getByText("테스트 포스트")).toBeInTheDocument();
     expect(screen.getByText("작성자")).toBeInTheDocument();
@@ -67,7 +68,7 @@ describe("PostCard", () => {
       summary: "# test",
     };
 
-    render(<PostCard post={minimalPost} />);
+    render(<MemoryRouter><PostCard post={minimalPost} /></MemoryRouter>);
     expect(screen.getByText("테스트 포스트")).toBeInTheDocument();
   });
 
@@ -77,7 +78,7 @@ describe("PostCard", () => {
       title: "아주 긴 제목".repeat(20),
     };
 
-    render(<PostCard post={longTitlePost} />);
+    render(<MemoryRouter><PostCard post={longTitlePost} /></MemoryRouter>);
     const titleElement = screen.getByText(/아주 긴 제목/);
     expect(titleElement).toHaveClass("line-clamp-2");
   });

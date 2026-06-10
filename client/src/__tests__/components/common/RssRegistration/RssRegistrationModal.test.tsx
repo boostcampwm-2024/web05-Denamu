@@ -86,6 +86,7 @@ describe("RssRegistrationModal", () => {
       blog: "블로그",
       name: "테스트",
       email: "test@example.com",
+      blogType: "",
     });
   });
 

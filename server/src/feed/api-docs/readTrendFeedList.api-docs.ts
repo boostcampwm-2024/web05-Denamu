@@ -1,44 +1,26 @@
 import { applyDecorators } from '@nestjs/common';
-import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
+import {
+  ApiExtraModels,
+  ApiOkResponse,
+  ApiOperation,
+  getSchemaPath,
+} from '@nestjs/swagger';
+
+import { FeedTrendResponseDto } from '@feed/dto/response/readFeedPagination.dto';
 
 export function ApiReadTrendFeedList() {
   return applyDecorators(
-    ApiOperation({
-      summary: '트렌드 게시글 조회 SSE',
-    }),
+    ApiOperation({ summary: '트렌드 게시글 조회 SSE' }),
+    ApiExtraModels(FeedTrendResponseDto),
     ApiOkResponse({
-      description: 'Ok',
+      description: 'SSE Stream',
       schema: {
+        type: 'object',
         properties: {
-          message: {
-            type: 'string',
-          },
+          message: { type: 'string' },
           data: {
             type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                id: { type: 'number' },
-                author: { type: 'string' },
-                blogPlatform: { type: 'string' },
-                title: { type: 'string' },
-                path: { type: 'string' },
-                createdAt: {
-                  type: 'string',
-                  format: 'date-time',
-                },
-                thumbnail: { type: 'string' },
-                viewCount: { type: 'number' },
-                tag: {
-                  type: 'array',
-                  items: {
-                    type: 'string',
-                  },
-                },
-                likes: { type: 'number' },
-                comments: { type: 'number' },
-              },
-            },
+            items: { $ref: getSchemaPath(FeedTrendResponseDto) },
           },
         },
       },

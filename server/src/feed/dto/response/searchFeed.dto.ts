@@ -3,26 +3,41 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Feed } from '@feed/entity/feed.entity';
 
 export class SearchFeedResult {
-  private constructor(
-    private id: number,
-    private blogName: string,
-    private title: string,
-    private path: string,
-    private createdAt: Date,
-    private likes: number,
-    private comments: number,
-  ) {}
+  @ApiProperty({ example: 1, description: '게시글 ID' })
+  id: number;
+
+  @ApiProperty({ example: 'example blog name', description: '블로그 이름' })
+  blogName: string;
+
+  @ApiProperty({ example: 'example title', description: '게시글 제목' })
+  title: string;
+
+  @ApiProperty({ example: 'https://example.com/feed', description: '게시글 URL' })
+  path: string;
+
+  @ApiProperty({ example: '2025-01-01T01:00:00.000Z', description: '게시글 작성 일자' })
+  createdAt: Date;
+
+  @ApiProperty({ example: 0, description: '좋아요 수' })
+  likes: number;
+
+  @ApiProperty({ example: 0, description: '댓글 수' })
+  comments: number;
+
+  private constructor(partial: Partial<SearchFeedResult>) {
+    Object.assign(this, partial);
+  }
 
   static toResultDto(feed: Feed) {
-    return new SearchFeedResult(
-      feed.id,
-      feed.blog.name,
-      feed.title,
-      feed.path,
-      feed.createdAt,
-      feed.likeCount,
-      feed.commentCount,
-    );
+    return new SearchFeedResult({
+      id: feed.id,
+      blogName: feed.blog.name,
+      title: feed.title,
+      path: feed.path,
+      createdAt: feed.createdAt,
+      likes: feed.likeCount,
+      comments: feed.commentCount,
+    });
   }
 
   static toResultDtoArray(feeds: Feed[]) {
@@ -37,19 +52,7 @@ export class SearchFeedResponseDto {
   })
   totalCount: number;
 
-  @ApiProperty({
-    example: [
-      {
-        id: 32,
-        blogName: 'example blog name',
-        title: 'example title',
-        likes: 0,
-        path: 'https://example/feed',
-        createdAt: '2025-01-01T00:00:00.000Z',
-      },
-    ],
-    description: '검색 결과 게시글',
-  })
+  @ApiProperty({ type: [SearchFeedResult], description: '검색 결과 게시글' })
   result: SearchFeedResult[];
 
   @ApiProperty({
@@ -64,7 +67,7 @@ export class SearchFeedResponseDto {
   })
   limit: number;
 
-  private constructor(partial: Partial<SearchFeedResponseDto>) {
+  constructor(partial: Partial<SearchFeedResponseDto>) {
     Object.assign(this, partial);
   }
 
