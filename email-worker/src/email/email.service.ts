@@ -5,9 +5,16 @@ import SMTPTransport from 'nodemailer/lib/smtp-transport';
 
 import logger from '@common/logger/logger';
 import { EmailMetrics } from '@common/metrics/email-metrics';
-import { Rss, RssRegistration, RssRemoval, User } from '@common/types';
+import {
+  AdminCertification,
+  Rss,
+  RssRegistration,
+  RssRemoval,
+  User,
+} from '@common/types';
 
 import {
+  createAdminVerificationMailContent,
   createDeleteAccountContent,
   createPasswordResetMailContent,
   createRssRegistrationContent,
@@ -63,6 +70,29 @@ export class EmailService {
       );
       throw error;
     }
+  }
+
+  async sendAdminCertificationMail(admin: AdminCertification): Promise<void> {
+    const mailOptions = this.createAdminCertificationMail(admin);
+
+    await this.sendMail(mailOptions);
+  }
+
+  private createAdminCertificationMail(
+    admin: AdminCertification,
+  ): nodemailer.SendMailOptions {
+    const redirectUrl = `${PRODUCT_DOMAIN}/admins/email-verifications?token=${admin.uuid}`;
+
+    return {
+      from: `Denamu<${this.emailUser}>`,
+      to: admin.email,
+      subject: `[🎋 Denamu] 관리자 계정 인증 메일`,
+      html: createAdminVerificationMailContent(
+        admin.name,
+        redirectUrl,
+        this.emailUser,
+      ),
+    };
   }
 
   async sendRssMail(rssRegistrationReuslt: RssRegistration): Promise<void> {

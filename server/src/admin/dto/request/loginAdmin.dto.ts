@@ -1,19 +1,19 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 
 export class LoginAdminRequestDto {
   @ApiProperty({
-    example: 'test',
-    description: '관리자 로그인 아이디를 입력해주세요.',
+    example: 'admin@example.com',
+    description: '관리자 이메일을 입력해주세요.',
   })
-  @IsNotEmpty({
-    message: '아이디가 없습니다.',
-  })
-  @IsString({
-    message: '문자열을 입력해주세요',
-  })
-  loginId: string;
+  @IsEmail(
+    {},
+    {
+      message: '이메일 주소 형식에 맞춰서 작성해주세요.',
+    },
+  )
+  email: string;
 
   @ApiProperty({
     example: 'test1234!',

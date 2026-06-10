@@ -15,13 +15,6 @@ export class Admin extends BaseEntity {
   id: number;
 
   @Column({
-    name: 'login_id',
-    length: 255,
-    nullable: false,
-  })
-  loginId: string;
-
-  @Column({
     length: 60,
     nullable: false,
   })
@@ -32,6 +25,13 @@ export class Admin extends BaseEntity {
     nullable: false,
   })
   name: string;
+
+  @Column({
+    length: 255,
+    nullable: false,
+    unique: true,
+  })
+  email: string;
 
   @Column({
     name: 'parent_admin_id',

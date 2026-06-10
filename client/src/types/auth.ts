@@ -1,5 +1,5 @@
 export type AdminAuthRequest = {
-  loginId: string;
+  email: string;
   password: string;
 };
 
@@ -11,7 +11,7 @@ export type AdminProfileResponse = {
   message: string;
   data: {
     name: string;
-    parent: { loginId: string; name: string } | null;
+    parent: { email: string; name: string } | null;
   };
 };
 

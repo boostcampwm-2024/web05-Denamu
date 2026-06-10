@@ -12,22 +12,26 @@ import { Request, Response } from 'express';
 import { In } from 'typeorm';
 
 import { SESSION_TTL } from '@admin/constant/admin.constant';
-import { Admin } from '@admin/entity/admin.entity';
 import { LoginAdminRequestDto } from '@admin/dto/request/loginAdmin.dto';
 import { RegisterAdminRequestDto } from '@admin/dto/request/registerAdmin.dto';
-import { GetChildAdminResponseDto } from '@admin/dto/response/getChildAdmin.dto';
 import { GetAdminProfileResponseDto } from '@admin/dto/response/getAdminProfile.dto';
+import { GetChildAdminResponseDto } from '@admin/dto/response/getChildAdmin.dto';
+import { Admin } from '@admin/entity/admin.entity';
 import { AdminRepository } from '@admin/repository/admin.repository';
 
 import { cookieConfig } from '@common/cookie/cookie.config';
+import { EmailProducer } from '@common/email/email.producer';
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
+
+const ADMIN_REGISTER_TTL = 600;
 
 @Injectable()
 export class AdminService {
   constructor(
     private readonly adminRepository: AdminRepository,
     private readonly redisService: RedisService,
+    private readonly emailProducer: EmailProducer,
   ) {}
 
   async loginAdmin(
@@ -36,14 +40,14 @@ export class AdminService {
     request: Request,
   ) {
     const cookie = request.cookies['sessionId'];
-    const { loginId, password } = loginAdminBodyDto;
+    const { email, password } = loginAdminBodyDto;
 
     const admin = await this.adminRepository.findOne({
-      where: { loginId },
+      where: { email },
     });
 
     if (!admin || !(await bcrypt.compare(password, admin.password))) {
-      throw new UnauthorizedException('아이디 혹은 비밀번호가 잘못되었습니다.');
+      throw new UnauthorizedException('이메일 혹은 비밀번호가 잘못되었습니다.');
     }
 
     const keysToInvalidate = new Set<string>();
@@ -52,7 +56,7 @@ export class AdminService {
     }
 
     const prevSessionId = await this.redisService.get(
-      `${REDIS_KEYS.ADMIN_SESSION_BY_LOGIN}:${loginId}`,
+      `${REDIS_KEYS.ADMIN_SESSION_BY_EMAIL}:${email}`,
     );
     if (prevSessionId) {
       keysToInvalidate.add(`${REDIS_KEYS.ADMIN_AUTH_KEY}:${prevSessionId}`);
@@ -66,12 +70,12 @@ export class AdminService {
 
     await this.redisService.set(
       `${REDIS_KEYS.ADMIN_AUTH_KEY}:${sessionId}`,
-      admin.loginId,
+      admin.email,
       `EX`,
       SESSION_TTL,
     );
     await this.redisService.set(
-      `${REDIS_KEYS.ADMIN_SESSION_BY_LOGIN}:${loginId}`,
+      `${REDIS_KEYS.ADMIN_SESSION_BY_EMAIL}:${email}`,
       sessionId,
       `EX`,
       SESSION_TTL,
@@ -82,32 +86,32 @@ export class AdminService {
 
   async logoutAdmin(request: Request, response: Response) {
     const sid = request.cookies['sessionId'];
-    const loginId = await this.redisService.get(
+    const email = await this.redisService.get(
       `${REDIS_KEYS.ADMIN_AUTH_KEY}:${sid}`,
     );
     await this.redisService.del(`${REDIS_KEYS.ADMIN_AUTH_KEY}:${sid}`);
-    if (loginId) {
+    if (email) {
       await this.redisService.del(
-        `${REDIS_KEYS.ADMIN_SESSION_BY_LOGIN}:${loginId}`,
+        `${REDIS_KEYS.ADMIN_SESSION_BY_EMAIL}:${email}`,
       );
     }
     response.clearCookie('sessionId');
   }
 
-  async createAdmin(
+  async registerAdmin(
     registerAdminBodyDto: RegisterAdminRequestDto,
-    creatorLoginId: string,
+    creatorEmail: string,
   ) {
     const existingAdmin = await this.adminRepository.findOne({
-      where: { loginId: registerAdminBodyDto.loginId },
+      where: { email: registerAdminBodyDto.email },
     });
 
     if (existingAdmin) {
-      throw new ConflictException('이미 존재하는 아이디입니다.');
+      throw new ConflictException('이미 존재하는 이메일입니다.');
     }
 
     const creator = await this.adminRepository.findOne({
-      where: { loginId: creatorLoginId },
+      where: { email: creatorEmail },
     });
 
     const saltRounds = 10;
@@ -119,12 +123,35 @@ export class AdminService {
     const admin = registerAdminBodyDto.toEntity();
     admin.parentAdminId = creator?.id ?? null;
 
-    await this.adminRepository.save(admin);
+    const adminRegisterCode = uuid.v4();
+    await this.redisService.set(
+      `${REDIS_KEYS.ADMIN_REGISTER_KEY}:${adminRegisterCode}`,
+      JSON.stringify(admin),
+      'EX',
+      ADMIN_REGISTER_TTL,
+    );
+    await this.emailProducer.produceAdminCertification(
+      admin.email,
+      admin.name,
+      adminRegisterCode,
+    );
   }
 
-  async getChildAdmins(loginId: string) {
+  async certificateAdmin(uuid: string) {
+    const admin = await this.redisService.get(
+      `${REDIS_KEYS.ADMIN_REGISTER_KEY}:${uuid}`,
+    );
+
+    if (!admin) {
+      throw new NotFoundException('인증에 실패했습니다.');
+    }
+    await this.redisService.del(`${REDIS_KEYS.ADMIN_REGISTER_KEY}:${uuid}`);
+    await this.adminRepository.save(JSON.parse(admin));
+  }
+
+  async getChildAdmins(email: string) {
     const admin = await this.adminRepository.findOne({
-      where: { loginId },
+      where: { email },
     });
 
     const children = await this.adminRepository.find({
@@ -136,9 +163,9 @@ export class AdminService {
     );
   }
 
-  async deleteChildAdmin(loginId: string, targetAdminId: number) {
+  async deleteChildAdmin(email: string, targetAdminId: number) {
     const admin = await this.adminRepository.findOne({
-      where: { loginId },
+      where: { email },
     });
 
     const target = await this.adminRepository.findOne({
@@ -155,14 +182,14 @@ export class AdminService {
       );
     }
 
-    const loginIdsToInvalidate = await this.collectSubtreeLoginIds(target);
+    const emailsToInvalidate = await this.collectSubtreeEmails(target);
 
     await this.adminRepository.delete({ id: target.id });
 
     await Promise.all(
-      loginIdsToInvalidate.map((id) =>
+      emailsToInvalidate.map((targetEmail) =>
         this.redisService.setex(
-          `${REDIS_KEYS.ADMIN_INVALIDATED_PREFIX}:${id}`,
+          `${REDIS_KEYS.ADMIN_INVALIDATED_PREFIX}:${targetEmail}`,
           SESSION_TTL,
           '1',
         ),
@@ -170,8 +197,8 @@ export class AdminService {
     );
   }
 
-  private async collectSubtreeLoginIds(root: Admin): Promise<string[]> {
-    const loginIds = [root.loginId];
+  private async collectSubtreeEmails(root: Admin): Promise<string[]> {
+    const emails = [root.email];
     let frontier = [root.id];
 
     while (frontier.length > 0) {
@@ -181,16 +208,16 @@ export class AdminService {
       if (children.length === 0) {
         break;
       }
-      loginIds.push(...children.map((child) => child.loginId));
+      emails.push(...children.map((child) => child.email));
       frontier = children.map((child) => child.id);
     }
 
-    return loginIds;
+    return emails;
   }
 
-  async getAdminProfile(loginId: string) {
+  async getAdminProfile(email: string) {
     const admin = await this.adminRepository.findOne({
-      where: { loginId },
+      where: { email },
     });
 
     let parent = null;
@@ -199,7 +226,7 @@ export class AdminService {
         where: { id: admin.parentAdminId },
       });
       if (parentAdmin) {
-        parent = { loginId: parentAdmin.loginId, name: parentAdmin.name };
+        parent = { email: parentAdmin.email, name: parentAdmin.name };
       }
     }
 

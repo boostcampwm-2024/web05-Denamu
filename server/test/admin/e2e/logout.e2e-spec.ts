@@ -17,7 +17,7 @@ describe(`POST ${URL} E2E Test`, () => {
   let agent: TestAgent;
   let redisService: RedisService;
   let adminRepository: AdminRepository;
-  let adminLoginId: string;
+  let adminEmail: string;
   const redisKeyMake = (data: string) => `${REDIS_KEYS.ADMIN_AUTH_KEY}:${data}`;
   const sessionKey = 'admin-logout-sessionKey';
 
@@ -31,8 +31,8 @@ describe(`POST ${URL} E2E Test`, () => {
     const admin = await adminRepository.save(
       await AdminFixture.createAdminCryptFixture(),
     );
-    adminLoginId = admin.loginId;
-    await redisService.set(redisKeyMake(sessionKey), adminLoginId);
+    adminEmail = admin.email;
+    await redisService.set(redisKeyMake(sessionKey), adminEmail);
   });
 
   it('[401] 관리자 로그인 쿠키가 없을 경우 로그아웃을 실패한다.', async () => {
@@ -48,7 +48,7 @@ describe(`POST ${URL} E2E Test`, () => {
     const savedSession = await redisService.get(redisKeyMake(sessionKey));
 
     // DB, Redis then
-    expect(savedSession).toBe(adminLoginId);
+    expect(savedSession).toBe(adminEmail);
   });
 
   it('[401] 관리자 로그인 쿠키가 만료됐을 경우 로그아웃을 실패한다.', async () => {
@@ -66,7 +66,7 @@ describe(`POST ${URL} E2E Test`, () => {
     const savedSession = await redisService.get(redisKeyMake(sessionKey));
 
     // DB, Redis then
-    expect(savedSession).toBe(adminLoginId);
+    expect(savedSession).toBe(adminEmail);
   });
 
   it('[200] 관리자 로그인이 되어 있을 경우 로그아웃을 성공한다.', async () => {

@@ -30,10 +30,10 @@ describe(`GET ${URL} E2E Test`, () => {
 
   beforeEach(async () => {
     const admin = await adminRepository.save(
-      await AdminFixture.createAdminCryptFixture({ loginId: 'testAdminId' }),
+      await AdminFixture.createAdminCryptFixture(),
     );
     parentId = admin.id;
-    await redisService.set(redisKeyMake(sessionKey), admin.loginId);
+    await redisService.set(redisKeyMake(sessionKey), admin.email);
   });
 
   it('[401] 관리자 로그인 쿠키가 없을 경우 자식 계정 조회를 실패한다.', async () => {
@@ -50,13 +50,11 @@ describe(`GET ${URL} E2E Test`, () => {
     // given
     const child1 = await adminRepository.save(
       await AdminFixture.createAdminCryptFixture({
-        loginId: 'childOne',
         parentAdminId: parentId,
       }),
     );
     const child2 = await adminRepository.save(
       await AdminFixture.createAdminCryptFixture({
-        loginId: 'childTwo',
         parentAdminId: parentId,
       }),
     );
@@ -71,8 +69,8 @@ describe(`GET ${URL} E2E Test`, () => {
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toEqual(
       expect.arrayContaining([
-        { id: child1.id, loginId: child1.loginId, name: child1.name },
-        { id: child2.id, loginId: child2.loginId, name: child2.name },
+        { id: child1.id, email: child1.email, name: child1.name },
+        { id: child2.id, email: child2.email, name: child2.name },
       ]),
     );
     expect(data).toHaveLength(2);

@@ -1,4 +1,9 @@
-import { RssRegistration, RssRemoval, User } from '@common/types';
+import {
+  AdminCertification,
+  RssRegistration,
+  RssRemoval,
+  User,
+} from '@common/types';
 
 import { EmailPayloadConstant } from './constant';
 
@@ -10,7 +15,11 @@ export type EmailPayload =
       data: RssRegistration;
     }
   | { type: typeof EmailPayloadConstant.PASSWORD_RESET; data: User }
-  | { type: typeof EmailPayloadConstant.ACCOUNT_DELETION; data: User };
+  | { type: typeof EmailPayloadConstant.ACCOUNT_DELETION; data: User }
+  | {
+      type: typeof EmailPayloadConstant.ADMIN_CERTIFICATION;
+      data: AdminCertification;
+    };
 
 export type NodeMailerError = Error & {
   code?: string;

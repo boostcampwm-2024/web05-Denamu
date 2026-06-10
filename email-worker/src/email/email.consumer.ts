@@ -104,6 +104,10 @@ export class EmailConsumer {
         await this.emailService.sendDeleteAccountMail(payload.data);
         break;
 
+      case EmailPayloadConstant.ADMIN_CERTIFICATION:
+        await this.emailService.sendAdminCertificationMail(payload.data);
+        break;
+
       default:
         logger.info(`처리할 수 없는 이메일 타입이 입력되었습니다.`);
     }

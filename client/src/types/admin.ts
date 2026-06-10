@@ -1,7 +1,7 @@
 export type RegisterRequest = {
-  loginId: string;
   password: string;
   name: string;
+  email: string;
 };
 
 export type RegisterResponse = {
@@ -10,7 +10,7 @@ export type RegisterResponse = {
 
 export type ChildAdmin = {
   id: number;
-  loginId: string;
+  email: string;
   name: string;
 };
 

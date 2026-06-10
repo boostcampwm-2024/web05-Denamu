@@ -14,6 +14,6 @@ export function ApiLoginAdmin() {
     ApiBody({ type: LoginAdminRequestDto }),
     ApiMessageResponse('로그인 성공'),
     ApiBadRequestDoc('요청 데이터 검증에 실패했습니다.'),
-    ApiUnauthorizedDoc('아이디 혹은 비밀번호가 잘못되었습니다.'),
+    ApiUnauthorizedDoc('이메일 혹은 비밀번호가 잘못되었습니다.'),
   );
 }

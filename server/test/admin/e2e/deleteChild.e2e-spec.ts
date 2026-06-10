@@ -19,8 +19,8 @@ describe(`DELETE /api/admins/children/:id E2E Test`, () => {
   let adminRepository: AdminRepository;
   const sessionKey = 'admin-delete-session-key';
   const redisKeyMake = (data: string) => `${REDIS_KEYS.ADMIN_AUTH_KEY}:${data}`;
-  const invalidatedKey = (loginId: string) =>
-    `${REDIS_KEYS.ADMIN_INVALIDATED_PREFIX}:${loginId}`;
+  const invalidatedKey = (email: string) =>
+    `${REDIS_KEYS.ADMIN_INVALIDATED_PREFIX}:${email}`;
 
   beforeAll(() => {
     agent = supertest(testApp.getHttpServer());
@@ -32,17 +32,16 @@ describe(`DELETE /api/admins/children/:id E2E Test`, () => {
 
   beforeEach(async () => {
     const admin = await adminRepository.save(
-      await AdminFixture.createAdminCryptFixture({ loginId: 'testAdminId' }),
+      await AdminFixture.createAdminCryptFixture(),
     );
     parentId = admin.id;
-    await redisService.set(redisKeyMake(sessionKey), admin.loginId);
+    await redisService.set(redisKeyMake(sessionKey), admin.email);
   });
 
   it('[401] 관리자 로그인 쿠키가 없을 경우 삭제를 실패한다.', async () => {
     // given
     const child = await adminRepository.save(
       await AdminFixture.createAdminCryptFixture({
-        loginId: 'childAdmin',
         parentAdminId: parentId,
       }),
     );
@@ -70,7 +69,7 @@ describe(`DELETE /api/admins/children/:id E2E Test`, () => {
   it('[403] 본인이 생성하지 않은 관리자 계정 삭제를 실패한다.', async () => {
     // given
     const stranger = await adminRepository.save(
-      await AdminFixture.createAdminCryptFixture({ loginId: 'strangerAdmin' }),
+      await AdminFixture.createAdminCryptFixture(),
     );
 
     // Http when
@@ -89,13 +88,11 @@ describe(`DELETE /api/admins/children/:id E2E Test`, () => {
     // given
     const child = await adminRepository.save(
       await AdminFixture.createAdminCryptFixture({
-        loginId: 'childAdmin',
         parentAdminId: parentId,
       }),
     );
     const grandChild = await adminRepository.save(
       await AdminFixture.createAdminCryptFixture({
-        loginId: 'grandChildAdmin',
         parentAdminId: child.id,
       }),
     );
@@ -113,9 +110,7 @@ describe(`DELETE /api/admins/children/:id E2E Test`, () => {
     expect(await adminRepository.findOneBy({ id: grandChild.id })).toBeNull();
 
     // Redis then - 삭제된 서브트리 전체 세션 무효화 키 등록
-    expect(await redisService.get(invalidatedKey(child.loginId))).toBe('1');
-    expect(await redisService.get(invalidatedKey(grandChild.loginId))).toBe(
-      '1',
-    );
+    expect(await redisService.get(invalidatedKey(child.email))).toBe('1');
+    expect(await redisService.get(invalidatedKey(grandChild.email))).toBe('1');
   });
 });

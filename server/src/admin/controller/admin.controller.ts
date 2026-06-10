@@ -16,12 +16,14 @@ import { ApiTags } from '@nestjs/swagger';
 
 import { Request, Response } from 'express';
 
-import { ApiCreateAdmin } from '@admin/api-docs/createAdmin.api-docs';
+import { ApiCertificateAdmin } from '@admin/api-docs/certificateAdmin.api-docs';
 import { ApiDeleteChildAdmin } from '@admin/api-docs/deleteChildAdmin.api-docs';
 import { ApiGetChildrenAdmin } from '@admin/api-docs/getChildrenAdmin.api-docs';
 import { ApiGetCurrentAdmin } from '@admin/api-docs/getCurrentAdmin.api-docs';
 import { ApiLoginAdmin } from '@admin/api-docs/loginAdmin.api-docs';
 import { ApiLogoutAdmin } from '@admin/api-docs/logoutAdmin.api-docs';
+import { ApiRegisterAdmin } from '@admin/api-docs/registerAdmin.api-docs';
+import { CertificateAdminRequestDto } from '@admin/dto/request/certificateAdmin.dto';
 import { LoginAdminRequestDto } from '@admin/dto/request/loginAdmin.dto';
 import { RegisterAdminRequestDto } from '@admin/dto/request/registerAdmin.dto';
 import { AdminService } from '@admin/service/admin.service';
@@ -63,17 +65,29 @@ export class AdminController {
     );
   }
 
-  @ApiCreateAdmin()
+  @ApiRegisterAdmin()
   @UseGuards(AdminAuthGuard)
-  @Post()
+  @Post('/registrations')
   @HttpCode(HttpStatus.CREATED)
-  async createAdmin(
+  async registerAdmin(
     @Body() registerAdminBodyDto: RegisterAdminRequestDto,
-    @CurrentAdmin() loginId: string,
+    @CurrentAdmin() email: string,
   ) {
-    await this.adminService.createAdmin(registerAdminBodyDto, loginId);
+    await this.adminService.registerAdmin(registerAdminBodyDto, email);
     return ApiResponse.responseWithNoContent(
-      '성공적으로 관리자 계정이 생성되었습니다.',
+      '관리자 계정 생성 요청이 성공적으로 처리되었습니다. 이메일을 확인해주세요.',
+    );
+  }
+
+  @ApiCertificateAdmin()
+  @Post('/email-verifications')
+  @HttpCode(HttpStatus.OK)
+  async certificateAdmin(
+    @Body() certificateAdminBodyDto: CertificateAdminRequestDto,
+  ) {
+    await this.adminService.certificateAdmin(certificateAdminBodyDto.uuid);
+    return ApiResponse.responseWithNoContent(
+      '이메일 인증이 성공적으로 처리되어 관리자 계정이 생성되었습니다.',
     );
   }
 
@@ -81,8 +95,8 @@ export class AdminController {
   @UseGuards(AdminAuthGuard)
   @Get('/children')
   @HttpCode(HttpStatus.OK)
-  async getChildrenAdmin(@CurrentAdmin() loginId: string) {
-    const children = await this.adminService.getChildAdmins(loginId);
+  async getChildrenAdmin(@CurrentAdmin() email: string) {
+    const children = await this.adminService.getChildAdmins(email);
     return ApiResponse.responseWithData(
       '내가 생성한 관리자 계정 목록입니다.',
       children,
@@ -94,10 +108,10 @@ export class AdminController {
   @Delete('/children/:id')
   @HttpCode(HttpStatus.OK)
   async deleteChildAdmin(
-    @CurrentAdmin() loginId: string,
+    @CurrentAdmin() email: string,
     @Param('id', ParseIntPipe) targetAdminId: number,
   ) {
-    await this.adminService.deleteChildAdmin(loginId, targetAdminId);
+    await this.adminService.deleteChildAdmin(email, targetAdminId);
     return ApiResponse.responseWithNoContent(
       '관리자 계정이 성공적으로 삭제되었습니다.',
     );
@@ -107,8 +121,8 @@ export class AdminController {
   @Get('/me')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AdminAuthGuard)
-  async getCurrentAdmin(@CurrentAdmin() loginId: string) {
-    const profile = await this.adminService.getAdminProfile(loginId);
+  async getCurrentAdmin(@CurrentAdmin() email: string) {
+    const profile = await this.adminService.getAdminProfile(email);
     return ApiResponse.responseWithData(
       '현재 로그인한 관리자 프로필입니다.',
       profile,

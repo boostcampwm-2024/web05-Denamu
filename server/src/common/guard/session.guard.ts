@@ -17,22 +17,22 @@ export class AdminAuthGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
     const sid = request.cookies['sessionId'];
-    const loginId = await this.redisService.get(
+    const email = await this.redisService.get(
       `${REDIS_KEYS.ADMIN_AUTH_KEY}:${sid}`,
     );
-    if (!loginId) {
+    if (!email) {
       throw new UnauthorizedException('인증되지 않은 요청입니다.');
     }
 
     const isInvalidated = await this.redisService.get(
-      `${REDIS_KEYS.ADMIN_INVALIDATED_PREFIX}:${loginId}`,
+      `${REDIS_KEYS.ADMIN_INVALIDATED_PREFIX}:${email}`,
     );
 
     if (isInvalidated) {
       throw new UnauthorizedException('인증되지 않은 요청입니다.');
     }
 
-    request['user'] = { loginId };
+    request['user'] = { email };
 
     return true;
   }

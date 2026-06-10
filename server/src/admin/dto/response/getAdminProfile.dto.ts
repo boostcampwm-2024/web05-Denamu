@@ -1,8 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 class ParentAdminDto {
-  @ApiProperty({ example: 'root-admin', description: '부모 관리자 로그인 아이디' })
-  loginId: string;
+  @ApiProperty({
+    example: 'root-admin@example.com',
+    description: '부모 관리자 이메일',
+  })
+  email: string;
 
   @ApiProperty({ example: '관리자', description: '부모 관리자 이름' })
   name: string;
