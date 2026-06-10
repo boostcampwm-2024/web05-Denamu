@@ -24,12 +24,19 @@ export interface RssRemoval {
   certificateCode: string;
 }
 
+export interface AdminCertification {
+  email: string;
+  name: string;
+  uuid: string;
+}
+
 export const EmailPayloadConstant = {
   USER_CERTIFICATION: 'userCertification',
   RSS_REMOVAL: 'rssRemoval',
   RSS_REGISTRATION: 'rssRegistration',
   PASSWORD_RESET: 'passwordReset',
   ACCOUNT_DELETION: 'accountDeletion',
+  ADMIN_CERTIFICATION: 'adminCertification',
 } as const;
 
 export type EmailPayload =
@@ -40,4 +47,8 @@ export type EmailPayload =
       data: RssRegistration;
     }
   | { type: typeof EmailPayloadConstant.PASSWORD_RESET; data: User }
-  | { type: typeof EmailPayloadConstant.ACCOUNT_DELETION; data: User };
+  | { type: typeof EmailPayloadConstant.ACCOUNT_DELETION; data: User }
+  | {
+      type: typeof EmailPayloadConstant.ADMIN_CERTIFICATION;
+      data: AdminCertification;
+    };

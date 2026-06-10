@@ -1,27 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-import { IsNotEmpty, IsString, Length, Matches } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, Length, Matches } from 'class-validator';
 
 import { Admin } from '@admin/entity/admin.entity';
 
 const PASSWORD_REG = /^(?=.*[!@#$%^&*()_+])[A-Za-z0-9!@#$%^&*()_+]+$/;
 
 export class RegisterAdminRequestDto {
-  @ApiProperty({
-    example: 'test',
-    description: '관리자 로그인 아이디를 입력해주세요.',
-  })
-  @IsNotEmpty({
-    message: '아이디가 없습니다.',
-  })
-  @IsString({
-    message: '문자열을 입력해주세요',
-  })
-  @Length(6, 255, {
-    message: '아이디의 길이는 6자 이상, 255자 이하로 작성해주세요.',
-  })
-  loginId: string;
-
   @ApiProperty({
     example: 'test1234!',
     description:
@@ -56,6 +41,18 @@ export class RegisterAdminRequestDto {
     message: '이름의 길이는 1자 이상, 255자 이하로 작성해주세요.',
   })
   name: string;
+
+  @ApiProperty({
+    example: 'admin@example.com',
+    description: '관리자 이메일을 입력해주세요.',
+  })
+  @IsEmail(
+    {},
+    {
+      message: '이메일 주소 형식에 맞춰서 작성해주세요.',
+    },
+  )
+  email: string;
 
   constructor(partial: Partial<RegisterAdminRequestDto>) {
     Object.assign(this, partial);

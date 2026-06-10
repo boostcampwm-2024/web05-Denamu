@@ -49,6 +49,19 @@ export class EmailProducer {
     await this.produceMessage(payload);
   }
 
+  async produceAdminCertification(email: string, name: string, uuid: string) {
+    const payload = {
+      type: EmailPayloadConstant.ADMIN_CERTIFICATION,
+      data: {
+        email,
+        name,
+        uuid,
+      },
+    };
+
+    await this.produceMessage(payload);
+  }
+
   async produceRssRegistration(
     rss: Rss,
     approveFlag: boolean,
