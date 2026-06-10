@@ -1,10 +1,10 @@
 import { useEffect } from "react";
-
 import { useNavigate } from "react-router-dom";
 
 import { AuthCard } from "@/components/auth/AuthCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+
 import { useResetPassword } from "@/hooks/auth/useResetPassword";
 import { useCustomToast } from "@/hooks/common/useCustomToast";
 
@@ -31,7 +31,7 @@ export const AuthResetPasswordForm = () => {
           유효하지 않은 접근입니다. 이메일에서 링크를 통해 접근해주세요.
         </p>
         <div className="mt-4">
-          <Button className="w-full" onClick={() => navigate("/forgot-password")}>
+          <Button className="w-full" onClick={() => navigate("/users/forgot-password")}>
             비밀번호 찾기로 이동
           </Button>
         </div>
@@ -58,9 +58,7 @@ export const AuthResetPasswordForm = () => {
             onChange={(e) => updateField("confirmPassword", e.target.value)}
           />
         </div>
-        <p className="text-xs text-muted-foreground">
-          8~32자, 대문자/소문자/숫자/특수문자 중 2가지 이상 포함
-        </p>
+        <p className="text-xs text-muted-foreground">8~32자, 대문자/소문자/숫자/특수문자 중 2가지 이상 포함</p>
         <Button className="w-full" type="submit" disabled={isLoading}>
           {isLoading ? "처리 중..." : "비밀번호 변경"}
         </Button>

@@ -77,7 +77,7 @@ export const AuthSignInForm = () => {
                 type="button"
                 variant="link"
                 className="h-auto p-0 text-muted-foreground underline underline-offset-4"
-                onClick={() => navigate("/forgot-password")}
+                onClick={() => navigate("/users/forgot-password")}
               >
                 비밀번호를 잊으셨나요?
               </Button>

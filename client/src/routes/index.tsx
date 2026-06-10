@@ -91,7 +91,7 @@ export const AppRouter = ({ location, state }: RouterProps) => {
           }
         />
         <Route
-          path="/forgot-password"
+          path="/users/forgot-password"
           element={
             <Suspense fallback={<Loading />}>
               <ForgotPassword />
@@ -99,7 +99,7 @@ export const AppRouter = ({ location, state }: RouterProps) => {
           }
         />
         <Route
-          path="/user/password"
+          path="/users/password"
           element={
             <Suspense fallback={<Loading />}>
               <ResetPassword />
