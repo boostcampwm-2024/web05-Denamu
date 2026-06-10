@@ -23,3 +23,9 @@ export interface RssRemoval {
   rssUrl: string;
   certificateCode: string;
 }
+
+export interface AdminCertification {
+  email: string;
+  name: string;
+  uuid: string;
+}
