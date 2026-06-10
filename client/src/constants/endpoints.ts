@@ -5,7 +5,8 @@ export const ADMIN = {
   LOGIN: "/api/admins/login",
   ME: "/api/admins/me",
   LOGOUT: "/api/admins/logout",
-  REGISTER: "/api/admins",
+  REGISTER: "/api/admins/registrations",
+  CERTIFICATE: "/api/admins/email-verifications",
   CHILDREN: "/api/admins/children",
   DELETE_CHILD: (id: number) => `/api/admins/children/${id}`,
   GET: {

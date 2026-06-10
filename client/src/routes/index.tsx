@@ -13,6 +13,7 @@ const Profile = lazy(() => import("@/pages/Profile"));
 const SignIn = lazy(() => import("@/pages/SignIn"));
 const SignUp = lazy(() => import("@/pages/SignUp"));
 const UserCertificate = lazy(() => import("@/pages/UserCertificate"));
+const AdminCertificate = lazy(() => import("@/pages/AdminCertificate"));
 const OAuthSuccessPage = lazy(() => import("@/pages/OAuthSuccessPage"));
 
 interface RouterProps {
@@ -77,6 +78,14 @@ export const AppRouter = ({ location, state }: RouterProps) => {
           element={
             <Suspense fallback={<Loading />}>
               <UserCertificate />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/admins/email-verifications"
+          element={
+            <Suspense fallback={<Loading />}>
+              <AdminCertificate />
             </Suspense>
           }
         />

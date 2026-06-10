@@ -17,7 +17,7 @@ export const AdminHeader = ({
   setLogin: () => void;
   handleTap: (tap: "RSS" | "MEMBER") => void;
   name?: string;
-  parent?: { loginId: string; name: string } | null;
+  parent?: { email: string; name: string } | null;
 }) => {
   const handleLogout = () => {
     auth.logout();
@@ -48,7 +48,7 @@ export const AdminHeader = ({
                 <TooltipContent>
                   {parent ? (
                     <span>
-                      상위 계정: {parent.name} ({parent.loginId})
+                      상위 계정: {parent.name} ({parent.email})
                     </span>
                   ) : (
                     <span>Root 계정이라 부모 계정이 없습니다.</span>
