@@ -35,14 +35,14 @@ describe(`GET ${URL} E2E Test`, () => {
 
   beforeEach(async () => {
     const admin = await adminRepository.save(
-      await AdminFixture.createAdminCryptFixture({ loginId: 'testAdminId' }),
+      await AdminFixture.createAdminCryptFixture(),
     );
     const rssAccepts = Array.from({ length: 2 }).map(() =>
       RssAcceptFixture.createRssAcceptFixture(),
     );
     [rssAcceptList] = await Promise.all([
       rssAcceptRepository.save(rssAccepts),
-      redisService.set(redisKeyMake(sessionKey), admin.loginId),
+      redisService.set(redisKeyMake(sessionKey), admin.email),
     ]);
     rssAcceptList.reverse();
   });

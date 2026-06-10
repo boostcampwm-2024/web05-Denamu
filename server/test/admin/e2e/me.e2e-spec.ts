@@ -30,10 +30,10 @@ describe(`GET ${URL} E2E Test`, () => {
 
   beforeEach(async () => {
     const admin = await adminRepository.save(
-      await AdminFixture.createAdminCryptFixture({ loginId: 'testAdminId' }),
+      await AdminFixture.createAdminCryptFixture(),
     );
     registeredName = admin.name;
-    await redisService.set(redisKeyMake(sessionKey), admin.loginId);
+    await redisService.set(redisKeyMake(sessionKey), admin.email);
   });
 
   it('[401] 관리자 로그인 쿠키가 없을 경우 관리자 자동 로그인을 실패한다.', async () => {
@@ -91,16 +91,15 @@ describe(`GET ${URL} E2E Test`, () => {
   it('[200] 부모 관리자가 있을 경우 프로필에 부모 정보를 포함한다.', async () => {
     // given
     const parent = await adminRepository.save(
-      await AdminFixture.createAdminCryptFixture({ loginId: 'parentAdminId' }),
+      await AdminFixture.createAdminCryptFixture(),
     );
     const child = await adminRepository.save(
       await AdminFixture.createAdminCryptFixture({
-        loginId: 'childAdminId',
         parentAdminId: parent.id,
       }),
     );
     const childSessionKey = 'child-session-check-key';
-    await redisService.set(redisKeyMake(childSessionKey), child.loginId);
+    await redisService.set(redisKeyMake(childSessionKey), child.email);
 
     // Http when
     const response = await agent
@@ -112,7 +111,7 @@ describe(`GET ${URL} E2E Test`, () => {
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toEqual({
       name: child.name,
-      parent: { loginId: parent.loginId, name: parent.name },
+      parent: { email: parent.email, name: parent.name },
     });
   });
 });
