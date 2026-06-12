@@ -92,6 +92,10 @@ export class EmailConsumer {
         await this.emailService.sendRssMail(payload.data);
         break;
 
+      case EmailPayloadConstant.RSS_REGISTRATION_REQUEST:
+        await this.emailService.sendRssRegistrationRequestMail(payload.data);
+        break;
+
       case EmailPayloadConstant.RSS_REMOVAL:
         await this.emailService.sendRssRemoveCertificationMail(payload.data);
         break;
