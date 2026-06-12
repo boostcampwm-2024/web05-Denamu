@@ -11,6 +11,7 @@ import { FeedMetrics } from '@common/metrics/feed-metrics';
 import { Notifier } from '@common/notification/notifier.interface';
 import { RedisConnection } from '@common/redis-access';
 
+import { AiSummaryRetryEventWorker } from '@event_worker/workers/ai-summary-retry-event-worker';
 import { ClaudeEventWorker } from '@event_worker/workers/claude-event-worker';
 import { FullFeedCrawlEventWorker } from '@event_worker/workers/full-feed-crawl-event-worker';
 
@@ -26,6 +27,7 @@ function initializeDependencies() {
     feedCrawler: container.resolve(FeedCrawler),
     claudeEventWorker: container.resolve(ClaudeEventWorker),
     fullFeedCrawlEventWorker: container.resolve(FullFeedCrawlEventWorker),
+    aiSummaryRetryEventWorker: container.resolve(AiSummaryRetryEventWorker),
     notifier: container.resolve<Notifier>(DEPENDENCY_SYMBOLS.Notifier),
     metrics: container.resolve(FeedMetrics),
   };
@@ -52,6 +54,11 @@ function registerSchedulers(
   schedule.scheduleJob('FULL FEED CRAWLING', '*/5 * * * *', () => {
     logger.info(`Full Feed Crawling Start: ${new Date().toISOString()}`);
     void dependencies.fullFeedCrawlEventWorker.start();
+  });
+
+  schedule.scheduleJob('AI SUMMARY RETRY', '*/1 * * * *', () => {
+    logger.info(`AI Summary Retry Start: ${new Date().toISOString()}`);
+    void dependencies.aiSummaryRetryEventWorker.start();
   });
 }
 

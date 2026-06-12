@@ -46,3 +46,9 @@ export interface FullFeedCrawlMessage {
   timestamp: number;
   deathCount: number;
 }
+
+export interface AiSummaryRetryMessage {
+  feedId: number;
+
+  deathCount: number;
+}

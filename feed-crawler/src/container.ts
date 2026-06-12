@@ -16,6 +16,7 @@ import { Rss20Parser } from '@common/parser/formats/rss20-parser';
 import { ParserUtil } from '@common/parser/utils/parser-util';
 import { RedisConnection } from '@common/redis-access';
 
+import { AiSummaryRetryEventWorker } from '@event_worker/workers/ai-summary-retry-event-worker';
 import { ClaudeEventWorker } from '@event_worker/workers/claude-event-worker';
 import { FullFeedCrawlEventWorker } from '@event_worker/workers/full-feed-crawl-event-worker';
 
@@ -44,6 +45,7 @@ container.registerSingleton(Atom10Parser);
 container.registerSingleton(FeedParserManager);
 container.registerSingleton(FeedCrawler);
 container.registerSingleton(FullFeedCrawlEventWorker);
+container.registerSingleton(AiSummaryRetryEventWorker);
 
 container.registerSingleton(DiscordNotifier);
 container.registerSingleton(NotifierRegistry);
