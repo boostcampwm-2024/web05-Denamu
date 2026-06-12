@@ -60,6 +60,7 @@ export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
     try {
       const aiData = await this.requestAI(feed);
       await this.saveAIResult(aiData);
+      await this.releaseRetryLock(feed.id);
     } catch (error) {
       await this.handleFailure(feed, error as Error);
       this.notifier.publish(NOTIFICATION_EVENT.AI_SUMMARY, {
@@ -195,6 +196,19 @@ export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
       logger.error(`${this.nameTag} ${feed.id} 영구 실패 - ${reason}`);
       this.aiMetrics.permanentFailure.inc();
       await this.feedRepository.updateNullSummary(feed.id);
+      await this.releaseRetryLock(feed.id);
+    }
+  }
+
+  private async releaseRetryLock(feedId: number): Promise<void> {
+    try {
+      await this.redisConnection.del(
+        `${redisConstant.FEED_AI_RETRY_LOCK}:${feedId}`,
+      );
+    } catch (error) {
+      logger.error(
+        `${this.nameTag} ${feedId} AI 재요청 락 해제 실패: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 

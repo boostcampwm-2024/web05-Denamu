@@ -122,4 +122,24 @@ describe(`POST /api/feeds/{feedId}/ai-summary-requests E2E Test`, () => {
     expect(queued).toHaveLength(1);
     expect(JSON.parse(queued[0])).toMatchObject({ feedId: feed.id });
   });
+
+  it('[409] 이미 재요청해 처리 중인 피드를 다시 요청하면 충돌이 발생하고 큐에 중복 적재되지 않는다.', async () => {
+    // given
+    const feed: Feed = await createFeed(null);
+    const first = await agent
+      .post(URL(feed.id))
+      .set('Cookie', `sessionId=${sessionKey}`);
+    expect(first.status).toBe(HttpStatus.ACCEPTED);
+
+    // Http when
+    const second = await agent
+      .post(URL(feed.id))
+      .set('Cookie', `sessionId=${sessionKey}`);
+
+    // Http then
+    expect(second.status).toBe(HttpStatus.CONFLICT);
+
+    // Redis then
+    expect(await readRetryQueue()).toHaveLength(1);
+  });
 });

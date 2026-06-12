@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 
 import axios from 'axios';
 import { Request, Response } from 'express';
@@ -36,6 +36,7 @@ describe(`${FeedService.name} Unit Test`, () => {
       | 'zincrby'
       | 'executePipeline'
       | 'rpush'
+      | 'set'
     >
   >;
 
@@ -61,6 +62,7 @@ describe(`${FeedService.name} Unit Test`, () => {
       zincrby: jest.fn(),
       executePipeline: jest.fn(),
       rpush: jest.fn(),
+      set: jest.fn().mockResolvedValue('OK'),
     };
 
     feedService = new FeedService(
@@ -118,11 +120,33 @@ describe(`${FeedService.name} Unit Test`, () => {
       await feedService.requestAiSummary(7);
 
       // then
+      expect(redisService.set).toHaveBeenCalledWith(
+        `${REDIS_KEYS.FEED_AI_RETRY_LOCK}:7`,
+        '1',
+        'NX',
+        'EX',
+        expect.any(Number),
+      );
       expect(redisService.rpush).toHaveBeenCalledWith(
         REDIS_KEYS.FEED_AI_RETRY_QUEUE,
         expect.any(String),
       );
       expect(parseEnqueued()).toMatchObject({ feedId: 7, deathCount: 0 });
+    });
+
+    it('이미 처리 중(락 점유)이면 ConflictException을 던지고 큐에 넣지 않는다.', async () => {
+      // given
+      feedRepository.findOneBy.mockResolvedValue({
+        id: 7,
+        summary: null,
+      } as any);
+      redisService.set.mockResolvedValue(null); // NX 실패 = 이미 락 존재
+
+      // when & then
+      await expect(feedService.requestAiSummary(7)).rejects.toThrow(
+        ConflictException,
+      );
+      expect(redisService.rpush).not.toHaveBeenCalled();
     });
   });
 

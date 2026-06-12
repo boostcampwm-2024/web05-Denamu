@@ -45,7 +45,9 @@ export class AiSummaryRetryEventWorker extends AbstractQueueWorker<AiSummaryRetr
   ): Promise<void> {
     const feedId = retryMessage.feedId;
 
-    logger.info(`${this.nameTag} feedId ${feedId} AI 요약 재요청을 시작합니다.`);
+    logger.info(
+      `${this.nameTag} feedId ${feedId} AI 요약 재요청을 시작합니다.`,
+    );
 
     try {
       await this.feedCrawler.requeueFeedForAiSummary(feedId);
@@ -81,6 +83,19 @@ export class AiSummaryRetryEventWorker extends AbstractQueueWorker<AiSummaryRetr
         : `재시도 불가능한 에러 (${error.name})`;
       logger.error(
         `${this.nameTag} feedId ${retryMessage.feedId} 영구 실패 - ${reason}`,
+      );
+      await this.releaseRetryLock(retryMessage.feedId);
+    }
+  }
+
+  private async releaseRetryLock(feedId: number): Promise<void> {
+    try {
+      await this.redisConnection.del(
+        `${redisConstant.FEED_AI_RETRY_LOCK}:${feedId}`,
+      );
+    } catch (error) {
+      logger.error(
+        `${this.nameTag} feedId ${feedId} AI 재요청 락 해제 실패: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }

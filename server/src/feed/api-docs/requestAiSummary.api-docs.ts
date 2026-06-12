@@ -18,6 +18,6 @@ export function ApiRequestAiSummary() {
     ApiMessageResponse('AI 요약 재요청 접수 성공'),
     ApiUnauthorizedDoc('관리자 인증이 되지 않은 경우'),
     ApiNotFoundDoc('해당 ID의 피드가 존재하지 않는 경우'),
-    ApiConflictDoc('이미 AI 요약이 완료된 게시글인 경우'),
+    ApiConflictDoc('이미 AI 요약 큐에 포함되어 처리 중인 게시글인 경우'),
   );
 }
