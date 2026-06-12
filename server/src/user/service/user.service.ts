@@ -56,14 +56,6 @@ export class UserService {
     return CheckEmailDuplicationResponseDto.toResponseDto(!!user);
   }
 
-  async checkNameDuplication(userName: string) {
-    const user = await this.userRepository.findOne({
-      where: { userName },
-    });
-
-    return CheckEmailDuplicationResponseDto.toResponseDto(!!user);
-  }
-
   async registerUser(registerDto: RegisterUserRequestDto): Promise<void> {
     const user = await this.userRepository.findOne({
       where: { email: registerDto.email },

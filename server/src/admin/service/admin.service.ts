@@ -14,7 +14,6 @@ import { In } from 'typeorm';
 import { SESSION_TTL } from '@admin/constant/admin.constant';
 import { LoginAdminRequestDto } from '@admin/dto/request/loginAdmin.dto';
 import { RegisterAdminRequestDto } from '@admin/dto/request/registerAdmin.dto';
-import { CheckNameDuplicationResponseDto } from '@admin/dto/response/checkNameDuplication.dto';
 import { GetAdminProfileResponseDto } from '@admin/dto/response/getAdminProfile.dto';
 import { GetChildAdminResponseDto } from '@admin/dto/response/getChildAdmin.dto';
 import { Admin } from '@admin/entity/admin.entity';
@@ -97,14 +96,6 @@ export class AdminService {
       );
     }
     response.clearCookie('sessionId');
-  }
-
-  async checkNameDuplication(name: string) {
-    const admin = await this.adminRepository.findOne({
-      where: { name },
-    });
-
-    return CheckNameDuplicationResponseDto.toResponseDto(!!admin);
   }
 
   async registerAdmin(

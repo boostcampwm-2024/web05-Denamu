@@ -8,7 +8,6 @@ import {
   Param,
   ParseIntPipe,
   Post,
-  Query,
   Req,
   Res,
   UseGuards,
@@ -18,7 +17,6 @@ import { ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 
 import { ApiCertificateAdmin } from '@admin/api-docs/certificateAdmin.api-docs';
-import { ApiCheckNameDuplication } from '@admin/api-docs/checkNameDuplication.api-docs';
 import { ApiDeleteChildAdmin } from '@admin/api-docs/deleteChildAdmin.api-docs';
 import { ApiGetChildrenAdmin } from '@admin/api-docs/getChildrenAdmin.api-docs';
 import { ApiGetCurrentAdmin } from '@admin/api-docs/getCurrentAdmin.api-docs';
@@ -26,7 +24,6 @@ import { ApiLoginAdmin } from '@admin/api-docs/loginAdmin.api-docs';
 import { ApiLogoutAdmin } from '@admin/api-docs/logoutAdmin.api-docs';
 import { ApiRegisterAdmin } from '@admin/api-docs/registerAdmin.api-docs';
 import { CertificateAdminRequestDto } from '@admin/dto/request/certificateAdmin.dto';
-import { CheckNameDuplicationRequestDto } from '@admin/dto/request/checkNameDuplication.dto';
 import { LoginAdminRequestDto } from '@admin/dto/request/loginAdmin.dto';
 import { RegisterAdminRequestDto } from '@admin/dto/request/registerAdmin.dto';
 import { AdminService } from '@admin/service/admin.service';
@@ -79,21 +76,6 @@ export class AdminController {
     await this.adminService.registerAdmin(registerAdminBodyDto, email);
     return ApiResponse.responseWithNoContent(
       '관리자 계정 생성 요청이 성공적으로 처리되었습니다. 이메일을 확인해주세요.',
-    );
-  }
-
-  @ApiCheckNameDuplication()
-  @UseGuards(AdminAuthGuard)
-  @Get('/name-availability')
-  @HttpCode(HttpStatus.OK)
-  async checkNameDuplication(
-    @Query() checkNameDuplicationRequestDto: CheckNameDuplicationRequestDto,
-  ) {
-    return ApiResponse.responseWithData(
-      '이름 중복 조회 요청이 성공적으로 처리되었습니다.',
-      await this.adminService.checkNameDuplication(
-        checkNameDuplicationRequestDto.name,
-      ),
     );
   }
 
