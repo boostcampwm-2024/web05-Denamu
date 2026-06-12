@@ -219,6 +219,7 @@ describe(`${AdminService.name} Unit Test`, () => {
       parent.id = 7;
       adminRepository.findOne
         .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(null)
         .mockResolvedValueOnce(parent);
 
       // when

@@ -123,6 +123,35 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(savedRegisterCode).toBeNull();
   });
 
+  it('[409] 중복된 이름으로 회원가입을 할 경우 회원가입을 실패한다.', async () => {
+    // given
+    const admin = await adminRepository.save(
+      await AdminFixture.createAdminCryptFixture(),
+    );
+    const newAdminDto = new RegisterAdminRequestDto({
+      password: 'testNewAdminPassword!',
+      name: admin.name,
+      email: 'testnewadmin@test.com',
+    });
+
+    // Http when
+    const response = await agent
+      .post(URL)
+      .send(newAdminDto)
+      .set('Cookie', `sessionId=${sessionKey}`);
+
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.CONFLICT);
+    expect(data).toBeUndefined();
+
+    // Redis then
+    const savedRegisterCode = await redisService.get(
+      registerKeyMake(adminRegisterCode),
+    );
+    expect(savedRegisterCode).toBeNull();
+  });
+
   it('[201] 관리자 로그인이 되어 있을 경우 회원가입 요청을 Redis에 저장한다.', async () => {
     // given
     const newAdminDto = new RegisterAdminRequestDto({
