@@ -35,6 +35,14 @@ export class Admin extends BaseEntity {
   email: string;
 
   @Column({
+    name: 'email_notification',
+    type: 'boolean',
+    nullable: false,
+    default: true,
+  })
+  emailNotification: boolean;
+
+  @Column({
     name: 'parent_admin_id',
     type: 'int',
     nullable: true,
