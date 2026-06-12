@@ -56,6 +56,14 @@ export class UserService {
     return CheckEmailDuplicationResponseDto.toResponseDto(!!user);
   }
 
+  async checkNameDuplication(userName: string) {
+    const user = await this.userRepository.findOne({
+      where: { userName },
+    });
+
+    return CheckEmailDuplicationResponseDto.toResponseDto(!!user);
+  }
+
   async registerUser(registerDto: RegisterUserRequestDto): Promise<void> {
     const user = await this.userRepository.findOne({
       where: { email: registerDto.email },
@@ -63,6 +71,14 @@ export class UserService {
 
     if (user) {
       throw new ConflictException('이미 존재하는 이메일입니다.');
+    }
+
+    const existingName = await this.userRepository.findOne({
+      where: { userName: registerDto.userName },
+    });
+
+    if (existingName) {
+      throw new ConflictException('이미 존재하는 닉네임입니다.');
     }
 
     const newUser = registerDto.toEntity();
@@ -90,7 +106,15 @@ export class UserService {
       throw new NotFoundException('인증에 실패했습니다.');
     }
     await this.redisService.del(`${REDIS_KEYS.USER_AUTH_KEY}:${uuid}`);
-    await this.userRepository.save(JSON.parse(user));
+
+    try {
+      await this.userRepository.save(JSON.parse(user));
+    } catch (error) {
+      if ((error as { code?: string })?.code === 'ER_DUP_ENTRY') {
+        throw new ConflictException('이미 존재하는 이메일 또는 닉네임입니다.');
+      }
+      throw error;
+    }
   }
 
   async loginUser(loginDto: LoginUserRequestDto, response: Response) {

@@ -22,6 +22,7 @@ import { ApiResponse } from '@common/response/common.response';
 
 import { ApiCertificateUser } from '@user/api-docs/certificateUser.api-docs';
 import { ApiCheckEmailDuplication } from '@user/api-docs/checkEmailDuplication.api-docs';
+import { ApiCheckNameDuplication } from '@user/api-docs/checkNameDuplication.api-docs';
 import { ApiConfirmDeleteAccount } from '@user/api-docs/confirmDeleteAccount.api-docs';
 import { ApiForgotPassword } from '@user/api-docs/forgotPassword.api-docs';
 import { ApiLoginUser } from '@user/api-docs/loginUser.api-docs';
@@ -33,6 +34,7 @@ import { ApiResetPassword } from '@user/api-docs/resetPassword.api-docs';
 import { ApiUpdateUser } from '@user/api-docs/updateUser.api-docs';
 import { CertificateUserRequestDto } from '@user/dto/request/certificateUser.dto';
 import { CheckEmailDuplicationRequestDto } from '@user/dto/request/checkEmailDuplication.dto';
+import { CheckNameDuplicationRequestDto } from '@user/dto/request/checkNameDuplication.dto';
 import { ConfirmDeleteAccountParamRequestDto } from '@user/dto/request/confirmDeleteAccountParam.dto';
 import { ForgotPasswordRequestDto } from '@user/dto/request/forgotPassword.dto';
 import { LoginUserRequestDto } from '@user/dto/request/loginUser.dto';
@@ -58,6 +60,21 @@ export class UserController {
       '이메일 중복 조회 요청이 성공적으로 처리되었습니다.',
       await this.userService.checkEmailDuplication(
         checkEmailDuplicationRequestDto.email,
+      ),
+    );
+  }
+
+  @ApiCheckNameDuplication()
+  @Get('/name-availability')
+  @HttpCode(HttpStatus.OK)
+  async checkNameDuplication(
+    @Query()
+    checkNameDuplicationRequestDto: CheckNameDuplicationRequestDto,
+  ) {
+    return ApiResponse.responseWithData(
+      '닉네임 중복 조회 요청이 성공적으로 처리되었습니다.',
+      await this.userService.checkNameDuplication(
+        checkNameDuplicationRequestDto.userName,
       ),
     );
   }
