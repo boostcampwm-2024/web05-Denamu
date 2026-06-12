@@ -42,6 +42,39 @@ export function createRssRegistrationContent(
 `;
 }
 
+export function createRssRegistrationRequestContent(
+  rss: Rss,
+  serviceAddress: string,
+) {
+  return `
+  <div style="font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', '맑은 고딕', sans-serif; margin: 0; padding: 1px; background-color: #f4f4f4;">
+    <div style="max-width: 600px; margin: 20px auto; background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+      <div style="text-align: center; padding: 20px 0; border-bottom: 2px solid #f0f0f0;">
+        <img src="https://denamu.dev/files/Denamu_Logo_KOR.png" alt="Denamu Logo" width="244" height="120">
+      </div>
+      <div style="padding: 20px 0;">
+        <div style="color: #007bff; font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center;">새로운 RSS 등록 신청이 접수되었습니다 📥</div>
+          <div style="background-color: #f8f9fa; padding: 15px; border-radius: 4px; margin: 15px 0;">
+            <p><strong>블로그 제목:</strong> ${rss.name}</p>
+            <p><strong>신청자 이름:</strong> ${rss.userName}</p>
+            <p><strong>신청자 이메일:</strong> ${rss.email}</p>
+            <p><strong>RSS 주소:</strong> ${rss.rssUrl}</p>
+          </div>
+          <p>관리자 페이지에서 신청 내용을 확인하고 승인 또는 거절을 진행해 주세요.</p>
+          <center>
+            <a href="${PRODUCT_DOMAIN}/admins" style="display: inline-block; padding: 12px 24px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; margin: 20px 0; font-weight: bold;">관리자 페이지로 이동</a>
+          </center>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; border-top: 2px solid #f0f0f0; color: #6c757d; font-size: 14px; height: 100px;">
+        <p>본 메일은 발신전용입니다.</p>
+        <p>문의사항이 있으시다면 ${serviceAddress}로 연락주세요.</p>
+      </div>
+    </div>
+  </div>
+`;
+}
+
 function acceptContent() {
   return `
     <p>안녕하세요! 귀하의 블로그가 저희 서비스에 성공적으로 등록되었음을 알려드립니다.</p>

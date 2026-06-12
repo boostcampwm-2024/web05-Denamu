@@ -5,6 +5,7 @@ CREATE TABLE `admin` (
   `email` varchar(255) NOT NULL,
   `password` varchar(60) NOT NULL,
   `name` varchar(255) NOT NULL,
+  `email_notification` tinyint NOT NULL DEFAULT 1,
   `parent_admin_id` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `UQ_admin_email` (`email`),

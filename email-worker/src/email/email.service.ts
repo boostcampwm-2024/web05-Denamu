@@ -9,6 +9,7 @@ import {
   AdminCertification,
   Rss,
   RssRegistration,
+  RssRegistrationRequest,
   RssRemoval,
   User,
 } from '@common/types';
@@ -18,6 +19,7 @@ import {
   createDeleteAccountContent,
   createPasswordResetMailContent,
   createRssRegistrationContent,
+  createRssRegistrationRequestContent,
   createRssRemoveCertificateContent,
   createVerificationMailContent,
   PRODUCT_DOMAIN,
@@ -103,6 +105,29 @@ export class EmailService {
     );
 
     await this.sendMail(mailOptions);
+  }
+
+  async sendRssRegistrationRequestMail(
+    rssRegistrationRequest: RssRegistrationRequest,
+  ): Promise<void> {
+    const mailOptions = this.createRssRegistrationRequestMail(
+      rssRegistrationRequest.rss,
+      rssRegistrationRequest.adminEmail,
+    );
+
+    await this.sendMail(mailOptions);
+  }
+
+  private createRssRegistrationRequestMail(
+    rss: Rss,
+    adminEmail: string,
+  ): nodemailer.SendMailOptions {
+    return {
+      from: `Denamu<${this.emailUser}>`,
+      to: adminEmail,
+      subject: `[🎋 Denamu] 새로운 RSS 등록 신청이 접수되었습니다.`,
+      html: createRssRegistrationRequestContent(rss, this.emailUser),
+    };
   }
 
   async sendUserCertificationMail(user: User): Promise<void> {

@@ -8,8 +8,12 @@ import axios from 'axios';
 import { DataSource } from 'typeorm';
 
 import { EmailProducer } from '@common/email/email.producer';
+import { WinstonLoggerService } from '@common/logger/logger.service';
+import { NotifierRegistry } from '@common/notification/notifier-registry';
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
+
+import { AdminRepository } from '@admin/repository/admin.repository';
 
 import { RegisterRssRequestDto } from '@rss/dto/request/registerRss.dto';
 import { ReadRssResponseDto } from '@rss/dto/response/readRss.dto';
@@ -37,12 +41,17 @@ describe(`${RssService.name} Unit Test`, () => {
   let emailProducer: jest.Mocked<
     Pick<
       EmailProducer,
-      'produceRssRegistration' | 'produceRssRemoval'
+      | 'produceRssRegistration'
+      | 'produceRssRegistrationRequest'
+      | 'produceRssRemoval'
     >
   >;
   let manager: { save: jest.Mock; remove: jest.Mock; delete: jest.Mock };
   let dataSource: jest.Mocked<Pick<DataSource, 'transaction'>>;
   let redisService: jest.Mocked<Pick<RedisService, 'rpush' | 'set' | 'get' | 'del'>>;
+  let adminRepository: jest.Mocked<Pick<AdminRepository, 'find'>>;
+  let notifierRegistry: jest.Mocked<Pick<NotifierRegistry, 'sendAlert'>>;
+  let logger: jest.Mocked<Pick<WinstonLoggerService, 'error'>>;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -56,6 +65,7 @@ describe(`${RssService.name} Unit Test`, () => {
     rssRejectRepository = { find: jest.fn() };
     emailProducer = {
       produceRssRegistration: jest.fn(),
+      produceRssRegistrationRequest: jest.fn(),
       produceRssRemoval: jest.fn(),
     };
     manager = { save: jest.fn(), remove: jest.fn(), delete: jest.fn() };
@@ -63,6 +73,9 @@ describe(`${RssService.name} Unit Test`, () => {
       transaction: jest.fn((cb: any) => cb(manager)),
     } as any;
     redisService = { rpush: jest.fn(), set: jest.fn(), get: jest.fn(), del: jest.fn() };
+    adminRepository = { find: jest.fn().mockResolvedValue([]) };
+    notifierRegistry = { sendAlert: jest.fn() };
+    logger = { error: jest.fn() };
 
     rssService = new RssService(
       rssRepository as unknown as RssRepository,
@@ -71,6 +84,9 @@ describe(`${RssService.name} Unit Test`, () => {
       emailProducer as unknown as EmailProducer,
       dataSource as unknown as DataSource,
       redisService as unknown as RedisService,
+      adminRepository as unknown as AdminRepository,
+      notifierRegistry as unknown as NotifierRegistry,
+      logger as unknown as WinstonLoggerService,
     );
   });
 
@@ -104,6 +120,45 @@ describe(`${RssService.name} Unit Test`, () => {
 
       // then
       expect(rssRepository.insert).toHaveBeenCalledWith(dto.toEntity());
+    });
+
+    it('저장 후 수신 동의한 관리자에게 메일을 발송하고 디스코드 알림을 보낸다.', async () => {
+      // given
+      rssRepository.findOne.mockResolvedValue(null);
+      rssAcceptRepository.findOne.mockResolvedValue(null);
+      adminRepository.find.mockResolvedValue([
+        { email: 'a@denamu.dev' },
+        { email: 'b@denamu.dev' },
+      ] as any);
+
+      // when
+      await rssService.createRss(dto);
+
+      // then
+      expect(adminRepository.find).toHaveBeenCalledWith({
+        where: { emailNotification: true },
+        select: ['email'],
+      });
+      expect(emailProducer.produceRssRegistrationRequest).toHaveBeenCalledTimes(2);
+      expect(emailProducer.produceRssRegistrationRequest).toHaveBeenCalledWith(
+        dto.toEntity(),
+        'a@denamu.dev',
+      );
+      expect(notifierRegistry.sendAlert).toHaveBeenCalledTimes(1);
+    });
+
+    it('알림 발송이 실패해도 신청 자체는 예외를 던지지 않는다.', async () => {
+      // given
+      rssRepository.findOne.mockResolvedValue(null);
+      rssAcceptRepository.findOne.mockResolvedValue(null);
+      adminRepository.find.mockRejectedValue(new Error('DB down'));
+
+      // when & then
+      await expect(rssService.createRss(dto)).resolves.not.toThrow();
+      expect(rssRepository.insert).toHaveBeenCalled();
+      expect(logger.error).toHaveBeenCalled();
+      // 메일 경로가 실패해도 디스코드 알림은 발송되어야 한다.
+      expect(notifierRegistry.sendAlert).toHaveBeenCalledTimes(1);
     });
   });
 

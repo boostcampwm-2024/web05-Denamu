@@ -1,5 +1,9 @@
 import { Module } from '@nestjs/common';
 
+import { NotifierModule } from '@common/notification/notifier.module';
+
+import { AdminModule } from '@admin/module/admin.module';
+
 import { RssController } from '@rss/controller/rss.controller';
 import {
   RssAcceptRepository,
@@ -9,6 +13,7 @@ import {
 import { RssService } from '@rss/service/rss.service';
 
 @Module({
+  imports: [AdminModule, NotifierModule],
   controllers: [RssController],
   providers: [
     RssService,

@@ -11,6 +11,11 @@ export interface RssRegistration {
   description?: string;
 }
 
+export interface RssRegistrationRequest {
+  rss: Rss;
+  adminEmail: string;
+}
+
 export interface User {
   email: string;
   userName: string;
