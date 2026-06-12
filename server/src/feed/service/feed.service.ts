@@ -31,6 +31,11 @@ import {
   FeedViewRepository,
 } from '@feed/repository/feed.repository';
 
+interface AiSummaryRetryMessage {
+  feedId: number;
+  deathCount: number;
+}
+
 @Injectable()
 export class FeedService {
   constructor(
@@ -46,6 +51,19 @@ export class FeedService {
     }
 
     return feed;
+  }
+
+  async requestAiSummary(feedId: number) {
+    await this.getFeed(feedId);
+
+    const message: AiSummaryRetryMessage = {
+      feedId,
+      deathCount: 0,
+    };
+    await this.redisService.rpush(
+      REDIS_KEYS.FEED_AI_RETRY_QUEUE,
+      JSON.stringify(message),
+    );
   }
 
   async getFeedByView(feedId: number) {

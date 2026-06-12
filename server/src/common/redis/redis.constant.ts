@@ -5,6 +5,7 @@ export const REDIS_KEYS = {
   FEED_RECENT_ALL_KEY: 'feed:recent:*',
   FEED_RECENT_KEY: 'feed:recent',
   FEED_AI_QUEUE: `feed:ai:queue`,
+  FEED_AI_RETRY_QUEUE: `feed:ai-retry:queue`,
   USER_AUTH_KEY: 'signup',
   ADMIN_AUTH_KEY: 'auth',
   ADMIN_SESSION_BY_EMAIL: 'auth:email',
