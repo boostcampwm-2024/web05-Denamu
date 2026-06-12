@@ -23,7 +23,9 @@ describe(`${OAuthService.name} Unit Test`, () => {
     Pick<ProviderRepository, 'findByProviderTypeAndId' | 'save'>
   >;
   let logger: jest.Mocked<Pick<WinstonLoggerService, 'log' | 'error'>>;
-  let redisService: jest.Mocked<Pick<RedisService, 'eval'>>;
+  let redisService: jest.Mocked<
+    Pick<RedisService, 'eval' | 'set' | 'get' | 'del'>
+  >;
   let userService: jest.Mocked<Pick<UserService, 'issueRefreshToken'>>;
   let googleProvider: {
     getAuthUrl: jest.Mock;
@@ -49,7 +51,12 @@ describe(`${OAuthService.name} Unit Test`, () => {
       save: jest.fn(),
     };
     logger = { log: jest.fn(), error: jest.fn() };
-    redisService = { eval: jest.fn() };
+    redisService = {
+      eval: jest.fn(),
+      set: jest.fn(),
+      get: jest.fn(),
+      del: jest.fn(),
+    };
     userService = { issueRefreshToken: jest.fn() };
     googleProvider = {
       getAuthUrl: jest.fn(),
@@ -148,7 +155,7 @@ describe(`${OAuthService.name} Unit Test`, () => {
       expect(result).toBe(`${OAUTH_URL_PATH.BASE_URL}/signin`);
     });
 
-    it('인증에 성공하면 신규 사용자를 생성하고 refresh 쿠키 설정 후 성공 URL을 반환한다.', async () => {
+    it('신규 사용자는 가입 정보를 임시 저장하고 닉네임 입력 페이지로 리다이렉트한다.', async () => {
       // given
       const dto = {
         state: encodeState({ provider: OAuthType.Google, csrfToken: 'key-1' }),
@@ -165,15 +172,59 @@ describe(`${OAuthService.name} Unit Test`, () => {
         name: 'oauth-user',
         picture: null,
       });
-      providerRepository.findByProviderTypeAndId.mockResolvedValue(null);
       userRepository.findOne.mockResolvedValue(null);
+      const cookie = jest.fn();
+      const res = { cookie, clearCookie: jest.fn() } as unknown as Response;
+
+      // when
+      const result = await oAuthService.callback(dto, res, createRequest('key-1'));
+
+      // then
+      expect(manager.save).not.toHaveBeenCalled();
+      expect(userService.issueRefreshToken).not.toHaveBeenCalled();
+      expect(redisService.set).toHaveBeenCalledWith(
+        expect.stringContaining('oauth:pending'),
+        expect.any(String),
+        'EX',
+        expect.any(Number),
+      );
+      expect(cookie).toHaveBeenCalledWith(
+        'oauth_pending_token',
+        expect.any(String),
+        expect.anything(),
+      );
+      expect(result).toBe(`${OAUTH_URL_PATH.BASE_URL}/oauth-signup`);
+    });
+
+    it('기존 사용자는 바로 로그인 처리 후 성공 URL을 반환한다.', async () => {
+      // given
+      const dto = {
+        state: encodeState({ provider: OAuthType.Google, csrfToken: 'key-1' }),
+        code: 'auth-code',
+      } as OAuthCallbackRequestDto;
+      redisService.eval.mockResolvedValue(`${OAuthType.Google}-CSRF`);
+      googleProvider.getTokens.mockResolvedValue({
+        access_token: 'at',
+        refresh_token: 'rt',
+      });
+      googleProvider.getUserInfo.mockResolvedValue({
+        id: 'provider-uid',
+        email: 'oauth@test.com',
+        name: 'oauth-user',
+        picture: null,
+      });
+      userRepository.findOne.mockResolvedValue({
+        id: 1,
+        email: 'oauth@test.com',
+        userName: 'existing-user',
+      } as any);
+      providerRepository.findByProviderTypeAndId.mockResolvedValue(null);
       const res = createResponse();
 
       // when
       const result = await oAuthService.callback(dto, res, createRequest('key-1'));
 
       // then
-      expect(manager.save).toHaveBeenCalledTimes(2); // User + Provider
       expect(userService.issueRefreshToken).toHaveBeenCalledWith(
         expect.objectContaining({ email: 'oauth@test.com', role: 'user' }),
         res,

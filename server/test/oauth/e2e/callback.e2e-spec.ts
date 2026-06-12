@@ -9,7 +9,9 @@ import { RedisService } from '@common/redis/redis.service';
 import { OAUTH_CSRF_TOKEN_TTL, OAuthType } from '@user/constant/oauth.constant';
 import { OAuthCallbackRequestDto } from '@user/dto/request/oAuthCallbackDto';
 import { ProviderRepository } from '@user/repository/provider.repository';
+import { UserRepository } from '@user/repository/user.repository';
 
+import { UserFixture } from '@test/config/common/fixture/user.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
 const URL = '/api/oauth/callback';
@@ -17,6 +19,7 @@ const URL = '/api/oauth/callback';
 describe(`GET ${URL} E2E Test`, () => {
   let agent: TestAgent;
   let providerRepository: ProviderRepository;
+  let userRepository: UserRepository;
   let redisService: RedisService;
 
   const createCsrfState = async (provider: OAuthType) => {
@@ -39,10 +42,11 @@ describe(`GET ${URL} E2E Test`, () => {
   beforeAll(() => {
     agent = supertest(testApp.getHttpServer());
     providerRepository = testApp.get(ProviderRepository);
+    userRepository = testApp.get(UserRepository);
     redisService = testApp.get(RedisService);
   });
 
-  it('[302] Github OAuth 로그인 콜백으로 인증 서버에서 데이터를 받을 경우 리다이렉트를 성공한다.', async () => {
+  it('[302] 신규 사용자가 Github OAuth 콜백을 받을 경우 닉네임 입력 페이지로 리다이렉트한다.', async () => {
     // given
     const { csrfToken, state } = await createCsrfState(OAuthType.Github);
     const requestDto = new OAuthCallbackRequestDto({
@@ -74,28 +78,23 @@ describe(`GET ${URL} E2E Test`, () => {
       .set('Cookie', `oauth_csrf_token=${csrfToken}`);
 
     // Http then
-    const { data } = response.body;
-    const setCookieHeader = response.headers['set-cookie'];
-    const setCookies = getSetCookies(setCookieHeader);
+    const setCookies = getSetCookies(response.headers['set-cookie']);
 
     expect(response.status).toBe(HttpStatus.FOUND);
     expect(
-      setCookies.some((cookie) => cookie.startsWith('refresh_token=')),
+      setCookies.some((cookie) => cookie.startsWith('oauth_pending_token=')),
     ).toBe(true);
-    expect(response.headers['location']).toContain('/oauth-success');
-    expect(data).toBeUndefined();
+    expect(response.headers['location']).toContain('/oauth-signup');
 
-    // DB, Redis when
+    // DB then - 닉네임 입력 전이므로 provider 저장 안 됨
     const savedProvider = await providerRepository.findOneBy({
       providerUserId: '1',
       providerType: OAuthType.Github,
     });
-
-    // DB, Redis then
-    expect(savedProvider).not.toBeNull();
+    expect(savedProvider).toBeNull();
   });
 
-  it('[302] Google OAuth 로그인 콜백으로 인증 서버에서 데이터를 받을 경우 리다이렉트를 성공한다.', async () => {
+  it('[302] 신규 사용자가 Google OAuth 콜백을 받을 경우 닉네임 입력 페이지로 리다이렉트한다.', async () => {
     // given
     const { csrfToken, state } = await createCsrfState(OAuthType.Google);
     const requestDto = new OAuthCallbackRequestDto({
@@ -127,24 +126,69 @@ describe(`GET ${URL} E2E Test`, () => {
       .set('Cookie', `oauth_csrf_token=${csrfToken}`);
 
     // Http then
-    const { data } = response.body;
-    const setCookieHeader = response.headers['set-cookie'];
-    const setCookies = getSetCookies(setCookieHeader);
+    const setCookies = getSetCookies(response.headers['set-cookie']);
+
+    expect(response.status).toBe(HttpStatus.FOUND);
+    expect(
+      setCookies.some((cookie) => cookie.startsWith('oauth_pending_token=')),
+    ).toBe(true);
+    expect(response.headers['location']).toContain('/oauth-signup');
+
+    const savedProvider = await providerRepository.findOneBy({
+      providerUserId: '1',
+      providerType: OAuthType.Google,
+    });
+    expect(savedProvider).toBeNull();
+  });
+
+  it('[302] 기존 사용자가 Google OAuth 콜백을 받을 경우 바로 로그인 처리 후 성공 페이지로 리다이렉트한다.', async () => {
+    // given
+    await userRepository.save(
+      UserFixture.createUserFixture({ email: 'test@test.com' }),
+    );
+    const { csrfToken, state } = await createCsrfState(OAuthType.Google);
+    const requestDto = new OAuthCallbackRequestDto({
+      code: 'testCode',
+      state,
+    });
+
+    jest.spyOn(axios, 'post').mockResolvedValue({
+      data: {
+        id_token: '1',
+        access_token: 'test_access_token',
+        expires_in: 3600,
+      },
+    });
+
+    jest.spyOn(axios, 'get').mockResolvedValue({
+      data: {
+        id: '1',
+        email: 'test@test.com',
+        name: 'test',
+        picture: 'https://test.com/test.png',
+      },
+    });
+
+    // Http when
+    const response = await agent
+      .get(URL)
+      .query(requestDto)
+      .set('Cookie', `oauth_csrf_token=${csrfToken}`);
+
+    // Http then
+    const setCookies = getSetCookies(response.headers['set-cookie']);
 
     expect(response.status).toBe(HttpStatus.FOUND);
     expect(
       setCookies.some((cookie) => cookie.startsWith('refresh_token=')),
     ).toBe(true);
     expect(response.headers['location']).toContain('/oauth-success');
-    expect(data).toBeUndefined();
 
-    // DB, Redis when
+    // DB then - 기존 사용자에 provider 연결
     const savedProvider = await providerRepository.findOneBy({
       providerUserId: '1',
       providerType: OAuthType.Google,
     });
-
-    // DB, Redis then
     expect(savedProvider).not.toBeNull();
   });
 
