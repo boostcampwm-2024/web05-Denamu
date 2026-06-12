@@ -14,6 +14,7 @@ import { In } from 'typeorm';
 import { SESSION_TTL } from '@admin/constant/admin.constant';
 import { LoginAdminRequestDto } from '@admin/dto/request/loginAdmin.dto';
 import { RegisterAdminRequestDto } from '@admin/dto/request/registerAdmin.dto';
+import { CheckNameDuplicationResponseDto } from '@admin/dto/response/checkNameDuplication.dto';
 import { GetAdminProfileResponseDto } from '@admin/dto/response/getAdminProfile.dto';
 import { GetChildAdminResponseDto } from '@admin/dto/response/getChildAdmin.dto';
 import { Admin } from '@admin/entity/admin.entity';
@@ -98,6 +99,14 @@ export class AdminService {
     response.clearCookie('sessionId');
   }
 
+  async checkNameDuplication(name: string) {
+    const admin = await this.adminRepository.findOne({
+      where: { name },
+    });
+
+    return CheckNameDuplicationResponseDto.toResponseDto(!!admin);
+  }
+
   async registerAdmin(
     registerAdminBodyDto: RegisterAdminRequestDto,
     creatorEmail: string,
@@ -108,6 +117,14 @@ export class AdminService {
 
     if (existingAdmin) {
       throw new ConflictException('이미 존재하는 이메일입니다.');
+    }
+
+    const existingName = await this.adminRepository.findOne({
+      where: { name: registerAdminBodyDto.name },
+    });
+
+    if (existingName) {
+      throw new ConflictException('이미 존재하는 이름입니다.');
     }
 
     const creator = await this.adminRepository.findOne({
@@ -146,7 +163,15 @@ export class AdminService {
       throw new NotFoundException('인증에 실패했습니다.');
     }
     await this.redisService.del(`${REDIS_KEYS.ADMIN_REGISTER_KEY}:${uuid}`);
-    await this.adminRepository.save(JSON.parse(admin));
+
+    try {
+      await this.adminRepository.save(JSON.parse(admin));
+    } catch (error) {
+      if ((error as { code?: string })?.code === 'ER_DUP_ENTRY') {
+        throw new ConflictException('이미 존재하는 이메일 또는 이름입니다.');
+      }
+      throw error;
+    }
   }
 
   async getChildAdmins(email: string) {
