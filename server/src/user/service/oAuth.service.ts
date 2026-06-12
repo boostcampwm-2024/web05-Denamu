@@ -1,8 +1,10 @@
 import {
   BadRequestException,
+  ConflictException,
   Inject,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 
 import * as uuid from 'uuid';
@@ -12,11 +14,15 @@ import { DataSource } from 'typeorm';
 import { cookieConfig } from '@common/cookie/cookie.config';
 import { Payload } from '@common/guard/jwt.guard';
 import { WinstonLoggerService } from '@common/logger/logger.service';
+import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
 
 import {
   OAUTH_CSRF_TOKEN_TTL,
+  OAUTH_PENDING_COOKIE,
+  OAUTH_PENDING_TTL,
   OAUTH_URL_PATH,
+  OAuthPendingData,
   OAuthType,
   StateData,
 } from '@user/constant/oauth.constant';
@@ -89,12 +95,31 @@ export class OAuthService {
 
     const userInfo = await this.providers[providerType].getUserInfo(tokenData);
 
+    const existingUser = await this.userRepository.findOne({
+      where: { email: userInfo.email },
+    });
+
+    if (!existingUser) {
+      await this.stagePendingOAuthSignUp(
+        {
+          providerType,
+          providerUserId: userInfo.id,
+          email: userInfo.email,
+          profileImage: userInfo.picture || null,
+          providerRefreshToken: tokenData.refresh_token || null,
+        },
+        res,
+      );
+
+      return `${OAUTH_URL_PATH.BASE_URL}/oauth-signup`;
+    }
+
     await this.completeOAuthSignIn(
       {
         providerType,
         providerUserId: userInfo.id,
         email: userInfo.email,
-        userName: userInfo.name,
+        userName: existingUser.userName,
         profileImage: userInfo.picture || null,
         providerRefreshToken: tokenData.refresh_token || null,
       },
@@ -102,6 +127,123 @@ export class OAuthService {
     );
 
     return `${OAUTH_URL_PATH.BASE_URL}/oauth-success`;
+  }
+
+  private async stagePendingOAuthSignUp(
+    pendingData: OAuthPendingData,
+    res: Response,
+  ) {
+    const pendingToken = uuid.v4();
+
+    await this.redisService.set(
+      `${REDIS_KEYS.OAUTH_PENDING_KEY}:${pendingToken}`,
+      JSON.stringify(pendingData),
+      'EX',
+      OAUTH_PENDING_TTL,
+    );
+
+    res.cookie(OAUTH_PENDING_COOKIE, pendingToken, {
+      ...cookieConfig[process.env.NODE_ENV],
+      maxAge: OAUTH_PENDING_TTL * 1000,
+    });
+  }
+
+  async completeOAuthRegistration(
+    userName: string,
+    req: Request,
+    res: Response,
+  ) {
+    const pendingToken = req.cookies[OAUTH_PENDING_COOKIE];
+
+    if (!pendingToken) {
+      throw new NotFoundException(
+        '유효하지 않거나 만료된 가입 요청입니다. 다시 시도해주세요.',
+      );
+    }
+
+    const pendingKey = `${REDIS_KEYS.OAUTH_PENDING_KEY}:${pendingToken}`;
+    const pendingRaw = await this.redisService.get(pendingKey);
+
+    if (!pendingRaw) {
+      res.clearCookie(OAUTH_PENDING_COOKIE);
+      throw new NotFoundException(
+        '유효하지 않거나 만료된 가입 요청입니다. 다시 시도해주세요.',
+      );
+    }
+
+    const pendingData: OAuthPendingData = JSON.parse(pendingRaw);
+
+    const duplicatedName = await this.userRepository.findOne({
+      where: { userName },
+    });
+
+    if (duplicatedName) {
+      throw new ConflictException('이미 존재하는 닉네임입니다.');
+    }
+
+    const user = await this.createOAuthUser(pendingData, userName);
+
+    await this.redisService.del(pendingKey);
+    res.clearCookie(OAUTH_PENDING_COOKIE);
+
+    const jwtPayload: Payload = {
+      id: user.id,
+      email: user.email,
+      userName: user.userName,
+      role: 'user',
+    };
+
+    this.userService.issueRefreshToken(jwtPayload, res);
+  }
+
+  private async createOAuthUser(
+    pendingData: OAuthPendingData,
+    userName: string,
+  ): Promise<User> {
+    const {
+      providerType,
+      providerUserId,
+      email,
+      profileImage,
+      providerRefreshToken,
+    } = pendingData;
+
+    try {
+      return await this.dataSource.transaction(async (entityManager) => {
+        const user = await entityManager.save(User, {
+          email,
+          userName,
+          profileImage,
+        });
+
+        await entityManager.save(Provider, {
+          providerType,
+          providerUserId,
+          refreshToken: providerRefreshToken,
+          user,
+        });
+
+        this.logger.log(`새로운 OAuth 사용자 가입 완료: ${email}`);
+
+        return user;
+      });
+    } catch (error) {
+      if ((error as { code?: string })?.code === 'ER_DUP_ENTRY') {
+        throw new ConflictException('이미 존재하는 닉네임 또는 계정입니다.');
+      }
+
+      if (error instanceof Error) {
+        this.logger.error('OAuth 사용자 저장 중 에러 발생', error.stack);
+      } else {
+        this.logger.error(
+          `OAuth 사용자 저장 중 알 수 없는 에러 발생: ${JSON.stringify(error)}`,
+        );
+      }
+
+      throw new InternalServerErrorException(
+        '회원가입 처리 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.',
+      );
+    }
   }
 
   async e2eCallback(providerType: OAuthType, res: Response) {

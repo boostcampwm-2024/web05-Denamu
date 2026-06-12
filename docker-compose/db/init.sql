@@ -8,6 +8,7 @@ CREATE TABLE `admin` (
   `parent_admin_id` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `UQ_admin_email` (`email`),
+  UNIQUE KEY `UQ_admin_name` (`name`),
     CONSTRAINT `FK_admin_parent_admin`
     FOREIGN KEY (`parent_admin_id`)
     REFERENCES `admin` (`id`)
@@ -89,7 +90,8 @@ CREATE TABLE `user` (
   `currentStreak` int NOT NULL DEFAULT '0',
   `lastActiveDate` date DEFAULT NULL,
   `maxStreak` int NOT NULL DEFAULT '0',
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UQ_user_user_name` (`user_name`)
 );
 
 -- denamu.activity definition

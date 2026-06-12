@@ -23,6 +23,7 @@ export class Admin extends BaseEntity {
   @Column({
     length: 255,
     nullable: false,
+    unique: true,
   })
   name: string;
 

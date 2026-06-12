@@ -44,7 +44,7 @@ export function useSignUp() {
         const status = error.response?.status;
         setResult({
           success: false,
-          message: status === 409 ? "이미 존재하는 이메일입니다." : error.response?.data?.message,
+          message: error.response?.data?.message,
           status,
         });
       } else {

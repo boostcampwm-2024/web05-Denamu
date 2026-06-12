@@ -60,6 +60,28 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(savedRegisterCode).toBeNull();
   });
 
+  it('[409] 이미 사용 중인 닉네임을 입력할 경우 회원가입을 실패한다.', async () => {
+    // given
+    const user = await userRepository.save(UserFixture.createUserFixture());
+    const requestDto = new RegisterUserRequestDto({
+      email: `unique-${user.email}`,
+      password: 'test1234!',
+      userName: user.userName,
+    });
+
+    // Http when
+    const response = await agent.post(URL).send(requestDto);
+
+    // Http then
+    expect(response.status).toBe(HttpStatus.CONFLICT);
+
+    // Redis then
+    const savedRegisterCode = await redisService.get(
+      redisKeyMake(userRegisterCode),
+    );
+    expect(savedRegisterCode).toBeNull();
+  });
+
   it('[201] 중복되는 회원이 없을 경우 회원가입을 성공한다.', async () => {
     // given
     const requestDto = new RegisterUserRequestDto({

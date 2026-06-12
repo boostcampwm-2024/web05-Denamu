@@ -110,6 +110,14 @@ export class AdminService {
       throw new ConflictException('이미 존재하는 이메일입니다.');
     }
 
+    const existingName = await this.adminRepository.findOne({
+      where: { name: registerAdminBodyDto.name },
+    });
+
+    if (existingName) {
+      throw new ConflictException('이미 존재하는 이름입니다.');
+    }
+
     const creator = await this.adminRepository.findOne({
       where: { email: creatorEmail },
     });
@@ -146,7 +154,15 @@ export class AdminService {
       throw new NotFoundException('인증에 실패했습니다.');
     }
     await this.redisService.del(`${REDIS_KEYS.ADMIN_REGISTER_KEY}:${uuid}`);
-    await this.adminRepository.save(JSON.parse(admin));
+
+    try {
+      await this.adminRepository.save(JSON.parse(admin));
+    } catch (error) {
+      if ((error as { code?: string })?.code === 'ER_DUP_ENTRY') {
+        throw new ConflictException('이미 존재하는 이메일 또는 이름입니다.');
+      }
+      throw error;
+    }
   }
 
   async getChildAdmins(email: string) {

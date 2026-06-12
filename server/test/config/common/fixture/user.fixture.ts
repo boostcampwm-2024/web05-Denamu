@@ -11,7 +11,7 @@ export class UserFixture {
     return {
       email: `test${uuid.v4()}@test.com`,
       password: USER_DEFAULT_PASSWORD,
-      userName: 'test1234',
+      userName: `test-${uuid.v4()}`,
       maxStreak: 15,
       currentStreak: 7,
       totalViews: 120,
