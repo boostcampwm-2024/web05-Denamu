@@ -11,6 +11,11 @@ export interface RssRegistration {
   description?: string;
 }
 
+export interface RssRegistrationRequest {
+  rss: Rss;
+  adminEmail: string;
+}
+
 export interface User {
   email: string;
   userName: string;
@@ -34,6 +39,7 @@ export const EmailPayloadConstant = {
   USER_CERTIFICATION: 'userCertification',
   RSS_REMOVAL: 'rssRemoval',
   RSS_REGISTRATION: 'rssRegistration',
+  RSS_REGISTRATION_REQUEST: 'rssRegistrationRequest',
   PASSWORD_RESET: 'passwordReset',
   ACCOUNT_DELETION: 'accountDeletion',
   ADMIN_CERTIFICATION: 'adminCertification',
@@ -45,6 +51,10 @@ export type EmailPayload =
   | {
       type: typeof EmailPayloadConstant.RSS_REGISTRATION;
       data: RssRegistration;
+    }
+  | {
+      type: typeof EmailPayloadConstant.RSS_REGISTRATION_REQUEST;
+      data: RssRegistrationRequest;
     }
   | { type: typeof EmailPayloadConstant.PASSWORD_RESET; data: User }
   | { type: typeof EmailPayloadConstant.ACCOUNT_DELETION; data: User }

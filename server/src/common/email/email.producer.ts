@@ -27,10 +27,14 @@ export class EmailProducer {
       stringifiedMessage,
     );
 
-    const email =
-      payload.type === EmailPayloadConstant.RSS_REGISTRATION
-        ? payload.data.rss.email
-        : payload.data.email;
+    let email: string;
+    if (payload.type === EmailPayloadConstant.RSS_REGISTRATION) {
+      email = payload.data.rss.email;
+    } else if (payload.type === EmailPayloadConstant.RSS_REGISTRATION_REQUEST) {
+      email = payload.data.adminEmail;
+    } else {
+      email = payload.data.email;
+    }
     this.logger.log(
       `이메일 메시지가 발행되었습니다.: type=${payload.type}, email=${email}`,
     );
@@ -73,6 +77,18 @@ export class EmailProducer {
         rss: rss,
         approveFlag: approveFlag,
         description: description ?? null,
+      },
+    };
+
+    await this.produceMessage(payload);
+  }
+
+  async produceRssRegistrationRequest(rss: Rss, adminEmail: string) {
+    const payload = {
+      type: EmailPayloadConstant.RSS_REGISTRATION_REQUEST,
+      data: {
+        rss,
+        adminEmail,
       },
     };
 

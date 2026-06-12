@@ -5,11 +5,15 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import axios from 'axios';
 import * as uuid from 'uuid';
+import axios from 'axios';
 import { DataSource } from 'typeorm';
 
+import { AdminRepository } from '@admin/repository/admin.repository';
+
 import { EmailProducer } from '@common/email/email.producer';
+import { WinstonLoggerService } from '@common/logger/logger.service';
+import { NotifierRegistry } from '@common/notification/notifier-registry';
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
 
@@ -43,6 +47,9 @@ export class RssService {
     private readonly emailProducer: EmailProducer,
     private readonly dataSource: DataSource,
     private readonly redisService: RedisService,
+    private readonly adminRepository: AdminRepository,
+    private readonly notifierRegistry: NotifierRegistry,
+    private readonly logger: WinstonLoggerService,
   ) {}
 
   async createRss(rssRegisterBodyDto: RegisterRssRequestDto) {
@@ -63,7 +70,35 @@ export class RssService {
       throw new ConflictException(`이미 ${status}된 ${field}입니다.`);
     }
 
-    await this.rssRepository.insert(rssRegisterBodyDto.toEntity());
+    const rssEntity = rssRegisterBodyDto.toEntity();
+    await this.rssRepository.insert(rssEntity);
+
+    await this.notifyRssRegistrationRequest(rssEntity);
+  }
+
+  private async notifyRssRegistrationRequest(rss: Rss) {
+    void this.notifierRegistry.sendAlert(
+      `📥 새로운 RSS 등록 신청이 접수되었습니다.\n블로그: ${rss.name}\n신청자: ${rss.userName}\nRSS: ${rss.rssUrl}`,
+    );
+
+    try {
+      const admins = await this.adminRepository.find({
+        where: { emailNotification: true },
+        select: ['email'],
+      });
+
+      await Promise.all(
+        admins.map((admin) =>
+          this.emailProducer.produceRssRegistrationRequest(rss, admin.email),
+        ),
+      );
+    } catch (error) {
+      this.logger.error(
+        `RSS 등록 신청 알림 발송 실패: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
   }
 
   async readAllRss() {
