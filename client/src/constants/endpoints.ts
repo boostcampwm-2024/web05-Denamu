@@ -48,4 +48,5 @@ export const USER = {
 
 export const OAUTH = {
   LOGIN: "/api/oauth",
+  REGISTER: "/api/oauth/registrations",
 };

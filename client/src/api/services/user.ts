@@ -1,9 +1,14 @@
 import axios from "axios";
 
-import { USER } from "@/constants/endpoints";
+import { USER, OAUTH } from "@/constants/endpoints";
 
 import { axiosInstance } from "@/api/instance";
 import { UserSignUpRequest, UserSignUpResponse, UserSignInRequest, UserSignInResponse } from "@/types/auth";
+
+export const completeOAuthRegistration = async (userName: string): Promise<{ message: string }> => {
+  const response = await axiosInstance.post<{ message: string }>(OAUTH.REGISTER, { userName });
+  return response.data;
+};
 
 export const register = async (data: UserSignUpRequest): Promise<UserSignUpResponse> => {
   try {
