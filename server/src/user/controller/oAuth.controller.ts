@@ -1,9 +1,11 @@
 import {
+  Body,
   Controller,
   Get,
   HttpCode,
   HttpStatus,
   NotFoundException,
+  Post,
   Query,
   Req,
   Res,
@@ -12,10 +14,14 @@ import { ApiTags } from '@nestjs/swagger';
 
 import { Request, Response } from 'express';
 
+import { ApiResponse } from '@common/response/common.response';
+
 import { ApiOAuth } from '@user/api-docs/oAuth.api-docs';
 import { ApiOAuthCallback } from '@user/api-docs/oAuthCallback.api-docs';
+import { ApiOAuthRegistration } from '@user/api-docs/oAuthRegistration.api-docs';
 import { OAUTH_URL_PATH, OAuthType } from '@user/constant/oauth.constant';
 import { OAuthCallbackRequestDto } from '@user/dto/request/oAuthCallbackDto';
+import { OAuthRegistrationRequestDto } from '@user/dto/request/oAuthRegistration.dto';
 import { OAuthTypeRequestDto } from '@user/dto/request/oAuthType.dto';
 import { OAuthService } from '@user/service/oAuth.service';
 
@@ -44,6 +50,24 @@ export class OAuthController {
   ) {
     return res.redirect(
       await this.oauthService.callback(callbackDto, res, req),
+    );
+  }
+
+  @ApiOAuthRegistration()
+  @Post('registrations')
+  @HttpCode(HttpStatus.CREATED)
+  async completeRegistration(
+    @Body() registrationDto: OAuthRegistrationRequestDto,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    await this.oauthService.completeOAuthRegistration(
+      registrationDto.userName,
+      req,
+      res,
+    );
+    return ApiResponse.responseWithNoContent(
+      '회원가입이 완료되어 로그인 처리되었습니다.',
     );
   }
 

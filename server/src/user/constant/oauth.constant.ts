@@ -53,3 +53,15 @@ export enum OAuthType {
 }
 
 export const OAUTH_CSRF_TOKEN_TTL = 60 * 2;
+
+export const OAUTH_PENDING_TTL = 60 * 10;
+
+export const OAUTH_PENDING_COOKIE = 'oauth_pending_token';
+
+export type OAuthPendingData = {
+  providerType: string;
+  providerUserId: string;
+  email: string;
+  profileImage: string | null;
+  providerRefreshToken: string | null;
+};
