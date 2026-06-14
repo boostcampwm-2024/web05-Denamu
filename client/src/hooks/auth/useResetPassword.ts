@@ -1,10 +1,9 @@
 import { useState } from "react";
 
 import axios from "axios";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 
 import { changePassword } from "@/api/services/user";
-import { useCustomToast } from "@/hooks/common/useCustomToast";
 import { ResetPasswordResult } from "@/types/auth";
 
 const PASSWORD_REGEX =
@@ -17,17 +16,14 @@ interface ResetPasswordForm {
 
 export function useResetPassword() {
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const { toast } = useCustomToast();
   const token = searchParams.get("token");
 
   const [form, setForm] = useState<ResetPasswordForm>({ password: "", confirmPassword: "" });
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<ResetPasswordResult | null>(null);
 
-  const updateField = (field: keyof ResetPasswordForm, value: string) => {
+  const updateField = (field: keyof ResetPasswordForm, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
-  };
 
   const submitForm = async () => {
     if (!token) {
@@ -49,21 +45,18 @@ export function useResetPassword() {
     try {
       setIsLoading(true);
       await changePassword(token, form.password);
-      toast({ title: "비밀번호 변경 완료", description: "비밀번호가 성공적으로 변경되었습니다." });
-      navigate("/signin");
+      setResult({ success: true, message: "비밀번호가 성공적으로 변경되었습니다." });
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         const status = error.response?.status;
-        if (status === 404) {
-          toast({ title: "인증 실패", description: "인증에 실패했습니다.", variant: "destructive" });
-          navigate("/signin");
-        } else {
-          setResult({
-            success: false,
-            message: error.response?.data?.message ?? "비밀번호 변경 중 오류가 발생했습니다.",
-            status,
-          });
-        }
+        setResult({
+          success: false,
+          message:
+            status === 404
+              ? "인증에 실패했습니다."
+              : (error.response?.data?.message ?? "비밀번호 변경 중 오류가 발생했습니다."),
+          status,
+        });
       } else {
         setResult({ success: false, message: "비밀번호 변경 중 오류가 발생했습니다." });
       }
