@@ -49,6 +49,5 @@ export interface FullFeedCrawlMessage {
 
 export interface AiSummaryRetryMessage {
   feedId: number;
-
   deathCount: number;
 }
