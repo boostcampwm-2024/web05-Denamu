@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "amqplib": "^0.10.9",
-    "axios": "^1.16.0",
+    "axios": "^1.18.0",
     "dotenv": "^16.4.5",
     "nodemailer": "^6.9.16",
     "prom-client": "^15.1.3",
