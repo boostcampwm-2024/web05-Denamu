@@ -1,7 +1,13 @@
 import { ADMIN } from "@/constants/endpoints";
 
 import { axiosInstance } from "@/api/instance";
-import { AdminAuthRequest, AdminAuthResponse, AdminProfileResponse } from "@/types/auth";
+import {
+  AdminAuthRequest,
+  AdminAuthResponse,
+  AdminProfileResponse,
+  AdminUpdateRequest,
+  AdminUpdateResponse,
+} from "@/types/auth";
 
 export const auth = {
   login: async (data: AdminAuthRequest): Promise<AdminAuthResponse> => {
@@ -11,6 +17,10 @@ export const auth = {
   me: async (): Promise<AdminProfileResponse["data"]> => {
     const response = await axiosInstance.get<AdminProfileResponse>(ADMIN.ME);
     return response.data.data;
+  },
+  updateProfile: async (data: AdminUpdateRequest): Promise<AdminUpdateResponse> => {
+    const response = await axiosInstance.patch<AdminUpdateResponse>(ADMIN.UPDATE_ME, data);
+    return response.data;
   },
   logout: async (): Promise<{ message: string }> => {
     const response = await axiosInstance.post<{ message: string }>(ADMIN.LOGOUT);

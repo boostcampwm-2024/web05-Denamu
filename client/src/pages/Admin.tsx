@@ -4,6 +4,7 @@ import { Loader } from "lucide-react";
 
 import { AdminHeader } from "@/components/admin/layout/AdminHeader";
 import AdminMember from "@/components/admin/layout/AdminMember";
+import AdminMyPage from "@/components/admin/layout/AdminMyPage";
 import { AdminTabs } from "@/components/admin/layout/AdminTabs";
 import AdminLogin from "@/components/admin/login/AdminLoginModal";
 import { RssRequestSearchBar } from "@/components/admin/rss/RssSearchBar";
@@ -13,7 +14,7 @@ import { useAdminCheck } from "@/hooks/queries/useAdminAuth";
 export default function Admin() {
   const [isLogin, setIsLogin] = useState<boolean>(false);
   const { status, isLoading, data } = useAdminCheck();
-  const [tap, setTap] = useState<"RSS" | "MEMBER">("RSS");
+  const [tap, setTap] = useState<"RSS" | "MEMBER" | "MYPAGE">("RSS");
 
   useEffect(() => {
     setIsLogin(status === "success");
@@ -28,6 +29,9 @@ export default function Admin() {
         </>
       );
     }
+    if (tap === "MYPAGE") {
+      return <AdminMyPage onBack={() => setTap("RSS")} />;
+    }
     return <AdminMember />;
   };
 
@@ -40,7 +44,7 @@ export default function Admin() {
 
   return isLogin ? (
     <main className="min-h-screen bg-background">
-      <AdminHeader setLogin={() => setIsLogin(false)} handleTap={setTap} name={data?.name} parent={data?.parent} />
+      <AdminHeader setLogin={() => setIsLogin(false)} handleTap={setTap} name={data?.name} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 h-full">{renderContent()} </div>
     </main>
   ) : (

@@ -4,7 +4,7 @@ import { auth } from "@/api/services/admin/auth";
 import { register } from "@/api/services/admin/register";
 import { useAuthStore } from "@/store/useAuthStore";
 import { DeleteChildResponse, RegisterRequest, RegisterResponse } from "@/types/admin";
-import { AdminAuthRequest, AdminAuthResponse } from "@/types/auth";
+import { AdminAuthRequest, AdminAuthResponse, AdminUpdateRequest, AdminUpdateResponse } from "@/types/auth";
 import { useMutation, UseMutationResult, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const useAdminAuth = (
@@ -33,6 +33,21 @@ export const useAdminCheck = () => {
     retry: 1,
   });
   return { status, isLoading, error, data };
+};
+
+export const useAdminUpdate = (
+  onSuccess: (data: AdminUpdateResponse) => void,
+  onError: (error: AxiosError<unknown, unknown>) => void
+): UseMutationResult<AdminUpdateResponse, AxiosError<unknown, unknown>, AdminUpdateRequest, unknown> => {
+  const queryClient = useQueryClient();
+  return useMutation<AdminUpdateResponse, AxiosError<unknown, unknown>, AdminUpdateRequest>({
+    mutationFn: (data) => auth.updateProfile(data),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["adminCheck"] });
+      onSuccess(data);
+    },
+    onError,
+  });
 };
 
 export const useAdminRegister = (
