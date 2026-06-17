@@ -6,4 +6,5 @@ export const EmailPayloadConstant = {
   PASSWORD_RESET: 'passwordReset',
   ACCOUNT_DELETION: 'accountDeletion',
   ADMIN_CERTIFICATION: 'adminCertification',
+  ADMIN_ACCOUNT_DELETION: 'adminAccountDeletion',
 } as const;
