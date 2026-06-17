@@ -25,6 +25,7 @@ import { RegisterUserRequestDto } from '@user/dto/request/registerUser.dto';
 import { UpdateUserRequestDto } from '@user/dto/request/updateUser.dto';
 import { CheckEmailDuplicationResponseDto } from '@user/dto/response/checkEmailDuplication.dto';
 import { CreateAccessTokenResponseDto } from '@user/dto/response/createAccessToken.dto';
+import { GetUserProfileImageResponseDto } from '@user/dto/response/getUserProfileImage.dto';
 import { UserRepository } from '@user/repository/user.repository';
 
 @Injectable()
@@ -46,6 +47,11 @@ export class UserService {
       throw new NotFoundException('존재하지 않는 유저입니다.');
     }
     return user;
+  }
+
+  async getUserProfileImage(userId: number) {
+    const user = await this.getUser(userId);
+    return GetUserProfileImageResponseDto.toResponseDto(user);
   }
 
   async checkEmailDuplication(email: string) {
