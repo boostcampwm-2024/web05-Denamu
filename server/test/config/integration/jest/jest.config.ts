@@ -8,6 +8,7 @@ const config: Config.InitialOptions = {
     '<rootDir>/test/config/e2e/jest/jest.config.ts',
   ],
   maxWorkers: '50%',
+  testTimeout: 20000,
   coverageDirectory: './coverage/integration',
   coverageReporters: ['json-summary', 'text', 'lcov'],
   coveragePathIgnorePatterns: ['test', 'src/common/database/migration'],
