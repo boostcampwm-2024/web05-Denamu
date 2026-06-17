@@ -78,7 +78,6 @@ export default function AdminMyPage({ onBack }: { onBack: () => void }) {
     }
 
     if (password && password !== passwordConfirm) {
-      alert("비밀번호와 비밀번호 확인이 일치하지 않습니다.");
       return;
     }
 
@@ -100,6 +99,7 @@ export default function AdminMyPage({ onBack }: { onBack: () => void }) {
   };
 
   const passwordError = password.length > 0 && !isValidPassword(password);
+  const passwordConfirmError = passwordConfirm.length > 0 && password !== passwordConfirm;
 
   if (!data) return null;
 
@@ -183,6 +183,7 @@ export default function AdminMyPage({ onBack }: { onBack: () => void }) {
             autoCapitalize="off"
             spellCheck="false"
           />
+          {passwordConfirmError && <p className="text-xs text-red-600">비밀번호와 비밀번호 확인이 일치하지 않습니다.</p>}
         </div>
 
         <div className="flex justify-end gap-2">
