@@ -4,6 +4,7 @@ export const CHAT_SERVER_URL = import.meta.env.VITE_DENAMU_URL;
 export const ADMIN = {
   LOGIN: "/api/admins/login",
   ME: "/api/admins/me",
+  UPDATE_ME: "/api/admins/me",
   LOGOUT: "/api/admins/logout",
   REGISTER: "/api/admins/registrations",
   CERTIFICATE: "/api/admins/email-verifications",
