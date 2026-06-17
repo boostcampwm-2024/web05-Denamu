@@ -105,25 +105,17 @@ export default function AdminMyPage({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="w-full max-w-2xl mx-auto py-4">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" aria-label="뒤로가기" onClick={onBack}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <h1 className="text-2xl font-bold">관리자 마이페이지</h1>
-        </div>
-        <div className="flex gap-2">
-          {isEditing && (
-            <Button variant="outline" onClick={handleCancel} disabled={isPending}>
-              취소
-            </Button>
-          )}
-          <Button onClick={handleSubmit} disabled={isPending}>
-            {isEditing ? "수정 완료" : "수정하기"}
-          </Button>
-        </div>
-      </div>
-      <p className="text-sm text-muted-foreground mb-8 pl-12">본인 계정 정보를 확인하고 수정합니다.</p>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={onBack}
+        className="-ml-3 mb-4 gap-1.5 text-muted-foreground hover:text-foreground"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        뒤로가기
+      </Button>
+      <h1 className="text-2xl font-bold">관리자 마이페이지</h1>
+      <p className="text-sm text-muted-foreground mt-1 mb-8">본인 계정 정보를 확인하고 수정합니다.</p>
 
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-2">
@@ -191,6 +183,17 @@ export default function AdminMyPage({ onBack }: { onBack: () => void }) {
             autoCapitalize="off"
             spellCheck="false"
           />
+        </div>
+
+        <div className="flex justify-end gap-2">
+          {isEditing && (
+            <Button variant="outline" onClick={handleCancel} disabled={isPending}>
+              취소
+            </Button>
+          )}
+          <Button onClick={handleSubmit} disabled={isPending}>
+            {isEditing ? "수정 완료" : "수정하기"}
+          </Button>
         </div>
 
         <div className="flex items-center justify-between border-t pt-6">
