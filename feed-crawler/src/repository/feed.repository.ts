@@ -139,6 +139,25 @@ export class FeedRepository {
     }
   }
 
+  public async selectFeedById(
+    feedId: number,
+  ): Promise<{ id: number; blogId: number; path: string } | null> {
+    const query = `SELECT id, blog_id as blogId, path FROM feed WHERE id = ?`;
+    this.dbMetrics.total.inc({ operation: 'select_feed_by_id' });
+    try {
+      const result = await this.dbConnection.executeQuery<{
+        id: number;
+        blogId: number;
+        path: string;
+      }>(query, [feedId]);
+      this.dbMetrics.success.inc({ operation: 'select_feed_by_id' });
+      return result && result.length > 0 ? result[0] : null;
+    } catch (error) {
+      this.dbMetrics.failure.inc({ operation: 'select_feed_by_id' });
+      throw error;
+    }
+  }
+
   public async updateSummary(feedId: number, summary: string) {
     const query = `
               UPDATE feed

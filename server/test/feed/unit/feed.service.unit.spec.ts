@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 
 import axios from 'axios';
 import { Request, Response } from 'express';
@@ -29,7 +29,14 @@ describe(`${FeedService.name} Unit Test`, () => {
   let redisService: jest.Mocked<
     Pick<
       RedisService,
-      'keys' | 'lrange' | 'sismember' | 'sadd' | 'zincrby' | 'executePipeline'
+      | 'keys'
+      | 'lrange'
+      | 'sismember'
+      | 'sadd'
+      | 'zincrby'
+      | 'executePipeline'
+      | 'rpush'
+      | 'set'
     >
   >;
 
@@ -54,6 +61,8 @@ describe(`${FeedService.name} Unit Test`, () => {
       sadd: jest.fn(),
       zincrby: jest.fn(),
       executePipeline: jest.fn(),
+      rpush: jest.fn(),
+      set: jest.fn().mockResolvedValue('OK'),
     };
 
     feedService = new FeedService(
@@ -82,6 +91,62 @@ describe(`${FeedService.name} Unit Test`, () => {
       await expect(feedService.getFeedByView(1)).rejects.toThrow(
         NotFoundException,
       );
+    });
+  });
+
+  describe('requestAiSummary', () => {
+    const parseEnqueued = () =>
+      JSON.parse(redisService.rpush.mock.calls[0][1] as string);
+
+    it('존재하지 않는 피드면 NotFoundException을 던지고 큐에 넣지 않는다.', async () => {
+      // given
+      feedRepository.findOneBy.mockResolvedValue(null);
+
+      // when & then
+      await expect(feedService.requestAiSummary(7)).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(redisService.rpush).not.toHaveBeenCalled();
+    });
+
+    it('요약이 NULL(영구 실패)이면 deathCount 0으로 재요청 큐에 넣는다.', async () => {
+      // given
+      feedRepository.findOneBy.mockResolvedValue({
+        id: 7,
+        summary: null,
+      } as any);
+
+      // when
+      await feedService.requestAiSummary(7);
+
+      // then
+      expect(redisService.set).toHaveBeenCalledWith(
+        `${REDIS_KEYS.FEED_AI_RETRY_LOCK}:7`,
+        '1',
+        'NX',
+        'EX',
+        expect.any(Number),
+      );
+      expect(redisService.rpush).toHaveBeenCalledWith(
+        REDIS_KEYS.FEED_AI_RETRY_QUEUE,
+        expect.any(String),
+      );
+      expect(parseEnqueued()).toMatchObject({ feedId: 7, deathCount: 0 });
+    });
+
+    it('이미 처리 중(락 점유)이면 ConflictException을 던지고 큐에 넣지 않는다.', async () => {
+      // given
+      feedRepository.findOneBy.mockResolvedValue({
+        id: 7,
+        summary: null,
+      } as any);
+      redisService.set.mockResolvedValue(null); // NX 실패 = 이미 락 존재
+
+      // when & then
+      await expect(feedService.requestAiSummary(7)).rejects.toThrow(
+        ConflictException,
+      );
+      expect(redisService.rpush).not.toHaveBeenCalled();
     });
   });
 

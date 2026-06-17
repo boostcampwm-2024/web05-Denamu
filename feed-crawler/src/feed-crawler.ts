@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { inject, injectable } from 'tsyringe';
 
 import logger from '@common/logger';
@@ -66,6 +67,64 @@ export class FeedCrawler {
     await this.feedRepository.saveAiQueue(insertedData);
 
     return insertedData;
+  }
+
+  async requeueFeedForAiSummary(feedId: number): Promise<void> {
+    const feed = await this.feedRepository.selectFeedById(feedId);
+    if (!feed) {
+      throw new Error(`피드를 찾을 수 없습니다: ${feedId}`);
+    }
+
+    const rssObj = await this.rssRepository.selectRssById(feed.blogId);
+    if (!rssObj) {
+      throw new Error(`RSS를 찾을 수 없습니다: blogId=${feed.blogId}`);
+    }
+
+    const allFeeds = await this.feedParserManager.fetchAndParseAll(rssObj);
+    const matched = allFeeds.find((parsed) => parsed.link === feed.path);
+    if (!matched) {
+      throw await this.buildMissingFeedError(feedId, feed.path);
+    }
+
+    await this.feedRepository.saveAiQueue([
+      { ...matched, id: feed.id, deathCount: 0 },
+    ]);
+    logger.info(
+      `[AI 재요청] feedId=${feedId} 게시글을 AI 큐에 다시 넣었습니다.`,
+    );
+  }
+
+  // RSS에서 게시글을 못 찾았을 때, 원본 URL 상태로 사유를 분류한다.
+  // 200(오래된 글)/404(삭제된 글)는 영구 스킵, 그 외(서버 오류/네트워크 실패)는 재시도.
+  private async buildMissingFeedError(
+    feedId: number,
+    path: string,
+  ): Promise<Error> {
+    const status = await this.probeOriginStatus(path);
+
+    if (status === 200) {
+      return new Error(
+        `RSS에서 찾을 수 없습니다 (원본 HTTP 200, RSS 노출 범위를 벗어난 오래된 게시글): feedId=${feedId}`,
+      );
+    }
+    if (status === 404) {
+      return new Error(
+        `RSS에서 찾을 수 없습니다 (원본 HTTP 404, 삭제된 게시글): feedId=${feedId}`,
+      );
+    }
+
+    return new Error(
+      `원본 게시글 상태 확인 실패 (HTTP ${status ?? 'NETWORK_ERROR'}), 일시적 서버 오류로 재시도 필요: feedId=${feedId}`,
+    );
+  }
+
+  private async probeOriginStatus(path: string): Promise<number | null> {
+    try {
+      const response = await axios.get(path, { validateStatus: () => true });
+      return response.status;
+    } catch {
+      return null;
+    }
   }
 
   private feedGroupByRss(
