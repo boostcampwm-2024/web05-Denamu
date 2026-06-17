@@ -26,4 +26,12 @@ export const auth = {
     const response = await axiosInstance.post<{ message: string }>(ADMIN.LOGOUT);
     return response.data;
   },
+  requestWithdraw: async (): Promise<{ message: string }> => {
+    const response = await axiosInstance.post<{ message: string }>(ADMIN.WITHDRAW_REQUEST);
+    return response.data;
+  },
+  confirmWithdraw: async (token: string): Promise<{ message: string }> => {
+    const response = await axiosInstance.delete<{ message: string }>(ADMIN.WITHDRAW_CONFIRM(token));
+    return response.data;
+  },
 };

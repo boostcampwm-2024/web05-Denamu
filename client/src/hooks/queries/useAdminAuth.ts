@@ -50,6 +50,17 @@ export const useAdminUpdate = (
   });
 };
 
+export const useAdminWithdraw = (
+  onSuccess: (data: { message: string }) => void,
+  onError: (error: AxiosError<unknown, unknown>) => void
+): UseMutationResult<{ message: string }, AxiosError<unknown, unknown>, void, unknown> => {
+  return useMutation<{ message: string }, AxiosError<unknown, unknown>, void>({
+    mutationFn: () => auth.requestWithdraw(),
+    onSuccess,
+    onError,
+  });
+};
+
 export const useAdminRegister = (
   onSuccess: (data: RegisterResponse) => void,
   onError: (error: AxiosError<unknown, unknown>) => void

@@ -3,13 +3,24 @@ import { useEffect, useState } from "react";
 import { AxiosError } from "axios";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Toggle } from "@/components/ui/toggle";
 
-import { useAdminCheck, useAdminUpdate } from "@/hooks/queries/useAdminAuth";
+import { useAdminCheck, useAdminUpdate, useAdminWithdraw } from "@/hooks/queries/useAdminAuth";
 
 import { AdminUpdateResponse } from "@/types/auth";
 
@@ -50,6 +61,11 @@ export default function AdminMyPage({ onBack }: { onBack: () => void }) {
   }, onError);
 
   const { mutate: updateNotification } = useAdminUpdate(() => {}, onError);
+
+  const { mutate: withdraw, isPending: isWithdrawing } = useAdminWithdraw(
+    (res) => alert(res.message),
+    (error) => alert(`회원 탈퇴 요청 실패: ${extractErrorMessage(error)}`)
+  );
 
   const handleSubmit = () => {
     if (!isEditing) {
@@ -183,6 +199,37 @@ export default function AdminMyPage({ onBack }: { onBack: () => void }) {
             <span className="text-xs text-muted-foreground">알림 이메일 수신을 켜거나 끕니다.</span>
           </div>
           <Switch id="MP-Notification" checked={data.emailNotification} onCheckedChange={handleNotificationChange} />
+        </div>
+
+        <div className="flex items-center justify-between border-t border-destructive/30 pt-6">
+          <div className="flex flex-col">
+            <Label className="text-destructive">회원 탈퇴</Label>
+            <span className="text-xs text-muted-foreground">
+              탈퇴 시 본인이 생성한 하위 관리자 계정도 함께 삭제되며, 되돌릴 수 없습니다.
+            </span>
+          </div>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" disabled={isWithdrawing}>
+                회원 탈퇴
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>관리자 회원 탈퇴</AlertDialogTitle>
+                <AlertDialogDescription>
+                  <br />
+                  정말 탈퇴하시겠습니까? 입력한 이메일({data.email})로 인증 메일이 발송됩니다.
+                  <br />
+                  인증을 완료하면 본인 계정과 하위 관리자 계정이 모두 삭제되며, 되돌릴 수 없습니다.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>취소</AlertDialogCancel>
+                <AlertDialogAction onClick={() => withdraw()}>인증 메일 발송</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
     </div>
