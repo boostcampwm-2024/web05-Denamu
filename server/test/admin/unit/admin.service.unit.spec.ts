@@ -33,7 +33,10 @@ describe(`${AdminService.name} Unit Test`, () => {
     Pick<RedisService, 'get' | 'set' | 'del' | 'setex'>
   >;
   let emailProducer: jest.Mocked<
-    Pick<EmailProducer, 'produceAdminCertification'>
+    Pick<
+      EmailProducer,
+      'produceAdminCertification' | 'produceAdminAccountDeletion'
+    >
   >;
 
   const createResponse = () =>
@@ -60,6 +63,7 @@ describe(`${AdminService.name} Unit Test`, () => {
     };
     emailProducer = {
       produceAdminCertification: jest.fn(),
+      produceAdminAccountDeletion: jest.fn(),
     };
 
     adminService = new AdminService(
@@ -376,6 +380,114 @@ describe(`${AdminService.name} Unit Test`, () => {
       expect(redisService.setex).toHaveBeenCalledTimes(1);
       expect(redisService.setex).toHaveBeenCalledWith(
         `${REDIS_KEYS.ADMIN_INVALIDATED_PREFIX}:child-admin@test.com`,
+        SESSION_TTL,
+        '1',
+      );
+    });
+  });
+
+  describe('requestDeleteAccount', () => {
+    it('존재하지 않는 관리자면 NotFoundException을 던진다.', async () => {
+      // given
+      adminRepository.findOne.mockResolvedValue(null);
+
+      // when & then
+      await expect(
+        adminService.requestDeleteAccount('ghost@test.com'),
+      ).rejects.toThrow(NotFoundException);
+      expect(redisService.set).not.toHaveBeenCalled();
+      expect(emailProducer.produceAdminAccountDeletion).not.toHaveBeenCalled();
+    });
+
+    it('관리자 ID를 Redis에 저장하고 탈퇴 인증 메일을 발행한다.', async () => {
+      // given
+      const admin = await AdminFixture.createAdminCryptFixture({
+        email: 'self-admin@test.com',
+      });
+      admin.id = 7;
+      adminRepository.findOne.mockResolvedValue(admin);
+
+      // when
+      await adminService.requestDeleteAccount('self-admin@test.com');
+
+      // then
+      const [redisKey, storedValue] = redisService.set.mock.calls[0];
+      expect(redisKey).toContain(REDIS_KEYS.ADMIN_DELETE_ACCOUNT_KEY);
+      expect(storedValue).toBe('7');
+      expect(emailProducer.produceAdminAccountDeletion).toHaveBeenCalledWith(
+        admin.email,
+        admin.name,
+        expect.any(String),
+      );
+    });
+  });
+
+  describe('confirmDeleteAccount', () => {
+    it('존재하지 않거나 만료된 토큰이면 NotFoundException을 던진다.', async () => {
+      // given
+      redisService.get.mockResolvedValue(null);
+
+      // when & then
+      await expect(
+        adminService.confirmDeleteAccount('expired-token'),
+      ).rejects.toThrow(NotFoundException);
+      expect(adminRepository.delete).not.toHaveBeenCalled();
+    });
+
+    it('토큰은 유효하지만 관리자가 없으면 키를 삭제하고 NotFoundException을 던진다.', async () => {
+      // given
+      redisService.get.mockResolvedValue('7');
+      adminRepository.findOne.mockResolvedValue(null);
+
+      // when & then
+      await expect(
+        adminService.confirmDeleteAccount('valid-token'),
+      ).rejects.toThrow(NotFoundException);
+      expect(redisService.del).toHaveBeenCalledWith(
+        `${REDIS_KEYS.ADMIN_DELETE_ACCOUNT_KEY}:valid-token`,
+      );
+      expect(adminRepository.delete).not.toHaveBeenCalled();
+    });
+
+    it('본인과 하위 트리 전체 세션을 무효화하고 계정을 삭제한다.', async () => {
+      // given
+      redisService.get.mockResolvedValue('7');
+      const admin = await AdminFixture.createAdminCryptFixture({
+        email: 'self-admin@test.com',
+      });
+      admin.id = 7;
+      const child = await AdminFixture.createAdminCryptFixture({
+        email: 'child-admin@test.com',
+      });
+      child.id = 8;
+      child.parentAdminId = 7;
+      const grandChild = await AdminFixture.createAdminCryptFixture({
+        email: 'grandchild-admin@test.com',
+      });
+      grandChild.id = 9;
+      grandChild.parentAdminId = 8;
+      adminRepository.findOne.mockResolvedValue(admin);
+      adminRepository.find
+        .mockResolvedValueOnce([child])
+        .mockResolvedValueOnce([grandChild])
+        .mockResolvedValueOnce([]);
+
+      // when
+      await adminService.confirmDeleteAccount('valid-token');
+
+      // then
+      expect(adminRepository.delete).toHaveBeenCalledWith({ id: 7 });
+      expect(redisService.del).toHaveBeenCalledWith(
+        `${REDIS_KEYS.ADMIN_DELETE_ACCOUNT_KEY}:valid-token`,
+      );
+      expect(redisService.setex).toHaveBeenCalledTimes(3);
+      expect(redisService.setex).toHaveBeenCalledWith(
+        `${REDIS_KEYS.ADMIN_INVALIDATED_PREFIX}:self-admin@test.com`,
+        SESSION_TTL,
+        '1',
+      );
+      expect(redisService.setex).toHaveBeenCalledWith(
+        `${REDIS_KEYS.ADMIN_INVALIDATED_PREFIX}:grandchild-admin@test.com`,
         SESSION_TTL,
         '1',
       );
