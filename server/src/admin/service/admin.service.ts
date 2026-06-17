@@ -14,6 +14,7 @@ import { In } from 'typeorm';
 import { SESSION_TTL } from '@admin/constant/admin.constant';
 import { LoginAdminRequestDto } from '@admin/dto/request/loginAdmin.dto';
 import { RegisterAdminRequestDto } from '@admin/dto/request/registerAdmin.dto';
+import { UpdateAdminProfileRequestDto } from '@admin/dto/request/updateAdminProfile.dto';
 import { GetAdminProfileResponseDto } from '@admin/dto/response/getAdminProfile.dto';
 import { GetChildAdminResponseDto } from '@admin/dto/response/getChildAdmin.dto';
 import { Admin } from '@admin/entity/admin.entity';
@@ -246,6 +247,54 @@ export class AdminService {
       }
     }
 
-    return GetAdminProfileResponseDto.toResponseDto(admin.name, parent);
+    return GetAdminProfileResponseDto.toResponseDto(
+      admin.email,
+      admin.name,
+      admin.emailNotification,
+      parent,
+    );
+  }
+
+  async updateAdminProfile(
+    email: string,
+    updateAdminProfileDto: UpdateAdminProfileRequestDto,
+  ) {
+    const admin = await this.adminRepository.findOne({
+      where: { email },
+    });
+
+    if (!admin) {
+      throw new NotFoundException('존재하지 않는 관리자 계정입니다.');
+    }
+
+    const { name, password, emailNotification } = updateAdminProfileDto;
+
+    if (name !== undefined && name !== admin.name) {
+      const existingName = await this.adminRepository.findOne({
+        where: { name },
+      });
+      if (existingName) {
+        throw new ConflictException('이미 존재하는 이름입니다.');
+      }
+      admin.name = name;
+    }
+
+    if (password !== undefined) {
+      const saltRounds = 10;
+      admin.password = await bcrypt.hash(password, saltRounds);
+    }
+
+    if (emailNotification !== undefined) {
+      admin.emailNotification = emailNotification;
+    }
+
+    try {
+      await this.adminRepository.save(admin);
+    } catch (error) {
+      if ((error as { code?: string })?.code === 'ER_DUP_ENTRY') {
+        throw new ConflictException('이미 존재하는 이름입니다.');
+      }
+      throw error;
+    }
   }
 }

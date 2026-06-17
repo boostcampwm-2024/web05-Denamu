@@ -7,6 +7,7 @@ import {
   HttpStatus,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Req,
   Res,
@@ -23,9 +24,11 @@ import { ApiGetCurrentAdmin } from '@admin/api-docs/getCurrentAdmin.api-docs';
 import { ApiLoginAdmin } from '@admin/api-docs/loginAdmin.api-docs';
 import { ApiLogoutAdmin } from '@admin/api-docs/logoutAdmin.api-docs';
 import { ApiRegisterAdmin } from '@admin/api-docs/registerAdmin.api-docs';
+import { ApiUpdateAdminProfile } from '@admin/api-docs/updateAdminProfile.api-docs';
 import { CertificateAdminRequestDto } from '@admin/dto/request/certificateAdmin.dto';
 import { LoginAdminRequestDto } from '@admin/dto/request/loginAdmin.dto';
 import { RegisterAdminRequestDto } from '@admin/dto/request/registerAdmin.dto';
+import { UpdateAdminProfileRequestDto } from '@admin/dto/request/updateAdminProfile.dto';
 import { AdminService } from '@admin/service/admin.service';
 
 import { CurrentAdmin } from '@common/decorator/current-admin.decorator';
@@ -126,6 +129,20 @@ export class AdminController {
     return ApiResponse.responseWithData(
       '현재 로그인한 관리자 프로필입니다.',
       profile,
+    );
+  }
+
+  @ApiUpdateAdminProfile()
+  @Patch('/me')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AdminAuthGuard)
+  async updateAdminProfile(
+    @CurrentAdmin() email: string,
+    @Body() updateAdminProfileBodyDto: UpdateAdminProfileRequestDto,
+  ) {
+    await this.adminService.updateAdminProfile(email, updateAdminProfileBodyDto);
+    return ApiResponse.responseWithNoContent(
+      '관리자 정보가 성공적으로 수정되었습니다.',
     );
   }
 }
