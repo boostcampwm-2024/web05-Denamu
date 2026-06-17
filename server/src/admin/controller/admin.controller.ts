@@ -18,14 +18,17 @@ import { ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 
 import { ApiCertificateAdmin } from '@admin/api-docs/certificateAdmin.api-docs';
+import { ApiConfirmDeleteAdmin } from '@admin/api-docs/confirmDeleteAdmin.api-docs';
 import { ApiDeleteChildAdmin } from '@admin/api-docs/deleteChildAdmin.api-docs';
 import { ApiGetChildrenAdmin } from '@admin/api-docs/getChildrenAdmin.api-docs';
 import { ApiGetCurrentAdmin } from '@admin/api-docs/getCurrentAdmin.api-docs';
 import { ApiLoginAdmin } from '@admin/api-docs/loginAdmin.api-docs';
 import { ApiLogoutAdmin } from '@admin/api-docs/logoutAdmin.api-docs';
 import { ApiRegisterAdmin } from '@admin/api-docs/registerAdmin.api-docs';
+import { ApiRequestDeleteAdmin } from '@admin/api-docs/requestDeleteAdmin.api-docs';
 import { ApiUpdateAdminProfile } from '@admin/api-docs/updateAdminProfile.api-docs';
 import { CertificateAdminRequestDto } from '@admin/dto/request/certificateAdmin.dto';
+import { ConfirmDeleteAdminParamRequestDto } from '@admin/dto/request/confirmDeleteAdminParam.dto';
 import { LoginAdminRequestDto } from '@admin/dto/request/loginAdmin.dto';
 import { RegisterAdminRequestDto } from '@admin/dto/request/registerAdmin.dto';
 import { UpdateAdminProfileRequestDto } from '@admin/dto/request/updateAdminProfile.dto';
@@ -118,6 +121,27 @@ export class AdminController {
     return ApiResponse.responseWithNoContent(
       '관리자 계정이 성공적으로 삭제되었습니다.',
     );
+  }
+
+  @ApiRequestDeleteAdmin()
+  @UseGuards(AdminAuthGuard)
+  @Post('/me/deletion-requests')
+  @HttpCode(HttpStatus.OK)
+  async requestDeleteAdmin(@CurrentAdmin() email: string) {
+    await this.adminService.requestDeleteAccount(email);
+    return ApiResponse.responseWithNoContent(
+      '회원탈퇴 신청이 성공적으로 처리되었습니다. 이메일을 확인해주세요.',
+    );
+  }
+
+  @ApiConfirmDeleteAdmin()
+  @Delete('/deletion-requests/:token')
+  @HttpCode(HttpStatus.OK)
+  async confirmDeleteAdmin(
+    @Param() paramDto: ConfirmDeleteAdminParamRequestDto,
+  ) {
+    await this.adminService.confirmDeleteAccount(paramDto.token);
+    return ApiResponse.responseWithNoContent('회원탈퇴가 완료되었습니다.');
   }
 
   @ApiGetCurrentAdmin()

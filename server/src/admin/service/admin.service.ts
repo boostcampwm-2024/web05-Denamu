@@ -214,6 +214,65 @@ export class AdminService {
     );
   }
 
+  async requestDeleteAccount(email: string) {
+    const admin = await this.adminRepository.findOne({
+      where: { email },
+    });
+
+    if (!admin) {
+      throw new NotFoundException('존재하지 않는 관리자 계정입니다.');
+    }
+
+    const deleteCode = uuid.v4();
+
+    await this.redisService.set(
+      `${REDIS_KEYS.ADMIN_DELETE_ACCOUNT_KEY}:${deleteCode}`,
+      admin.id.toString(),
+      'EX',
+      ADMIN_REGISTER_TTL,
+    );
+    await this.emailProducer.produceAdminAccountDeletion(
+      admin.email,
+      admin.name,
+      deleteCode,
+    );
+  }
+
+  async confirmDeleteAccount(token: string) {
+    const deleteRequestKey = `${REDIS_KEYS.ADMIN_DELETE_ACCOUNT_KEY}:${token}`;
+
+    const data = await this.redisService.get(deleteRequestKey);
+
+    if (!data) {
+      throw new NotFoundException('유효하지 않거나 만료된 토큰입니다.');
+    }
+
+    const adminId = parseInt(data, 10);
+    const admin = await this.adminRepository.findOne({
+      where: { id: adminId },
+    });
+
+    if (!admin) {
+      await this.redisService.del(deleteRequestKey);
+      throw new NotFoundException('존재하지 않는 관리자 계정입니다.');
+    }
+
+    const emailsToInvalidate = await this.collectSubtreeEmails(admin);
+
+    await this.adminRepository.delete({ id: admin.id });
+    await this.redisService.del(deleteRequestKey);
+
+    await Promise.all(
+      emailsToInvalidate.map((targetEmail) =>
+        this.redisService.setex(
+          `${REDIS_KEYS.ADMIN_INVALIDATED_PREFIX}:${targetEmail}`,
+          SESSION_TTL,
+          '1',
+        ),
+      ),
+    );
+  }
+
   private async collectSubtreeEmails(root: Admin): Promise<string[]> {
     const emails = [root.email];
     let frontier = [root.id];
