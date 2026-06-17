@@ -4,11 +4,14 @@ export const CHAT_SERVER_URL = import.meta.env.VITE_DENAMU_URL;
 export const ADMIN = {
   LOGIN: "/api/admins/login",
   ME: "/api/admins/me",
+  UPDATE_ME: "/api/admins/me",
   LOGOUT: "/api/admins/logout",
   REGISTER: "/api/admins/registrations",
   CERTIFICATE: "/api/admins/email-verifications",
   CHILDREN: "/api/admins/children",
   DELETE_CHILD: (id: number) => `/api/admins/children/${id}`,
+  WITHDRAW_REQUEST: "/api/admins/me/deletion-requests",
+  WITHDRAW_CONFIRM: (token: string) => `/api/admins/deletion-requests/${token}`,
   GET: {
     RSS: "/api/rss",
     ACCEPT: "/api/rss/history/accept",

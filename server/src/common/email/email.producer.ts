@@ -66,6 +66,23 @@ export class EmailProducer {
     await this.produceMessage(payload);
   }
 
+  async produceAdminAccountDeletion(
+    email: string,
+    name: string,
+    uuid: string,
+  ) {
+    const payload = {
+      type: EmailPayloadConstant.ADMIN_ACCOUNT_DELETION,
+      data: {
+        email,
+        name,
+        uuid,
+      },
+    };
+
+    await this.produceMessage(payload);
+  }
+
   async produceRssRegistration(
     rss: Rss,
     approveFlag: boolean,

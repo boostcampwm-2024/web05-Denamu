@@ -5,10 +5,12 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 
+import * as bcrypt from 'bcrypt';
 import { Request, Response } from 'express';
 
 import { SESSION_TTL } from '@admin/constant/admin.constant';
 import { RegisterAdminRequestDto } from '@admin/dto/request/registerAdmin.dto';
+import { Admin } from '@admin/entity/admin.entity';
 import { AdminRepository } from '@admin/repository/admin.repository';
 import { AdminService } from '@admin/service/admin.service';
 
@@ -31,7 +33,10 @@ describe(`${AdminService.name} Unit Test`, () => {
     Pick<RedisService, 'get' | 'set' | 'del' | 'setex'>
   >;
   let emailProducer: jest.Mocked<
-    Pick<EmailProducer, 'produceAdminCertification'>
+    Pick<
+      EmailProducer,
+      'produceAdminCertification' | 'produceAdminAccountDeletion'
+    >
   >;
 
   const createResponse = () =>
@@ -58,6 +63,7 @@ describe(`${AdminService.name} Unit Test`, () => {
     };
     emailProducer = {
       produceAdminCertification: jest.fn(),
+      produceAdminAccountDeletion: jest.fn(),
     };
 
     adminService = new AdminService(
@@ -377,6 +383,291 @@ describe(`${AdminService.name} Unit Test`, () => {
         SESSION_TTL,
         '1',
       );
+    });
+  });
+
+  describe('requestDeleteAccount', () => {
+    it('존재하지 않는 관리자면 NotFoundException을 던진다.', async () => {
+      // given
+      adminRepository.findOne.mockResolvedValue(null);
+
+      // when & then
+      await expect(
+        adminService.requestDeleteAccount('ghost@test.com'),
+      ).rejects.toThrow(NotFoundException);
+      expect(redisService.set).not.toHaveBeenCalled();
+      expect(emailProducer.produceAdminAccountDeletion).not.toHaveBeenCalled();
+    });
+
+    it('관리자 ID를 Redis에 저장하고 탈퇴 인증 메일을 발행한다.', async () => {
+      // given
+      const admin = await AdminFixture.createAdminCryptFixture({
+        email: 'self-admin@test.com',
+      });
+      admin.id = 7;
+      adminRepository.findOne.mockResolvedValue(admin);
+
+      // when
+      await adminService.requestDeleteAccount('self-admin@test.com');
+
+      // then
+      const [redisKey, storedValue] = redisService.set.mock.calls[0];
+      expect(redisKey).toContain(REDIS_KEYS.ADMIN_DELETE_ACCOUNT_KEY);
+      expect(storedValue).toBe('7');
+      expect(emailProducer.produceAdminAccountDeletion).toHaveBeenCalledWith(
+        admin.email,
+        admin.name,
+        expect.any(String),
+      );
+    });
+  });
+
+  describe('confirmDeleteAccount', () => {
+    it('존재하지 않거나 만료된 토큰이면 NotFoundException을 던진다.', async () => {
+      // given
+      redisService.get.mockResolvedValue(null);
+
+      // when & then
+      await expect(
+        adminService.confirmDeleteAccount('expired-token'),
+      ).rejects.toThrow(NotFoundException);
+      expect(adminRepository.delete).not.toHaveBeenCalled();
+    });
+
+    it('토큰은 유효하지만 관리자가 없으면 키를 삭제하고 NotFoundException을 던진다.', async () => {
+      // given
+      redisService.get.mockResolvedValue('7');
+      adminRepository.findOne.mockResolvedValue(null);
+
+      // when & then
+      await expect(
+        adminService.confirmDeleteAccount('valid-token'),
+      ).rejects.toThrow(NotFoundException);
+      expect(redisService.del).toHaveBeenCalledWith(
+        `${REDIS_KEYS.ADMIN_DELETE_ACCOUNT_KEY}:valid-token`,
+      );
+      expect(adminRepository.delete).not.toHaveBeenCalled();
+    });
+
+    it('본인과 하위 트리 전체 세션을 무효화하고 계정을 삭제한다.', async () => {
+      // given
+      redisService.get.mockResolvedValue('7');
+      const admin = await AdminFixture.createAdminCryptFixture({
+        email: 'self-admin@test.com',
+      });
+      admin.id = 7;
+      const child = await AdminFixture.createAdminCryptFixture({
+        email: 'child-admin@test.com',
+      });
+      child.id = 8;
+      child.parentAdminId = 7;
+      const grandChild = await AdminFixture.createAdminCryptFixture({
+        email: 'grandchild-admin@test.com',
+      });
+      grandChild.id = 9;
+      grandChild.parentAdminId = 8;
+      adminRepository.findOne.mockResolvedValue(admin);
+      adminRepository.find
+        .mockResolvedValueOnce([child])
+        .mockResolvedValueOnce([grandChild])
+        .mockResolvedValueOnce([]);
+
+      // when
+      await adminService.confirmDeleteAccount('valid-token');
+
+      // then
+      expect(adminRepository.delete).toHaveBeenCalledWith({ id: 7 });
+      expect(redisService.del).toHaveBeenCalledWith(
+        `${REDIS_KEYS.ADMIN_DELETE_ACCOUNT_KEY}:valid-token`,
+      );
+      expect(redisService.setex).toHaveBeenCalledTimes(3);
+      expect(redisService.setex).toHaveBeenCalledWith(
+        `${REDIS_KEYS.ADMIN_INVALIDATED_PREFIX}:self-admin@test.com`,
+        SESSION_TTL,
+        '1',
+      );
+      expect(redisService.setex).toHaveBeenCalledWith(
+        `${REDIS_KEYS.ADMIN_INVALIDATED_PREFIX}:grandchild-admin@test.com`,
+        SESSION_TTL,
+        '1',
+      );
+    });
+  });
+
+  describe('getAdminProfile', () => {
+    it('Root 계정이면 parent가 null인 프로필을 반환한다.', async () => {
+      // given
+      const admin = await AdminFixture.createAdminCryptFixture({
+        email: 'root-admin@test.com',
+        name: 'root',
+        emailNotification: true,
+        parentAdminId: null,
+      });
+      adminRepository.findOne.mockResolvedValue(admin);
+
+      // when
+      const result = await adminService.getAdminProfile('root-admin@test.com');
+
+      // then
+      expect(result).toEqual({
+        email: 'root-admin@test.com',
+        name: 'root',
+        emailNotification: true,
+        parent: null,
+      });
+    });
+
+    it('부모가 있으면 부모의 이메일과 이름을 함께 반환한다.', async () => {
+      // given
+      const admin = await AdminFixture.createAdminCryptFixture({
+        email: 'child-admin@test.com',
+        name: 'child',
+        emailNotification: false,
+        parentAdminId: 7,
+      });
+      const parent = await AdminFixture.createAdminCryptFixture({
+        email: 'parent-admin@test.com',
+        name: 'parent',
+      });
+      parent.id = 7;
+      adminRepository.findOne
+        .mockResolvedValueOnce(admin)
+        .mockResolvedValueOnce(parent);
+
+      // when
+      const result = await adminService.getAdminProfile('child-admin@test.com');
+
+      // then
+      expect(result).toEqual({
+        email: 'child-admin@test.com',
+        name: 'child',
+        emailNotification: false,
+        parent: { email: 'parent-admin@test.com', name: 'parent' },
+      });
+    });
+  });
+
+  describe('updateAdminProfile', () => {
+    const email = 'admin@test.com';
+
+    it('존재하지 않는 관리자면 NotFoundException을 던진다.', async () => {
+      // given
+      adminRepository.findOne.mockResolvedValue(null);
+
+      // when & then
+      await expect(
+        adminService.updateAdminProfile(email, { name: 'new-name' }),
+      ).rejects.toThrow(NotFoundException);
+      expect(adminRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('이름만 변경하면 중복 검사 후 저장한다.', async () => {
+      // given
+      const admin = await AdminFixture.createAdminCryptFixture({
+        email,
+        name: 'old-name',
+      });
+      adminRepository.findOne
+        .mockResolvedValueOnce(admin)
+        .mockResolvedValueOnce(null);
+
+      // when
+      await adminService.updateAdminProfile(email, { name: 'new-name' });
+
+      // then
+      expect(adminRepository.findOne).toHaveBeenNthCalledWith(2, {
+        where: { name: 'new-name' },
+      });
+      const saved = adminRepository.save.mock.calls[0][0] as Admin;
+      expect(saved.name).toBe('new-name');
+    });
+
+    it('이미 존재하는 이름으로 변경하면 ConflictException을 던진다.', async () => {
+      // given
+      const admin = await AdminFixture.createAdminCryptFixture({
+        email,
+        name: 'old-name',
+      });
+      const other = await AdminFixture.createAdminCryptFixture({
+        name: 'taken-name',
+      });
+      adminRepository.findOne
+        .mockResolvedValueOnce(admin)
+        .mockResolvedValueOnce(other);
+
+      // when & then
+      await expect(
+        adminService.updateAdminProfile(email, { name: 'taken-name' }),
+      ).rejects.toThrow(ConflictException);
+      expect(adminRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('이름이 기존과 동일하면 중복 검사를 하지 않는다.', async () => {
+      // given
+      const admin = await AdminFixture.createAdminCryptFixture({
+        email,
+        name: 'same-name',
+      });
+      adminRepository.findOne.mockResolvedValueOnce(admin);
+
+      // when
+      await adminService.updateAdminProfile(email, { name: 'same-name' });
+
+      // then
+      expect(adminRepository.findOne).toHaveBeenCalledTimes(1);
+      expect(adminRepository.save).toHaveBeenCalledTimes(1);
+    });
+
+    it('비밀번호를 변경하면 해시해서 저장한다.', async () => {
+      // given
+      const admin = await AdminFixture.createAdminCryptFixture({ email });
+      adminRepository.findOne.mockResolvedValueOnce(admin);
+
+      // when
+      await adminService.updateAdminProfile(email, {
+        password: 'newPass1!',
+      });
+
+      // then
+      const saved = adminRepository.save.mock.calls[0][0] as Admin;
+      expect(saved.password).not.toBe('newPass1!');
+      expect(await bcrypt.compare('newPass1!', saved.password)).toBe(true);
+    });
+
+    it('이메일 수신 여부만 변경하면 해당 값만 저장한다.', async () => {
+      // given
+      const admin = await AdminFixture.createAdminCryptFixture({
+        email,
+        emailNotification: true,
+      });
+      adminRepository.findOne.mockResolvedValueOnce(admin);
+
+      // when
+      await adminService.updateAdminProfile(email, {
+        emailNotification: false,
+      });
+
+      // then
+      expect(adminRepository.findOne).toHaveBeenCalledTimes(1);
+      const saved = adminRepository.save.mock.calls[0][0] as Admin;
+      expect(saved.emailNotification).toBe(false);
+    });
+
+    it('저장 시 이름 중복 제약을 위반하면 ConflictException으로 변환한다.', async () => {
+      // given
+      const admin = await AdminFixture.createAdminCryptFixture({
+        email,
+        name: 'old-name',
+      });
+      adminRepository.findOne
+        .mockResolvedValueOnce(admin)
+        .mockResolvedValueOnce(null);
+      adminRepository.save.mockRejectedValue({ code: 'ER_DUP_ENTRY' });
+
+      // when & then
+      await expect(
+        adminService.updateAdminProfile(email, { name: 'race-name' }),
+      ).rejects.toThrow(ConflictException);
     });
   });
 });

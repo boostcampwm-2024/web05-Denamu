@@ -14,6 +14,7 @@ const SignIn = lazy(() => import("@/pages/SignIn"));
 const SignUp = lazy(() => import("@/pages/SignUp"));
 const UserCertificate = lazy(() => import("@/pages/UserCertificate"));
 const AdminCertificate = lazy(() => import("@/pages/AdminCertificate"));
+const AdminWithdraw = lazy(() => import("@/pages/AdminWithdraw"));
 const OAuthSuccessPage = lazy(() => import("@/pages/OAuthSuccessPage"));
 const OAuthSignUpPage = lazy(() => import("@/pages/OAuthSignUpPage"));
 
@@ -95,6 +96,14 @@ export const AppRouter = ({ location, state }: RouterProps) => {
           element={
             <Suspense fallback={<Loading />}>
               <AdminCertificate />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/admins/deletion-requests/confirm"
+          element={
+            <Suspense fallback={<Loading />}>
+              <AdminWithdraw />
             </Suspense>
           }
         />

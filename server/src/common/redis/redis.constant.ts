@@ -12,6 +12,7 @@ export const REDIS_KEYS = {
   ADMIN_SESSION_BY_EMAIL: 'auth:email',
   ADMIN_INVALIDATED_PREFIX: 'admin:invalidated',
   ADMIN_REGISTER_KEY: 'admin:signup',
+  ADMIN_DELETE_ACCOUNT_KEY: 'admin:delete-account',
   RSS_REMOVE_KEY: 'rss:remove',
   CHAT_HISTORY_KEY: (roomId: string) => `chat:history:${roomId}`,
   FULL_FEED_CRAWL_QUEUE: `feed:full-crawl:queue`,

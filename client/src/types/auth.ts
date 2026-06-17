@@ -10,9 +10,21 @@ export type AdminAuthResponse = {
 export type AdminProfileResponse = {
   message: string;
   data: {
+    email: string;
     name: string;
+    emailNotification: boolean;
     parent: { email: string; name: string } | null;
   };
+};
+
+export type AdminUpdateRequest = {
+  name?: string;
+  password?: string;
+  emailNotification?: boolean;
+};
+
+export type AdminUpdateResponse = {
+  message: string;
 };
 
 export interface UserSignUpRequest {

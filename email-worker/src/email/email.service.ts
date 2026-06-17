@@ -15,6 +15,7 @@ import {
 } from '@common/types';
 
 import {
+  createAdminDeleteAccountContent,
   createAdminVerificationMailContent,
   createDeleteAccountContent,
   createPasswordResetMailContent,
@@ -90,6 +91,29 @@ export class EmailService {
       to: admin.email,
       subject: `[🎋 Denamu] 관리자 계정 인증 메일`,
       html: createAdminVerificationMailContent(
+        admin.name,
+        redirectUrl,
+        this.emailUser,
+      ),
+    };
+  }
+
+  async sendAdminDeleteAccountMail(admin: AdminCertification): Promise<void> {
+    const mailOptions = this.createAdminDeleteAccountMail(admin);
+
+    await this.sendMail(mailOptions);
+  }
+
+  private createAdminDeleteAccountMail(
+    admin: AdminCertification,
+  ): nodemailer.SendMailOptions {
+    const redirectUrl = `${PRODUCT_DOMAIN}/admins/deletion-requests/confirm?token=${admin.uuid}`;
+
+    return {
+      from: `Denamu<${this.emailUser}>`,
+      to: admin.email,
+      subject: `[🎋 Denamu] 관리자 회원탈퇴 확인 메일`,
+      html: createAdminDeleteAccountContent(
         admin.name,
         redirectUrl,
         this.emailUser,

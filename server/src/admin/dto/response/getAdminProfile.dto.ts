@@ -13,10 +13,22 @@ class ParentAdminDto {
 
 export class GetAdminProfileResponseDto {
   @ApiProperty({
+    example: 'admin@example.com',
+    description: '관리자 이메일 (변경 불가)',
+  })
+  email: string;
+
+  @ApiProperty({
     example: '홍길동',
     description: '관리자 이름',
   })
   name: string;
+
+  @ApiProperty({
+    example: true,
+    description: '이메일 수신 여부',
+  })
+  emailNotification: boolean;
 
   @ApiProperty({
     type: ParentAdminDto,
@@ -29,7 +41,17 @@ export class GetAdminProfileResponseDto {
     Object.assign(this, partial);
   }
 
-  static toResponseDto(name: string, parent: ParentAdminDto | null) {
-    return new GetAdminProfileResponseDto({ name, parent });
+  static toResponseDto(
+    email: string,
+    name: string,
+    emailNotification: boolean,
+    parent: ParentAdminDto | null,
+  ) {
+    return new GetAdminProfileResponseDto({
+      email,
+      name,
+      emailNotification,
+      parent,
+    });
   }
 }

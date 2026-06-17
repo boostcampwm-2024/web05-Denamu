@@ -43,6 +43,7 @@ export const EmailPayloadConstant = {
   PASSWORD_RESET: 'passwordReset',
   ACCOUNT_DELETION: 'accountDeletion',
   ADMIN_CERTIFICATION: 'adminCertification',
+  ADMIN_ACCOUNT_DELETION: 'adminAccountDeletion',
 } as const;
 
 export type EmailPayload =
@@ -60,5 +61,9 @@ export type EmailPayload =
   | { type: typeof EmailPayloadConstant.ACCOUNT_DELETION; data: User }
   | {
       type: typeof EmailPayloadConstant.ADMIN_CERTIFICATION;
+      data: AdminCertification;
+    }
+  | {
+      type: typeof EmailPayloadConstant.ADMIN_ACCOUNT_DELETION;
       data: AdminCertification;
     };

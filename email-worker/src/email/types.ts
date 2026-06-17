@@ -24,6 +24,10 @@ export type EmailPayload =
   | {
       type: typeof EmailPayloadConstant.ADMIN_CERTIFICATION;
       data: AdminCertification;
+    }
+  | {
+      type: typeof EmailPayloadConstant.ADMIN_ACCOUNT_DELETION;
+      data: AdminCertification;
     };
 
 export type NodeMailerError = Error & {
