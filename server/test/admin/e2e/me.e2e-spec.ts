@@ -27,12 +27,14 @@ describe(`GET ${URL} E2E Test`, () => {
   });
 
   let registeredName: string;
+  let registeredEmail: string;
 
   beforeEach(async () => {
     const admin = await adminRepository.save(
       await AdminFixture.createAdminCryptFixture(),
     );
     registeredName = admin.name;
+    registeredEmail = admin.email;
     await redisService.set(redisKeyMake(sessionKey), admin.email);
   });
 
@@ -79,7 +81,12 @@ describe(`GET ${URL} E2E Test`, () => {
     // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
-    expect(data).toEqual({ name: registeredName, parent: null });
+    expect(data).toEqual({
+      email: registeredEmail,
+      name: registeredName,
+      emailNotification: true,
+      parent: null,
+    });
 
     // DB, Redis when
     const savedSession = await redisService.get(redisKeyMake(sessionKey));
@@ -110,7 +117,9 @@ describe(`GET ${URL} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toEqual({
+      email: child.email,
       name: child.name,
+      emailNotification: true,
       parent: { email: parent.email, name: parent.name },
     });
   });
