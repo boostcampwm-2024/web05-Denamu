@@ -1,6 +1,6 @@
 import { Rss } from '@common/types';
 
-export const PRODUCT_DOMAIN = 'https://denamu.dev';
+export const PRODUCT_DOMAIN = process.env.PRODUCT_DOMAIN || 'https://denamu.dev';
 
 export function createRssRegistrationContent(
   rss: Rss,
@@ -27,7 +27,7 @@ export function createRssRegistrationContent(
           </div>
           ${approveFlag ? acceptContent() : rejectContent(description)}
           <center>
-            <a href="https://denamu.dev" style="display: inline-block; padding: 12px 24px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; margin: 20px 0;">${
+            <a href="${PRODUCT_DOMAIN}" style="display: inline-block; padding: 12px 24px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; margin: 20px 0;">${
               approveFlag ? '서비스 바로가기' : '다시 신청하러 가기'
             }</a>
           </center>
