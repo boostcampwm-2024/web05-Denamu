@@ -75,6 +75,31 @@ describe(`POST ${URL} E2E Test`, () => {
     );
 
     // DB, Redis then
-    expect(savedDeleteCode).toBe(user.id.toString());
+    expect(savedDeleteCode).toBe(
+      JSON.stringify({ userId: user.id, deleteRss: true }),
+    );
+  });
+
+  it('[200] deleteRss=false로 신청할 경우 해당 값이 저장된다.', async () => {
+    // Http when
+    const response = await agent
+      .post(URL)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ deleteRss: false });
+
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.OK);
+    expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedDeleteCode = await redisService.get(
+      redisKeyMake(userDeleteCode),
+    );
+
+    // DB, Redis then
+    expect(savedDeleteCode).toBe(
+      JSON.stringify({ userId: user.id, deleteRss: false }),
+    );
   });
 });

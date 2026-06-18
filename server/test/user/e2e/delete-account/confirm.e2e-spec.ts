@@ -74,7 +74,10 @@ describe(`DELETE /api/users/deletion-requests/:token E2E Test`, () => {
       commentRepository.insert(CommentFixture.createCommentFixture(feed, user)),
       likeRepository.insert({ feed, user }),
       fileRepository.insert(FileFixture.createFileFixture(user)),
-      redisService.set(redisKeyMake(userDeleteCode), user.id),
+      redisService.set(
+        redisKeyMake(userDeleteCode),
+        JSON.stringify({ userId: user.id, deleteRss: true }),
+      ),
     ]);
   });
 
@@ -107,7 +110,10 @@ describe(`DELETE /api/users/deletion-requests/:token E2E Test`, () => {
       await UserFixture.createUserCryptFixture(),
     );
 
-    await redisService.set(redisKeyMake(userDeleteCode), user.id.toString());
+    await redisService.set(
+      redisKeyMake(userDeleteCode),
+      JSON.stringify({ userId: user.id, deleteRss: true }),
+    );
 
     // Http when
     const response = await agent.delete(makeURL(userDeleteCode));
@@ -144,5 +150,76 @@ describe(`DELETE /api/users/deletion-requests/:token E2E Test`, () => {
     expect(savedActivities.length).toBe(0);
     expect(savedFiles.length).toBe(0);
     expect(Number(invalidatedUser)).toBeGreaterThan(0);
+  });
+
+  it('[200] deleteRss=true면 소유 RSS와 연관 데이터까지 함께 삭제한다.', async () => {
+    // given - 소유자가 연결된 RSS
+    const owner = await userRepository.save(
+      await UserFixture.createUserCryptFixture(),
+    );
+    const ownedRssAccept = await rssAcceptRepository.save(
+      RssAcceptFixture.createRssAcceptFixture({ userId: owner.id }),
+    );
+    const ownedFeed = await feedRepository.save(
+      FeedFixture.createFeedFixture(ownedRssAccept),
+    );
+    await redisService.set(
+      redisKeyMake(userDeleteCode),
+      JSON.stringify({ userId: owner.id, deleteRss: true }),
+    );
+
+    // Http when
+    const response = await agent.delete(makeURL(userDeleteCode));
+
+    // Http then
+    expect(response.status).toBe(HttpStatus.OK);
+
+    // DB when
+    const [savedUser, savedRssAccept, savedFeed] = await Promise.all([
+      userRepository.findOneBy({ id: owner.id }),
+      rssAcceptRepository.findOneBy({ id: ownedRssAccept.id }),
+      feedRepository.findOneBy({ id: ownedFeed.id }),
+    ]);
+
+    // DB then
+    expect(savedUser).toBeNull();
+    expect(savedRssAccept).toBeNull();
+    expect(savedFeed).toBeNull();
+  });
+
+  it('[200] deleteRss=false면 소유 RSS는 유지하고 연결만 해제(user_id NULL)한다.', async () => {
+    // given - 소유자가 연결된 RSS
+    const owner = await userRepository.save(
+      await UserFixture.createUserCryptFixture(),
+    );
+    const ownedRssAccept = await rssAcceptRepository.save(
+      RssAcceptFixture.createRssAcceptFixture({ userId: owner.id }),
+    );
+    const ownedFeed = await feedRepository.save(
+      FeedFixture.createFeedFixture(ownedRssAccept),
+    );
+    await redisService.set(
+      redisKeyMake(userDeleteCode),
+      JSON.stringify({ userId: owner.id, deleteRss: false }),
+    );
+
+    // Http when
+    const response = await agent.delete(makeURL(userDeleteCode));
+
+    // Http then
+    expect(response.status).toBe(HttpStatus.OK);
+
+    // DB when
+    const [savedUser, savedRssAccept, savedFeed] = await Promise.all([
+      userRepository.findOneBy({ id: owner.id }),
+      rssAcceptRepository.findOneBy({ id: ownedRssAccept.id }),
+      feedRepository.findOneBy({ id: ownedFeed.id }),
+    ]);
+
+    // DB then
+    expect(savedUser).toBeNull();
+    expect(savedRssAccept).not.toBeNull();
+    expect(savedRssAccept.userId).toBeNull();
+    expect(savedFeed).not.toBeNull();
   });
 });
