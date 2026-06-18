@@ -7,6 +7,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 
 import { Response } from 'express';
+import { DataSource } from 'typeorm';
 
 import { EmailProducer } from '@common/email/email.producer';
 import { Payload } from '@common/guard/jwt.guard';
@@ -15,10 +16,14 @@ import { RedisService } from '@common/redis/redis.service';
 
 import { FileService } from '@file/service/file.service';
 
+import { RssAccept } from '@rss/entity/rss.entity';
+import { RssAcceptRepository } from '@rss/repository/rss.repository';
+
 import { RegisterUserRequestDto } from '@user/dto/request/registerUser.dto';
 import { CheckEmailDuplicationResponseDto } from '@user/dto/response/checkEmailDuplication.dto';
 import { CreateAccessTokenResponseDto } from '@user/dto/response/createAccessToken.dto';
 import { GetUserProfileImageResponseDto } from '@user/dto/response/getUserProfileImage.dto';
+import { GetUserRssResponseDto } from '@user/dto/response/getUserRss.dto';
 import { User } from '@user/entity/user.entity';
 import { UserRepository } from '@user/repository/user.repository';
 import { UserService } from '@user/service/user.service';
@@ -47,6 +52,11 @@ describe(`${UserService.name} Unit Test`, () => {
   let jwtService: jest.Mocked<Pick<JwtService, 'sign'>>;
   let configService: jest.Mocked<Pick<ConfigService, 'get'>>;
   let fileService: jest.Mocked<Pick<FileService, 'deleteByPath'>>;
+  let rssAcceptRepository: jest.Mocked<
+    Pick<RssAcceptRepository, 'find' | 'update'>
+  >;
+  let manager: { remove: jest.Mock; delete: jest.Mock };
+  let dataSource: jest.Mocked<Pick<DataSource, 'transaction'>>;
 
   const createResponse = () => ({ cookie: jest.fn() }) as unknown as Response;
 
@@ -80,6 +90,11 @@ describe(`${UserService.name} Unit Test`, () => {
     jwtService = { sign: jest.fn().mockReturnValue('signed-token') };
     configService = { get: jest.fn().mockReturnValue('14d') };
     fileService = { deleteByPath: jest.fn() };
+    rssAcceptRepository = { find: jest.fn(), update: jest.fn() };
+    manager = { remove: jest.fn(), delete: jest.fn() };
+    dataSource = {
+      transaction: jest.fn((cb: any) => cb(manager)),
+    } as any;
 
     userService = new UserService(
       userRepository as unknown as UserRepository,
@@ -88,6 +103,8 @@ describe(`${UserService.name} Unit Test`, () => {
       jwtService as unknown as JwtService,
       configService as unknown as ConfigService,
       fileService as unknown as FileService,
+      rssAcceptRepository as unknown as RssAcceptRepository,
+      dataSource as unknown as DataSource,
     );
   });
 
@@ -293,6 +310,10 @@ describe(`${UserService.name} Unit Test`, () => {
     it('인증에 성공하면 Redis 키를 지우고 사용자를 저장한다.', async () => {
       // given
       redisService.get.mockResolvedValue(JSON.stringify({ email: 'a@test.com' }));
+      userRepository.save.mockResolvedValue({
+        id: 5,
+        email: 'a@test.com',
+      } as any);
 
       // when
       await userService.certificateUser('uuid');
@@ -300,6 +321,44 @@ describe(`${UserService.name} Unit Test`, () => {
       // then
       expect(redisService.del).toHaveBeenCalled();
       expect(userRepository.save).toHaveBeenCalledWith({ email: 'a@test.com' });
+    });
+
+    it('가입 완료 후 동일 이메일의 미연결 RSS에 user_id를 연결한다.', async () => {
+      // given
+      redisService.get.mockResolvedValue(JSON.stringify({ email: 'a@test.com' }));
+      userRepository.save.mockResolvedValue({
+        id: 5,
+        email: 'a@test.com',
+      } as any);
+
+      // when
+      await userService.certificateUser('uuid');
+
+      // then
+      expect(rssAcceptRepository.update).toHaveBeenCalledWith(
+        expect.objectContaining({ email: 'a@test.com' }),
+        { userId: 5 },
+      );
+    });
+  });
+
+  describe('getUserRss', () => {
+    it('userId로 소유 RSS를 조회하고 응답으로 변환한다.', async () => {
+      // given
+      const rssList = [] as RssAccept[];
+      rssAcceptRepository.find.mockResolvedValue(rssList);
+
+      // when
+      const result = await userService.getUserRss(1);
+
+      // then
+      expect(rssAcceptRepository.find).toHaveBeenCalledWith({
+        where: { userId: 1 },
+        order: { id: 'DESC' },
+      });
+      expect(result).toEqual(
+        GetUserRssResponseDto.toResponseDtoArray(rssList),
+      );
     });
   });
 
@@ -495,13 +554,30 @@ describe(`${UserService.name} Unit Test`, () => {
       // then
       expect(redisService.set).toHaveBeenCalledWith(
         expect.stringContaining(REDIS_KEYS.USER_DELETE_ACCOUNT_KEY),
-        '1',
+        JSON.stringify({ userId: 1, deleteRss: true }),
         'EX',
         600,
       );
       expect(emailProducer.produceAccountDeletion).toHaveBeenCalledWith(
         user,
         expect.any(String),
+      );
+    });
+
+    it('deleteRss=false면 해당 값을 그대로 저장한다.', async () => {
+      // given
+      const user = UserFixture.createUserFixture({ id: 1 });
+      userRepository.findOneBy.mockResolvedValue(user);
+
+      // when
+      await userService.requestDeleteAccount(1, false);
+
+      // then
+      expect(redisService.set).toHaveBeenCalledWith(
+        expect.stringContaining(REDIS_KEYS.USER_DELETE_ACCOUNT_KEY),
+        JSON.stringify({ userId: 1, deleteRss: false }),
+        'EX',
+        600,
       );
     });
   });
@@ -514,13 +590,15 @@ describe(`${UserService.name} Unit Test`, () => {
       );
     });
 
-    it('탈퇴를 확정하면 토큰을 무효화하고 사용자와 프로필을 제거한다.', async () => {
+    it('deleteRss=true면 트랜잭션에서 RSS를 먼저 삭제한 뒤 사용자를 제거한다.', async () => {
       // given
       const user = UserFixture.createUserFixture({
         id: 1,
         profileImage: 'avatar.png',
       });
-      redisService.get.mockResolvedValue('1');
+      redisService.get.mockResolvedValue(
+        JSON.stringify({ userId: 1, deleteRss: true }),
+      );
       userRepository.findOneBy.mockResolvedValue(user);
 
       // when
@@ -528,12 +606,33 @@ describe(`${UserService.name} Unit Test`, () => {
 
       // then
       expect(fileService.deleteByPath).toHaveBeenCalledWith('avatar.png');
+      expect(manager.delete).toHaveBeenCalledWith(RssAccept, { userId: 1 });
+      expect(manager.remove).toHaveBeenCalledWith(user);
+      // RSS 삭제가 user 제거보다 먼저 호출되어야 한다(FK SET NULL 함정 방지).
+      expect(manager.delete.mock.invocationCallOrder[0]).toBeLessThan(
+        manager.remove.mock.invocationCallOrder[0],
+      );
       expect(redisService.setex).toHaveBeenCalledWith(
         `${REDIS_KEYS.USER_INVALIDATED_PREFIX}:1`,
-        14 * 86400, // parseTimeToSeconds('14d')
-        expect.stringMatching(/^\d+$/), // invalidatedAt 타임스탬프(초)
+        14 * 86400,
+        expect.stringMatching(/^\d+$/),
       );
-      expect(userRepository.remove).toHaveBeenCalledWith(user);
+    });
+
+    it('deleteRss=false면 RSS를 삭제하지 않고 사용자만 제거한다(FK SET NULL로 연결만 해제).', async () => {
+      // given
+      const user = UserFixture.createUserFixture({ id: 1, profileImage: null });
+      redisService.get.mockResolvedValue(
+        JSON.stringify({ userId: 1, deleteRss: false }),
+      );
+      userRepository.findOneBy.mockResolvedValue(user);
+
+      // when
+      await userService.confirmDeleteAccount('token');
+
+      // then
+      expect(manager.delete).not.toHaveBeenCalled();
+      expect(manager.remove).toHaveBeenCalledWith(user);
     });
   });
 
