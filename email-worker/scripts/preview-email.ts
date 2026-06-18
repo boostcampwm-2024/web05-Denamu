@@ -64,9 +64,9 @@ const previews: [string, string, string][] = [
     'RSS 삭제 인증코드',
     createRssRemoveCertificateContent(
       '김데나무',
-      '123456',
       SERVICE_ADDRESS,
       SAMPLE_RSS.rssUrl,
+      `${SAMPLE_LINK}&code=123456`,
     ),
   ],
   [
@@ -74,7 +74,6 @@ const previews: [string, string, string][] = [
     'RSS 소유 인증',
     createRssCertificationContent(
       '김데나무',
-      '123456',
       SERVICE_ADDRESS,
       SAMPLE_RSS.name,
       SAMPLE_RSS.email,
