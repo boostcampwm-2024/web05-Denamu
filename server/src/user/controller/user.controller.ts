@@ -25,6 +25,7 @@ import { ApiCheckEmailDuplication } from '@user/api-docs/checkEmailDuplication.a
 import { ApiConfirmDeleteAccount } from '@user/api-docs/confirmDeleteAccount.api-docs';
 import { ApiForgotPassword } from '@user/api-docs/forgotPassword.api-docs';
 import { ApiGetUserProfileImage } from '@user/api-docs/getUserProfileImage.api-docs';
+import { ApiGetUserRss } from '@user/api-docs/getUserRss.api-docs';
 import { ApiLoginUser } from '@user/api-docs/loginUser.api-docs';
 import { ApiLogoutUser } from '@user/api-docs/logoutUser.api-docs';
 import { ApiRefreshToken } from '@user/api-docs/refreshToken.api-docs';
@@ -39,6 +40,7 @@ import { ForgotPasswordRequestDto } from '@user/dto/request/forgotPassword.dto';
 import { GetUserProfileImageParamRequestDto } from '@user/dto/request/getUserProfileImageParam.dto';
 import { LoginUserRequestDto } from '@user/dto/request/loginUser.dto';
 import { RegisterUserRequestDto } from '@user/dto/request/registerUser.dto';
+import { RequestDeleteAccountRequestDto } from '@user/dto/request/requestDeleteAccount.dto';
 import { ResetPasswordRequestDto } from '@user/dto/request/resetPassword.dto';
 import { ResetPasswordParamRequestDto } from '@user/dto/request/resetPasswordParam.dto';
 import { UpdateUserRequestDto } from '@user/dto/request/updateUser.dto';
@@ -73,6 +75,16 @@ export class UserController {
     return ApiResponse.responseWithData(
       '프로필 이미지 조회가 성공적으로 처리되었습니다.',
       await this.userService.getUserProfileImage(paramDto.id),
+    );
+  }
+
+  @ApiGetUserRss()
+  @Get('/:id/rss')
+  @HttpCode(HttpStatus.OK)
+  async getUserRss(@Param() paramDto: GetUserProfileImageParamRequestDto) {
+    return ApiResponse.responseWithData(
+      '사용자 소유 RSS 조회가 성공적으로 처리되었습니다.',
+      await this.userService.getUserRss(paramDto.id),
     );
   }
 
@@ -150,8 +162,14 @@ export class UserController {
   @Post('/deletion-requests')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtGuard)
-  async requestDeleteAccount(@CurrentUser() user: Payload) {
-    await this.userService.requestDeleteAccount(user.id);
+  async requestDeleteAccount(
+    @CurrentUser() user: Payload,
+    @Body() requestDeleteAccountDto: RequestDeleteAccountRequestDto,
+  ) {
+    await this.userService.requestDeleteAccount(
+      user.id,
+      requestDeleteAccountDto.deleteRss,
+    );
     return ApiResponse.responseWithNoContent(
       '회원탈퇴 신청이 성공적으로 처리되었습니다. 이메일을 확인해주세요.',
     );

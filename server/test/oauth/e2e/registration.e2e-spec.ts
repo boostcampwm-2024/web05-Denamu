@@ -6,6 +6,8 @@ import TestAgent from 'supertest/lib/agent';
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
 
+import { RssAcceptRepository } from '@rss/repository/rss.repository';
+
 import {
   OAUTH_PENDING_TTL,
   OAuthType,
@@ -13,6 +15,7 @@ import {
 import { ProviderRepository } from '@user/repository/provider.repository';
 import { UserRepository } from '@user/repository/user.repository';
 
+import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture';
 import { UserFixture } from '@test/config/common/fixture/user.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
@@ -23,6 +26,7 @@ describe(`POST ${URL} E2E Test`, () => {
   let redisService: RedisService;
   let userRepository: UserRepository;
   let providerRepository: ProviderRepository;
+  let rssAcceptRepository: RssAcceptRepository;
 
   const pendingToken = 'oauth-pending-token';
 
@@ -46,6 +50,7 @@ describe(`POST ${URL} E2E Test`, () => {
     redisService = testApp.get(RedisService);
     userRepository = testApp.get(UserRepository);
     providerRepository = testApp.get(ProviderRepository);
+    rssAcceptRepository = testApp.get(RssAcceptRepository);
   });
 
   it('[201] 닉네임 입력 시 사용자/Provider를 생성하고 refresh 쿠키를 설정한다.', async () => {
@@ -99,6 +104,31 @@ describe(`POST ${URL} E2E Test`, () => {
 
     // Http then
     expect(response.status).toBe(HttpStatus.CONFLICT);
+  });
+
+  it('[201] OAuth 가입 시 동일 이메일의 미연결 RSS에 user_id를 연결한다.', async () => {
+    // given
+    const email = 'oauth-blogger@test.com';
+    const rssAccept = await rssAcceptRepository.save(
+      RssAcceptFixture.createRssAcceptFixture({ email }),
+    );
+    await stagePending(email);
+
+    // Http when
+    const response = await agent
+      .post(URL)
+      .set('Cookie', `oauth_pending_token=${pendingToken}`)
+      .send({ userName: 'oauth-blogger-nickname' });
+
+    // Http then
+    expect(response.status).toBe(HttpStatus.CREATED);
+
+    // DB then
+    const [savedUser, savedRssAccept] = await Promise.all([
+      userRepository.findOne({ where: { email } }),
+      rssAcceptRepository.findOneBy({ id: rssAccept.id }),
+    ]);
+    expect(savedRssAccept.userId).toBe(savedUser.id);
   });
 
   it('[404] pending 쿠키가 없을 경우 회원가입을 실패한다.', async () => {

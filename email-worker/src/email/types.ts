@@ -1,5 +1,6 @@
 import {
   AdminCertification,
+  RssCertification,
   RssRegistration,
   RssRegistrationRequest,
   RssRemoval,
@@ -11,6 +12,10 @@ import { EmailPayloadConstant } from './constant';
 export type EmailPayload =
   | { type: typeof EmailPayloadConstant.USER_CERTIFICATION; data: User }
   | { type: typeof EmailPayloadConstant.RSS_REMOVAL; data: RssRemoval }
+  | {
+      type: typeof EmailPayloadConstant.RSS_CERTIFICATION;
+      data: RssCertification;
+    }
   | {
       type: typeof EmailPayloadConstant.RSS_REGISTRATION;
       data: RssRegistration;

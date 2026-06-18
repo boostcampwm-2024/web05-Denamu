@@ -32,7 +32,7 @@ describe(`${OAuthService.name} Unit Test`, () => {
     getTokens: jest.Mock;
     getUserInfo: jest.Mock;
   };
-  let manager: { save: jest.Mock };
+  let manager: { save: jest.Mock; update: jest.Mock };
   let dataSource: jest.Mocked<Pick<DataSource, 'transaction'>>;
 
   const createResponse = () =>
@@ -67,6 +67,7 @@ describe(`${OAuthService.name} Unit Test`, () => {
       save: jest.fn((_entity: any, data: any) =>
         Promise.resolve({ id: 1, ...data }),
       ),
+      update: jest.fn().mockResolvedValue({ affected: 1 }),
     };
     dataSource = {
       transaction: jest.fn((cb: any) => cb(manager)),

@@ -29,6 +29,25 @@ CREATE TABLE `rss` (
   UNIQUE KEY `UQ_af1d102908727aa95ef09e16065` (`rss_url`)
 );
 
+-- denamu.`user` definition
+
+CREATE TABLE `user` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `email` varchar(255) NOT NULL,
+  `password` varchar(60) DEFAULT NULL,
+  `user_name` varchar(60) NOT NULL,
+  `profile_image` varchar(255) DEFAULT NULL,
+  `introduction` varchar(255) DEFAULT NULL,
+  `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `updated_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  `totalViews` int NOT NULL DEFAULT '0',
+  `currentStreak` int NOT NULL DEFAULT '0',
+  `lastActiveDate` date DEFAULT NULL,
+  `maxStreak` int NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UQ_user_user_name` (`user_name`)
+);
+
 -- denamu.rss_accept definition
 
 CREATE TABLE `rss_accept` (
@@ -38,10 +57,13 @@ CREATE TABLE `rss_accept` (
   `email` varchar(255) NOT NULL,
   `rss_url` varchar(255) NOT NULL,
   `blog_platform` varchar(255) NOT NULL DEFAULT 'etc',
+  `user_id` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `UQ_59f4be4de3817b3f975acff0766` (`name`),
   UNIQUE KEY `UQ_b3a5d4196368864d938dae4e9ff` (`rss_url`),
-  FULLTEXT KEY (`name`)
+  KEY `FK_rss_accept_user_id` (`user_id`),
+  FULLTEXT KEY (`name`),
+  CONSTRAINT `FK_rss_accept_user_id` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 -- denamu.rss_reject definition
@@ -74,25 +96,6 @@ CREATE TABLE `feed` (
   KEY `FK_7474d489d05b8051874b227f868` (`blog_id`),
   FULLTEXT KEY `IDX_7d93e66e624232af470d2f7bb3` (`title`) /*!50100 WITH PARSER `ngram` */ ,
   CONSTRAINT `FK_7474d489d05b8051874b227f868` FOREIGN KEY (`blog_id`) REFERENCES `rss_accept` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-);
-
--- denamu.`user` definition
-
-CREATE TABLE `user` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `email` varchar(255) NOT NULL,
-  `password` varchar(60) DEFAULT NULL,
-  `user_name` varchar(60) NOT NULL,
-  `profile_image` varchar(255) DEFAULT NULL,
-  `introduction` varchar(255) DEFAULT NULL,
-  `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-  `updated_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
-  `totalViews` int NOT NULL DEFAULT '0',
-  `currentStreak` int NOT NULL DEFAULT '0',
-  `lastActiveDate` date DEFAULT NULL,
-  `maxStreak` int NOT NULL DEFAULT '0',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `UQ_user_user_name` (`user_name`)
 );
 
 -- denamu.activity definition

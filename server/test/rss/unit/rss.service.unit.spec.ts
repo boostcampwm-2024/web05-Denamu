@@ -1,19 +1,20 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
 
 import axios from 'axios';
 import { DataSource } from 'typeorm';
 
+import { AdminRepository } from '@admin/repository/admin.repository';
+
 import { EmailProducer } from '@common/email/email.producer';
 import { WinstonLoggerService } from '@common/logger/logger.service';
 import { NotifierRegistry } from '@common/notification/notifier-registry';
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
-
-import { AdminRepository } from '@admin/repository/admin.repository';
 
 import { RegisterRssRequestDto } from '@rss/dto/request/registerRss.dto';
 import { ReadRssResponseDto } from '@rss/dto/response/readRss.dto';
@@ -35,7 +36,7 @@ describe(`${RssService.name} Unit Test`, () => {
     Pick<RssRepository, 'findOne' | 'find' | 'insert' | 'delete'>
   >;
   let rssAcceptRepository: jest.Mocked<
-    Pick<RssAcceptRepository, 'findOne' | 'find' | 'delete'>
+    Pick<RssAcceptRepository, 'findOne' | 'find' | 'delete' | 'update'>
   >;
   let rssRejectRepository: jest.Mocked<Pick<RssRejectRepository, 'find'>>;
   let emailProducer: jest.Mocked<
@@ -44,11 +45,14 @@ describe(`${RssService.name} Unit Test`, () => {
       | 'produceRssRegistration'
       | 'produceRssRegistrationRequest'
       | 'produceRssRemoval'
+      | 'produceRssCertification'
     >
   >;
   let manager: { save: jest.Mock; remove: jest.Mock; delete: jest.Mock };
   let dataSource: jest.Mocked<Pick<DataSource, 'transaction'>>;
-  let redisService: jest.Mocked<Pick<RedisService, 'rpush' | 'set' | 'get' | 'del'>>;
+  let redisService: jest.Mocked<
+    Pick<RedisService, 'rpush' | 'set' | 'get' | 'del'>
+  >;
   let adminRepository: jest.Mocked<Pick<AdminRepository, 'find'>>;
   let notifierRegistry: jest.Mocked<Pick<NotifierRegistry, 'sendAlert'>>;
   let logger: jest.Mocked<Pick<WinstonLoggerService, 'error'>>;
@@ -61,18 +65,29 @@ describe(`${RssService.name} Unit Test`, () => {
       insert: jest.fn(),
       delete: jest.fn(),
     };
-    rssAcceptRepository = { findOne: jest.fn(), find: jest.fn(), delete: jest.fn() };
+    rssAcceptRepository = {
+      findOne: jest.fn(),
+      find: jest.fn(),
+      delete: jest.fn(),
+      update: jest.fn().mockResolvedValue({ affected: 1 }),
+    };
     rssRejectRepository = { find: jest.fn() };
     emailProducer = {
       produceRssRegistration: jest.fn(),
       produceRssRegistrationRequest: jest.fn(),
       produceRssRemoval: jest.fn(),
+      produceRssCertification: jest.fn(),
     };
     manager = { save: jest.fn(), remove: jest.fn(), delete: jest.fn() };
     dataSource = {
       transaction: jest.fn((cb: any) => cb(manager)),
     } as any;
-    redisService = { rpush: jest.fn(), set: jest.fn(), get: jest.fn(), del: jest.fn() };
+    redisService = {
+      rpush: jest.fn(),
+      set: jest.fn(),
+      get: jest.fn(),
+      del: jest.fn(),
+    };
     adminRepository = { find: jest.fn().mockResolvedValue([]) };
     notifierRegistry = { sendAlert: jest.fn() };
     logger = { error: jest.fn() };
@@ -106,7 +121,9 @@ describe(`${RssService.name} Unit Test`, () => {
       rssAcceptRepository.findOne.mockResolvedValue(null);
 
       // when & then
-      await expect(rssService.createRss(dto)).rejects.toThrow(ConflictException);
+      await expect(rssService.createRss(dto)).rejects.toThrow(
+        ConflictException,
+      );
       expect(rssRepository.insert).not.toHaveBeenCalled();
     });
 
@@ -139,7 +156,9 @@ describe(`${RssService.name} Unit Test`, () => {
         where: { emailNotification: true },
         select: ['email'],
       });
-      expect(emailProducer.produceRssRegistrationRequest).toHaveBeenCalledTimes(2);
+      expect(emailProducer.produceRssRegistrationRequest).toHaveBeenCalledTimes(
+        2,
+      );
       expect(emailProducer.produceRssRegistrationRequest).toHaveBeenCalledWith(
         dto.toEntity(),
         'a@denamu.dev',
@@ -380,6 +399,195 @@ describe(`${RssService.name} Unit Test`, () => {
 
       // then
       expect(redisService.del).toHaveBeenCalledWith(redisKey);
+    });
+  });
+
+  describe('createRssCertification', () => {
+    const user = {
+      id: 10,
+      email: 'me@test.com',
+      userName: 'me',
+      role: 'user',
+    };
+
+    it('이름과 일치하는 RSS가 없으면 NotFoundException을 던진다.', async () => {
+      rssAcceptRepository.findOne.mockResolvedValue(null);
+
+      await expect(
+        rssService.createRssCertification(user, 'blog'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('이미 본인이 인증한 RSS면 ConflictException을 던진다.', async () => {
+      rssAcceptRepository.findOne.mockResolvedValue({
+        id: 1,
+        userId: 10,
+      } as any);
+
+      await expect(
+        rssService.createRssCertification(user, 'blog'),
+      ).rejects.toThrow(ConflictException);
+      expect(rssAcceptRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('다른 사용자가 인증한 RSS면 ConflictException을 던진다.', async () => {
+      rssAcceptRepository.findOne.mockResolvedValue({
+        id: 1,
+        userId: 99,
+      } as any);
+
+      await expect(
+        rssService.createRssCertification(user, 'blog'),
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('RSS 이메일과 사용자 이메일이 같으면 즉시 연결하고 메일을 보내지 않는다.', async () => {
+      rssAcceptRepository.findOne.mockResolvedValue({
+        id: 1,
+        userId: null,
+        email: 'me@test.com',
+        userName: 'tester',
+        blogPlatform: 'velog',
+      } as any);
+
+      const result = await rssService.createRssCertification(user, 'blog');
+
+      expect(rssAcceptRepository.update).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 1 }),
+        { userId: 10 },
+      );
+      expect(emailProducer.produceRssCertification).not.toHaveBeenCalled();
+      expect(redisService.set).not.toHaveBeenCalled();
+      expect(result.certified).toBe(true);
+    });
+
+    it('이메일이 다르면 인증 코드를 저장하고 인증 메일을 발송한다.', async () => {
+      rssAcceptRepository.findOne.mockResolvedValue({
+        id: 1,
+        userId: null,
+        email: 'other@test.com',
+        name: 'blog',
+        userName: 'tester',
+        blogPlatform: 'velog',
+      } as any);
+
+      const result = await rssService.createRssCertification(user, 'blog');
+
+      expect(redisService.set).toHaveBeenCalledWith(
+        expect.stringContaining(REDIS_KEYS.RSS_CERTIFICATION_KEY),
+        expect.any(String),
+        'EX',
+        300,
+      );
+      expect(emailProducer.produceRssCertification).toHaveBeenCalledWith(
+        'tester',
+        'blog',
+        expect.any(String),
+        'other@test.com',
+        user.email,
+      );
+      expect(rssAcceptRepository.update).not.toHaveBeenCalled();
+      expect(result.certified).toBe(false);
+    });
+  });
+
+  describe('verifyRssCertification', () => {
+    const user = {
+      id: 10,
+      email: 'me@test.com',
+      userName: 'me',
+      role: 'user',
+    };
+    const code = 'cert-code';
+    const redisKey = `${REDIS_KEYS.RSS_CERTIFICATION_KEY}:${code}`;
+
+    it('인증 코드가 만료되었으면 NotFoundException을 던진다.', async () => {
+      redisService.get.mockResolvedValue(null);
+
+      await expect(
+        rssService.verifyRssCertification(user, code),
+      ).rejects.toThrow(NotFoundException);
+      expect(redisService.del).not.toHaveBeenCalled();
+    });
+
+    it('본인의 인증 요청이 아니면 ForbiddenException을 던진다.', async () => {
+      redisService.get.mockResolvedValue(
+        JSON.stringify({ rssAcceptId: 1, userId: 99 }),
+      );
+
+      await expect(
+        rssService.verifyRssCertification(user, code),
+      ).rejects.toThrow(ForbiddenException);
+      expect(rssAcceptRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('정상 검증 시 RSS를 연결하고 인증 코드를 정리한다.', async () => {
+      redisService.get.mockResolvedValue(
+        JSON.stringify({ rssAcceptId: 1, userId: 10 }),
+      );
+
+      await rssService.verifyRssCertification(user, code);
+
+      expect(rssAcceptRepository.update).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 1 }),
+        { userId: 10 },
+      );
+      expect(redisService.del).toHaveBeenCalledWith(redisKey);
+    });
+
+    it('이미 인증된 RSS면 ConflictException을 던지고 인증 코드는 정리한다.', async () => {
+      redisService.get.mockResolvedValue(
+        JSON.stringify({ rssAcceptId: 1, userId: 10 }),
+      );
+      rssAcceptRepository.update.mockResolvedValue({ affected: 0 } as any);
+
+      await expect(
+        rssService.verifyRssCertification(user, code),
+      ).rejects.toThrow(ConflictException);
+      expect(redisService.del).toHaveBeenCalledWith(redisKey);
+    });
+  });
+
+  describe('deleteRssCertification', () => {
+    const user = {
+      id: 10,
+      email: 'me@test.com',
+      userName: 'me',
+      role: 'user',
+    };
+
+    it('RSS가 없으면 NotFoundException을 던진다.', async () => {
+      rssAcceptRepository.findOne.mockResolvedValue(null);
+
+      await expect(rssService.deleteRssCertification(user, 1)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('본인이 인증한 RSS가 아니면 ForbiddenException을 던진다.', async () => {
+      rssAcceptRepository.findOne.mockResolvedValue({
+        id: 1,
+        userId: 99,
+      } as any);
+
+      await expect(rssService.deleteRssCertification(user, 1)).rejects.toThrow(
+        ForbiddenException,
+      );
+      expect(rssAcceptRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('본인이 인증한 RSS면 연결을 해제한다.', async () => {
+      rssAcceptRepository.findOne.mockResolvedValue({
+        id: 1,
+        userId: 10,
+      } as any);
+
+      await rssService.deleteRssCertification(user, 1);
+
+      expect(rssAcceptRepository.update).toHaveBeenCalledWith(
+        { id: 1 },
+        { userId: null },
+      );
     });
   });
 

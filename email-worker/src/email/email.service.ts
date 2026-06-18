@@ -8,6 +8,7 @@ import { EmailMetrics } from '@common/metrics/email-metrics';
 import {
   AdminCertification,
   Rss,
+  RssCertification,
   RssRegistration,
   RssRegistrationRequest,
   RssRemoval,
@@ -19,6 +20,7 @@ import {
   createAdminVerificationMailContent,
   createDeleteAccountContent,
   createPasswordResetMailContent,
+  createRssCertificationContent,
   createRssRegistrationContent,
   createRssRegistrationRequestContent,
   createRssRemoveCertificateContent,
@@ -219,6 +221,40 @@ export class EmailService {
         certificateCode,
         this.emailUser,
         rssUrl,
+      ),
+    };
+  }
+
+  async sendRssCertificationMail(rssCertification: RssCertification) {
+    const mailOption = this.createRssCertificationMail(
+      rssCertification.userName,
+      rssCertification.email,
+      rssCertification.blogName,
+      rssCertification.certificateCode,
+      rssCertification.userEmail,
+    );
+    await this.sendMail(mailOption);
+  }
+
+  private createRssCertificationMail(
+    userName: string,
+    email: string,
+    blogName: string,
+    certificateCode: string,
+    userEmail: string,
+  ) {
+    const certificationLink = `${PRODUCT_DOMAIN}/rss/certifications/confirm?code=${certificateCode}`;
+    return {
+      from: `Denamu<${this.emailUser}>`,
+      to: `${userName}<${email}>`,
+      subject: `[🎋 Denamu] RSS 소유 인증 메일입니다.`,
+      html: createRssCertificationContent(
+        userName,
+        certificateCode,
+        this.emailUser,
+        blogName,
+        userEmail,
+        certificationLink,
       ),
     };
   }

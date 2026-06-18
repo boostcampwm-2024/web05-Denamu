@@ -10,6 +10,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import * as uuid from 'uuid';
 import { Response } from 'express';
+import { DataSource, IsNull } from 'typeorm';
 
 import { cookieConfig } from '@common/cookie/cookie.config';
 import { EmailProducer } from '@common/email/email.producer';
@@ -19,6 +20,9 @@ import { RedisService } from '@common/redis/redis.service';
 
 import { FileService } from '@file/service/file.service';
 
+import { RssAccept } from '@rss/entity/rss.entity';
+import { RssAcceptRepository } from '@rss/repository/rss.repository';
+
 import { REFRESH_TOKEN_TTL, SALT_ROUNDS } from '@user/constant/user.constants';
 import { LoginUserRequestDto } from '@user/dto/request/loginUser.dto';
 import { RegisterUserRequestDto } from '@user/dto/request/registerUser.dto';
@@ -26,6 +30,8 @@ import { UpdateUserRequestDto } from '@user/dto/request/updateUser.dto';
 import { CheckEmailDuplicationResponseDto } from '@user/dto/response/checkEmailDuplication.dto';
 import { CreateAccessTokenResponseDto } from '@user/dto/response/createAccessToken.dto';
 import { GetUserProfileImageResponseDto } from '@user/dto/response/getUserProfileImage.dto';
+import { GetUserRssResponseDto } from '@user/dto/response/getUserRss.dto';
+import { User } from '@user/entity/user.entity';
 import { UserRepository } from '@user/repository/user.repository';
 
 @Injectable()
@@ -37,6 +43,8 @@ export class UserService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly fileService: FileService,
+    private readonly rssAcceptRepository: RssAcceptRepository,
+    private readonly dataSource: DataSource,
   ) {}
 
   async getUser(userId: number) {
@@ -106,13 +114,25 @@ export class UserService {
     await this.redisService.del(`${REDIS_KEYS.USER_AUTH_KEY}:${uuid}`);
 
     try {
-      await this.userRepository.save(JSON.parse(user));
+      const newUser = await this.userRepository.save(JSON.parse(user) as User);
+      await this.rssAcceptRepository.update(
+        { email: newUser.email, userId: IsNull() },
+        { userId: newUser.id },
+      );
     } catch (error) {
       if ((error as { code?: string })?.code === 'ER_DUP_ENTRY') {
         throw new ConflictException('이미 존재하는 이메일 또는 닉네임입니다.');
       }
       throw error;
     }
+  }
+
+  async getUserRss(userId: number) {
+    const rssList = await this.rssAcceptRepository.find({
+      where: { userId },
+      order: { id: 'DESC' },
+    });
+    return GetUserRssResponseDto.toResponseDtoArray(rssList);
   }
 
   async loginUser(loginDto: LoginUserRequestDto, response: Response) {
@@ -280,14 +300,14 @@ export class UserService {
     );
   }
 
-  async requestDeleteAccount(userId: number): Promise<void> {
+  async requestDeleteAccount(userId: number, deleteRss = true): Promise<void> {
     const user = await this.getUser(userId);
 
     const userDeleteCode = uuid.v4();
 
     await this.redisService.set(
       `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${userDeleteCode}`,
-      user.id.toString(),
+      JSON.stringify({ userId: user.id, deleteRss }),
       'EX',
       600,
     );
@@ -303,16 +323,28 @@ export class UserService {
       throw new NotFoundException('유효하지 않거나 만료된 토큰입니다.');
     }
 
-    const userId = parseInt(data, 10);
+    const { userId, deleteRss } = JSON.parse(data) as {
+      userId: number;
+      deleteRss: boolean;
+    };
     const user = await this.getUser(userId);
 
     if (user.profileImage) {
       await this.fileService.deleteByPath(user.profileImage);
     }
 
+    // RSS 삭제(true)와 user 삭제는 반드시 순차 실행해야 한다.
+    // user를 먼저 지우면 FK ON DELETE SET NULL이 rss_accept.user_id를 NULL로 만들어
+    // 이후 user_id 기준 RSS 삭제가 0건이 된다. deleteRss=false면 SET NULL로 연결만 끊긴다.
+    await this.dataSource.transaction(async (manager) => {
+      if (deleteRss) {
+        await manager.delete(RssAccept, { userId });
+      }
+      await manager.remove(user);
+    });
+
     await Promise.all([
       this.invalidateUserTokens(userId),
-      this.userRepository.remove(user),
       this.redisService.del(deleteRequestKey),
     ]);
   }

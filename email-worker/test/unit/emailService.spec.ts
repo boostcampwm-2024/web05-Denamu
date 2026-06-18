@@ -3,7 +3,12 @@ import 'reflect-metadata';
 import * as nodemailer from 'nodemailer';
 
 import { EmailMetrics } from '@common/metrics/email-metrics';
-import { RssRegistration, RssRemoval, User } from '@common/types';
+import {
+  RssCertification,
+  RssRegistration,
+  RssRemoval,
+  User,
+} from '@common/types';
 
 import { PRODUCT_DOMAIN } from '@email/email.content';
 import { EmailService } from '@email/email.service';
@@ -205,6 +210,38 @@ describe('EmailService unit test', () => {
       expect(callArgs.html).toContain(rssRemoval.userName);
       expect(callArgs.html).toContain(rssRemoval.certificateCode);
       expect(callArgs.html).toContain(rssRemoval.rssUrl);
+    });
+  });
+
+  describe('sendRssCertificationMail unit test', () => {
+    it('RSS 소유 인증 메일을 올바르게 전송한다', async () => {
+      const rssCertification: RssCertification = {
+        userName: 'tester',
+        email: 'tester@test.com',
+        blogName: 'Test Blog',
+        certificateCode: 'cert-uuid',
+        userEmail: 'requester@test.com',
+      };
+
+      await emailService.sendRssCertificationMail(rssCertification);
+
+      expect(mockSendMail).toHaveBeenCalledTimes(1);
+      expect(mockSendMail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          from: `Denamu<${mockEmailUser}>`,
+          to: `${rssCertification.userName}<${rssCertification.email}>`,
+          subject: '[🎋 Denamu] RSS 소유 인증 메일입니다.',
+        }),
+      );
+
+      const callArgs = (mockSendMail.mock.calls[0] as [{ html: string }])[0];
+      expect(callArgs.html).toContain(rssCertification.userName);
+      expect(callArgs.html).toContain(rssCertification.certificateCode);
+      expect(callArgs.html).toContain(rssCertification.blogName);
+      expect(callArgs.html).toContain(rssCertification.userEmail);
+      expect(callArgs.html).toContain(
+        `/rss/certifications/confirm?code=${rssCertification.certificateCode}`,
+      );
     });
   });
 

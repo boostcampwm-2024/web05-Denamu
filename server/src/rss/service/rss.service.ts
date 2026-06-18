@@ -1,17 +1,19 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 
 import * as uuid from 'uuid';
 import axios from 'axios';
-import { DataSource } from 'typeorm';
+import { DataSource, IsNull } from 'typeorm';
 
 import { AdminRepository } from '@admin/repository/admin.repository';
 
 import { EmailProducer } from '@common/email/email.producer';
+import { Payload } from '@common/guard/jwt.guard';
 import { WinstonLoggerService } from '@common/logger/logger.service';
 import { NotifierRegistry } from '@common/notification/notifier-registry';
 import { REDIS_KEYS } from '@common/redis/redis.constant';
@@ -22,6 +24,7 @@ import { DeleteRssRequestDto } from '@rss/dto/request/deleteRss.dto';
 import { ManageRssRequestDto } from '@rss/dto/request/manageRss.dto';
 import { RegisterRssRequestDto } from '@rss/dto/request/registerRss.dto';
 import { RejectRssRequestDto } from '@rss/dto/request/rejectRss';
+import { CreateRssCertificationResponseDto } from '@rss/dto/response/createRssCertification.dto';
 import { ReadRssResponseDto } from '@rss/dto/response/readRss.dto';
 import { ReadRssAcceptHistoryResponseDto } from '@rss/dto/response/readRssAcceptHistory.dto';
 import { ReadRssRejectHistoryResponseDto } from '@rss/dto/response/readRssRejectHistory.dto';
@@ -281,5 +284,99 @@ export class RssService {
     } finally {
       await this.redisService.del(redisKey);
     }
+  }
+
+  async createRssCertification(user: Payload, blogName: string) {
+    const rssAccept = await this.rssAcceptRepository.findOne({
+      where: { name: blogName },
+    });
+
+    if (!rssAccept) {
+      throw new NotFoundException('해당 이름의 RSS를 찾을 수 없습니다.');
+    }
+
+    if (rssAccept.userId !== null) {
+      if (rssAccept.userId === user.id) {
+        throw new ConflictException('이미 본인이 인증한 RSS입니다.');
+      }
+      throw new ConflictException('다른 사용자가 이미 인증한 RSS입니다.');
+    }
+
+    if (rssAccept.email === user.email) {
+      await this.linkRssAcceptToUser(rssAccept.id, user.id);
+      return CreateRssCertificationResponseDto.toResponseDto(rssAccept, true);
+    }
+
+    const certificateCode = uuid.v4();
+    await this.redisService.set(
+      `${REDIS_KEYS.RSS_CERTIFICATION_KEY}:${certificateCode}`,
+      JSON.stringify({ rssAcceptId: rssAccept.id, userId: user.id }),
+      'EX',
+      300,
+    );
+    await this.emailProducer.produceRssCertification(
+      rssAccept.userName,
+      rssAccept.name,
+      certificateCode,
+      rssAccept.email,
+      user.email,
+    );
+
+    return CreateRssCertificationResponseDto.toResponseDto(rssAccept, false);
+  }
+
+  async verifyRssCertification(user: Payload, code: string) {
+    const redisKey = `${REDIS_KEYS.RSS_CERTIFICATION_KEY}:${code}`;
+    const stored = await this.redisService.get(redisKey);
+
+    if (!stored) {
+      throw new NotFoundException(
+        'RSS 인증 코드가 만료되었거나 찾을 수 없습니다.',
+      );
+    }
+
+    const { rssAcceptId, userId } = JSON.parse(stored) as {
+      rssAcceptId: number;
+      userId: number;
+    };
+
+    if (userId !== user.id) {
+      throw new ForbiddenException('본인의 RSS 인증 요청이 아닙니다.');
+    }
+
+    try {
+      await this.linkRssAcceptToUser(rssAcceptId, user.id);
+    } finally {
+      await this.redisService.del(redisKey);
+    }
+  }
+
+  private async linkRssAcceptToUser(rssAcceptId: number, userId: number) {
+    const result = await this.rssAcceptRepository.update(
+      { id: rssAcceptId, userId: IsNull() },
+      { userId },
+    );
+
+    if (result.affected === 0) {
+      throw new ConflictException(
+        '이미 인증되었거나 인증할 수 없는 RSS입니다.',
+      );
+    }
+  }
+
+  async deleteRssCertification(user: Payload, rssAcceptId: number) {
+    const rssAccept = await this.rssAcceptRepository.findOne({
+      where: { id: rssAcceptId },
+    });
+
+    if (!rssAccept) {
+      throw new NotFoundException('RSS를 찾을 수 없습니다.');
+    }
+
+    if (rssAccept.userId !== user.id) {
+      throw new ForbiddenException('본인이 인증한 RSS가 아닙니다.');
+    }
+
+    await this.rssAcceptRepository.update({ id: rssAcceptId }, { userId: null });
   }
 }

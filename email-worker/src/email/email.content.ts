@@ -240,6 +240,50 @@ export function createRssRemoveCertificateContent(
 `;
 }
 
+export function createRssCertificationContent(
+  userName: string,
+  certificateCode: string,
+  serviceAddress: string,
+  blogName: string,
+  userEmail: string,
+  certificationLink: string,
+) {
+  return `
+        <div style="font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', '맑은 고딕', sans-serif; margin: 0; padding: 1px; background-color: #f4f4f4;">
+            <div style="max-width: 600px; margin: 20px auto; background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+              <div style="text-align: center; padding: 20px 0; border-bottom: 2px solid #f0f0f0;">
+                <img src="https://denamu.dev/files/Denamu_Logo_KOR.png" alt="Denamu Logo" width="244" height="120">
+              </div>
+              <div style="padding: 20px 0;">
+                <div style="color: #007bff; font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center;">RSS 소유 인증을 완료해주세요</div>
+                  <div style="background-color: #f8f9fa; padding: 15px; border-radius: 4px; margin: 15px 0;">
+                    <p>안녕하세요, <b>${userName}</b>님!</p>
+                    <p>Denamu 서비스에서 <b><u>${blogName}</u></b> 블로그의 소유 인증이 요청되었습니다.</p>
+                    <p>신청자 이메일: <b>${userEmail}</b></p>
+                    <p>본인이 요청한 것이 맞다면 아래 인증 코드를 데나무 사이트에 입력해주세요.</p>
+                  </div>
+                  <center>
+                    <p style="background-color: #ffde4d; padding: 15px; border-radius: 4px; margin: 15px 200px;""><b>${certificateCode}</b></p>
+                  </center>
+                  <center>
+                    <a href="${certificationLink}" style="display: inline-block; padding: 12px 24px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; margin: 20px 0; font-weight: bold;">소유 인증 완료하기</a>
+                  </center>
+                  <div style="font-size: 14px; color: #6c757d; margin-top: 20px; text-align: center;">
+                    <p>버튼이 작동하지 않는 경우, 위 인증 코드를 데나무 사이트에 직접 입력해주세요.</p>
+                    <p>이 코드는 5분 동안 유효합니다.</p>
+                    <p>본인이 요청하지 않은 경우, 이 메일을 무시하시기 바랍니다.</p>
+                  </div>
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; border-top: 2px solid #f0f0f0; color: #6c757d; font-size: 14px; height: 100px;">
+                <p>본 메일은 발신전용입니다.</p>
+                <p>문의사항이 있으시다면 ${serviceAddress}로 연락주세요.</p>
+              </div>
+            </div>
+          </div>
+`;
+}
+
 export function createPasswordResetMailContent(
   userName: string,
   passwordResetLink: string,
