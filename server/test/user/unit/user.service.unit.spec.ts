@@ -18,6 +18,7 @@ import { FileService } from '@file/service/file.service';
 import { RegisterUserRequestDto } from '@user/dto/request/registerUser.dto';
 import { CheckEmailDuplicationResponseDto } from '@user/dto/response/checkEmailDuplication.dto';
 import { CreateAccessTokenResponseDto } from '@user/dto/response/createAccessToken.dto';
+import { GetUserProfileImageResponseDto } from '@user/dto/response/getUserProfileImage.dto';
 import { User } from '@user/entity/user.entity';
 import { UserRepository } from '@user/repository/user.repository';
 import { UserService } from '@user/service/user.service';
@@ -100,6 +101,46 @@ describe(`${UserService.name} Unit Test`, () => {
       const user = UserFixture.createUserFixture();
       userRepository.findOneBy.mockResolvedValue(user);
       await expect(userService.getUser(1)).resolves.toBe(user);
+    });
+  });
+
+  describe('getUserProfileImage', () => {
+    it('존재하지 않는 사용자면 NotFoundException을 던진다.', async () => {
+      userRepository.findOneBy.mockResolvedValue(null);
+      await expect(userService.getUserProfileImage(1)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('프로필 이미지가 있으면 해당 URL 응답을 반환한다.', async () => {
+      // given
+      const user = UserFixture.createUserFixture({
+        profileImage: 'https://denamu.dev/objects/PROFILE_IMAGE/a.png',
+      });
+      userRepository.findOneBy.mockResolvedValue(user);
+
+      // when
+      const result = await userService.getUserProfileImage(1);
+
+      // then
+      expect(result).toEqual(
+        GetUserProfileImageResponseDto.toResponseDto(user),
+      );
+      expect(result.profileImage).toBe(
+        'https://denamu.dev/objects/PROFILE_IMAGE/a.png',
+      );
+    });
+
+    it('프로필 이미지가 미설정이면 null을 반환한다.', async () => {
+      // given
+      const user = UserFixture.createUserFixture({ profileImage: null });
+      userRepository.findOneBy.mockResolvedValue(user);
+
+      // when
+      const result = await userService.getUserProfileImage(1);
+
+      // then
+      expect(result.profileImage).toBeNull();
     });
   });
 

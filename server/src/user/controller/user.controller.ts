@@ -24,6 +24,7 @@ import { ApiCertificateUser } from '@user/api-docs/certificateUser.api-docs';
 import { ApiCheckEmailDuplication } from '@user/api-docs/checkEmailDuplication.api-docs';
 import { ApiConfirmDeleteAccount } from '@user/api-docs/confirmDeleteAccount.api-docs';
 import { ApiForgotPassword } from '@user/api-docs/forgotPassword.api-docs';
+import { ApiGetUserProfileImage } from '@user/api-docs/getUserProfileImage.api-docs';
 import { ApiLoginUser } from '@user/api-docs/loginUser.api-docs';
 import { ApiLogoutUser } from '@user/api-docs/logoutUser.api-docs';
 import { ApiRefreshToken } from '@user/api-docs/refreshToken.api-docs';
@@ -35,6 +36,7 @@ import { CertificateUserRequestDto } from '@user/dto/request/certificateUser.dto
 import { CheckEmailDuplicationRequestDto } from '@user/dto/request/checkEmailDuplication.dto';
 import { ConfirmDeleteAccountParamRequestDto } from '@user/dto/request/confirmDeleteAccountParam.dto';
 import { ForgotPasswordRequestDto } from '@user/dto/request/forgotPassword.dto';
+import { GetUserProfileImageParamRequestDto } from '@user/dto/request/getUserProfileImageParam.dto';
 import { LoginUserRequestDto } from '@user/dto/request/loginUser.dto';
 import { RegisterUserRequestDto } from '@user/dto/request/registerUser.dto';
 import { ResetPasswordRequestDto } from '@user/dto/request/resetPassword.dto';
@@ -59,6 +61,18 @@ export class UserController {
       await this.userService.checkEmailDuplication(
         checkEmailDuplicationRequestDto.email,
       ),
+    );
+  }
+
+  @ApiGetUserProfileImage()
+  @Get('/:id/profile-image')
+  @HttpCode(HttpStatus.OK)
+  async getUserProfileImage(
+    @Param() paramDto: GetUserProfileImageParamRequestDto,
+  ) {
+    return ApiResponse.responseWithData(
+      '프로필 이미지 조회가 성공적으로 처리되었습니다.',
+      await this.userService.getUserProfileImage(paramDto.id),
     );
   }
 
