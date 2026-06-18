@@ -8,13 +8,13 @@ import {
 import axios from 'axios';
 import { DataSource } from 'typeorm';
 
+import { AdminRepository } from '@admin/repository/admin.repository';
+
 import { EmailProducer } from '@common/email/email.producer';
 import { WinstonLoggerService } from '@common/logger/logger.service';
 import { NotifierRegistry } from '@common/notification/notifier-registry';
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
-
-import { AdminRepository } from '@admin/repository/admin.repository';
 
 import { RegisterRssRequestDto } from '@rss/dto/request/registerRss.dto';
 import { ReadRssResponseDto } from '@rss/dto/response/readRss.dto';
@@ -50,7 +50,9 @@ describe(`${RssService.name} Unit Test`, () => {
   >;
   let manager: { save: jest.Mock; remove: jest.Mock; delete: jest.Mock };
   let dataSource: jest.Mocked<Pick<DataSource, 'transaction'>>;
-  let redisService: jest.Mocked<Pick<RedisService, 'rpush' | 'set' | 'get' | 'del'>>;
+  let redisService: jest.Mocked<
+    Pick<RedisService, 'rpush' | 'set' | 'get' | 'del'>
+  >;
   let adminRepository: jest.Mocked<Pick<AdminRepository, 'find'>>;
   let notifierRegistry: jest.Mocked<Pick<NotifierRegistry, 'sendAlert'>>;
   let logger: jest.Mocked<Pick<WinstonLoggerService, 'error'>>;
@@ -80,7 +82,12 @@ describe(`${RssService.name} Unit Test`, () => {
     dataSource = {
       transaction: jest.fn((cb: any) => cb(manager)),
     } as any;
-    redisService = { rpush: jest.fn(), set: jest.fn(), get: jest.fn(), del: jest.fn() };
+    redisService = {
+      rpush: jest.fn(),
+      set: jest.fn(),
+      get: jest.fn(),
+      del: jest.fn(),
+    };
     adminRepository = { find: jest.fn().mockResolvedValue([]) };
     notifierRegistry = { sendAlert: jest.fn() };
     logger = { error: jest.fn() };
@@ -114,7 +121,9 @@ describe(`${RssService.name} Unit Test`, () => {
       rssAcceptRepository.findOne.mockResolvedValue(null);
 
       // when & then
-      await expect(rssService.createRss(dto)).rejects.toThrow(ConflictException);
+      await expect(rssService.createRss(dto)).rejects.toThrow(
+        ConflictException,
+      );
       expect(rssRepository.insert).not.toHaveBeenCalled();
     });
 
@@ -147,7 +156,9 @@ describe(`${RssService.name} Unit Test`, () => {
         where: { emailNotification: true },
         select: ['email'],
       });
-      expect(emailProducer.produceRssRegistrationRequest).toHaveBeenCalledTimes(2);
+      expect(emailProducer.produceRssRegistrationRequest).toHaveBeenCalledTimes(
+        2,
+      );
       expect(emailProducer.produceRssRegistrationRequest).toHaveBeenCalledWith(
         dto.toEntity(),
         'a@denamu.dev',
@@ -470,9 +481,10 @@ describe(`${RssService.name} Unit Test`, () => {
       );
       expect(emailProducer.produceRssCertification).toHaveBeenCalledWith(
         'tester',
-        'other@test.com',
         'blog',
         expect.any(String),
+        'other@test.com',
+        user.email,
       );
       expect(rssAcceptRepository.update).not.toHaveBeenCalled();
       expect(result.certified).toBe(false);
@@ -547,9 +559,9 @@ describe(`${RssService.name} Unit Test`, () => {
     it('RSS가 없으면 NotFoundException을 던진다.', async () => {
       rssAcceptRepository.findOne.mockResolvedValue(null);
 
-      await expect(
-        rssService.deleteRssCertification(user, 1),
-      ).rejects.toThrow(NotFoundException);
+      await expect(rssService.deleteRssCertification(user, 1)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('본인이 인증한 RSS가 아니면 ForbiddenException을 던진다.', async () => {
@@ -558,9 +570,9 @@ describe(`${RssService.name} Unit Test`, () => {
         userId: 99,
       } as any);
 
-      await expect(
-        rssService.deleteRssCertification(user, 1),
-      ).rejects.toThrow(ForbiddenException);
+      await expect(rssService.deleteRssCertification(user, 1)).rejects.toThrow(
+        ForbiddenException,
+      );
       expect(rssAcceptRepository.update).not.toHaveBeenCalled();
     });
 
