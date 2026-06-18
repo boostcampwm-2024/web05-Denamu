@@ -9,13 +9,15 @@ import {
 
 import * as uuid from 'uuid';
 import { Request, Response } from 'express';
-import { DataSource } from 'typeorm';
+import { DataSource, IsNull } from 'typeorm';
 
 import { cookieConfig } from '@common/cookie/cookie.config';
 import { Payload } from '@common/guard/jwt.guard';
 import { WinstonLoggerService } from '@common/logger/logger.service';
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
+
+import { RssAccept } from '@rss/entity/rss.entity';
 
 import {
   OAUTH_CSRF_TOKEN_TTL,
@@ -223,6 +225,12 @@ export class OAuthService {
           user,
         });
 
+        await entityManager.update(
+          RssAccept,
+          { email, userId: IsNull() },
+          { userId: user.id },
+        );
+
         this.logger.log(`새로운 OAuth 사용자 가입 완료: ${email}`);
 
         return user;
@@ -305,6 +313,11 @@ export class OAuthService {
             profileImage,
             provider: providerType,
           });
+          await entityManager.update(
+            RssAccept,
+            { email, userId: IsNull() },
+            { userId: user.id },
+          );
           this.logger.log(`새로운 사용자 가입 완료: ${email}`);
         }
 

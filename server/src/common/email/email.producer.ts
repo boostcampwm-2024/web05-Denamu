@@ -66,11 +66,7 @@ export class EmailProducer {
     await this.produceMessage(payload);
   }
 
-  async produceAdminAccountDeletion(
-    email: string,
-    name: string,
-    uuid: string,
-  ) {
+  async produceAdminAccountDeletion(email: string, name: string, uuid: string) {
     const payload = {
       type: EmailPayloadConstant.ADMIN_ACCOUNT_DELETION,
       data: {
@@ -156,17 +152,19 @@ export class EmailProducer {
 
   async produceRssCertification(
     userName: string,
-    email: string,
     blogName: string,
     certificateCode: string,
+    rssAcceptEmail: string,
+    userEmail: string,
   ) {
     const payload = {
       type: EmailPayloadConstant.RSS_CERTIFICATION,
       data: {
         userName,
-        email,
+        email: rssAcceptEmail,
         blogName,
         certificateCode,
+        userEmail,
       },
     };
     await this.produceMessage(payload);
