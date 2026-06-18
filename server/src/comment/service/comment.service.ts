@@ -9,8 +9,10 @@ import { DataSource } from 'typeorm';
 import { CommentParamRequestDto } from '@comment/dto/request/commentParam.dto';
 import { CreateCommentRequestDto } from '@comment/dto/request/createComment.dto';
 import { GetCommentRequestDto } from '@comment/dto/request/getComment.dto';
+import { GetUserCommentsRequestDto } from '@comment/dto/request/getUserComments.dto';
 import { UpdateCommentRequestDto } from '@comment/dto/request/updateComment.dto';
 import { GetCommentResponseDto } from '@comment/dto/response/getComment.dto';
+import { GetUserCommentsResponseDto } from '@comment/dto/response/getUserComments.dto';
 import { Comment } from '@comment/entity/comment.entity';
 import { CommentRepository } from '@comment/repository/comment.repository';
 
@@ -18,12 +20,15 @@ import { Payload } from '@common/guard/jwt.guard';
 
 import { FeedService } from '@feed/service/feed.service';
 
+import { UserService } from '@user/service/user.service';
+
 @Injectable()
 export class CommentService {
   constructor(
     private readonly commentRepository: CommentRepository,
     private readonly dataSource: DataSource,
     private readonly feedService: FeedService,
+    private readonly userService: UserService,
   ) {}
 
   private async getValidatedComment(
@@ -55,6 +60,25 @@ export class CommentService {
       commentDto.feedId,
     );
     return GetCommentResponseDto.toResponseDtoArray(comments);
+  }
+
+  async getCommentsByUser(
+    userId: number,
+    commentDto: GetUserCommentsRequestDto,
+  ) {
+    await this.userService.getUser(userId);
+
+    const comments = await this.commentRepository.getCommentsByUser(
+      userId,
+      commentDto.lastId,
+      commentDto.limit,
+    );
+
+    const hasMore = comments.length > commentDto.limit;
+    if (hasMore) comments.pop();
+    const lastId = comments.length ? comments[comments.length - 1].id : 0;
+
+    return GetUserCommentsResponseDto.toResponseDto(comments, lastId, hasMore);
   }
 
   async create(
