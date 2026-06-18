@@ -153,4 +153,22 @@ export class EmailProducer {
     };
     await this.produceMessage(payload);
   }
+
+  async produceRssCertification(
+    userName: string,
+    email: string,
+    blogName: string,
+    certificateCode: string,
+  ) {
+    const payload = {
+      type: EmailPayloadConstant.RSS_CERTIFICATION,
+      data: {
+        userName,
+        email,
+        blogName,
+        certificateCode,
+      },
+    };
+    await this.produceMessage(payload);
+  }
 }
