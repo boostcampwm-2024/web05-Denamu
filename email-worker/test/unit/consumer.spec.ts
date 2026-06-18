@@ -1,6 +1,11 @@
 import 'reflect-metadata';
 
-import { RssRegistration, RssRemoval, User } from '@common/types';
+import {
+  RssCertification,
+  RssRegistration,
+  RssRemoval,
+  User,
+} from '@common/types';
 
 import { EmailPayloadConstant } from '@email/constant';
 import { EmailConsumer } from '@email/email.consumer';
@@ -26,6 +31,7 @@ describe('email consumer unit test', () => {
     let sendUserCertificationMail: jest.Mock;
     let sendRssMail: jest.Mock;
     let sendRssRemoveCertificationMail: jest.Mock;
+    let sendRssCertificationMail: jest.Mock;
     let sendPasswordResetEmail: jest.Mock;
     let sendDeleteAccountMail: jest.Mock;
 
@@ -33,6 +39,7 @@ describe('email consumer unit test', () => {
       sendUserCertificationMail = jest.fn().mockResolvedValue(undefined);
       sendRssMail = jest.fn().mockResolvedValue(undefined);
       sendRssRemoveCertificationMail = jest.fn().mockResolvedValue(undefined);
+      sendRssCertificationMail = jest.fn().mockResolvedValue(undefined);
       sendPasswordResetEmail = jest.fn().mockResolvedValue(undefined);
       sendDeleteAccountMail = jest.fn().mockResolvedValue(undefined);
 
@@ -40,6 +47,7 @@ describe('email consumer unit test', () => {
         sendUserCertificationMail,
         sendRssMail,
         sendRssRemoveCertificationMail,
+        sendRssCertificationMail,
         sendPasswordResetEmail,
         sendDeleteAccountMail,
       } as any;
@@ -113,6 +121,27 @@ describe('email consumer unit test', () => {
       expect(sendRssRemoveCertificationMail).toHaveBeenCalledTimes(1);
       expect(sendRssRemoveCertificationMail).toHaveBeenCalledWith(
         rssRemovalData,
+      );
+    });
+
+    it('RSS_CERTIFICATION 타입일 때 sendRssCertificationMail을 호출한다', async () => {
+      const rssCertificationData: RssCertification = {
+        userName: 'tester',
+        email: 'test@test.com',
+        blogName: 'Test Blog',
+        certificateCode: 'cert-code-123',
+        userEmail: 'requester@test.com',
+      };
+      const payload: EmailPayload = {
+        type: EmailPayloadConstant.RSS_CERTIFICATION,
+        data: rssCertificationData,
+      };
+
+      await emailConsumer.handleEmailByType(payload);
+
+      expect(sendRssCertificationMail).toHaveBeenCalledTimes(1);
+      expect(sendRssCertificationMail).toHaveBeenCalledWith(
+        rssCertificationData,
       );
     });
 

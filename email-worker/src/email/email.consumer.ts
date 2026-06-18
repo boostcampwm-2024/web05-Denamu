@@ -100,6 +100,10 @@ export class EmailConsumer {
         await this.emailService.sendRssRemoveCertificationMail(payload.data);
         break;
 
+      case EmailPayloadConstant.RSS_CERTIFICATION:
+        await this.emailService.sendRssCertificationMail(payload.data);
+        break;
+
       case EmailPayloadConstant.PASSWORD_RESET:
         await this.emailService.sendPasswordResetEmail(payload.data);
         break;
