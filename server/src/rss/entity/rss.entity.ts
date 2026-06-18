@@ -3,11 +3,15 @@ import {
   Column,
   Entity,
   Index,
+  JoinColumn,
+  ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
 import { Feed } from '@feed/entity/feed.entity';
+
+import { User } from '@user/entity/user.entity';
 
 export class RssInformation extends BaseEntity {
   @PrimaryGeneratedColumn()
@@ -78,6 +82,17 @@ export class RssAccept extends RssInformation {
 
   @Column({ name: 'blog_platform', default: 'etc', nullable: false })
   blogPlatform: string;
+
+  @Column({ name: 'user_id', type: 'int', nullable: true })
+  userId: number | null;
+
+  @ManyToOne(() => User, {
+    nullable: true,
+    onUpdate: 'CASCADE',
+    onDelete: 'SET NULL',
+  })
+  @JoinColumn({ name: 'user_id' })
+  user: User | null;
 
   static fromRss(rss: Rss, blogPlatform: string) {
     const blog = new RssAccept();
