@@ -28,6 +28,8 @@ export const BLOG = {
   Trend: "/api/feeds/trend/sse",
   RSS: {
     REGISTRER_RSS: "/api/rss",
+    CERTIFICATION_VERIFY: "/api/rss/certifications/verify",
+    REMOVE_CONFIRM: (code: string) => `/api/rss/remove/${code}`,
   },
 };
 
@@ -47,6 +49,7 @@ export const USER = {
   REFRESH_TOKEN: "/api/users/tokens",
   LOGOUT: "/api/users/logout",
   CERTIFICATE: "/api/users/email-verifications",
+  WITHDRAW_CONFIRM: (token: string) => `/api/users/deletion-requests/${token}`,
 };
 
 export const OAUTH = {
