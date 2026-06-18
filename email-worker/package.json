@@ -36,6 +36,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "build": "tsc --project tsconfig.build.json && tsc-alias",
+    "preview:email": "ts-node -r tsconfig-paths/register scripts/preview-email.ts",
     "start": "node dist/src/main.js",
     "start:dev": "nodemon",
     "test": "cross-env NODE_ENV=TEST jest --config test/config/integration/jest/jest.config.ts",
