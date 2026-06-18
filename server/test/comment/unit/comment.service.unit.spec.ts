@@ -4,6 +4,7 @@ import { DataSource } from 'typeorm';
 
 import { CommentService } from '@comment/service/comment.service';
 import { GetCommentResponseDto } from '@comment/dto/response/getComment.dto';
+import { GetUserCommentsResponseDto } from '@comment/dto/response/getUserComments.dto';
 import { Comment } from '@comment/entity/comment.entity';
 import { CommentRepository } from '@comment/repository/comment.repository';
 
@@ -11,12 +12,18 @@ import { Payload } from '@common/guard/jwt.guard';
 
 import { FeedService } from '@feed/service/feed.service';
 
+import { UserService } from '@user/service/user.service';
+
 describe(`${CommentService.name} Unit Test`, () => {
   let commentService: CommentService;
   let commentRepository: jest.Mocked<
-    Pick<CommentRepository, 'findOne' | 'getCommentInformation' | 'save'>
+    Pick<
+      CommentRepository,
+      'findOne' | 'getCommentInformation' | 'getCommentsByUser' | 'save'
+    >
   >;
   let feedService: jest.Mocked<Pick<FeedService, 'getFeed'>>;
+  let userService: jest.Mocked<Pick<UserService, 'getUser'>>;
   let manager: { save: jest.Mock; remove: jest.Mock };
   let dataSource: jest.Mocked<Pick<DataSource, 'transaction'>>;
 
@@ -31,9 +38,11 @@ describe(`${CommentService.name} Unit Test`, () => {
     commentRepository = {
       findOne: jest.fn(),
       getCommentInformation: jest.fn(),
+      getCommentsByUser: jest.fn(),
       save: jest.fn(),
     };
     feedService = { getFeed: jest.fn() };
+    userService = { getUser: jest.fn() };
     manager = { save: jest.fn(), remove: jest.fn() };
     dataSource = {
       transaction: jest.fn((cb: any) => cb(manager)),
@@ -43,6 +52,7 @@ describe(`${CommentService.name} Unit Test`, () => {
       commentRepository as unknown as CommentRepository,
       dataSource as unknown as DataSource,
       feedService as unknown as FeedService,
+      userService as unknown as UserService,
     );
   });
 
@@ -70,6 +80,85 @@ describe(`${CommentService.name} Unit Test`, () => {
       expect(result).toEqual(
         GetCommentResponseDto.toResponseDtoArray(comments),
       );
+    });
+  });
+
+  describe('getCommentsByUser', () => {
+    const makeComment = (id: number) =>
+      ({
+        id,
+        comment: `c${id}`,
+        date: new Date('2025-01-01'),
+        feed: { id, title: `t${id}`, path: `https://example.com/${id}` },
+      }) as any;
+
+    it('존재하지 않는 유저면 NotFoundException을 던진다.', async () => {
+      // given
+      userService.getUser.mockRejectedValue(
+        new NotFoundException('존재하지 않는 유저입니다.'),
+      );
+
+      // when & then
+      await expect(
+        commentService.getCommentsByUser(999, { limit: 10 }),
+      ).rejects.toThrow(NotFoundException);
+      expect(commentRepository.getCommentsByUser).not.toHaveBeenCalled();
+    });
+
+    it('limit+1개가 조회되면 마지막 항목을 잘라내고 hasMore=true로 응답한다.', async () => {
+      // given
+      const dto = { lastId: undefined, limit: 2 };
+      const rows = [makeComment(5), makeComment(4), makeComment(3)];
+      userService.getUser.mockResolvedValue({ id: 1 } as any);
+      commentRepository.getCommentsByUser.mockResolvedValue(rows);
+
+      // when
+      const result = await commentService.getCommentsByUser(1, dto);
+
+      // then
+      expect(userService.getUser).toHaveBeenCalledWith(1);
+      expect(commentRepository.getCommentsByUser).toHaveBeenCalledWith(
+        1,
+        undefined,
+        2,
+      );
+      expect(result).toEqual(
+        GetUserCommentsResponseDto.toResponseDto(
+          [makeComment(5), makeComment(4)],
+          4,
+          true,
+        ),
+      );
+    });
+
+    it('마지막 페이지면 hasMore=false, lastId는 마지막 댓글 ID로 응답한다.', async () => {
+      // given
+      const dto = { lastId: 6, limit: 2 };
+      const rows = [makeComment(5), makeComment(4)];
+      userService.getUser.mockResolvedValue({ id: 1 } as any);
+      commentRepository.getCommentsByUser.mockResolvedValue(rows);
+
+      // when
+      const result = await commentService.getCommentsByUser(1, dto);
+
+      // then
+      expect(result.hasMore).toBe(false);
+      expect(result.lastId).toBe(4);
+      expect(result.result).toHaveLength(2);
+    });
+
+    it('댓글이 없으면 빈 목록과 lastId=0으로 응답한다.', async () => {
+      // given
+      userService.getUser.mockResolvedValue({ id: 1 } as any);
+      commentRepository.getCommentsByUser.mockResolvedValue([]);
+
+      // when
+      const result = await commentService.getCommentsByUser(1, { limit: 10 });
+
+      // then
+      expect(result.result).toEqual([]);
+      expect(result.lastId).toBe(0);
+      expect(result.hasMore).toBe(false);
     });
   });
 
