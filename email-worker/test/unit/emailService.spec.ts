@@ -210,6 +210,9 @@ describe('EmailService unit test', () => {
       expect(callArgs.html).toContain(rssRemoval.userName);
       expect(callArgs.html).toContain(rssRemoval.certificateCode);
       expect(callArgs.html).toContain(rssRemoval.rssUrl);
+      expect(callArgs.html).toContain(
+        `/rss/removals/confirm?code=${rssRemoval.certificateCode}`,
+      );
     });
   });
 

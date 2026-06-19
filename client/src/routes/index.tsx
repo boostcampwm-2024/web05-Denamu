@@ -12,9 +12,12 @@ const PostDetailPage = lazy(() => import("@/pages/PostDetailPage"));
 const Profile = lazy(() => import("@/pages/Profile"));
 const SignIn = lazy(() => import("@/pages/SignIn"));
 const SignUp = lazy(() => import("@/pages/SignUp"));
-const UserCertificate = lazy(() => import("@/pages/UserCertificate"));
-const AdminCertificate = lazy(() => import("@/pages/AdminCertificate"));
-const AdminWithdraw = lazy(() => import("@/pages/AdminWithdraw"));
+const UserCertificate = lazy(() => import("@/pages/email-actions/UserCertificate"));
+const AdminCertificate = lazy(() => import("@/pages/email-actions/AdminCertificate"));
+const AdminWithdraw = lazy(() => import("@/pages/email-actions/AdminWithdraw"));
+const UserWithdraw = lazy(() => import("@/pages/email-actions/UserWithdraw"));
+const RssCertificate = lazy(() => import("@/pages/email-actions/RssCertificate"));
+const RssRemoval = lazy(() => import("@/pages/email-actions/RssRemoval"));
 const OAuthSuccessPage = lazy(() => import("@/pages/OAuthSuccessPage"));
 const OAuthSignUpPage = lazy(() => import("@/pages/OAuthSignUpPage"));
 
@@ -104,6 +107,30 @@ export const AppRouter = ({ location, state }: RouterProps) => {
           element={
             <Suspense fallback={<Loading />}>
               <AdminWithdraw />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/users/deletion-requests/confirm"
+          element={
+            <Suspense fallback={<Loading />}>
+              <UserWithdraw />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/rss/certifications/confirm"
+          element={
+            <Suspense fallback={<Loading />}>
+              <RssCertificate />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/rss/removals/confirm"
+          element={
+            <Suspense fallback={<Loading />}>
+              <RssRemoval />
             </Suspense>
           }
         />

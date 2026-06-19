@@ -36,9 +36,7 @@ export class EmailService {
   >;
   private emailUser: string;
 
-  constructor(
-    @inject(EmailMetrics) private readonly metrics: EmailMetrics,
-  ) {
+  constructor(@inject(EmailMetrics) private readonly metrics: EmailMetrics) {
     this.emailUser = process.env.EMAIL_USER;
     const emailPassword = process.env.EMAIL_PASSWORD;
     if (!this.emailUser) {
@@ -212,15 +210,17 @@ export class EmailService {
     rssUrl: string,
     certificateCode: string,
   ) {
+    const removalLink = `${PRODUCT_DOMAIN}/rss/removals/confirm?code=${certificateCode}`;
+
     return {
       from: `Denamu<${this.emailUser}>`,
       to: `${userName}<${email}>`,
       subject: `[🎋 Denamu] RSS 삭제 신청 인증 메일입니다.`,
       html: createRssRemoveCertificateContent(
         userName,
-        certificateCode,
         this.emailUser,
         rssUrl,
+        removalLink,
       ),
     };
   }
@@ -250,7 +250,6 @@ export class EmailService {
       subject: `[🎋 Denamu] RSS 소유 인증 메일입니다.`,
       html: createRssCertificationContent(
         userName,
-        certificateCode,
         this.emailUser,
         blogName,
         userEmail,
