@@ -26,3 +26,51 @@ export interface SidebarItem {
   label: string;
   id: string;
 }
+
+export type ProfileTab = "mypage" | "rss" | "settings";
+
+export interface UserProfile {
+  userName: string;
+  profileImage: string | null;
+  introduction: string | null;
+  maxStreak: number;
+  currentStreak: number;
+  totalViews: number;
+}
+
+export interface ProfileActivity {
+  dailyActivities: DailyActivity[];
+}
+
+export interface CertifiedRss {
+  id: number;
+  name: string;
+  userName: string;
+  rssUrl: string;
+  blogPlatform: string;
+}
+
+export interface FeedRef {
+  id: number;
+  title: string;
+  path: string;
+}
+
+export interface LikedItem {
+  id: number;
+  likeDate: string;
+  feed: FeedRef;
+}
+
+export interface CommentItem {
+  id: number;
+  comment: string;
+  date: string;
+  feed: FeedRef;
+}
+
+export interface CursorPage<T> {
+  result: T[];
+  lastId: number;
+  hasMore: boolean;
+}
