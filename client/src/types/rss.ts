@@ -1,3 +1,5 @@
+import { ApiData, ApiMessage } from "@/types/api";
+
 export type RssRequestStatus = "pending" | "approved" | "rejected";
 
 export interface RssRequest {
@@ -21,14 +23,9 @@ export interface AdminRssData {
   rssUrl: string;
   description?: string;
 }
-export interface AdminRss {
-  message: string;
-  data: AdminRssData[];
-}
+export type AdminRss = ApiData<AdminRssData[]>;
 
-export type AdminResponse = {
-  message: string;
-};
+export type AdminResponse = ApiMessage;
 export type AdminRequest = {
   id: number;
   rejectMessage?: string;
@@ -42,6 +39,4 @@ export interface RegisterRss {
   blogType?: string; 
 }
 
-export interface RegisterResponse {
-  message: string; 
-}
+export type RegisterResponse = ApiMessage;

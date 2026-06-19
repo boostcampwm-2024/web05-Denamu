@@ -1,6 +1,7 @@
 import { ADMIN } from "@/constants/endpoints";
 
 import { axiosInstance } from "@/api/instance";
+import { ApiMessage } from "@/types/api";
 import {
   AdminAuthRequest,
   AdminAuthResponse,
@@ -22,16 +23,16 @@ export const auth = {
     const response = await axiosInstance.patch<AdminUpdateResponse>(ADMIN.UPDATE_ME, data);
     return response.data;
   },
-  logout: async (): Promise<{ message: string }> => {
-    const response = await axiosInstance.post<{ message: string }>(ADMIN.LOGOUT);
+  logout: async (): Promise<ApiMessage> => {
+    const response = await axiosInstance.post<ApiMessage>(ADMIN.LOGOUT);
     return response.data;
   },
-  requestWithdraw: async (): Promise<{ message: string }> => {
-    const response = await axiosInstance.post<{ message: string }>(ADMIN.WITHDRAW_REQUEST);
+  requestWithdraw: async (): Promise<ApiMessage> => {
+    const response = await axiosInstance.post<ApiMessage>(ADMIN.WITHDRAW_REQUEST);
     return response.data;
   },
-  confirmWithdraw: async (token: string): Promise<{ message: string }> => {
-    const response = await axiosInstance.delete<{ message: string }>(ADMIN.WITHDRAW_CONFIRM(token));
+  confirmWithdraw: async (token: string): Promise<ApiMessage> => {
+    const response = await axiosInstance.delete<ApiMessage>(ADMIN.WITHDRAW_CONFIRM(token));
     return response.data;
   },
 };
