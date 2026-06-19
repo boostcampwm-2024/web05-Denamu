@@ -1,12 +1,12 @@
 import { validate } from 'class-validator';
 
-import { GetUserProfileImageParamRequestDto } from '@user/dto/request/getUserProfileImageParam.dto';
+import { GetUserProfileParamRequestDto } from '@user/dto/request/getUserProfileParam.dto';
 
-describe(`${GetUserProfileImageParamRequestDto.name} Test`, () => {
-  let dto: GetUserProfileImageParamRequestDto;
+describe(`${GetUserProfileParamRequestDto.name} Test`, () => {
+  let dto: GetUserProfileParamRequestDto;
 
   beforeEach(() => {
-    dto = new GetUserProfileImageParamRequestDto({ id: 1 });
+    dto = new GetUserProfileParamRequestDto({ id: 1 });
   });
 
   it('사용자 ID가 1 이상의 정수일 경우 유효성 검사에 성공한다.', async () => {

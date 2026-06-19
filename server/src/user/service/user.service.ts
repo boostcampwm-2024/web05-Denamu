@@ -29,7 +29,7 @@ import { RegisterUserRequestDto } from '@user/dto/request/registerUser.dto';
 import { UpdateUserRequestDto } from '@user/dto/request/updateUser.dto';
 import { CheckEmailDuplicationResponseDto } from '@user/dto/response/checkEmailDuplication.dto';
 import { CreateAccessTokenResponseDto } from '@user/dto/response/createAccessToken.dto';
-import { GetUserProfileImageResponseDto } from '@user/dto/response/getUserProfileImage.dto';
+import { GetUserProfileResponseDto } from '@user/dto/response/getUserProfile.dto';
 import { GetUserRssResponseDto } from '@user/dto/response/getUserRss.dto';
 import { User } from '@user/entity/user.entity';
 import { UserRepository } from '@user/repository/user.repository';
@@ -57,9 +57,9 @@ export class UserService {
     return user;
   }
 
-  async getUserProfileImage(userId: number) {
+  async getUserProfile(userId: number) {
     const user = await this.getUser(userId);
-    return GetUserProfileImageResponseDto.toResponseDto(user);
+    return GetUserProfileResponseDto.toResponseDto(user);
   }
 
   async checkEmailDuplication(email: string) {

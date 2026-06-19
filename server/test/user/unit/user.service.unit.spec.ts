@@ -22,7 +22,7 @@ import { RssAcceptRepository } from '@rss/repository/rss.repository';
 import { RegisterUserRequestDto } from '@user/dto/request/registerUser.dto';
 import { CheckEmailDuplicationResponseDto } from '@user/dto/response/checkEmailDuplication.dto';
 import { CreateAccessTokenResponseDto } from '@user/dto/response/createAccessToken.dto';
-import { GetUserProfileImageResponseDto } from '@user/dto/response/getUserProfileImage.dto';
+import { GetUserProfileResponseDto } from '@user/dto/response/getUserProfile.dto';
 import { GetUserRssResponseDto } from '@user/dto/response/getUserRss.dto';
 import { User } from '@user/entity/user.entity';
 import { UserRepository } from '@user/repository/user.repository';
@@ -121,43 +121,44 @@ describe(`${UserService.name} Unit Test`, () => {
     });
   });
 
-  describe('getUserProfileImage', () => {
+  describe('getUserProfile', () => {
     it('존재하지 않는 사용자면 NotFoundException을 던진다.', async () => {
       userRepository.findOneBy.mockResolvedValue(null);
-      await expect(userService.getUserProfileImage(1)).rejects.toThrow(
+      await expect(userService.getUserProfile(1)).rejects.toThrow(
         NotFoundException,
       );
     });
 
-    it('프로필 이미지가 있으면 해당 URL 응답을 반환한다.', async () => {
+    it('사용자의 이름·이미지·소개를 응답으로 변환해 반환한다.', async () => {
       // given
       const user = UserFixture.createUserFixture({
+        userName: '김개발',
         profileImage: 'https://denamu.dev/objects/PROFILE_IMAGE/a.png',
+        introduction: '안녕하세요! 김개발입니다.',
       });
       userRepository.findOneBy.mockResolvedValue(user);
 
       // when
-      const result = await userService.getUserProfileImage(1);
+      const result = await userService.getUserProfile(1);
 
       // then
-      expect(result).toEqual(
-        GetUserProfileImageResponseDto.toResponseDto(user),
-      );
-      expect(result.profileImage).toBe(
-        'https://denamu.dev/objects/PROFILE_IMAGE/a.png',
-      );
+      expect(result).toEqual(GetUserProfileResponseDto.toResponseDto(user));
     });
 
-    it('프로필 이미지가 미설정이면 null을 반환한다.', async () => {
+    it('이미지·소개가 미설정이면 해당 필드를 null로 반환한다.', async () => {
       // given
-      const user = UserFixture.createUserFixture({ profileImage: null });
+      const user = UserFixture.createUserFixture({
+        profileImage: null,
+        introduction: null,
+      });
       userRepository.findOneBy.mockResolvedValue(user);
 
       // when
-      const result = await userService.getUserProfileImage(1);
+      const result = await userService.getUserProfile(1);
 
       // then
       expect(result.profileImage).toBeNull();
+      expect(result.introduction).toBeNull();
     });
   });
 

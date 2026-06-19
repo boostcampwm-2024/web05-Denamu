@@ -9,9 +9,9 @@ import { UserRepository } from '@user/repository/user.repository';
 import { UserFixture } from '@test/config/common/fixture/user.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = (id: number | string) => `/api/users/${id}/profile-image`;
+const URL = (id: number | string) => `/api/users/${id}/profile`;
 
-describe(`GET /api/users/:id/profile-image E2E Test`, () => {
+describe(`GET /api/users/:id/profile E2E Test`, () => {
   let agent: TestAgent;
   let userRepository: UserRepository;
   let user: User;
@@ -24,35 +24,49 @@ describe(`GET /api/users/:id/profile-image E2E Test`, () => {
   beforeEach(async () => {
     user = await userRepository.save(
       UserFixture.createUserFixture({
+        userName: '김개발',
         profileImage:
           'https://denamu.dev/objects/PROFILE_IMAGE/20250816/uuid.png',
+        introduction: '안녕하세요! 김개발입니다.',
       }),
     );
   });
 
-  it('[200] 프로필 이미지가 설정된 유저를 조회하면 이미지 URL을 반환한다.', async () => {
+  it('[200] 프로필이 설정된 유저를 조회하면 이름·이미지·소개를 반환한다.', async () => {
     // Http when
     const response = await agent.get(URL(user.id));
 
     // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
-    expect(data).toStrictEqual({ profileImage: user.profileImage });
+    expect(data).toStrictEqual({
+      userName: user.userName,
+      profileImage: user.profileImage,
+      introduction: user.introduction,
+    });
   });
 
-  it('[200] 프로필 이미지가 미설정인 유저를 조회하면 null을 반환한다.', async () => {
+  it('[200] 이미지·소개가 미설정인 유저를 조회하면 해당 필드를 null로 반환한다.', async () => {
     // given
-    const noImageUser = await userRepository.save(
-      UserFixture.createUserFixture({ profileImage: null }),
+    const minimalUser = await userRepository.save(
+      UserFixture.createUserFixture({
+        userName: '최소정보',
+        profileImage: null,
+        introduction: null,
+      }),
     );
 
     // Http when
-    const response = await agent.get(URL(noImageUser.id));
+    const response = await agent.get(URL(minimalUser.id));
 
     // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
-    expect(data).toStrictEqual({ profileImage: null });
+    expect(data).toStrictEqual({
+      userName: minimalUser.userName,
+      profileImage: null,
+      introduction: null,
+    });
   });
 
   it('[404] 존재하지 않는 유저를 조회하면 실패한다.', async () => {

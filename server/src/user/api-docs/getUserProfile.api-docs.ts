@@ -7,13 +7,13 @@ import {
   ApiNotFoundDoc,
 } from '@common/swagger/swagger.helper';
 
-import { GetUserProfileImageResponseDto } from '@user/dto/response/getUserProfileImage.dto';
+import { GetUserProfileResponseDto } from '@user/dto/response/getUserProfile.dto';
 
-export function ApiGetUserProfileImage() {
+export function ApiGetUserProfile() {
   return applyDecorators(
     ApiOperation({
-      summary: '사용자 프로필 이미지 조회 API',
-      description: '특정 사용자의 프로필 이미지 URL을 조회합니다.',
+      summary: '사용자 프로필 조회 API',
+      description: '특정 사용자의 이름, 프로필 이미지, 자기소개를 조회합니다.',
     }),
     ApiParam({
       name: 'id',
@@ -21,11 +21,7 @@ export function ApiGetUserProfileImage() {
       description: '조회할 사용자 ID',
       example: 1,
     }),
-    ApiDataResponse(
-      GetUserProfileImageResponseDto,
-      false,
-      '프로필 이미지 조회 성공',
-    ),
+    ApiDataResponse(GetUserProfileResponseDto, false, '프로필 조회 성공'),
     ApiBadRequestDoc('요청 데이터 검증에 실패했습니다.'),
     ApiNotFoundDoc('존재하지 않는 유저입니다.'),
   );
