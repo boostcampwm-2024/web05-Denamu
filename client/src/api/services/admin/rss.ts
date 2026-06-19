@@ -21,12 +21,14 @@ export const admin = {
   },
   //rss 승인
   acceptRss: async (data: AdminRequest): Promise<AdminResponse> => {
-    const response = await axiosInstance.post(`${ADMIN.ACTION.ACCEPT}/${data.id}`);
+    const response = await axiosInstance.post<AdminResponse>(`${ADMIN.ACTION.ACCEPT}/${data.id}`);
     return response.data;
   },
   //rss 거부
   rejectRss: async (data: AdminRequest): Promise<AdminResponse> => {
-    const response = await axiosInstance.post(`${ADMIN.ACTION.REJECT}/${data.id}`, { description: data.rejectMessage });
+    const response = await axiosInstance.post<AdminResponse>(`${ADMIN.ACTION.REJECT}/${data.id}`, {
+      description: data.rejectMessage,
+    });
     return response.data;
   },
 };

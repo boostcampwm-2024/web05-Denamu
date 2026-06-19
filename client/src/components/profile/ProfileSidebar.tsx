@@ -55,7 +55,11 @@ export const ProfileSidebar = ({ activeTab, onTabChange, isOwner }: ProfileSideb
                       onClick={() => onTabChange(tab.id)}
                       className={cn(
                         "flex items-center w-full p-3 rounded-lg transition-colors",
-                        isActive ? "bg-blue-50 text-blue-600 font-semibold" : "text-gray-600 hover:bg-gray-50"
+                        isActive
+                          ? tab.id === "rss"
+                            ? "bg-[#FF870D]/10 text-[#FF870D] font-semibold"
+                            : "bg-blue-50 text-blue-600 font-semibold"
+                          : "text-gray-600 hover:bg-gray-50"
                       )}
                     >
                       <Icon className="w-5 h-5 mr-3" />

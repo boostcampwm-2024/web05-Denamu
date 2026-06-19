@@ -1,12 +1,8 @@
 import { PROFILE } from "@/constants/endpoints";
 
 import { axiosInstance } from "@/api/instance";
+import { ApiData } from "@/types/api";
 import { CertifiedRss, CommentItem, CursorPage, LikedItem, ProfileActivity, UserProfile } from "@/types/profile";
-
-interface ApiData<T> {
-  message: string;
-  data: T;
-}
 
 export const getProfile = async (userId: number): Promise<UserProfile> => {
   const response = await axiosInstance.get<ApiData<UserProfile>>(PROFILE.PROFILE(userId));

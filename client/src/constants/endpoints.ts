@@ -28,7 +28,10 @@ export const BLOG = {
   Trend: "/api/feeds/trend/sse",
   RSS: {
     REGISTRER_RSS: "/api/rss",
+    CERTIFICATION: "/api/rss/certifications",
+    CERTIFICATION_PREVIEW: "/api/rss/certifications/preview",
     CERTIFICATION_VERIFY: "/api/rss/certifications/verify",
+    CERTIFICATION_BY_ID: (id: number) => `/api/rss/certifications/${id}`,
     REMOVE_CONFIRM: (code: string) => `/api/rss/remove/${code}`,
   },
 };

@@ -1,3 +1,5 @@
+import { ApiData } from "@/types/api";
+
 export interface Post {
   id: number;
   createdAt: string;
@@ -13,27 +15,14 @@ export interface Post {
   summary: string;
 }
 
-export interface LatestPostsApiResponse {
-  message: string;
-  data: {
-    result: Post[];
-    hasMore: boolean;
-    lastId: number | null;
-  };
-}
-
-export interface TrendingPostsApiResponse {
-  message: string;
-  data: Post[];
-}
-
 export interface InfiniteScrollResponse<T> {
   result: T[];
   hasMore: boolean;
   lastId: number | null;
 }
 
-export interface PostDetailType {
-  message: string;
-  data: Post;
-}
+export type LatestPostsApiResponse = ApiData<InfiniteScrollResponse<Post>>;
+
+export type TrendingPostsApiResponse = ApiData<Post[]>;
+
+export type PostDetailType = ApiData<Post>;

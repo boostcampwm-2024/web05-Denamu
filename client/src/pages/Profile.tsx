@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import { MyPage } from "@/components/profile/MyPage.tsx";
 import { ProfileSidebar } from "@/components/profile/ProfileSidebar.tsx";
+import { RssManagementTab } from "@/components/profile/rss/RssManagementTab.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 
 import { useAuthStore } from "@/store/useAuthStore.ts";
@@ -42,7 +43,7 @@ export default function Profile() {
           {activeTab === "mypage" && (
             <MyPage userId={userInfo.id} name={userInfo.userName ?? ""} email={userInfo.email ?? ""} />
           )}
-          {activeTab === "rss" && <ComingSoon title="RSS 관리" />}
+          {activeTab === "rss" && <RssManagementTab userId={userInfo.id} />}
           {activeTab === "settings" && <ComingSoon title="정보 수정" />}
         </div>
       </div>

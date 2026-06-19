@@ -6,7 +6,9 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
@@ -22,18 +24,23 @@ import { ApiCreateRssCertification } from '@rss/api-docs/createRssCertification.
 import { ApiDeleteCertificateRss } from '@rss/api-docs/deleteCertificateRss.api-docs';
 import { ApiDeleteRss } from '@rss/api-docs/deleteRss.api-docs';
 import { ApiDeleteRssCertification } from '@rss/api-docs/deleteRssCertification.api-docs';
+import { ApiPreviewRssCertification } from '@rss/api-docs/previewRssCertification.api-docs';
 import { ApiReadAllRss } from '@rss/api-docs/readAllRss.api-docs';
 import { ApiReadRssAcceptHistory } from '@rss/api-docs/readRssAcceptHistory.api-docs';
 import { ApiReadRssRejectHistory } from '@rss/api-docs/readRssRejectHistory.api-docs';
 import { ApiRejectRss } from '@rss/api-docs/rejectRss.api-docs';
+import { ApiUpdateRssCertification } from '@rss/api-docs/updateRssCertification.api-docs';
 import { ApiVerifyRssCertification } from '@rss/api-docs/verifyRssCertification.api-docs';
 import { CreateRssCertificationRequestDto } from '@rss/dto/request/createRssCertification.dto';
 import { DeleteCertificateRssRequestDto } from '@rss/dto/request/deleteCertificateRss.dto';
 import { DeleteRssCertificationParamRequestDto } from '@rss/dto/request/deleteRssCertificationParam.dto';
 import { DeleteRssRequestDto } from '@rss/dto/request/deleteRss.dto';
 import { ManageRssRequestDto } from '@rss/dto/request/manageRss.dto';
+import { PreviewRssCertificationRequestDto } from '@rss/dto/request/previewRssCertification.dto';
 import { RegisterRssRequestDto } from '@rss/dto/request/registerRss.dto';
 import { RejectRssRequestDto } from '@rss/dto/request/rejectRss';
+import { UpdateRssCertificationRequestDto } from '@rss/dto/request/updateRssCertification.dto';
+import { UpdateRssCertificationParamRequestDto } from '@rss/dto/request/updateRssCertificationParam.dto';
 import { VerifyRssCertificationRequestDto } from '@rss/dto/request/verifyRssCertification.dto';
 import { RssService } from '@rss/service/rss.service';
 
@@ -120,6 +127,23 @@ export class RssController {
     return ApiResponse.responseWithNoContent('RSS 삭제를 성공했습니다.');
   }
 
+  @ApiPreviewRssCertification()
+  @UseGuards(JwtGuard)
+  @Get('certifications/preview')
+  @HttpCode(HttpStatus.OK)
+  async previewRssCertification(
+    @CurrentUser() user: Payload,
+    @Query() previewRssCertificationDto: PreviewRssCertificationRequestDto,
+  ) {
+    return ApiResponse.responseWithData(
+      'RSS 소유 인증 미리보기를 처리했습니다.',
+      await this.rssService.previewRssCertification(
+        user,
+        previewRssCertificationDto.blogName,
+      ),
+    );
+  }
+
   @ApiCreateRssCertification()
   @UseGuards(JwtGuard)
   @Post('certifications')
@@ -150,6 +174,24 @@ export class RssController {
       verifyRssCertificationDto.code,
     );
     return ApiResponse.responseWithNoContent('RSS 소유 인증을 완료했습니다.');
+  }
+
+  @ApiUpdateRssCertification()
+  @UseGuards(JwtGuard)
+  @Patch('certifications/:id')
+  @HttpCode(HttpStatus.OK)
+  async updateRssCertification(
+    @CurrentUser() user: Payload,
+    @Param() updateRssCertificationParamDto: UpdateRssCertificationParamRequestDto,
+    @Body() updateRssCertificationDto: UpdateRssCertificationRequestDto,
+  ) {
+    await this.rssService.updateRssCertification(
+      user,
+      updateRssCertificationParamDto.id,
+      updateRssCertificationDto.name,
+      updateRssCertificationDto.userName,
+    );
+    return ApiResponse.responseWithNoContent('RSS 정보를 수정했습니다.');
   }
 
   @ApiDeleteRssCertification()

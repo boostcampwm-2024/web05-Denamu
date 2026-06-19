@@ -178,13 +178,18 @@ INSERT INTO admin (email,password, name, parent_admin_id) VALUES
 	('test1234@denamu.dev','$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정', NULL),
 	('test5678@denamu.dev','$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정의 자식', 1);
 
+-- denamu.user insert data
+-- id: test@test.com, password: test1234!
+INSERT INTO user (email, password, user_name, profile_image, introduction) VALUES
+	('test@test.com', '$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정', NULL, '안녕하세요 테스트입니다.');
+
 -- denamu.rss_accept insert data
 
-INSERT INTO rss_accept (name,user_name,email,rss_url,blog_platform) VALUES
-	 ('seok3765.log','조민석','seok3765@naver.com','https://v2.velog.io/rss/@seok3765','velog'),
-	 ('나무보다 숲을','채준혁','cjh4302@gmail.com','https://laurent.tistory.com/rss','tistory'),
-	 ('월성참치','정명기','jmk101711@naver.com','https://tunaspace.tistory.com/rss','tistory'),
-	 ('해야지 뭐','안성윤','asn6878@gmail.com','https://asn6878.tistory.com/rss','tistory');
+INSERT INTO rss_accept (name,user_name,email,rss_url,blog_platform, user_id) VALUES
+	 ('seok3765.log','조민석','seok3765@naver.com','https://v2.velog.io/rss/@seok3765','velog', 1),
+	 ('나무보다 숲을','채준혁','cjh4302@gmail.com','https://laurent.tistory.com/rss','tistory', NULL),
+	 ('월성참치','정명기','jmk101711@naver.com','https://tunaspace.tistory.com/rss','tistory', NULL),
+	 ('해야지 뭐','안성윤','asn6878@gmail.com','https://asn6878.tistory.com/rss','tistory', NULL);
 
 -- denamu.rss_reject insert data
 
@@ -336,11 +341,6 @@ FE와 BE 개발 환경 공유 가능
 TypeScript 등으로 단점 극복 노력
 
 결국 상황에 맞는 도구를 선택하는 문제 해결력이 중요하다는 개발자의 통찰력 있는 회고입니다! 💡',1);
-
--- denamu.user insert data
--- id: test@test.com, password: test1234!
-INSERT INTO user (email, password, user_name, profile_image, introduction) VALUES
-	('test@test.com', '$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정', NULL, '안녕하세요 테스트입니다.');
 
 -- denamu.tag insert data
 

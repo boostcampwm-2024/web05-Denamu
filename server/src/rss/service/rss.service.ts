@@ -25,6 +25,7 @@ import { ManageRssRequestDto } from '@rss/dto/request/manageRss.dto';
 import { RegisterRssRequestDto } from '@rss/dto/request/registerRss.dto';
 import { RejectRssRequestDto } from '@rss/dto/request/rejectRss';
 import { CreateRssCertificationResponseDto } from '@rss/dto/response/createRssCertification.dto';
+import { PreviewRssCertificationResponseDto } from '@rss/dto/response/previewRssCertification.dto';
 import { ReadRssResponseDto } from '@rss/dto/response/readRss.dto';
 import { ReadRssAcceptHistoryResponseDto } from '@rss/dto/response/readRssAcceptHistory.dto';
 import { ReadRssRejectHistoryResponseDto } from '@rss/dto/response/readRssRejectHistory.dto';
@@ -325,6 +326,28 @@ export class RssService {
     return CreateRssCertificationResponseDto.toResponseDto(rssAccept, false);
   }
 
+  async previewRssCertification(user: Payload, blogName: string) {
+    const rssAccept = await this.rssAcceptRepository.findOne({
+      where: { name: blogName },
+    });
+
+    if (!rssAccept) {
+      throw new NotFoundException('해당 이름의 RSS를 찾을 수 없습니다.');
+    }
+
+    if (rssAccept.userId !== null) {
+      if (rssAccept.userId === user.id) {
+        throw new ConflictException('이미 본인이 인증한 RSS입니다.');
+      }
+      throw new ConflictException('다른 사용자가 이미 인증한 RSS입니다.');
+    }
+
+    return PreviewRssCertificationResponseDto.toResponseDto(
+      rssAccept,
+      rssAccept.email !== user.email,
+    );
+  }
+
   async verifyRssCertification(user: Payload, code: string) {
     const redisKey = `${REDIS_KEYS.RSS_CERTIFICATION_KEY}:${code}`;
     const stored = await this.redisService.get(redisKey);
@@ -362,6 +385,41 @@ export class RssService {
         '이미 인증되었거나 인증할 수 없는 RSS입니다.',
       );
     }
+  }
+
+  async updateRssCertification(
+    user: Payload,
+    rssAcceptId: number,
+    name: string,
+    userName: string,
+  ) {
+    const rssAccept = await this.rssAcceptRepository.findOne({
+      where: { id: rssAcceptId },
+    });
+
+    if (!rssAccept) {
+      throw new NotFoundException('RSS를 찾을 수 없습니다.');
+    }
+
+    if (rssAccept.userId !== user.id) {
+      throw new ForbiddenException('본인이 인증한 RSS가 아닙니다.');
+    }
+
+    if (name !== rssAccept.name) {
+      const [duplicateRss, duplicateAccept] = await Promise.all([
+        this.rssRepository.findOne({ where: { name } }),
+        this.rssAcceptRepository.findOne({ where: { name } }),
+      ]);
+
+      if (duplicateRss || duplicateAccept) {
+        throw new ConflictException('이미 사용 중인 블로그 이름입니다.');
+      }
+    }
+
+    await this.rssAcceptRepository.update(
+      { id: rssAcceptId },
+      { name, userName },
+    );
   }
 
   async deleteRssCertification(user: Payload, rssAcceptId: number) {

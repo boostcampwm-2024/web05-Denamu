@@ -1,3 +1,5 @@
+import { ApiData } from "@/types/api";
+
 export interface SearchResult {
   id: number;
   title: string;
@@ -6,16 +8,13 @@ export interface SearchResult {
   createdAt: string;
 }
 
-interface SearchData {
+export interface SearchData {
   totalCount: number;
   result: SearchResult[];
   totalPages: number;
 }
 
-export interface SearchResponse {
-  data: SearchData;
-  message: string;
-}
+export type SearchResponse = ApiData<SearchData>;
 export interface SearchRequest {
   query: string;
   filter: FilterType;

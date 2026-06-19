@@ -3,10 +3,11 @@ import axios from "axios";
 import { USER, OAUTH } from "@/constants/endpoints";
 
 import { axiosInstance } from "@/api/instance";
+import { ApiMessage } from "@/types/api";
 import { UserSignUpRequest, UserSignUpResponse, UserSignInRequest, UserSignInResponse } from "@/types/auth";
 
-export const completeOAuthRegistration = async (userName: string): Promise<{ message: string }> => {
-  const response = await axiosInstance.post<{ message: string }>(OAUTH.REGISTER, { userName });
+export const completeOAuthRegistration = async (userName: string): Promise<ApiMessage> => {
+  const response = await axiosInstance.post<ApiMessage>(OAUTH.REGISTER, { userName });
   return response.data;
 };
 
@@ -39,14 +40,14 @@ export const refreshAccessToken = async (config = {}): Promise<UserSignInRespons
   return response.data;
 };
 
-export const logout = async (): Promise<{ message: string }> => {
-  const response = await axiosInstance.post<{ message: string }>(USER.LOGOUT);
+export const logout = async (): Promise<ApiMessage> => {
+  const response = await axiosInstance.post<ApiMessage>(USER.LOGOUT);
   return response.data;
 };
 
-export const certificateUser = async (token: string): Promise<{ message: string }> => {
+export const certificateUser = async (token: string): Promise<ApiMessage> => {
   try {
-    const response = await axiosInstance.post<{ message: string }>(USER.CERTIFICATE, { uuid: token });
+    const response = await axiosInstance.post<ApiMessage>(USER.CERTIFICATE, { uuid: token });
     return response.data;
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
@@ -56,7 +57,7 @@ export const certificateUser = async (token: string): Promise<{ message: string 
   }
 };
 
-export const confirmDeleteAccount = async (token: string): Promise<{ message: string }> => {
-  const response = await axiosInstance.delete<{ message: string }>(USER.WITHDRAW_CONFIRM(token));
+export const confirmDeleteAccount = async (token: string): Promise<ApiMessage> => {
+  const response = await axiosInstance.delete<ApiMessage>(USER.WITHDRAW_CONFIRM(token));
   return response.data;
 };
