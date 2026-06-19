@@ -11,7 +11,7 @@ export const PlatformIcon = ({ platform, className = "w-5 h-5" }: PlatformIconPr
   const key = platform.toLowerCase().replace(" ", "_");
 
   if (KNOWN_PLATFORMS.includes(key)) {
-    return <img src={`https://denamu.site/files/${key}-icon.svg`} alt={platform} className={className} />;
+    return <img src={`https://denamu.dev/files/${key}-icon.svg`} alt={platform} className={className} />;
   }
 
   return <Rss className={`${className} text-blue-500`} />;

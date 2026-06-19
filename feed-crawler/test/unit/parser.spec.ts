@@ -49,7 +49,7 @@ describe('Parser 모듈 테스트', () => {
       .spyOn(axios, 'get')
       .mockImplementation((url: string) => {
         // RSS/Atom 피드 URL
-        if (url.includes('/rss') || url.includes('denamu.site')) {
+        if (url.includes('/rss') || url.includes('denamu.dev')) {
           return Promise.resolve({
             data: RSS_20_SAMPLE,
             status: HttpStatusCode.Ok,

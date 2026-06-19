@@ -16,7 +16,7 @@ export const OwnedRssCard = ({ rss, onEdit, onDelete }: OwnedRssCardProps) => {
   return (
     <li className="flex items-center justify-between p-4 border border-gray-100 rounded-lg">
       <div className="flex items-center min-w-0 space-x-3">
-        <PlatformIcon platform={rss.blogPlatform} className="flex-shrink-0 w-6 h-6" />
+        <PlatformIcon platform={rss.blogPlatform} className="flex-shrink-0 w-10 h-10" />
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <p className="font-medium truncate">{rss.name}</p>
