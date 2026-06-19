@@ -180,11 +180,11 @@ INSERT INTO admin (email,password, name, parent_admin_id) VALUES
 
 -- denamu.rss_accept insert data
 
-INSERT INTO rss_accept (name,user_name,email,rss_url,blog_platform) VALUES
-	 ('seok3765.log','조민석','seok3765@naver.com','https://v2.velog.io/rss/@seok3765','velog'),
-	 ('나무보다 숲을','채준혁','cjh4302@gmail.com','https://laurent.tistory.com/rss','tistory'),
-	 ('월성참치','정명기','jmk101711@naver.com','https://tunaspace.tistory.com/rss','tistory'),
-	 ('해야지 뭐','안성윤','asn6878@gmail.com','https://asn6878.tistory.com/rss','tistory');
+INSERT INTO rss_accept (name,user_name,email,rss_url,blog_platform, user_id) VALUES
+	 ('seok3765.log','조민석','seok3765@naver.com','https://v2.velog.io/rss/@seok3765','velog', 1),
+	 ('나무보다 숲을','채준혁','cjh4302@gmail.com','https://laurent.tistory.com/rss','tistory', NULL),
+	 ('월성참치','정명기','jmk101711@naver.com','https://tunaspace.tistory.com/rss','tistory', NULL),
+	 ('해야지 뭐','안성윤','asn6878@gmail.com','https://asn6878.tistory.com/rss','tistory', NULL);
 
 -- denamu.rss_reject insert data
 
