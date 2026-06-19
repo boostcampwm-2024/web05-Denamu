@@ -50,6 +50,20 @@ export interface CertifiedRss {
   blogPlatform: string;
 }
 
+export interface RssCertificationPreview {
+  name: string;
+  userName: string;
+  rssUrl: string;
+  blogPlatform: string;
+  requiresEmailVerification: boolean;
+}
+
+export interface CreateRssCertificationResult {
+  blogPlatform: string;
+  userName: string;
+  certified: boolean;
+}
+
 export interface FeedRef {
   id: number;
   title: string;
