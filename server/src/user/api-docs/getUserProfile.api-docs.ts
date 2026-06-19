@@ -13,7 +13,8 @@ export function ApiGetUserProfile() {
   return applyDecorators(
     ApiOperation({
       summary: '사용자 프로필 조회 API',
-      description: '특정 사용자의 이름, 프로필 이미지, 자기소개를 조회합니다.',
+      description:
+        '특정 사용자의 이름, 프로필 이미지, 자기소개와 스트릭 통계(최장/현재 스트릭, 총 읽기 횟수)를 조회합니다.',
     }),
     ApiParam({
       name: 'id',

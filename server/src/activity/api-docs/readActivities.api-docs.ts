@@ -13,8 +13,7 @@ export function ApiReadActivities() {
   return applyDecorators(
     ApiOperation({
       summary: '사용자 활동 데이터 조회',
-      description:
-        '특정 연도의 사용자 일별 활동 데이터와 스트릭 정보를 조회합니다.',
+      description: '특정 연도의 사용자 일별 활동 데이터를 조회합니다.',
     }),
     ApiParam({
       name: 'userId',

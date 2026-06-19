@@ -21,6 +21,16 @@ export class ActivityRepository extends Repository<Activity> {
     );
   }
 
+  async findActivityYearsByUserId(userId: number): Promise<number[]> {
+    const rows = await this.createQueryBuilder('activity')
+      .select('DISTINCT YEAR(activity.activity_date)', 'year')
+      .where('activity.user_id = :userId', { userId })
+      .orderBy('year', 'DESC')
+      .getRawMany<{ year: number }>();
+
+    return rows.map((row) => Number(row.year));
+  }
+
   async findActivitiesByUserIdAndYear(
     userId: number,
     year: number,

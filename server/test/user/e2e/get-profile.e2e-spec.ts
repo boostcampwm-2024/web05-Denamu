@@ -28,11 +28,14 @@ describe(`GET /api/users/:id/profile E2E Test`, () => {
         profileImage:
           'https://denamu.dev/objects/PROFILE_IMAGE/20250816/uuid.png',
         introduction: '안녕하세요! 김개발입니다.',
+        maxStreak: 15,
+        currentStreak: 7,
+        totalViews: 120,
       }),
     );
   });
 
-  it('[200] 프로필이 설정된 유저를 조회하면 이름·이미지·소개를 반환한다.', async () => {
+  it('[200] 프로필이 설정된 유저를 조회하면 이름·이미지·소개와 스트릭 통계를 반환한다.', async () => {
     // Http when
     const response = await agent.get(URL(user.id));
 
@@ -43,6 +46,9 @@ describe(`GET /api/users/:id/profile E2E Test`, () => {
       userName: user.userName,
       profileImage: user.profileImage,
       introduction: user.introduction,
+      maxStreak: user.maxStreak,
+      currentStreak: user.currentStreak,
+      totalViews: user.totalViews,
     });
   });
 
@@ -66,6 +72,9 @@ describe(`GET /api/users/:id/profile E2E Test`, () => {
       userName: minimalUser.userName,
       profileImage: null,
       introduction: null,
+      maxStreak: minimalUser.maxStreak,
+      currentStreak: minimalUser.currentStreak,
+      totalViews: minimalUser.totalViews,
     });
   });
 

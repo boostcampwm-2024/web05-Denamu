@@ -129,12 +129,15 @@ describe(`${UserService.name} Unit Test`, () => {
       );
     });
 
-    it('사용자의 이름·이미지·소개를 응답으로 변환해 반환한다.', async () => {
+    it('사용자의 이름·이미지·소개와 스트릭 통계를 응답으로 변환해 반환한다.', async () => {
       // given
       const user = UserFixture.createUserFixture({
         userName: '김개발',
         profileImage: 'https://denamu.dev/objects/PROFILE_IMAGE/a.png',
         introduction: '안녕하세요! 김개발입니다.',
+        maxStreak: 15,
+        currentStreak: 7,
+        totalViews: 120,
       });
       userRepository.findOneBy.mockResolvedValue(user);
 
@@ -143,6 +146,9 @@ describe(`${UserService.name} Unit Test`, () => {
 
       // then
       expect(result).toEqual(GetUserProfileResponseDto.toResponseDto(user));
+      expect(result.maxStreak).toBe(15);
+      expect(result.currentStreak).toBe(7);
+      expect(result.totalViews).toBe(120);
     });
 
     it('이미지·소개가 미설정이면 해당 필드를 null로 반환한다.', async () => {
