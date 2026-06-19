@@ -15,8 +15,6 @@ import {
 
 import { useCustomToast } from "@/hooks/common/useCustomToast";
 
-import { TOAST_MESSAGES } from "@/constants/messages";
-
 import { useAuthStore } from "@/store/useAuthStore";
 
 export const UserProfileMenu = () => {
@@ -33,7 +31,7 @@ export const UserProfileMenu = () => {
   };
 
   const handleProfileClick = () => {
-    toast(TOAST_MESSAGES.SERVICE_NOT_PREPARED);
+    navigate("/profile");
   };
 
   if (!isAuthenticated) {

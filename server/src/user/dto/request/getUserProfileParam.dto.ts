@@ -3,10 +3,10 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsInt, Min } from 'class-validator';
 
-export class GetUserProfileImageParamRequestDto {
+export class GetUserProfileParamRequestDto {
   @ApiProperty({
     example: 1,
-    description: '프로필 이미지를 조회할 사용자 ID',
+    description: '프로필을 조회할 사용자 ID',
   })
   @IsInt({
     message: '숫자로 입력해주세요.',
@@ -15,7 +15,7 @@ export class GetUserProfileImageParamRequestDto {
   @Type(() => Number)
   id: number;
 
-  constructor(partial: Partial<GetUserProfileImageParamRequestDto>) {
+  constructor(partial: Partial<GetUserProfileParamRequestDto>) {
     Object.assign(this, partial);
   }
 }

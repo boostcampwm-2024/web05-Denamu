@@ -2,6 +2,7 @@ export interface DayInfo {
   date: Date;
   dateStr: string;
   count: number;
+  empty?: boolean;
 }
 
 export interface WeekInfo {

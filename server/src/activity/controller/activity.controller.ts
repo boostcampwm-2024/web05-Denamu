@@ -9,6 +9,7 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 
 import { ApiReadActivities } from '@activity/api-docs/readActivities.api-docs';
+import { ApiReadActivityYears } from '@activity/api-docs/readActivityYears.api-docs';
 import {
   ReadActivityParamRequestDto,
   ReadActivityQueryRequestDto,
@@ -21,6 +22,16 @@ import { ApiResponse } from '@common/response/common.response';
 @Controller('activities')
 export class ActivityController {
   constructor(private readonly activityService: ActivityService) {}
+
+  @ApiReadActivityYears()
+  @Get(':userId/years')
+  @HttpCode(HttpStatus.OK)
+  async readActivityYears(@Param() paramDto: ReadActivityParamRequestDto) {
+    return ApiResponse.responseWithData(
+      '요청이 성공적으로 처리되었습니다.',
+      await this.activityService.readActivityYears(paramDto.userId),
+    );
+  }
 
   @ApiReadActivities()
   @Get(':userId')

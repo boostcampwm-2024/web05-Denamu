@@ -56,3 +56,12 @@ export const OAUTH = {
   LOGIN: "/api/oauth",
   REGISTER: "/api/oauth/registrations",
 };
+
+export const PROFILE = {
+  PROFILE: (id: number) => `/api/users/${id}/profile`,
+  RSS: (id: number) => `/api/users/${id}/rss`,
+  LIKES: (id: number) => `/api/users/${id}/likes`,
+  COMMENTS: (id: number) => `/api/users/${id}/comments`,
+  ACTIVITIES: (id: number) => `/api/activities/${id}`,
+  ACTIVITY_YEARS: (id: number) => `/api/activities/${id}/years`,
+};

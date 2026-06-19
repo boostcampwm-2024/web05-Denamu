@@ -19,7 +19,7 @@ export class ActivityService {
     userId: number,
     year: number,
   ): Promise<ReadActivityResponseDto> {
-    const user = await this.userService.getUser(userId);
+    await this.userService.getUser(userId);
 
     const activities =
       await this.activityRepository.findActivitiesByUserIdAndYear(userId, year);
@@ -32,7 +32,12 @@ export class ActivityService {
         }),
     );
 
-    return ReadActivityResponseDto.toResponseDto(dailyActivities, user);
+    return ReadActivityResponseDto.toResponseDto(dailyActivities);
+  }
+
+  async readActivityYears(userId: number): Promise<number[]> {
+    await this.userService.getUser(userId);
+    return this.activityRepository.findActivityYearsByUserId(userId);
   }
 
   async upsertActivity(userId: number) {
