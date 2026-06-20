@@ -33,6 +33,12 @@ export class UserRssFeedResult {
   })
   commentCount: number;
 
+  @ApiProperty({
+    example: 0,
+    description: '게시글 좋아요 수',
+  })
+  likeCount: number;
+
   private constructor(partial: Partial<UserRssFeedResult>) {
     Object.assign(this, partial);
   }
@@ -44,6 +50,7 @@ export class UserRssFeedResult {
       path: feed.path,
       createdAt: feed.createdAt,
       commentCount: feed.commentCount,
+      likeCount: feed.likeCount,
     });
   }
 

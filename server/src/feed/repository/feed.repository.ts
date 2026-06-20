@@ -66,6 +66,7 @@ export class FeedRepository extends Repository<Feed> {
         'feed.path',
         'feed.createdAt',
         'feed.commentCount',
+        'feed.likeCount',
         'feed.isPublic',
       ])
       .where('feed.blog_id = :blogId', { blogId });

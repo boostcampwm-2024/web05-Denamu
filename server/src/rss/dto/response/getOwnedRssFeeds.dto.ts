@@ -34,6 +34,12 @@ export class OwnedRssFeedResult {
   commentCount: number;
 
   @ApiProperty({
+    example: 0,
+    description: '게시글 좋아요 수',
+  })
+  likeCount: number;
+
+  @ApiProperty({
     example: true,
     description: '공개 여부 (true: 공개, false: 비공개)',
   })
@@ -50,6 +56,7 @@ export class OwnedRssFeedResult {
       path: feed.path,
       createdAt: feed.createdAt,
       commentCount: feed.commentCount,
+      likeCount: feed.likeCount,
       isPublic: feed.isPublic,
     });
   }
