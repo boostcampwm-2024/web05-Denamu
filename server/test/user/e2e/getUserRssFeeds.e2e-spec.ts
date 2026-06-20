@@ -67,6 +67,7 @@ describe(`GET ${BASE_URL}/:id/rss/:rssId/feeds E2E Test`, () => {
         path: feed.path,
         createdAt: feed.createdAt.toISOString(),
         commentCount: feed.commentCount,
+        likeCount: feed.likeCount,
       })),
     );
   });

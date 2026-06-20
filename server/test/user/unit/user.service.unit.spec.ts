@@ -59,7 +59,9 @@ describe(`${UserService.name} Unit Test`, () => {
   let rssAcceptRepository: jest.Mocked<
     Pick<RssAcceptRepository, 'find' | 'update'>
   >;
-  let feedRepository: jest.Mocked<Pick<FeedRepository, 'getFeedsByBlog'>>;
+  let feedRepository: jest.Mocked<
+    Pick<FeedRepository, 'getFeedsByBlog' | 'countPublicFeedsByBlogIds'>
+  >;
   let manager: { remove: jest.Mock; delete: jest.Mock };
   let dataSource: jest.Mocked<Pick<DataSource, 'transaction'>>;
 
@@ -96,7 +98,10 @@ describe(`${UserService.name} Unit Test`, () => {
     configService = { get: jest.fn().mockReturnValue('14d') };
     fileService = { deleteByPath: jest.fn() };
     rssAcceptRepository = { find: jest.fn(), update: jest.fn() };
-    feedRepository = { getFeedsByBlog: jest.fn() };
+    feedRepository = {
+      getFeedsByBlog: jest.fn(),
+      countPublicFeedsByBlogIds: jest.fn().mockResolvedValue(new Map()),
+    };
     manager = { remove: jest.fn(), delete: jest.fn() };
     dataSource = {
       transaction: jest.fn((cb: any) => cb(manager)),
@@ -357,10 +362,12 @@ describe(`${UserService.name} Unit Test`, () => {
   });
 
   describe('getUserRss', () => {
-    it('userId로 소유 RSS를 조회하고 응답으로 변환한다.', async () => {
+    it('userId로 소유 RSS를 조회하고 공개 게시글 수와 함께 응답으로 변환한다.', async () => {
       // given
-      const rssList = [] as RssAccept[];
+      const rssList = [{ id: 7 } as RssAccept];
+      const feedCountMap = new Map<number, number>([[7, 3]]);
       rssAcceptRepository.find.mockResolvedValue(rssList);
+      feedRepository.countPublicFeedsByBlogIds.mockResolvedValue(feedCountMap);
 
       // when
       const result = await userService.getUserRss(1);
@@ -370,9 +377,11 @@ describe(`${UserService.name} Unit Test`, () => {
         where: { userId: 1 },
         order: { id: 'DESC' },
       });
+      expect(feedRepository.countPublicFeedsByBlogIds).toHaveBeenCalledWith([7]);
       expect(result).toEqual(
-        GetUserRssResponseDto.toResponseDtoArray(rssList),
+        GetUserRssResponseDto.toResponseDtoArray(rssList, feedCountMap),
       );
+      expect(result[0].feedCount).toBe(3);
     });
   });
 
