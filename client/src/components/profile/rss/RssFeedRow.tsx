@@ -1,8 +1,7 @@
 import { Link } from "react-router-dom";
 
-import { Eye, EyeOff, Heart, MessageSquare } from "lucide-react";
+import { Eye, EyeOff, Heart, Lock, MessageSquare } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 
 interface RssFeedRowProps {
@@ -28,18 +27,16 @@ export const RssFeedRow = ({
 }: RssFeedRowProps) => {
   return (
     <li className="flex items-center justify-between gap-3 text-sm">
-      <div className="flex items-center min-w-0 gap-2">
+      <div className="flex items-center min-w-0 gap-1.5">
+        {!isPublic && (
+          <Lock className="flex-shrink-0 w-3.5 h-3.5 text-gray-400" aria-label="비공개" />
+        )}
         {isPublic ? (
           <Link to={`/${id}`} className="text-gray-800 truncate hover:underline">
             {title}
           </Link>
         ) : (
           <span className="text-gray-400 truncate">{title}</span>
-        )}
-        {!isPublic && (
-          <Badge variant="secondary" className="flex-shrink-0">
-            비공개
-          </Badge>
         )}
       </div>
       <div className="flex items-center flex-shrink-0 gap-3 text-gray-400">
