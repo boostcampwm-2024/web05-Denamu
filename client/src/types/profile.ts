@@ -42,6 +42,22 @@ export interface ProfileActivity {
   dailyActivities: DailyActivity[];
 }
 
+export interface UpdateProfilePayload {
+  userName?: string;
+  profileImage?: string;
+  introduction?: string;
+}
+
+export interface ChangePasswordPayload {
+  currentPassword?: string;
+  newPassword: string;
+}
+
+export interface UploadResult {
+  id: number;
+  url: string;
+}
+
 export interface CertifiedRss {
   id: number;
   name: string;
