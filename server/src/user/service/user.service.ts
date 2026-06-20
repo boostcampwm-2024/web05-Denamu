@@ -24,10 +24,12 @@ import { RssAccept } from '@rss/entity/rss.entity';
 import { RssAcceptRepository } from '@rss/repository/rss.repository';
 
 import { REFRESH_TOKEN_TTL, SALT_ROUNDS } from '@user/constant/user.constants';
+import { ChangePasswordRequestDto } from '@user/dto/request/changePassword.dto';
 import { LoginUserRequestDto } from '@user/dto/request/loginUser.dto';
 import { RegisterUserRequestDto } from '@user/dto/request/registerUser.dto';
 import { UpdateUserRequestDto } from '@user/dto/request/updateUser.dto';
 import { CheckEmailDuplicationResponseDto } from '@user/dto/response/checkEmailDuplication.dto';
+import { CheckUserNameDuplicationResponseDto } from '@user/dto/response/checkUserNameDuplication.dto';
 import { CreateAccessTokenResponseDto } from '@user/dto/response/createAccessToken.dto';
 import { GetUserProfileResponseDto } from '@user/dto/response/getUserProfile.dto';
 import { GetUserRssResponseDto } from '@user/dto/response/getUserRss.dto';
@@ -230,7 +232,16 @@ export class UserService {
   ): Promise<void> {
     const user = await this.getUser(userId);
 
-    if (updateData.userName !== undefined) {
+    if (
+      updateData.userName !== undefined &&
+      updateData.userName !== user.userName
+    ) {
+      const existingName = await this.userRepository.findOne({
+        where: { userName: updateData.userName },
+      });
+      if (existingName) {
+        throw new ConflictException('이미 존재하는 닉네임입니다.');
+      }
       user.userName = updateData.userName;
     }
     if (
@@ -244,6 +255,45 @@ export class UserService {
       user.introduction = updateData.introduction;
     }
 
+    try {
+      await this.userRepository.save(user);
+    } catch (error) {
+      if ((error as { code?: string })?.code === 'ER_DUP_ENTRY') {
+        throw new ConflictException('이미 존재하는 닉네임입니다.');
+      }
+      throw error;
+    }
+  }
+
+  async checkUserNameDuplication(userName: string) {
+    const user = await this.userRepository.findOne({
+      where: { userName },
+    });
+
+    return CheckUserNameDuplicationResponseDto.toResponseDto(!!user);
+  }
+
+  async changePassword(
+    userId: number,
+    changePasswordDto: ChangePasswordRequestDto,
+  ): Promise<void> {
+    const user = await this.getUser(userId);
+
+    if (user.password) {
+      const matched =
+        !!changePasswordDto.currentPassword &&
+        (await bcrypt.compare(
+          changePasswordDto.currentPassword,
+          user.password,
+        ));
+      if (!matched) {
+        throw new UnauthorizedException('현재 비밀번호가 일치하지 않습니다.');
+      }
+    }
+
+    user.password = await this.createHashedPassword(
+      changePasswordDto.newPassword,
+    );
     await this.userRepository.save(user);
   }
 

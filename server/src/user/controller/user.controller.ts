@@ -21,7 +21,9 @@ import { JwtGuard, Payload, RefreshJwtGuard } from '@common/guard/jwt.guard';
 import { ApiResponse } from '@common/response/common.response';
 
 import { ApiCertificateUser } from '@user/api-docs/certificateUser.api-docs';
+import { ApiChangePassword } from '@user/api-docs/changePassword.api-docs';
 import { ApiCheckEmailDuplication } from '@user/api-docs/checkEmailDuplication.api-docs';
+import { ApiCheckUserNameDuplication } from '@user/api-docs/checkUserNameDuplication.api-docs';
 import { ApiConfirmDeleteAccount } from '@user/api-docs/confirmDeleteAccount.api-docs';
 import { ApiForgotPassword } from '@user/api-docs/forgotPassword.api-docs';
 import { ApiGetUserProfile } from '@user/api-docs/getUserProfile.api-docs';
@@ -34,7 +36,9 @@ import { ApiRequestDeleteAccount } from '@user/api-docs/requestDeleteAccount.api
 import { ApiResetPassword } from '@user/api-docs/resetPassword.api-docs';
 import { ApiUpdateUser } from '@user/api-docs/updateUser.api-docs';
 import { CertificateUserRequestDto } from '@user/dto/request/certificateUser.dto';
+import { ChangePasswordRequestDto } from '@user/dto/request/changePassword.dto';
 import { CheckEmailDuplicationRequestDto } from '@user/dto/request/checkEmailDuplication.dto';
+import { CheckUserNameDuplicationRequestDto } from '@user/dto/request/checkUserNameDuplication.dto';
 import { ConfirmDeleteAccountParamRequestDto } from '@user/dto/request/confirmDeleteAccountParam.dto';
 import { ForgotPasswordRequestDto } from '@user/dto/request/forgotPassword.dto';
 import { GetUserProfileParamRequestDto } from '@user/dto/request/getUserProfileParam.dto';
@@ -62,6 +66,21 @@ export class UserController {
       '이메일 중복 조회 요청이 성공적으로 처리되었습니다.',
       await this.userService.checkEmailDuplication(
         checkEmailDuplicationRequestDto.email,
+      ),
+    );
+  }
+
+  @ApiCheckUserNameDuplication()
+  @Get('/username-availability')
+  @HttpCode(HttpStatus.OK)
+  async checkUserNameDuplication(
+    @Query()
+    checkUserNameDuplicationRequestDto: CheckUserNameDuplicationRequestDto,
+  ) {
+    return ApiResponse.responseWithData(
+      '닉네임 중복 조회 요청이 성공적으로 처리되었습니다.',
+      await this.userService.checkUserNameDuplication(
+        checkUserNameDuplicationRequestDto.userName,
       ),
     );
   }
@@ -153,6 +172,20 @@ export class UserController {
     await this.userService.updateUser(user.id, updateUserDto);
     return ApiResponse.responseWithNoContent(
       '사용자 프로필 정보가 성공적으로 수정되었습니다.',
+    );
+  }
+
+  @ApiChangePassword()
+  @Patch('/password')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtGuard)
+  async changePassword(
+    @Body() changePasswordDto: ChangePasswordRequestDto,
+    @CurrentUser() user: Payload,
+  ) {
+    await this.userService.changePassword(user.id, changePasswordDto);
+    return ApiResponse.responseWithNoContent(
+      '비밀번호가 성공적으로 변경되었습니다.',
     );
   }
 
