@@ -70,6 +70,13 @@ export class Feed extends BaseEntity {
   })
   commentCount: number;
 
+  @Column({
+    name: 'is_public',
+    nullable: false,
+    default: true,
+  })
+  isPublic: boolean;
+
   @ManyToOne(() => RssAccept, (rssAccept) => rssAccept.feeds, {
     nullable: false,
     onUpdate: 'CASCADE',
@@ -117,6 +124,7 @@ export class Feed extends BaseEntity {
       )
       .from(Feed, 'f')
       .innerJoin(RssAccept, 'r', 'r.id = f.blog_id')
+      .where('f.is_public = 1')
       .groupBy('f.id'),
   name: 'feed_view',
 })

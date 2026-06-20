@@ -90,6 +90,7 @@ CREATE TABLE `feed` (
   `blog_id` int NOT NULL,
   `summary` text,
   `like_count` int NOT NULL DEFAULT '0',
+  `is_public` tinyint NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`),
   UNIQUE KEY `IDX_cbdceca2d71f784a8bb160268e` (`path`),
   KEY `IDX_fda780ffdcc013b739cdc6f31d` (`created_at`),
