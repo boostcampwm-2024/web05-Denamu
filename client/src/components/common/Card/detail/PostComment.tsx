@@ -9,9 +9,15 @@ import { timeAgo } from "@/utils/timeago";
 
 import { PostCommentType } from "@/types/post";
 
-type PostCommentProps = {
+interface PostCommentProps {
   comments: PostCommentType[];
-};
+}
+
+interface CommentItemProps {
+  comment: PostCommentType;
+  modifyId: number | null;
+  handleModify: (id: number | null) => void;
+}
 export default function PostComment({ comments }: PostCommentProps) {
   const [modifyId, setModifyId] = useState<number | null>(null);
   const handleModify = (id: number | null) => {
@@ -49,49 +55,10 @@ export default function PostComment({ comments }: PostCommentProps) {
 
       {/* 댓글 목록 */}
       <ul className="space-y-4">
-        {comments
+        {[...comments]
           .sort((a, b) => Number(new Date(b.createdAt)) - Number(new Date(a.createdAt)))
           .map((comment) => (
-            <li key={comment.id} className="border-b border-gray-100 pb-4">
-              <div className="flex items-start gap-3">
-                <Avatar className="w-8 h-8">
-                  <AvatarImage src={comment.authorImage} alt={comment.author} />
-                  <AvatarFallback>{comment.author.substring(0, 2)}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <div className="flex justify-between w-full">
-                      <div className="flex gap-2 items-center">
-                        <p className="font-semibold text-sm">{comment.author}</p>
-                        <p className="text-sm text-gray-400">{timeAgo(comment.createdAt)}</p>
-                        <span className="flex text-[10px] items-center gap-1 border rounded-sm p-1 hover:bg-red-300">
-                          <Heart size={15} color="red" fill={comment.isLiked ? `red` : "#fff"} />
-                          {comment.likes}
-                        </span>
-                      </div>
-                      {modifyId !== comment.id && <CommentAction id={comment.id} handleModify={handleModify} />}
-                    </div>
-                  </div>
-                  {modifyId !== comment.id ? (
-                    <p className="mt-1 text-gray-800">{comment.content}</p>
-                  ) : (
-                    <div className="">
-                      <textarea className="w-[100%] mt-2 flex-1 bg-transparent p-2 rounded-md h-20 outline-none ring-2 ring-gray-300 border-transparent resize-none">
-                        {comment.content}
-                      </textarea>
-                      <div className="flex justify-end gap-3 text-sm">
-                        <button onClick={() => handleModify(null)} className="hover:bg-gray-200 py-2 px-4 rounded-lg">
-                          취소
-                        </button>
-                        <button className="bg-primary hover:bg-primary/80 py-2 px-4 text-white  rounded-lg">
-                          댓글 수정
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </li>
+            <CommentItem key={comment.id} comment={comment} modifyId={modifyId} handleModify={handleModify} />
           ))}
       </ul>
 
@@ -106,3 +73,47 @@ export default function PostComment({ comments }: PostCommentProps) {
     </div>
   );
 }
+
+const CommentItem = ({ comment, modifyId, handleModify }: CommentItemProps) => {
+  return (
+    <li className="border-b border-gray-100 pb-4">
+      <div className="flex items-start gap-3">
+        <Avatar className="w-8 h-8">
+          <AvatarImage src={comment.authorImage} alt={comment.author} />
+          <AvatarFallback>{comment.author.substring(0, 2)}</AvatarFallback>
+        </Avatar>
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <div className="flex justify-between w-full">
+              <div className="flex gap-2 items-center">
+                <p className="font-semibold text-sm">{comment.author}</p>
+                <p className="text-sm text-gray-400">{timeAgo(comment.createdAt)}</p>
+                <span className="flex text-[10px] items-center gap-1 border rounded-sm p-1 hover:bg-red-300">
+                  <Heart size={15} color="red" fill={comment.isLiked ? `red` : "#fff"} />
+                  {comment.likes}
+                </span>
+              </div>
+              {modifyId !== comment.id && <CommentAction id={comment.id} handleModify={handleModify} />}
+            </div>
+          </div>
+          {modifyId !== comment.id ? (
+            <p className="mt-1 text-gray-800">{comment.content}</p>
+          ) : (
+            <div className="">
+              <textarea
+                defaultValue={comment.content}
+                className="w-[100%] mt-2 flex-1 bg-transparent p-2 rounded-md h-20 outline-none ring-2 ring-gray-300 border-transparent resize-none"
+              ></textarea>
+              <div className="flex justify-end gap-3 text-sm">
+                <button onClick={() => handleModify(null)} className="hover:bg-gray-200 py-2 px-4 rounded-lg">
+                  취소
+                </button>
+                <button className="bg-primary hover:bg-primary/80 py-2 px-4 text-white  rounded-lg">댓글 수정</button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </li>
+  );
+};
