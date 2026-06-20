@@ -1,4 +1,9 @@
+import { useState } from "react";
+
 import { Heart } from "lucide-react";
+
+import { AuthSignInForm } from "@/components/auth/AuthSignInForm";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 import { useLikeStatus, useToggleLike } from "@/hooks/queries/useLike";
 
@@ -9,6 +14,7 @@ import { Post } from "@/types/post";
 export default function LikeButton({ post }: { post: Post }) {
   const isMobile = useMediaStore((state) => state.isMobile);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const [loginPromptOpen, setLoginPromptOpen] = useState(false);
 
   const { data: isLike = false } = useLikeStatus(post.id, isAuthenticated);
   const { mutate: toggleLike, isPending } = useToggleLike(post.id);
@@ -16,14 +22,29 @@ export default function LikeButton({ post }: { post: Post }) {
   const count = post.likes ?? 0;
 
   const handleClick = () => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated) {
+      setLoginPromptOpen(true);
+      return;
+    }
     toggleLike(isLike);
   };
 
-  return isMobile ? (
-    <MobileButton isLike={isLike} count={count} disabled={isPending} onClick={handleClick} />
-  ) : (
-    <DesktopButton isLike={isLike} count={count} disabled={isPending} onClick={handleClick} />
+  return (
+    <>
+      {isMobile ? (
+        <MobileButton isLike={isLike} count={count} disabled={isPending} onClick={handleClick} />
+      ) : (
+        <DesktopButton isLike={isLike} count={count} disabled={isPending} onClick={handleClick} />
+      )}
+      <div onClick={(e) => e.stopPropagation()}>
+        <Dialog open={loginPromptOpen} onOpenChange={setLoginPromptOpen}>
+          <DialogContent className="z-[1000] max-w-md border-0 bg-transparent p-0 shadow-none">
+            <DialogTitle className="sr-only">로그인</DialogTitle>
+            <AuthSignInForm hideBackButton onSuccess={() => setLoginPromptOpen(false)} />
+          </DialogContent>
+        </Dialog>
+      </div>
+    </>
   );
 }
 

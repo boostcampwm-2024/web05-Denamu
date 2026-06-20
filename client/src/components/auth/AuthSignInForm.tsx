@@ -9,7 +9,12 @@ import { Input } from "@/components/ui/input";
 import { useSignIn } from "@/hooks/auth/useSignIn";
 import { useCustomToast } from "@/hooks/common/useCustomToast.ts";
 
-export const AuthSignInForm = () => {
+interface AuthSignInFormProps {
+  hideBackButton?: boolean;
+  onSuccess?: () => void;
+}
+
+export const AuthSignInForm = ({ hideBackButton = false, onSuccess }: AuthSignInFormProps = {}) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useCustomToast();
@@ -23,6 +28,11 @@ export const AuthSignInForm = () => {
           description: result.message,
         });
 
+        if (onSuccess) {
+          onSuccess();
+          return;
+        }
+
         const from = location.state?.from || "/";
         navigate(from === "/signup" ? "/" : from);
       } else {
@@ -33,7 +43,7 @@ export const AuthSignInForm = () => {
         });
       }
     }
-  }, [result, toast, navigate, location.state]);
+  }, [result, toast, navigate, location.state, onSuccess]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,13 +83,15 @@ export const AuthSignInForm = () => {
           >
             계정이 없으신가요?
           </Button>
-          <Button
-            variant="link"
-            className="text-muted-foreground underline underline-offset-4 h-auto p-0"
-            onClick={() => navigate("/")}
-          >
-            메인 페이지로 돌아가기
-          </Button>
+          {!hideBackButton && (
+            <Button
+              variant="link"
+              className="text-muted-foreground underline underline-offset-4 h-auto p-0"
+              onClick={() => navigate("/")}
+            >
+              메인 페이지로 돌아가기
+            </Button>
+          )}
         </div>
       </AuthCard>
     </>
