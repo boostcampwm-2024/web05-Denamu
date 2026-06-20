@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
+import { useNavigate } from "react-router-dom";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -49,7 +51,8 @@ const getErrorMessage = (error: unknown, fallback: string) => {
 
 export const ProfileEditTab = ({ userId, email }: ProfileEditTabProps) => {
   const { toast } = useCustomToast();
-  const { setUserName: setAuthUserName } = useAuthStore();
+  const { setUserName: setAuthUserName, logout } = useAuthStore();
+  const navigate = useNavigate();
 
   const { data: profile } = useUserProfile(userId);
 
@@ -169,14 +172,16 @@ export const ProfileEditTab = ({ userId, email }: ProfileEditTabProps) => {
     changePassword.mutate(
       { currentPassword: currentPassword || undefined, newPassword },
       {
-        onSuccess: () => {
+        onSuccess: async () => {
           setCurrentPassword("");
           setNewPassword("");
           setConfirmPassword("");
           toast({
             title: "비밀번호 변경 성공",
-            description: "비밀번호가 성공적으로 적용되었습니다.",
+            description: "보안을 위해 모든 기기에서 로그아웃됩니다. 다시 로그인해주세요.",
           });
+          await logout();
+          navigate("/signin");
         },
         onError: (error) => {
           toast({

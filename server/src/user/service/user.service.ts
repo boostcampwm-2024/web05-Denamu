@@ -295,6 +295,7 @@ export class UserService {
       changePasswordDto.newPassword,
     );
     await this.userRepository.save(user);
+    await this.invalidateUserTokens(user.id);
   }
 
   async forgotPassword(email: string) {
