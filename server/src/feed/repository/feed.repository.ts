@@ -85,7 +85,32 @@ export class FeedRepository extends Repository<Feed> {
       .getMany();
   }
 
-  async setVisibilityForBlog(feedId: number, blogId: number, isPublic: boolean) {
+  async countPublicFeedsByBlogIds(
+    blogIds: number[],
+  ): Promise<Map<number, number>> {
+    if (!blogIds.length) return new Map();
+
+    const rows = await this.createQueryBuilder('feed')
+      .select('feed.blog_id', 'blogId')
+      .addSelect('COUNT(*)', 'count')
+      .where('feed.blog_id IN (:...blogIds)', { blogIds })
+      .andWhere('feed.is_public = 1')
+      .groupBy('feed.blog_id')
+      .getRawMany();
+
+    return new Map(
+      rows.map((row: { blogId: number; count: number }) => [
+        Number(row.blogId),
+        Number(row.count),
+      ]),
+    );
+  }
+
+  async setVisibilityForBlog(
+    feedId: number,
+    blogId: number,
+    isPublic: boolean,
+  ) {
     const result = await this.createQueryBuilder()
       .update(Feed)
       .set({ isPublic })

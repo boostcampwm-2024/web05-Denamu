@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, FileText } from "lucide-react";
 
 import { PlatformIcon } from "@/components/profile/rss/PlatformIcon.tsx";
 import { RssFeedRow } from "@/components/profile/rss/RssFeedRow.tsx";
@@ -42,6 +42,10 @@ export const CertifiedRssCard = ({ userId, rss }: CertifiedRssCardProps) => {
             >
               {rss.rssUrl}
             </a>
+            <p className="flex items-center gap-1 text-sm text-gray-400">
+              <FileText className="w-3.5 h-3.5" />
+              게시글 {rss.feedCount}개
+            </p>
           </div>
         </div>
         <div className="flex items-center flex-shrink-0 gap-2 ml-3">

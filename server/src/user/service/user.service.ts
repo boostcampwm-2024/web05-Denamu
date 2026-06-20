@@ -139,7 +139,10 @@ export class UserService {
       where: { userId },
       order: { id: 'DESC' },
     });
-    return GetUserRssResponseDto.toResponseDtoArray(rssList);
+    const feedCountMap = await this.feedRepository.countPublicFeedsByBlogIds(
+      rssList.map((rss) => rss.id),
+    );
+    return GetUserRssResponseDto.toResponseDtoArray(rssList, feedCountMap);
   }
 
   async getUserRssFeeds(rssId: number, feedDto: GetUserRssFeedsRequestDto) {

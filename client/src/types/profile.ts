@@ -64,6 +64,7 @@ export interface CertifiedRss {
   userName: string;
   rssUrl: string;
   blogPlatform: string;
+  feedCount: number;
 }
 
 export interface RssCertificationPreview {
