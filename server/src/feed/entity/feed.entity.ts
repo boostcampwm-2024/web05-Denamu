@@ -45,7 +45,7 @@ export class Feed extends BaseEntity {
   path: string;
 
   @Column({
-    length: 255,
+    type: 'text',
     nullable: true,
   })
   thumbnail: string;

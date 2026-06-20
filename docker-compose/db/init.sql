@@ -86,7 +86,7 @@ CREATE TABLE `feed` (
   `title` varchar(255) NOT NULL,
   `view_count` int NOT NULL DEFAULT '0',
   `path` varchar(512) NOT NULL,
-  `thumbnail` varchar(255) DEFAULT NULL,
+  `thumbnail` text,
   `blog_id` int NOT NULL,
   `summary` text,
   `like_count` int NOT NULL DEFAULT '0',
