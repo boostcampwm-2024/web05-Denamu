@@ -38,7 +38,7 @@ const DesktopCard = ({ post, className }: PostCardProps) => {
         className
       )}
     >
-      <PostCardImage thumbnail={post.thumbnail} alt={post.title} />
+      <PostCardImage thumbnail={post.thumbnail} alt={post.title} isNew={post.isNew} />
       <PostCardContent post={post} />
     </Card>
   );

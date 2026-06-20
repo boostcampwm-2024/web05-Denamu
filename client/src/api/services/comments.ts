@@ -2,11 +2,11 @@ import { BLOG } from "@/constants/endpoints";
 
 import { axiosInstance } from "@/api/instance";
 import { ApiData } from "@/types/api";
-import { PostCommentType } from "@/types/post";
+import { FeedCommentType } from "@/types/post";
 
 export const comments = {
-  get: async (feedId: number): Promise<PostCommentType[]> => {
-    const response = await axiosInstance.get<ApiData<PostCommentType[]>>(BLOG.COMMENT.LIST(feedId));
+  get: async (feedId: number): Promise<FeedCommentType[]> => {
+    const response = await axiosInstance.get<ApiData<FeedCommentType[]>>(BLOG.COMMENT.LIST(feedId));
     return response.data.data;
   },
   create: async (feedId: number, comment: string): Promise<void> => {

@@ -9,9 +9,9 @@ import { useLikeStatus, useToggleLike } from "@/hooks/queries/useLike";
 
 import { useAuthStore } from "@/store/useAuthStore";
 import { useMediaStore } from "@/store/useMediaStore";
-import { Post } from "@/types/post";
+import { FeedDetail } from "@/types/post";
 
-export default function LikeButton({ post }: { post: Post }) {
+export default function LikeButton({ post }: { post: FeedDetail }) {
   const isMobile = useMediaStore((state) => state.isMobile);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const [loginPromptOpen, setLoginPromptOpen] = useState(false);
