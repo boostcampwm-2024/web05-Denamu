@@ -21,6 +21,7 @@ import { RssAcceptRepository } from '@rss/repository/rss.repository';
 
 import { RegisterUserRequestDto } from '@user/dto/request/registerUser.dto';
 import { CheckEmailDuplicationResponseDto } from '@user/dto/response/checkEmailDuplication.dto';
+import { CheckUserNameDuplicationResponseDto } from '@user/dto/response/checkUserNameDuplication.dto';
 import { CreateAccessTokenResponseDto } from '@user/dto/response/createAccessToken.dto';
 import { GetUserProfileResponseDto } from '@user/dto/response/getUserProfile.dto';
 import { GetUserRssResponseDto } from '@user/dto/response/getUserRss.dto';
@@ -456,6 +457,127 @@ describe(`${UserService.name} Unit Test`, () => {
       // then
       expect(user.userName).toBe('new');
       expect(fileService.deleteByPath).not.toHaveBeenCalled();
+    });
+
+    it('변경하려는 userName이 이미 존재하면 ConflictException을 던진다.', async () => {
+      // given
+      const user = UserFixture.createUserFixture({ userName: 'old' });
+      userRepository.findOneBy.mockResolvedValue(user);
+      userRepository.findOne.mockResolvedValue(
+        UserFixture.createUserFixture({ userName: 'taken' }),
+      );
+
+      // when & then
+      await expect(
+        userService.updateUser(userId, { userName: 'taken' }),
+      ).rejects.toThrow(ConflictException);
+      expect(userRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('동일한 userName이면 중복 조회 없이 통과한다.', async () => {
+      // given
+      const user = UserFixture.createUserFixture({ userName: 'same' });
+      userRepository.findOneBy.mockResolvedValue(user);
+
+      // when
+      await userService.updateUser(userId, { userName: 'same' });
+
+      // then
+      expect(userRepository.findOne).not.toHaveBeenCalled();
+      expect(userRepository.save).toHaveBeenCalledWith(user);
+    });
+
+    it('사전 조회를 통과해도 저장 시 unique 제약 위반(ER_DUP_ENTRY)이면 ConflictException으로 변환한다.', async () => {
+      // given: 사전 조회는 비어 있지만(TOCTOU) 저장 시점에 중복이 발생하는 경합 상황
+      const user = UserFixture.createUserFixture({ userName: 'old' });
+      userRepository.findOneBy.mockResolvedValue(user);
+      userRepository.findOne.mockResolvedValue(null);
+      userRepository.save.mockRejectedValue({ code: 'ER_DUP_ENTRY' });
+
+      // when & then
+      await expect(
+        userService.updateUser(userId, { userName: 'taken' }),
+      ).rejects.toThrow(ConflictException);
+    });
+  });
+
+  describe('checkUserNameDuplication', () => {
+    it('닉네임이 존재하면 exists=true 응답을 반환한다.', async () => {
+      userRepository.findOne.mockResolvedValue(UserFixture.createUserFixture());
+      const result = await userService.checkUserNameDuplication('tester');
+      expect(result).toEqual(
+        CheckUserNameDuplicationResponseDto.toResponseDto(true),
+      );
+    });
+
+    it('닉네임이 없으면 exists=false 응답을 반환한다.', async () => {
+      userRepository.findOne.mockResolvedValue(null);
+      const result = await userService.checkUserNameDuplication('tester');
+      expect(result).toEqual(
+        CheckUserNameDuplicationResponseDto.toResponseDto(false),
+      );
+    });
+  });
+
+  describe('changePassword', () => {
+    const userId = 1;
+
+    it('현재 비밀번호가 일치하면 새 비밀번호로 변경하고 전 기기를 로그아웃한다.', async () => {
+      // given
+      const user = await UserFixture.createUserCryptFixture({ id: userId });
+      const before = user.password;
+      userRepository.findOneBy.mockResolvedValue(user);
+
+      // when
+      await userService.changePassword(userId, {
+        currentPassword: USER_DEFAULT_PASSWORD,
+        newPassword: 'newPass1!',
+      });
+
+      // then
+      expect(user.password).not.toBe(before);
+      expect(userRepository.save).toHaveBeenCalledWith(user);
+      expect(redisService.setex).toHaveBeenCalledWith(
+        `${REDIS_KEYS.USER_INVALIDATED_PREFIX}:${userId}`,
+        14 * 86400,
+        expect.stringMatching(/^\d+$/),
+      );
+    });
+
+    it('현재 비밀번호가 일치하지 않으면 UnauthorizedException을 던지고 저장하지 않는다.', async () => {
+      // given
+      const user = await UserFixture.createUserCryptFixture({ id: userId });
+      userRepository.findOneBy.mockResolvedValue(user);
+
+      // when & then
+      await expect(
+        userService.changePassword(userId, {
+          currentPassword: 'wrongPass1!',
+          newPassword: 'newPass1!',
+        }),
+      ).rejects.toThrow(UnauthorizedException);
+      expect(userRepository.save).not.toHaveBeenCalled();
+      expect(redisService.setex).not.toHaveBeenCalled();
+    });
+
+    it('비밀번호 미설정 소셜 계정은 현재 비밀번호 없이 새로 설정하고 전 기기를 로그아웃한다.', async () => {
+      // given
+      const user = UserFixture.createUserFixture({ id: userId, password: null });
+      userRepository.findOneBy.mockResolvedValue(user);
+
+      // when
+      await userService.changePassword(userId, {
+        newPassword: 'newPass1!',
+      });
+
+      // then
+      expect(user.password).toBeTruthy();
+      expect(userRepository.save).toHaveBeenCalledWith(user);
+      expect(redisService.setex).toHaveBeenCalledWith(
+        `${REDIS_KEYS.USER_INVALIDATED_PREFIX}:${userId}`,
+        14 * 86400,
+        expect.stringMatching(/^\d+$/),
+      );
     });
   });
 

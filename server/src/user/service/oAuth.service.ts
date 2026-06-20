@@ -97,6 +97,25 @@ export class OAuthService {
 
     const userInfo = await this.providers[providerType].getUserInfo(tokenData);
 
+    const linkedProvider = await this.findExistingProvider(
+      providerType,
+      userInfo.id,
+    );
+    if (linkedProvider) {
+      await this.updateProviderTokens(
+        linkedProvider,
+        tokenData.refresh_token || null,
+      );
+      const jwtPayload: Payload = {
+        id: linkedProvider.user.id,
+        email: linkedProvider.user.email,
+        userName: linkedProvider.user.userName,
+        role: 'user',
+      };
+      this.userService.issueRefreshToken(jwtPayload, res);
+      return `${OAUTH_URL_PATH.BASE_URL}/oauth-success`;
+    }
+
     const existingUser = await this.userRepository.findOne({
       where: { email: userInfo.email },
     });

@@ -17,6 +17,7 @@ type AuthState = {
   isInitialized: boolean;
   setAccessToken: (token: string | null) => void;
   setRole: (role: "guest" | "user" | "admin") => void;
+  setUserName: (userName: string) => void;
   setUserFromToken: (token: string) => void;
   logout: () => void;
   initialize: () => void;
@@ -34,6 +35,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   isInitialized: false,
   setRole: (role) => set({ role }),
   setAccessToken: (token) => set({ accessToken: token }),
+  setUserName: (userName) => set((state) => ({ userInfo: { ...state.userInfo, userName } })),
   setUserFromToken: (token) => {
     const decoded = decodeToken(token);
     if (decoded) {

@@ -53,6 +53,9 @@ export const USER = {
   LOGOUT: "/api/users/logout",
   CERTIFICATE: "/api/users/email-verifications",
   WITHDRAW_CONFIRM: (token: string) => `/api/users/deletion-requests/${token}`,
+  USERNAME_AVAILABILITY: "/api/users/username-availability",
+  PASSWORD: "/api/users/password",
+  DELETE_REQUEST: "/api/users/deletion-requests",
 };
 
 export const OAUTH = {
@@ -60,8 +63,13 @@ export const OAUTH = {
   REGISTER: "/api/oauth/registrations",
 };
 
+export const FILE = {
+  UPLOAD: "/api/files",
+};
+
 export const PROFILE = {
   PROFILE: (id: number) => `/api/users/${id}/profile`,
+  UPDATE: "/api/users/profile",
   RSS: (id: number) => `/api/users/${id}/rss`,
   LIKES: (id: number) => `/api/users/${id}/likes`,
   COMMENTS: (id: number) => `/api/users/${id}/comments`,

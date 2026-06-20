@@ -4,20 +4,11 @@ import { useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import { MyPage } from "@/components/profile/MyPage.tsx";
 import { ProfileSidebar } from "@/components/profile/ProfileSidebar.tsx";
+import { ProfileEditTab } from "@/components/profile/sections/ProfileEditTab.tsx";
 import { RssManagementTab } from "@/components/profile/rss/RssManagementTab.tsx";
-import { Card, CardContent } from "@/components/ui/card.tsx";
 
 import { useAuthStore } from "@/store/useAuthStore.ts";
 import { ProfileTab } from "@/types/profile.ts";
-
-const ComingSoon = ({ title }: { title: string }) => (
-  <Card>
-    <CardContent className="p-8 text-center">
-      <h3 className="mb-2 text-lg font-semibold">{title}</h3>
-      <p className="text-gray-400">다음 업데이트에서 제공됩니다.</p>
-    </CardContent>
-  </Card>
-);
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -44,7 +35,7 @@ export default function Profile() {
             <MyPage userId={userInfo.id} name={userInfo.userName ?? ""} email={userInfo.email ?? ""} />
           )}
           {activeTab === "rss" && <RssManagementTab userId={userInfo.id} />}
-          {activeTab === "settings" && <ComingSoon title="정보 수정" />}
+          {activeTab === "settings" && <ProfileEditTab userId={userInfo.id} email={userInfo.email ?? ""} />}
         </div>
       </div>
     </Layout>
