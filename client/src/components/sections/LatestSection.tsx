@@ -15,7 +15,7 @@ import { Badge } from "../ui/badge";
 import { posts } from "@/api/services/posts";
 import { useFilterStore } from "@/store/useFilterStore";
 import { usePostTypeStore } from "@/store/usePostTypeStore";
-import { Post } from "@/types/post";
+import { FeedList } from "@/types/post";
 
 export default function LatestSection() {
   const pickedFilter = useFilterStore((state) => state.filters);
@@ -25,7 +25,7 @@ export default function LatestSection() {
   const recentTags = useRecentTag();
   const tags = postType === "latest" ? pickedFilter : recentTags;
 
-  const { items, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } = useInfiniteScrollQuery<Post>({
+  const { items, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } = useInfiniteScrollQuery<FeedList>({
     queryKey: "latest-posts",
     fetchFn: posts.latest,
     tags: tags,

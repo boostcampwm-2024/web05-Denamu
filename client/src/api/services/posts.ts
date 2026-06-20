@@ -1,11 +1,21 @@
 import { BLOG } from "@/constants/endpoints";
 
 import { axiosInstance } from "@/api/instance";
-import { InfiniteScrollResponse, LatestPostsApiResponse, Post, PostDetailType, UpdatePostsApiResponse } from "@/types/post";
+import {
+  InfiniteScrollResponse,
+  LatestFeedsApiResponse,
+  FeedList,
+  FeedDetailType,
+  RecentFeedsApiResponse,
+} from "@/types/post";
 
 export const posts = {
-  latest: async (params: { limit: number; lastId: number; tags: string[] }): Promise<InfiniteScrollResponse<Post>> => {
-    const response = await axiosInstance.get<LatestPostsApiResponse>(BLOG.POST, {
+  latest: async (params: {
+    limit: number;
+    lastId: number;
+    tags: string[];
+  }): Promise<InfiniteScrollResponse<FeedList>> => {
+    const response = await axiosInstance.get<LatestFeedsApiResponse>(BLOG.POST, {
       params: {
         limit: params.limit,
         lastId: params.lastId || 0,
@@ -18,12 +28,12 @@ export const posts = {
       lastId: response.data.data.lastId,
     };
   },
-  detail: async (postId: number): Promise<PostDetailType> => {
-    const response = await axiosInstance.get<PostDetailType>(`${BLOG.POST}/${postId}`);
+  detail: async (postId: number): Promise<FeedDetailType> => {
+    const response = await axiosInstance.get<FeedDetailType>(`${BLOG.POST}/${postId}`);
     return response.data;
   },
-  update: async (): Promise<UpdatePostsApiResponse> => {
-    const response = await axiosInstance.get<UpdatePostsApiResponse>("/api/feed/recent");
+  update: async (): Promise<RecentFeedsApiResponse> => {
+    const response = await axiosInstance.get<RecentFeedsApiResponse>(BLOG.RECENT);
     return {
       message: response.data.message,
       data: response.data.data,

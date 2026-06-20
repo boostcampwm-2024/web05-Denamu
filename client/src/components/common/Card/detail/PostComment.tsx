@@ -1,23 +1,24 @@
 import { useState } from "react";
 
-import CommentAction from "@/components/common/Card/detail/CommentAction";
 import { AuthSignInForm } from "@/components/auth/AuthSignInForm";
+import CommentAction from "@/components/common/Card/detail/CommentAction";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 import { useComments, useCreateComment, useUpdateComment, useDeleteComment } from "@/hooks/queries/useComments";
 import { useUserProfile } from "@/hooks/queries/useProfile";
 
-import { useAuthStore } from "@/store/useAuthStore";
-import { PostCommentType } from "@/types/post";
 import { timeAgo } from "@/utils/timeago";
+
+import { useAuthStore } from "@/store/useAuthStore";
+import { FeedCommentType } from "@/types/post";
 
 interface PostCommentProps {
   feedId: number;
 }
 
 interface CommentItemProps {
-  comment: PostCommentType;
+  comment: FeedCommentType;
   isOwner: boolean;
   modifyId: number | null;
   handleModify: (id: number | null) => void;

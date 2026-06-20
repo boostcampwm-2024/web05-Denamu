@@ -5,10 +5,10 @@ import { SimpleTagList } from "@/components/common/Card/PostTag";
 
 import { detailFormatDate } from "@/utils/date";
 
-import { Post } from "@/types/post";
+import { FeedDetail } from "@/types/post";
 
 interface PostHeaderProps {
-  data: Post;
+  data: FeedDetail;
 }
 
 export const PostHeader = React.memo(({ data }: PostHeaderProps) => (

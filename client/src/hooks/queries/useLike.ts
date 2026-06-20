@@ -1,5 +1,5 @@
 import { likes } from "@/api/services/likes";
-import { PostDetailType } from "@/types/post";
+import { FeedDetailType } from "@/types/post";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const likeKey = (feedId: number) => ["like", feedId];
@@ -23,14 +23,12 @@ export const useToggleLike = (feedId: number) => {
       await queryClient.cancelQueries({ queryKey: detailKey(feedId) });
 
       const prevIsLike = queryClient.getQueryData<boolean>(likeKey(feedId));
-      const prevDetail = queryClient.getQueryData<PostDetailType>(detailKey(feedId));
+      const prevDetail = queryClient.getQueryData<FeedDetailType>(detailKey(feedId));
 
       const nextIsLike = !isLike;
       queryClient.setQueryData<boolean>(likeKey(feedId), nextIsLike);
-      queryClient.setQueryData<PostDetailType>(detailKey(feedId), (old) =>
-        old
-          ? { ...old, data: { ...old.data, likes: Math.max(0, (old.data.likes ?? 0) + (nextIsLike ? 1 : -1)) } }
-          : old
+      queryClient.setQueryData<FeedDetailType>(detailKey(feedId), (old) =>
+        old ? { ...old, data: { ...old.data, likes: Math.max(0, (old.data.likes ?? 0) + (nextIsLike ? 1 : -1)) } } : old
       );
 
       return { prevIsLike, prevDetail };

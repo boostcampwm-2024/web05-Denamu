@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 
-import { Post } from "@/types/post.ts";
+import { FeedList } from "@/types/post.ts";
 
-export const usePositionTracking = (posts: Post[]) => {
+export const usePositionTracking = (posts: FeedList[]) => {
   const [positions, setPositions] = useState(new Map());
   const [prevPosts, setPrevPosts] = useState(posts);
 

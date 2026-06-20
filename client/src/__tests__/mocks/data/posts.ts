@@ -23,7 +23,6 @@ export const createMinimalPost = () =>
     thumbnail: undefined,
     authorImageUrl: undefined,
     tags: undefined,
-    likes: undefined,
   });
 
 export const createLongTitlePost = () =>

@@ -1,6 +1,6 @@
 import { ApiData } from "@/types/api";
 
-export interface Post {
+export interface FeedBase {
   id: number;
   createdAt: string;
   title: string;
@@ -10,10 +10,15 @@ export interface Post {
   thumbnail: string;
   authorImageUrl?: string;
   tag: string[];
-  likes?: number;
+  likes: number;
   blogPlatform: string;
-  summary: string;
   isNew?: boolean;
+}
+
+export type FeedList = FeedBase;
+
+export interface FeedDetail extends FeedBase {
+  summary: string;
 }
 
 export interface InfiniteScrollResponse<T> {
@@ -22,13 +27,13 @@ export interface InfiniteScrollResponse<T> {
   lastId: number | null;
 }
 
-export type LatestPostsApiResponse = ApiData<InfiniteScrollResponse<Post>>;
+export type LatestFeedsApiResponse = ApiData<InfiniteScrollResponse<FeedList>>;
 
-export type TrendingPostsApiResponse = ApiData<Post[]>;
+export type TrendingFeedsApiResponse = ApiData<FeedList[]>;
 
-export type PostDetailType = ApiData<Post>;
+export type FeedDetailType = ApiData<FeedDetail>;
 
-export interface PostCommentType {
+export interface FeedCommentType {
   id: number;
   comment: string;
   date: string;
@@ -41,5 +46,5 @@ export interface PostCommentType {
 
 export interface UpdatePostsApiResponse {
   message: string;
-  data: Post[];
+  data: FeedList[];
 }

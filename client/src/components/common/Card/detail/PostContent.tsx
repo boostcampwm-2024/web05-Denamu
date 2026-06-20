@@ -8,10 +8,10 @@ import ShareButton from "@/components/common/Card/detail/ShareButton";
 import { usePostCardActions } from "@/hooks/common/usePostCardActions";
 
 import { useMediaStore } from "@/store/useMediaStore";
-import { Post } from "@/types/post";
+import { FeedDetail } from "@/types/post";
 
 interface PostContentProps {
-  post: Post;
+  post: FeedDetail;
 }
 
 export const PostContent = React.memo(({ post }: PostContentProps) => {
