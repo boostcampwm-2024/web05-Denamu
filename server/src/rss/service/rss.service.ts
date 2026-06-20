@@ -24,7 +24,9 @@ import { DeleteRssRequestDto } from '@rss/dto/request/deleteRss.dto';
 import { ManageRssRequestDto } from '@rss/dto/request/manageRss.dto';
 import { RegisterRssRequestDto } from '@rss/dto/request/registerRss.dto';
 import { RejectRssRequestDto } from '@rss/dto/request/rejectRss';
+import { GetOwnedRssFeedsRequestDto } from '@rss/dto/request/getOwnedRssFeeds.dto';
 import { CreateRssCertificationResponseDto } from '@rss/dto/response/createRssCertification.dto';
+import { GetOwnedRssFeedsResponseDto } from '@rss/dto/response/getOwnedRssFeeds.dto';
 import { PreviewRssCertificationResponseDto } from '@rss/dto/response/previewRssCertification.dto';
 import { ReadRssResponseDto } from '@rss/dto/response/readRss.dto';
 import { ReadRssAcceptHistoryResponseDto } from '@rss/dto/response/readRssAcceptHistory.dto';
@@ -35,6 +37,8 @@ import {
   RssRejectRepository,
   RssRepository,
 } from '@rss/repository/rss.repository';
+
+import { FeedRepository } from '@feed/repository/feed.repository';
 
 type FullFeedCrawlMessage = {
   rssId: number;
@@ -48,6 +52,7 @@ export class RssService {
     private readonly rssRepository: RssRepository,
     private readonly rssAcceptRepository: RssAcceptRepository,
     private readonly rssRejectRepository: RssRejectRepository,
+    private readonly feedRepository: FeedRepository,
     private readonly emailProducer: EmailProducer,
     private readonly dataSource: DataSource,
     private readonly redisService: RedisService,
@@ -436,5 +441,61 @@ export class RssService {
     }
 
     await this.rssAcceptRepository.update({ id: rssAcceptId }, { userId: null });
+  }
+
+  private async assertRssOwnership(rssAcceptId: number, userId: number) {
+    const rssAccept = await this.rssAcceptRepository.findOne({
+      where: { id: rssAcceptId },
+    });
+
+    if (!rssAccept) {
+      throw new NotFoundException('RSS를 찾을 수 없습니다.');
+    }
+
+    if (rssAccept.userId !== userId) {
+      throw new ForbiddenException('본인이 인증한 RSS가 아닙니다.');
+    }
+
+    return rssAccept;
+  }
+
+  async getOwnedRssFeeds(
+    user: Payload,
+    rssAcceptId: number,
+    feedDto: GetOwnedRssFeedsRequestDto,
+  ) {
+    await this.assertRssOwnership(rssAcceptId, user.id);
+
+    const feeds = await this.feedRepository.getFeedsByBlog(
+      rssAcceptId,
+      feedDto.lastId,
+      feedDto.limit,
+      false,
+    );
+
+    const hasMore = feeds.length > feedDto.limit;
+    if (hasMore) feeds.pop();
+    const lastId = feeds.length ? feeds[feeds.length - 1].id : 0;
+
+    return GetOwnedRssFeedsResponseDto.toResponseDto(feeds, lastId, hasMore);
+  }
+
+  async setFeedVisibility(
+    user: Payload,
+    rssAcceptId: number,
+    feedId: number,
+    isPublic: boolean,
+  ) {
+    await this.assertRssOwnership(rssAcceptId, user.id);
+
+    const affected = await this.feedRepository.setVisibilityForBlog(
+      feedId,
+      rssAcceptId,
+      isPublic,
+    );
+
+    if (!affected) {
+      throw new NotFoundException('해당 RSS의 게시글을 찾을 수 없습니다.');
+    }
   }
 }
