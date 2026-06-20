@@ -26,6 +26,7 @@ export const ADMIN = {
 export const BLOG = {
   POST: "/api/feeds",
   Trend: "/api/feeds/trend/sse",
+  LIKE: (id: number) => `/api/feeds/${id}/likes`,
   RSS: {
     REGISTRER_RSS: "/api/rss",
     CERTIFICATION: "/api/rss/certifications",
