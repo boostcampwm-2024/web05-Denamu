@@ -29,10 +29,11 @@ export type PostDetailType = ApiData<Post>;
 
 export interface PostCommentType {
   id: number;
-  author: string;
-  content: string;
-  authorImage: string;
-  createdAt: string;
-  likes: number;
-  isLiked: boolean;
+  comment: string;
+  date: string;
+  user: {
+    id: number;
+    userName: string;
+    profileImage: string | null;
+  };
 }

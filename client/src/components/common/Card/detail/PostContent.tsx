@@ -7,8 +7,6 @@ import ShareButton from "@/components/common/Card/detail/ShareButton";
 
 import { usePostCardActions } from "@/hooks/common/usePostCardActions";
 
-import { POST_COMMENT_DATA } from "@/constants/dummyData";
-
 import { useMediaStore } from "@/store/useMediaStore";
 import { Post } from "@/types/post";
 
@@ -58,7 +56,7 @@ export const PostContent = React.memo(({ post }: PostContentProps) => {
         <LikeButton post={post} />
         <ShareButton post={post} />
       </div>
-      <PostComment comments={POST_COMMENT_DATA} />
+      <PostComment feedId={post.id} />
     </div>
   );
 });

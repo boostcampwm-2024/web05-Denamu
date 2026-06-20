@@ -27,6 +27,10 @@ export const BLOG = {
   POST: "/api/feeds",
   Trend: "/api/feeds/trend/sse",
   LIKE: (id: number) => `/api/feeds/${id}/likes`,
+  COMMENT: {
+    LIST: (feedId: number) => `/api/feeds/${feedId}/comments`,
+    ITEM: (feedId: number, commentId: number) => `/api/feeds/${feedId}/comments/${commentId}`,
+  },
   RSS: {
     REGISTRER_RSS: "/api/rss",
     CERTIFICATION: "/api/rss/certifications",
