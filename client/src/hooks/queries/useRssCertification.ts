@@ -3,13 +3,15 @@ import { AxiosError } from "axios";
 import {
   createRssCertification,
   deleteRssCertification,
+  getOwnedRssFeeds,
   previewRssCertification,
+  setFeedVisibility,
   updateRssCertification,
   verifyRssCertification,
 } from "@/api/services/rss";
 import { ApiMessage } from "@/types/api";
 import { CreateRssCertificationResult, RssCertificationPreview } from "@/types/profile";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 type ApiError = AxiosError<{ message?: string }>;
 
@@ -55,5 +57,22 @@ export const useDeleteRssCertification = (userId: number) => {
   return useMutation<ApiMessage, ApiError, number>({
     mutationFn: deleteRssCertification,
     onSuccess: () => invalidate(),
+  });
+};
+
+export const useOwnedRssFeeds = (rssId: number, enabled: boolean) =>
+  useInfiniteQuery({
+    queryKey: ["ownedRssFeeds", rssId],
+    queryFn: ({ pageParam }) => getOwnedRssFeeds(rssId, pageParam),
+    initialPageParam: undefined as number | undefined,
+    getNextPageParam: (lastPage) => (lastPage.hasMore ? lastPage.lastId : undefined),
+    enabled: enabled && !!rssId,
+  });
+
+export const useSetFeedVisibility = (rssId: number) => {
+  const queryClient = useQueryClient();
+  return useMutation<ApiMessage, ApiError, { feedId: number; isPublic: boolean }>({
+    mutationFn: ({ feedId, isPublic }) => setFeedVisibility(rssId, feedId, isPublic),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["ownedRssFeeds", rssId] }),
   });
 };

@@ -58,7 +58,7 @@ export const MyPage = ({ userId, name, email }: MyPageProps) => {
         </CardContent>
       </Card>
 
-      <CertifiedRssList rssList={rssList ?? []} />
+      <CertifiedRssList userId={userId} rssList={rssList ?? []} />
 
       <LikedList userId={userId} />
       <CommentList userId={userId} />

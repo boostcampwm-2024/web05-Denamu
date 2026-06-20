@@ -99,6 +99,19 @@ export interface CommentItem {
   feed: FeedRef;
 }
 
+export interface RssFeedItem {
+  id: number;
+  title: string;
+  path: string;
+  createdAt: string;
+  commentCount: number;
+  likeCount: number;
+}
+
+export interface OwnedRssFeedItem extends RssFeedItem {
+  isPublic: boolean;
+}
+
 export interface CursorPage<T> {
   result: T[];
   lastId: number;

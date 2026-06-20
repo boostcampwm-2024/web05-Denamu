@@ -1,15 +1,14 @@
-import { Rss } from "lucide-react";
-
-import { Badge } from "@/components/ui/badge.tsx";
+import { CertifiedRssCard } from "@/components/profile/rss/CertifiedRssCard.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 
 import { CertifiedRss } from "@/types/profile.ts";
 
 interface CertifiedRssListProps {
+  userId: number;
   rssList: CertifiedRss[];
 }
 
-export const CertifiedRssList = ({ rssList }: CertifiedRssListProps) => {
+export const CertifiedRssList = ({ userId, rssList }: CertifiedRssListProps) => {
   return (
     <Card className="mb-8">
       <CardContent className="p-6">
@@ -19,25 +18,7 @@ export const CertifiedRssList = ({ rssList }: CertifiedRssListProps) => {
         ) : (
           <ul className="space-y-3">
             {rssList.map((rss) => (
-              <li key={rss.id} className="flex items-center justify-between p-3 border border-gray-100 rounded-lg">
-                <div className="flex items-center min-w-0 space-x-3">
-                  <Rss className="flex-shrink-0 w-5 h-5 text-blue-500" />
-                  <div className="min-w-0">
-                    <p className="font-medium truncate">{rss.name}</p>
-                    <a
-                      href={rss.rssUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-gray-500 truncate hover:underline"
-                    >
-                      {rss.rssUrl}
-                    </a>
-                  </div>
-                </div>
-                <Badge variant="secondary" className="flex-shrink-0 ml-3">
-                  {rss.blogPlatform}
-                </Badge>
-              </li>
+              <CertifiedRssCard key={rss.id} userId={userId} rss={rss} />
             ))}
           </ul>
         )}
