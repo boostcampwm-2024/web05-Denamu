@@ -52,7 +52,7 @@ export const PostContent = React.memo(({ post }: PostContentProps) => {
         )}
       </div>
       <div className="flex gap-3">
-        <LikeButton />
+        <LikeButton post={post} />
         <ShareButton post={post} />
       </div>
     </div>
