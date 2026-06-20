@@ -22,7 +22,7 @@ describe(`${CommentService.name} Unit Test`, () => {
       'findOne' | 'getCommentInformation' | 'getCommentsByUser' | 'save'
     >
   >;
-  let feedService: jest.Mocked<Pick<FeedService, 'getFeed'>>;
+  let feedService: jest.Mocked<Pick<FeedService, 'getPublicFeed'>>;
   let userService: jest.Mocked<Pick<UserService, 'getUser'>>;
   let manager: { save: jest.Mock; remove: jest.Mock };
   let dataSource: jest.Mocked<Pick<DataSource, 'transaction'>>;
@@ -41,7 +41,7 @@ describe(`${CommentService.name} Unit Test`, () => {
       getCommentsByUser: jest.fn(),
       save: jest.fn(),
     };
-    feedService = { getFeed: jest.fn() };
+    feedService = { getPublicFeed: jest.fn() };
     userService = { getUser: jest.fn() };
     manager = { save: jest.fn(), remove: jest.fn() };
     dataSource = {
@@ -68,14 +68,14 @@ describe(`${CommentService.name} Unit Test`, () => {
           user: { id: 1, userName: 'tester', profileImage: null },
         },
       ] as any;
-      feedService.getFeed.mockResolvedValue({ id: 10 } as any);
+      feedService.getPublicFeed.mockResolvedValue({ id: 10, isPublic: true } as any);
       commentRepository.getCommentInformation.mockResolvedValue(comments);
 
       // when
       const result = await commentService.get(dto);
 
       // then
-      expect(feedService.getFeed).toHaveBeenCalledWith(10);
+      expect(feedService.getPublicFeed).toHaveBeenCalledWith(10);
       expect(commentRepository.getCommentInformation).toHaveBeenCalledWith(10);
       expect(result).toEqual(
         GetCommentResponseDto.toResponseDtoArray(comments),
@@ -165,8 +165,8 @@ describe(`${CommentService.name} Unit Test`, () => {
   describe('create', () => {
     it('트랜잭션 안에서 댓글 수를 증가시키고 댓글을 저장한다.', async () => {
       // given
-      const feed = { id: 10, commentCount: 2 };
-      feedService.getFeed.mockResolvedValue(feed as any);
+      const feed = { id: 10, commentCount: 2, isPublic: true };
+      feedService.getPublicFeed.mockResolvedValue(feed as any);
       const dto = { comment: '새 댓글' };
 
       // when
@@ -180,6 +180,19 @@ describe(`${CommentService.name} Unit Test`, () => {
         feed,
         user: { id: user.id },
       });
+    });
+
+    it('비공개 게시글이면 NotFoundException을 던지고 저장하지 않는다.', async () => {
+      // given - getPublicFeed가 비공개 게시글에 대해 404를 던진다.
+      feedService.getPublicFeed.mockRejectedValue(
+        new NotFoundException('존재하지 않는 게시글입니다.')
+      );
+
+      // when & then
+      await expect(commentService.create(user, 10, { comment: 'x' })).rejects.toThrow(
+        NotFoundException
+      );
+      expect(manager.save).not.toHaveBeenCalled();
     });
   });
 

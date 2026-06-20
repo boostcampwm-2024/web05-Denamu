@@ -85,6 +85,24 @@ describe(`${FeedService.name} Unit Test`, () => {
     });
   });
 
+  describe('getPublicFeed', () => {
+    it('존재하지 않으면 NotFoundException을 던진다.', async () => {
+      feedRepository.findOneBy.mockResolvedValue(null);
+      await expect(feedService.getPublicFeed(1)).rejects.toThrow(NotFoundException);
+    });
+
+    it('비공개 게시글이면 NotFoundException을 던진다.', async () => {
+      feedRepository.findOneBy.mockResolvedValue({ id: 1, isPublic: false } as any);
+      await expect(feedService.getPublicFeed(1)).rejects.toThrow(NotFoundException);
+    });
+
+    it('공개 게시글이면 피드를 반환한다.', async () => {
+      const feed = { id: 1, isPublic: true } as any;
+      feedRepository.findOneBy.mockResolvedValue(feed);
+      await expect(feedService.getPublicFeed(1)).resolves.toBe(feed);
+    });
+  });
+
   describe('getFeedByView', () => {
     it('존재하지 않으면 NotFoundException을 던진다.', async () => {
       feedViewRepository.findOneBy.mockResolvedValue(null);

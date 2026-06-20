@@ -98,6 +98,29 @@ describe(`POST ${BASE_URL}/:feedId/comments E2E Test`, () => {
     expect(data).toBeUndefined();
   });
 
+  it('[404] 비공개 게시글에는 댓글을 등록할 수 없다.', async () => {
+    // given
+    const privateFeed = await feedRepository.save(
+      FeedFixture.createFeedFixture(rssAccept, { isPublic: false }),
+    );
+    const requestDto = new CreateCommentRequestDto({
+      comment: COMMENT_DEFAULT_TEXT,
+    });
+
+    // Http when
+    const response = await agent
+      .post(`${BASE_URL}/${privateFeed.id}/comments`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send(requestDto);
+
+    // Http then
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    const savedComment = await commentRepository.findOneBy({
+      feed: { id: privateFeed.id },
+    });
+    expect(savedComment).toBeNull();
+  });
+
   it('[201] 로그인이 되어 있을 경우 댓글 등록을 성공한다.', async () => {
     // given
     const requestDto = new CreateCommentRequestDto({

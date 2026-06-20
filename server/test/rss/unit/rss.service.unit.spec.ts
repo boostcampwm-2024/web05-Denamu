@@ -10,6 +10,8 @@ import { DataSource } from 'typeorm';
 
 import { AdminRepository } from '@admin/repository/admin.repository';
 
+import { FeedRepository } from '@feed/repository/feed.repository';
+
 import { EmailProducer } from '@common/email/email.producer';
 import { WinstonLoggerService } from '@common/logger/logger.service';
 import { NotifierRegistry } from '@common/notification/notifier-registry';
@@ -39,6 +41,9 @@ describe(`${RssService.name} Unit Test`, () => {
     Pick<RssAcceptRepository, 'findOne' | 'find' | 'delete' | 'update'>
   >;
   let rssRejectRepository: jest.Mocked<Pick<RssRejectRepository, 'find'>>;
+  let feedRepository: jest.Mocked<
+    Pick<FeedRepository, 'getFeedsByBlog' | 'setVisibilityForBlog'>
+  >;
   let emailProducer: jest.Mocked<
     Pick<
       EmailProducer,
@@ -72,6 +77,10 @@ describe(`${RssService.name} Unit Test`, () => {
       update: jest.fn().mockResolvedValue({ affected: 1 }),
     };
     rssRejectRepository = { find: jest.fn() };
+    feedRepository = {
+      getFeedsByBlog: jest.fn(),
+      setVisibilityForBlog: jest.fn().mockResolvedValue(1),
+    };
     emailProducer = {
       produceRssRegistration: jest.fn(),
       produceRssRegistrationRequest: jest.fn(),
@@ -96,6 +105,7 @@ describe(`${RssService.name} Unit Test`, () => {
       rssRepository as unknown as RssRepository,
       rssAcceptRepository as unknown as RssAcceptRepository,
       rssRejectRepository as unknown as RssRejectRepository,
+      feedRepository as unknown as FeedRepository,
       emailProducer as unknown as EmailProducer,
       dataSource as unknown as DataSource,
       redisService as unknown as RedisService,
@@ -588,6 +598,66 @@ describe(`${RssService.name} Unit Test`, () => {
         { id: 1 },
         { userId: null },
       );
+    });
+  });
+
+  describe('getOwnedRssFeeds', () => {
+    const user = { id: 10, email: 'me@test.com', userName: 'me', role: 'user' };
+
+    it('본인이 인증한 RSS가 아니면 ForbiddenException을 던진다.', async () => {
+      rssAcceptRepository.findOne.mockResolvedValue({ id: 1, userId: 99 } as any);
+
+      await expect(
+        rssService.getOwnedRssFeeds(user, 1, { limit: 10 }),
+      ).rejects.toThrow(ForbiddenException);
+      expect(feedRepository.getFeedsByBlog).not.toHaveBeenCalled();
+    });
+
+    it('비공개 글 포함 전체 게시글을 커서로 조회한다(onlyPublic=false).', async () => {
+      rssAcceptRepository.findOne.mockResolvedValue({ id: 1, userId: 10 } as any);
+      feedRepository.getFeedsByBlog.mockResolvedValue([
+        { id: 3, isPublic: true },
+        { id: 2, isPublic: false },
+        { id: 1, isPublic: true },
+      ] as any);
+
+      const result = await rssService.getOwnedRssFeeds(user, 1, { lastId: 4, limit: 2 });
+
+      expect(feedRepository.getFeedsByBlog).toHaveBeenCalledWith(1, 4, 2, false);
+      expect(result.result).toHaveLength(2);
+      expect(result.hasMore).toBe(true);
+      expect(result.lastId).toBe(2);
+    });
+  });
+
+  describe('setFeedVisibility', () => {
+    const user = { id: 10, email: 'me@test.com', userName: 'me', role: 'user' };
+
+    it('본인이 인증한 RSS가 아니면 ForbiddenException을 던진다.', async () => {
+      rssAcceptRepository.findOne.mockResolvedValue({ id: 1, userId: 99 } as any);
+
+      await expect(
+        rssService.setFeedVisibility(user, 1, 5, false),
+      ).rejects.toThrow(ForbiddenException);
+      expect(feedRepository.setVisibilityForBlog).not.toHaveBeenCalled();
+    });
+
+    it('게시글이 해당 RSS 소속이 아니면(affected=0) NotFoundException을 던진다.', async () => {
+      rssAcceptRepository.findOne.mockResolvedValue({ id: 1, userId: 10 } as any);
+      feedRepository.setVisibilityForBlog.mockResolvedValue(0);
+
+      await expect(
+        rssService.setFeedVisibility(user, 1, 5, false),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('소유/소속 검증 통과 시 공개 상태를 변경한다.', async () => {
+      rssAcceptRepository.findOne.mockResolvedValue({ id: 1, userId: 10 } as any);
+      feedRepository.setVisibilityForBlog.mockResolvedValue(1);
+
+      await rssService.setFeedVisibility(user, 1, 5, false);
+
+      expect(feedRepository.setVisibilityForBlog).toHaveBeenCalledWith(5, 1, false);
     });
   });
 
