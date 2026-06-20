@@ -1,0 +1,82 @@
+import { ApiProperty } from '@nestjs/swagger';
+
+import { Feed } from '@feed/entity/feed.entity';
+
+export class UserRssFeedResult {
+  @ApiProperty({
+    example: 1,
+    description: '게시글 ID',
+  })
+  id: number;
+
+  @ApiProperty({
+    example: 'example title',
+    description: '게시글 제목',
+  })
+  title: string;
+
+  @ApiProperty({
+    example: 'https://example.com/feed',
+    description: '게시글 URL',
+  })
+  path: string;
+
+  @ApiProperty({
+    example: '2025-01-01T00:00:00.000Z',
+    description: '게시글 작성일',
+  })
+  createdAt: Date;
+
+  @ApiProperty({
+    example: 0,
+    description: '게시글 댓글 수',
+  })
+  commentCount: number;
+
+  private constructor(partial: Partial<UserRssFeedResult>) {
+    Object.assign(this, partial);
+  }
+
+  static toResultDto(feed: Feed) {
+    return new UserRssFeedResult({
+      id: feed.id,
+      title: feed.title,
+      path: feed.path,
+      createdAt: feed.createdAt,
+      commentCount: feed.commentCount,
+    });
+  }
+
+  static toResultDtoArray(feeds: Feed[]) {
+    return feeds.map((feed) => this.toResultDto(feed));
+  }
+}
+
+export class GetUserRssFeedsResponseDto {
+  @ApiProperty({ type: [UserRssFeedResult], description: 'RSS의 게시글 목록' })
+  result: UserRssFeedResult[];
+
+  @ApiProperty({
+    example: 1,
+    description: '마지막으로 조회한 게시글 ID (다음 요청의 커서)',
+  })
+  lastId: number;
+
+  @ApiProperty({
+    example: true,
+    description: '다음 페이지 존재 여부',
+  })
+  hasMore: boolean;
+
+  constructor(partial: Partial<GetUserRssFeedsResponseDto>) {
+    Object.assign(this, partial);
+  }
+
+  static toResponseDto(feeds: Feed[], lastId: number, hasMore: boolean) {
+    return new GetUserRssFeedsResponseDto({
+      result: UserRssFeedResult.toResultDtoArray(feeds),
+      lastId,
+      hasMore,
+    });
+  }
+}
