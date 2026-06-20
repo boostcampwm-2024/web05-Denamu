@@ -5,6 +5,8 @@ import { NotifierModule } from '@common/notification/notifier.module';
 
 import { AdminModule } from '@admin/module/admin.module';
 
+import { FeedRepository } from '@feed/repository/feed.repository';
+
 import { RssController } from '@rss/controller/rss.controller';
 import {
   RssAcceptRepository,
@@ -21,6 +23,7 @@ import { RssService } from '@rss/service/rss.service';
     RssRepository,
     RssAcceptRepository,
     RssRejectRepository,
+    FeedRepository,
   ],
   exports: [RssAcceptRepository],
 })

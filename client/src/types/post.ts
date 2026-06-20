@@ -44,7 +44,7 @@ export interface FeedCommentType {
   };
 }
 
-export interface UpdatePostsApiResponse {
+export interface RecentFeedsApiResponse {
   message: string;
   data: FeedList[];
 }

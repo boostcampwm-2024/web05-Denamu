@@ -28,6 +28,7 @@ import { ApiConfirmDeleteAccount } from '@user/api-docs/confirmDeleteAccount.api
 import { ApiForgotPassword } from '@user/api-docs/forgotPassword.api-docs';
 import { ApiGetUserProfile } from '@user/api-docs/getUserProfile.api-docs';
 import { ApiGetUserRss } from '@user/api-docs/getUserRss.api-docs';
+import { ApiGetUserRssFeeds } from '@user/api-docs/getUserRssFeeds.api-docs';
 import { ApiLoginUser } from '@user/api-docs/loginUser.api-docs';
 import { ApiLogoutUser } from '@user/api-docs/logoutUser.api-docs';
 import { ApiRefreshToken } from '@user/api-docs/refreshToken.api-docs';
@@ -42,6 +43,8 @@ import { CheckUserNameDuplicationRequestDto } from '@user/dto/request/checkUserN
 import { ConfirmDeleteAccountParamRequestDto } from '@user/dto/request/confirmDeleteAccountParam.dto';
 import { ForgotPasswordRequestDto } from '@user/dto/request/forgotPassword.dto';
 import { GetUserProfileParamRequestDto } from '@user/dto/request/getUserProfileParam.dto';
+import { GetUserRssFeedsRequestDto } from '@user/dto/request/getUserRssFeeds.dto';
+import { GetUserRssFeedsParamRequestDto } from '@user/dto/request/getUserRssFeedsParam.dto';
 import { LoginUserRequestDto } from '@user/dto/request/loginUser.dto';
 import { RegisterUserRequestDto } from '@user/dto/request/registerUser.dto';
 import { RequestDeleteAccountRequestDto } from '@user/dto/request/requestDeleteAccount.dto';
@@ -102,6 +105,19 @@ export class UserController {
     return ApiResponse.responseWithData(
       '사용자 소유 RSS 조회가 성공적으로 처리되었습니다.',
       await this.userService.getUserRss(paramDto.id),
+    );
+  }
+
+  @ApiGetUserRssFeeds()
+  @Get('/:id/rss/:rssId/feeds')
+  @HttpCode(HttpStatus.OK)
+  async getUserRssFeeds(
+    @Param() paramDto: GetUserRssFeedsParamRequestDto,
+    @Query() queryDto: GetUserRssFeedsRequestDto,
+  ) {
+    return ApiResponse.responseWithData(
+      'RSS 게시글 목록 조회가 성공적으로 처리되었습니다.',
+      await this.userService.getUserRssFeeds(paramDto.rssId, queryDto),
     );
   }
 

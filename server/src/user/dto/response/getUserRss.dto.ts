@@ -33,21 +33,33 @@ export class GetUserRssResponseDto {
   })
   blogPlatform: string;
 
+  @ApiProperty({
+    example: 0,
+    description: 'RSS의 공개 게시글 수',
+  })
+  feedCount: number;
+
   constructor(partial: Partial<GetUserRssResponseDto>) {
     Object.assign(this, partial);
   }
 
-  static toResponseDto(rssAccept: RssAccept) {
+  static toResponseDto(rssAccept: RssAccept, feedCount: number) {
     return new GetUserRssResponseDto({
       id: rssAccept.id,
       name: rssAccept.name,
       userName: rssAccept.userName,
       rssUrl: rssAccept.rssUrl,
       blogPlatform: rssAccept.blogPlatform,
+      feedCount,
     });
   }
 
-  static toResponseDtoArray(rssAcceptList: RssAccept[]) {
-    return rssAcceptList.map((rssAccept) => this.toResponseDto(rssAccept));
+  static toResponseDtoArray(
+    rssAcceptList: RssAccept[],
+    feedCountMap: Map<number, number>,
+  ) {
+    return rssAcceptList.map((rssAccept) =>
+      this.toResponseDto(rssAccept, feedCountMap.get(rssAccept.id) ?? 0),
+    );
   }
 }

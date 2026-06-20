@@ -38,6 +38,9 @@ export const BLOG = {
     CERTIFICATION_PREVIEW: "/api/rss/certifications/preview",
     CERTIFICATION_VERIFY: "/api/rss/certifications/verify",
     CERTIFICATION_BY_ID: (id: number) => `/api/rss/certifications/${id}`,
+    OWNED_FEEDS: (id: number) => `/api/rss/certifications/${id}/feeds`,
+    FEED_VISIBILITY: (id: number, feedId: number) =>
+      `/api/rss/certifications/${id}/feeds/${feedId}/visibility`,
     REMOVE_CONFIRM: (code: string) => `/api/rss/remove/${code}`,
   },
 };
@@ -77,6 +80,7 @@ export const PROFILE = {
   PROFILE: (id: number) => `/api/users/${id}/profile`,
   UPDATE: "/api/users/profile",
   RSS: (id: number) => `/api/users/${id}/rss`,
+  RSS_FEEDS: (id: number, rssId: number) => `/api/users/${id}/rss/${rssId}/feeds`,
   LIKES: (id: number) => `/api/users/${id}/likes`,
   COMMENTS: (id: number) => `/api/users/${id}/comments`,
   ACTIVITIES: (id: number) => `/api/activities/${id}`,

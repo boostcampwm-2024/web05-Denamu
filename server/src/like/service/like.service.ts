@@ -48,7 +48,7 @@ export class LikeService {
     userInformation: Payload | null,
     feedLikeGetDto: ManageLikeRequestDto,
   ) {
-    await this.feedService.getFeed(feedLikeGetDto.feedId);
+    await this.feedService.getPublicFeed(feedLikeGetDto.feedId);
     let isLike = false;
 
     if (userInformation) {
@@ -67,7 +67,7 @@ export class LikeService {
     feedLikeCreateDto: ManageLikeRequestDto,
   ) {
     await this.dataSource.transaction(async (manager) => {
-      const feed = await this.feedService.getFeed(feedLikeCreateDto.feedId);
+      const feed = await this.feedService.getPublicFeed(feedLikeCreateDto.feedId);
       const existing = await this.likeRepository.findOneBy({
         user: { id: userInformation.id },
         feed,

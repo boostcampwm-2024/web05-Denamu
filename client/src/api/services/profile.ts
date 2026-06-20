@@ -1,17 +1,20 @@
 import { FILE, PROFILE, USER } from "@/constants/endpoints";
 
 import { axiosInstance } from "@/api/instance";
+
 import { ApiData, ApiMessage } from "@/types/api";
+
 import {
   CertifiedRss,
-  ChangePasswordPayload,
   CommentItem,
   CursorPage,
   LikedItem,
   ProfileActivity,
   UpdateProfilePayload,
   UploadResult,
+  RssFeedItem,
   UserProfile,
+  ChangePasswordPayload
 } from "@/types/profile";
 
 export const getProfile = async (userId: number): Promise<UserProfile> => {
@@ -33,6 +36,18 @@ export const getActivityYears = async (userId: number): Promise<number[]> => {
 
 export const getCertifiedRss = async (userId: number): Promise<CertifiedRss[]> => {
   const response = await axiosInstance.get<ApiData<CertifiedRss[]>>(PROFILE.RSS(userId));
+  return response.data.data;
+};
+
+export const getRssFeeds = async (
+  userId: number,
+  rssId: number,
+  lastId?: number,
+  limit = 10
+): Promise<CursorPage<RssFeedItem>> => {
+  const response = await axiosInstance.get<ApiData<CursorPage<RssFeedItem>>>(PROFILE.RSS_FEEDS(userId, rssId), {
+    params: { lastId, limit },
+  });
   return response.data.data;
 };
 

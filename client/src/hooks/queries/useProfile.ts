@@ -3,6 +3,7 @@ import {
   getActivityYears,
   getCertifiedRss,
   getProfile,
+  getRssFeeds,
   getUserComments,
   getUserLikes,
 } from "@/api/services/profile";
@@ -34,6 +35,15 @@ export const useCertifiedRss = (userId: number) =>
     queryKey: ["certifiedRss", userId],
     queryFn: () => getCertifiedRss(userId),
     enabled: !!userId,
+  });
+
+export const useRssFeeds = (userId: number, rssId: number, enabled: boolean) =>
+  useInfiniteQuery({
+    queryKey: ["rssFeeds", userId, rssId],
+    queryFn: ({ pageParam }) => getRssFeeds(userId, rssId, pageParam),
+    initialPageParam: undefined as number | undefined,
+    getNextPageParam: (lastPage) => (lastPage.hasMore ? lastPage.lastId : undefined),
+    enabled: enabled && !!userId && !!rssId,
   });
 
 export const useUserLikes = (userId: number) =>

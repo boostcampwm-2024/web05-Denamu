@@ -19,7 +19,7 @@ describe(`${LikeService.name} Unit Test`, () => {
   let likeRepository: jest.Mocked<
     Pick<LikeRepository, 'findOneBy' | 'getLikesByUser'>
   >;
-  let feedService: jest.Mocked<Pick<FeedService, 'getFeed'>>;
+  let feedService: jest.Mocked<Pick<FeedService, 'getFeed' | 'getPublicFeed'>>;
   let userService: jest.Mocked<Pick<UserService, 'getUser'>>;
   let manager: { save: jest.Mock; delete: jest.Mock };
   let dataSource: jest.Mocked<Pick<DataSource, 'transaction'>>;
@@ -34,7 +34,7 @@ describe(`${LikeService.name} Unit Test`, () => {
 
   beforeEach(() => {
     likeRepository = { findOneBy: jest.fn(), getLikesByUser: jest.fn() };
-    feedService = { getFeed: jest.fn() };
+    feedService = { getFeed: jest.fn(), getPublicFeed: jest.fn() };
     userService = { getUser: jest.fn() };
     manager = { save: jest.fn(), delete: jest.fn() };
     dataSource = {
@@ -52,7 +52,7 @@ describe(`${LikeService.name} Unit Test`, () => {
   describe('get', () => {
     it('비로그인 사용자는 좋아요 조회 없이 false를 반환한다.', async () => {
       // given
-      feedService.getFeed.mockResolvedValue({ id: 10 } as any);
+      feedService.getPublicFeed.mockResolvedValue({ id: 10 } as any);
 
       // when
       const result = await likeService.get(null, dto);
@@ -64,7 +64,7 @@ describe(`${LikeService.name} Unit Test`, () => {
 
     it('로그인 사용자가 좋아요를 눌렀으면 true를 반환한다.', async () => {
       // given
-      feedService.getFeed.mockResolvedValue({ id: 10 } as any);
+      feedService.getPublicFeed.mockResolvedValue({ id: 10 } as any);
       likeRepository.findOneBy.mockResolvedValue({ id: 1 } as any);
 
       // when
@@ -76,7 +76,7 @@ describe(`${LikeService.name} Unit Test`, () => {
 
     it('로그인 사용자가 좋아요를 누르지 않았으면 false를 반환한다.', async () => {
       // given
-      feedService.getFeed.mockResolvedValue({ id: 10 } as any);
+      feedService.getPublicFeed.mockResolvedValue({ id: 10 } as any);
       likeRepository.findOneBy.mockResolvedValue(null);
 
       // when
@@ -90,7 +90,7 @@ describe(`${LikeService.name} Unit Test`, () => {
   describe('create', () => {
     it('이미 좋아요한 상태면 ConflictException을 던진다.', async () => {
       // given
-      feedService.getFeed.mockResolvedValue({ id: 10, likeCount: 0 } as any);
+      feedService.getPublicFeed.mockResolvedValue({ id: 10, likeCount: 0 } as any);
       likeRepository.findOneBy.mockResolvedValue({ id: 1 } as any);
 
       // when & then
@@ -103,7 +103,7 @@ describe(`${LikeService.name} Unit Test`, () => {
     it('좋아요 수를 증가시키고 좋아요를 저장한다.', async () => {
       // given
       const feed = { id: 10, likeCount: 2 };
-      feedService.getFeed.mockResolvedValue(feed as any);
+      feedService.getPublicFeed.mockResolvedValue(feed as any);
       likeRepository.findOneBy.mockResolvedValue(null);
 
       // when

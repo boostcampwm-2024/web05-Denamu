@@ -24,7 +24,8 @@ export class CommentRepository extends Repository<Comment> {
       .innerJoin('comment.feed', 'feed')
       .select(['comment.id', 'comment.comment', 'comment.date'])
       .addSelect(['feed.id', 'feed.title', 'feed.path'])
-      .where('comment.user_id = :userId', { userId });
+      .where('comment.user_id = :userId', { userId })
+      .andWhere('feed.is_public = 1');
 
     if (lastId) {
       query.andWhere('comment.id < :lastId', { lastId });

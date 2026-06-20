@@ -63,6 +63,20 @@ describe(`GET ${BASE_URL}/:feedId/likes E2E Test`, () => {
     expect(data).toBeUndefined();
   });
 
+  it('[404] 비공개 게시글의 좋아요 정보는 조회할 수 없다.', async () => {
+    // given
+    const privateFeed = await feedRepository.save(
+      FeedFixture.createFeedFixture(rssAccept, { isPublic: false }),
+    );
+
+    // Http when
+    const response = await agent.get(`${BASE_URL}/${privateFeed.id}/likes`);
+
+    // Http then
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    expect(response.body.data).toBeUndefined();
+  });
+
   it('[200] 로그인하지 않은 상황에서 게시글에 대한 좋아요 조회 요청을 받을 경우 좋아요 정보 제공을 성공한다.', async () => {
     // Http when
     const response = await agent.get(`${BASE_URL}/${feed.id}/likes`);

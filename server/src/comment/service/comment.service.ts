@@ -54,7 +54,7 @@ export class CommentService {
   }
 
   async get(commentDto: GetCommentRequestDto) {
-    await this.feedService.getFeed(commentDto.feedId);
+    await this.feedService.getPublicFeed(commentDto.feedId);
 
     const comments = await this.commentRepository.getCommentInformation(
       commentDto.feedId,
@@ -87,7 +87,7 @@ export class CommentService {
     commentDto: CreateCommentRequestDto,
   ) {
     await this.dataSource.transaction(async (manager) => {
-      const feed = await this.feedService.getFeed(feedId);
+      const feed = await this.feedService.getPublicFeed(feedId);
       feed.commentCount++;
       await manager.save(feed);
       await manager.save(Comment, {

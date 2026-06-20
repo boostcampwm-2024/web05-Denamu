@@ -64,6 +64,7 @@ export interface CertifiedRss {
   userName: string;
   rssUrl: string;
   blogPlatform: string;
+  feedCount: number;
 }
 
 export interface RssCertificationPreview {
@@ -97,6 +98,19 @@ export interface CommentItem {
   comment: string;
   date: string;
   feed: FeedRef;
+}
+
+export interface RssFeedItem {
+  id: number;
+  title: string;
+  path: string;
+  createdAt: string;
+  commentCount: number;
+  likeCount: number;
+}
+
+export interface OwnedRssFeedItem extends RssFeedItem {
+  isPublic: boolean;
 }
 
 export interface CursorPage<T> {

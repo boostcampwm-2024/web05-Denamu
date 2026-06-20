@@ -1,72 +1,55 @@
 import { useState } from "react";
 
-import { ChevronDown, FileText, Pencil, Trash2 } from "lucide-react";
+import { ChevronDown, FileText } from "lucide-react";
 
 import { PlatformIcon } from "@/components/profile/rss/PlatformIcon.tsx";
 import { RssFeedRow } from "@/components/profile/rss/RssFeedRow.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 
-import { useCustomToast } from "@/hooks/common/useCustomToast.ts";
-import { useOwnedRssFeeds, useSetFeedVisibility } from "@/hooks/queries/useRssCertification.ts";
+import { useRssFeeds } from "@/hooks/queries/useProfile.ts";
 
 import { CertifiedRss } from "@/types/profile.ts";
 
-interface OwnedRssCardProps {
+interface CertifiedRssCardProps {
+  userId: number;
   rss: CertifiedRss;
-  onEdit: (rss: CertifiedRss) => void;
-  onDelete: (rss: CertifiedRss) => void;
 }
 
-export const OwnedRssCard = ({ rss, onEdit, onDelete }: OwnedRssCardProps) => {
-  const { toast } = useCustomToast();
+export const CertifiedRssCard = ({ userId, rss }: CertifiedRssCardProps) => {
   const [expanded, setExpanded] = useState(false);
 
-  const { data, isLoading, isError, hasNextPage, fetchNextPage, isFetchingNextPage } = useOwnedRssFeeds(
+  const { data, isLoading, isError, hasNextPage, fetchNextPage, isFetchingNextPage } = useRssFeeds(
+    userId,
     rss.id,
     expanded
   );
-  const visibilityMutation = useSetFeedVisibility(rss.id);
 
   const feeds = data?.pages.flatMap((page) => page.result) ?? [];
 
-  const handleToggle = (feedId: number, next: boolean) => {
-    visibilityMutation.mutate(
-      { feedId, isPublic: next },
-      {
-        onError: () => toast({ title: "변경 실패", description: "다시 시도해주세요." }),
-      }
-    );
-  };
-
   return (
     <li className="border border-gray-100 rounded-lg">
-      <div className="flex items-center justify-between p-4">
+      <div className="flex items-center justify-between p-3">
         <div className="flex items-center min-w-0 space-x-3">
           <PlatformIcon platform={rss.blogPlatform} className="flex-shrink-0 w-10 h-10" />
           <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <p className="font-medium truncate">{rss.name}</p>
-              <Badge variant="secondary" className="flex-shrink-0">
-                {rss.blogPlatform}
-              </Badge>
-            </div>
-            <p className="text-sm text-gray-500 truncate">{rss.userName}</p>
+            <p className="font-medium truncate">{rss.name}</p>
             <a
               href={rss.rssUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-gray-400 truncate hover:underline"
+              className="text-sm text-gray-500 truncate hover:underline"
             >
               {rss.rssUrl}
             </a>
             <p className="flex items-center gap-1 text-sm text-gray-400">
               <FileText className="w-3.5 h-3.5" />
-              공개 중인 게시글 {rss.feedCount}개
+              게시글 {rss.feedCount}개
             </p>
           </div>
         </div>
-        <div className="flex flex-shrink-0 gap-1 ml-3">
+        <div className="flex items-center flex-shrink-0 gap-2 ml-3">
+          <Badge variant="secondary">{rss.blogPlatform}</Badge>
           <Button
             variant="ghost"
             size="icon"
@@ -76,27 +59,15 @@ export const OwnedRssCard = ({ rss, onEdit, onDelete }: OwnedRssCardProps) => {
           >
             <ChevronDown className={`w-4 h-4 transition-transform ${expanded ? "rotate-180" : ""}`} />
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => onEdit(rss)} aria-label="RSS 정보 수정">
-            <Pencil className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onDelete(rss)}
-            aria-label="RSS 소유 해제"
-            className="text-red-500 hover:text-red-600"
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
         </div>
       </div>
 
       {expanded && (
-        <div className="px-4 py-3 border-t border-gray-100">
+        <div className="px-3 py-3 border-t border-gray-100">
           {isLoading && <p className="text-sm text-gray-400">게시글을 불러오는 중...</p>}
           {isError && <p className="text-sm text-red-500">게시글을 불러오지 못했습니다.</p>}
           {!isLoading && !isError && feeds.length === 0 && (
-            <p className="text-sm text-gray-400">등록된 게시글이 없습니다.</p>
+            <p className="text-sm text-gray-400">게시글이 없습니다.</p>
           )}
 
           <ul className="space-y-2">
@@ -108,9 +79,6 @@ export const OwnedRssCard = ({ rss, onEdit, onDelete }: OwnedRssCardProps) => {
                 createdAt={feed.createdAt}
                 commentCount={feed.commentCount}
                 likeCount={feed.likeCount}
-                isPublic={feed.isPublic}
-                onToggleVisibility={(next) => handleToggle(feed.id, next)}
-                toggleDisabled={visibilityMutation.isPending}
               />
             ))}
           </ul>

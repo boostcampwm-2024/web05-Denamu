@@ -92,6 +92,25 @@ describe(`POST ${BASE_URL}/:feedId/likes E2E Test`, () => {
     expect(savedLike).toBeNull();
   });
 
+  it('[404] 비공개 게시글에는 좋아요를 등록할 수 없다.', async () => {
+    // given
+    const privateFeed = await feedRepository.save(
+      FeedFixture.createFeedFixture(rssAccept, { isPublic: false }),
+    );
+
+    // Http when
+    const response = await agent
+      .post(`${BASE_URL}/${privateFeed.id}/likes`)
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    // Http then
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    const savedLike = await likeRepository.findOneBy({
+      feed: { id: privateFeed.id },
+    });
+    expect(savedLike).toBeNull();
+  });
+
   it('[409] 이미 좋아요를 한 게시글일 경우 좋아요 등록을 실패한다.', async () => {
     // given
     await likeRepository.insert({ user, feed });

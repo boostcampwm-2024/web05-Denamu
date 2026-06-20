@@ -18,6 +18,8 @@ import { Payload } from '@common/guard/jwt.guard';
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
 
+import { FeedRepository } from '@feed/repository/feed.repository';
+
 import { FileService } from '@file/service/file.service';
 
 import { RssAccept } from '@rss/entity/rss.entity';
@@ -33,6 +35,8 @@ import { CheckUserNameDuplicationResponseDto } from '@user/dto/response/checkUse
 import { CreateAccessTokenResponseDto } from '@user/dto/response/createAccessToken.dto';
 import { GetUserProfileResponseDto } from '@user/dto/response/getUserProfile.dto';
 import { GetUserRssResponseDto } from '@user/dto/response/getUserRss.dto';
+import { GetUserRssFeedsRequestDto } from '@user/dto/request/getUserRssFeeds.dto';
+import { GetUserRssFeedsResponseDto } from '@user/dto/response/getUserRssFeeds.dto';
 import { User } from '@user/entity/user.entity';
 import { UserRepository } from '@user/repository/user.repository';
 
@@ -46,6 +50,7 @@ export class UserService {
     private readonly configService: ConfigService,
     private readonly fileService: FileService,
     private readonly rssAcceptRepository: RssAcceptRepository,
+    private readonly feedRepository: FeedRepository,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -134,7 +139,25 @@ export class UserService {
       where: { userId },
       order: { id: 'DESC' },
     });
-    return GetUserRssResponseDto.toResponseDtoArray(rssList);
+    const feedCountMap = await this.feedRepository.countPublicFeedsByBlogIds(
+      rssList.map((rss) => rss.id),
+    );
+    return GetUserRssResponseDto.toResponseDtoArray(rssList, feedCountMap);
+  }
+
+  async getUserRssFeeds(rssId: number, feedDto: GetUserRssFeedsRequestDto) {
+    const feeds = await this.feedRepository.getFeedsByBlog(
+      rssId,
+      feedDto.lastId,
+      feedDto.limit,
+      true,
+    );
+
+    const hasMore = feeds.length > feedDto.limit;
+    if (hasMore) feeds.pop();
+    const lastId = feeds.length ? feeds[feeds.length - 1].id : 0;
+
+    return GetUserRssFeedsResponseDto.toResponseDto(feeds, lastId, hasMore);
   }
 
   async loginUser(loginDto: LoginUserRequestDto, response: Response) {

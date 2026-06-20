@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 
 import { JwtAuthModule } from '@common/auth/jwt.module';
 
+import { FeedRepository } from '@feed/repository/feed.repository';
+
 import { FileModule } from '@file/module/file.module';
 
 import { RssModule } from '@rss/module/rss.module';
@@ -24,6 +26,7 @@ import { UserService } from '@user/service/user.service';
     OAuthService,
     UserRepository,
     ProviderRepository,
+    FeedRepository,
     GoogleOAuthProvider,
     GithubOAuthProvider,
     UserScheduler,

@@ -24,6 +24,8 @@ import { ApiCreateRssCertification } from '@rss/api-docs/createRssCertification.
 import { ApiDeleteCertificateRss } from '@rss/api-docs/deleteCertificateRss.api-docs';
 import { ApiDeleteRss } from '@rss/api-docs/deleteRss.api-docs';
 import { ApiDeleteRssCertification } from '@rss/api-docs/deleteRssCertification.api-docs';
+import { ApiGetOwnedRssFeeds } from '@rss/api-docs/getOwnedRssFeeds.api-docs';
+import { ApiSetFeedVisibility } from '@rss/api-docs/setFeedVisibility.api-docs';
 import { ApiPreviewRssCertification } from '@rss/api-docs/previewRssCertification.api-docs';
 import { ApiReadAllRss } from '@rss/api-docs/readAllRss.api-docs';
 import { ApiReadRssAcceptHistory } from '@rss/api-docs/readRssAcceptHistory.api-docs';
@@ -34,6 +36,10 @@ import { ApiVerifyRssCertification } from '@rss/api-docs/verifyRssCertification.
 import { CreateRssCertificationRequestDto } from '@rss/dto/request/createRssCertification.dto';
 import { DeleteCertificateRssRequestDto } from '@rss/dto/request/deleteCertificateRss.dto';
 import { DeleteRssCertificationParamRequestDto } from '@rss/dto/request/deleteRssCertificationParam.dto';
+import { GetOwnedRssFeedsRequestDto } from '@rss/dto/request/getOwnedRssFeeds.dto';
+import { GetOwnedRssFeedsParamRequestDto } from '@rss/dto/request/getOwnedRssFeedsParam.dto';
+import { SetFeedVisibilityRequestDto } from '@rss/dto/request/setFeedVisibility.dto';
+import { SetFeedVisibilityParamRequestDto } from '@rss/dto/request/setFeedVisibilityParam.dto';
 import { DeleteRssRequestDto } from '@rss/dto/request/deleteRss.dto';
 import { ManageRssRequestDto } from '@rss/dto/request/manageRss.dto';
 import { PreviewRssCertificationRequestDto } from '@rss/dto/request/previewRssCertification.dto';
@@ -207,5 +213,38 @@ export class RssController {
       deleteRssCertificationDto.id,
     );
     return ApiResponse.responseWithNoContent('RSS 소유 인증을 해제했습니다.');
+  }
+
+  @ApiGetOwnedRssFeeds()
+  @UseGuards(JwtGuard)
+  @Get('certifications/:id/feeds')
+  @HttpCode(HttpStatus.OK)
+  async getOwnedRssFeeds(
+    @CurrentUser() user: Payload,
+    @Param() paramDto: GetOwnedRssFeedsParamRequestDto,
+    @Query() queryDto: GetOwnedRssFeedsRequestDto,
+  ) {
+    return ApiResponse.responseWithData(
+      '소유 RSS 게시글 목록 조회를 처리했습니다.',
+      await this.rssService.getOwnedRssFeeds(user, paramDto.id, queryDto),
+    );
+  }
+
+  @ApiSetFeedVisibility()
+  @UseGuards(JwtGuard)
+  @Patch('certifications/:id/feeds/:feedId/visibility')
+  @HttpCode(HttpStatus.OK)
+  async setFeedVisibility(
+    @CurrentUser() user: Payload,
+    @Param() paramDto: SetFeedVisibilityParamRequestDto,
+    @Body() bodyDto: SetFeedVisibilityRequestDto,
+  ) {
+    await this.rssService.setFeedVisibility(
+      user,
+      paramDto.id,
+      paramDto.feedId,
+      bodyDto.isPublic,
+    );
+    return ApiResponse.responseWithNoContent('게시글 공개 상태를 변경했습니다.');
   }
 }

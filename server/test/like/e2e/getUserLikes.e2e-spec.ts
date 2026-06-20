@@ -126,6 +126,24 @@ describe(`GET ${BASE_URL}/:userId/likes E2E Test`, () => {
     expect(data.hasMore).toBe(false);
   });
 
+  it('[200] 비공개 게시글에 누른 좋아요는 목록에서 제외된다.', async () => {
+    // given - 비공개 게시글에 좋아요 추가
+    const privateFeed = await feedRepository.save(
+      FeedFixture.createFeedFixture(rssAccept, { title: '비공개', isPublic: false }),
+    );
+    const privateLike = await likeRepository.save({ user, feed: privateFeed });
+
+    // Http when
+    const response = await agent.get(`${BASE_URL}/${user.id}/likes`);
+
+    // Http then
+    const { data }: { data: GetUserLikesResponseDto } = response.body;
+    expect(response.status).toBe(HttpStatus.OK);
+    const ids = data.result.map((item) => item.id);
+    expect(ids).not.toContain(privateLike.id);
+    expect(data.result).toHaveLength(3);
+  });
+
   it('[200] 좋아요가 없는 유저는 빈 목록과 lastId=0을 반환한다.', async () => {
     // Http given
     const otherUser = await userRepository.save(
