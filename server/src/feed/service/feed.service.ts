@@ -59,6 +59,15 @@ export class FeedService {
     return feed;
   }
 
+  async getPublicFeed(feedId: number) {
+    const feed = await this.getFeed(feedId);
+    if (!feed.isPublic) {
+      throw new NotFoundException('존재하지 않는 게시글입니다.');
+    }
+
+    return feed;
+  }
+
   async requestAiSummary(feedId: number) {
     await this.getFeed(feedId);
 

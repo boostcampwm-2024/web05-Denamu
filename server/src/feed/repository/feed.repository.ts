@@ -22,6 +22,7 @@ export class FeedRepository extends Repository<Feed> {
       .innerJoinAndSelect('feed.blog', 'rss_accept')
       .addSelect(this.getMatchAgainstExpression(type, 'find'), 'relevance')
       .where(this.getWhereCondition(type), { find })
+      .andWhere('feed.is_public = 1')
       .orderBy('relevance', 'DESC')
       .addOrderBy('feed.createdAt', 'DESC')
       .skip(offset)
@@ -52,9 +53,53 @@ export class FeedRepository extends Repository<Feed> {
     }
   }
 
+  async getFeedsByBlog(
+    blogId: number,
+    lastId: number,
+    limit: number,
+    onlyPublic: boolean,
+  ) {
+    const query = this.createQueryBuilder('feed')
+      .select([
+        'feed.id',
+        'feed.title',
+        'feed.path',
+        'feed.createdAt',
+        'feed.commentCount',
+        'feed.isPublic',
+      ])
+      .where('feed.blog_id = :blogId', { blogId });
+
+    if (onlyPublic) {
+      query.andWhere('feed.is_public = 1');
+    }
+
+    if (lastId) {
+      query.andWhere('feed.id < :lastId', { lastId });
+    }
+
+    return await query
+      .orderBy('feed.id', 'DESC')
+      .take(limit + 1)
+      .getMany();
+  }
+
+  async setVisibilityForBlog(feedId: number, blogId: number, isPublic: boolean) {
+    const result = await this.createQueryBuilder()
+      .update(Feed)
+      .set({ isPublic })
+      .where('id = :feedId AND blog_id = :blogId', { feedId, blogId })
+      .execute();
+
+    return result.affected ?? 0;
+  }
+
   async findAllStatisticsOrderByViewCount(limit: number) {
     return this.find({
       select: ['id', 'title', 'viewCount'],
+      where: {
+        isPublic: true,
+      },
       order: {
         viewCount: 'DESC',
       },

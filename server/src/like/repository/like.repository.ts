@@ -15,7 +15,8 @@ export class LikeRepository extends Repository<Like> {
       .innerJoin('like.feed', 'feed')
       .select(['like.id', 'like.likeDate'])
       .addSelect(['feed.id', 'feed.title', 'feed.path'])
-      .where('like.user_id = :userId', { userId });
+      .where('like.user_id = :userId', { userId })
+      .andWhere('feed.is_public = 1');
 
     if (lastId) {
       query.andWhere('like.id < :lastId', { lastId });
