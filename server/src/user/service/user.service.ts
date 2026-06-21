@@ -29,11 +29,16 @@ import { REFRESH_TOKEN_TTL, SALT_ROUNDS } from '@user/constant/user.constants';
 import { ChangePasswordRequestDto } from '@user/dto/request/changePassword.dto';
 import { LoginUserRequestDto } from '@user/dto/request/loginUser.dto';
 import { RegisterUserRequestDto } from '@user/dto/request/registerUser.dto';
+import { SearchUserRequestDto } from '@user/dto/request/searchUser.dto';
 import { UpdateUserRequestDto } from '@user/dto/request/updateUser.dto';
 import { CheckEmailDuplicationResponseDto } from '@user/dto/response/checkEmailDuplication.dto';
 import { CheckUserNameDuplicationResponseDto } from '@user/dto/response/checkUserNameDuplication.dto';
 import { CreateAccessTokenResponseDto } from '@user/dto/response/createAccessToken.dto';
 import { GetUserProfileResponseDto } from '@user/dto/response/getUserProfile.dto';
+import {
+  SearchUserResponseDto,
+  SearchUserResult,
+} from '@user/dto/response/searchUser.dto';
 import { GetUserRssResponseDto } from '@user/dto/response/getUserRss.dto';
 import { GetUserRssFeedsRequestDto } from '@user/dto/request/getUserRssFeeds.dto';
 import { GetUserRssFeedsResponseDto } from '@user/dto/response/getUserRssFeeds.dto';
@@ -67,6 +72,27 @@ export class UserService {
   async getUserProfile(userId: number) {
     const user = await this.getUser(userId);
     return GetUserProfileResponseDto.toResponseDto(user);
+  }
+
+  async searchUserList(searchUserQueryDto: SearchUserRequestDto) {
+    const { find, page, limit } = searchUserQueryDto;
+    const offset = (page - 1) * limit;
+
+    const [searchResult, totalCount] = await this.userRepository.searchUserList(
+      find,
+      limit,
+      offset,
+    );
+
+    const users = SearchUserResult.toResultDtoArray(searchResult);
+    const totalPages = Math.ceil(totalCount / limit);
+
+    return SearchUserResponseDto.toResponseDto(
+      totalCount,
+      users,
+      totalPages,
+      limit,
+    );
   }
 
   async checkEmailDuplication(email: string) {
