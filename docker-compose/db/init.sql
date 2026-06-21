@@ -164,11 +164,14 @@ CREATE TABLE `provider` (
   `id` int NOT NULL AUTO_INCREMENT,
   `provider_type` varchar(255) NOT NULL,
   `provider_user_id` varchar(255) NOT NULL,
-  `refresh_token` varchar(255) NOT NULL,
+  `provider_user_name` varchar(255) DEFAULT NULL,
+  `refresh_token` varchar(255) DEFAULT NULL,
   `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   `updated_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
   `user_id` int NOT NULL,
   PRIMARY KEY (`id`),
+  UNIQUE KEY `UQ_provider_type_user_id` (`provider_type`,`provider_user_id`),
+  UNIQUE KEY `UQ_user_provider_type` (`user_id`,`provider_type`),
   KEY `FK_d3d18186b602240b93c9f1621ea` (`user_id`),
   CONSTRAINT `FK_d3d18186b602240b93c9f1621ea` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 );
