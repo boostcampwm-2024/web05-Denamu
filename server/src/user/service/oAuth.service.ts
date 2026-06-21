@@ -24,11 +24,15 @@ import {
   OAUTH_PENDING_COOKIE,
   OAUTH_PENDING_TTL,
   OAUTH_URL_PATH,
+  OAuthLinkData,
   OAuthPendingData,
+  OAuthTokenResponse,
   OAuthType,
   StateData,
+  UserInfo,
 } from '@user/constant/oauth.constant';
 import { OAuthCallbackRequestDto } from '@user/dto/request/oAuthCallbackDto';
+import { GetLinkedProvidersResponseDto } from '@user/dto/response/getLinkedProviders.dto';
 import { Provider } from '@user/entity/provider.entity';
 import { User } from '@user/entity/user.entity';
 import { OAuthProvider } from '@user/provider/oauth-provider.interface';
@@ -56,6 +60,119 @@ export class OAuthService {
       maxAge: OAUTH_CSRF_TOKEN_TTL * 1000,
     });
     return await this.providers[providerType].getAuthUrl(csrfToken);
+  }
+
+  async initiateLink(userId: number, providerType: OAuthType, res: Response) {
+    const csrfToken = uuid.v4();
+    res.cookie('oauth_csrf_token', csrfToken, {
+      ...cookieConfig[process.env.NODE_ENV],
+      maxAge: OAUTH_CSRF_TOKEN_TTL * 1000,
+    });
+
+    const linkData: OAuthLinkData = { userId, providerType };
+    await this.redisService.set(
+      `${REDIS_KEYS.OAUTH_LINK_KEY}:${csrfToken}`,
+      JSON.stringify(linkData),
+      'EX',
+      OAUTH_CSRF_TOKEN_TTL,
+    );
+
+    return await this.providers[providerType].getAuthUrl(csrfToken);
+  }
+
+  private async tryHandleAccountLink(
+    csrfToken: string,
+    providerType: string,
+    userInfo: UserInfo,
+    tokenData: OAuthTokenResponse,
+  ): Promise<string | null> {
+    const linkKey = `${REDIS_KEYS.OAUTH_LINK_KEY}:${csrfToken}`;
+    const linkRaw = await this.redisService.get(linkKey);
+    if (!linkRaw) {
+      return null;
+    }
+    await this.redisService.del(linkKey);
+
+    const { userId, providerType: intentProvider }: OAuthLinkData =
+      JSON.parse(linkRaw);
+
+    const fail = (reason: string) =>
+      `${OAUTH_URL_PATH.BASE_URL}/profile?oauthLink=error&reason=${reason}`;
+    const success = `${OAUTH_URL_PATH.BASE_URL}/profile?oauthLink=success&provider=${providerType}`;
+
+    if (intentProvider !== providerType) {
+      return fail('mismatch');
+    }
+
+    const existing = await this.findExistingProvider(providerType, userInfo.id);
+    if (existing) {
+      return existing.user.id === userId ? success : fail('already_linked');
+    }
+
+    const sameType = await this.providerRepository.findByUserIdAndType(
+      userId,
+      providerType,
+    );
+    if (sameType) {
+      return fail('duplicate_type');
+    }
+
+    try {
+      await this.providerRepository.save({
+        providerType,
+        providerUserId: userInfo.id,
+        providerUserName: userInfo.name || null,
+        refreshToken: tokenData.refresh_token || null,
+        user: { id: userId } as User,
+      });
+    } catch (error) {
+      if ((error as { code?: string })?.code === 'ER_DUP_ENTRY') {
+        return fail('duplicate_type');
+      }
+      this.logger.error(
+        `OAuth 연결 저장 중 에러 발생: ${error instanceof Error ? error.stack : JSON.stringify(error)}`,
+      );
+      return fail('server');
+    }
+
+    this.logger.log(`OAuth 연결 완료: user ${userId} ${providerType}`);
+    return success;
+  }
+
+  async getLinkedProviders(userId: number) {
+    const user = await this.userRepository.findOneBy({ id: userId });
+    if (!user) {
+      throw new NotFoundException('존재하지 않는 유저입니다.');
+    }
+    const providers = await this.providerRepository.findByUserId(userId);
+    return GetLinkedProvidersResponseDto.toResponseDto(
+      !!user.password,
+      providers,
+    );
+  }
+
+  async unlinkProvider(userId: number, providerType: OAuthType) {
+    const user = await this.userRepository.findOneBy({ id: userId });
+    if (!user) {
+      throw new NotFoundException('존재하지 않는 유저입니다.');
+    }
+
+    const providers = await this.providerRepository.findByUserId(userId);
+    const target = providers.find(
+      (p) => p.providerType === (providerType as string),
+    );
+    if (!target) {
+      throw new NotFoundException('연결되지 않은 인증 제공자입니다.');
+    }
+
+    if (providers.length === 1 && !user.password) {
+      throw new BadRequestException(
+        '마지막 인증 수단입니다. 비밀번호를 먼저 설정한 후 해제해주세요.',
+      );
+    }
+
+    await this.providerRepository.delete(target.id);
+    this.logger.log(`OAuth 연결 해제: user ${userId} ${providerType}`);
   }
 
   async callback(
@@ -97,10 +214,21 @@ export class OAuthService {
 
     const userInfo = await this.providers[providerType].getUserInfo(tokenData);
 
+    const linkResult = await this.tryHandleAccountLink(
+      csrfTokenKey,
+      providerType,
+      userInfo,
+      tokenData,
+    );
+    if (linkResult) {
+      return linkResult;
+    }
+
     const linkedProvider = await this.findExistingProvider(
       providerType,
       userInfo.id,
     );
+
     if (linkedProvider) {
       await this.updateProviderTokens(
         linkedProvider,
@@ -125,6 +253,7 @@ export class OAuthService {
         {
           providerType,
           providerUserId: userInfo.id,
+          providerUserName: userInfo.name || null,
           email: userInfo.email,
           profileImage: userInfo.picture || null,
           providerRefreshToken: tokenData.refresh_token || null,
@@ -139,6 +268,7 @@ export class OAuthService {
       {
         providerType,
         providerUserId: userInfo.id,
+        providerUserName: userInfo.name || null,
         email: userInfo.email,
         userName: existingUser.userName,
         profileImage: userInfo.picture || null,
@@ -224,6 +354,7 @@ export class OAuthService {
     const {
       providerType,
       providerUserId,
+      providerUserName,
       email,
       profileImage,
       providerRefreshToken,
@@ -240,6 +371,7 @@ export class OAuthService {
         await entityManager.save(Provider, {
           providerType,
           providerUserId,
+          providerUserName,
           refreshToken: providerRefreshToken,
           user,
         });
@@ -281,6 +413,7 @@ export class OAuthService {
       {
         providerType: normalizedProvider,
         providerUserId: `e2e-${normalizedProvider}-provider-user`,
+        providerUserName: `e2e-${normalizedProvider}-name`,
         email: `e2e-${normalizedProvider}@denamu.local`,
         userName: `e2e-${normalizedProvider}-user`,
         profileImage: null,
@@ -294,6 +427,7 @@ export class OAuthService {
     payload: {
       providerType: string;
       providerUserId: string;
+      providerUserName: string | null;
       email: string;
       userName: string;
       profileImage: string | null;
@@ -304,6 +438,7 @@ export class OAuthService {
     const {
       providerType,
       providerUserId,
+      providerUserName,
       email,
       userName,
       profileImage,
@@ -344,6 +479,7 @@ export class OAuthService {
           await entityManager.save(Provider, {
             providerType,
             providerUserId,
+            providerUserName,
             refreshToken: providerRefreshToken,
             user,
           });

@@ -1,26 +1,38 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
   NotFoundException,
+  Param,
+  ParseEnumPipe,
   Post,
   Query,
   Req,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
 import { Request, Response } from 'express';
 
+import { CurrentUser } from '@common/decorator';
+import { JwtGuard, Payload } from '@common/guard/jwt.guard';
 import { ApiResponse } from '@common/response/common.response';
 
 import { ApiOAuth } from '@user/api-docs/oAuth.api-docs';
 import { ApiOAuthCallback } from '@user/api-docs/oAuthCallback.api-docs';
+import {
+  ApiOAuthLinkInitiate,
+  ApiOAuthLinks,
+  ApiOAuthUnlink,
+} from '@user/api-docs/oAuthLink.api-docs';
 import { ApiOAuthRegistration } from '@user/api-docs/oAuthRegistration.api-docs';
 import { OAUTH_URL_PATH, OAuthType } from '@user/constant/oauth.constant';
 import { OAuthCallbackRequestDto } from '@user/dto/request/oAuthCallbackDto';
+import { OAuthLinkRequestDto } from '@user/dto/request/oAuthLink.dto';
 import { OAuthRegistrationRequestDto } from '@user/dto/request/oAuthRegistration.dto';
 import { OAuthTypeRequestDto } from '@user/dto/request/oAuthType.dto';
 import { OAuthService } from '@user/service/oAuth.service';
@@ -69,6 +81,49 @@ export class OAuthController {
     return ApiResponse.responseWithNoContent(
       '회원가입이 완료되어 로그인 처리되었습니다.',
     );
+  }
+
+  @ApiOAuthLinkInitiate()
+  @Post('links')
+  @UseGuards(JwtGuard)
+  @HttpCode(HttpStatus.CREATED)
+  async initiateLink(
+    @CurrentUser() user: Payload,
+    @Body() linkDto: OAuthLinkRequestDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const authUrl = await this.oauthService.initiateLink(
+      user.id,
+      linkDto.provider,
+      res,
+    );
+    return ApiResponse.responseWithData('연결용 인증 URL이 발급되었습니다.', {
+      authUrl,
+    });
+  }
+
+  @ApiOAuthLinks()
+  @Get('links')
+  @UseGuards(JwtGuard)
+  @HttpCode(HttpStatus.OK)
+  async getLinkedProviders(@CurrentUser() user: Payload) {
+    const result = await this.oauthService.getLinkedProviders(user.id);
+    return ApiResponse.responseWithData(
+      '연결된 제공자 목록을 조회했습니다.',
+      result,
+    );
+  }
+
+  @ApiOAuthUnlink()
+  @Delete('links/:provider')
+  @UseGuards(JwtGuard)
+  @HttpCode(HttpStatus.OK)
+  async unlinkProvider(
+    @CurrentUser() user: Payload,
+    @Param('provider', new ParseEnumPipe(OAuthType)) provider: OAuthType,
+  ) {
+    await this.oauthService.unlinkProvider(user.id, provider);
+    return ApiResponse.responseWithNoContent('OAuth 연결이 해제되었습니다.');
   }
 
   @Get('e2e/callback')

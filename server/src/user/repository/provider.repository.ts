@@ -19,4 +19,17 @@ export class ProviderRepository extends Repository<Provider> {
       relations: ['user'],
     });
   }
+
+  async findByUserId(userId: number) {
+    return this.find({
+      where: { user: { id: userId } },
+      order: { createdAt: 'ASC' },
+    });
+  }
+
+  async findByUserIdAndType(userId: number, providerType: string) {
+    return this.findOne({
+      where: { user: { id: userId }, providerType },
+    });
+  }
 }
