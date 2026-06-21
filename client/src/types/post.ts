@@ -19,6 +19,7 @@ export type FeedList = FeedBase;
 
 export interface FeedDetail extends FeedBase {
   summary: string;
+  isOwner: boolean;
 }
 
 export interface InfiniteScrollResponse<T> {

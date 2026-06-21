@@ -16,11 +16,13 @@ import { FeedCommentType } from "@/types/post";
 
 interface PostCommentProps {
   feedId: number;
+  isFeedOwner?: boolean;
 }
 
 interface CommentItemProps {
   comment: FeedCommentType;
-  isOwner: boolean;
+  canEdit: boolean;
+  canDelete: boolean;
   modifyId: number | null;
   handleModify: (id: number | null) => void;
   onUpdate: (commentId: number, newComment: string) => void;
@@ -29,7 +31,7 @@ interface CommentItemProps {
 
 const INITIAL_VISIBLE = 3;
 
-export default function PostComment({ feedId }: PostCommentProps) {
+export default function PostComment({ feedId, isFeedOwner = false }: PostCommentProps) {
   const { id: userId, userName } = useAuthStore((state) => state.userInfo);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
@@ -107,7 +109,8 @@ export default function PostComment({ feedId }: PostCommentProps) {
           <CommentItem
             key={comment.id}
             comment={comment}
-            isOwner={comment.user.id === userId}
+            canEdit={comment.user.id === userId}
+            canDelete={comment.user.id === userId || isFeedOwner}
             modifyId={modifyId}
             handleModify={handleModify}
             onUpdate={handleUpdate}
@@ -140,7 +143,7 @@ export default function PostComment({ feedId }: PostCommentProps) {
   );
 }
 
-const CommentItem = ({ comment, isOwner, modifyId, handleModify, onUpdate, onDelete }: CommentItemProps) => {
+const CommentItem = ({ comment, canEdit, canDelete, modifyId, handleModify, onUpdate, onDelete }: CommentItemProps) => {
   const [editContent, setEditContent] = useState(comment.comment);
   const isEditing = modifyId === comment.id;
   const navigateToProfile = useNavigateToProfile();
@@ -163,8 +166,14 @@ const CommentItem = ({ comment, isOwner, modifyId, handleModify, onUpdate, onDel
                 </p>
                 <p className="text-sm text-gray-400">{timeAgo(comment.date)}</p>
               </div>
-              {isOwner && !isEditing && (
-                <CommentAction id={comment.id} handleModify={handleModify} onDelete={onDelete} />
+              {(canEdit || canDelete) && !isEditing && (
+                <CommentAction
+                  id={comment.id}
+                  canEdit={canEdit}
+                  canDelete={canDelete}
+                  handleModify={handleModify}
+                  onDelete={onDelete}
+                />
               )}
             </div>
           </div>
