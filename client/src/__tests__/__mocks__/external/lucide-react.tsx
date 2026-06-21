@@ -2,6 +2,7 @@ export const mockLucideIcons = {
   Image: () => <div data-testid="fallback-icon">Mock Image Icon</div>,
   FileText: () => <div data-testid="file-text-icon">Mock File Text Icon</div>,
   User: () => <div data-testid="user-icon">Mock User Icon</div>,
+  Users: () => <div data-testid="users-icon">Mock Users Icon</div>,
   PanelBottom: () => <div data-testid="panel-bottom-icon">Mock Panel Bottom Icon</div>,
   Search: () => <div data-testid="search-icon">Mock Search Icon</div>,
   X: () => <div data-testid="x-icon">Mock X Icon</div>,

@@ -35,6 +35,7 @@ import { ApiRefreshToken } from '@user/api-docs/refreshToken.api-docs';
 import { ApiRegisterUser } from '@user/api-docs/registerUser.api-docs';
 import { ApiRequestDeleteAccount } from '@user/api-docs/requestDeleteAccount.api-docs';
 import { ApiResetPassword } from '@user/api-docs/resetPassword.api-docs';
+import { ApiSearchUser } from '@user/api-docs/searchUser.api-docs';
 import { ApiUpdateUser } from '@user/api-docs/updateUser.api-docs';
 import { CertificateUserRequestDto } from '@user/dto/request/certificateUser.dto';
 import { ChangePasswordRequestDto } from '@user/dto/request/changePassword.dto';
@@ -50,6 +51,7 @@ import { RegisterUserRequestDto } from '@user/dto/request/registerUser.dto';
 import { RequestDeleteAccountRequestDto } from '@user/dto/request/requestDeleteAccount.dto';
 import { ResetPasswordRequestDto } from '@user/dto/request/resetPassword.dto';
 import { ResetPasswordParamRequestDto } from '@user/dto/request/resetPasswordParam.dto';
+import { SearchUserRequestDto } from '@user/dto/request/searchUser.dto';
 import { UpdateUserRequestDto } from '@user/dto/request/updateUser.dto';
 import { UserService } from '@user/service/user.service';
 
@@ -85,6 +87,16 @@ export class UserController {
       await this.userService.checkUserNameDuplication(
         checkUserNameDuplicationRequestDto.userName,
       ),
+    );
+  }
+
+  @ApiSearchUser()
+  @Get('/search')
+  @HttpCode(HttpStatus.OK)
+  async searchUser(@Query() searchUserQueryDto: SearchUserRequestDto) {
+    return ApiResponse.responseWithData(
+      '유저 검색 결과 조회 완료',
+      await this.userService.searchUserList(searchUserQueryDto),
     );
   }
 

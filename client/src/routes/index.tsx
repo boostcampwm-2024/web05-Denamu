@@ -143,6 +143,14 @@ export const AppRouter = ({ location, state }: RouterProps) => {
           }
         />
         <Route
+          path="/profile/:id"
+          element={
+            <Suspense fallback={<Loading />}>
+              <Profile />
+            </Suspense>
+          }
+        />
+        <Route
           path="/:id"
           element={
             <Suspense fallback={<Loading />}>
