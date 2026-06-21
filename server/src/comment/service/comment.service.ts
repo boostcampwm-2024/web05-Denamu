@@ -53,6 +53,30 @@ export class CommentService {
     return commentObj;
   }
 
+  private async getDeletableComment(
+    userInformation: Payload,
+    commentId: number,
+  ) {
+    const commentObj = await this.commentRepository.findOne({
+      where: {
+        id: commentId,
+      },
+      relations: ['user', 'feed', 'feed.blog'],
+    });
+
+    if (!commentObj) {
+      throw new NotFoundException('존재하지 않는 댓글입니다.');
+    }
+
+    const isAuthor = userInformation.id === commentObj.user.id;
+    const isFeedOwner = userInformation.id === commentObj.feed.blog?.userId;
+    if (!isAuthor && !isFeedOwner) {
+      throw new ForbiddenException('댓글을 삭제할 권한이 없습니다.');
+    }
+
+    return commentObj;
+  }
+
   async get(commentDto: GetCommentRequestDto) {
     await this.feedService.getPublicFeed(commentDto.feedId);
 
@@ -99,7 +123,7 @@ export class CommentService {
   }
 
   async delete(userInformation: Payload, commentDto: CommentParamRequestDto) {
-    const comment = await this.getValidatedComment(
+    const comment = await this.getDeletableComment(
       userInformation,
       commentDto.commentId,
     );

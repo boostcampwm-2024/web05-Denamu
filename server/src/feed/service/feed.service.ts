@@ -294,9 +294,18 @@ export class FeedService {
     return request.socket.remoteAddress;
   }
 
-  async getFeedDetail(feedDetailRequestDto: ManageFeedRequestDto) {
+  async getFeedDetail(
+    feedDetailRequestDto: ManageFeedRequestDto,
+    userId?: number,
+  ) {
     const feed = await this.getFeedByView(feedDetailRequestDto.feedId);
-    return GetFeedDetailResponseDto.toResponseDto(feed);
+    const isOwner = userId
+      ? await this.feedRepository.isOwnedByUser(
+          feedDetailRequestDto.feedId,
+          userId,
+        )
+      : false;
+    return GetFeedDetailResponseDto.toResponseDto(feed, isOwner);
   }
 
   async deleteCheckFeed(feedDeleteCheckDto: ManageFeedRequestDto) {

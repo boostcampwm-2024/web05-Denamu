@@ -164,7 +164,7 @@ export class FeedController {
     }
     return ApiResponse.responseWithData(
       '요청이 성공적으로 처리되었습니다.',
-      await this.feedService.getFeedDetail(feedDetailRequestDto),
+      await this.feedService.getFeedDetail(feedDetailRequestDto, user?.id),
     );
   }
 }

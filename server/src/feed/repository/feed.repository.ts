@@ -120,6 +120,16 @@ export class FeedRepository extends Repository<Feed> {
     return result.affected ?? 0;
   }
 
+  async isOwnedByUser(feedId: number, userId: number): Promise<boolean> {
+    const count = await this.createQueryBuilder('feed')
+      .innerJoin('feed.blog', 'blog')
+      .where('feed.id = :feedId', { feedId })
+      .andWhere('blog.user_id = :userId', { userId })
+      .getCount();
+
+    return count > 0;
+  }
+
   async findAllStatisticsOrderByViewCount(limit: number) {
     return this.find({
       select: ['id', 'title', 'viewCount'],
