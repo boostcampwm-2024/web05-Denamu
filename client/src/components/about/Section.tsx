@@ -1,4 +1,4 @@
-import { HTMLAttributes, forwardRef } from "react";
+import { HTMLAttributes } from "react";
 
 import { useInView } from "@/hooks/common/useInView.ts";
 
@@ -8,7 +8,7 @@ interface SectionProps extends HTMLAttributes<HTMLElement> {
   children: React.ReactNode;
 }
 
-export const Section = forwardRef<HTMLElement, SectionProps>(({ children, className, ...props }) => {
+export const Section = ({ children, className, ...props }: SectionProps) => {
   const { ref, isInView } = useInView<HTMLElement>({ once: true });
 
   return (
@@ -24,6 +24,4 @@ export const Section = forwardRef<HTMLElement, SectionProps>(({ children, classN
       {children}
     </section>
   );
-});
-
-Section.displayName = "Section";
+};

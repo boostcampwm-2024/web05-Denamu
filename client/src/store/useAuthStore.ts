@@ -3,6 +3,8 @@ import { create } from "zustand";
 import { decodeToken } from "@/utils/jwt";
 import { refreshAccessToken, logout as logoutApi } from "@/api/services/user";
 
+const AUTH_HINT_KEY = "denamu_auth_hint";
+
 export type UserInfo = {
   id: number | null;
   email: string | null;
@@ -39,6 +41,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   setUserFromToken: (token) => {
     const decoded = decodeToken(token);
     if (decoded) {
+      localStorage.setItem(AUTH_HINT_KEY, "1");
       set({
         accessToken: token,
         userInfo: {
@@ -58,6 +61,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     } catch (e){
       console.warn("logout API 실패: ", e);
     } finally {
+      localStorage.removeItem(AUTH_HINT_KEY);
       set({
         accessToken: null,
         role: "guest",
@@ -71,6 +75,13 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
   initialize: async () => {
+    const isOAuthCallback = window.location.pathname === "/oauth-success";
+    const hasAuthHint = localStorage.getItem(AUTH_HINT_KEY) === "1";
+    if (!hasAuthHint && !isOAuthCallback) {
+      set({ isInitialized: true });
+      return;
+    }
+
     try {
       const res = await refreshAccessToken();
       const accessToken = res.data?.accessToken;
@@ -78,10 +89,12 @@ export const useAuthStore = create<AuthState>((set) => ({
       if (accessToken) {
         const decoded = decodeToken(accessToken);
         if (!decoded) {
+          localStorage.removeItem(AUTH_HINT_KEY);
           set({ isInitialized: true });
           return;
         }
 
+        localStorage.setItem(AUTH_HINT_KEY, "1");
         set({
           accessToken,
           userInfo: {
@@ -95,8 +108,10 @@ export const useAuthStore = create<AuthState>((set) => ({
         });
         return;
       }
+      localStorage.removeItem(AUTH_HINT_KEY);
       set({ isInitialized: true });
     } catch {
+      localStorage.removeItem(AUTH_HINT_KEY);
       set({
         role: "guest",
         userInfo: {
