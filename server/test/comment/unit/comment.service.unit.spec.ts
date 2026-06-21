@@ -1,4 +1,8 @@
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 
 import { DataSource } from 'typeorm';
 
@@ -19,7 +23,11 @@ describe(`${CommentService.name} Unit Test`, () => {
   let commentRepository: jest.Mocked<
     Pick<
       CommentRepository,
-      'findOne' | 'getCommentInformation' | 'getCommentsByUser' | 'save'
+      | 'findOne'
+      | 'getCommentInformation'
+      | 'getCommentsByUser'
+      | 'save'
+      | 'count'
     >
   >;
   let feedService: jest.Mocked<Pick<FeedService, 'getPublicFeed'>>;
@@ -40,6 +48,7 @@ describe(`${CommentService.name} Unit Test`, () => {
       getCommentInformation: jest.fn(),
       getCommentsByUser: jest.fn(),
       save: jest.fn(),
+      count: jest.fn(),
     };
     feedService = { getPublicFeed: jest.fn() };
     userService = { getUser: jest.fn() };
@@ -179,6 +188,7 @@ describe(`${CommentService.name} Unit Test`, () => {
         comment: '새 댓글',
         feed,
         user: { id: user.id },
+        parentId: null,
       });
     });
 
@@ -193,6 +203,85 @@ describe(`${CommentService.name} Unit Test`, () => {
         NotFoundException
       );
       expect(manager.save).not.toHaveBeenCalled();
+    });
+
+    it('유효한 부모 댓글이 있으면 parentId를 포함해 답글을 저장한다.', async () => {
+      // given
+      const feed = { id: 10, commentCount: 2, isPublic: true };
+      feedService.getPublicFeed.mockResolvedValue(feed as any);
+      commentRepository.findOne.mockResolvedValue({
+        id: 7,
+        parentId: null,
+        feed: { id: 10 },
+      } as any);
+
+      // when
+      await commentService.create(user, 10, { comment: '답글', parentId: 7 });
+
+      // then
+      expect(feed.commentCount).toBe(3);
+      expect(manager.save).toHaveBeenCalledWith(Comment, {
+        comment: '답글',
+        feed,
+        user: { id: user.id },
+        parentId: 7,
+      });
+    });
+
+    it('존재하지 않는 부모 댓글이면 NotFoundException을 던지고 저장하지 않는다.', async () => {
+      // given
+      feedService.getPublicFeed.mockResolvedValue({
+        id: 10,
+        commentCount: 2,
+        isPublic: true,
+      } as any);
+      commentRepository.findOne.mockResolvedValue(null);
+
+      // when & then
+      await expect(
+        commentService.create(user, 10, { comment: '답글', parentId: 999 }),
+      ).rejects.toThrow(NotFoundException);
+      expect(manager.save).not.toHaveBeenCalledWith(Comment, expect.anything());
+    });
+
+    it('부모 댓글이 다른 게시글에 속하면 BadRequestException을 던진다.', async () => {
+      // given
+      feedService.getPublicFeed.mockResolvedValue({
+        id: 10,
+        commentCount: 2,
+        isPublic: true,
+      } as any);
+      commentRepository.findOne.mockResolvedValue({
+        id: 7,
+        parentId: null,
+        feed: { id: 99 },
+      } as any);
+
+      // when & then
+      await expect(
+        commentService.create(user, 10, { comment: '답글', parentId: 7 }),
+      ).rejects.toThrow(BadRequestException);
+      expect(manager.save).not.toHaveBeenCalledWith(Comment, expect.anything());
+    });
+
+    it('부모 댓글이 이미 답글이면(2단계 초과) BadRequestException을 던진다.', async () => {
+      // given
+      feedService.getPublicFeed.mockResolvedValue({
+        id: 10,
+        commentCount: 2,
+        isPublic: true,
+      } as any);
+      commentRepository.findOne.mockResolvedValue({
+        id: 7,
+        parentId: 3,
+        feed: { id: 10 },
+      } as any);
+
+      // when & then
+      await expect(
+        commentService.create(user, 10, { comment: '답답글', parentId: 7 }),
+      ).rejects.toThrow(BadRequestException);
+      expect(manager.save).not.toHaveBeenCalledWith(Comment, expect.anything());
     });
   });
 
@@ -227,8 +316,14 @@ describe(`${CommentService.name} Unit Test`, () => {
     it('본인 댓글이면 댓글 수를 감소시키고 댓글을 제거한다.', async () => {
       // given
       const feed = { id: 10, commentCount: 3, blog: { userId: 888 } };
-      const comment = { id: 5, user: { id: user.id }, feed } as any;
+      const comment = {
+        id: 5,
+        parentId: null,
+        user: { id: user.id },
+        feed,
+      } as any;
       commentRepository.findOne.mockResolvedValue(comment);
+      commentRepository.count.mockResolvedValue(0);
 
       // when
       await commentService.delete(user, dto);
@@ -236,6 +331,49 @@ describe(`${CommentService.name} Unit Test`, () => {
       // then
       expect(feed.commentCount).toBe(2);
       expect(manager.save).toHaveBeenCalledWith(feed);
+      expect(manager.remove).toHaveBeenCalledWith(comment);
+    });
+
+    it('답글이 달린 최상위 댓글은 soft delete 처리하고 commentCount를 유지한다.', async () => {
+      // given
+      const feed = { id: 10, commentCount: 3, blog: { userId: 888 } };
+      const comment = {
+        id: 5,
+        parentId: null,
+        isDeleted: false,
+        user: { id: user.id },
+        feed,
+      } as any;
+      commentRepository.findOne.mockResolvedValue(comment);
+      commentRepository.count.mockResolvedValue(2);
+
+      // when
+      await commentService.delete(user, dto);
+
+      // then
+      expect(comment.isDeleted).toBe(true);
+      expect(feed.commentCount).toBe(3);
+      expect(manager.save).toHaveBeenCalledWith(comment);
+      expect(manager.remove).not.toHaveBeenCalled();
+    });
+
+    it('답글(parentId 존재)은 replyCount 조회 없이 hard delete 한다.', async () => {
+      // given
+      const feed = { id: 10, commentCount: 3, blog: { userId: 888 } };
+      const comment = {
+        id: 5,
+        parentId: 1,
+        user: { id: user.id },
+        feed,
+      } as any;
+      commentRepository.findOne.mockResolvedValue(comment);
+
+      // when
+      await commentService.delete(user, dto);
+
+      // then
+      expect(commentRepository.count).not.toHaveBeenCalled();
+      expect(feed.commentCount).toBe(2);
       expect(manager.remove).toHaveBeenCalledWith(comment);
     });
 
@@ -289,6 +427,23 @@ describe(`${CommentService.name} Unit Test`, () => {
           newComment: '수정됨',
         }),
       ).rejects.toThrow(ForbiddenException);
+      expect(commentRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('이미 삭제된 댓글이면 NotFoundException을 던지고 저장하지 않는다.', async () => {
+      // given
+      commentRepository.findOne.mockResolvedValue({
+        id: 5,
+        isDeleted: true,
+        comment: '삭제됨',
+        user: { id: user.id },
+        feed: { id: 10 },
+      } as any);
+
+      // when & then
+      await expect(
+        commentService.update(user, 5, { newComment: '수정됨' }),
+      ).rejects.toThrow(NotFoundException);
       expect(commentRepository.save).not.toHaveBeenCalled();
     });
   });

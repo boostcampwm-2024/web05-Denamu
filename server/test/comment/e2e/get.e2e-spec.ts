@@ -95,6 +95,8 @@ describe(`GET ${BASE_URL}/:feedId/comments E2E Test`, () => {
     expect(data).toStrictEqual([
       {
         id: comment.id,
+        parentId: null,
+        isDeleted: false,
         comment: comment.comment,
         date: comment.date.toISOString(),
         user: {

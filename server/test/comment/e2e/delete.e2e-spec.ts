@@ -158,4 +158,57 @@ describe(`DELETE ${BASE_URL}/:feedId/comments/:commentId E2E Test`, () => {
     // DB, Redis then
     expect(savedComment).toBeNull();
   });
+
+  it('[200] 답글이 달린 최상위 댓글은 soft delete(placeholder)로 남고 답글/commentCount는 유지된다.', async () => {
+    // given - comment(root)에 답글을 단다
+    const reply = await commentRepository.save(
+      CommentFixture.createCommentFixture(feed, user, { parentId: comment.id }),
+    );
+    const before = await feedRepository.findOneBy({ id: feed.id });
+
+    // Http when
+    const response = await agent
+      .delete(`${BASE_URL}/${feed.id}/comments/${comment.id}`)
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    // Http then
+    expect(response.status).toBe(HttpStatus.OK);
+
+    // DB then - root는 row 유지 + isDeleted, 답글 유지, commentCount 불변
+    const softDeleted = await commentRepository.findOneBy({ id: comment.id });
+    expect(softDeleted).not.toBeNull();
+    expect(softDeleted.isDeleted).toBe(true);
+
+    const survivingReply = await commentRepository.findOneBy({ id: reply.id });
+    expect(survivingReply).not.toBeNull();
+
+    const after = await feedRepository.findOneBy({ id: feed.id });
+    expect(after.commentCount).toBe(before.commentCount);
+  });
+
+  it('[200] 답글 삭제 시 hard delete 되고 commentCount가 감소한다.', async () => {
+    // given - comment(root)에 답글을 단다
+    const reply = await commentRepository.save(
+      CommentFixture.createCommentFixture(feed, user, { parentId: comment.id }),
+    );
+    const before = await feedRepository.findOneBy({ id: feed.id });
+
+    // Http when
+    const response = await agent
+      .delete(`${BASE_URL}/${feed.id}/comments/${reply.id}`)
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    // Http then
+    expect(response.status).toBe(HttpStatus.OK);
+
+    // DB then - 답글 row 제거, root 유지, commentCount -1
+    const deletedReply = await commentRepository.findOneBy({ id: reply.id });
+    expect(deletedReply).toBeNull();
+
+    const survivingRoot = await commentRepository.findOneBy({ id: comment.id });
+    expect(survivingRoot).not.toBeNull();
+
+    const after = await feedRepository.findOneBy({ id: feed.id });
+    expect(after.commentCount).toBe(before.commentCount - 1);
+  });
 });
