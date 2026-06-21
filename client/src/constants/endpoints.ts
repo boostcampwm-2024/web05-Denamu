@@ -71,6 +71,8 @@ export const USER = {
 export const OAUTH = {
   LOGIN: "/api/oauth",
   REGISTER: "/api/oauth/registrations",
+  LINKS: "/api/oauth/links",
+  UNLINK: (provider: string) => `/api/oauth/links/${provider}`,
 };
 
 export const FILE = {
