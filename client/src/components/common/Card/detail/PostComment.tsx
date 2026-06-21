@@ -5,6 +5,7 @@ import CommentAction from "@/components/common/Card/detail/CommentAction";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
+import { useNavigateToProfile } from "@/hooks/common/useNavigateToProfile";
 import { useComments, useCreateComment, useUpdateComment, useDeleteComment } from "@/hooks/queries/useComments";
 import { useUserProfile } from "@/hooks/queries/useProfile";
 
@@ -142,11 +143,14 @@ export default function PostComment({ feedId }: PostCommentProps) {
 const CommentItem = ({ comment, isOwner, modifyId, handleModify, onUpdate, onDelete }: CommentItemProps) => {
   const [editContent, setEditContent] = useState(comment.comment);
   const isEditing = modifyId === comment.id;
+  const navigateToProfile = useNavigateToProfile();
+
+  const goToProfile = () => navigateToProfile(comment.user.id);
 
   return (
     <li className="border-b border-gray-100 pb-4">
       <div className="flex items-start gap-3">
-        <Avatar className="w-8 h-8">
+        <Avatar className="w-8 h-8 cursor-pointer" onClick={goToProfile}>
           <AvatarImage src={comment.user.profileImage ?? undefined} alt={comment.user.userName} />
           <AvatarFallback>{comment.user.userName.substring(0, 2)}</AvatarFallback>
         </Avatar>
@@ -154,7 +158,9 @@ const CommentItem = ({ comment, isOwner, modifyId, handleModify, onUpdate, onDel
           <div className="flex items-center gap-2">
             <div className="flex justify-between w-full">
               <div className="flex gap-2 items-center">
-                <p className="font-semibold text-sm">{comment.user.userName}</p>
+                <p className="font-semibold text-sm cursor-pointer hover:underline" onClick={goToProfile}>
+                  {comment.user.userName}
+                </p>
                 <p className="text-sm text-gray-400">{timeAgo(comment.date)}</p>
               </div>
               {isOwner && !isEditing && (
