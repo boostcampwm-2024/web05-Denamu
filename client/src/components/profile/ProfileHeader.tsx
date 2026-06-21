@@ -21,7 +21,7 @@ export const ProfileHeader = ({ name, email, profileImage, introduction }: Profi
           </Avatar>
           <div className="min-w-0">
             <h1 className="text-2xl font-bold">{name}</h1>
-            <p className="mt-1 text-gray-600">{email}</p>
+            {email && <p className="mt-1 text-gray-600">{email}</p>}
             <p className="mt-4 text-gray-800 whitespace-pre-wrap">
               {introduction ? introduction : <span className="text-gray-400">자기소개가 없습니다.</span>}
             </p>
