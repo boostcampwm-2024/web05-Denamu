@@ -99,6 +99,7 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
       thumbnail: feedList[0].thumbnail,
       title: feedList[0].title,
       viewCount: feedList[0].viewCount,
+      isOwner: false,
     });
   });
 
@@ -127,6 +128,52 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
       thumbnail: feedList[1].thumbnail,
       title: feedList[1].title,
       viewCount: feedList[1].viewCount,
+      isOwner: false,
+    });
+  });
+
+  describe('isOwner 필드', () => {
+    let user: User;
+    let userRepository: UserRepository;
+
+    beforeAll(() => {
+      userRepository = testApp.get(UserRepository);
+    });
+
+    beforeEach(async () => {
+      user = await userRepository.save(
+        await UserFixture.createUserCryptFixture(),
+      );
+    });
+
+    it('[200] RSS 소유자가 조회할 경우 isOwner=true로 응답한다.', async () => {
+      // given
+      rssAccept.userId = user.id;
+      await rssAcceptRepository.save(rssAccept);
+      const accessToken = createAccessToken(user);
+
+      // Http when
+      const response = await agent
+        .get(`${URL}/${feedList[0].id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Http then
+      expect(response.status).toBe(HttpStatus.OK);
+      expect(response.body.data.isOwner).toBe(true);
+    });
+
+    it('[200] RSS 소유자가 아닌 사용자가 조회할 경우 isOwner=false로 응답한다.', async () => {
+      // given
+      const accessToken = createAccessToken(user);
+
+      // Http when
+      const response = await agent
+        .get(`${URL}/${feedList[0].id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Http then
+      expect(response.status).toBe(HttpStatus.OK);
+      expect(response.body.data.isOwner).toBe(false);
     });
   });
 

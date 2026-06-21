@@ -209,24 +209,40 @@ describe(`${CommentService.name} Unit Test`, () => {
       );
     });
 
-    it('본인 댓글이 아니면 ForbiddenException을 던진다.', async () => {
+    it('본인 댓글도 아니고 RSS 소유자도 아니면 ForbiddenException을 던진다.', async () => {
       // given
       commentRepository.findOne.mockResolvedValue({
         id: 5,
         user: { id: 999 },
-        feed: { id: 10, commentCount: 3 },
+        feed: { id: 10, commentCount: 3, blog: { userId: 888 } },
       } as any);
 
       // when & then
       await expect(commentService.delete(user, dto)).rejects.toThrow(
         ForbiddenException,
       );
+      expect(manager.remove).not.toHaveBeenCalled();
     });
 
     it('본인 댓글이면 댓글 수를 감소시키고 댓글을 제거한다.', async () => {
       // given
-      const feed = { id: 10, commentCount: 3 };
+      const feed = { id: 10, commentCount: 3, blog: { userId: 888 } };
       const comment = { id: 5, user: { id: user.id }, feed } as any;
+      commentRepository.findOne.mockResolvedValue(comment);
+
+      // when
+      await commentService.delete(user, dto);
+
+      // then
+      expect(feed.commentCount).toBe(2);
+      expect(manager.save).toHaveBeenCalledWith(feed);
+      expect(manager.remove).toHaveBeenCalledWith(comment);
+    });
+
+    it('본인 댓글이 아니어도 RSS 소유자면 댓글 수를 감소시키고 댓글을 제거한다.', async () => {
+      // given
+      const feed = { id: 10, commentCount: 3, blog: { userId: user.id } };
+      const comment = { id: 5, user: { id: 999 }, feed } as any;
       commentRepository.findOne.mockResolvedValue(comment);
 
       // when

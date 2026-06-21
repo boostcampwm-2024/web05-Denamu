@@ -114,6 +114,31 @@ describe(`DELETE ${BASE_URL}/:feedId/comments/:commentId E2E Test`, () => {
     expect(savedComment).not.toBeNull();
   });
 
+  it('[200] 본인 댓글이 아니어도 게시글의 RSS 소유자일 경우 댓글 삭제를 성공한다.', async () => {
+    // given - user2가 RSS 소유자, 댓글 작성자는 user
+    rssAccept.userId = user2.id;
+    await rssAcceptRepository.save(rssAccept);
+    accessToken = createAccessToken({ id: user2.id });
+
+    // Http when
+    const response = await agent
+      .delete(`${BASE_URL}/${feed.id}/comments/${comment.id}`)
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.OK);
+    expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedComment = await commentRepository.findOneBy({
+      id: comment.id,
+    });
+
+    // DB, Redis then
+    expect(savedComment).toBeNull();
+  });
+
   it('[200] 본인이 작성한 댓글일 경우 댓글 삭제를 성공한다.', async () => {
     // Http when
     const response = await agent
