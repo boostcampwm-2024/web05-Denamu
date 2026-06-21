@@ -37,6 +37,8 @@ export type FeedDetailType = ApiData<FeedDetail>;
 export interface FeedCommentType {
   id: number;
   comment: string;
+  parentId: number | null;
+  isDeleted: boolean;
   date: string;
   user: {
     id: number;

@@ -13,7 +13,8 @@ export const useComments = (feedId: number) =>
 export const useCreateComment = (feedId: number) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (comment: string) => comments.create(feedId, comment),
+    mutationFn: ({ comment, parentId }: { comment: string; parentId?: number }) =>
+      comments.create(feedId, comment, parentId),
     onSettled: () => queryClient.invalidateQueries({ queryKey: commentsKey(feedId) }),
   });
 };

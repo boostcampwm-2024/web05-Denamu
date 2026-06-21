@@ -23,10 +23,12 @@ interface CommentItemProps {
   comment: FeedCommentType;
   canEdit: boolean;
   canDelete: boolean;
+  isReply?: boolean;
   modifyId: number | null;
   handleModify: (id: number | null) => void;
   onUpdate: (commentId: number, newComment: string) => void;
   onDelete: (commentId: number) => void;
+  onReply: (rootId: number, mention?: string) => void;
 }
 
 const INITIAL_VISIBLE = 3;
@@ -45,6 +47,8 @@ export default function PostComment({ feedId, isFeedOwner = false }: PostComment
   const [modifyId, setModifyId] = useState<number | null>(null);
   const [showAll, setShowAll] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
+  const [replyTo, setReplyTo] = useState<number | null>(null);
+  const [replyContent, setReplyContent] = useState("");
 
   const handleModify = (id: number | null) => setModifyId(id);
 
@@ -55,7 +59,30 @@ export default function PostComment({ feedId, isFeedOwner = false }: PostComment
     }
     const trimmed = content.trim();
     if (!trimmed || isCreating) return;
-    createComment(trimmed, { onSuccess: () => setContent("") });
+    createComment({ comment: trimmed }, { onSuccess: () => setContent("") });
+  };
+
+  const handleReplyOpen = (rootId: number, mention?: string) => {
+    if (!isAuthenticated) {
+      setLoginOpen(true);
+      return;
+    }
+    setReplyTo(rootId);
+    setReplyContent(mention ? `@${mention} ` : "");
+  };
+
+  const handleReplySubmit = (rootId: number) => {
+    const trimmed = replyContent.trim();
+    if (!trimmed || isCreating) return;
+    createComment(
+      { comment: trimmed, parentId: rootId },
+      {
+        onSuccess: () => {
+          setReplyTo(null);
+          setReplyContent("");
+        },
+      },
+    );
   };
 
   const handleUpdate = (commentId: number, newComment: string) => {
@@ -64,8 +91,24 @@ export default function PostComment({ feedId, isFeedOwner = false }: PostComment
     updateComment({ commentId, newComment: trimmed }, { onSuccess: () => setModifyId(null) });
   };
 
-  const sorted = [...comments].sort((a, b) => Number(new Date(b.date)) - Number(new Date(a.date)));
-  const visible = showAll ? sorted : sorted.slice(0, INITIAL_VISIBLE);
+  const canEditComment = (comment: FeedCommentType) => !comment.isDeleted && comment.user.id === userId;
+  const canDeleteComment = (comment: FeedCommentType) =>
+    !comment.isDeleted && (comment.user.id === userId || isFeedOwner);
+
+  const repliesByParent = comments.reduce<Record<number, FeedCommentType[]>>((acc, comment) => {
+    if (comment.parentId !== null) {
+      (acc[comment.parentId] ??= []).push(comment);
+    }
+    return acc;
+  }, {});
+  Object.values(repliesByParent).forEach((replies) =>
+    replies.sort((a, b) => Number(new Date(a.date)) - Number(new Date(b.date))),
+  );
+
+  const roots = comments
+    .filter((comment) => comment.parentId === null)
+    .sort((a, b) => Number(new Date(b.date)) - Number(new Date(a.date)));
+  const visibleRoots = showAll ? roots : roots.slice(0, INITIAL_VISIBLE);
 
   return (
     <div className="w-full space-y-6">
@@ -105,22 +148,75 @@ export default function PostComment({ feedId, isFeedOwner = false }: PostComment
 
       {/* 댓글 목록 */}
       <ul className="space-y-4">
-        {visible.map((comment) => (
-          <CommentItem
-            key={comment.id}
-            comment={comment}
-            canEdit={comment.user.id === userId}
-            canDelete={comment.user.id === userId || isFeedOwner}
-            modifyId={modifyId}
-            handleModify={handleModify}
-            onUpdate={handleUpdate}
-            onDelete={deleteComment}
-          />
+        {visibleRoots.map((root) => (
+          <li key={root.id} className="border-b border-gray-100 pb-4">
+            <CommentItem
+              comment={root}
+              canEdit={canEditComment(root)}
+              canDelete={canDeleteComment(root)}
+              modifyId={modifyId}
+              handleModify={handleModify}
+              onUpdate={handleUpdate}
+              onDelete={deleteComment}
+              onReply={handleReplyOpen}
+            />
+
+            {/* 답글 목록 */}
+            {(repliesByParent[root.id] ?? []).length > 0 && (
+              <ul className="mt-3 ml-11 space-y-3 border-l-2 border-gray-100 pl-4">
+                {repliesByParent[root.id].map((reply) => (
+                  <li key={reply.id}>
+                    <CommentItem
+                      comment={reply}
+                      canEdit={canEditComment(reply)}
+                      canDelete={canDeleteComment(reply)}
+                      isReply
+                      modifyId={modifyId}
+                      handleModify={handleModify}
+                      onUpdate={handleUpdate}
+                      onDelete={deleteComment}
+                      onReply={() => handleReplyOpen(root.id, reply.user.userName)}
+                    />
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {/* 답글 입력 영역 */}
+            {replyTo === root.id && (
+              <div className="mt-3 ml-11">
+                <textarea
+                  value={replyContent}
+                  onChange={(e) => setReplyContent(e.target.value)}
+                  placeholder="답글을 입력하세요..."
+                  className="w-full bg-gray-50 p-2 rounded-md h-16 outline-none ring-1 ring-gray-300 resize-none"
+                ></textarea>
+                <div className="flex justify-end gap-2 text-sm mt-1">
+                  <button
+                    onClick={() => {
+                      setReplyTo(null);
+                      setReplyContent("");
+                    }}
+                    className="hover:bg-gray-200 py-1.5 px-3 rounded-lg"
+                  >
+                    취소
+                  </button>
+                  <button
+                    onClick={() => handleReplySubmit(root.id)}
+                    disabled={isCreating}
+                    className="bg-primary hover:bg-primary/90 py-1.5 px-3 text-white rounded-lg disabled:opacity-60"
+                  >
+                    답글 등록
+                  </button>
+                </div>
+              </div>
+            )}
+          </li>
         ))}
       </ul>
 
       {/* 더보기 버튼 */}
-      {!showAll && sorted.length > INITIAL_VISIBLE && (
+      {!showAll && roots.length > INITIAL_VISIBLE && (
         <div className="flex justify-center">
           <button
             onClick={() => setShowAll(true)}
@@ -143,64 +239,90 @@ export default function PostComment({ feedId, isFeedOwner = false }: PostComment
   );
 }
 
-const CommentItem = ({ comment, canEdit, canDelete, modifyId, handleModify, onUpdate, onDelete }: CommentItemProps) => {
+const CommentItem = ({
+  comment,
+  canEdit,
+  canDelete,
+  isReply = false,
+  modifyId,
+  handleModify,
+  onUpdate,
+  onDelete,
+  onReply,
+}: CommentItemProps) => {
   const [editContent, setEditContent] = useState(comment.comment);
   const isEditing = modifyId === comment.id;
   const navigateToProfile = useNavigateToProfile();
 
-  const goToProfile = () => navigateToProfile(comment.user.id);
+  const goToProfile = () => {
+    if (comment.isDeleted) return;
+    navigateToProfile(comment.user.id);
+  };
+
+  const avatarCursor = comment.isDeleted ? "" : "cursor-pointer";
 
   return (
-    <li className="border-b border-gray-100 pb-4">
-      <div className="flex items-start gap-3">
-        <Avatar className="w-8 h-8 cursor-pointer" onClick={goToProfile}>
+    <div className="flex items-start gap-3">
+      <Avatar className={`w-8 h-8 ${avatarCursor}`} onClick={goToProfile}>
+        {!comment.isDeleted && (
           <AvatarImage src={comment.user.profileImage ?? undefined} alt={comment.user.userName} />
-          <AvatarFallback>{comment.user.userName.substring(0, 2)}</AvatarFallback>
-        </Avatar>
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <div className="flex justify-between w-full">
-              <div className="flex gap-2 items-center">
-                <p className="font-semibold text-sm cursor-pointer hover:underline" onClick={goToProfile}>
-                  {comment.user.userName}
-                </p>
-                <p className="text-sm text-gray-400">{timeAgo(comment.date)}</p>
-              </div>
-              {(canEdit || canDelete) && !isEditing && (
-                <CommentAction
-                  id={comment.id}
-                  canEdit={canEdit}
-                  canDelete={canDelete}
-                  handleModify={handleModify}
-                  onDelete={onDelete}
-                />
-              )}
+        )}
+        <AvatarFallback>{comment.isDeleted ? "?" : comment.user.userName.substring(0, 2)}</AvatarFallback>
+      </Avatar>
+      <div className="flex-1">
+        <div className="flex items-center gap-2">
+          <div className="flex justify-between w-full">
+            <div className="flex gap-2 items-center">
+              <p
+                className={`font-semibold text-sm ${comment.isDeleted ? "text-gray-400" : "cursor-pointer hover:underline"}`}
+                onClick={goToProfile}
+              >
+                {comment.user.userName}
+              </p>
+              <p className="text-sm text-gray-400">{timeAgo(comment.date)}</p>
+            </div>
+            {(canEdit || canDelete) && !isEditing && (
+              <CommentAction
+                id={comment.id}
+                canEdit={canEdit}
+                canDelete={canDelete}
+                handleModify={handleModify}
+                onDelete={onDelete}
+              />
+            )}
+          </div>
+        </div>
+        {!isEditing ? (
+          <p className={`mt-1 ${comment.isDeleted ? "text-gray-400 italic" : "text-gray-800"}`}>{comment.comment}</p>
+        ) : (
+          <div className="">
+            <textarea
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+              className="w-[100%] mt-2 flex-1 bg-transparent p-2 rounded-md h-20 outline-none ring-2 ring-gray-300 border-transparent resize-none"
+            ></textarea>
+            <div className="flex justify-end gap-3 text-sm">
+              <button onClick={() => handleModify(null)} className="hover:bg-gray-200 py-2 px-4 rounded-lg">
+                취소
+              </button>
+              <button
+                onClick={() => onUpdate(comment.id, editContent)}
+                className="bg-primary hover:bg-primary/80 py-2 px-4 text-white rounded-lg"
+              >
+                댓글 수정
+              </button>
             </div>
           </div>
-          {!isEditing ? (
-            <p className="mt-1 text-gray-800">{comment.comment}</p>
-          ) : (
-            <div className="">
-              <textarea
-                value={editContent}
-                onChange={(e) => setEditContent(e.target.value)}
-                className="w-[100%] mt-2 flex-1 bg-transparent p-2 rounded-md h-20 outline-none ring-2 ring-gray-300 border-transparent resize-none"
-              ></textarea>
-              <div className="flex justify-end gap-3 text-sm">
-                <button onClick={() => handleModify(null)} className="hover:bg-gray-200 py-2 px-4 rounded-lg">
-                  취소
-                </button>
-                <button
-                  onClick={() => onUpdate(comment.id, editContent)}
-                  className="bg-primary hover:bg-primary/80 py-2 px-4 text-white rounded-lg"
-                >
-                  댓글 수정
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
+        )}
+        {!isEditing && !comment.isDeleted && (
+          <button
+            onClick={() => onReply(comment.id, isReply ? comment.user.userName : undefined)}
+            className="mt-1 text-xs text-gray-400 hover:text-gray-600"
+          >
+            답글
+          </button>
+        )}
       </div>
-    </li>
+    </div>
   );
 };
