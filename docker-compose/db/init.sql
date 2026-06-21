@@ -174,15 +174,18 @@ CREATE TABLE `provider` (
 );
 
 -- denamu.admin insert data
-
+-- id: test1234@denamu.dev, password: test1234!
+-- id: test5678@denamu.dev, password: test1234!
 INSERT INTO admin (email,password, name, parent_admin_id) VALUES
 	('test1234@denamu.dev','$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정', NULL),
 	('test5678@denamu.dev','$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정의 자식', 1);
 
 -- denamu.user insert data
 -- id: test@test.com, password: test1234!
+-- id: example@example.com, password: test1234!
 INSERT INTO user (email, password, user_name, profile_image, introduction) VALUES
-	('test@test.com', '$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정', NULL, '안녕하세요 테스트입니다.');
+	('test@test.com', '$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정', NULL, '안녕하세요 테스트입니다.'),
+	('example@example.com', '$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '예제 계정', NULL, '안녕하세요 예제입니다.');
 
 -- denamu.rss_accept insert data
 
