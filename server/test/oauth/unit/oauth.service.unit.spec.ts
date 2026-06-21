@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 import { Request, Response } from 'express';
 import { DataSource } from 'typeorm';
@@ -18,9 +18,16 @@ import { UserService } from '@user/service/user.service';
 
 describe(`${OAuthService.name} Unit Test`, () => {
   let oAuthService: OAuthService;
-  let userRepository: jest.Mocked<Pick<UserRepository, 'findOne'>>;
+  let userRepository: jest.Mocked<Pick<UserRepository, 'findOne' | 'findOneBy'>>;
   let providerRepository: jest.Mocked<
-    Pick<ProviderRepository, 'findByProviderTypeAndId' | 'save'>
+    Pick<
+      ProviderRepository,
+      | 'findByProviderTypeAndId'
+      | 'findByUserId'
+      | 'findByUserIdAndType'
+      | 'save'
+      | 'delete'
+    >
   >;
   let logger: jest.Mocked<Pick<WinstonLoggerService, 'log' | 'error'>>;
   let redisService: jest.Mocked<
@@ -45,10 +52,13 @@ describe(`${OAuthService.name} Unit Test`, () => {
     Buffer.from(JSON.stringify(data)).toString('base64');
 
   beforeEach(() => {
-    userRepository = { findOne: jest.fn() };
+    userRepository = { findOne: jest.fn(), findOneBy: jest.fn() };
     providerRepository = {
       findByProviderTypeAndId: jest.fn(),
+      findByUserId: jest.fn(),
+      findByUserIdAndType: jest.fn(),
       save: jest.fn(),
+      delete: jest.fn(),
     };
     logger = { log: jest.fn(), error: jest.fn() };
     redisService = {
@@ -231,6 +241,193 @@ describe(`${OAuthService.name} Unit Test`, () => {
         res,
       );
       expect(result).toBe(`${OAUTH_URL_PATH.BASE_URL}/oauth-success`);
+    });
+  });
+
+  describe('callback - 계정 연결(link)', () => {
+    const linkDto = () =>
+      ({
+        state: encodeState({ provider: OAuthType.Google, csrfToken: 'key-1' }),
+        code: 'auth-code',
+      }) as OAuthCallbackRequestDto;
+
+    const setupLinkCallback = (linkData: object) => {
+      redisService.eval.mockResolvedValue(`${OAuthType.Google}-CSRF`);
+      googleProvider.getTokens.mockResolvedValue({
+        access_token: 'at',
+        refresh_token: 'rt',
+      });
+      googleProvider.getUserInfo.mockResolvedValue({
+        id: 'provider-uid',
+        email: 'oauth@test.com',
+        name: 'oauth-handle',
+        picture: null,
+      });
+      redisService.get.mockResolvedValue(JSON.stringify(linkData));
+    };
+
+    it('연결되지 않은 제공자는 현재 유저에 연결하고 성공 URL을 반환하며 토큰을 재발급하지 않는다.', async () => {
+      // given
+      setupLinkCallback({ userId: 1, providerType: OAuthType.Google });
+      providerRepository.findByProviderTypeAndId.mockResolvedValue(null);
+      providerRepository.findByUserIdAndType.mockResolvedValue(null);
+
+      // when
+      const result = await oAuthService.callback(
+        linkDto(),
+        createResponse(),
+        createRequest('key-1'),
+      );
+
+      // then
+      expect(providerRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          providerType: OAuthType.Google,
+          providerUserId: 'provider-uid',
+          providerUserName: 'oauth-handle',
+          user: { id: 1 },
+        }),
+      );
+      expect(userService.issueRefreshToken).not.toHaveBeenCalled();
+      expect(result).toBe(
+        `${OAUTH_URL_PATH.BASE_URL}/profile?oauthLink=success&provider=${OAuthType.Google}`,
+      );
+    });
+
+    it('이미 본인에게 연결된 제공자는 멱등 처리(저장 없이 성공)한다.', async () => {
+      // given
+      setupLinkCallback({ userId: 1, providerType: OAuthType.Google });
+      providerRepository.findByProviderTypeAndId.mockResolvedValue({
+        id: 10,
+        user: { id: 1 },
+      } as any);
+
+      // when
+      const result = await oAuthService.callback(
+        linkDto(),
+        createResponse(),
+        createRequest('key-1'),
+      );
+
+      // then
+      expect(providerRepository.save).not.toHaveBeenCalled();
+      expect(result).toContain('oauthLink=success');
+    });
+
+    it('타 유저에게 연결된 제공자는 already_linked 에러로 리다이렉트한다.', async () => {
+      // given
+      setupLinkCallback({ userId: 1, providerType: OAuthType.Google });
+      providerRepository.findByProviderTypeAndId.mockResolvedValue({
+        id: 10,
+        user: { id: 999 },
+      } as any);
+
+      // when
+      const result = await oAuthService.callback(
+        linkDto(),
+        createResponse(),
+        createRequest('key-1'),
+      );
+
+      // then
+      expect(providerRepository.save).not.toHaveBeenCalled();
+      expect(result).toContain('oauthLink=error&reason=already_linked');
+    });
+
+    it('같은 종류가 이미 연결돼 있으면 duplicate_type 에러로 리다이렉트한다.', async () => {
+      // given
+      setupLinkCallback({ userId: 1, providerType: OAuthType.Google });
+      providerRepository.findByProviderTypeAndId.mockResolvedValue(null);
+      providerRepository.findByUserIdAndType.mockResolvedValue({ id: 5 } as any);
+
+      // when
+      const result = await oAuthService.callback(
+        linkDto(),
+        createResponse(),
+        createRequest('key-1'),
+      );
+
+      // then
+      expect(providerRepository.save).not.toHaveBeenCalled();
+      expect(result).toContain('oauthLink=error&reason=duplicate_type');
+    });
+  });
+
+  describe('unlinkProvider', () => {
+    it('마지막 OAuth이고 비밀번호가 없으면 BadRequestException을 던진다.', async () => {
+      // given
+      userRepository.findOneBy.mockResolvedValue({ id: 1, password: null } as any);
+      providerRepository.findByUserId.mockResolvedValue([
+        { id: 10, providerType: OAuthType.Google },
+      ] as any);
+
+      // when & then
+      await expect(
+        oAuthService.unlinkProvider(1, OAuthType.Google),
+      ).rejects.toThrow(BadRequestException);
+      expect(providerRepository.delete).not.toHaveBeenCalled();
+    });
+
+    it('마지막 OAuth라도 비밀번호가 있으면 해제한다.', async () => {
+      // given
+      userRepository.findOneBy.mockResolvedValue({
+        id: 1,
+        password: 'hashed',
+      } as any);
+      providerRepository.findByUserId.mockResolvedValue([
+        { id: 10, providerType: OAuthType.Google },
+      ] as any);
+
+      // when
+      await oAuthService.unlinkProvider(1, OAuthType.Google);
+
+      // then
+      expect(providerRepository.delete).toHaveBeenCalledWith(10);
+    });
+
+    it('연결되지 않은 제공자를 해제하면 NotFoundException을 던진다.', async () => {
+      // given
+      userRepository.findOneBy.mockResolvedValue({
+        id: 1,
+        password: 'hashed',
+      } as any);
+      providerRepository.findByUserId.mockResolvedValue([
+        { id: 10, providerType: OAuthType.Github },
+      ] as any);
+
+      // when & then
+      await expect(
+        oAuthService.unlinkProvider(1, OAuthType.Google),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('getLinkedProviders', () => {
+    it('비밀번호 보유 여부와 연결된 제공자 목록을 반환한다.', async () => {
+      // given
+      userRepository.findOneBy.mockResolvedValue({
+        id: 1,
+        password: 'hashed',
+      } as any);
+      providerRepository.findByUserId.mockResolvedValue([
+        {
+          providerType: OAuthType.Google,
+          providerUserName: 'oauth-handle',
+          createdAt: new Date('2026-01-01'),
+        },
+      ] as any);
+
+      // when
+      const result = await oAuthService.getLinkedProviders(1);
+
+      // then
+      expect(result.hasPassword).toBe(true);
+      expect(result.providers).toEqual([
+        expect.objectContaining({
+          provider: OAuthType.Google,
+          providerUserName: 'oauth-handle',
+        }),
+      ]);
     });
   });
 
