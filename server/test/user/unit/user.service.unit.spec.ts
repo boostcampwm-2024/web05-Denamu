@@ -23,6 +23,7 @@ import { RssAccept } from '@rss/entity/rss.entity';
 import { RssAcceptRepository } from '@rss/repository/rss.repository';
 
 import { RegisterUserRequestDto } from '@user/dto/request/registerUser.dto';
+import { SearchUserRequestDto } from '@user/dto/request/searchUser.dto';
 import { CheckEmailDuplicationResponseDto } from '@user/dto/response/checkEmailDuplication.dto';
 import { CheckUserNameDuplicationResponseDto } from '@user/dto/response/checkUserNameDuplication.dto';
 import { CreateAccessTokenResponseDto } from '@user/dto/response/createAccessToken.dto';
@@ -40,7 +41,10 @@ import {
 describe(`${UserService.name} Unit Test`, () => {
   let userService: UserService;
   let userRepository: jest.Mocked<
-    Pick<UserRepository, 'findOneBy' | 'findOne' | 'save' | 'remove'>
+    Pick<
+      UserRepository,
+      'findOneBy' | 'findOne' | 'save' | 'remove' | 'searchUserList'
+    >
   >;
   let redisService: jest.Mocked<
     Pick<RedisService, 'set' | 'get' | 'del' | 'setex'>
@@ -82,6 +86,7 @@ describe(`${UserService.name} Unit Test`, () => {
       findOne: jest.fn(),
       save: jest.fn(),
       remove: jest.fn(),
+      searchUserList: jest.fn(),
     };
     redisService = {
       set: jest.fn(),
@@ -130,6 +135,72 @@ describe(`${UserService.name} Unit Test`, () => {
       const user = UserFixture.createUserFixture();
       userRepository.findOneBy.mockResolvedValue(user);
       await expect(userService.getUser(1)).resolves.toBe(user);
+    });
+  });
+
+  describe('searchUserList', () => {
+    it('닉네임 검색 결과를 id·닉네임·프로필 이미지로 매핑하고 페이지 정보를 계산한다.', async () => {
+      // given
+      const users = [
+        UserFixture.createUserFixture({
+          userName: '김개발',
+          profileImage: 'https://denamu.dev/profile.png',
+        }),
+        UserFixture.createUserFixture({
+          userName: '김철수',
+          profileImage: null,
+        }),
+      ] as User[];
+      users[0].id = 1;
+      users[1].id = 2;
+      userRepository.searchUserList.mockResolvedValue([users, 2]);
+
+      // when
+      const result = await userService.searchUserList(
+        new SearchUserRequestDto({ find: '김', page: 1, limit: 5 }),
+      );
+
+      // then
+      expect(result).toEqual({
+        totalCount: 2,
+        result: [
+          { id: 1, userName: '김개발', profileImage: 'https://denamu.dev/profile.png' },
+          { id: 2, userName: '김철수', profileImage: null },
+        ],
+        totalPages: 1,
+        limit: 5,
+      });
+    });
+
+    it('page와 limit으로 offset을 계산해 레포지토리에 전달한다.', async () => {
+      // given
+      userRepository.searchUserList.mockResolvedValue([[], 0]);
+
+      // when
+      await userService.searchUserList(
+        new SearchUserRequestDto({ find: '김', page: 3, limit: 4 }),
+      );
+
+      // then
+      expect(userRepository.searchUserList).toHaveBeenCalledWith('김', 4, 8);
+    });
+
+    it('검색 결과가 없으면 빈 배열과 0건을 반환한다.', async () => {
+      // given
+      userRepository.searchUserList.mockResolvedValue([[], 0]);
+
+      // when
+      const result = await userService.searchUserList(
+        new SearchUserRequestDto({ find: '없음', page: 1, limit: 5 }),
+      );
+
+      // then
+      expect(result).toEqual({
+        totalCount: 0,
+        result: [],
+        totalPages: 0,
+        limit: 5,
+      });
     });
   });
 
