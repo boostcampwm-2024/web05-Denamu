@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+
+import { Check, Plus } from "lucide-react";
+
+import { useQueryClient } from "@tanstack/react-query";
 
 import {
   AlertDialog,
@@ -21,8 +25,12 @@ import { Label } from "@/components/ui/label.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 
+import { GitHub } from "@/components/icons/social/GitHub.tsx";
+import { Google } from "@/components/icons/social/Google.tsx";
+
 import { useCustomToast } from "@/hooks/common/useCustomToast.ts";
 import { useUserProfile } from "@/hooks/queries/useProfile.ts";
+import { LINKED_PROVIDERS_KEY, useLinkedProviders, useUnlinkProvider } from "@/hooks/queries/useOAuthLinks.ts";
 import {
   useChangePassword,
   useRequestDeleteAccount,
@@ -31,8 +39,19 @@ import {
 } from "@/hooks/queries/useProfileSettings.ts";
 
 import { checkUserNameAvailability } from "@/api/services/profile.ts";
+import { initiateOAuthLink } from "@/api/services/oauthLink.ts";
 import { useAuthStore } from "@/store/useAuthStore.ts";
-import { UpdateProfilePayload } from "@/types/profile.ts";
+import { OAuthProviderType, UpdateProfilePayload } from "@/types/profile.ts";
+
+const OAUTH_PROVIDERS: { type: OAuthProviderType; label: string; Icon: typeof GitHub }[] = [
+  { type: "google", label: "Google", Icon: Google },
+  { type: "github", label: "Github", Icon: GitHub },
+];
+
+const LINK_ERROR_MESSAGES: Record<string, string> = {
+  already_linked: "이미 다른 계정에 연결된 제공자입니다.",
+  duplicate_type: "이미 같은 종류의 계정이 연결되어 있습니다.",
+};
 
 interface ProfileEditTabProps {
   userId: number;
@@ -74,6 +93,19 @@ export const ProfileEditTab = ({ userId, email }: ProfileEditTabProps) => {
   const changePassword = useChangePassword();
   const requestDelete = useRequestDeleteAccount();
 
+  const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { data: linkData } = useLinkedProviders();
+  const unlinkProvider = useUnlinkProvider();
+  const [connecting, setConnecting] = useState<OAuthProviderType | null>(null);
+
+  const passwordCardRef = useRef<HTMLDivElement>(null);
+  const newPasswordRef = useRef<HTMLInputElement>(null);
+
+  const linkedProviders = linkData?.providers ?? [];
+  const hasPassword = linkData?.hasPassword ?? false;
+  const isLastProvider = linkedProviders.length === 1;
+
   useEffect(() => {
     if (profile) {
       setUserName(profile.userName);
@@ -81,6 +113,63 @@ export const ProfileEditTab = ({ userId, email }: ProfileEditTabProps) => {
       setProfileImage(profile.profileImage ?? null);
     }
   }, [profile]);
+
+  useEffect(() => {
+    const linkResult = searchParams.get("oauthLink");
+    if (!linkResult) return;
+
+    if (linkResult === "success") {
+      toast({ title: "계정 연결 성공", description: "OAuth 계정이 연결되었습니다." });
+      queryClient.invalidateQueries({ queryKey: LINKED_PROVIDERS_KEY });
+    } else {
+      const reason = searchParams.get("reason") ?? "";
+      toast({
+        title: "계정 연결 실패",
+        description: LINK_ERROR_MESSAGES[reason] ?? "계정 연결에 실패했습니다. 다시 시도해주세요.",
+        variant: "destructive",
+      });
+    }
+
+    searchParams.delete("oauthLink");
+    searchParams.delete("reason");
+    searchParams.delete("provider");
+    setSearchParams(searchParams, { replace: true });
+  }, [searchParams, setSearchParams, toast, queryClient]);
+
+  const handleConnectOAuth = async (provider: OAuthProviderType) => {
+    setConnecting(provider);
+    try {
+      const authUrl = await initiateOAuthLink(provider);
+      window.location.href = authUrl;
+    } catch (error) {
+      setConnecting(null);
+      toast({
+        title: "연결 시작 실패",
+        description: getErrorMessage(error, "연결을 시작하지 못했습니다."),
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUnlinkOAuth = (provider: OAuthProviderType) => {
+    unlinkProvider.mutate(provider, {
+      onSuccess: () => {
+        toast({ title: "연결 해제 성공", description: "OAuth 연결이 해제되었습니다." });
+      },
+      onError: (error) => {
+        toast({
+          title: "연결 해제 실패",
+          description: getErrorMessage(error, "연결 해제에 실패했습니다."),
+          variant: "destructive",
+        });
+      },
+    });
+  };
+
+  const focusPasswordSetup = () => {
+    passwordCardRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    newPasswordRef.current?.focus();
+  };
 
   const initials = userName ? userName.substring(0, 2).toUpperCase() : "사용자";
 
@@ -295,23 +384,99 @@ export const ProfileEditTab = ({ userId, email }: ProfileEditTabProps) => {
 
       <Card>
         <CardHeader>
-          <CardTitle>비밀번호 변경</CardTitle>
+          <CardTitle>연결된 계정</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {OAUTH_PROVIDERS.map(({ type, label, Icon }) => {
+            const linked = linkedProviders.find((p) => p.provider === type);
+            const blockUnlink = !!linked && isLastProvider && !hasPassword;
+            return (
+              <div
+                key={type}
+                className={
+                  linked
+                    ? "flex items-center justify-between rounded-lg border border-primary/30 bg-primary/5 p-4"
+                    : "flex items-center justify-between rounded-lg border border-dashed border-gray-300 p-4"
+                }
+              >
+                <div className="flex items-center gap-3">
+                  <div className="relative shrink-0">
+                    <Icon className="h-7 w-7" />
+                    {linked && (
+                      <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-green-500 ring-2 ring-white">
+                        <Check className="h-2.5 w-2.5 text-white" />
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <p className="font-medium">{label}</p>
+                    {linked ? (
+                      <p className="text-sm text-muted-foreground">
+                        {linked.providerUserName ?? label} · 연결됨
+                      </p>
+                    ) : (
+                      <p className="text-sm text-gray-400">연결하면 간편 로그인</p>
+                    )}
+                  </div>
+                </div>
+                {linked ? (
+                  blockUnlink ? (
+                    <Button variant="outline" className="shrink-0" onClick={focusPasswordSetup}>
+                      비밀번호 설정
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="ghost"
+                      className="shrink-0 text-red-500 hover:bg-red-50 hover:text-red-600"
+                      disabled={unlinkProvider.isPending}
+                      onClick={() => handleUnlinkOAuth(type)}
+                    >
+                      해제
+                    </Button>
+                  )
+                ) : (
+                  <Button
+                    className="shrink-0"
+                    disabled={connecting !== null}
+                    onClick={() => handleConnectOAuth(type)}
+                  >
+                    <Plus className="mr-1 h-4 w-4" />
+                    {connecting === type ? "이동 중..." : "연결"}
+                  </Button>
+                )}
+              </div>
+            );
+          })}
+          {linkedProviders.length > 0 && isLastProvider && !hasPassword && (
+            <p className="text-xs text-amber-600">
+              마지막 인증 수단입니다. 비밀번호를 설정해야 연결을 해제할 수 있습니다.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card ref={passwordCardRef}>
+        <CardHeader>
+          <CardTitle>{linkData && !hasPassword ? "비밀번호 설정" : "비밀번호 변경"}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="currentPassword">현재 비밀번호</Label>
-            <Input
-              id="currentPassword"
-              type="password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              autoComplete="current-password"
-            />
-          </div>
+          {(!linkData || hasPassword) && (
+            <div className="space-y-2">
+              <Label htmlFor="currentPassword">현재 비밀번호</Label>
+              <Input
+                id="currentPassword"
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                autoComplete="current-password"
+              />
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="newPassword">새 비밀번호</Label>
             <Input
               id="newPassword"
+              ref={newPasswordRef}
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}

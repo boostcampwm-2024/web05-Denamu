@@ -21,4 +21,5 @@ export const REDIS_KEYS = {
   USER_RESET_PASSWORD_KEY: 'user:password_reset',
   USER_INVALIDATED_PREFIX: 'user:invalidated',
   OAUTH_PENDING_KEY: 'oauth:pending',
+  OAUTH_LINK_KEY: 'oauth:link',
 };

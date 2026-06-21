@@ -61,7 +61,13 @@ export const OAUTH_PENDING_COOKIE = 'oauth_pending_token';
 export type OAuthPendingData = {
   providerType: string;
   providerUserId: string;
+  providerUserName: string | null;
   email: string;
   profileImage: string | null;
   providerRefreshToken: string | null;
+};
+
+export type OAuthLinkData = {
+  userId: number;
+  providerType: string;
 };

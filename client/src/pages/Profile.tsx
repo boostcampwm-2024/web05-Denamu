@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import Layout from "@/components/layout/Layout";
 import { MyPage } from "@/components/profile/MyPage.tsx";
@@ -14,7 +14,8 @@ export default function Profile() {
   const navigate = useNavigate();
   const { id } = useParams();
   const { isAuthenticated, isInitialized, userInfo } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<ProfileTab>("mypage");
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState<ProfileTab>(searchParams.get("oauthLink") ? "settings" : "mypage");
 
   const targetId = id ? Number(id) : userInfo.id;
   const isOwner = isAuthenticated && userInfo.id !== null && userInfo.id === targetId;

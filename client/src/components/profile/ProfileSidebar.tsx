@@ -58,7 +58,9 @@ export const ProfileSidebar = ({ activeTab, onTabChange, isOwner }: ProfileSideb
                         isActive
                           ? tab.id === "rss"
                             ? "bg-[#FF870D]/10 text-[#FF870D] font-semibold"
-                            : "bg-blue-50 text-blue-600 font-semibold"
+                            : tab.id === "settings"
+                              ? "bg-purple-50 text-purple-600 font-semibold"
+                              : "bg-blue-50 text-blue-600 font-semibold"
                           : "text-gray-600 hover:bg-gray-50"
                       )}
                     >
@@ -76,7 +78,7 @@ export const ProfileSidebar = ({ activeTab, onTabChange, isOwner }: ProfileSideb
           <div className="pt-4 mt-4 border-t border-gray-200">
             <button
               onClick={handleLogout}
-              className="flex items-center w-full p-3 text-gray-600 rounded-lg hover:bg-gray-50"
+              className="flex items-center w-full p-3 text-gray-600 rounded-lg hover:bg-red-50 hover:text-red-600"
             >
               <LogOut className="w-5 h-5 mr-3" />
               <span>로그아웃</span>

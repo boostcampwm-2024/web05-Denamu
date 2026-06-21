@@ -118,3 +118,16 @@ export interface CursorPage<T> {
   lastId: number;
   hasMore: boolean;
 }
+
+export type OAuthProviderType = "google" | "github";
+
+export interface LinkedProvider {
+  provider: OAuthProviderType;
+  providerUserName: string | null;
+  linkedAt: string;
+}
+
+export interface LinkedProvidersResponse {
+  hasPassword: boolean;
+  providers: LinkedProvider[];
+}

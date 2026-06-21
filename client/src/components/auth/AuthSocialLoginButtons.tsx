@@ -1,23 +1,12 @@
 import { GitHub } from "@/components/icons/social/GitHub.tsx";
 import { Google } from "@/components/icons/social/Google.tsx";
-import { Kakao } from "@/components/icons/social/Kakao.tsx";
-import { Naver } from "@/components/icons/social/Naver.tsx";
 import { Button } from "@/components/ui/button.tsx";
 
-import { useCustomToast } from "@/hooks/common/useCustomToast.ts";
-
-import { TOAST_MESSAGES } from "@/constants/messages.ts";
 import { BASE_URL, OAUTH } from "@/constants/endpoints.ts";
 
 export const AuthSocialLoginButtons = () => {
-  const { toast } = useCustomToast();
-
   const handleSocialLogin = (provider: "google" | "github") => {
     window.location.href = `${BASE_URL}${OAUTH.LOGIN}?type=${provider}`;
-  };
-
-  const handleNotPrepared = () => {
-    toast(TOAST_MESSAGES.SERVICE_NOT_PREPARED);
   };
 
   return (
@@ -49,14 +38,6 @@ export const AuthSocialLoginButtons = () => {
         >
           <Google />
           <span className="text-muted-foreground">Google로 계속하기</span>
-        </Button>
-        <Button variant="outline" className="w-full" onClick={handleNotPrepared}>
-          <Naver className="text-[#03C75A]" />
-          <span className="text-muted-foreground">네이버로 계속하기</span>
-        </Button>
-        <Button variant="outline" className="w-full" onClick={handleNotPrepared}>
-          <Kakao className="text-[#FEE500]" />
-          <span className="text-muted-foreground">카카오로 계속하기</span>
         </Button>
       </div>
     </>

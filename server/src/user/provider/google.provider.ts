@@ -11,7 +11,6 @@ import {
   OAUTH_CSRF_TOKEN_TTL,
   OAUTH_URL_PATH,
   OAuthTokenResponse,
-  UserInfo,
 } from '@user/constant/oauth.constant';
 import { OAuthProvider } from '@user/provider/oauth-provider.interface';
 
@@ -110,7 +109,7 @@ export class GoogleOAuthProvider implements OAuthProvider {
         email,
         name,
         picture,
-      } as UserInfo;
+      };
     } catch (error) {
       this.logger.error(`Failed to fetch user info from Google: ${error}`);
       throw new BadGatewayException(
