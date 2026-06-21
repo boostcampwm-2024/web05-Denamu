@@ -22,3 +22,25 @@ export interface SearchRequest {
   pageSize: number;
 }
 export type FilterType = "title" | "blogName" | "all";
+
+export type SearchMode = "feed" | "user";
+
+export interface UserSearchResult {
+  id: number;
+  userName: string;
+  profileImage: string | null;
+}
+
+export interface UserSearchData {
+  totalCount: number;
+  result: UserSearchResult[];
+  totalPages: number;
+}
+
+export type UserSearchResponse = ApiData<UserSearchData>;
+
+export interface UserSearchRequest {
+  query: string;
+  page: number;
+  pageSize: number;
+}

@@ -1,16 +1,19 @@
 import FilterButton from "@/components/search/SearchFilters/FilterButton";
 import SearchInput from "@/components/search/SearchHeader/SearchInput";
+import SearchModeTabs from "@/components/search/SearchModeTabs";
 import SearchResultList from "@/components/search/SearchResults/SearchResultList";
+import UserSearchResultList from "@/components/search/SearchResults/UserSearchResultList";
 import { Command, CommandSeparator } from "@/components/ui/command";
 
 import { useSearchStore } from "@/store/useSearchStore";
 
 export default function SearchModal({ onClose }: { onClose: () => void }) {
-  const { resetPage, resetParam, resetFilter } = useSearchStore();
+  const { searchMode, resetPage, resetParam, resetFilter, resetMode } = useSearchStore();
   const handleClose = () => {
     resetPage();
     resetParam();
     resetFilter();
+    resetMode();
     onClose();
   };
   return (
@@ -21,9 +24,17 @@ export default function SearchModal({ onClose }: { onClose: () => void }) {
       <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4" onClick={(e) => e.stopPropagation()}>
         <SearchInput onClose={handleClose} />
         <CommandSeparator />
-        <FilterButton />
+        <SearchModeTabs />
         <CommandSeparator />
-        <SearchResultList />
+        {searchMode === "feed" ? (
+          <>
+            <FilterButton />
+            <CommandSeparator />
+            <SearchResultList />
+          </>
+        ) : (
+          <UserSearchResultList onClose={handleClose} />
+        )}
       </div>
     </Command>
   );

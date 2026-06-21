@@ -53,6 +53,7 @@ export const CHART = {
 
 export const SEARCH = {
   GET_RESULT: "/api/feeds/search",
+  GET_USER_RESULT: "/api/users/search",
 };
 
 export const USER = {
