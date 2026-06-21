@@ -9,8 +9,8 @@ export const comments = {
     const response = await axiosInstance.get<ApiData<FeedCommentType[]>>(BLOG.COMMENT.LIST(feedId));
     return response.data.data;
   },
-  create: async (feedId: number, comment: string): Promise<void> => {
-    await axiosInstance.post(BLOG.COMMENT.LIST(feedId), { comment });
+  create: async (feedId: number, comment: string, parentId?: number): Promise<void> => {
+    await axiosInstance.post(BLOG.COMMENT.LIST(feedId), { comment, parentId });
   },
   update: async (feedId: number, commentId: number, newComment: string): Promise<void> => {
     await axiosInstance.patch(BLOG.COMMENT.ITEM(feedId, commentId), { newComment });

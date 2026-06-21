@@ -56,7 +56,7 @@ export const PostContent = React.memo(({ post }: PostContentProps) => {
         <LikeButton post={post} />
         <ShareButton post={post} />
       </div>
-      <PostComment feedId={post.id} />
+      <PostComment feedId={post.id} isFeedOwner={post.isOwner} />
     </div>
   );
 });

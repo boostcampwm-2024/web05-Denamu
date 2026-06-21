@@ -2,6 +2,8 @@ import { useState } from "react";
 
 interface CommentActionProps {
   id: number;
+  canEdit: boolean;
+  canDelete: boolean;
   handleModify: (id: number) => void;
   onDelete: (id: number) => void;
 }
@@ -11,7 +13,7 @@ interface DeleteButtonProps {
   handleDelete: () => void;
 }
 
-export default function CommentAction({ id, handleModify, onDelete }: CommentActionProps) {
+export default function CommentAction({ id, canEdit, canDelete, handleModify, onDelete }: CommentActionProps) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const handleOpen = () => {
     setIsOpen(!isOpen);
@@ -22,12 +24,16 @@ export default function CommentAction({ id, handleModify, onDelete }: CommentAct
   };
   return (
     <div className="flex gap-2 text-sm">
-      <button onClick={() => handleModify(id)} className="text-gray-400">
-        수정
-      </button>
-      <button onClick={handleOpen} className="text-gray-400">
-        삭제
-      </button>
+      {canEdit && (
+        <button onClick={() => handleModify(id)} className="text-gray-400">
+          수정
+        </button>
+      )}
+      {canDelete && (
+        <button onClick={handleOpen} className="text-gray-400">
+          삭제
+        </button>
+      )}
       {isOpen && <DeleteButton handleOpen={handleOpen} handleDelete={handleDelete} />}
     </div>
   );

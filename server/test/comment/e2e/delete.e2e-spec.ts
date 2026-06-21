@@ -114,6 +114,31 @@ describe(`DELETE ${BASE_URL}/:feedId/comments/:commentId E2E Test`, () => {
     expect(savedComment).not.toBeNull();
   });
 
+  it('[200] 본인 댓글이 아니어도 게시글의 RSS 소유자일 경우 댓글 삭제를 성공한다.', async () => {
+    // given - user2가 RSS 소유자, 댓글 작성자는 user
+    rssAccept.userId = user2.id;
+    await rssAcceptRepository.save(rssAccept);
+    accessToken = createAccessToken({ id: user2.id });
+
+    // Http when
+    const response = await agent
+      .delete(`${BASE_URL}/${feed.id}/comments/${comment.id}`)
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.OK);
+    expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedComment = await commentRepository.findOneBy({
+      id: comment.id,
+    });
+
+    // DB, Redis then
+    expect(savedComment).toBeNull();
+  });
+
   it('[200] 본인이 작성한 댓글일 경우 댓글 삭제를 성공한다.', async () => {
     // Http when
     const response = await agent
@@ -132,5 +157,58 @@ describe(`DELETE ${BASE_URL}/:feedId/comments/:commentId E2E Test`, () => {
 
     // DB, Redis then
     expect(savedComment).toBeNull();
+  });
+
+  it('[200] 답글이 달린 최상위 댓글은 soft delete(placeholder)로 남고 답글/commentCount는 유지된다.', async () => {
+    // given - comment(root)에 답글을 단다
+    const reply = await commentRepository.save(
+      CommentFixture.createCommentFixture(feed, user, { parentId: comment.id }),
+    );
+    const before = await feedRepository.findOneBy({ id: feed.id });
+
+    // Http when
+    const response = await agent
+      .delete(`${BASE_URL}/${feed.id}/comments/${comment.id}`)
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    // Http then
+    expect(response.status).toBe(HttpStatus.OK);
+
+    // DB then - root는 row 유지 + isDeleted, 답글 유지, commentCount 불변
+    const softDeleted = await commentRepository.findOneBy({ id: comment.id });
+    expect(softDeleted).not.toBeNull();
+    expect(softDeleted.isDeleted).toBe(true);
+
+    const survivingReply = await commentRepository.findOneBy({ id: reply.id });
+    expect(survivingReply).not.toBeNull();
+
+    const after = await feedRepository.findOneBy({ id: feed.id });
+    expect(after.commentCount).toBe(before.commentCount);
+  });
+
+  it('[200] 답글 삭제 시 hard delete 되고 commentCount가 감소한다.', async () => {
+    // given - comment(root)에 답글을 단다
+    const reply = await commentRepository.save(
+      CommentFixture.createCommentFixture(feed, user, { parentId: comment.id }),
+    );
+    const before = await feedRepository.findOneBy({ id: feed.id });
+
+    // Http when
+    const response = await agent
+      .delete(`${BASE_URL}/${feed.id}/comments/${reply.id}`)
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    // Http then
+    expect(response.status).toBe(HttpStatus.OK);
+
+    // DB then - 답글 row 제거, root 유지, commentCount -1
+    const deletedReply = await commentRepository.findOneBy({ id: reply.id });
+    expect(deletedReply).toBeNull();
+
+    const survivingRoot = await commentRepository.findOneBy({ id: comment.id });
+    expect(survivingRoot).not.toBeNull();
+
+    const after = await feedRepository.findOneBy({ id: feed.id });
+    expect(after.commentCount).toBe(before.commentCount - 1);
   });
 });

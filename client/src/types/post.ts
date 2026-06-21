@@ -19,6 +19,7 @@ export type FeedList = FeedBase;
 
 export interface FeedDetail extends FeedBase {
   summary: string;
+  isOwner: boolean;
 }
 
 export interface InfiniteScrollResponse<T> {
@@ -36,6 +37,8 @@ export type FeedDetailType = ApiData<FeedDetail>;
 export interface FeedCommentType {
   id: number;
   comment: string;
+  parentId: number | null;
+  isDeleted: boolean;
   date: string;
   user: {
     id: number;

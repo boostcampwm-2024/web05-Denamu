@@ -61,9 +61,9 @@ CREATE TABLE `rss_accept` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `UQ_59f4be4de3817b3f975acff0766` (`name`),
   UNIQUE KEY `UQ_b3a5d4196368864d938dae4e9ff` (`rss_url`),
-  KEY `FK_rss_accept_user_id` (`user_id`),
+  KEY `FK_c6af67149ff8aa87d001091acbe` (`user_id`),
   FULLTEXT KEY (`name`),
-  CONSTRAINT `FK_rss_accept_user_id` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+  CONSTRAINT `FK_c6af67149ff8aa87d001091acbe` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 -- denamu.rss_reject definition
@@ -134,14 +134,18 @@ CREATE TABLE `tag_map` (
 CREATE TABLE `comment` (
   `id` int NOT NULL AUTO_INCREMENT,
   `comment` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `is_deleted` tinyint NOT NULL DEFAULT '0',
   `date` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   `feed_id` int NOT NULL,
   `user_id` int NOT NULL,
+  `parent_id` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `FK_df1fd1eaf7cc0224ab5e829bf64` (`feed_id`),
   KEY `FK_bbfe153fa60aa06483ed35ff4a7` (`user_id`),
+  KEY `FK_8bd8d0985c0d077c8129fb4a209` (`parent_id`),
   CONSTRAINT `FK_bbfe153fa60aa06483ed35ff4a7` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `FK_df1fd1eaf7cc0224ab5e829bf64` FOREIGN KEY (`feed_id`) REFERENCES `feed` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+  CONSTRAINT `FK_df1fd1eaf7cc0224ab5e829bf64` FOREIGN KEY (`feed_id`) REFERENCES `feed` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_8bd8d0985c0d077c8129fb4a209` FOREIGN KEY (`parent_id`) REFERENCES `comment` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- denamu.likes definition
@@ -174,15 +178,18 @@ CREATE TABLE `provider` (
 );
 
 -- denamu.admin insert data
-
+-- id: test1234@denamu.dev, password: test1234!
+-- id: test5678@denamu.dev, password: test1234!
 INSERT INTO admin (email,password, name, parent_admin_id) VALUES
 	('test1234@denamu.dev','$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정', NULL),
 	('test5678@denamu.dev','$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정의 자식', 1);
 
 -- denamu.user insert data
 -- id: test@test.com, password: test1234!
+-- id: example@example.com, password: test1234!
 INSERT INTO user (email, password, user_name, profile_image, introduction) VALUES
-	('test@test.com', '$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정', NULL, '안녕하세요 테스트입니다.');
+	('test@test.com', '$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정', NULL, '안녕하세요 테스트입니다.'),
+	('example@example.com', '$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '예제 계정', NULL, '안녕하세요 예제입니다.');
 
 -- denamu.rss_accept insert data
 

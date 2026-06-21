@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -53,6 +54,30 @@ export class CommentService {
     return commentObj;
   }
 
+  private async getDeletableComment(
+    userInformation: Payload,
+    commentId: number,
+  ) {
+    const commentObj = await this.commentRepository.findOne({
+      where: {
+        id: commentId,
+      },
+      relations: ['user', 'feed', 'feed.blog'],
+    });
+
+    if (!commentObj) {
+      throw new NotFoundException('존재하지 않는 댓글입니다.');
+    }
+
+    const isAuthor = userInformation.id === commentObj.user.id;
+    const isFeedOwner = userInformation.id === commentObj.feed.blog?.userId;
+    if (!isAuthor && !isFeedOwner) {
+      throw new ForbiddenException('댓글을 삭제할 권한이 없습니다.');
+    }
+
+    return commentObj;
+  }
+
   async get(commentDto: GetCommentRequestDto) {
     await this.feedService.getPublicFeed(commentDto.feedId);
 
@@ -81,6 +106,25 @@ export class CommentService {
     return GetUserCommentsResponseDto.toResponseDto(comments, lastId, hasMore);
   }
 
+  private async validateParentComment(parentId: number, feedId: number) {
+    const parent = await this.commentRepository.findOne({
+      where: { id: parentId },
+      relations: ['feed'],
+    });
+
+    if (!parent) {
+      throw new NotFoundException('존재하지 않는 부모 댓글입니다.');
+    }
+    if (parent.feed.id !== feedId) {
+      throw new BadRequestException(
+        '부모 댓글이 해당 게시글에 속하지 않습니다.',
+      );
+    }
+    if (parent.parentId !== null) {
+      throw new BadRequestException('답글에는 답글을 달 수 없습니다.');
+    }
+  }
+
   async create(
     userInformation: Payload,
     feedId: number,
@@ -88,23 +132,42 @@ export class CommentService {
   ) {
     await this.dataSource.transaction(async (manager) => {
       const feed = await this.feedService.getPublicFeed(feedId);
+
+      if (commentDto.parentId) {
+        await this.validateParentComment(commentDto.parentId, feedId);
+      }
+
       feed.commentCount++;
       await manager.save(feed);
       await manager.save(Comment, {
         comment: commentDto.comment,
         feed,
         user: { id: userInformation.id },
+        parentId: commentDto.parentId ?? null,
       });
     });
   }
 
   async delete(userInformation: Payload, commentDto: CommentParamRequestDto) {
-    const comment = await this.getValidatedComment(
+    const comment = await this.getDeletableComment(
       userInformation,
       commentDto.commentId,
     );
 
+    const replyCount =
+      comment.parentId === null
+        ? await this.commentRepository.count({
+            where: { parentId: comment.id },
+          })
+        : 0;
+
     await this.dataSource.transaction(async (manager) => {
+      if (replyCount > 0) {
+        comment.isDeleted = true;
+        await manager.save(comment);
+        return;
+      }
+
       const feed = comment.feed;
       feed.commentCount--;
       await manager.save(feed);
@@ -121,6 +184,9 @@ export class CommentService {
       userInformation,
       commentId,
     );
+    if (commentObj.isDeleted) {
+      throw new NotFoundException('삭제된 댓글입니다.');
+    }
     commentObj.comment = commentDto.newComment;
     await this.commentRepository.save(commentObj);
   }

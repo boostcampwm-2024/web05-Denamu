@@ -21,7 +21,10 @@ const mockedAxios = axios as jest.Mocked<typeof axios>;
 describe(`${FeedService.name} Unit Test`, () => {
   let feedService: FeedService;
   let feedRepository: jest.Mocked<
-    Pick<FeedRepository, 'findOneBy' | 'searchFeedList' | 'update' | 'delete'>
+    Pick<
+      FeedRepository,
+      'findOneBy' | 'searchFeedList' | 'update' | 'delete' | 'isOwnedByUser'
+    >
   >;
   let feedViewRepository: jest.Mocked<
     Pick<FeedViewRepository, 'findOneBy' | 'findFeedPagination'>
@@ -49,6 +52,7 @@ describe(`${FeedService.name} Unit Test`, () => {
       searchFeedList: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
+      isOwnedByUser: jest.fn(),
     };
     feedViewRepository = {
       findOneBy: jest.fn(),
@@ -363,7 +367,40 @@ describe(`${FeedService.name} Unit Test`, () => {
 
       // then
       expect(feedViewRepository.findOneBy).toHaveBeenCalledWith({ feedId: 10 });
+      expect(feedRepository.isOwnedByUser).not.toHaveBeenCalled();
       expect(result).toEqual(GetFeedDetailResponseDto.toResponseDto(feed));
+    });
+
+    it('RSS 소유자가 조회하면 isOwner=true로 응답한다.', async () => {
+      // given
+      const feed = { feedId: 10, title: 'detail', tag: ['a'] } as any;
+      feedViewRepository.findOneBy.mockResolvedValue(feed);
+      feedRepository.isOwnedByUser.mockResolvedValue(true);
+
+      // when
+      const result = await feedService.getFeedDetail({ feedId: 10 }, 7);
+
+      // then
+      expect(feedRepository.isOwnedByUser).toHaveBeenCalledWith(10, 7);
+      expect(result).toEqual(
+        GetFeedDetailResponseDto.toResponseDto(feed, true),
+      );
+    });
+
+    it('소유자가 아니면 isOwner=false로 응답한다.', async () => {
+      // given
+      const feed = { feedId: 10, title: 'detail', tag: ['a'] } as any;
+      feedViewRepository.findOneBy.mockResolvedValue(feed);
+      feedRepository.isOwnedByUser.mockResolvedValue(false);
+
+      // when
+      const result = await feedService.getFeedDetail({ feedId: 10 }, 7);
+
+      // then
+      expect(feedRepository.isOwnedByUser).toHaveBeenCalledWith(10, 7);
+      expect(result).toEqual(
+        GetFeedDetailResponseDto.toResponseDto(feed, false),
+      );
     });
   });
 

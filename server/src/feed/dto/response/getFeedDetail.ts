@@ -75,11 +75,17 @@ export class GetFeedDetailResponseDto {
   })
   tag: string[];
 
+  @ApiProperty({
+    example: false,
+    description: '요청자가 해당 게시글의 RSS 소유자인지 여부',
+  })
+  isOwner: boolean;
+
   constructor(partial: Partial<GetFeedDetailResponseDto>) {
     Object.assign(this, partial);
   }
 
-  static toResponseDto(feed: FeedView) {
+  static toResponseDto(feed: FeedView, isOwner = false) {
     return new GetFeedDetailResponseDto({
       id: feed.feedId,
       author: feed.blogName,
@@ -93,6 +99,7 @@ export class GetFeedDetailResponseDto {
       likes: feed.likeCount,
       comments: feed.commentCount,
       tag: feed.tag ? feed.tag : [],
+      isOwner,
     });
   }
 }
