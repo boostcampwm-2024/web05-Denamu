@@ -121,7 +121,7 @@ describe('ParserUtil', () => {
 
       // When & Then
       await expect(parserUtil.getThumbnailUrl(feedUrl)).rejects.toThrow(
-        `${feedUrl}에 GET 요청 실패`,
+        `썸네일 GET 요청 실패 (HTTP ${HttpStatusCode.NotFound})`,
       );
     });
 

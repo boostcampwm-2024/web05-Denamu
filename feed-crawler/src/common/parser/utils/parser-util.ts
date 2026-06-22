@@ -17,7 +17,7 @@ export class ParserUtil {
       validateStatus: () => true,
     });
     if (response.status < 200 || response.status >= 300) {
-      throw new Error(`${feedUrl}에 GET 요청 실패`);
+      throw new Error(`썸네일 GET 요청 실패 (HTTP ${response.status})`);
     }
 
     const htmlData = response.data;
