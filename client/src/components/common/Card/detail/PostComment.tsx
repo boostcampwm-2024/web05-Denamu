@@ -6,7 +6,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 import { useNavigateToProfile } from "@/hooks/common/useNavigateToProfile";
-import { useComments, useCreateComment, useUpdateComment, useDeleteComment } from "@/hooks/queries/useComments";
+import {
+  useComments,
+  useCreateComment,
+  useUpdateComment,
+  useDeleteComment,
+  useAdminDeleteComment,
+} from "@/hooks/queries/useComments";
 import { useUserProfile } from "@/hooks/queries/useProfile";
 
 import { timeAgo } from "@/utils/timeago";
@@ -17,12 +23,14 @@ import { FeedCommentType } from "@/types/post";
 interface PostCommentProps {
   feedId: number;
   isFeedOwner?: boolean;
+  isAdmin?: boolean;
 }
 
 interface CommentItemProps {
   comment: FeedCommentType;
   canEdit: boolean;
   canDelete: boolean;
+  canReply?: boolean;
   isReply?: boolean;
   modifyId: number | null;
   handleModify: (id: number | null) => void;
@@ -33,7 +41,7 @@ interface CommentItemProps {
 
 const INITIAL_VISIBLE = 3;
 
-export default function PostComment({ feedId, isFeedOwner = false }: PostCommentProps) {
+export default function PostComment({ feedId, isFeedOwner = false, isAdmin = false }: PostCommentProps) {
   const { id: userId, userName } = useAuthStore((state) => state.userInfo);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
@@ -41,7 +49,9 @@ export default function PostComment({ feedId, isFeedOwner = false }: PostComment
   const { data: myProfile } = useUserProfile(userId ?? 0);
   const { mutate: createComment, isPending: isCreating } = useCreateComment(feedId);
   const { mutate: updateComment } = useUpdateComment(feedId);
-  const { mutate: deleteComment } = useDeleteComment(feedId);
+  const { mutate: deleteCommentUser } = useDeleteComment(feedId);
+  const { mutate: deleteCommentAdmin } = useAdminDeleteComment(feedId);
+  const deleteComment = isAdmin ? deleteCommentAdmin : deleteCommentUser;
 
   const [content, setContent] = useState("");
   const [modifyId, setModifyId] = useState<number | null>(null);
@@ -91,9 +101,10 @@ export default function PostComment({ feedId, isFeedOwner = false }: PostComment
     updateComment({ commentId, newComment: trimmed }, { onSuccess: () => setModifyId(null) });
   };
 
-  const canEditComment = (comment: FeedCommentType) => !comment.isDeleted && comment.user.id === userId;
+  const canEditComment = (comment: FeedCommentType) =>
+    !isAdmin && !comment.isDeleted && comment.user.id === userId;
   const canDeleteComment = (comment: FeedCommentType) =>
-    !comment.isDeleted && (comment.user.id === userId || isFeedOwner);
+    !comment.isDeleted && (isAdmin || comment.user.id === userId || isFeedOwner);
 
   const repliesByParent = comments.reduce<Record<number, FeedCommentType[]>>((acc, comment) => {
     if (comment.parentId !== null) {
@@ -113,31 +124,33 @@ export default function PostComment({ feedId, isFeedOwner = false }: PostComment
   return (
     <div className="w-full space-y-6">
       {/* 댓글 입력 영역 */}
-      <div className="bg-gray-50 rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div className="p-4">
-          <div className="flex items-start gap-3">
-            <Avatar className="w-10 h-10">
-              <AvatarImage src={myProfile?.profileImage ?? undefined} alt={userName ?? "사용자 프로필"} />
-              <AvatarFallback>{(myProfile?.userName ?? userName ?? "?").substring(0, 2)}</AvatarFallback>
-            </Avatar>
-            <textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="댓글을 입력하세요..."
-              className="flex-1 bg-transparent p-2 rounded-md h-20 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent resize-none"
-            ></textarea>
+      {!isAdmin && (
+        <div className="bg-gray-50 rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div className="p-4">
+            <div className="flex items-start gap-3">
+              <Avatar className="w-10 h-10">
+                <AvatarImage src={myProfile?.profileImage ?? undefined} alt={userName ?? "사용자 프로필"} />
+                <AvatarFallback>{(myProfile?.userName ?? userName ?? "?").substring(0, 2)}</AvatarFallback>
+              </Avatar>
+              <textarea
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="댓글을 입력하세요..."
+                className="flex-1 bg-transparent p-2 rounded-md h-20 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent resize-none"
+              ></textarea>
+            </div>
+          </div>
+          <div className="flex justify-end px-4 pb-4">
+            <button
+              onClick={handleSubmit}
+              disabled={isCreating}
+              className="bg-primary hover:bg-primary/90 text-white font-medium py-2 px-4 rounded-full transition-colors disabled:opacity-60"
+            >
+              등록
+            </button>
           </div>
         </div>
-        <div className="flex justify-end px-4 pb-4">
-          <button
-            onClick={handleSubmit}
-            disabled={isCreating}
-            className="bg-primary hover:bg-primary/90 text-white font-medium py-2 px-4 rounded-full transition-colors disabled:opacity-60"
-          >
-            등록
-          </button>
-        </div>
-      </div>
+      )}
 
       {/* 댓글 목록 헤더 */}
       <div className="flex items-center border-b border-gray-200 pb-2">
@@ -154,6 +167,7 @@ export default function PostComment({ feedId, isFeedOwner = false }: PostComment
               comment={root}
               canEdit={canEditComment(root)}
               canDelete={canDeleteComment(root)}
+              canReply={!isAdmin}
               modifyId={modifyId}
               handleModify={handleModify}
               onUpdate={handleUpdate}
@@ -170,6 +184,7 @@ export default function PostComment({ feedId, isFeedOwner = false }: PostComment
                       comment={reply}
                       canEdit={canEditComment(reply)}
                       canDelete={canDeleteComment(reply)}
+                      canReply={!isAdmin}
                       isReply
                       modifyId={modifyId}
                       handleModify={handleModify}
@@ -243,6 +258,7 @@ const CommentItem = ({
   comment,
   canEdit,
   canDelete,
+  canReply = true,
   isReply = false,
   modifyId,
   handleModify,
@@ -314,7 +330,7 @@ const CommentItem = ({
             </div>
           </div>
         )}
-        {!isEditing && !comment.isDeleted && (
+        {canReply && !isEditing && !comment.isDeleted && (
           <button
             onClick={() => onReply(comment.id, isReply ? comment.user.userName : undefined)}
             className="mt-1 text-xs text-gray-400 hover:text-gray-600"

@@ -12,6 +12,7 @@ export const ADMIN = {
   DELETE_CHILD: (id: number) => `/api/admins/children/${id}`,
   WITHDRAW_REQUEST: "/api/admins/me/deletion-requests",
   WITHDRAW_CONFIRM: (token: string) => `/api/admins/deletion-requests/${token}`,
+  DELETE_COMMENT: (commentId: number) => `/api/admins/comments/${commentId}`,
   GET: {
     RSS: "/api/rss",
     ACCEPT: "/api/rss/history/accept",
