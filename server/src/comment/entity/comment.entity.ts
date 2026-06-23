@@ -32,6 +32,14 @@ export class Comment extends BaseEntity {
   })
   isDeleted: boolean;
 
+  @Column({
+    name: 'is_admin_deleted',
+    type: 'boolean',
+    nullable: false,
+    default: false,
+  })
+  isAdminDeleted: boolean;
+
   @CreateDateColumn({
     name: 'date',
     nullable: false,

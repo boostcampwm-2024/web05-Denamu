@@ -7,6 +7,7 @@ import AdminMember from "@/components/admin/layout/AdminMember";
 import AdminMyPage from "@/components/admin/layout/AdminMyPage";
 import { AdminTabs } from "@/components/admin/layout/AdminTabs";
 import AdminLogin from "@/components/admin/login/AdminLoginModal";
+import AdminPostTab from "@/components/admin/post/AdminPostTab";
 import { RssRequestSearchBar } from "@/components/admin/rss/RssSearchBar";
 
 import { useAdminCheck } from "@/hooks/queries/useAdminAuth";
@@ -14,7 +15,7 @@ import { useAdminCheck } from "@/hooks/queries/useAdminAuth";
 export default function Admin() {
   const [isLogin, setIsLogin] = useState<boolean>(false);
   const { status, isLoading, data } = useAdminCheck();
-  const [tap, setTap] = useState<"RSS" | "MEMBER" | "MYPAGE">("RSS");
+  const [tap, setTap] = useState<"RSS" | "MEMBER" | "MYPAGE" | "POST">("RSS");
 
   useEffect(() => {
     setIsLogin(status === "success");
@@ -31,6 +32,9 @@ export default function Admin() {
     }
     if (tap === "MYPAGE") {
       return <AdminMyPage onBack={() => setTap("RSS")} />;
+    }
+    if (tap === "POST") {
+      return <AdminPostTab />;
     }
     return <AdminMember />;
   };

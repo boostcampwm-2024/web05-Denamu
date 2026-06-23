@@ -135,6 +135,7 @@ CREATE TABLE `comment` (
   `id` int NOT NULL AUTO_INCREMENT,
   `comment` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `is_deleted` tinyint NOT NULL DEFAULT '0',
+  `is_admin_deleted` tinyint NOT NULL DEFAULT '0',
   `date` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   `feed_id` int NOT NULL,
   `user_id` int NOT NULL,

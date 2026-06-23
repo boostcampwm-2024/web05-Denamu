@@ -175,6 +175,20 @@ export class CommentService {
     });
   }
 
+  async deleteByAdmin(commentId: number) {
+    const comment = await this.commentRepository.findOne({
+      where: { id: commentId },
+    });
+
+    if (!comment) {
+      throw new NotFoundException('존재하지 않는 댓글입니다.');
+    }
+
+    comment.isDeleted = true;
+    comment.isAdminDeleted = true;
+    await this.commentRepository.save(comment);
+  }
+
   async update(
     userInformation: Payload,
     commentId: number,

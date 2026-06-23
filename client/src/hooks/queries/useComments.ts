@@ -1,3 +1,4 @@
+import { adminComment } from "@/api/services/admin/comment";
 import { comments } from "@/api/services/comments";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -32,6 +33,14 @@ export const useDeleteComment = (feedId: number) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (commentId: number) => comments.remove(feedId, commentId),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: commentsKey(feedId) }),
+  });
+};
+
+export const useAdminDeleteComment = (feedId: number) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (commentId: number) => adminComment.remove(commentId),
     onSettled: () => queryClient.invalidateQueries({ queryKey: commentsKey(feedId) }),
   });
 };
