@@ -17,6 +17,7 @@ import { ManageFeedRequestDto } from '@feed/dto/request/manageFeed.dto';
 import { ReadFeedPaginationRequestDto } from '@feed/dto/request/readFeedPagination.dto';
 import { SearchFeedRequestDto } from '@feed/dto/request/searchFeed.dto';
 import { GetFeedDetailResponseDto } from '@feed/dto/response/getFeedDetail';
+import { ReadNoSummaryFeedResponseDto } from '@feed/dto/response/readNoSummaryFeed.dto';
 import {
   FeedPaginationResult,
   FeedResult,
@@ -66,6 +67,11 @@ export class FeedService {
     }
 
     return feed;
+  }
+
+  async readFeedsWithoutSummary() {
+    const feeds = await this.feedRepository.findFeedsWithoutSummary();
+    return ReadNoSummaryFeedResponseDto.toResponseDtoArray(feeds);
   }
 
   async requestAiSummary(feedId: number) {

@@ -26,6 +26,7 @@ import { ApiResponse } from '@common/response/common.response';
 import { ApiDeleteCheckFeed } from '@feed/api-docs/deleteCheckFeed.api-docs';
 import { ApiGetFeedDetail } from '@feed/api-docs/getFeedDetail.api-docs';
 import { ApiReadFeedPagination } from '@feed/api-docs/readFeedPagination.api-docs';
+import { ApiReadNoSummaryFeedList } from '@feed/api-docs/readNoSummaryFeedList.api-docs';
 import { ApiReadRecentFeedList } from '@feed/api-docs/readRecentFeedList.api-docs';
 import { ApiReadTrendFeedList } from '@feed/api-docs/readTrendFeedList.api-docs';
 import { ApiRequestAiSummary } from '@feed/api-docs/requestAiSummary.api-docs';
@@ -114,6 +115,17 @@ export class FeedController {
     );
     return ApiResponse.responseWithNoContent(
       '요청이 성공적으로 처리되었습니다.',
+    );
+  }
+
+  @ApiReadNoSummaryFeedList()
+  @UseGuards(AdminAuthGuard)
+  @Get('/no-summary')
+  @HttpCode(HttpStatus.OK)
+  async readFeedsWithoutSummary() {
+    return ApiResponse.responseWithData(
+      'AI 요약 없는 게시글 목록 조회 완료',
+      await this.feedService.readFeedsWithoutSummary(),
     );
   }
 

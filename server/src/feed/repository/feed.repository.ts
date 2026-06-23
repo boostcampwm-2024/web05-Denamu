@@ -130,6 +130,15 @@ export class FeedRepository extends Repository<Feed> {
     return count > 0;
   }
 
+  async findFeedsWithoutSummary() {
+    return this.createQueryBuilder('feed')
+      .select(['feed.id', 'feed.title', 'feed.likeCount', 'feed.commentCount'])
+      .where('feed.is_public = 1')
+      .andWhere("(feed.summary IS NULL OR feed.summary = '')")
+      .orderBy('feed.id', 'DESC')
+      .getMany();
+  }
+
   async findAllStatisticsOrderByViewCount(limit: number) {
     return this.find({
       select: ['id', 'title', 'viewCount'],
