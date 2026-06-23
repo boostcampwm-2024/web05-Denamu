@@ -11,6 +11,7 @@ export interface FeedBase {
   authorImageUrl?: string;
   tag: string[];
   likes: number;
+  comments: number;
   blogPlatform: string;
   isNew?: boolean;
 }
@@ -46,6 +47,15 @@ export interface FeedCommentType {
     profileImage: string | null;
   };
 }
+
+export interface NoSummaryFeed {
+  id: number;
+  title: string;
+  likes: number;
+  comments: number;
+}
+
+export type NoSummaryFeedsApiResponse = ApiData<NoSummaryFeed[]>;
 
 export interface RecentFeedsApiResponse {
   message: string;

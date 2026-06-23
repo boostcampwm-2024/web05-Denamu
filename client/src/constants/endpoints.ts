@@ -29,6 +29,8 @@ export const BLOG = {
   RECENT: "/api/feed/recent",
   Trend: "/api/feeds/trend/sse",
   LIKE: (id: number) => `/api/feeds/${id}/likes`,
+  AI_SUMMARY: (id: number) => `/api/feeds/${id}/ai-summary-requests`,
+  NO_SUMMARY: "/api/feeds/no-summary",
   COMMENT: {
     LIST: (feedId: number) => `/api/feeds/${feedId}/comments`,
     ITEM: (feedId: number, commentId: number) => `/api/feeds/${feedId}/comments/${commentId}`,

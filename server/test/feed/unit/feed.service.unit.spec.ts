@@ -9,6 +9,7 @@ import { RedisService } from '@common/redis/redis.service';
 import { ReadFeedPaginationRequestDto } from '@feed/dto/request/readFeedPagination.dto';
 import { SearchFeedRequestDto } from '@feed/dto/request/searchFeed.dto';
 import { GetFeedDetailResponseDto } from '@feed/dto/response/getFeedDetail';
+import { ReadNoSummaryFeedResponseDto } from '@feed/dto/response/readNoSummaryFeed.dto';
 import {
   FeedRepository,
   FeedViewRepository,
@@ -23,7 +24,12 @@ describe(`${FeedService.name} Unit Test`, () => {
   let feedRepository: jest.Mocked<
     Pick<
       FeedRepository,
-      'findOneBy' | 'searchFeedList' | 'update' | 'delete' | 'isOwnedByUser'
+      | 'findOneBy'
+      | 'searchFeedList'
+      | 'update'
+      | 'delete'
+      | 'isOwnedByUser'
+      | 'findFeedsWithoutSummary'
     >
   >;
   let feedViewRepository: jest.Mocked<
@@ -53,6 +59,7 @@ describe(`${FeedService.name} Unit Test`, () => {
       update: jest.fn(),
       delete: jest.fn(),
       isOwnedByUser: jest.fn(),
+      findFeedsWithoutSummary: jest.fn(),
     };
     feedViewRepository = {
       findOneBy: jest.fn(),
@@ -169,6 +176,37 @@ describe(`${FeedService.name} Unit Test`, () => {
         ConflictException,
       );
       expect(redisService.rpush).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('readFeedsWithoutSummary', () => {
+    it('레포지토리 조회 결과를 응답 DTO 배열로 변환해 반환한다.', async () => {
+      // given
+      const feeds = [
+        { id: 2, title: 'b', likeCount: 5, commentCount: 1 },
+        { id: 1, title: 'a', likeCount: 0, commentCount: 0 },
+      ] as any[];
+      feedRepository.findFeedsWithoutSummary.mockResolvedValue(feeds);
+
+      // when
+      const result = await feedService.readFeedsWithoutSummary();
+
+      // then
+      expect(feedRepository.findFeedsWithoutSummary).toHaveBeenCalledTimes(1);
+      expect(result).toStrictEqual(
+        ReadNoSummaryFeedResponseDto.toResponseDtoArray(feeds),
+      );
+    });
+
+    it('조회 결과가 없으면 빈 배열을 반환한다.', async () => {
+      // given
+      feedRepository.findFeedsWithoutSummary.mockResolvedValue([]);
+
+      // when
+      const result = await feedService.readFeedsWithoutSummary();
+
+      // then
+      expect(result).toStrictEqual([]);
     });
   });
 

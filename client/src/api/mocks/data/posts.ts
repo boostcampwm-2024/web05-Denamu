@@ -12,6 +12,7 @@ export const generateMockPost = (id: number): FeedList => ({
   thumbnail: `https://picsum.photos/640/480?random=${id}`,
   blogPlatform: "etc",
   likes: 0,
+  comments: 0,
   tag: [],
 });
 
