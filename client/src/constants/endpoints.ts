@@ -13,6 +13,11 @@ export const ADMIN = {
   WITHDRAW_REQUEST: "/api/admins/me/deletion-requests",
   WITHDRAW_CONFIRM: (token: string) => `/api/admins/deletion-requests/${token}`,
   DELETE_COMMENT: (commentId: number) => `/api/admins/comments/${commentId}`,
+  CHAT: {
+    ROOMS: "/api/admins/chats",
+    MESSAGES: (roomId: string) => `/api/admins/chats/${roomId}`,
+    DELETE: (roomId: string, messageId: string) => `/api/admins/chats/${roomId}/${messageId}`,
+  },
   GET: {
     RSS: "/api/rss",
     ACCEPT: "/api/rss/history/accept",
