@@ -66,6 +66,7 @@ describe("PostCard", () => {
       blogPlatform: "etc",
       tag: ["JavaScript", "React"],
       likes: 0,
+      comments: 0,
     };
 
     render(<MemoryRouter><PostCard post={minimalPost} /></MemoryRouter>);
