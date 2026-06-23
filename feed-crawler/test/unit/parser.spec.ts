@@ -35,8 +35,9 @@ describe('Parser 모듈 테스트', () => {
 
   beforeEach(() => {
     parserUtil = new ParserUtil();
-    rss20Parser = new Rss20Parser(parserUtil);
-    atom10Parser = new Atom10Parser(parserUtil);
+    notifier = { initialize: jest.fn(), publish: jest.fn() };
+    rss20Parser = new Rss20Parser(parserUtil, notifier);
+    atom10Parser = new Atom10Parser(parserUtil, notifier);
     feedParserManager = new FeedParserManager(
       rss20Parser,
       atom10Parser,
