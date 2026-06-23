@@ -393,6 +393,99 @@ describe(`${CommentService.name} Unit Test`, () => {
     });
   });
 
+  describe('deleteByAdmin', () => {
+    it('존재하지 않는 댓글이면 NotFoundException을 던진다.', async () => {
+      // given
+      commentRepository.findOne.mockResolvedValue(null);
+
+      // when & then
+      await expect(commentService.deleteByAdmin(5)).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(commentRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('권한·답글·commentCount 분기 없이 isDeleted와 isAdminDeleted를 true로 저장한다.', async () => {
+      // given
+      const comment = {
+        id: 5,
+        isDeleted: false,
+        isAdminDeleted: false,
+      } as any;
+      commentRepository.findOne.mockResolvedValue(comment);
+
+      // when
+      await commentService.deleteByAdmin(5);
+
+      // then
+      expect(commentRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 5 },
+      });
+      expect(comment.isDeleted).toBe(true);
+      expect(comment.isAdminDeleted).toBe(true);
+      expect(commentRepository.save).toHaveBeenCalledWith(comment);
+      expect(commentRepository.count).not.toHaveBeenCalled();
+      expect(dataSource.transaction).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GetCommentResponseDto placeholder', () => {
+    const baseComment = {
+      id: 5,
+      parentId: null,
+      date: new Date('2025-01-01'),
+      comment: '원본 내용',
+      user: { id: 1, userName: 'tester', profileImage: null },
+    };
+
+    it('관리자가 삭제한 댓글은 "관리자에 의해 제거된 댓글입니다." placeholder로 변환한다.', () => {
+      // given
+      const comment = {
+        ...baseComment,
+        isDeleted: true,
+        isAdminDeleted: true,
+      } as any;
+
+      // when
+      const dto = GetCommentResponseDto.toResponseDto(comment);
+
+      // then
+      expect(dto.comment).toBe('관리자에 의해 제거된 댓글입니다.');
+      expect(dto.isDeleted).toBe(true);
+      expect(dto.user).toEqual({ id: 0, userName: '(알 수 없음)', profileImage: null });
+    });
+
+    it('일반 soft delete 댓글은 "삭제된 댓글입니다." placeholder로 변환한다.', () => {
+      // given
+      const comment = {
+        ...baseComment,
+        isDeleted: true,
+        isAdminDeleted: false,
+      } as any;
+
+      // when
+      const dto = GetCommentResponseDto.toResponseDto(comment);
+
+      // then
+      expect(dto.comment).toBe('삭제된 댓글입니다.');
+    });
+
+    it('삭제되지 않은 댓글은 원본 내용을 그대로 노출한다.', () => {
+      // given
+      const comment = {
+        ...baseComment,
+        isDeleted: false,
+        isAdminDeleted: false,
+      } as any;
+
+      // when
+      const dto = GetCommentResponseDto.toResponseDto(comment);
+
+      // then
+      expect(dto.comment).toBe('원본 내용');
+    });
+  });
+
   describe('update', () => {
     it('본인 댓글의 내용을 수정하고 저장한다.', async () => {
       // given
