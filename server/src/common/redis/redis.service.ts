@@ -63,6 +63,30 @@ export class RedisService {
     return this.redisClient.zrevrange(key, start, stop);
   }
 
+  async zrange(
+    key: string,
+    start: number,
+    stop: number,
+    withScores?: 'WITHSCORES',
+  ): Promise<string[]> {
+    if (withScores) {
+      return this.redisClient.zrange(key, start, stop, 'WITHSCORES');
+    }
+    return this.redisClient.zrange(key, start, stop);
+  }
+
+  async zcard(key: string): Promise<number> {
+    return this.redisClient.zcard(key);
+  }
+
+  async zremrangebyrank(
+    key: string,
+    start: number,
+    stop: number,
+  ): Promise<number> {
+    return this.redisClient.zremrangebyrank(key, start, stop);
+  }
+
   async executePipeline(commands: (pipeline: ChainableCommander) => void) {
     const pipeline = this.redisClient.pipeline();
     commands(pipeline);

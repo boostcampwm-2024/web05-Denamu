@@ -57,6 +57,16 @@ export const useChatStore = create<State & Action>((set, get) => {
       });
     });
 
+    socket.on("messageDeleted", (data) => {
+      set((state) => ({
+        chatHistory: state.chatHistory.map((msg) =>
+          msg.messageId === data.messageId
+            ? { ...msg, message: data.message, userName: data.userName }
+            : msg
+        ),
+      }));
+    });
+
     socket.on('assignUserId', ({ userId }: { userId: string }) => {
       localStorage.setItem('userID', userId);
     });
