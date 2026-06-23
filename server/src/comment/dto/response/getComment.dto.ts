@@ -57,7 +57,11 @@ export class GetCommentResponseDto {
       id: comment.id,
       parentId: comment.parentId ?? null,
       isDeleted: comment.isDeleted,
-      comment: comment.isDeleted ? '삭제된 댓글입니다.' : comment.comment,
+      comment: comment.isAdminDeleted
+        ? '관리자에 의해 제거된 댓글입니다.'
+        : comment.isDeleted
+          ? '삭제된 댓글입니다.'
+          : comment.comment,
       date: comment.date,
       user: comment.isDeleted
         ? { id: 0, userName: '(알 수 없음)', profileImage: null }
