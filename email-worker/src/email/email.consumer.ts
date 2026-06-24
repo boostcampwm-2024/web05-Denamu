@@ -7,6 +7,7 @@ import { Lifecycle } from '@common/lifecycle/lifecycle.interface';
 import logger from '@common/logger/logger';
 
 import { EmailPayloadConstant } from '@email/constant';
+import { classifyEmailError } from '@email/email.error';
 import { EmailService } from '@email/email.service';
 import { EmailPayload, NodeMailerError } from '@email/types';
 
@@ -166,47 +167,6 @@ export class EmailConsumer implements Lifecycle {
     });
   }
 
-  /**
-   * 이메일 전송 실패 시 에러 타입에 따라 재시도 또는 DLQ 처리를 수행합니다.
-   *
-   * @description
-   * 에러 처리 흐름:
-   * 1. 네트워크 에러 (ECONNREFUSED, ETIMEDOUT 등)
-   *    - 재시도 횟수 < 3회: Wait Queue로 재시도
-   *    - 재시도 횟수 >= 3회: DLQ로 발행 (MAX_RETRIES_EXCEEDED)
-   *
-   * 2. SMTP 에러
-   *    - 5xx 에러: 즉시 DLQ로 발행 (SMTP_PERMANENT_FAILURE)
-   *    - 4xx 에러:
-   *      - 재시도 횟수 < 3회: Wait Queue로 재시도
-   *      - 재시도 횟수 >= 3회: DLQ로 발행 (MAX_RETRIES_EXCEEDED)
-   *
-   * 3. 알 수 없는 에러: 즉시 DLQ로 발행 (UNKNOWN_ERROR)
-   *
-   * @param {NodeMailerError} error - 발생한 에러 객체 (네트워크 에러, SMTP 에러 등)
-   * @param {EmailPayload} payload - 전송 실패한 이메일 페이로드
-   * @param {number} retryCount - 현재까지의 재시도 횟수 (0부터 시작)
-   *
-   * @returns {Promise<void>}
-   *
-   * @example
-   * // 네트워크 에러로 첫 번째 재시도
-   * await handleEmailByError(
-   *   new Error('ECONNREFUSED'),
-   *   { type: 'userCertification', ... },
-   *   0
-   * );
-   * // -> Wait Queue에 발행됨
-   *
-   * @example
-   * // SMTP 5xx 에러
-   * await handleEmailByError(
-   *   { responseCode: 550, message: 'Mailbox not found' },
-   *   { type: 'userCertification', ... },
-   *   0
-   * );
-   * // -> 즉시 DLQ로 발행됨 (SMTP_PERMANENT_FAILURE)
-   */
   async handleEmailByError(
     error: NodeMailerError,
     payload: EmailPayload,
@@ -219,13 +179,9 @@ export class EmailConsumer implements Lifecycle {
       },
     };
 
-    // Node.js 네트워크 레벨의 에러
-    const isNetworkError =
-      error.code === 'ESOCKET' ||
-      error.message?.includes('ECONNREFUSED') ||
-      error.message?.includes('ETIMEDOUT') ||
-      error.message?.includes('Unexpected socket close');
-    if (isNetworkError) {
+    const classification = classifyEmailError(error);
+
+    if (classification.retryable) {
       if (retryCount >= RETRY_CONFIG.MAX_RETRY) {
         await this.sendToDLQ(
           error,
@@ -244,51 +200,28 @@ export class EmailConsumer implements Lifecycle {
       return;
     }
 
-    // SMTP 레벨의 에러
-    if (error.responseCode) {
-      if (error.responseCode >= 500) {
-        await this.sendToDLQ(
-          error,
-          stringifiedMessage,
-          retryCount,
-          'SMTP_PERMANENT_FAILURE',
-          '[SMTP 500 에러 발생]',
-        );
-        return;
-      }
-
-      if (error.responseCode >= 400) {
-        if (retryCount >= RETRY_CONFIG.MAX_RETRY) {
-          await this.sendToDLQ(
-            error,
-            stringifiedMessage,
-            retryCount,
-            'MAX_RETRIES_EXCEEDED',
-            '[retry count 초과]',
-          );
-          return;
-        }
-        await this.rabbitmqService.sendMessageToQueue(
-          RETRY_CONFIG.WAITING_QUEUE[retryCount],
-          stringifiedMessage,
-          retryOptions,
-        );
-        return;
-      }
-    }
-
-    logger.error(
-      `[EmailConsumer] 알 수 없는 에러로 DLQ 메시지 발행
-      오류 메시지: ${error.message} 
+    if (classification.failureType === 'UNKNOWN_ERROR') {
+      logger.error(
+        `[EmailConsumer] 알 수 없는 에러로 DLQ 메시지 발행
+      오류 메시지: ${error.message}
       스택 트레이스: ${error.stack}`,
-    );
+      );
+      await this.sendToDLQ(
+        error,
+        stringifiedMessage,
+        retryCount,
+        'UNKNOWN_ERROR',
+        '[알 수 없는 에러 발생]',
+      );
+      return;
+    }
 
     await this.sendToDLQ(
       error,
       stringifiedMessage,
       retryCount,
-      'UNKNOWN_ERROR',
-      '[알 수 없는 에러 발생]',
+      'SMTP_PERMANENT_FAILURE',
+      '[SMTP 500 에러 발생]',
     );
   }
 
