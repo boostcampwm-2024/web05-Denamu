@@ -112,12 +112,23 @@ CREATE TABLE `activity` (
   CONSTRAINT `FK_10bf0c2dd4736190070e8475119` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
 );
 
+-- denamu.category definition
+
+CREATE TABLE `category` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(30) NOT NULL UNIQUE,
+  `display_order` int NOT NULL,
+  PRIMARY KEY (`id`)
+);
+
 -- denamu.tag definition
 
 CREATE TABLE `tag` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(50) NOT NULL UNIQUE,
-  PRIMARY KEY (`id`)
+  `category_id` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  CONSTRAINT `FK_tag_category` FOREIGN KEY (`category_id`) REFERENCES `category` (`id`) ON DELETE SET NULL
 );
 
 -- denamu.tag_map definition
@@ -356,27 +367,35 @@ TypeScript 등으로 단점 극복 노력
 
 -- denamu.tag insert data
 
-INSERT INTO tag (name) VALUES
-	('Backend'),
-	('Spring'),
-	('Frontend'),
-	('회고'),
-	('Java'),
-	('MySQL'),
-	('Network'),
-	('DB'),
-	('OS'),
-	('JavaScript'),
-	('Docker'),
-	('Infra'),
-	('React'),
-	('Algorithm'),
-	('TypeScript'),
-	('Nest.JS'),
-	('Next.JS'),
-	('PostgreSQL'),
-	('Express.JS'),
-	('Browser');
+INSERT INTO category (name, display_order) VALUES
+	('Frontend', 1),
+	('Backend', 2),
+	('ETC', 3),
+	('DB', 4),
+	('Infra', 5),
+	('CS', 6);
+
+INSERT INTO tag (name, category_id) VALUES
+	('Backend', 2),
+	('Spring', 2),
+	('Frontend', 1),
+	('회고', 3),
+	('Java', 2),
+	('MySQL', 4),
+	('Network', 6),
+	('DB', 4),
+	('OS', 6),
+	('JavaScript', 1),
+	('Docker', 5),
+	('Infra', 5),
+	('React', 1),
+	('Algorithm', 6),
+	('TypeScript', 1),
+	('Nest.JS', 2),
+	('Next.JS', 1),
+	('PostgreSQL', 4),
+	('Express.JS', 2),
+	('Browser', 1);
 
 -- denamu.tag_map insert data
 
