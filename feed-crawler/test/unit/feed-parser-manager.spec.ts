@@ -65,7 +65,7 @@ describe('FeedParserManager', () => {
     } as any;
 
     mockNotifier = {
-      initialize: jest.fn(),
+      start: jest.fn(),
       publish: jest.fn(),
     };
 
@@ -75,7 +75,7 @@ describe('FeedParserManager', () => {
       failure: { inc: jest.fn() },
       fullCrawlQueueDepth: { set: jest.fn() },
       fullCrawlPermanentFailure: { inc: jest.fn() },
-      startMetricsServer: jest.fn(),
+      start: jest.fn(),
     } as any;
 
     feedParserManager = new FeedParserManager(

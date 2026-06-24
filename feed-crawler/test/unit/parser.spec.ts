@@ -30,12 +30,12 @@ describe('Parser 모듈 테스트', () => {
     failure: { inc: jest.fn() },
     fullCrawlQueueDepth: { set: jest.fn() },
     fullCrawlPermanentFailure: { inc: jest.fn() },
-    startMetricsServer: jest.fn(),
+    start: jest.fn(),
   } as unknown as FeedMetrics;
 
   beforeEach(() => {
     parserUtil = new ParserUtil();
-    notifier = { initialize: jest.fn(), publish: jest.fn() };
+    notifier = { start: jest.fn(), publish: jest.fn() };
     rss20Parser = new Rss20Parser(parserUtil, notifier);
     atom10Parser = new Atom10Parser(parserUtil, notifier);
     feedParserManager = new FeedParserManager(
