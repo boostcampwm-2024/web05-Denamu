@@ -29,12 +29,15 @@ export class RedisConnection implements Lifecycle {
     }
   }
 
-  async rpop(key: string) {
+  private async execute<T>(
+    operation: string,
+    fn: () => Promise<T>,
+  ): Promise<T> {
     try {
-      return await this.redis.rpop(key);
+      return await fn();
     } catch (error) {
       logger.error(
-        `${this.nameTag} rpop 실행 중 오류 발생:
+        `${this.nameTag} ${operation} 실행 중 오류 발생:
         메시지: ${error instanceof Error ? error.message : String(error)}
         스택 트레이스: ${error instanceof Error ? error.stack : ''}`,
       );
@@ -42,16 +45,12 @@ export class RedisConnection implements Lifecycle {
     }
   }
 
+  async rpop(key: string) {
+    return this.execute('rpop', () => this.redis.rpop(key));
+  }
+
   async rpush(key: string, elements: (string | Buffer | number)[]) {
-    try {
-      await this.redis.rpush(key, ...elements);
-    } catch (error) {
-      logger.error(
-        `${this.nameTag} rpush 실행 중 오류 발생:
-        메시지: ${error instanceof Error ? error.message : String(error)}
-        스택 트레이스: ${error instanceof Error ? error.stack : ''}`,
-      );
-    }
+    await this.execute('rpush', () => this.redis.rpush(key, ...elements));
   }
 
   async stop() {
@@ -70,37 +69,30 @@ export class RedisConnection implements Lifecycle {
   }
 
   async del(...keys: string[]): Promise<number> {
-    return this.redis.del(...keys);
+    return this.execute('del', () => this.redis.del(...keys));
   }
 
   async executePipeline(commands: (pipeline: ChainableCommander) => void) {
-    const pipeline = this.redis.pipeline();
-    try {
+    return this.execute('pipeline', () => {
+      const pipeline = this.redis.pipeline();
       commands(pipeline);
       return pipeline.exec();
-    } catch (error) {
-      logger.error(
-        `${this.nameTag} 파이프라인 실행 중 오류 발생:
-        메시지: ${error instanceof Error ? error.message : String(error)}
-        스택 트레이스: ${error instanceof Error ? error.stack : ''}`,
-      );
-      throw error;
-    }
+    });
   }
 
   async smembers(key: string): Promise<string[]> {
-    return this.redis.smembers(key);
+    return this.execute('smembers', () => this.redis.smembers(key));
   }
 
   async hset(key: string, ...fieldValues: (string | Buffer | number)[]) {
-    await this.redis.hset(key, fieldValues);
+    await this.execute('hset', () => this.redis.hset(key, fieldValues));
   }
 
   async llen(key: string): Promise<number> {
-    return this.redis.llen(key);
+    return this.execute('llen', () => this.redis.llen(key));
   }
 
   async flushall() {
-    await this.redis.flushall();
+    await this.execute('flushall', () => this.redis.flushall());
   }
 }
