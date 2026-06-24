@@ -16,10 +16,26 @@ const TRANSIENT_NETWORK_CODES = new Set([
 ]);
 
 function isNetworkError(error: NodeMailerError): boolean {
-  return (
-    (error.code !== undefined && TRANSIENT_NETWORK_CODES.has(error.code)) ||
-    error.message?.includes('Unexpected socket close')
-  );
+  if (error.code !== undefined && TRANSIENT_NETWORK_CODES.has(error.code)) {
+    return true;
+  }
+
+  const message = error.message;
+  if (!message) {
+    return false;
+  }
+
+  if (message.includes('Unexpected socket close')) {
+    return true;
+  }
+
+  for (const code of TRANSIENT_NETWORK_CODES) {
+    if (message.includes(code)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 export function classifyEmailError(
