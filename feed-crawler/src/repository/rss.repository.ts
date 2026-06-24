@@ -33,7 +33,9 @@ export class RssRepository {
         FROM rss_accept WHERE id = ?`;
     this.dbMetrics.total.inc({ operation: 'select_rss_by_id' });
     try {
-      const result = await this.dbConnection.executeQuery<RssObj>(query, [rssId]);
+      const result = await this.dbConnection.executeQuery<RssObj>(query, [
+        rssId,
+      ]);
       this.dbMetrics.success.inc({ operation: 'select_rss_by_id' });
       return result && result.length > 0 ? result[0] : null;
     } catch (error) {
