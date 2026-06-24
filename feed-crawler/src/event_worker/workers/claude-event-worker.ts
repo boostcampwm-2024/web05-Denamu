@@ -2,7 +2,7 @@ import { inject, injectable } from 'tsyringe';
 
 import Anthropic from '@anthropic-ai/sdk';
 
-import { PROMPT_CONTENT } from '@common/ai/ai.constant';
+import { buildPromptContent } from '@common/ai/ai.constant';
 import { ClaudeResponse, FeedAIQueueItem } from '@common/ai/ai.type';
 import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
 import { RetryableError } from '@common/errors';
@@ -17,15 +17,19 @@ import { redisConstant } from '@common/redis/redis.constant';
 import { AbstractQueueWorker } from '@event_worker/abstract-queue-worker';
 
 import { FeedRepository } from '@repository/feed.repository';
+import { TagRepository } from '@repository/tag.repository';
 import { TagMapRepository } from '@repository/tag-map.repository';
 
 @injectable()
 export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
   private readonly client: Anthropic;
+  private promptContent: string | null = null;
 
   constructor(
     @inject(TagMapRepository)
     private readonly tagMapRepository: TagMapRepository,
+    @inject(TagRepository)
+    private readonly tagRepository: TagRepository,
     @inject(FeedRepository)
     private readonly feedRepository: FeedRepository,
     @inject(RedisConnection)
@@ -110,6 +114,14 @@ export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
     }
   }
 
+  private async getPromptContent(): Promise<string> {
+    if (this.promptContent === null) {
+      const allowedTags = await this.tagRepository.findAllNames();
+      this.promptContent = buildPromptContent(allowedTags);
+    }
+    return this.promptContent;
+  }
+
   private async requestAI(feed: FeedAIQueueItem) {
     logger.info(`${this.nameTag} AI 요청: ${JSON.stringify(feed)}`);
     this.aiMetrics.total.inc();
@@ -117,7 +129,7 @@ export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
     try {
       const params: Anthropic.MessageCreateParams = {
         max_tokens: 8192,
-        system: PROMPT_CONTENT,
+        system: await this.getPromptContent(),
         messages: [{ role: 'user', content: feed.content }],
         model: 'claude-haiku-4-5',
       };

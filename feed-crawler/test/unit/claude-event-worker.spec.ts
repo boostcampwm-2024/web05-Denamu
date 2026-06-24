@@ -11,11 +11,13 @@ import { redisConstant } from '@common/redis/redis.constant';
 import { ClaudeEventWorker } from '@event_worker/workers/claude-event-worker';
 
 import { FeedRepository } from '@repository/feed.repository';
+import { TagRepository } from '@repository/tag.repository';
 import { TagMapRepository } from '@repository/tag-map.repository';
 
 describe('ClaudeEventWorker', () => {
   let claudeEventWorker: ClaudeEventWorker;
   let mockTagMapRepository: jest.Mocked<TagMapRepository>;
+  let mockTagRepository: jest.Mocked<TagRepository>;
   let mockFeedRepository: jest.Mocked<FeedRepository>;
   let mockRedisConnection: jest.Mocked<RedisConnection>;
   let mockAnthropicClient: any;
@@ -62,6 +64,10 @@ describe('ClaudeEventWorker', () => {
       insertTags: insertTagsMock,
     } as any;
 
+    mockTagRepository = {
+      findAllNames: jest.fn().mockResolvedValue(['JavaScript', 'React']),
+    } as any;
+
     mockFeedRepository = {
       updateSummary: updateSummaryMock,
       updateNullSummary: updateNullSummaryMock,
@@ -102,6 +108,7 @@ describe('ClaudeEventWorker', () => {
 
     claudeEventWorker = new ClaudeEventWorker(
       mockTagMapRepository,
+      mockTagRepository,
       mockFeedRepository,
       mockRedisConnection,
       mockNotifier,
