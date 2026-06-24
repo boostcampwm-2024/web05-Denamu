@@ -5,9 +5,19 @@ export interface EmailErrorClassification {
   failureType: 'SMTP_PERMANENT_FAILURE' | 'UNKNOWN_ERROR' | null;
 }
 
+const TRANSIENT_NETWORK_CODES = new Set([
+  'ESOCKET',
+  'ECONNECTION',
+  'ECONNRESET',
+  'ECONNREFUSED',
+  'ETIMEDOUT',
+  'EAI_AGAIN',
+  'EDNS',
+]);
+
 function isNetworkError(error: NodeMailerError): boolean {
   return (
-    error.code === 'ESOCKET' ||
+    (error.code !== undefined && TRANSIENT_NETWORK_CODES.has(error.code)) ||
     error.message?.includes('ECONNREFUSED') ||
     error.message?.includes('ETIMEDOUT') ||
     error.message?.includes('Unexpected socket close')
