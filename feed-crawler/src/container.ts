@@ -22,6 +22,7 @@ import { FullFeedCrawlEventWorker } from '@event_worker/workers/full-feed-crawl-
 
 import { FeedRepository } from '@repository/feed.repository';
 import { RssRepository } from '@repository/rss.repository';
+import { TagRepository } from '@repository/tag.repository';
 import { TagMapRepository } from '@repository/tag-map.repository';
 
 import { FeedCrawler } from './feed-crawler';
@@ -37,6 +38,7 @@ container.registerSingleton(RedisMetrics);
 container.registerSingleton(RedisConnection);
 container.registerSingleton(RssRepository);
 container.registerSingleton(FeedRepository);
+container.registerSingleton(TagRepository);
 container.registerSingleton(TagMapRepository);
 container.registerSingleton(ClaudeEventWorker);
 container.registerSingleton(ParserUtil);

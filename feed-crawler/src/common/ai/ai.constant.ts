@@ -1,29 +1,4 @@
-export const ALLOWED_TAGS = [
-  '회고',
-  'Frontend',
-  'Backend',
-  'DB',
-  'Network',
-  'OS',
-  'Algorithm',
-  'Infra',
-  'TypeScript',
-  'JavaScript',
-  'Java',
-  'React',
-  'Vue.JS',
-  'Nest.JS',
-  'Express.JS',
-  'Spring',
-  'MySQL',
-  'SQLite',
-  'PostgreSQL',
-  'MongoDB',
-  'Redis',
-  'Docker',
-];
-
-export const PROMPT_CONTENT = `[System]
+export const buildPromptContent = (allowedTags: string[]) => `[System]
 You need to assign tags and provide a summary of the content.
 The input format is XML.
 Remove the XML tags and analyze the content.
@@ -67,5 +42,5 @@ The response should look exactly like this, without any surrounding characters:
 Strictly follow this rule.
 
 Tag List:
-${ALLOWED_TAGS.map((tag) => `- ${tag}`).join('\n')}
+${allowedTags.map((tag) => `- ${tag}`).join('\n')}
 `;
