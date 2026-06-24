@@ -2,16 +2,17 @@ import { inject, injectable } from 'tsyringe';
 
 import Anthropic from '@anthropic-ai/sdk';
 
-import { PROMPT_CONTENT, redisConstant } from '@common/constant';
+import { PROMPT_CONTENT } from '@common/ai/ai.constant';
+import { ClaudeResponse, FeedAIQueueItem } from '@common/ai/ai.type';
 import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
 import { RetryableError } from '@common/errors';
-import logger from '@common/logger';
+import logger from '@common/logger/logger';
 import { AiMetrics } from '@common/metrics/ai-metrics';
 import { RedisMetrics } from '@common/metrics/redis-metrics';
 import { NOTIFICATION_EVENT } from '@common/notification/notification-event.constant';
 import { Notifier } from '@common/notification/notifier.interface';
-import { RedisConnection } from '@common/redis-access';
-import { ClaudeResponse, FeedAIQueueItem } from '@common/types';
+import { RedisConnection } from '@common/redis/redis-access';
+import { redisConstant } from '@common/redis/redis.constant';
 
 import { AbstractQueueWorker } from '@event_worker/abstract-queue-worker';
 

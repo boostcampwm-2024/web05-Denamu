@@ -1,15 +1,16 @@
-import axios from 'axios';
 import { inject, injectable } from 'tsyringe';
 
+import axios from 'axios';
+
 import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
-import logger from '@common/logger';
+import { FeedDetail, RssObj } from '@common/feed/feed.type';
+import logger from '@common/logger/logger';
 import { FeedMetrics } from '@common/metrics/feed-metrics';
 import { NOTIFICATION_EVENT } from '@common/notification/notification-event.constant';
 import { Notifier } from '@common/notification/notifier.interface';
 import { BaseFeedParser } from '@common/parser/base-feed-parser';
 import { Atom10Parser } from '@common/parser/formats/atom10-parser';
 import { Rss20Parser } from '@common/parser/formats/rss20-parser';
-import { FeedDetail, RssObj } from '@common/types';
 
 @injectable()
 export class FeedParserManager {

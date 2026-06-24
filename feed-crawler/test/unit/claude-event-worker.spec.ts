@@ -1,12 +1,12 @@
 import 'reflect-metadata';
 
-import { redisConstant } from '@common/constant';
+import { ClaudeResponse, FeedAIQueueItem } from '@common/ai/ai.type';
 import { PermanentError, RetryableError } from '@common/errors';
 import { AiMetrics } from '@common/metrics/ai-metrics';
 import { RedisMetrics } from '@common/metrics/redis-metrics';
 import { Notifier } from '@common/notification/notifier.interface';
-import { RedisConnection } from '@common/redis-access';
-import { ClaudeResponse, FeedAIQueueItem } from '@common/types';
+import { RedisConnection } from '@common/redis/redis-access';
+import { redisConstant } from '@common/redis/redis.constant';
 
 import { ClaudeEventWorker } from '@event_worker/workers/claude-event-worker';
 
@@ -372,7 +372,9 @@ describe('ClaudeEventWorker', () => {
     it('RetryableError(json 파싱 실패)는 재시도 큐에 재투입해야 한다', async () => {
       // Given - LLM 비결정 출력은 재요청 시 회복 가능
       const feed = { ...mockFeedAIQueueItem, deathCount: 0 };
-      const error = new RetryableError('AI 응답이 json으로 반환되지 않았습니다');
+      const error = new RetryableError(
+        'AI 응답이 json으로 반환되지 않았습니다',
+      );
 
       // When
       await claudeEventWorker['handleFailure'](feed, error);

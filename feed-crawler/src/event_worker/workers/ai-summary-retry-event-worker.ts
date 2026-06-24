@@ -1,9 +1,9 @@
 import { inject, injectable } from 'tsyringe';
 
-import { redisConstant } from '@common/constant';
-import logger from '@common/logger';
-import { RedisConnection } from '@common/redis-access';
-import { AiSummaryRetryMessage } from '@common/types';
+import { AiSummaryRetryMessage } from '@common/ai/ai.type';
+import logger from '@common/logger/logger';
+import { RedisConnection } from '@common/redis/redis-access';
+import { redisConstant } from '@common/redis/redis.constant';
 
 import { AbstractQueueWorker } from '@event_worker/abstract-queue-worker';
 

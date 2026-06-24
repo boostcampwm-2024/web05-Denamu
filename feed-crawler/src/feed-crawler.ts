@@ -1,10 +1,11 @@
-import axios from 'axios';
 import { inject, injectable } from 'tsyringe';
 
+import axios from 'axios';
+
 import { PermanentError, RetryableError } from '@common/errors';
-import logger from '@common/logger';
+import { FeedDetail, RssObj } from '@common/feed/feed.type';
+import logger from '@common/logger/logger';
 import { FeedParserManager } from '@common/parser/feed-parser-manager';
-import { FeedDetail, RssObj } from '@common/types';
 
 import { FeedRepository } from '@repository/feed.repository';
 import { RssRepository } from '@repository/rss.repository';

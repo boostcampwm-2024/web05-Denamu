@@ -2,12 +2,12 @@ import 'reflect-metadata';
 
 import axios, { HttpStatusCode } from 'axios';
 
+import { FeedDetail, RssObj } from '@common/feed/feed.type';
 import { FeedMetrics } from '@common/metrics/feed-metrics';
 import { Notifier } from '@common/notification/notifier.interface';
 import { FeedParserManager } from '@common/parser/feed-parser-manager';
 import { Atom10Parser } from '@common/parser/formats/atom10-parser';
 import { Rss20Parser } from '@common/parser/formats/rss20-parser';
-import { FeedDetail, RssObj } from '@common/types';
 
 describe('FeedParserManager', () => {
   let feedParserManager: FeedParserManager;

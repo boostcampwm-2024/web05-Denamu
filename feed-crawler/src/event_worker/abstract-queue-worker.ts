@@ -1,6 +1,6 @@
 import { isRetryable } from '@common/errors';
-import logger from '@common/logger';
-import { RedisConnection } from '@common/redis-access';
+import logger from '@common/logger/logger';
+import { RedisConnection } from '@common/redis/redis-access';
 
 export const MAX_DEATH_COUNT = 3;
 

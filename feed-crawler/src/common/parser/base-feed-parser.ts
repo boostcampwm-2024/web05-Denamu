@@ -4,12 +4,12 @@ import {
   FEED_AI_SUMMARY_IN_PROGRESS_MESSAGE,
   ONE_MINUTE,
   TIME_INTERVAL,
-} from '@common/constant';
-import logger from '@common/logger';
+} from '@common/feed/feed.constant';
+import { FeedDetail, RssObj } from '@common/feed/feed.type';
+import logger from '@common/logger/logger';
 import { NOTIFICATION_EVENT } from '@common/notification/notification-event.constant';
 import { Notifier } from '@common/notification/notifier.interface';
 import { ParserUtil } from '@common/parser/utils/parser-util';
-import { FeedDetail, RssObj } from '@common/types';
 
 export interface RawFeed {
   title: string;

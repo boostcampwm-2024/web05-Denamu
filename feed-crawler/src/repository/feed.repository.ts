@@ -1,13 +1,13 @@
 import { inject, injectable } from 'tsyringe';
 
-import { redisConstant } from '@common/constant';
-import { DatabaseConnection } from '@common/database-connection';
+import { DatabaseConnection } from '@common/database/database-connection';
 import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
-import logger from '@common/logger';
+import { FeedDetail } from '@common/feed/feed.type';
+import logger from '@common/logger/logger';
 import { DbMetrics } from '@common/metrics/db-metrics';
 import { RedisMetrics } from '@common/metrics/redis-metrics';
-import { RedisConnection } from '@common/redis-access';
-import { FeedDetail } from '@common/types';
+import { RedisConnection } from '@common/redis/redis-access';
+import { redisConstant } from '@common/redis/redis.constant';
 
 @injectable()
 export class FeedRepository {

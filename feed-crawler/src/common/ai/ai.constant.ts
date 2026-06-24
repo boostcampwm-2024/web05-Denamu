@@ -1,20 +1,3 @@
-export const CONNECTION_LIMIT = 50;
-export const redisConstant = {
-  FEED_RECENT_INDEX_KEY: 'feed:recent:index',
-  FEED_AI_QUEUE: `feed:ai:queue`,
-  FEED_AI_RETRY_QUEUE: `feed:ai-retry:queue`,
-  FEED_AI_RETRY_LOCK: `feed:ai-retry:lock`,
-  FULL_FEED_CRAWL_QUEUE: `feed:full-crawl:queue`,
-};
-
-export const ONE_MINUTE = 60 * 1000;
-export const TIME_INTERVAL =
-  process.env.NODE_ENV !== 'TEST'
-    ? parseInt(process.env.TIME_INTERVAL)
-    : Number.MAX_SAFE_INTEGER;
-
-export const FEED_AI_SUMMARY_IN_PROGRESS_MESSAGE = `아직 AI가 요약을 진행중인 게시글 이에요! 💭`;
-
 export const ALLOWED_TAGS = [
   '회고',
   'Frontend',
@@ -61,7 +44,7 @@ If possible, organize the summary using Markdown format.
 The first line of the summary must be the title and should be displayed in **bold**.
 
 Output Format:
-You must respond with raw JSON only, without any code blocks or backticks. 
+You must respond with raw JSON only, without any code blocks or backticks.
 The output should be in JSON format only, containing tags, relevance, and summary.
 Do not wrap the response in code blocks.
 Do not provide any additional explanations.

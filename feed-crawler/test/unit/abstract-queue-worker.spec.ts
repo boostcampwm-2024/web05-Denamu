@@ -1,5 +1,5 @@
-import logger from '@common/logger';
-import { RedisConnection } from '@common/redis-access';
+import logger from '@common/logger/logger';
+import { RedisConnection } from '@common/redis/redis-access';
 
 import { AbstractQueueWorker } from '@event_worker/abstract-queue-worker';
 

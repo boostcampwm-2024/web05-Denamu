@@ -1,10 +1,10 @@
 import { inject, injectable } from 'tsyringe';
 
-import { redisConstant } from '@common/constant';
-import logger from '@common/logger';
+import { FullFeedCrawlMessage } from '@common/feed/feed.type';
+import logger from '@common/logger/logger';
 import { FeedMetrics } from '@common/metrics/feed-metrics';
-import { RedisConnection } from '@common/redis-access';
-import { FullFeedCrawlMessage } from '@common/types';
+import { RedisConnection } from '@common/redis/redis-access';
+import { redisConstant } from '@common/redis/redis.constant';
 
 import { AbstractQueueWorker } from '@event_worker/abstract-queue-worker';
 
