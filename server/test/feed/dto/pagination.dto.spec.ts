@@ -97,16 +97,27 @@ describe(`${ReadFeedPaginationRequestDto.name} Test`, () => {
   });
 
   describe('tags', () => {
-    it('태그에 유효하지 않은 값을 입력할 경우 유효성 검사에 실패한다.', async () => {
+    it('태그가 문자열 배열일 경우 유효성 검사에 성공한다.', async () => {
       //given
-      dto.tags = ['TEST'] as any;
+      dto.tags = ['Frontend', 'React'];
+
+      //when
+      const errors = await validate(dto);
+
+      //then
+      expect(errors).toHaveLength(0);
+    });
+
+    it('태그에 문자열이 아닌 값을 입력할 경우 유효성 검사에 실패한다.', async () => {
+      //given
+      dto.tags = [123] as any;
 
       //when
       const errors = await validate(dto);
 
       //then
       expect(errors).toHaveLength(1);
-      expect(errors[0].constraints).toHaveProperty('isIn');
+      expect(errors[0].constraints).toHaveProperty('isString');
     });
   });
 });

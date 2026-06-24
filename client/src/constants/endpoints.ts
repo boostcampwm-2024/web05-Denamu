@@ -53,6 +53,10 @@ export const BLOG = {
   },
 };
 
+export const TAG = {
+  LIST: "/api/tags",
+};
+
 export const CHART = {
   TODAY: "/api/statistics/today?limit=5",
   ALL: "/api/statistics/all?limit=5",
