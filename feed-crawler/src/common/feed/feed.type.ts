@@ -1,11 +1,3 @@
-export interface RawFeed {
-  title: string;
-  link: string;
-  pubDate: string;
-  description?: string;
-  'content:encoded'?: string;
-}
-
 export interface RssObj {
   id: number;
   rssUrl: string;
@@ -28,26 +20,8 @@ export interface FeedDetail {
   deathCount?: number;
 }
 
-export interface ClaudeResponse {
-  tags: Record<string, number>;
-  summary: string;
-}
-
-export type FeedAIQueueItem = {
-  id: number;
-  content: string;
-  deathCount: number;
-  tagList?: string[];
-  summary?: string;
-};
-
 export interface FullFeedCrawlMessage {
   rssId: number;
   timestamp: number;
-  deathCount: number;
-}
-
-export interface AiSummaryRetryMessage {
-  feedId: number;
   deathCount: number;
 }

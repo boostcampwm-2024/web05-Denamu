@@ -3,20 +3,20 @@ import 'reflect-metadata';
 import { container } from 'tsyringe';
 import { DependencyContainer } from 'tsyringe';
 
-import { DatabaseConnection } from '@common/database-connection';
+import { DatabaseConnection } from '@common/database/database-connection';
+import { MySQLConnection } from '@common/database/mysql-access';
 import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
 import { AiMetrics } from '@common/metrics/ai-metrics';
 import { DbMetrics } from '@common/metrics/db-metrics';
 import { FeedMetrics } from '@common/metrics/feed-metrics';
 import { RedisMetrics } from '@common/metrics/redis-metrics';
-import { MySQLConnection } from '@common/mysql-access';
 import { DiscordNotifier } from '@common/notification/discord.notifier';
 import { Notifier } from '@common/notification/notifier.interface';
 import { FeedParserManager } from '@common/parser/feed-parser-manager';
 import { Atom10Parser } from '@common/parser/formats/atom10-parser';
 import { Rss20Parser } from '@common/parser/formats/rss20-parser';
 import { ParserUtil } from '@common/parser/utils/parser-util';
-import { RedisConnection } from '@common/redis-access';
+import { RedisConnection } from '@common/redis/redis-access';
 
 import { ClaudeEventWorker } from '@event_worker/workers/claude-event-worker';
 

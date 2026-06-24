@@ -1,11 +1,12 @@
 import 'reflect-metadata';
 
-import { redisConstant } from '@common/constant';
+import { ClaudeResponse, FeedAIQueueItem } from '@common/ai/ai.type';
+import { PermanentError, RetryableError } from '@common/errors';
 import { AiMetrics } from '@common/metrics/ai-metrics';
 import { RedisMetrics } from '@common/metrics/redis-metrics';
 import { Notifier } from '@common/notification/notifier.interface';
-import { RedisConnection } from '@common/redis-access';
-import { ClaudeResponse, FeedAIQueueItem } from '@common/types';
+import { RedisConnection } from '@common/redis/redis-access';
+import { redisConstant } from '@common/redis/redis.constant';
 
 import { ClaudeEventWorker } from '@event_worker/workers/claude-event-worker';
 
@@ -212,16 +213,30 @@ describe('ClaudeEventWorker', () => {
       expect(result).toEqual([mockFeedAIQueueItem]);
     });
 
-    it('JSON 파싱 에러를 처리해야 한다', async () => {
+    it('malformed 메시지는 스킵하고 나머지를 반환해야 한다 (poison message 격리)', async () => {
       // Given
-      const mockRedisResults = [[null, 'invalid-json']];
+      const mockRedisResults = [
+        [null, 'invalid-json'],
+        [null, JSON.stringify(mockFeedAIQueueItem)],
+      ];
       executePipelineMock.mockResolvedValue(mockRedisResults as any);
 
       // When
       const result = await claudeEventWorker['loadFeeds']();
 
       // Then
-      expect(result).toBeUndefined();
+      expect(result).toEqual([mockFeedAIQueueItem]);
+    });
+
+    it('파이프라인 실패 시 빈 배열을 반환해야 한다', async () => {
+      // Given
+      executePipelineMock.mockRejectedValue(new Error('redis down'));
+
+      // When
+      const result = await claudeEventWorker['loadFeeds']();
+
+      // Then
+      expect(result).toEqual([]);
     });
   });
 
@@ -339,6 +354,36 @@ describe('ClaudeEventWorker', () => {
       expect(updateNullSummaryMock).toHaveBeenCalledWith(
         feedWithExactDeathCount.id,
       );
+    });
+
+    it('PermanentError는 deathCount와 무관하게 재시도 없이 영구 실패 처리해야 한다', async () => {
+      // Given - 재시도 여유가 있어도(0/3) 영구 에러면 재시도 금지
+      const feed = { ...mockFeedAIQueueItem, deathCount: 0 };
+      const error = new PermanentError('삭제된 게시글 (원본 HTTP 404)');
+
+      // When
+      await claudeEventWorker['handleFailure'](feed, error);
+
+      // Then
+      expect(rpushMock).not.toHaveBeenCalled();
+      expect(updateNullSummaryMock).toHaveBeenCalledWith(feed.id);
+    });
+
+    it('RetryableError(json 파싱 실패)는 재시도 큐에 재투입해야 한다', async () => {
+      // Given - LLM 비결정 출력은 재요청 시 회복 가능
+      const feed = { ...mockFeedAIQueueItem, deathCount: 0 };
+      const error = new RetryableError(
+        'AI 응답이 json으로 반환되지 않았습니다',
+      );
+
+      // When
+      await claudeEventWorker['handleFailure'](feed, error);
+
+      // Then
+      expect(rpushMock).toHaveBeenCalledWith(redisConstant.FEED_AI_QUEUE, [
+        JSON.stringify({ ...feed, deathCount: 1 }),
+      ]);
+      expect(updateNullSummaryMock).not.toHaveBeenCalled();
     });
 
     it('deathCount가 정확히 2일 때 재시도해야 한다 (경계값-1)', async () => {

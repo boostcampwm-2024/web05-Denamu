@@ -3,7 +3,7 @@ import { injectable } from 'tsyringe';
 import axios from 'axios';
 import { EventEmitter } from 'node:events';
 
-import logger from '@common/logger';
+import logger from '@common/logger/logger';
 import {
   aiSummaryPayload,
   fullFeedCrawlingPayload,

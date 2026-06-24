@@ -4,12 +4,12 @@ import * as schedule from 'node-schedule';
 
 import '@common/env-load';
 
-import { DatabaseConnection } from '@common/database-connection';
+import { DatabaseConnection } from '@common/database/database-connection';
 import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
-import logger from '@common/logger';
+import logger from '@common/logger/logger';
 import { FeedMetrics } from '@common/metrics/feed-metrics';
 import { Notifier } from '@common/notification/notifier.interface';
-import { RedisConnection } from '@common/redis-access';
+import { RedisConnection } from '@common/redis/redis-access';
 
 import { AiSummaryRetryEventWorker } from '@event_worker/workers/ai-summary-retry-event-worker';
 import { ClaudeEventWorker } from '@event_worker/workers/claude-event-worker';

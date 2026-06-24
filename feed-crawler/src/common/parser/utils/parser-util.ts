@@ -1,10 +1,10 @@
-import axios from 'axios';
 import { injectable } from 'tsyringe';
 
+import axios from 'axios';
 import { unescape } from 'html-escaper';
 import { parse } from 'node-html-parser';
 
-import logger from '@common/logger';
+import logger from '@common/logger/logger';
 
 @injectable()
 export class ParserUtil {

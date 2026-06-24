@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 
+import { FeedDetail, RssObj } from '@common/feed/feed.type';
 import { FeedParserManager } from '@common/parser/feed-parser-manager';
-import { FeedDetail, RssObj } from '@common/types';
 
 import { FeedRepository } from '@repository/feed.repository';
 import { RssRepository } from '@repository/rss.repository';
