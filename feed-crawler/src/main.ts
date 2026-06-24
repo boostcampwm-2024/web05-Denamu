@@ -6,6 +6,7 @@ import '@common/env-load';
 
 import { DatabaseConnection } from '@common/database/database-connection';
 import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
+import { Lifecycle } from '@common/lifecycle/lifecycle.interface';
 import logger from '@common/logger/logger';
 import { FeedMetrics } from '@common/metrics/feed-metrics';
 import { Notifier } from '@common/notification/notifier.interface';
@@ -62,18 +63,13 @@ function registerSchedulers(
   });
 }
 
-async function handleShutdown(
-  dependencies: ReturnType<typeof initializeDependencies>,
-  signal: string,
-) {
+async function handleShutdown(shutdownTargets: Lifecycle[], signal: string) {
   try {
     logger.info(`${signal} 신호 수신, feed-crawler 종료 중...`);
 
-    logger.info('데이터 베이스 연결 종료 중...');
-    await dependencies.dbConnection.end();
-
-    logger.info('Redis 연결 종료 중...');
-    await dependencies.redisConnection.quit();
+    for (const target of shutdownTargets) {
+      await target.stop();
+    }
 
     logger.info('Feed Crawler 정상 종료');
     process.exit(0);
@@ -97,8 +93,12 @@ function startScheduler() {
     dependencies.notifier.initialize();
     registerSchedulers(dependencies);
 
-    process.on('SIGINT', () => void handleShutdown(dependencies, 'SIGINT'));
-    process.on('SIGTERM', () => void handleShutdown(dependencies, 'SIGTERM'));
+    const shutdownTargets: Lifecycle[] = [
+      dependencies.dbConnection,
+      dependencies.redisConnection,
+    ];
+    process.on('SIGINT', () => void handleShutdown(shutdownTargets, 'SIGINT'));
+    process.on('SIGTERM', () => void handleShutdown(shutdownTargets, 'SIGTERM'));
 
     logger.info('[Feed Crawler Scheduler Complete]');
   } catch (error) {

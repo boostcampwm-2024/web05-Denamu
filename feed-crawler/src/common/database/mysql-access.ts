@@ -82,7 +82,8 @@ export class MySQLConnection implements DatabaseConnection {
     }
   }
 
-  public async end() {
+  public async stop() {
+    logger.info('데이터 베이스 연결 종료 중...');
     await this.pool.end();
   }
 }

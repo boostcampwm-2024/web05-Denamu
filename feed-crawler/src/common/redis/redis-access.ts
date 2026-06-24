@@ -3,10 +3,11 @@ import { injectable } from 'tsyringe';
 import Redis, { ChainableCommander } from 'ioredis';
 import Redis_Mock from 'ioredis-mock';
 
+import { Lifecycle } from '@common/lifecycle/lifecycle.interface';
 import logger from '@common/logger/logger';
 
 @injectable()
-export class RedisConnection {
+export class RedisConnection implements Lifecycle {
   private redis: Redis;
   private nameTag: string;
 
@@ -53,7 +54,8 @@ export class RedisConnection {
     }
   }
 
-  async quit() {
+  async stop() {
+    logger.info('Redis 연결 종료 중...');
     if (this.redis) {
       try {
         await this.redis.quit();
