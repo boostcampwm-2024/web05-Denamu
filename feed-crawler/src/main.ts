@@ -63,12 +63,12 @@ function registerSchedulers(
   });
 }
 
-async function handleShutdown(shutdownTargets: Lifecycle[], signal: string) {
+async function handleShutdown(components: Lifecycle[], signal: string) {
   try {
     logger.info(`${signal} 신호 수신, feed-crawler 종료 중...`);
 
-    for (const target of shutdownTargets) {
-      await target.stop();
+    for (const component of [...components].reverse()) {
+      await component.stop?.();
     }
 
     logger.info('Feed Crawler 정상 종료');
@@ -81,24 +81,27 @@ async function handleShutdown(shutdownTargets: Lifecycle[], signal: string) {
   }
 }
 
-function startScheduler() {
+async function startScheduler() {
   try {
     logger.info('[Feed Crawler Scheduler Start]');
 
-    const metricsPort = Number(process.env.FEED_CRAWLER_METRICS_PORT) || 9092;
-
     const dependencies = initializeDependencies();
-    dependencies.metrics.startMetricsServer(metricsPort);
-    logger.info(`Metrics server started on port ${metricsPort}`);
-    dependencies.notifier.initialize();
-    registerSchedulers(dependencies);
 
-    const shutdownTargets: Lifecycle[] = [
+    const components: Lifecycle[] = [
+      dependencies.metrics,
+      dependencies.notifier,
       dependencies.dbConnection,
       dependencies.redisConnection,
     ];
-    process.on('SIGINT', () => void handleShutdown(shutdownTargets, 'SIGINT'));
-    process.on('SIGTERM', () => void handleShutdown(shutdownTargets, 'SIGTERM'));
+
+    for (const component of components) {
+      await component.start?.();
+    }
+
+    registerSchedulers(dependencies);
+
+    process.on('SIGINT', () => void handleShutdown(components, 'SIGINT'));
+    process.on('SIGTERM', () => void handleShutdown(components, 'SIGTERM'));
 
     logger.info('[Feed Crawler Scheduler Complete]');
   } catch (error) {
@@ -107,4 +110,4 @@ function startScheduler() {
   }
 }
 
-startScheduler();
+void startScheduler();

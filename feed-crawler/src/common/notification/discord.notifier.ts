@@ -29,7 +29,7 @@ export class DiscordNotifier implements Notifier {
     this.eventEmitter = new EventEmitter();
   }
 
-  initialize() {
+  start() {
     if (!this.initialized) {
       this.eventEmitter.on(
         NOTIFICATION_EVENT.FEED_CRAWLING_SCHEDULED,

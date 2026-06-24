@@ -1,3 +1,4 @@
 export interface Lifecycle {
-  stop(): Promise<void> | void;
+  start?(): Promise<void> | void;
+  stop?(): Promise<void> | void;
 }
