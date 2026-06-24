@@ -3,6 +3,7 @@ import { inject, injectable } from 'tsyringe';
 import { Options } from 'amqplib/properties';
 
 import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
+import { Lifecycle } from '@common/lifecycle/lifecycle.interface';
 import logger from '@common/logger/logger';
 
 import { EmailPayloadConstant } from '@email/constant';
@@ -16,7 +17,7 @@ import { RETRY_CONFIG, RMQ_QUEUES } from '@rabbitmq/rabbitmq.constant';
 import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
 
 @injectable()
-export class EmailConsumer {
+export class EmailConsumer implements Lifecycle {
   private consumerTag: string | null;
   private shuttingDownFlag = false;
   private pendingTasks = 0;
@@ -73,6 +74,17 @@ export class EmailConsumer {
     );
 
     logger.info('[EmailConsumer] 이메일 큐 리스닝 시작');
+  }
+
+  async stop(): Promise<void> {
+    logger.info('새로운 메시지 수신 중지...');
+    await this.stopConsuming();
+
+    logger.info('진행 중인 이메일 전송 작업 완료 대기...');
+    await this.waitForPendingTasks();
+
+    logger.info('Consumer 정리 중...');
+    await this.close();
   }
 
   async close() {

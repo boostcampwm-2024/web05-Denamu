@@ -55,7 +55,7 @@ describe('email consumer unit test', () => {
         sendMessageToQueue: jest.fn().mockResolvedValue(null),
       } as any;
       notifier = {
-        initialize: jest.fn(),
+        start: jest.fn(),
         publish: jest.fn(),
       };
       emailConsumer = new EmailConsumer(
@@ -225,7 +225,7 @@ describe('email consumer unit test', () => {
         sendMessageToQueue,
       } as any;
       notifier = {
-        initialize: jest.fn(),
+        start: jest.fn(),
         publish: jest.fn(),
       };
       emailConsumer = new EmailConsumer(

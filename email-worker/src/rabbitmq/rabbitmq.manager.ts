@@ -3,8 +3,11 @@ import { injectable } from 'tsyringe';
 import * as amqp from 'amqplib';
 import { Channel, ChannelModel } from 'amqplib';
 
+import { Lifecycle } from '@common/lifecycle/lifecycle.interface';
+import logger from '@common/logger/logger';
+
 @injectable()
-export class RabbitMQManager {
+export class RabbitMQManager implements Lifecycle {
   private connection: ChannelModel | null;
   private channel: Channel | null;
   private connectionPromise: Promise<ChannelModel> | null = null;
@@ -13,6 +16,16 @@ export class RabbitMQManager {
   constructor() {
     this.connection = null;
     this.channel = null;
+  }
+
+  async start(): Promise<void> {
+    await this.connect();
+    logger.info('RabbitMQ 초기화 완료');
+  }
+
+  async stop(): Promise<void> {
+    logger.info('RabbitMQ 연결 종료 중...');
+    await this.disconnect();
   }
 
   async connect() {

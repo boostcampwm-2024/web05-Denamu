@@ -28,7 +28,7 @@ export class DiscordNotifier implements Notifier {
     this.eventEmitter = new EventEmitter();
   }
 
-  initialize() {
+  start() {
     if (!this.initialized) {
       this.eventEmitter.on(
         NOTIFICATION_EVENT.EMAIL_DLQ,
