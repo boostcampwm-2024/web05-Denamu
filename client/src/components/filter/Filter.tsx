@@ -2,20 +2,25 @@ import { useState } from "react";
 
 import clsx from "clsx";
 
-import { CATEGORIES, CATEGORIES_KEY, CATEGORIES_MAP } from "@/constants/filter";
+import { useTags } from "@/hooks/queries/useTags";
 
 import { useFilterStore } from "@/store/useFilterStore";
 
 export default function Filter() {
-  const [lastActiveCategory, setLastActiveCategory] = useState<string>("FrontEnd");
+  const [activeCategory, setActiveCategory] = useState<string>("");
   const [filterOpen, setFilterOpen] = useState<boolean>(false);
+  const { data: categories } = useTags();
+
   const handleFilterOpen = () => {
     setFilterOpen(!filterOpen);
   };
 
   const handleCategoryChange = (category: string) => {
-    setLastActiveCategory(category);
+    setActiveCategory(category);
   };
+
+  const active = activeCategory || categories?.[0]?.category || "";
+  const activeTags = categories?.find((c) => c.category === active)?.tags ?? [];
 
   return (
     <div className={`px-4 md:px-0 mt-0 md:pt-3 rounded-lg flex flex-col gap-1`}>
@@ -25,11 +30,11 @@ export default function Filter() {
           {filterOpen ? "닫기" : "열기"}
         </button>
       </div>
-      {filterOpen && (
+      {filterOpen && categories && (
         <Filters
-          filters={CATEGORIES[CATEGORIES_MAP[lastActiveCategory as keyof typeof CATEGORIES_MAP]]}
-          keys={CATEGORIES_KEY}
-          activeCategory={lastActiveCategory}
+          filters={activeTags}
+          keys={categories.map((c) => c.category)}
+          activeCategory={active}
           onCategoryChange={handleCategoryChange}
         />
       )}
@@ -50,6 +55,7 @@ function Filters({
 }) {
   const { filters: pickedFilter, addFilter, removeFilter } = useFilterStore();
   const commonClass = `w-fit select-none cursor-pointer`;
+  const chipClass = "px-2 md:px-3 text-xs md:text-sm  py-1 rounded-full ";
   return (
     <div className="flex flex-col">
       <ul className="py-2 flex gap-2">
@@ -73,7 +79,7 @@ function Filters({
             className={clsx(
               pickedFilter.includes(filter) ? "bg-primary text-white" : "bg-gray-200 hover:bg-gray-300 text-gray-800",
               commonClass,
-              "px-2 md:px-3 text-xs md:text-sm  py-1 rounded-full "
+              chipClass
             )}
             onClick={() => (pickedFilter.includes(filter) ? removeFilter(filter) : addFilter(filter))}
           >
