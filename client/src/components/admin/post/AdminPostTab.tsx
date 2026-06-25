@@ -133,7 +133,7 @@ export default function AdminPostTab() {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-amber-400" />
           <Input
-            placeholder="제목으로 검색"
+            placeholder="제목으로 게시글 검색"
             className="pl-10 bg-white"
             value={noSummaryQuery}
             onChange={(event) => setNoSummaryQuery(event.target.value)}
@@ -200,9 +200,7 @@ export default function AdminPostTab() {
       </div>
 
       <div className="flex flex-col">
-        <h2 className="text-lg font-bold mb-3">
-          {isSearching ? `검색 결과 (${searchTotalCount})` : "전체 게시글"}
-        </h2>
+        <h2 className="text-lg font-bold mb-3">{isSearching ? `검색 결과 (${searchTotalCount})` : "전체 게시글"}</h2>
         <div className="relative mb-6">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
