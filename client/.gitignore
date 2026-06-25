@@ -45,3 +45,7 @@ stats.html
 # Lighthouse
 lhci_reports
 .lighthouseci
+
+# Storybook
+*storybook.log
+storybook-static
