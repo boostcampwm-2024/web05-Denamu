@@ -18,6 +18,21 @@ export class SearchFeedResult {
   @ApiProperty({ example: '2025-01-01T01:00:00.000Z', description: '게시글 작성 일자' })
   createdAt: Date;
 
+  @ApiProperty({ example: 'example author', description: '작성자' })
+  author: string;
+
+  @ApiProperty({ example: 'example platform', description: '블로그 플랫폼' })
+  blogPlatform: string;
+
+  @ApiProperty({ example: 'https://example.com/thumbnail', description: '썸네일 URL' })
+  thumbnail: string;
+
+  @ApiProperty({ example: 0, description: '조회수' })
+  viewCount: number;
+
+  @ApiProperty({ example: [], description: '태그 목록' })
+  tag: string[];
+
   @ApiProperty({ example: 0, description: '좋아요 수' })
   likes: number;
 
@@ -35,6 +50,11 @@ export class SearchFeedResult {
       title: feed.title,
       path: feed.path,
       createdAt: feed.createdAt,
+      author: feed.blog.name,
+      blogPlatform: feed.blog.blogPlatform,
+      thumbnail: feed.thumbnail,
+      viewCount: feed.viewCount,
+      tag: [],
       likes: feed.likeCount,
       comments: feed.commentCount,
     });

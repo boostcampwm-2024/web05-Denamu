@@ -68,6 +68,11 @@ describe(`GET ${URL}?type={}&find={} E2E Test`, () => {
           comments: feed.commentCount,
           path: feed.path,
           createdAt: feed.createdAt.toISOString(),
+          author: feed.blog.name,
+          blogPlatform: feed.blog.blogPlatform,
+          thumbnail: feed.thumbnail,
+          viewCount: feed.viewCount,
+          tag: [],
         };
       }),
       totalPages: 2,
