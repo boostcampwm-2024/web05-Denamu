@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-import { AlertTriangle, CheckSquare, Heart, MessageSquare, Square } from "lucide-react";
+import { AlertTriangle, CheckSquare, Heart, MessageSquare, Search, Square } from "lucide-react";
 
 import AdminPostDetail from "@/components/admin/post/AdminPostDetail";
 import { PostCardContent } from "@/components/common/Card/PostCardContent";
@@ -8,24 +8,60 @@ import { PostCardImage } from "@/components/common/Card/PostCardImage";
 import { PostGridSkeleton } from "@/components/common/Card/PostCardSkeleton";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 
 import { useCustomToast } from "@/hooks/common/useCustomToast";
 import { NO_SUMMARY_FEEDS_KEY, useBatchRequestAiSummary, useNoSummaryFeeds } from "@/hooks/queries/useAiSummaryRequest";
 import { useInfiniteScrollQuery } from "@/hooks/queries/useInfiniteScrollQuery";
+import { useSearch } from "@/hooks/queries/useSearch";
 
 import { posts } from "@/api/services/posts";
 import { FeedList } from "@/types/post";
+import { SearchResult } from "@/types/search";
 import { useQueryClient } from "@tanstack/react-query";
+
+const SEARCH_PAGE_SIZE = 12;
+
+const toFeedCard = (result: SearchResult): FeedList => ({
+  id: result.id,
+  title: result.title,
+  path: result.path,
+  createdAt: result.createdAt,
+  author: result.author,
+  blogPlatform: result.blogPlatform,
+  thumbnail: result.thumbnail,
+  viewCount: result.viewCount,
+  tag: result.tag,
+  likes: result.likes,
+  comments: result.comments,
+});
 
 export default function AdminPostTab() {
   const observerTarget = useRef<HTMLDivElement>(null);
   const [selectedFeedId, setSelectedFeedId] = useState<number | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [noSummaryQuery, setNoSummaryQuery] = useState("");
+  const [postQuery, setPostQuery] = useState("");
 
   const queryClient = useQueryClient();
   const { toast } = useCustomToast();
   const { data: noSummaryFeeds = [], isLoading: isNoSummaryLoading } = useNoSummaryFeeds();
   const { mutate: batchRequest, isPending } = useBatchRequestAiSummary();
+
+  const trimmedPostQuery = postQuery.trim();
+  const isSearching = trimmedPostQuery.length > 0;
+  const { data: searchData, isLoading: isSearchLoading } = useSearch({
+    query: trimmedPostQuery,
+    filter: "title",
+    page: 1,
+    pageSize: SEARCH_PAGE_SIZE,
+  });
+  const searchResults = searchData?.data.result ?? [];
+  const searchTotalCount = searchData?.data.totalCount ?? 0;
+
+  const filteredNoSummaryFeeds = noSummaryFeeds.filter((feed) =>
+    feed.title.toLowerCase().includes(noSummaryQuery.trim().toLowerCase())
+  );
 
   const { items, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } = useInfiniteScrollQuery<FeedList>({
     queryKey: "admin-latest-posts",
@@ -58,7 +94,7 @@ export default function AdminPostTab() {
     });
   };
 
-  const selectAll = () => setSelectedIds(new Set(noSummaryFeeds.map((feed) => feed.id)));
+  const selectAll = () => setSelectedIds(new Set(filteredNoSummaryFeeds.map((feed) => feed.id)));
   const clearSelection = () => setSelectedIds(new Set());
 
   const handleBatchRequest = () => {
@@ -94,14 +130,26 @@ export default function AdminPostTab() {
           </div>
         </div>
 
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-amber-400" />
+          <Input
+            placeholder="제목으로 게시글 검색"
+            className="pl-10 bg-white"
+            value={noSummaryQuery}
+            onChange={(event) => setNoSummaryQuery(event.target.value)}
+          />
+        </div>
+
         {isNoSummaryLoading ? (
           <p className="text-sm text-gray-400 py-6 text-center">불러오는 중...</p>
         ) : noSummaryFeeds.length === 0 ? (
           <p className="text-sm text-gray-400 py-6 text-center">AI 요약이 없는 게시글이 없습니다.</p>
+        ) : filteredNoSummaryFeeds.length === 0 ? (
+          <p className="text-sm text-gray-400 py-6 text-center">검색 결과가 없습니다.</p>
         ) : (
           <div className="max-h-[320px] overflow-y-auto pr-1">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {noSummaryFeeds.map((feed) => {
+              {filteredNoSummaryFeeds.map((feed) => {
                 const isSelected = selectedIds.has(feed.id);
                 return (
                   <div
@@ -152,8 +200,39 @@ export default function AdminPostTab() {
       </div>
 
       <div className="flex flex-col">
-        <h2 className="text-lg font-bold mb-3">전체 게시글</h2>
-        {isLoading ? (
+        <h2 className="text-lg font-bold mb-3">{isSearching ? `검색 결과 (${searchTotalCount})` : "전체 게시글"}</h2>
+        <div className="relative mb-6">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="제목으로 게시글 검색"
+            className="pl-10"
+            value={postQuery}
+            onChange={(event) => setPostQuery(event.target.value)}
+          />
+        </div>
+
+        {isSearching ? (
+          isSearchLoading ? (
+            <PostGridSkeleton count={8} />
+          ) : searchResults.length === 0 ? (
+            <p className="text-sm text-gray-400 py-12 text-center">검색 결과가 없습니다.</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 min-h-[300px]">
+              {searchResults.map((result) => {
+                const post = toFeedCard(result);
+                return (
+                  <Card
+                    key={post.id}
+                    className="h-[270px] group shadow-md hover:shadow-xl transition-all duration-300 border-none rounded-xl"
+                  >
+                    <PostCardImage thumbnail={post.thumbnail} alt={post.title} />
+                    <PostCardContent post={post} />
+                  </Card>
+                );
+              })}
+            </div>
+          )
+        ) : isLoading ? (
           <PostGridSkeleton count={8} />
         ) : (
           <>

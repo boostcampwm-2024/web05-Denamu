@@ -22,6 +22,13 @@ describe("SearchResultItem", () => {
     title: "테스트 제목입니다",
     blogName: "테스트 블로그",
     path: "/test-path",
+    author: "테스트 블로그",
+    blogPlatform: "etc",
+    thumbnail: "",
+    viewCount: 0,
+    tag: [],
+    likes: 0,
+    comments: 0,
   };
 
   it("검색 결과의 제목과 블로그명이 렌더링되어야 한다", () => {
