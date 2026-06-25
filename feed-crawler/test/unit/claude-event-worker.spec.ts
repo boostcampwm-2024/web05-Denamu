@@ -11,8 +11,8 @@ import { redisConstant } from '@common/redis/redis.constant';
 import { ClaudeEventWorker } from '@event_worker/workers/claude-event-worker';
 
 import { FeedRepository } from '@repository/feed.repository';
-import { TagRepository } from '@repository/tag.repository';
 import { TagMapRepository } from '@repository/tag-map.repository';
+import { TagRepository } from '@repository/tag.repository';
 
 describe('ClaudeEventWorker', () => {
   let claudeEventWorker: ClaudeEventWorker;
@@ -406,6 +406,90 @@ describe('ClaudeEventWorker', () => {
         JSON.stringify({ ...feedWithDeathCount2, deathCount: 3 }),
       ]);
       expect(updateNullSummaryMock).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getQueueKey', () => {
+    it('AI 큐 키를 반환해야 한다', () => {
+      expect(claudeEventWorker['getQueueKey']()).toBe(
+        redisConstant.FEED_AI_QUEUE,
+      );
+    });
+  });
+
+  describe('loadFeeds 파이프라인', () => {
+    it('AI_RATE_LIMIT_COUNT만큼 rpop을 파이프라인에 등록해야 한다', async () => {
+      // Given
+      process.env.AI_RATE_LIMIT_COUNT = '3';
+      const pipelineRpop = jest.fn();
+      executePipelineMock.mockImplementation((cb: (pipeline: any) => void) => {
+        cb({ rpop: pipelineRpop });
+        return Promise.resolve([]);
+      });
+
+      // When
+      await claudeEventWorker['loadFeeds']();
+
+      // Then
+      expect(pipelineRpop).toHaveBeenCalledTimes(3);
+      expect(pipelineRpop).toHaveBeenCalledWith(redisConstant.FEED_AI_QUEUE);
+    });
+  });
+
+  describe('requestAI 실패 처리', () => {
+    it('Anthropic API 호출이 실패하면 에러를 전파해야 한다', async () => {
+      // Given
+      messagesCreateMock.mockRejectedValue(new Error('API down'));
+
+      // When & Then
+      await expect(
+        claudeEventWorker['requestAI'](mockFeedAIQueueItem),
+      ).rejects.toThrow('API down');
+    });
+
+    it('응답에 JSON이 없으면 RetryableError를 던져야 한다', async () => {
+      // Given
+      messagesCreateMock.mockResolvedValue({
+        content: [{ text: 'JSON이 아닌 응답' }],
+      } as any);
+
+      // When & Then
+      await expect(
+        claudeEventWorker['requestAI'](mockFeedAIQueueItem),
+      ).rejects.toThrow(RetryableError);
+    });
+  });
+
+  describe('saveAIResult 실패 처리', () => {
+    it('Redis hset이 실패하면 에러를 전파해야 한다', async () => {
+      // Given
+      const feedWithAIResult = {
+        ...mockFeedAIQueueItem,
+        summary: mockClaudeResponse.summary,
+        tagList: Object.keys(mockClaudeResponse.tags),
+      };
+      hsetMock.mockRejectedValue(new Error('redis down'));
+
+      // When & Then
+      await expect(
+        claudeEventWorker['saveAIResult'](feedWithAIResult),
+      ).rejects.toThrow('redis down');
+      expect(updateSummaryMock).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('pushToRetryQueue 실패 처리', () => {
+    it('재시도 큐 재투입이 실패하면 에러를 전파해야 한다', async () => {
+      // Given
+      rpushMock.mockRejectedValue(new Error('redis down'));
+
+      // When & Then
+      await expect(
+        claudeEventWorker['pushToRetryQueue'](mockFeedAIQueueItem),
+      ).rejects.toThrow('redis down');
+      expect(rpushMock).toHaveBeenCalledWith(redisConstant.FEED_AI_QUEUE, [
+        JSON.stringify(mockFeedAIQueueItem),
+      ]);
     });
   });
 

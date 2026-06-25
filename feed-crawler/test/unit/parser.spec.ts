@@ -2,10 +2,12 @@ import 'reflect-metadata';
 
 import {
   ATOM_10_SAMPLE,
+  ATOM_10_SINGLE_ENTRY,
   FIXED_DATE,
   INVALID_XML,
   MOCK_RSS_OBJ,
   RSS_20_SAMPLE,
+  RSS_20_SINGLE_ITEM,
 } from '@test/config/constant/parser-fixtures';
 import axios, { HttpStatusCode } from 'axios';
 
@@ -209,6 +211,16 @@ describe('Parser 모듈 테스트', () => {
         expect(rawFeeds[0].link).toBe('https://rssfeed.com/post1');
         expect(rawFeeds[1].link).toBe('https://rssfeed.com/post2');
       });
+
+      it('item이 단일 객체일 때도 배열로 변환해야 한다', () => {
+        const rawFeeds = rss20Parser['extractRawFeeds'](RSS_20_SINGLE_ITEM);
+
+        expect(rawFeeds).toHaveLength(1);
+        expect(rawFeeds[0]).toMatchObject({
+          title: '유일한 글',
+          link: 'https://rssfeed.com/only',
+        });
+      });
     });
   });
 
@@ -249,6 +261,16 @@ describe('Parser 모듈 테스트', () => {
         expect(rawFeeds[0].link).toBe('https://atomfeed.com/entry1');
         expect(rawFeeds[1].link).toBe('https://atomfeed.com/entry2');
       });
+
+      it('entry가 단일 객체일 때도 배열로 변환해야 한다', () => {
+        const rawFeeds = atom10Parser['extractRawFeeds'](ATOM_10_SINGLE_ENTRY);
+
+        expect(rawFeeds).toHaveLength(1);
+        expect(rawFeeds[0]).toMatchObject({
+          title: '유일한 Atom 글',
+          link: 'https://atomfeed.com/only',
+        });
+      });
     });
 
     describe('extractLink', () => {
@@ -270,6 +292,56 @@ describe('Parser 모듈 테스트', () => {
         ];
         const result = atom10Parser['extractLink'](linkData);
         expect(result).toBe('https://example.com/alternate');
+      });
+    });
+  });
+
+  describe('BaseFeedParser', () => {
+    describe('parseAllFeeds (전체 크롤링)', () => {
+      it('시간 필터 없이 모든 피드를 변환해야 한다', async () => {
+        // Given - RSS_20_SAMPLE은 고정 날짜의 2개 피드를 포함
+        // When
+        const result = await rss20Parser.parseAllFeeds(
+          MOCK_RSS_OBJ,
+          RSS_20_SAMPLE,
+        );
+
+        // Then - parseFeed와 달리 시간 필터가 없으므로 모든 피드 반환
+        expect(result).toHaveLength(2);
+        expect(result[0]).toMatchObject({
+          blogId: MOCK_RSS_OBJ.id,
+          title: '첫 번째 글제목',
+          summary: expect.any(String),
+          deathCount: 0,
+        });
+      });
+    });
+
+    describe('convertToFeedDetails 실패 처리', () => {
+      it('일부 피드 변환이 실패하면 성공한 피드만 반환하고 알림을 발행해야 한다', async () => {
+        // Given - 첫 번째 피드의 썸네일 조회를 실패시켜 변환 실패 유도
+        jest
+          .spyOn(parserUtil, 'getThumbnailUrl')
+          .mockRejectedValueOnce(new Error('썸네일 GET 요청 실패'))
+          .mockResolvedValue('https://example.com/image.jpg');
+        const publishSpy = jest.spyOn(notifier, 'publish');
+
+        // When
+        const result = await rss20Parser.parseAllFeeds(
+          MOCK_RSS_OBJ,
+          RSS_20_SAMPLE,
+        );
+
+        // Then - 2개 중 1개만 성공
+        expect(result).toHaveLength(1);
+        expect(publishSpy).toHaveBeenCalledWith(
+          expect.any(String),
+          expect.objectContaining({
+            error: expect.any(Error),
+            blogUrl: MOCK_RSS_OBJ.rssUrl,
+            errorSource: '[Full FeedCrawling]',
+          }),
+        );
       });
     });
   });
