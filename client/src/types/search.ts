@@ -6,6 +6,13 @@ export interface SearchResult {
   blogName: string;
   path: string;
   createdAt: string;
+  author: string;
+  blogPlatform: string;
+  thumbnail: string;
+  viewCount: number;
+  tag: string[];
+  likes: number;
+  comments: number;
 }
 
 export interface SearchData {
