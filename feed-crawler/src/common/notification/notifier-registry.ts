@@ -11,8 +11,8 @@ export class NotifierRegistry implements Notifier {
     this.notifiers.set(name, notifier);
   }
 
-  initialize(): void {
-    this.notifiers.forEach((notifier) => notifier.initialize());
+  start(): void {
+    this.notifiers.forEach((notifier) => notifier.start());
   }
 
   publish<K extends keyof NotificationEventPayloadMap>(

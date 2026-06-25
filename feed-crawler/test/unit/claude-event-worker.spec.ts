@@ -87,7 +87,7 @@ describe('ClaudeEventWorker', () => {
     };
 
     mockNotifier = {
-      initialize: jest.fn(),
+      start: jest.fn(),
       publish: jest.fn(),
     };
 

@@ -3,8 +3,11 @@ import { injectable } from 'tsyringe';
 import * as http from 'node:http';
 import { collectDefaultMetrics, Counter, Gauge, register } from 'prom-client';
 
+import { Lifecycle } from '@common/lifecycle/lifecycle.interface';
+import logger from '@common/logger/logger';
+
 @injectable()
-export class FeedMetrics {
+export class FeedMetrics implements Lifecycle {
   readonly total: Counter;
   readonly success: Counter;
   readonly failure: Counter;
@@ -38,7 +41,8 @@ export class FeedMetrics {
     });
   }
 
-  startMetricsServer(port: number) {
+  start(): void {
+    const port = Number(process.env.FEED_CRAWLER_METRICS_PORT) || 9092;
     const handleRequest = async (
       req: http.IncomingMessage,
       res: http.ServerResponse,
@@ -56,5 +60,6 @@ export class FeedMetrics {
       (req, res) => void handleRequest(req, res),
     );
     server.listen(port);
+    logger.info(`Metrics server started on port ${port}`);
   }
 }

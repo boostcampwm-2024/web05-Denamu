@@ -6,6 +6,7 @@ import '@common/env-load';
 
 import { DatabaseConnection } from '@common/database/database-connection';
 import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
+import { Lifecycle } from '@common/lifecycle/lifecycle.interface';
 import logger from '@common/logger/logger';
 import { FeedMetrics } from '@common/metrics/feed-metrics';
 import { Notifier } from '@common/notification/notifier.interface';
@@ -62,18 +63,13 @@ function registerSchedulers(
   });
 }
 
-async function handleShutdown(
-  dependencies: ReturnType<typeof initializeDependencies>,
-  signal: string,
-) {
+async function handleShutdown(components: Lifecycle[], signal: string) {
   try {
     logger.info(`${signal} 신호 수신, feed-crawler 종료 중...`);
 
-    logger.info('데이터 베이스 연결 종료 중...');
-    await dependencies.dbConnection.end();
-
-    logger.info('Redis 연결 종료 중...');
-    await dependencies.redisConnection.quit();
+    for (const component of [...components].reverse()) {
+      await component.stop?.();
+    }
 
     logger.info('Feed Crawler 정상 종료');
     process.exit(0);
@@ -85,20 +81,27 @@ async function handleShutdown(
   }
 }
 
-function startScheduler() {
+async function startScheduler() {
   try {
     logger.info('[Feed Crawler Scheduler Start]');
 
-    const metricsPort = Number(process.env.FEED_CRAWLER_METRICS_PORT) || 9092;
-
     const dependencies = initializeDependencies();
-    dependencies.metrics.startMetricsServer(metricsPort);
-    logger.info(`Metrics server started on port ${metricsPort}`);
-    dependencies.notifier.initialize();
+
+    const components: Lifecycle[] = [
+      dependencies.metrics,
+      dependencies.notifier,
+      dependencies.dbConnection,
+      dependencies.redisConnection,
+    ];
+
+    for (const component of components) {
+      await component.start?.();
+    }
+
     registerSchedulers(dependencies);
 
-    process.on('SIGINT', () => void handleShutdown(dependencies, 'SIGINT'));
-    process.on('SIGTERM', () => void handleShutdown(dependencies, 'SIGTERM'));
+    process.on('SIGINT', () => void handleShutdown(components, 'SIGINT'));
+    process.on('SIGTERM', () => void handleShutdown(components, 'SIGTERM'));
 
     logger.info('[Feed Crawler Scheduler Complete]');
   } catch (error) {
@@ -107,4 +110,4 @@ function startScheduler() {
   }
 }
 
-startScheduler();
+void startScheduler();
