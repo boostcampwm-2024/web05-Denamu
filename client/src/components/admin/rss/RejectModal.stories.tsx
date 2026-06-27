@@ -9,7 +9,13 @@ import { ADMIN } from "@/constants/endpoints";
 const meta = {
   title: "admin/rss/RejectModal",
   component: RejectModal,
-  args: { blogName: "데나무 블로그" },
+  args: {
+    blogName: "데나무 블로그",
+    rejectMessage: "",
+    handleReason: () => {},
+    onSubmit: () => {},
+    onCancel: () => {},
+  },
 } satisfies Meta<typeof RejectModal>;
 
 export default meta;
