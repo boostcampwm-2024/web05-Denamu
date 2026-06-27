@@ -4,12 +4,21 @@ import { FileText, Sparkles } from "lucide-react";
 
 import type { FeatureItem } from "@/types/about";
 import type { DayInfo, WeekInfo } from "@/types/activity";
-import type { ChartPlatform } from "@/types/chart";
-import type { ChatType } from "@/types/chat";
+import type { ChartPlatform, ChartType } from "@/types/chart";
+import type { AdminChatRoom, ChatType } from "@/types/chat";
 import type { FeedDetail, FeedList } from "@/types/post";
-import type { CertifiedRss, User } from "@/types/profile";
+import type {
+  CertifiedRss,
+  CommentItem,
+  CursorPage,
+  LikedItem,
+  ProfileActivity,
+  User,
+  UserProfile,
+} from "@/types/profile";
 import type { AdminRssData } from "@/types/rss";
 import type { SearchResult, UserSearchResult } from "@/types/search";
+import type { ChildAdmin } from "@/types/admin";
 
 export const mockFeedList: FeedList = {
   id: 1,
@@ -163,3 +172,108 @@ export const mockWeeks: WeekInfo[] = [
 export const mockSidebarIcon = FileText;
 
 export const mockDailyActivities = mockUser.dailyActivities;
+
+export const mockUserProfile: UserProfile = {
+  userName: "조민석",
+  profileImage: "https://picsum.photos/seed/profile/120/120",
+  introduction: "기술 블로그를 운영하는 개발자입니다.",
+  maxStreak: 30,
+  currentStreak: 7,
+  totalViews: 98765,
+};
+
+export const mockProfileActivity: ProfileActivity = {
+  dailyActivities: [
+    { date: "2026-06-20", viewCount: 12 },
+    { date: "2026-06-21", viewCount: 30 },
+    { date: "2026-06-22", viewCount: 8 },
+    { date: "2026-06-23", viewCount: 5 },
+    { date: "2026-06-24", viewCount: 20 },
+    { date: "2026-06-25", viewCount: 15 },
+    { date: "2026-06-26", viewCount: 3 },
+  ],
+};
+
+export const mockActivityYears: number[] = [2026, 2025, 2024];
+
+export const mockLikedItemsPage: CursorPage<LikedItem> = {
+  result: [
+    { id: 1, likeDate: "2026-06-25T09:00:00.000Z", feed: { id: 1, title: "Storybook으로 컴포넌트 문서화하기", path: "https://example.com/post/1" } },
+    { id: 2, likeDate: "2026-06-24T09:00:00.000Z", feed: { id: 2, title: "TypeScript 5.0 새로운 기능 살펴보기", path: "https://example.com/post/2" } },
+    { id: 3, likeDate: "2026-06-23T09:00:00.000Z", feed: { id: 3, title: "React Query v5 마이그레이션 가이드", path: "https://example.com/post/3" } },
+  ],
+  lastId: 3,
+  hasMore: false,
+};
+
+export const mockCommentItemsPage: CursorPage<CommentItem> = {
+  result: [
+    { id: 1, comment: "좋은 글 감사합니다!", date: "2026-06-25T09:00:00.000Z", feed: { id: 1, title: "Storybook으로 컴포넌트 문서화하기", path: "https://example.com/post/1" } },
+    { id: 2, comment: "정말 유익한 내용이네요. 특히 마이그레이션 가이드 부분이 도움이 많이 됐습니다.", date: "2026-06-24T09:00:00.000Z", feed: { id: 2, title: "TypeScript 5.0 새로운 기능 살펴보기", path: "https://example.com/post/2" } },
+  ],
+  lastId: 2,
+  hasMore: false,
+};
+
+export const mockAdminChatRooms: AdminChatRoom[] = [
+  { roomId: "room-1", roomName: "일반 채팅", messageCount: 15, userCount: 3 },
+  { roomId: "room-2", roomName: "기술 채팅", messageCount: 8, userCount: 1 },
+  { roomId: "room-3", roomName: "공지사항", messageCount: 2, userCount: 5 },
+];
+
+export const mockAdminChatMessages: ChatType[] = [
+  { userName: "사용자1", timestamp: "2026-06-25T09:00:00.000Z", message: "안녕하세요!", userId: "user-1", messageId: "msg-1" },
+  { userName: "사용자2", timestamp: "2026-06-25T09:01:00.000Z", message: "반갑습니다. Storybook 설정 완료했나요?", userId: "user-2", messageId: "msg-2" },
+  { userName: "사용자1", timestamp: "2026-06-25T09:02:00.000Z", message: "네, 방금 완료했습니다!", userId: "user-1", messageId: "msg-3" },
+];
+
+export const mockChildAdmins: ChildAdmin[] = [
+  { id: 1, email: "child1@denamu.dev", name: "부관리자1" },
+  { id: 2, email: "child2@denamu.dev", name: "부관리자2" },
+];
+
+export const mockAdminProfileData = {
+  email: "admin@denamu.dev",
+  name: "메인 관리자",
+  emailNotification: true,
+  parent: null as { email: string; name: string } | null,
+};
+
+export const mockChartTodayData: ChartType[] = [
+  { id: 1, title: "Storybook으로 컴포넌트 문서화하기", viewCount: 1234 },
+  { id: 2, title: "TypeScript 5.0 새로운 기능 살펴보기", viewCount: 987 },
+  { id: 3, title: "React Query v5 마이그레이션 가이드", viewCount: 856 },
+  { id: 4, title: "NestJS 모듈 설계 패턴", viewCount: 645 },
+  { id: 5, title: "Docker Compose로 로컬 개발환경 구성", viewCount: 532 },
+];
+
+export const mockChartAllData: ChartType[] = [
+  { id: 10, title: "프론트엔드 아키텍처 설계", viewCount: 98765 },
+  { id: 11, title: "TypeScript 제네릭 완전 정복", viewCount: 87654 },
+  { id: 12, title: "React 성능 최적화 가이드", viewCount: 76543 },
+  { id: 13, title: "Node.js 스트림 처리", viewCount: 65432 },
+  { id: 14, title: "PostgreSQL 인덱스 전략", viewCount: 54321 },
+];
+
+export const mockFeedsList: FeedList[] = Array.from({ length: 8 }, (_, i) => ({
+  id: i + 1,
+  createdAt: new Date(Date.now() - i * 86400000).toISOString(),
+  title: `블로그 포스트 #${i + 1} - Storybook 데모`,
+  viewCount: (i + 1) * 100,
+  path: `https://example.com/post/${i + 1}`,
+  author: `작성자 ${(i % 4) + 1}`,
+  thumbnail: `https://picsum.photos/seed/feed${i}/400/240`,
+  authorImageUrl: `https://picsum.photos/seed/author${i}/80/80`,
+  tag: i % 2 === 0 ? ["React", "TypeScript"] : ["NestJS", "Node.js"],
+  likes: (i + 1) * 5,
+  comments: i + 1,
+  blogPlatform: i % 3 === 0 ? "tistory" : i % 3 === 1 ? "velog" : "medium",
+  isNew: i < 2,
+}));
+
+export const mockNoSummaryFeeds = mockFeedsList.slice(0, 3).map(({ id, title, likes, comments }) => ({
+  id,
+  title,
+  likes,
+  comments,
+}));
