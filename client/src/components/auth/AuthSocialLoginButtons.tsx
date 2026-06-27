@@ -3,10 +3,11 @@ import { Google } from "@/components/icons/social/Google.tsx";
 import { Button } from "@/components/ui/button.tsx";
 
 import { BASE_URL, OAUTH } from "@/constants/endpoints.ts";
+import { nav } from "@/utils/redirect.ts";
 
 export const AuthSocialLoginButtons = () => {
   const handleSocialLogin = (provider: "google" | "github") => {
-    window.location.href = `${BASE_URL}${OAUTH.LOGIN}?type=${provider}`;
+    nav.redirect(`${BASE_URL}${OAUTH.LOGIN}?type=${provider}`);
   };
 
   return (

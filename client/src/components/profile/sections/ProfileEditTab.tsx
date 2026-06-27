@@ -42,6 +42,7 @@ import { checkUserNameAvailability } from "@/api/services/profile.ts";
 import { initiateOAuthLink } from "@/api/services/oauthLink.ts";
 import { useAuthStore } from "@/store/useAuthStore.ts";
 import { OAuthProviderType, UpdateProfilePayload } from "@/types/profile.ts";
+import { nav } from "@/utils/redirect.ts";
 
 const OAUTH_PROVIDERS: { type: OAuthProviderType; label: string; Icon: typeof GitHub }[] = [
   { type: "google", label: "Google", Icon: Google },
@@ -140,7 +141,7 @@ export const ProfileEditTab = ({ userId, email }: ProfileEditTabProps) => {
     setConnecting(provider);
     try {
       const authUrl = await initiateOAuthLink(provider);
-      window.location.href = authUrl;
+      nav.redirect(authUrl);
     } catch (error) {
       setConnecting(null);
       toast({
