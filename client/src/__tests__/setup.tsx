@@ -12,10 +12,13 @@ import { mockUseRssRegistrationForm } from "@/__tests__/__mocks__/helpers/rssReg
 import { mockPostCardActions } from "@/__tests__/__mocks__/hooks/usePostCardActions.ts";
 import { mockUseRegisterRss } from "@/__tests__/__mocks__/hooks/useRegisterRss.ts";
 import { mockDate } from "@/__tests__/__mocks__/utils/date.ts";
-import { mockIntersectionObserver } from "@/__tests__/__mocks__/utils/observers.ts";
+import { mockIntersectionObserver, mockResizeObserver } from "@/__tests__/__mocks__/utils/observers.ts";
 import "@testing-library/jest-dom";
 
 window.IntersectionObserver = mockIntersectionObserver;
+window.ResizeObserver = mockResizeObserver;
+window.scrollTo = vi.fn();
+Element.prototype.scrollIntoView = vi.fn();
 
 vi.mock("@/components/ui/card", () => mockCard);
 vi.mock("@/components/ui/avatar", () => mockAvatar);
