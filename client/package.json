@@ -12,7 +12,8 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:coverage": "vitest run --coverage",
-    "test:e2e": "playwright test",
+    "test:e2e": "playwright test --project=ui-mocked",
+    "test:e2e:real": "playwright test --project=chromium --project=firefox --project=webkit --grep-invert @oauth-real",
     "test:e2e:always": "playwright test --grep-invert @oauth-real --pass-with-no-tests",
     "test:e2e:oauth-smoke": "playwright test --project=chromium --workers=1 --grep @oauth-real --pass-with-no-tests",
     "storybook": "storybook dev -p 6006",
@@ -62,7 +63,7 @@
   "devDependencies": {
     "@eslint/js": "^9.39.4",
     "@lhci/cli": "^0.15.1",
-    "@playwright/test": "^1.59.1",
+    "@playwright/test": "^1.61.1",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.2",

@@ -16,4 +16,6 @@ export const mockAvatar = {
       {children}
     </div>
   ),
+  AvatarImage: ({ src, alt, className }: { src?: string; alt?: string; className?: string }) =>
+    src ? <img src={src} alt={alt} className={className} data-testid="avatar-image" /> : null,
 };
