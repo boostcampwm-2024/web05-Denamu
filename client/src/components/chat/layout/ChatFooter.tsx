@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { Suspense, lazy, useState } from "react";
 
-import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react";
+import type { EmojiClickData, Theme } from "emoji-picker-react";
 import { Send, Smile } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,8 @@ import { useKeyboardShortcut } from "@/hooks/common/useKeyboardShortcut";
 
 import { useChatStore } from "@/store/useChatStore";
 import { useMediaStore } from "@/store/useMediaStore";
+
+const EmojiPicker = lazy(() => import("emoji-picker-react"));
 
 export default function ChatFooter() {
   const [message, setMessage] = useState<string>("");
@@ -56,7 +58,15 @@ export default function ChatFooter() {
               </Button>
             </PopoverTrigger>
             <PopoverContent side="top" align="end" className="w-auto border-none p-0 shadow-none">
-              <EmojiPicker onEmojiClick={handleEmojiClick} theme={Theme.AUTO} lazyLoadEmojis width={320} height={400} />
+              <Suspense fallback={<div style={{ width: 320, height: 400 }} />}>
+                <EmojiPicker
+                  onEmojiClick={handleEmojiClick}
+                  theme={"auto" as Theme}
+                  lazyLoadEmojis
+                  width={320}
+                  height={400}
+                />
+              </Suspense>
             </PopoverContent>
           </Popover>
         )}
