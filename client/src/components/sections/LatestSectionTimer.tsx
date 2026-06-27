@@ -6,16 +6,18 @@ import { useUpdatePost } from "@/hooks/queries/useUpdatePost";
 
 const calculateTime = () => {
   const now = new Date();
-  const currentMinutes = now.getMinutes();
+  const currentMinutes = now.getUTCMinutes();
 
   const targetMinutes = currentMinutes < 31 ? 31 : 1;
-  let targetHours = now.getHours();
+  let targetHours = now.getUTCHours();
 
   if (currentMinutes >= 31) {
     targetHours = (targetHours + 1) % 24;
   }
 
-  const targetTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), targetHours, targetMinutes, 0);
+  const targetTime = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), targetHours, targetMinutes, 0)
+  );
   return Math.floor((targetTime.getTime() - now.getTime()) / 1000);
 };
 
