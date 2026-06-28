@@ -6,12 +6,26 @@ on:
     paths: ["nginx.conf", ".github/workflows/deploy_nginx.yml"]
   workflow_dispatch:
 
+env:
+  # Blue-Green host publish 포트 (SSOT: GitHub repo variable)
+  # 미설정 시 8080/8081 fallback. deploy_server.yml 과 동일 값 사용.
+  BLUE_PORT: ${{ vars.BLUE_PORT || '8080' }}
+  GREEN_PORT: ${{ vars.GREEN_PORT || '8081' }}
+
 jobs:
   deploy:
     runs-on: [self-hosted, prod]
     steps:
       - name: 코드 체크아웃
         uses: actions/checkout@v6
+
+      - name: Blue-Green active backend 시드 (최초 1회 보장)
+        run: |
+          ACTIVE_FILE=/etc/nginx/conf.d/denamu_active_backend.conf
+          if [ ! -f "$ACTIVE_FILE" ]; then
+            echo "ℹ️  $ACTIVE_FILE 없음 → blue(${BLUE_PORT}) 로 시드 (upstream include 검증 통과용)"
+            echo "server 127.0.0.1:${BLUE_PORT};" | sudo tee "$ACTIVE_FILE"
+          fi
 
       - name: nginx 설정 검사 및 reload
         run: |
