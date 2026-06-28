@@ -736,10 +736,11 @@ describe(`${AdminService.name} Unit Test`, () => {
       expect(adminRepository.save).toHaveBeenCalledTimes(1);
     });
 
-    it('비밀번호를 변경하면 해시해서 저장한다.', async () => {
+    it('비밀번호를 변경하면 해시해서 저장하고 활성 세션을 무효화한다.', async () => {
       // given
       const admin = await AdminFixture.createAdminCryptFixture({ email });
       adminRepository.findOne.mockResolvedValueOnce(admin);
+      redisService.get.mockResolvedValueOnce('active-session-id');
 
       // when
       await adminService.updateAdminProfile(email, {
@@ -750,6 +751,27 @@ describe(`${AdminService.name} Unit Test`, () => {
       const saved = adminRepository.save.mock.calls[0][0] as Admin;
       expect(saved.password).not.toBe('newPass1!');
       expect(await bcrypt.compare('newPass1!', saved.password)).toBe(true);
+      expect(redisService.del).toHaveBeenCalledWith(
+        `${REDIS_KEYS.ADMIN_SESSION_BY_EMAIL}:${email}`,
+        `${REDIS_KEYS.ADMIN_AUTH_KEY}:active-session-id`,
+      );
+    });
+
+    it('비밀번호를 변경하지 않으면 세션을 무효화하지 않는다.', async () => {
+      // given
+      const admin = await AdminFixture.createAdminCryptFixture({
+        email,
+        name: 'old-name',
+      });
+      adminRepository.findOne
+        .mockResolvedValueOnce(admin)
+        .mockResolvedValueOnce(null);
+
+      // when
+      await adminService.updateAdminProfile(email, { name: 'new-name' });
+
+      // then
+      expect(redisService.del).not.toHaveBeenCalled();
     });
 
     it('이메일 수신 여부만 변경하면 해당 값만 저장한다.', async () => {
