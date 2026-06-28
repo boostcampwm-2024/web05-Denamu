@@ -1,0 +1,41 @@
+name: Chromatic
+
+on:
+  pull_request:
+    branches: [develop, main]
+    paths: ['client/**', '.github/workflows/chromatic.yml']
+  workflow_dispatch:
+
+jobs:
+  chromatic:
+    if: github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. PR 코드 체크아웃 (baseline 비교 위해 전체 history)
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      # 2. Node.js 환경 설정
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      # 3. 의존성 설치
+      - name: Install dependencies
+        working-directory: ./client
+        run: npm ci
+
+      # 4. Chromatic 실행
+      #    forked PR에는 secret이 전달되지 않으므로 projectToken을 plaintext로 노출.
+      #    project token은 빌드 실행/스냅샷 사용만 가능하며 계정·설정 접근, baseline 승인은 불가.
+      #    참고: https://www.chromatic.com/docs/github-actions/#forked-repositories
+      - name: Run Chromatic
+        uses: chromaui/action@latest
+        with:
+          projectToken: chpt_e3044940de9719c
+          workingDir: ./client
