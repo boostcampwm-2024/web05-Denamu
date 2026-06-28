@@ -13,6 +13,7 @@ export const REDIS_KEYS = {
   ADMIN_INVALIDATED_PREFIX: 'admin:invalidated',
   ADMIN_REGISTER_KEY: 'admin:signup',
   ADMIN_DELETE_ACCOUNT_KEY: 'admin:delete-account',
+  ADMIN_RESET_PASSWORD_KEY: 'admin:password_reset',
   RSS_REMOVE_KEY: 'rss:remove',
   RSS_CERTIFICATION_KEY: 'rss:certification',
   CHAT_HISTORY_KEY: (roomId: string) => `chat:history:${roomId}`,
