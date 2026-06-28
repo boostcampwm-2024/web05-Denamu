@@ -389,6 +389,33 @@ describe('EmailService unit test', () => {
     });
   });
 
+  describe('sendAdminPasswordResetEmail unit test', () => {
+    it('관리자 비밀번호 재설정 메일을 올바르게 전송한다', async () => {
+      const admin: AdminCertification = {
+        email: 'admin@test.com',
+        name: 'adminUser',
+        uuid: 'admin-uuid',
+      };
+
+      await emailService.sendAdminPasswordResetEmail(admin);
+
+      expect(mockSendMail).toHaveBeenCalledTimes(1);
+      expect(mockSendMail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          from: `Denamu<${mockEmailUser}>`,
+          to: admin.email,
+          subject: '[🎋 Denamu] 관리자 비밀번호 재설정',
+        }),
+      );
+
+      const callArgs = (mockSendMail.mock.calls[0] as [{ html: string }])[0];
+      expect(callArgs.html).toContain(admin.name);
+      expect(callArgs.html).toContain(
+        `${PRODUCT_DOMAIN}/admins/password-resets/confirm?token=${admin.uuid}`,
+      );
+    });
+  });
+
   describe('sendRssRegistrationRequestMail unit test', () => {
     it('RSS 등록 신청 접수 메일을 관리자에게 올바르게 전송한다', async () => {
       const request: RssRegistrationRequest = {
