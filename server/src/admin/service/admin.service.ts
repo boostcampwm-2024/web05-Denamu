@@ -324,8 +324,6 @@ export class AdminService {
     await this.invalidateAdminSession(admin.email);
   }
 
-  // 비밀번호 재설정 시 기존 활성 세션을 강제 종료한다(로그아웃과 동일 메커니즘).
-  // ADMIN_INVALIDATED_PREFIX(탈퇴용 플래그)는 재로그인 후에도 SESSION_TTL 동안 차단하므로 사용하지 않는다.
   private async invalidateAdminSession(email: string) {
     const prevSessionId = await this.redisService.get(
       `${REDIS_KEYS.ADMIN_SESSION_BY_EMAIL}:${email}`,
@@ -402,7 +400,8 @@ export class AdminService {
       admin.name = name;
     }
 
-    if (password !== undefined) {
+    const passwordChanged = password !== undefined;
+    if (passwordChanged) {
       const saltRounds = 10;
       admin.password = await bcrypt.hash(password, saltRounds);
     }
@@ -418,6 +417,10 @@ export class AdminService {
         throw new ConflictException('이미 존재하는 이름입니다.');
       }
       throw error;
+    }
+
+    if (passwordChanged) {
+      await this.invalidateAdminSession(admin.email);
     }
   }
 }
