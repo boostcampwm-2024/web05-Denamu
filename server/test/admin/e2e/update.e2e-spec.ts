@@ -20,6 +20,8 @@ describe(`PATCH ${URL} E2E Test`, () => {
   let adminRepository: AdminRepository;
   const sessionKey = 'admin-session-update-key';
   const redisKeyMake = (data: string) => `${REDIS_KEYS.ADMIN_AUTH_KEY}:${data}`;
+  const sessionByEmailKeyMake = (email: string) =>
+    `${REDIS_KEYS.ADMIN_SESSION_BY_EMAIL}:${email}`;
 
   beforeAll(() => {
     agent = supertest(testApp.getHttpServer());
@@ -72,6 +74,45 @@ describe(`PATCH ${URL} E2E Test`, () => {
     const updated = await adminRepository.findOne({ where: { id: adminId } });
     expect(updated.password).not.toBe('newPass1!');
     expect(await bcrypt.compare('newPass1!', updated.password)).toBe(true);
+  });
+
+  it('[200] 비밀번호를 변경하면 활성 세션을 무효화하고 이후 같은 쿠키 요청이 401이 된다.', async () => {
+    // given: 단일 세션 모델의 이메일→세션 매핑 등록
+    await redisService.set(sessionByEmailKeyMake(adminEmail), sessionKey);
+
+    // when
+    const response = await agent
+      .patch(URL)
+      .set('Cookie', `sessionId=${sessionKey}`)
+      .send({ password: 'newPass1!' });
+
+    // then
+    expect(response.status).toBe(HttpStatus.OK);
+    expect(await redisService.get(redisKeyMake(sessionKey))).toBeNull();
+    expect(await redisService.get(sessionByEmailKeyMake(adminEmail))).toBeNull();
+
+    const afterResponse = await agent
+      .get(URL)
+      .set('Cookie', `sessionId=${sessionKey}`);
+    expect(afterResponse.status).toBe(HttpStatus.UNAUTHORIZED);
+  });
+
+  it('[200] 비밀번호를 변경하지 않으면 세션이 유지된다.', async () => {
+    // given
+    await redisService.set(sessionByEmailKeyMake(adminEmail), sessionKey);
+
+    // when
+    const response = await agent
+      .patch(URL)
+      .set('Cookie', `sessionId=${sessionKey}`)
+      .send({ name: 'keep-session-name' });
+
+    // then
+    expect(response.status).toBe(HttpStatus.OK);
+    expect(await redisService.get(redisKeyMake(sessionKey))).toBe(adminEmail);
+    expect(await redisService.get(sessionByEmailKeyMake(adminEmail))).toBe(
+      sessionKey,
+    );
   });
 
   it('[200] 이메일 수신 여부를 끄면 DB에 반영된다.', async () => {
