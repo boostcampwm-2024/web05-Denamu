@@ -10,6 +10,7 @@ vi.mock("@/hooks/common/useKeyboardShortcut", () => ({ useKeyboardShortcut: vi.f
 
 vi.mock("@/hooks/queries/useAdminAuth", () => ({
   useAdminAuth: () => ({ mutate }),
+  useAdminForgotPassword: () => ({ mutate: vi.fn(), isPending: false }),
 }));
 
 vi.mock("@/components/RssRegistration/FormInput", () => ({
