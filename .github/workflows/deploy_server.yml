@@ -18,9 +18,10 @@ env:
   SERVER_ENV_FILE: /var/prod_config/server/.env.prod
   INFRA_ENV_FILE: /var/prod_config/infra/.env.prod
   COMPOSE_FILE: docker-compose/docker-compose.prod.yml
-  # Blue-Green host publish 포트 (nginx active backend 와 일치해야 함)
-  BLUE_PORT: '8080'
-  GREEN_PORT: '8081'
+  # Blue-Green host publish 포트 (SSOT: GitHub repo variable)
+  # 미설정 시 8080/8081 fallback. deploy_nginx.yml 과 동일 값 사용.
+  BLUE_PORT: ${{ vars.BLUE_PORT || '8080' }}
+  GREEN_PORT: ${{ vars.GREEN_PORT || '8081' }}
 
 jobs:
   build-and-push:
