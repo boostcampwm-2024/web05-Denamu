@@ -17,6 +17,7 @@ import { CommentModule } from '@comment/module/comment.module';
 
 import { loadDBSetting } from '@common/database/load.config';
 import { EmailModule } from '@common/email/email.module';
+import { HealthController } from '@health/health.controller';
 import { WinstonLoggerModule } from '@common/logger/logger.module';
 import { MetricsModule } from '@common/metrics/metrics.module';
 import { RabbitMQModule } from '@common/rabbitmq/rabbitmq.module';
@@ -89,6 +90,6 @@ const exists = !!chosen && fs.existsSync(chosen);
     FileModule,
     RabbitMQModule,
   ],
-  controllers: [],
+  controllers: [HealthController],
 })
 export class AppModule {}
