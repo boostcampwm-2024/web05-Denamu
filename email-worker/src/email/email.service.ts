@@ -121,6 +121,29 @@ export class EmailService {
     };
   }
 
+  async sendAdminPasswordResetEmail(admin: AdminCertification): Promise<void> {
+    const mailOptions = this.createAdminPasswordResetMail(admin);
+
+    await this.sendMail(mailOptions);
+  }
+
+  private createAdminPasswordResetMail(
+    admin: AdminCertification,
+  ): nodemailer.SendMailOptions {
+    const redirectUrl = `${PRODUCT_DOMAIN}/admins/password-resets/confirm?token=${admin.uuid}`;
+
+    return {
+      from: `Denamu<${this.emailUser}>`,
+      to: admin.email,
+      subject: `[🎋 Denamu] 관리자 비밀번호 재설정`,
+      html: createPasswordResetMailContent(
+        admin.name,
+        redirectUrl,
+        this.emailUser,
+      ),
+    };
+  }
+
   async sendRssMail(rssRegistrationReuslt: RssRegistration): Promise<void> {
     const mailOptions = this.createRssRegistrationMail(
       rssRegistrationReuslt.rss,

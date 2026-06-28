@@ -79,6 +79,19 @@ export class EmailProducer {
     await this.produceMessage(payload);
   }
 
+  async produceAdminPasswordReset(email: string, name: string, uuid: string) {
+    const payload = {
+      type: EmailPayloadConstant.ADMIN_PASSWORD_RESET,
+      data: {
+        email,
+        name,
+        uuid,
+      },
+    };
+
+    await this.produceMessage(payload);
+  }
+
   async produceRssRegistration(
     rss: Rss,
     approveFlag: boolean,

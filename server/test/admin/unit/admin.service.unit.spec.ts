@@ -35,7 +35,9 @@ describe(`${AdminService.name} Unit Test`, () => {
   let emailProducer: jest.Mocked<
     Pick<
       EmailProducer,
-      'produceAdminCertification' | 'produceAdminAccountDeletion'
+      | 'produceAdminCertification'
+      | 'produceAdminAccountDeletion'
+      | 'produceAdminPasswordReset'
     >
   >;
 
@@ -64,6 +66,7 @@ describe(`${AdminService.name} Unit Test`, () => {
     emailProducer = {
       produceAdminCertification: jest.fn(),
       produceAdminAccountDeletion: jest.fn(),
+      produceAdminPasswordReset: jest.fn(),
     };
 
     adminService = new AdminService(
@@ -490,6 +493,121 @@ describe(`${AdminService.name} Unit Test`, () => {
         `${REDIS_KEYS.ADMIN_INVALIDATED_PREFIX}:grandchild-admin@test.com`,
         SESSION_TTL,
         '1',
+      );
+    });
+  });
+
+  describe('forgotPassword', () => {
+    it('존재하지 않는 이메일이면 계정 열거 방지를 위해 아무 동작도 하지 않는다.', async () => {
+      // given
+      adminRepository.findOne.mockResolvedValue(null);
+
+      // when
+      await adminService.forgotPassword('ghost@test.com');
+
+      // then
+      expect(redisService.set).not.toHaveBeenCalled();
+      expect(emailProducer.produceAdminPasswordReset).not.toHaveBeenCalled();
+    });
+
+    it('존재하는 이메일이면 코드를 Redis에 저장하고 재설정 메일을 발행한다.', async () => {
+      // given
+      const admin = await AdminFixture.createAdminCryptFixture({
+        email: 'self-admin@test.com',
+      });
+      admin.id = 7;
+      adminRepository.findOne.mockResolvedValue(admin);
+
+      // when
+      await adminService.forgotPassword('self-admin@test.com');
+
+      // then
+      const [redisKey, storedValue] = redisService.set.mock.calls[0];
+      expect(redisKey).toContain(REDIS_KEYS.ADMIN_RESET_PASSWORD_KEY);
+      expect(storedValue).toBe('7');
+      expect(emailProducer.produceAdminPasswordReset).toHaveBeenCalledWith(
+        admin.email,
+        admin.name,
+        expect.any(String),
+      );
+    });
+  });
+
+  describe('resetPassword', () => {
+    it('존재하지 않거나 만료된 토큰이면 NotFoundException을 던진다.', async () => {
+      // given
+      redisService.get.mockResolvedValue(null);
+
+      // when & then
+      await expect(
+        adminService.resetPassword('expired-token', 'newPass1!'),
+      ).rejects.toThrow(NotFoundException);
+      expect(adminRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('토큰은 유효하지만 관리자가 없으면 키를 삭제하고 NotFoundException을 던진다.', async () => {
+      // given
+      redisService.get.mockResolvedValue('7');
+      adminRepository.findOne.mockResolvedValue(null);
+
+      // when & then
+      await expect(
+        adminService.resetPassword('valid-token', 'newPass1!'),
+      ).rejects.toThrow(NotFoundException);
+      expect(redisService.del).toHaveBeenCalledWith(
+        `${REDIS_KEYS.ADMIN_RESET_PASSWORD_KEY}:valid-token`,
+      );
+      expect(adminRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('유효한 토큰이면 비밀번호를 해시 저장하고 코드와 활성 세션을 무효화한다.', async () => {
+      // given
+      const admin = await AdminFixture.createAdminCryptFixture({
+        email: 'self-admin@test.com',
+      });
+      admin.id = 7;
+      // 1st get: 토큰 → adminId, 2nd get: 활성 세션 조회
+      redisService.get
+        .mockResolvedValueOnce('7')
+        .mockResolvedValueOnce('active-session-id');
+      adminRepository.findOne.mockResolvedValue(admin);
+
+      // when
+      await adminService.resetPassword('valid-token', 'newPass1!');
+
+      // then
+      const saved = adminRepository.save.mock.calls[0][0] as Admin;
+      expect(saved.password).not.toBe('newPass1!');
+      expect(await bcrypt.compare('newPass1!', saved.password)).toBe(true);
+
+      expect(redisService.del).toHaveBeenCalledWith(
+        `${REDIS_KEYS.ADMIN_RESET_PASSWORD_KEY}:valid-token`,
+      );
+      expect(redisService.del).toHaveBeenCalledWith(
+        `${REDIS_KEYS.ADMIN_SESSION_BY_EMAIL}:self-admin@test.com`,
+        `${REDIS_KEYS.ADMIN_AUTH_KEY}:active-session-id`,
+      );
+      // 재로그인을 영구 차단하는 탈퇴용 무효화 플래그는 사용하지 않는다.
+      expect(redisService.setex).not.toHaveBeenCalled();
+    });
+
+    it('활성 세션이 없으면 이메일 매핑 키만 삭제한다.', async () => {
+      // given
+      const admin = await AdminFixture.createAdminCryptFixture({
+        email: 'self-admin@test.com',
+      });
+      admin.id = 7;
+      redisService.get
+        .mockResolvedValueOnce('7')
+        .mockResolvedValueOnce(null);
+      adminRepository.findOne.mockResolvedValue(admin);
+
+      // when
+      await adminService.resetPassword('valid-token', 'newPass1!');
+
+      // then
+      expect(redisService.del).toHaveBeenCalledWith(
+        `${REDIS_KEYS.ADMIN_SESSION_BY_EMAIL}:self-admin@test.com`,
       );
     });
   });

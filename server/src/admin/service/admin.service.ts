@@ -273,6 +273,70 @@ export class AdminService {
     );
   }
 
+  async forgotPassword(email: string) {
+    const admin = await this.adminRepository.findOne({
+      where: { email },
+    });
+
+    // 계정 열거(enumeration) 방지를 위해 미존재 시에도 동일 응답을 반환한다.
+    if (!admin) {
+      return;
+    }
+
+    const resetCode = uuid.v4();
+    await this.redisService.set(
+      `${REDIS_KEYS.ADMIN_RESET_PASSWORD_KEY}:${resetCode}`,
+      admin.id.toString(),
+      'EX',
+      ADMIN_REGISTER_TTL,
+    );
+    await this.emailProducer.produceAdminPasswordReset(
+      admin.email,
+      admin.name,
+      resetCode,
+    );
+  }
+
+  async resetPassword(token: string, password: string) {
+    const resetRequestKey = `${REDIS_KEYS.ADMIN_RESET_PASSWORD_KEY}:${token}`;
+
+    const data = await this.redisService.get(resetRequestKey);
+
+    if (!data) {
+      throw new NotFoundException('인증에 실패했습니다.');
+    }
+
+    const adminId = parseInt(data, 10);
+    const admin = await this.adminRepository.findOne({
+      where: { id: adminId },
+    });
+
+    if (!admin) {
+      await this.redisService.del(resetRequestKey);
+      throw new NotFoundException('인증에 실패했습니다.');
+    }
+
+    const saltRounds = 10;
+    admin.password = await bcrypt.hash(password, saltRounds);
+    await this.adminRepository.save(admin);
+
+    await this.redisService.del(resetRequestKey);
+    await this.invalidateAdminSession(admin.email);
+  }
+
+  // 비밀번호 재설정 시 기존 활성 세션을 강제 종료한다(로그아웃과 동일 메커니즘).
+  // ADMIN_INVALIDATED_PREFIX(탈퇴용 플래그)는 재로그인 후에도 SESSION_TTL 동안 차단하므로 사용하지 않는다.
+  private async invalidateAdminSession(email: string) {
+    const prevSessionId = await this.redisService.get(
+      `${REDIS_KEYS.ADMIN_SESSION_BY_EMAIL}:${email}`,
+    );
+    const keysToDelete = [`${REDIS_KEYS.ADMIN_SESSION_BY_EMAIL}:${email}`];
+    if (prevSessionId) {
+      keysToDelete.push(`${REDIS_KEYS.ADMIN_AUTH_KEY}:${prevSessionId}`);
+    }
+    await this.redisService.del(...keysToDelete);
+  }
+
   private async collectSubtreeEmails(root: Admin): Promise<string[]> {
     const emails = [root.email];
     let frontier = [root.id];

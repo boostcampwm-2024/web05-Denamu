@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import AdminForgotPasswordModal from "@/components/admin/login/AdminForgotPasswordModal";
 import { FormInput } from "@/components/RssRegistration/FormInput";
 import {
   AlertDialog,
@@ -19,6 +20,7 @@ import { useAdminAuth } from "@/hooks/queries/useAdminAuth";
 export default function AdminLogin({ setLogin }: { setLogin: () => void }) {
   const [loginData, setLoginData] = useState<{ email: string; password: string }>({ email: "", password: "" });
   const [loginError, setLoginError] = useState<boolean>(false);
+  const [forgotOpen, setForgotOpen] = useState<boolean>(false);
   const handleChange = (field: "email" | "password", value: string) => {
     setLoginData((prevData) => ({
       ...prevData,
@@ -71,13 +73,22 @@ export default function AdminLogin({ setLogin }: { setLogin: () => void }) {
               />
             </div>
           </CardContent>
-          <CardFooter className="flex justify-end">
-            <Button type="submit" className="bg-black hover:bg-gray-800 text-white">
+          <CardFooter className="flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => setForgotOpen(true)}
+              className="text-sm text-muted-foreground underline-offset-4 hover:underline"
+            >
+              비밀번호를 잊으셨나요?
+            </button>
+            <Button type="submit" className="bg-primary hover:bg-primary/90 text-primary-foreground">
               로그인
             </Button>
           </CardFooter>
         </form>
       </Card>
+
+      <AdminForgotPasswordModal open={forgotOpen} onOpenChange={setForgotOpen} />
 
       <AlertDialog open={loginError}>
         <AlertDialogContent>

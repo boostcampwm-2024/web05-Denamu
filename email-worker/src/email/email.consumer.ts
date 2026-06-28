@@ -133,6 +133,10 @@ export class EmailConsumer implements Lifecycle {
         await this.emailService.sendAdminDeleteAccountMail(payload.data);
         break;
 
+      case EmailPayloadConstant.ADMIN_PASSWORD_RESET:
+        await this.emailService.sendAdminPasswordResetEmail(payload.data);
+        break;
+
       default:
         logger.info(`처리할 수 없는 이메일 타입이 입력되었습니다.`);
     }

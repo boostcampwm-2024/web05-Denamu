@@ -12,6 +12,8 @@ export const ADMIN = {
   DELETE_CHILD: (id: number) => `/api/admins/children/${id}`,
   WITHDRAW_REQUEST: "/api/admins/me/deletion-requests",
   WITHDRAW_CONFIRM: (token: string) => `/api/admins/deletion-requests/${token}`,
+  PASSWORD_RESET_REQUEST: "/api/admins/password-resets",
+  PASSWORD_RESET_CONFIRM: (token: string) => `/api/admins/password-resets/${token}`,
   DELETE_COMMENT: (commentId: number) => `/api/admins/comments/${commentId}`,
   CHAT: {
     ROOMS: "/api/admins/chats",
