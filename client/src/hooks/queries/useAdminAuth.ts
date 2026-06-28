@@ -4,7 +4,15 @@ import { auth } from "@/api/services/admin/auth";
 import { register } from "@/api/services/admin/register";
 import { useAuthStore } from "@/store/useAuthStore";
 import { DeleteChildResponse, RegisterRequest, RegisterResponse } from "@/types/admin";
-import { AdminAuthRequest, AdminAuthResponse, AdminUpdateRequest, AdminUpdateResponse } from "@/types/auth";
+import {
+  AdminAuthRequest,
+  AdminAuthResponse,
+  AdminForgotPasswordRequest,
+  AdminResetPasswordRequest,
+  AdminUpdateRequest,
+  AdminUpdateResponse,
+} from "@/types/auth";
+import { ApiMessage } from "@/types/api";
 import { useMutation, UseMutationResult, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const useAdminAuth = (
@@ -56,6 +64,28 @@ export const useAdminWithdraw = (
 ): UseMutationResult<{ message: string }, AxiosError<unknown, unknown>, void, unknown> => {
   return useMutation<{ message: string }, AxiosError<unknown, unknown>, void>({
     mutationFn: () => auth.requestWithdraw(),
+    onSuccess,
+    onError,
+  });
+};
+
+export const useAdminForgotPassword = (
+  onSuccess: (data: ApiMessage) => void,
+  onError: (error: AxiosError<unknown, unknown>) => void
+): UseMutationResult<ApiMessage, AxiosError<unknown, unknown>, AdminForgotPasswordRequest, unknown> => {
+  return useMutation<ApiMessage, AxiosError<unknown, unknown>, AdminForgotPasswordRequest>({
+    mutationFn: (data) => auth.forgotPassword(data),
+    onSuccess,
+    onError,
+  });
+};
+
+export const useAdminResetPassword = (
+  onSuccess: (data: ApiMessage) => void,
+  onError: (error: AxiosError<unknown, unknown>) => void
+): UseMutationResult<ApiMessage, AxiosError<unknown, unknown>, AdminResetPasswordRequest, unknown> => {
+  return useMutation<ApiMessage, AxiosError<unknown, unknown>, AdminResetPasswordRequest>({
+    mutationFn: (data) => auth.resetPassword(data),
     onSuccess,
     onError,
   });

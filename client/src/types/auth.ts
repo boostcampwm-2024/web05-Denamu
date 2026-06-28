@@ -22,6 +22,15 @@ export type AdminUpdateRequest = {
 
 export type AdminUpdateResponse = ApiMessage;
 
+export type AdminForgotPasswordRequest = {
+  email: string;
+};
+
+export type AdminResetPasswordRequest = {
+  token: string;
+  password: string;
+};
+
 export interface UserSignUpRequest {
   email: string;
   password: string;

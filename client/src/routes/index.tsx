@@ -15,6 +15,7 @@ const SignUp = lazy(() => import("@/pages/SignUp"));
 const UserCertificate = lazy(() => import("@/pages/email-actions/UserCertificate"));
 const AdminCertificate = lazy(() => import("@/pages/email-actions/AdminCertificate"));
 const AdminWithdraw = lazy(() => import("@/pages/email-actions/AdminWithdraw"));
+const AdminPasswordReset = lazy(() => import("@/pages/email-actions/AdminPasswordReset"));
 const UserWithdraw = lazy(() => import("@/pages/email-actions/UserWithdraw"));
 const RssCertificate = lazy(() => import("@/pages/email-actions/RssCertificate"));
 const RssRemoval = lazy(() => import("@/pages/email-actions/RssRemoval"));
@@ -107,6 +108,14 @@ export const AppRouter = ({ location, state }: RouterProps) => {
           element={
             <Suspense fallback={<Loading />}>
               <AdminWithdraw />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/admins/password-resets/confirm"
+          element={
+            <Suspense fallback={<Loading />}>
+              <AdminPasswordReset />
             </Suspense>
           }
         />
