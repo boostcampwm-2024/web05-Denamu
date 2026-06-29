@@ -1,9 +1,10 @@
 import { useState } from "react";
 
-import { ChevronDown, FileText, Pencil, Trash2 } from "lucide-react";
+import { ChevronDown, FileText, Pencil, Trash2, Users } from "lucide-react";
 
 import { PlatformIcon } from "@/components/profile/rss/PlatformIcon.tsx";
 import { RssFeedRow } from "@/components/profile/rss/RssFeedRow.tsx";
+import { SubscribersModal } from "@/components/profile/rss/SubscribersModal.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 
@@ -21,6 +22,7 @@ interface OwnedRssCardProps {
 export const OwnedRssCard = ({ rss, onEdit, onDelete }: OwnedRssCardProps) => {
   const { toast } = useCustomToast();
   const [expanded, setExpanded] = useState(false);
+  const [subscribersOpen, setSubscribersOpen] = useState(false);
 
   const { data, isLoading, isError, hasNextPage, fetchNextPage, isFetchingNextPage } = useOwnedRssFeeds(
     rss.id,
@@ -64,6 +66,13 @@ export const OwnedRssCard = ({ rss, onEdit, onDelete }: OwnedRssCardProps) => {
               <FileText className="w-3.5 h-3.5" />
               공개 중인 게시글 {rss.feedCount}개
             </p>
+            <button
+              onClick={() => setSubscribersOpen(true)}
+              className="flex items-center gap-1 text-sm text-gray-500 hover:text-[#FF870D]"
+            >
+              <Users className="w-3.5 h-3.5" />
+              구독자 {rss.subscriberCount}명
+            </button>
           </div>
         </div>
         <div className="flex flex-shrink-0 gap-1 ml-3">
@@ -124,6 +133,13 @@ export const OwnedRssCard = ({ rss, onEdit, onDelete }: OwnedRssCardProps) => {
           )}
         </div>
       )}
+
+      <SubscribersModal
+        rssId={rss.id}
+        rssName={rss.name}
+        open={subscribersOpen}
+        onClose={() => setSubscribersOpen(false)}
+      />
     </li>
   );
 };
