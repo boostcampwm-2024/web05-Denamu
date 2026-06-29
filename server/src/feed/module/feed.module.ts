@@ -13,6 +13,8 @@ import {
 import { FeedScheduler } from '@feed/scheduler/feed.scheduler';
 import { FeedService } from '@feed/service/feed.service';
 
+import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
+
 import { UserModule } from '@user/module/user.module';
 
 @Module({
@@ -24,6 +26,7 @@ import { UserModule } from '@user/module/user.module';
     FeedViewRepository,
     FeedScheduler,
     FeedViewedListener,
+    SubscriptionRepository,
   ],
   exports: [FeedRepository, FeedService],
 })

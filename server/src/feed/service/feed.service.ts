@@ -12,9 +12,12 @@ import { cookieConfig } from '@common/cookie/cookie.config';
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
 
+import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
+
 import { AI_RETRY_LOCK_TTL_SECONDS } from '@feed/constant/feed.constant';
 import { ManageFeedRequestDto } from '@feed/dto/request/manageFeed.dto';
 import { ReadFeedPaginationRequestDto } from '@feed/dto/request/readFeedPagination.dto';
+import { ReadSubscriptionFeedResponseDto } from '@feed/dto/response/readSubscriptionFeed.dto';
 import { SearchFeedRequestDto } from '@feed/dto/request/searchFeed.dto';
 import { GetFeedDetailResponseDto } from '@feed/dto/response/getFeedDetail';
 import { ReadNoSummaryFeedResponseDto } from '@feed/dto/response/readNoSummaryFeed.dto';
@@ -49,6 +52,7 @@ export class FeedService {
     private readonly feedRepository: FeedRepository,
     private readonly feedViewRepository: FeedViewRepository,
     private readonly redisService: RedisService,
+    private readonly subscriptionRepository: SubscriptionRepository,
   ) {}
 
   async getFeed(feedId: number) {
@@ -305,13 +309,51 @@ export class FeedService {
     userId?: number,
   ) {
     const feed = await this.getFeedByView(feedDetailRequestDto.feedId);
+    const blogMeta = await this.feedRepository.getBlogMetaByFeedId(
+      feedDetailRequestDto.feedId,
+    );
     const isOwner = userId
       ? await this.feedRepository.isOwnedByUser(
           feedDetailRequestDto.feedId,
           userId,
         )
       : false;
-    return GetFeedDetailResponseDto.toResponseDto(feed, isOwner);
+
+    let isSubscribed = false;
+    if (userId && blogMeta) {
+      const subscription = await this.subscriptionRepository.findOneBy({
+        user: { id: userId },
+        rssAccept: { id: blogMeta.id },
+      });
+      isSubscribed = !!subscription;
+    }
+
+    return GetFeedDetailResponseDto.toResponseDto(
+      feed,
+      isOwner,
+      blogMeta,
+      isSubscribed,
+    );
+  }
+
+  async readSubscriptionFeeds(
+    userId: number,
+    feedPaginationQueryDto: ReadFeedPaginationRequestDto,
+  ) {
+    const limit = feedPaginationQueryDto.limit ?? 12;
+    const blogIds =
+      await this.subscriptionRepository.getSubscribedBlogIds(userId);
+    const feeds = await this.feedRepository.getSubscriptionFeeds(
+      blogIds,
+      feedPaginationQueryDto.lastId ?? 0,
+      limit,
+    );
+
+    const hasMore = feeds.length > limit;
+    if (hasMore) feeds.pop();
+    const lastId = feeds.length ? feeds[feeds.length - 1].id : 0;
+
+    return ReadSubscriptionFeedResponseDto.toResponseDto(feeds, lastId, hasMore);
   }
 
   async deleteCheckFeed(feedDeleteCheckDto: ManageFeedRequestDto) {

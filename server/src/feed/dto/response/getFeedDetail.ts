@@ -81,11 +81,42 @@ export class GetFeedDetailResponseDto {
   })
   isOwner: boolean;
 
+  @ApiProperty({
+    example: 1,
+    description: '게시글이 속한 RSS(rss_accept) ID. 구독 버튼의 대상',
+    nullable: true,
+  })
+  blogId: number | null;
+
+  @ApiProperty({
+    example: '조민석',
+    description: 'RSS 블로그에 등록된 신청자(소유자) 이름',
+    nullable: true,
+  })
+  ownerName: string | null;
+
+  @ApiProperty({
+    example: true,
+    description: '해당 RSS의 소유자가 인증되었는지 여부',
+  })
+  isOwnerCertified: boolean;
+
+  @ApiProperty({
+    example: false,
+    description: '요청자가 해당 RSS를 구독 중인지 여부',
+  })
+  isSubscribed: boolean;
+
   constructor(partial: Partial<GetFeedDetailResponseDto>) {
     Object.assign(this, partial);
   }
 
-  static toResponseDto(feed: FeedView, isOwner = false) {
+  static toResponseDto(
+    feed: FeedView,
+    isOwner = false,
+    blogMeta: { id: number; userName: string; userId: number | null } | null = null,
+    isSubscribed = false,
+  ) {
     return new GetFeedDetailResponseDto({
       id: feed.feedId,
       author: feed.blogName,
@@ -100,6 +131,10 @@ export class GetFeedDetailResponseDto {
       comments: feed.commentCount,
       tag: feed.tag ? feed.tag : [],
       isOwner,
+      blogId: blogMeta?.id ?? null,
+      ownerName: blogMeta?.userName ?? null,
+      isOwnerCertified: blogMeta?.userId != null,
+      isSubscribed,
     });
   }
 }
