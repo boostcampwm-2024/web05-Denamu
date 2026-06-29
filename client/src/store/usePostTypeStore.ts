@@ -1,7 +1,7 @@
 import { create } from "zustand";
 
 type State = {
-  postType: "latest" | "recommend";
+  postType: "latest" | "recommend" | "subscribe";
 };
 type Action = {
   setPostType: (postType: State["postType"]) => void;
