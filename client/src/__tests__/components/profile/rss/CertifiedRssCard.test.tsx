@@ -21,6 +21,19 @@ vi.mock("@/hooks/queries/useProfile.ts", () => ({
   useRssFeeds: () => feedsState,
 }));
 
+vi.mock("react-router-dom", () => ({
+  useNavigate: () => vi.fn(),
+}));
+
+vi.mock("@/hooks/queries/useSubscription.ts", () => ({
+  useToggleSubscription: () => ({ mutate: vi.fn(), isPending: false }),
+}));
+
+vi.mock("@/store/useAuthStore.ts", () => ({
+  useAuthStore: (selector: (state: { isAuthenticated: boolean }) => unknown) =>
+    selector({ isAuthenticated: true }),
+}));
+
 vi.mock("@/components/profile/rss/PlatformIcon.tsx", () => ({ PlatformIcon: () => <div data-testid="platform-icon" /> }));
 vi.mock("@/components/profile/rss/RssFeedRow.tsx", () => ({
   RssFeedRow: ({ title }: { title: string }) => <li data-testid="feed-row">{title}</li>,
@@ -47,7 +60,7 @@ describe("CertifiedRssCard", () => {
   });
 
   it("블로그명, URL, 게시글 수를 렌더링해야 한다", () => {
-    render(<CertifiedRssCard userId={1} rss={rss} />);
+    render(<CertifiedRssCard userId={1} rss={rss} isOwner={false} />);
 
     expect(screen.getByText("내 블로그")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "https://blog.test/rss" })).toBeInTheDocument();
@@ -55,7 +68,7 @@ describe("CertifiedRssCard", () => {
   });
 
   it("초기에는 게시글 목록이 접혀 있고 펼치면 RssFeedRow가 보여야 한다", () => {
-    render(<CertifiedRssCard userId={1} rss={rss} />);
+    render(<CertifiedRssCard userId={1} rss={rss} isOwner={false} />);
 
     expect(screen.queryByTestId("feed-row")).not.toBeInTheDocument();
 
