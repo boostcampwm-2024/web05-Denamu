@@ -29,6 +29,7 @@
       "@like/*": ["./src/like/*"],
       "@rss/*": ["./src/rss/*"],
       "@statistic/*": ["./src/statistic/*"],
+      "@subscribe/*": ["./src/subscribe/*"],
       "@tag/*": ["./src/tag/*"],
       "@user/*": ["./src/user/*"],
       "@test/*": ["./test/*"]

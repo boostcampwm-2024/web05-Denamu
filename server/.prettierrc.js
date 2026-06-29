@@ -22,6 +22,7 @@ module.exports = {
     '^@like/(.*)?$',
     '^@rss/(.*)?$',
     '^@statistic/(.*)?$',
+    '^@subscribe/(.*)?$',
     '^@tag/(.*)?$',
     '^@user/(.*)?$',
     '^@test/(.*)$',
