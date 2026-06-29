@@ -16,6 +16,8 @@ import {
 } from '@feed/repository/feed.repository';
 import { FeedService } from '@feed/service/feed.service';
 
+import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
+
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
@@ -29,11 +31,15 @@ describe(`${FeedService.name} Unit Test`, () => {
       | 'update'
       | 'delete'
       | 'isOwnedByUser'
+      | 'getBlogMetaByFeedId'
       | 'findFeedsWithoutSummary'
     >
   >;
   let feedViewRepository: jest.Mocked<
     Pick<FeedViewRepository, 'findOneBy' | 'findFeedPagination'>
+  >;
+  let subscriptionRepository: jest.Mocked<
+    Pick<SubscriptionRepository, 'findOneBy' | 'getSubscribedBlogIds'>
   >;
   let redisService: jest.Mocked<
     Pick<
@@ -59,6 +65,7 @@ describe(`${FeedService.name} Unit Test`, () => {
       update: jest.fn(),
       delete: jest.fn(),
       isOwnedByUser: jest.fn(),
+      getBlogMetaByFeedId: jest.fn().mockResolvedValue(null),
       findFeedsWithoutSummary: jest.fn(),
     };
     feedViewRepository = {
@@ -76,10 +83,16 @@ describe(`${FeedService.name} Unit Test`, () => {
       set: jest.fn().mockResolvedValue('OK'),
     };
 
+    subscriptionRepository = {
+      findOneBy: jest.fn(),
+      getSubscribedBlogIds: jest.fn().mockResolvedValue([]),
+    };
+
     feedService = new FeedService(
       feedRepository as unknown as FeedRepository,
       feedViewRepository as unknown as FeedViewRepository,
       redisService as unknown as RedisService,
+      subscriptionRepository as unknown as SubscriptionRepository,
     );
   });
 
