@@ -186,14 +186,11 @@ export const AppRouter = ({ location, state }: RouterProps) => {
           }
         />
       </Routes>
-      {
-        state?.backgroundLocation && (
-          <Routes>
-            <Route path="/:id" element={<PostDetail />} />
-          </Routes>
-        );
-      }
+      {state?.backgroundLocation && (
+        <Routes>
+          <Route path="/:id" element={<PostDetail />} />
+        </Routes>
+      )}
     </>
-  )
-    ;
+  );
 };
