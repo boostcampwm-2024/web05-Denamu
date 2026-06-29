@@ -55,6 +55,14 @@ export const BLOG = {
   },
 };
 
+export const SUBSCRIPTION = {
+  CREATE: (rssId: number) => `/api/rss/${rssId}/subscriptions`,
+  REMOVE: (rssId: number) => `/api/rss/${rssId}/subscriptions`,
+  SUBSCRIBERS: (rssId: number) => `/api/rss/${rssId}/subscribers`,
+  BY_USER: (userId: number) => `/api/users/${userId}/subscriptions`,
+  FEED: "/api/feeds/subscriptions",
+};
+
 export const TAG = {
   LIST: "/api/tags",
 };
