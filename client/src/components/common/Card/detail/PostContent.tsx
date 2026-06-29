@@ -2,15 +2,16 @@ import React from "react";
 import Markdown from "react-markdown";
 
 import LikeButton from "@/components/common/Card/detail/LikeButton";
+import PostComment from "@/components/common/Card/detail/PostComment";
 import ShareButton from "@/components/common/Card/detail/ShareButton";
 
 import { usePostCardActions } from "@/hooks/common/usePostCardActions";
 
 import { useMediaStore } from "@/store/useMediaStore";
-import { Post } from "@/types/post";
+import { FeedDetail } from "@/types/post";
 
 interface PostContentProps {
-  post: Post;
+  post: FeedDetail;
 }
 
 export const PostContent = React.memo(({ post }: PostContentProps) => {
@@ -51,10 +52,11 @@ export const PostContent = React.memo(({ post }: PostContentProps) => {
           <p className="text-gray-400">💡 인공지능이 요약한 내용입니다. 오류가 포함될 수 있으니 참고 바랍니다.</p>
         )}
       </div>
-      <div className="flex gap-3">
-        <LikeButton />
+      <div className="flex gap-3 border-b pb-5">
+        <LikeButton post={post} />
         <ShareButton post={post} />
       </div>
+      <PostComment feedId={post.id} isFeedOwner={post.isOwner} />
     </div>
   );
 });

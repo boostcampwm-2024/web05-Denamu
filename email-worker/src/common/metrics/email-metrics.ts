@@ -3,8 +3,11 @@ import { injectable } from 'tsyringe';
 import * as http from 'node:http';
 import { collectDefaultMetrics, Counter, register } from 'prom-client';
 
+import { Lifecycle } from '@common/lifecycle/lifecycle.interface';
+import logger from '@common/logger/logger';
+
 @injectable()
-export class EmailMetrics {
+export class EmailMetrics implements Lifecycle {
   readonly total: Counter;
   readonly success: Counter;
 
@@ -20,7 +23,8 @@ export class EmailMetrics {
     });
   }
 
-  startMetricsServer(port: number): void {
+  start(): void {
+    const port = Number(process.env.EMAIL_WORKER_METRICS_PORT) || 9091;
     const handleRequest = async (
       req: http.IncomingMessage,
       res: http.ServerResponse,
@@ -38,5 +42,6 @@ export class EmailMetrics {
       (req, res) => void handleRequest(req, res),
     );
     server.listen(port);
+    logger.info(`Metrics server started on port ${port}`);
   }
 }

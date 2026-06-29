@@ -5,10 +5,10 @@ import { CardContent } from "@/components/ui/card";
 import { formatDate } from "@/utils/date";
 
 import { useMediaStore } from "@/store/useMediaStore";
-import { Post } from "@/types/post";
+import { FeedList } from "@/types/post";
 
 interface PostCardContentProps {
-  post: Post;
+  post: FeedList;
 }
 
 export const PostCardContent = ({ post }: PostCardContentProps) => {

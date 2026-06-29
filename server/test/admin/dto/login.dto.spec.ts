@@ -11,7 +11,7 @@ describe(`${LoginAdminRequestDto.name} Test`, () => {
     dto = new LoginAdminRequestDto(AdminFixture.createAdminFixture());
   });
 
-  it('ID와 패스워드가 문자열일 경우 유효성 검사에 성공한다.', async () => {
+  it('이메일과 패스워드가 정책에 부합할 경우 유효성 검사에 성공한다.', async () => {
     //when
     const errors = await validate(dto);
 
@@ -19,41 +19,29 @@ describe(`${LoginAdminRequestDto.name} Test`, () => {
     expect(errors).toHaveLength(0);
   });
 
-  describe('loginId', () => {
-    it('로그인 ID가 없을 경우 유효성 검사에 실패한다.', async () => {
+  describe('email', () => {
+    it('이메일이 없을 경우 유효성 검사에 실패한다.', async () => {
       //given
-      dto.loginId = null;
+      dto.email = null;
 
       //when
       const errors = await validate(dto);
 
       //then
       expect(errors).toHaveLength(1);
-      expect(errors[0].constraints).toHaveProperty('isNotEmpty');
+      expect(errors[0].constraints).toHaveProperty('isEmail');
     });
 
-    it('로그인 ID가 빈 문자열일 경우 유효성 검사에 실패한다.', async () => {
+    it('이메일 형식이 아닐 경우 유효성 검사에 실패한다.', async () => {
       //given
-      dto.loginId = '';
+      dto.email = 'not-an-email';
 
       //when
       const errors = await validate(dto);
 
       //then
       expect(errors).toHaveLength(1);
-      expect(errors[0].constraints).toHaveProperty('isNotEmpty');
-    });
-
-    it('로그인 ID가 문자열이 아니고 정수일 경우 유효성 검사에 실패한다.', async () => {
-      //given
-      dto.loginId = 1 as any;
-
-      //when
-      const errors = await validate(dto);
-
-      //then
-      expect(errors).toHaveLength(1);
-      expect(errors[0].constraints).toHaveProperty('isString');
+      expect(errors[0].constraints).toHaveProperty('isEmail');
     });
   });
 

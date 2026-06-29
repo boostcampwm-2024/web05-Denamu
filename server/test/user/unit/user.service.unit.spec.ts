@@ -7,17 +7,28 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 
 import { Response } from 'express';
+import { DataSource } from 'typeorm';
 
 import { EmailProducer } from '@common/email/email.producer';
 import { Payload } from '@common/guard/jwt.guard';
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
 
+import { Feed } from '@feed/entity/feed.entity';
+import { FeedRepository } from '@feed/repository/feed.repository';
+
 import { FileService } from '@file/service/file.service';
 
+import { RssAccept } from '@rss/entity/rss.entity';
+import { RssAcceptRepository } from '@rss/repository/rss.repository';
+
 import { RegisterUserRequestDto } from '@user/dto/request/registerUser.dto';
+import { SearchUserRequestDto } from '@user/dto/request/searchUser.dto';
 import { CheckEmailDuplicationResponseDto } from '@user/dto/response/checkEmailDuplication.dto';
+import { CheckUserNameDuplicationResponseDto } from '@user/dto/response/checkUserNameDuplication.dto';
 import { CreateAccessTokenResponseDto } from '@user/dto/response/createAccessToken.dto';
+import { GetUserProfileResponseDto } from '@user/dto/response/getUserProfile.dto';
+import { GetUserRssResponseDto } from '@user/dto/response/getUserRss.dto';
 import { User } from '@user/entity/user.entity';
 import { UserRepository } from '@user/repository/user.repository';
 import { UserService } from '@user/service/user.service';
@@ -30,7 +41,10 @@ import {
 describe(`${UserService.name} Unit Test`, () => {
   let userService: UserService;
   let userRepository: jest.Mocked<
-    Pick<UserRepository, 'findOneBy' | 'findOne' | 'save' | 'remove'>
+    Pick<
+      UserRepository,
+      'findOneBy' | 'findOne' | 'save' | 'remove' | 'searchUserList'
+    >
   >;
   let redisService: jest.Mocked<
     Pick<RedisService, 'set' | 'get' | 'del' | 'setex'>
@@ -46,6 +60,14 @@ describe(`${UserService.name} Unit Test`, () => {
   let jwtService: jest.Mocked<Pick<JwtService, 'sign'>>;
   let configService: jest.Mocked<Pick<ConfigService, 'get'>>;
   let fileService: jest.Mocked<Pick<FileService, 'deleteByPath'>>;
+  let rssAcceptRepository: jest.Mocked<
+    Pick<RssAcceptRepository, 'find' | 'update'>
+  >;
+  let feedRepository: jest.Mocked<
+    Pick<FeedRepository, 'getFeedsByBlog' | 'countPublicFeedsByBlogIds'>
+  >;
+  let manager: { remove: jest.Mock; delete: jest.Mock };
+  let dataSource: jest.Mocked<Pick<DataSource, 'transaction'>>;
 
   const createResponse = () => ({ cookie: jest.fn() }) as unknown as Response;
 
@@ -64,6 +86,7 @@ describe(`${UserService.name} Unit Test`, () => {
       findOne: jest.fn(),
       save: jest.fn(),
       remove: jest.fn(),
+      searchUserList: jest.fn(),
     };
     redisService = {
       set: jest.fn(),
@@ -79,6 +102,15 @@ describe(`${UserService.name} Unit Test`, () => {
     jwtService = { sign: jest.fn().mockReturnValue('signed-token') };
     configService = { get: jest.fn().mockReturnValue('14d') };
     fileService = { deleteByPath: jest.fn() };
+    rssAcceptRepository = { find: jest.fn(), update: jest.fn() };
+    feedRepository = {
+      getFeedsByBlog: jest.fn(),
+      countPublicFeedsByBlogIds: jest.fn().mockResolvedValue(new Map()),
+    };
+    manager = { remove: jest.fn(), delete: jest.fn() };
+    dataSource = {
+      transaction: jest.fn((cb: any) => cb(manager)),
+    } as any;
 
     userService = new UserService(
       userRepository as unknown as UserRepository,
@@ -87,6 +119,9 @@ describe(`${UserService.name} Unit Test`, () => {
       jwtService as unknown as JwtService,
       configService as unknown as ConfigService,
       fileService as unknown as FileService,
+      rssAcceptRepository as unknown as RssAcceptRepository,
+      feedRepository as unknown as FeedRepository,
+      dataSource as unknown as DataSource,
     );
   });
 
@@ -100,6 +135,119 @@ describe(`${UserService.name} Unit Test`, () => {
       const user = UserFixture.createUserFixture();
       userRepository.findOneBy.mockResolvedValue(user);
       await expect(userService.getUser(1)).resolves.toBe(user);
+    });
+  });
+
+  describe('searchUserList', () => {
+    it('닉네임 검색 결과를 id·닉네임·프로필 이미지로 매핑하고 페이지 정보를 계산한다.', async () => {
+      // given
+      const users = [
+        UserFixture.createUserFixture({
+          userName: '김개발',
+          profileImage: 'https://denamu.dev/profile.png',
+        }),
+        UserFixture.createUserFixture({
+          userName: '김철수',
+          profileImage: null,
+        }),
+      ] as User[];
+      users[0].id = 1;
+      users[1].id = 2;
+      userRepository.searchUserList.mockResolvedValue([users, 2]);
+
+      // when
+      const result = await userService.searchUserList(
+        new SearchUserRequestDto({ find: '김', page: 1, limit: 5 }),
+      );
+
+      // then
+      expect(result).toEqual({
+        totalCount: 2,
+        result: [
+          { id: 1, userName: '김개발', profileImage: 'https://denamu.dev/profile.png' },
+          { id: 2, userName: '김철수', profileImage: null },
+        ],
+        totalPages: 1,
+        limit: 5,
+      });
+    });
+
+    it('page와 limit으로 offset을 계산해 레포지토리에 전달한다.', async () => {
+      // given
+      userRepository.searchUserList.mockResolvedValue([[], 0]);
+
+      // when
+      await userService.searchUserList(
+        new SearchUserRequestDto({ find: '김', page: 3, limit: 4 }),
+      );
+
+      // then
+      expect(userRepository.searchUserList).toHaveBeenCalledWith('김', 4, 8);
+    });
+
+    it('검색 결과가 없으면 빈 배열과 0건을 반환한다.', async () => {
+      // given
+      userRepository.searchUserList.mockResolvedValue([[], 0]);
+
+      // when
+      const result = await userService.searchUserList(
+        new SearchUserRequestDto({ find: '없음', page: 1, limit: 5 }),
+      );
+
+      // then
+      expect(result).toEqual({
+        totalCount: 0,
+        result: [],
+        totalPages: 0,
+        limit: 5,
+      });
+    });
+  });
+
+  describe('getUserProfile', () => {
+    it('존재하지 않는 사용자면 NotFoundException을 던진다.', async () => {
+      userRepository.findOneBy.mockResolvedValue(null);
+      await expect(userService.getUserProfile(1)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('사용자의 이름·이미지·소개와 스트릭 통계를 응답으로 변환해 반환한다.', async () => {
+      // given
+      const user = UserFixture.createUserFixture({
+        userName: '김개발',
+        profileImage: 'https://denamu.dev/objects/PROFILE_IMAGE/a.png',
+        introduction: '안녕하세요! 김개발입니다.',
+        maxStreak: 15,
+        currentStreak: 7,
+        totalViews: 120,
+      });
+      userRepository.findOneBy.mockResolvedValue(user);
+
+      // when
+      const result = await userService.getUserProfile(1);
+
+      // then
+      expect(result).toEqual(GetUserProfileResponseDto.toResponseDto(user));
+      expect(result.maxStreak).toBe(15);
+      expect(result.currentStreak).toBe(7);
+      expect(result.totalViews).toBe(120);
+    });
+
+    it('이미지·소개가 미설정이면 해당 필드를 null로 반환한다.', async () => {
+      // given
+      const user = UserFixture.createUserFixture({
+        profileImage: null,
+        introduction: null,
+      });
+      userRepository.findOneBy.mockResolvedValue(user);
+
+      // when
+      const result = await userService.getUserProfile(1);
+
+      // then
+      expect(result.profileImage).toBeNull();
+      expect(result.introduction).toBeNull();
     });
   });
 
@@ -252,6 +400,10 @@ describe(`${UserService.name} Unit Test`, () => {
     it('인증에 성공하면 Redis 키를 지우고 사용자를 저장한다.', async () => {
       // given
       redisService.get.mockResolvedValue(JSON.stringify({ email: 'a@test.com' }));
+      userRepository.save.mockResolvedValue({
+        id: 5,
+        email: 'a@test.com',
+      } as any);
 
       // when
       await userService.certificateUser('uuid');
@@ -259,6 +411,97 @@ describe(`${UserService.name} Unit Test`, () => {
       // then
       expect(redisService.del).toHaveBeenCalled();
       expect(userRepository.save).toHaveBeenCalledWith({ email: 'a@test.com' });
+    });
+
+    it('가입 완료 후 동일 이메일의 미연결 RSS에 user_id를 연결한다.', async () => {
+      // given
+      redisService.get.mockResolvedValue(JSON.stringify({ email: 'a@test.com' }));
+      userRepository.save.mockResolvedValue({
+        id: 5,
+        email: 'a@test.com',
+      } as any);
+
+      // when
+      await userService.certificateUser('uuid');
+
+      // then
+      expect(rssAcceptRepository.update).toHaveBeenCalledWith(
+        expect.objectContaining({ email: 'a@test.com' }),
+        { userId: 5 },
+      );
+    });
+  });
+
+  describe('getUserRss', () => {
+    it('userId로 소유 RSS를 조회하고 공개 게시글 수와 함께 응답으로 변환한다.', async () => {
+      // given
+      const rssList = [{ id: 7 } as RssAccept];
+      const feedCountMap = new Map<number, number>([[7, 3]]);
+      rssAcceptRepository.find.mockResolvedValue(rssList);
+      feedRepository.countPublicFeedsByBlogIds.mockResolvedValue(feedCountMap);
+
+      // when
+      const result = await userService.getUserRss(1);
+
+      // then
+      expect(rssAcceptRepository.find).toHaveBeenCalledWith({
+        where: { userId: 1 },
+        order: { id: 'DESC' },
+      });
+      expect(feedRepository.countPublicFeedsByBlogIds).toHaveBeenCalledWith([7]);
+      expect(result).toEqual(
+        GetUserRssResponseDto.toResponseDtoArray(rssList, feedCountMap),
+      );
+      expect(result[0].feedCount).toBe(3);
+    });
+  });
+
+  describe('getUserRssFeeds', () => {
+    const makeFeed = (id: number) =>
+      ({ id, title: `t${id}`, path: `p${id}`, createdAt: new Date(), commentCount: id }) as Feed;
+
+    it('limit보다 많이 조회되면 마지막 항목을 잘라내고 hasMore=true로 반환한다.', async () => {
+      // given (limit=2인데 3개 조회 → 다음 페이지 존재)
+      feedRepository.getFeedsByBlog.mockResolvedValue([
+        makeFeed(10),
+        makeFeed(9),
+        makeFeed(8),
+      ]);
+
+      // when
+      const result = await userService.getUserRssFeeds(5, { lastId: 11, limit: 2 });
+
+      // then
+      expect(feedRepository.getFeedsByBlog).toHaveBeenCalledWith(5, 11, 2, true);
+      expect(result.result).toHaveLength(2);
+      expect(result.hasMore).toBe(true);
+      expect(result.lastId).toBe(9);
+      expect(result.result[0].commentCount).toBe(10);
+    });
+
+    it('limit 이하로 조회되면 hasMore=false로 반환한다.', async () => {
+      // given
+      feedRepository.getFeedsByBlog.mockResolvedValue([makeFeed(3)]);
+
+      // when
+      const result = await userService.getUserRssFeeds(5, { limit: 10 });
+
+      // then
+      expect(result.hasMore).toBe(false);
+      expect(result.lastId).toBe(3);
+    });
+
+    it('조회 결과가 없으면 lastId=0, hasMore=false로 반환한다.', async () => {
+      // given
+      feedRepository.getFeedsByBlog.mockResolvedValue([]);
+
+      // when
+      const result = await userService.getUserRssFeeds(5, { limit: 10 });
+
+      // then
+      expect(result.result).toHaveLength(0);
+      expect(result.lastId).toBe(0);
+      expect(result.hasMore).toBe(false);
     });
   });
 
@@ -349,6 +592,127 @@ describe(`${UserService.name} Unit Test`, () => {
       // then
       expect(user.userName).toBe('new');
       expect(fileService.deleteByPath).not.toHaveBeenCalled();
+    });
+
+    it('변경하려는 userName이 이미 존재하면 ConflictException을 던진다.', async () => {
+      // given
+      const user = UserFixture.createUserFixture({ userName: 'old' });
+      userRepository.findOneBy.mockResolvedValue(user);
+      userRepository.findOne.mockResolvedValue(
+        UserFixture.createUserFixture({ userName: 'taken' }),
+      );
+
+      // when & then
+      await expect(
+        userService.updateUser(userId, { userName: 'taken' }),
+      ).rejects.toThrow(ConflictException);
+      expect(userRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('동일한 userName이면 중복 조회 없이 통과한다.', async () => {
+      // given
+      const user = UserFixture.createUserFixture({ userName: 'same' });
+      userRepository.findOneBy.mockResolvedValue(user);
+
+      // when
+      await userService.updateUser(userId, { userName: 'same' });
+
+      // then
+      expect(userRepository.findOne).not.toHaveBeenCalled();
+      expect(userRepository.save).toHaveBeenCalledWith(user);
+    });
+
+    it('사전 조회를 통과해도 저장 시 unique 제약 위반(ER_DUP_ENTRY)이면 ConflictException으로 변환한다.', async () => {
+      // given: 사전 조회는 비어 있지만(TOCTOU) 저장 시점에 중복이 발생하는 경합 상황
+      const user = UserFixture.createUserFixture({ userName: 'old' });
+      userRepository.findOneBy.mockResolvedValue(user);
+      userRepository.findOne.mockResolvedValue(null);
+      userRepository.save.mockRejectedValue({ code: 'ER_DUP_ENTRY' });
+
+      // when & then
+      await expect(
+        userService.updateUser(userId, { userName: 'taken' }),
+      ).rejects.toThrow(ConflictException);
+    });
+  });
+
+  describe('checkUserNameDuplication', () => {
+    it('닉네임이 존재하면 exists=true 응답을 반환한다.', async () => {
+      userRepository.findOne.mockResolvedValue(UserFixture.createUserFixture());
+      const result = await userService.checkUserNameDuplication('tester');
+      expect(result).toEqual(
+        CheckUserNameDuplicationResponseDto.toResponseDto(true),
+      );
+    });
+
+    it('닉네임이 없으면 exists=false 응답을 반환한다.', async () => {
+      userRepository.findOne.mockResolvedValue(null);
+      const result = await userService.checkUserNameDuplication('tester');
+      expect(result).toEqual(
+        CheckUserNameDuplicationResponseDto.toResponseDto(false),
+      );
+    });
+  });
+
+  describe('changePassword', () => {
+    const userId = 1;
+
+    it('현재 비밀번호가 일치하면 새 비밀번호로 변경하고 전 기기를 로그아웃한다.', async () => {
+      // given
+      const user = await UserFixture.createUserCryptFixture({ id: userId });
+      const before = user.password;
+      userRepository.findOneBy.mockResolvedValue(user);
+
+      // when
+      await userService.changePassword(userId, {
+        currentPassword: USER_DEFAULT_PASSWORD,
+        newPassword: 'newPass1!',
+      });
+
+      // then
+      expect(user.password).not.toBe(before);
+      expect(userRepository.save).toHaveBeenCalledWith(user);
+      expect(redisService.setex).toHaveBeenCalledWith(
+        `${REDIS_KEYS.USER_INVALIDATED_PREFIX}:${userId}`,
+        14 * 86400,
+        expect.stringMatching(/^\d+$/),
+      );
+    });
+
+    it('현재 비밀번호가 일치하지 않으면 UnauthorizedException을 던지고 저장하지 않는다.', async () => {
+      // given
+      const user = await UserFixture.createUserCryptFixture({ id: userId });
+      userRepository.findOneBy.mockResolvedValue(user);
+
+      // when & then
+      await expect(
+        userService.changePassword(userId, {
+          currentPassword: 'wrongPass1!',
+          newPassword: 'newPass1!',
+        }),
+      ).rejects.toThrow(UnauthorizedException);
+      expect(userRepository.save).not.toHaveBeenCalled();
+      expect(redisService.setex).not.toHaveBeenCalled();
+    });
+
+    it('비밀번호 미설정 소셜 계정은 현재 비밀번호 없이 새로 설정하고 전 기기를 로그아웃한다.', async () => {
+      // given
+      const user = UserFixture.createUserFixture({ id: userId, password: null });
+      userRepository.findOneBy.mockResolvedValue(user);
+
+      // when
+      await userService.changePassword(userId, {
+        newPassword: 'newPass1!',
+      });
+
+      // then
+      expect(user.password).toBeTruthy();
+      expect(userRepository.save).toHaveBeenCalledWith(user);
+      expect(redisService.setex).toHaveBeenCalledWith(
+        `${REDIS_KEYS.USER_INVALIDATED_PREFIX}:${userId}`,
+        14 * 86400,
+        expect.stringMatching(/^\d+$/),
+      );
     });
   });
 
@@ -454,13 +818,30 @@ describe(`${UserService.name} Unit Test`, () => {
       // then
       expect(redisService.set).toHaveBeenCalledWith(
         expect.stringContaining(REDIS_KEYS.USER_DELETE_ACCOUNT_KEY),
-        '1',
+        JSON.stringify({ userId: 1, deleteRss: true }),
         'EX',
         600,
       );
       expect(emailProducer.produceAccountDeletion).toHaveBeenCalledWith(
         user,
         expect.any(String),
+      );
+    });
+
+    it('deleteRss=false면 해당 값을 그대로 저장한다.', async () => {
+      // given
+      const user = UserFixture.createUserFixture({ id: 1 });
+      userRepository.findOneBy.mockResolvedValue(user);
+
+      // when
+      await userService.requestDeleteAccount(1, false);
+
+      // then
+      expect(redisService.set).toHaveBeenCalledWith(
+        expect.stringContaining(REDIS_KEYS.USER_DELETE_ACCOUNT_KEY),
+        JSON.stringify({ userId: 1, deleteRss: false }),
+        'EX',
+        600,
       );
     });
   });
@@ -473,13 +854,15 @@ describe(`${UserService.name} Unit Test`, () => {
       );
     });
 
-    it('탈퇴를 확정하면 토큰을 무효화하고 사용자와 프로필을 제거한다.', async () => {
+    it('deleteRss=true면 트랜잭션에서 RSS를 먼저 삭제한 뒤 사용자를 제거한다.', async () => {
       // given
       const user = UserFixture.createUserFixture({
         id: 1,
         profileImage: 'avatar.png',
       });
-      redisService.get.mockResolvedValue('1');
+      redisService.get.mockResolvedValue(
+        JSON.stringify({ userId: 1, deleteRss: true }),
+      );
       userRepository.findOneBy.mockResolvedValue(user);
 
       // when
@@ -487,12 +870,33 @@ describe(`${UserService.name} Unit Test`, () => {
 
       // then
       expect(fileService.deleteByPath).toHaveBeenCalledWith('avatar.png');
+      expect(manager.delete).toHaveBeenCalledWith(RssAccept, { userId: 1 });
+      expect(manager.remove).toHaveBeenCalledWith(user);
+      // RSS 삭제가 user 제거보다 먼저 호출되어야 한다(FK SET NULL 함정 방지).
+      expect(manager.delete.mock.invocationCallOrder[0]).toBeLessThan(
+        manager.remove.mock.invocationCallOrder[0],
+      );
       expect(redisService.setex).toHaveBeenCalledWith(
         `${REDIS_KEYS.USER_INVALIDATED_PREFIX}:1`,
-        14 * 86400, // parseTimeToSeconds('14d')
-        expect.stringMatching(/^\d+$/), // invalidatedAt 타임스탬프(초)
+        14 * 86400,
+        expect.stringMatching(/^\d+$/),
       );
-      expect(userRepository.remove).toHaveBeenCalledWith(user);
+    });
+
+    it('deleteRss=false면 RSS를 삭제하지 않고 사용자만 제거한다(FK SET NULL로 연결만 해제).', async () => {
+      // given
+      const user = UserFixture.createUserFixture({ id: 1, profileImage: null });
+      redisService.get.mockResolvedValue(
+        JSON.stringify({ userId: 1, deleteRss: false }),
+      );
+      userRepository.findOneBy.mockResolvedValue(user);
+
+      // when
+      await userService.confirmDeleteAccount('token');
+
+      // then
+      expect(manager.delete).not.toHaveBeenCalled();
+      expect(manager.remove).toHaveBeenCalledWith(user);
     });
   });
 

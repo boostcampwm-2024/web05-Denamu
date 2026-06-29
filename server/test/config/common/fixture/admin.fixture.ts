@@ -10,9 +10,9 @@ export const ADMIN_DEFAULT_PASSWORD = 'test1234!';
 export class AdminFixture {
   static createGeneralAdmin() {
     return {
-      loginId: `test${uuid.v4()}`,
       password: ADMIN_DEFAULT_PASSWORD,
       name: `name${uuid.v4()}`,
+      email: `admin${uuid.v4()}@test.com`,
     };
   }
 

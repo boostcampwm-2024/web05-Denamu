@@ -11,7 +11,12 @@ import { Input } from "@/components/ui/input";
 import { useSignIn } from "@/hooks/auth/useSignIn";
 import { useCustomToast } from "@/hooks/common/useCustomToast.ts";
 
-export const AuthSignInForm = () => {
+interface AuthSignInFormProps {
+  hideBackButton?: boolean;
+  onSuccess?: () => void;
+}
+
+export const AuthSignInForm = ({ hideBackButton = false, onSuccess }: AuthSignInFormProps = {}) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useCustomToast();
@@ -25,6 +30,11 @@ export const AuthSignInForm = () => {
           description: result.message,
         });
 
+        if (onSuccess) {
+          onSuccess();
+          return;
+        }
+
         const from = location.state?.from || "/";
         navigate(from === "/signup" ? "/" : from);
       } else {
@@ -35,7 +45,7 @@ export const AuthSignInForm = () => {
         });
       }
     }
-  }, [result, toast, navigate, location.state]);
+  }, [result, toast, navigate, location.state, onSuccess]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,17 +54,19 @@ export const AuthSignInForm = () => {
 
   return (
     <>
-      <div className="px-6 pt-6 pb-2">
-        <button
-          type="button"
-          aria-label="Denamu 홈으로 돌아가기"
-          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
-          onClick={() => navigate("/")}
-        >
-          <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
-          Denamu 홈으로 돌아가기
-        </button>
-      </div>
+      {!hideBackButton && (
+        <div className="px-6 pt-6 pb-2">
+          <button
+            type="button"
+            aria-label="Denamu 홈으로 돌아가기"
+            className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+            onClick={() => navigate("/")}
+          >
+            <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+            Denamu 홈으로 돌아가기
+          </button>
+        </div>
+      )}
       <AuthCard title="로그인" description="로그인을 해주세요">
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div className="space-y-2">

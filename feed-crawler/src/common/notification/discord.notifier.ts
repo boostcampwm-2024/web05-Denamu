@@ -3,7 +3,7 @@ import { injectable } from 'tsyringe';
 import axios from 'axios';
 import { EventEmitter } from 'node:events';
 
-import logger from '@common/logger';
+import logger from '@common/logger/logger';
 import {
   aiSummaryPayload,
   fullFeedCrawlingPayload,
@@ -29,7 +29,7 @@ export class DiscordNotifier implements Notifier {
     this.eventEmitter = new EventEmitter();
   }
 
-  initialize() {
+  start() {
     if (!this.initialized) {
       this.eventEmitter.on(
         NOTIFICATION_EVENT.FEED_CRAWLING_SCHEDULED,

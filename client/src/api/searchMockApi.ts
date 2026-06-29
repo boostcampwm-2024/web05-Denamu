@@ -5,7 +5,7 @@ import { SearchResult } from "@/types/search";
 
 const mock = new MockAdapter(axios);
 
-const mockData: SearchResult[] = [
+const baseMockData = [
   {
     id: 1,
     blogName: "토스",
@@ -77,6 +77,17 @@ const mockData: SearchResult[] = [
     createdAt: "2024-11-05 13:42:30",
   },
 ];
+
+const mockData: SearchResult[] = baseMockData.map((item) => ({
+  ...item,
+  author: item.blogName,
+  blogPlatform: "etc",
+  thumbnail: "",
+  viewCount: 0,
+  tag: [],
+  likes: 0,
+  comments: 0,
+}));
 
 mock.onGet("/api/search").reply((config) => {
   const { find, type, limit = 4, page = 1 } = config.params;

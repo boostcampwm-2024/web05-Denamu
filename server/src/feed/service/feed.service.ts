@@ -1,4 +1,9 @@
-import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 import axios from 'axios';
 import { Request, Response } from 'express';
@@ -7,10 +12,12 @@ import { cookieConfig } from '@common/cookie/cookie.config';
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
 
+import { AI_RETRY_LOCK_TTL_SECONDS } from '@feed/constant/feed.constant';
 import { ManageFeedRequestDto } from '@feed/dto/request/manageFeed.dto';
 import { ReadFeedPaginationRequestDto } from '@feed/dto/request/readFeedPagination.dto';
 import { SearchFeedRequestDto } from '@feed/dto/request/searchFeed.dto';
 import { GetFeedDetailResponseDto } from '@feed/dto/response/getFeedDetail';
+import { ReadNoSummaryFeedResponseDto } from '@feed/dto/response/readNoSummaryFeed.dto';
 import {
   FeedPaginationResult,
   FeedResult,
@@ -31,6 +38,11 @@ import {
   FeedViewRepository,
 } from '@feed/repository/feed.repository';
 
+type AiSummaryRetryMessage = {
+  feedId: number;
+  deathCount: number;
+};
+
 @Injectable()
 export class FeedService {
   constructor(
@@ -46,6 +58,47 @@ export class FeedService {
     }
 
     return feed;
+  }
+
+  async getPublicFeed(feedId: number) {
+    const feed = await this.getFeed(feedId);
+    if (!feed.isPublic) {
+      throw new NotFoundException('존재하지 않는 게시글입니다.');
+    }
+
+    return feed;
+  }
+
+  async readFeedsWithoutSummary() {
+    const feeds = await this.feedRepository.findFeedsWithoutSummary();
+    return ReadNoSummaryFeedResponseDto.toResponseDtoArray(feeds);
+  }
+
+  async requestAiSummary(feedId: number) {
+    await this.getFeed(feedId);
+
+    const lockKey = `${REDIS_KEYS.FEED_AI_RETRY_LOCK}:${feedId}`;
+    const acquired = await this.redisService.set(
+      lockKey,
+      '1',
+      'NX',
+      'EX',
+      AI_RETRY_LOCK_TTL_SECONDS,
+    );
+    if (!acquired) {
+      throw new ConflictException(
+        '현재 이 게시글은 AI 큐에 포함되어 요약을 진행중입니다.',
+      );
+    }
+
+    const message: AiSummaryRetryMessage = {
+      feedId,
+      deathCount: 0,
+    };
+    await this.redisService.rpush(
+      REDIS_KEYS.FEED_AI_RETRY_QUEUE,
+      JSON.stringify(message),
+    );
   }
 
   async getFeedByView(feedId: number) {
@@ -247,9 +300,18 @@ export class FeedService {
     return request.socket.remoteAddress;
   }
 
-  async getFeedDetail(feedDetailRequestDto: ManageFeedRequestDto) {
+  async getFeedDetail(
+    feedDetailRequestDto: ManageFeedRequestDto,
+    userId?: number,
+  ) {
     const feed = await this.getFeedByView(feedDetailRequestDto.feedId);
-    return GetFeedDetailResponseDto.toResponseDto(feed);
+    const isOwner = userId
+      ? await this.feedRepository.isOwnedByUser(
+          feedDetailRequestDto.feedId,
+          userId,
+        )
+      : false;
+    return GetFeedDetailResponseDto.toResponseDto(feed, isOwner);
   }
 
   async deleteCheckFeed(feedDeleteCheckDto: ManageFeedRequestDto) {

@@ -1,4 +1,4 @@
-import { RssObj } from '@common/types';
+import { RssObj } from '@common/feed/feed.type';
 
 /**
  * Parser 테스트용 픽스처 데이터
@@ -55,6 +55,37 @@ export const ATOM_10_SAMPLE = `<?xml version="1.0" encoding="UTF-8"?>
     <published>${FIXED_DATE_ISO}</published>
     <updated>${FIXED_DATE_ISO}</updated>
     <summary>Atom 두 번째 글 요약</summary>
+  </entry>
+</feed>`;
+
+// RSS 2.0 단일 item 데이터 (item이 배열이 아닌 단일 객체로 파싱되는 케이스)
+export const RSS_20_SINGLE_ITEM = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>단일 글 블로그</title>
+    <link>https://rssfeed.com</link>
+    <item>
+      <title>유일한 글</title>
+      <description>유일한 글 내용입니다.</description>
+      <link>https://rssfeed.com/only</link>
+      <pubDate>${FIXED_DATE_UTC}</pubDate>
+    </item>
+  </channel>
+</rss>`;
+
+// Atom 1.0 단일 entry 데이터 (entry가 배열이 아닌 단일 객체로 파싱되는 케이스)
+export const ATOM_10_SINGLE_ENTRY = `<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>단일 글 Atom 피드</title>
+  <link href="https://atomfeed.com"/>
+  <id>https://atomfeed.com</id>
+  <updated>${FIXED_DATE_ISO}</updated>
+  <entry>
+    <title>유일한 Atom 글</title>
+    <link rel="alternate" href="https://atomfeed.com/only"/>
+    <id>https://atomfeed.com/only</id>
+    <published>${FIXED_DATE_ISO}</published>
+    <summary>유일한 글 요약</summary>
   </entry>
 </feed>`;
 

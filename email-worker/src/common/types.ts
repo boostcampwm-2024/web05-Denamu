@@ -11,6 +11,11 @@ export interface RssRegistration {
   description?: string;
 }
 
+export interface RssRegistrationRequest {
+  rss: Rss;
+  adminEmail: string;
+}
+
 export interface User {
   email: string;
   userName: string;
@@ -22,4 +27,18 @@ export interface RssRemoval {
   email: string;
   rssUrl: string;
   certificateCode: string;
+}
+
+export interface RssCertification {
+  userName: string;
+  email: string;
+  blogName: string;
+  certificateCode: string;
+  userEmail: string;
+}
+
+export interface AdminCertification {
+  email: string;
+  name: string;
+  uuid: string;
 }

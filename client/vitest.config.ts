@@ -13,7 +13,13 @@ export default defineConfig({
       reporter: ["text", "json", "json-summary", "html"],
       reportsDirectory: "./coverage",
       include: ["src/components/**/*.{ts,tsx}", "src/hooks/**/*.{ts,tsx}"],
-      exclude: ["src/**/*.test.{ts,tsx}", "src/**/*.spec.{ts,tsx}"],
+      exclude: [
+        "src/**/*.test.{ts,tsx}",
+        "src/**/*.spec.{ts,tsx}",
+        "src/**/*.stories.{ts,tsx}",
+        "src/components/ui/**",
+        "src/**/index.ts",
+      ],
     },
   },
   resolve: {

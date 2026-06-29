@@ -1,13 +1,13 @@
 import { inject, injectable } from 'tsyringe';
 
-import { redisConstant } from '@common/constant';
-import { DatabaseConnection } from '@common/database-connection';
+import { DatabaseConnection } from '@common/database/database-connection';
 import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
-import logger from '@common/logger';
+import { FeedDetail } from '@common/feed/feed.type';
+import logger from '@common/logger/logger';
 import { DbMetrics } from '@common/metrics/db-metrics';
 import { RedisMetrics } from '@common/metrics/redis-metrics';
-import { RedisConnection } from '@common/redis-access';
-import { FeedDetail } from '@common/types';
+import { RedisConnection } from '@common/redis/redis-access';
+import { redisConstant } from '@common/redis/redis.constant';
 
 @injectable()
 export class FeedRepository {
@@ -136,6 +136,25 @@ export class FeedRepository {
         에러 메시지: ${error instanceof Error ? error.message : String(error)}
         스택 트레이스: ${error instanceof Error ? error.stack : ''}`,
       );
+    }
+  }
+
+  public async selectFeedById(
+    feedId: number,
+  ): Promise<{ id: number; blogId: number; path: string } | null> {
+    const query = `SELECT id, blog_id as blogId, path FROM feed WHERE id = ?`;
+    this.dbMetrics.total.inc({ operation: 'select_feed_by_id' });
+    try {
+      const result = await this.dbConnection.executeQuery<{
+        id: number;
+        blogId: number;
+        path: string;
+      }>(query, [feedId]);
+      this.dbMetrics.success.inc({ operation: 'select_feed_by_id' });
+      return result && result.length > 0 ? result[0] : null;
+    } catch (error) {
+      this.dbMetrics.failure.inc({ operation: 'select_feed_by_id' });
+      throw error;
     }
   }
 

@@ -3,7 +3,14 @@ import 'reflect-metadata';
 import * as nodemailer from 'nodemailer';
 
 import { EmailMetrics } from '@common/metrics/email-metrics';
-import { RssRegistration, RssRemoval, User } from '@common/types';
+import {
+  AdminCertification,
+  RssCertification,
+  RssRegistration,
+  RssRegistrationRequest,
+  RssRemoval,
+  User,
+} from '@common/types';
 
 import { PRODUCT_DOMAIN } from '@email/email.content';
 import { EmailService } from '@email/email.service';
@@ -83,6 +90,24 @@ describe('EmailService unit test', () => {
         },
       });
     });
+
+    it('SMTP_HOST, SMTP_PORT 환경 변수가 있으면 해당 값으로 transporter를 생성한다', () => {
+      process.env.SMTP_HOST = 'smtp.custom.com';
+      process.env.SMTP_PORT = '2525';
+      (nodemailer.createTransport as jest.Mock).mockClear();
+
+      new EmailService(mockEmailMetrics);
+
+      expect(nodemailer.createTransport).toHaveBeenCalledWith({
+        host: 'smtp.custom.com',
+        port: 2525,
+        secure: false,
+        auth: {
+          user: mockEmailUser,
+          pass: mockEmailPassword,
+        },
+      });
+    });
   });
 
   describe('sendUserCertificationMail unit test', () => {
@@ -123,6 +148,19 @@ describe('EmailService unit test', () => {
       await expect(
         emailService.sendUserCertificationMail(user),
       ).rejects.toThrow('SMTP connection failed');
+    });
+
+    it('Error 인스턴스가 아닌 값으로 실패해도 그대로 전파한다', async () => {
+      const user: User = {
+        email: 'user@test.com',
+        userName: 'testUser',
+        uuid: 'test-uuid',
+      };
+      mockSendMail.mockRejectedValue('non-error failure');
+
+      await expect(emailService.sendUserCertificationMail(user)).rejects.toBe(
+        'non-error failure',
+      );
     });
   });
 
@@ -205,6 +243,41 @@ describe('EmailService unit test', () => {
       expect(callArgs.html).toContain(rssRemoval.userName);
       expect(callArgs.html).toContain(rssRemoval.certificateCode);
       expect(callArgs.html).toContain(rssRemoval.rssUrl);
+      expect(callArgs.html).toContain(
+        `/rss/removals/confirm?code=${rssRemoval.certificateCode}`,
+      );
+    });
+  });
+
+  describe('sendRssCertificationMail unit test', () => {
+    it('RSS 소유 인증 메일을 올바르게 전송한다', async () => {
+      const rssCertification: RssCertification = {
+        userName: 'tester',
+        email: 'tester@test.com',
+        blogName: 'Test Blog',
+        certificateCode: 'cert-uuid',
+        userEmail: 'requester@test.com',
+      };
+
+      await emailService.sendRssCertificationMail(rssCertification);
+
+      expect(mockSendMail).toHaveBeenCalledTimes(1);
+      expect(mockSendMail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          from: `Denamu<${mockEmailUser}>`,
+          to: `${rssCertification.userName}<${rssCertification.email}>`,
+          subject: '[🎋 Denamu] RSS 소유 인증 메일입니다.',
+        }),
+      );
+
+      const callArgs = (mockSendMail.mock.calls[0] as [{ html: string }])[0];
+      expect(callArgs.html).toContain(rssCertification.userName);
+      expect(callArgs.html).toContain(rssCertification.certificateCode);
+      expect(callArgs.html).toContain(rssCertification.blogName);
+      expect(callArgs.html).toContain(rssCertification.userEmail);
+      expect(callArgs.html).toContain(
+        `/rss/certifications/confirm?code=${rssCertification.certificateCode}`,
+      );
     });
   });
 
@@ -259,6 +332,116 @@ describe('EmailService unit test', () => {
       expect(callArgs.html).toContain(
         `${PRODUCT_DOMAIN}/users/deletion-requests/confirm?token=${user.uuid}`,
       );
+    });
+  });
+
+  describe('sendAdminCertificationMail unit test', () => {
+    it('관리자 계정 인증 메일을 올바르게 전송한다', async () => {
+      const admin: AdminCertification = {
+        email: 'admin@test.com',
+        name: 'adminUser',
+        uuid: 'admin-uuid',
+      };
+
+      await emailService.sendAdminCertificationMail(admin);
+
+      expect(mockSendMail).toHaveBeenCalledTimes(1);
+      expect(mockSendMail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          from: `Denamu<${mockEmailUser}>`,
+          to: admin.email,
+          subject: '[🎋 Denamu] 관리자 계정 인증 메일',
+        }),
+      );
+
+      const callArgs = (mockSendMail.mock.calls[0] as [{ html: string }])[0];
+      expect(callArgs.html).toContain(admin.name);
+      expect(callArgs.html).toContain(
+        `${PRODUCT_DOMAIN}/admins/email-verifications?token=${admin.uuid}`,
+      );
+    });
+  });
+
+  describe('sendAdminDeleteAccountMail unit test', () => {
+    it('관리자 회원탈퇴 확인 메일을 올바르게 전송한다', async () => {
+      const admin: AdminCertification = {
+        email: 'admin@test.com',
+        name: 'adminUser',
+        uuid: 'admin-uuid',
+      };
+
+      await emailService.sendAdminDeleteAccountMail(admin);
+
+      expect(mockSendMail).toHaveBeenCalledTimes(1);
+      expect(mockSendMail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          from: `Denamu<${mockEmailUser}>`,
+          to: admin.email,
+          subject: '[🎋 Denamu] 관리자 회원탈퇴 확인 메일',
+        }),
+      );
+
+      const callArgs = (mockSendMail.mock.calls[0] as [{ html: string }])[0];
+      expect(callArgs.html).toContain(admin.name);
+      expect(callArgs.html).toContain(
+        `${PRODUCT_DOMAIN}/admins/deletion-requests/confirm?token=${admin.uuid}`,
+      );
+    });
+  });
+
+  describe('sendAdminPasswordResetEmail unit test', () => {
+    it('관리자 비밀번호 재설정 메일을 올바르게 전송한다', async () => {
+      const admin: AdminCertification = {
+        email: 'admin@test.com',
+        name: 'adminUser',
+        uuid: 'admin-uuid',
+      };
+
+      await emailService.sendAdminPasswordResetEmail(admin);
+
+      expect(mockSendMail).toHaveBeenCalledTimes(1);
+      expect(mockSendMail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          from: `Denamu<${mockEmailUser}>`,
+          to: admin.email,
+          subject: '[🎋 Denamu] 관리자 비밀번호 재설정',
+        }),
+      );
+
+      const callArgs = (mockSendMail.mock.calls[0] as [{ html: string }])[0];
+      expect(callArgs.html).toContain(admin.name);
+      expect(callArgs.html).toContain(
+        `${PRODUCT_DOMAIN}/admins/password-resets/confirm?token=${admin.uuid}`,
+      );
+    });
+  });
+
+  describe('sendRssRegistrationRequestMail unit test', () => {
+    it('RSS 등록 신청 접수 메일을 관리자에게 올바르게 전송한다', async () => {
+      const request: RssRegistrationRequest = {
+        rss: {
+          name: 'Test Blog',
+          userName: 'tester',
+          email: 'tester@test.com',
+          rssUrl: 'https://test.com/rss',
+        },
+        adminEmail: 'admin@test.com',
+      };
+
+      await emailService.sendRssRegistrationRequestMail(request);
+
+      expect(mockSendMail).toHaveBeenCalledTimes(1);
+      expect(mockSendMail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          from: `Denamu<${mockEmailUser}>`,
+          to: request.adminEmail,
+          subject: '[🎋 Denamu] 새로운 RSS 등록 신청이 접수되었습니다.',
+        }),
+      );
+
+      const callArgs = (mockSendMail.mock.calls[0] as [{ html: string }])[0];
+      expect(callArgs.html).toContain(request.rss.name);
+      expect(callArgs.html).toContain(request.rss.rssUrl);
     });
   });
 });

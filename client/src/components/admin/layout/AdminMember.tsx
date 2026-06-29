@@ -26,7 +26,7 @@ import { DeleteChildResponse, RegisterResponse, RegisterRequest } from "@/types/
 
 export default function AdminMember() {
   const [viewPassword, setViewPassword] = useState<boolean>(false);
-  const [formData, setFormData] = useState<RegisterRequest>({ loginId: "", password: "", name: "" });
+  const [formData, setFormData] = useState<RegisterRequest>({ password: "", name: "", email: "" });
 
   const extractErrorMessage = (error: AxiosError) => {
     const data = error.response?.data as { message?: string | string[] } | string | undefined;
@@ -37,8 +37,8 @@ export default function AdminMember() {
   };
 
   const onSuccess = (data: RegisterResponse) => {
-    alert(`관리자 등록 성공: ${data.message}`);
-    setFormData({ loginId: "", password: "", name: "" });
+    alert(`인증 이메일을 발송했습니다: ${data.message}`);
+    setFormData({ password: "", name: "", email: "" });
   };
 
   const onError = (error: AxiosError) => {
@@ -75,25 +75,11 @@ export default function AdminMember() {
       <Card className="shadow">
         <CardHeader>
           <CardTitle>관리자 계정 생성</CardTitle>
-          <CardDescription>새로운 관리자 계정을 생성합니다.</CardDescription>
+          <CardDescription>입력한 이메일로 인증 메일을 발송합니다. 인증을 완료해야 계정이 생성됩니다.</CardDescription>
         </CardHeader>
 
         <form onSubmit={handleSubmit} autoCapitalize="off" autoCorrect="off" className="w-[30rem]">
           <CardContent className="flex flex-col gap-5">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="R-ID">ID</Label>
-              <Input
-                type="text"
-                autoComplete="off"
-                id="R-ID"
-                value={formData.loginId}
-                onChange={(e) => handleChange(e, "loginId")}
-                className="appearance-none"
-                autoCorrect="off"
-                autoCapitalize="off"
-                spellCheck="false"
-              />
-            </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="R-Name">이름</Label>
               <Input
@@ -103,6 +89,21 @@ export default function AdminMember() {
                 id="R-Name"
                 value={formData.name}
                 onChange={(e) => handleChange(e, "name")}
+                className="appearance-none"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck="false"
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="R-Email">이메일</Label>
+              <Input
+                type="email"
+                required
+                autoComplete="off"
+                id="R-Email"
+                value={formData.email}
+                onChange={(e) => handleChange(e, "email")}
                 className="appearance-none"
                 autoCorrect="off"
                 autoCapitalize="off"
@@ -154,7 +155,7 @@ export default function AdminMember() {
                 <li key={child.id} className="flex items-center justify-between py-3">
                   <div className="flex flex-col">
                     <span className="font-medium">{child.name}</span>
-                    <span className="text-sm text-muted-foreground">{child.loginId}</span>
+                    <span className="text-sm text-muted-foreground">{child.email}</span>
                   </div>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
@@ -166,7 +167,7 @@ export default function AdminMember() {
                       <AlertDialogHeader>
                         <AlertDialogTitle>관리자 계정 삭제</AlertDialogTitle>
                         <AlertDialogDescription>
-                          <span className="font-medium">{child.name}</span> ({child.loginId}) 계정을 삭제하시겠습니까?
+                          <span className="font-medium">{child.name}</span> ({child.email}) 계정을 삭제하시겠습니까?
                           <br />이 계정이 생성한 하위 관리자 계정도 함께 삭제되며, 되돌릴 수 없습니다.
                         </AlertDialogDescription>
                       </AlertDialogHeader>

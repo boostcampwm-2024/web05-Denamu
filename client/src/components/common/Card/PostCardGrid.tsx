@@ -1,8 +1,8 @@
 import { PostCard } from "./PostCard";
-import { Post } from "@/types/post";
+import { FeedList } from "@/types/post";
 
 interface PostCardGridProps {
-  posts: Post[];
+  posts: FeedList[];
 }
 
 export const PostCardGrid = ({ posts }: PostCardGridProps) => {

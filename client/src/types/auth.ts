@@ -1,18 +1,34 @@
+import { ApiData, ApiMessage } from "@/types/api";
+
 export type AdminAuthRequest = {
-  loginId: string;
+  email: string;
   password: string;
 };
 
-export type AdminAuthResponse = {
-  message: string;
+export type AdminAuthResponse = ApiMessage;
+
+export type AdminProfileResponse = ApiData<{
+  email: string;
+  name: string;
+  emailNotification: boolean;
+  parent: { email: string; name: string } | null;
+}>;
+
+export type AdminUpdateRequest = {
+  name?: string;
+  password?: string;
+  emailNotification?: boolean;
 };
 
-export type AdminProfileResponse = {
-  message: string;
-  data: {
-    name: string;
-    parent: { loginId: string; name: string } | null;
-  };
+export type AdminUpdateResponse = ApiMessage;
+
+export type AdminForgotPasswordRequest = {
+  email: string;
+};
+
+export type AdminResetPasswordRequest = {
+  token: string;
+  password: string;
 };
 
 export interface UserSignUpRequest {
@@ -21,17 +37,14 @@ export interface UserSignUpRequest {
   userName: string;
 }
 
-export interface UserSignUpResponse {
-  message: string;
-}
+export type UserSignUpResponse = ApiMessage;
 
 export interface UserSignInRequest {
   email: string;
   password: string;
 }
 
-export interface UserSignInResponse {
-  message: string;
+export interface UserSignInResponse extends ApiMessage {
   data?: {
     accessToken: string;
   };

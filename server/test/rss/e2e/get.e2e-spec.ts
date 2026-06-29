@@ -33,9 +33,9 @@ describe(`GET ${URL} E2E Test`, () => {
 
   beforeEach(async () => {
     const admin = await adminRepository.save(
-      await AdminFixture.createAdminCryptFixture({ loginId: 'testAdminId' }),
+      await AdminFixture.createAdminCryptFixture(),
     );
-    await redisService.set(redisKeyMake(sessionKey), admin.loginId);
+    await redisService.set(redisKeyMake(sessionKey), admin.email);
   });
 
   it('[401] 관리자 로그인 쿠키가 없을 경우 RSS 조회를 실패한다.', async () => {

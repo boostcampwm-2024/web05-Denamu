@@ -22,6 +22,7 @@ export class FeedRepository extends Repository<Feed> {
       .innerJoinAndSelect('feed.blog', 'rss_accept')
       .addSelect(this.getMatchAgainstExpression(type, 'find'), 'relevance')
       .where(this.getWhereCondition(type), { find })
+      .andWhere('feed.is_public = 1')
       .orderBy('relevance', 'DESC')
       .addOrderBy('feed.createdAt', 'DESC')
       .skip(offset)
@@ -52,9 +53,98 @@ export class FeedRepository extends Repository<Feed> {
     }
   }
 
+  async getFeedsByBlog(
+    blogId: number,
+    lastId: number,
+    limit: number,
+    onlyPublic: boolean,
+  ) {
+    const query = this.createQueryBuilder('feed')
+      .select([
+        'feed.id',
+        'feed.title',
+        'feed.path',
+        'feed.createdAt',
+        'feed.commentCount',
+        'feed.likeCount',
+        'feed.isPublic',
+      ])
+      .where('feed.blog_id = :blogId', { blogId });
+
+    if (onlyPublic) {
+      query.andWhere('feed.is_public = 1');
+    }
+
+    if (lastId) {
+      query.andWhere('feed.id < :lastId', { lastId });
+    }
+
+    return await query
+      .orderBy('feed.id', 'DESC')
+      .take(limit + 1)
+      .getMany();
+  }
+
+  async countPublicFeedsByBlogIds(
+    blogIds: number[],
+  ): Promise<Map<number, number>> {
+    if (!blogIds.length) return new Map();
+
+    const rows = await this.createQueryBuilder('feed')
+      .select('feed.blog_id', 'blogId')
+      .addSelect('COUNT(*)', 'count')
+      .where('feed.blog_id IN (:...blogIds)', { blogIds })
+      .andWhere('feed.is_public = 1')
+      .groupBy('feed.blog_id')
+      .getRawMany();
+
+    return new Map(
+      rows.map((row: { blogId: number; count: number }) => [
+        Number(row.blogId),
+        Number(row.count),
+      ]),
+    );
+  }
+
+  async setVisibilityForBlog(
+    feedId: number,
+    blogId: number,
+    isPublic: boolean,
+  ) {
+    const result = await this.createQueryBuilder()
+      .update(Feed)
+      .set({ isPublic })
+      .where('id = :feedId AND blog_id = :blogId', { feedId, blogId })
+      .execute();
+
+    return result.affected ?? 0;
+  }
+
+  async isOwnedByUser(feedId: number, userId: number): Promise<boolean> {
+    const count = await this.createQueryBuilder('feed')
+      .innerJoin('feed.blog', 'blog')
+      .where('feed.id = :feedId', { feedId })
+      .andWhere('blog.user_id = :userId', { userId })
+      .getCount();
+
+    return count > 0;
+  }
+
+  async findFeedsWithoutSummary() {
+    return this.createQueryBuilder('feed')
+      .select(['feed.id', 'feed.title', 'feed.likeCount', 'feed.commentCount'])
+      .where('feed.is_public = 1')
+      .andWhere("(feed.summary IS NULL OR feed.summary = '')")
+      .orderBy('feed.id', 'DESC')
+      .getMany();
+  }
+
   async findAllStatisticsOrderByViewCount(limit: number) {
     return this.find({
       select: ['id', 'title', 'viewCount'],
+      where: {
+        isPublic: true,
+      },
       order: {
         viewCount: 'DESC',
       },

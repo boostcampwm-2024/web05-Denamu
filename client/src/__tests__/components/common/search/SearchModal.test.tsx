@@ -11,9 +11,13 @@ vi.mock("@/components/search/SearchResults/SearchResultList", () => ({
 
 vi.mock("@/store/useSearchStore", () => ({
   useSearchStore: vi.fn(() => ({
+    searchMode: "feed",
+    setSearchMode: vi.fn(),
+    setPage: vi.fn(),
     resetPage: vi.fn(),
     resetParam: vi.fn(),
     resetFilter: vi.fn(),
+    resetMode: vi.fn(),
   })),
 }));
 
@@ -31,9 +35,13 @@ describe("SearchModal", () => {
     const mockResetFilter = vi.fn();
 
     vi.mocked(useSearchStore).mockReturnValue({
+      searchMode: "feed",
+      setSearchMode: vi.fn(),
+      setPage: vi.fn(),
       resetPage: mockResetPage,
       resetParam: mockResetParam,
       resetFilter: mockResetFilter,
+      resetMode: vi.fn(),
     });
 
     const { container } = render(<SearchModal onClose={mockOnClose} />);

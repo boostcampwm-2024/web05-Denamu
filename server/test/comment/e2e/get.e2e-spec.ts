@@ -67,6 +67,24 @@ describe(`GET ${BASE_URL}/:feedId/comments E2E Test`, () => {
     expect(data).toBeUndefined();
   });
 
+  it('[404] 비공개 게시글의 댓글은 조회할 수 없다.', async () => {
+    // given - 비공개 게시글 + 댓글
+    const privateFeed = await feedRepository.save(
+      FeedFixture.createFeedFixture(rssAccept, { isPublic: false }),
+    );
+    await commentRepository.save(
+      CommentFixture.createCommentFixture(privateFeed, user),
+    );
+
+    // Http when
+    const response = await agent.get(`${BASE_URL}/${privateFeed.id}/comments`);
+
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    expect(data).toBeUndefined();
+  });
+
   it('[200] 게시글이 존재할 경우 댓글 조회를 성공한다.', async () => {
     // Http when
     const response = await agent.get(`${BASE_URL}/${feed.id}/comments`);
@@ -77,6 +95,8 @@ describe(`GET ${BASE_URL}/:feedId/comments E2E Test`, () => {
     expect(data).toStrictEqual([
       {
         id: comment.id,
+        parentId: null,
+        isDeleted: false,
         comment: comment.comment,
         date: comment.date.toISOString(),
         user: {

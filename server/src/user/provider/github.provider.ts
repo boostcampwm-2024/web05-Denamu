@@ -100,13 +100,13 @@ export class GithubOAuthProvider implements OAuthProvider {
         },
       );
 
-      const { id, email, name, avatar_url } = response.data;
+      const { id, email, name, login, avatar_url } = response.data;
       return {
         id,
         email,
-        name,
+        name: name || login,
         picture: avatar_url,
-      } as UserInfo;
+      };
     } catch (error) {
       this.logger.error(`Failed to fetch user info from GitHub: ${error}`);
       throw new BadGatewayException(

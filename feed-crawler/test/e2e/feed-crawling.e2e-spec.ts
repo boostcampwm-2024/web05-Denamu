@@ -1,6 +1,6 @@
 import { setupTestContainer } from '@test/setup/testContext.setup';
 
-import { redisConstant } from '@common/constant';
+import { redisConstant } from '@common/redis/redis.constant';
 
 import { FeedCrawler } from '../../src/feed-crawler';
 

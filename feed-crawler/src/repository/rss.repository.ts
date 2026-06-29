@@ -1,9 +1,9 @@
 import { inject, injectable } from 'tsyringe';
 
-import { DatabaseConnection } from '@common/database-connection';
+import { DatabaseConnection } from '@common/database/database-connection';
 import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
+import { RssObj } from '@common/feed/feed.type';
 import { DbMetrics } from '@common/metrics/db-metrics';
-import { RssObj } from '@common/types';
 
 @injectable()
 export class RssRepository {
@@ -19,7 +19,7 @@ export class RssRepository {
         FROM rss_accept`;
     this.dbMetrics.total.inc({ operation: 'select_all_rss' });
     try {
-      const result = await this.dbConnection.executeQuery<RssObj>(query, []);
+      const result = await this.dbConnection.executeQuery<RssObj>(query);
       this.dbMetrics.success.inc({ operation: 'select_all_rss' });
       return result;
     } catch (error) {
@@ -33,7 +33,9 @@ export class RssRepository {
         FROM rss_accept WHERE id = ?`;
     this.dbMetrics.total.inc({ operation: 'select_rss_by_id' });
     try {
-      const result = await this.dbConnection.executeQuery<RssObj>(query, [rssId]);
+      const result = await this.dbConnection.executeQuery<RssObj>(query, [
+        rssId,
+      ]);
       this.dbMetrics.success.inc({ operation: 'select_rss_by_id' });
       return result && result.length > 0 ? result[0] : null;
     } catch (error) {

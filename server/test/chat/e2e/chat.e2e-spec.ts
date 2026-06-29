@@ -74,10 +74,13 @@ describe('Socket.IO Anonymous Chat E2E Test', () => {
     // given
     const mockChatHistory = ChatFixture.createChatHistory(2);
 
-    await redisService.lpush(
-      REDIS_KEYS.CHAT_HISTORY_KEY('anonymous1'),
-      ...mockChatHistory.map((chat) => JSON.stringify(chat)).reverse(),
-    );
+    for (let i = 0; i < mockChatHistory.length; i++) {
+      await redisService.zadd(
+        REDIS_KEYS.CHAT_HISTORY_KEY('anonymous1'),
+        i + 1,
+        JSON.stringify(mockChatHistory[i]),
+      );
+    }
 
     clientSocket = io(serverUrl, {
       forceNew: true,
@@ -101,7 +104,7 @@ describe('Socket.IO Anonymous Chat E2E Test', () => {
     });
 
     // Socket.IO then
-    expect(data).toStrictEqual(mockChatHistory.reverse());
+    expect(data).toStrictEqual(mockChatHistory);
   });
 
   it('[Connect] 클라이언트가 연결될 경우 현재 접속중인 유저 수 정보를 받는다.', async () => {
@@ -346,7 +349,7 @@ describe('Socket.IO Anonymous Chat E2E Test', () => {
     });
 
     // Socket.IO then
-    const history = await redisService.lrange(
+    const history = await redisService.zrange(
       REDIS_KEYS.CHAT_HISTORY_KEY('anonymous1'),
       0,
       -1,
@@ -360,10 +363,13 @@ describe('Socket.IO Anonymous Chat E2E Test', () => {
   it('[Message] CHAT_HISTORY_LIMIT 초과 메시지 저장 시 오래된 메시지가 제거된다.', async () => {
     // given: Redis에 CHAT_HISTORY_LIMIT개의 메시지 미리 적재
     const existingMessages = ChatFixture.createChatHistory(CHAT_HISTORY_LIMIT);
-    await redisService.lpush(
-      REDIS_KEYS.CHAT_HISTORY_KEY('anonymous1'),
-      ...existingMessages.map((m) => JSON.stringify(m)).reverse(),
-    );
+    for (let i = 0; i < existingMessages.length; i++) {
+      await redisService.zadd(
+        REDIS_KEYS.CHAT_HISTORY_KEY('anonymous1'),
+        i + 1,
+        JSON.stringify(existingMessages[i]),
+      );
+    }
 
     const chat = ChatFixture.createChat();
     clientSocket = io(serverUrl, {
@@ -381,7 +387,7 @@ describe('Socket.IO Anonymous Chat E2E Test', () => {
     });
 
     // Socket.IO then
-    const history = await redisService.lrange(
+    const history = await redisService.zrange(
       REDIS_KEYS.CHAT_HISTORY_KEY('anonymous1'),
       0,
       -1,

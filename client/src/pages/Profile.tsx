@@ -1,32 +1,63 @@
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
-import { useCustomToast } from "@/hooks/common/useCustomToast.ts";
+import Layout from "@/components/layout/Layout";
+import { MyPage } from "@/components/profile/MyPage.tsx";
+import { ProfileSidebar } from "@/components/profile/ProfileSidebar.tsx";
+import { RssManagementTab } from "@/components/profile/rss/RssManagementTab.tsx";
+import { ProfileEditTab } from "@/components/profile/sections/ProfileEditTab.tsx";
 
-import { TOAST_MESSAGES } from "@/constants/messages";
+import { useAuthStore } from "@/store/useAuthStore.ts";
+import { ProfileTab } from "@/types/profile.ts";
 
-export default function ProfileLayout() {
-  const { toast } = useCustomToast();
+export default function Profile() {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const { isAuthenticated, isInitialized, userInfo } = useAuthStore();
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState<ProfileTab>(searchParams.get("oauthLink") ? "settings" : "mypage");
+
+  const targetId = id ? Number(id) : userInfo.id;
+  const isOwner = isAuthenticated && userInfo.id !== null && userInfo.id === targetId;
 
   useEffect(() => {
-    toast(TOAST_MESSAGES.SERVICE_NOT_PREPARED);
-    navigate("/");
-  }, [toast, navigate]);
+    if (!isInitialized) return;
+    if (!id && !isAuthenticated) {
+      navigate("/signin");
+    }
+  }, [isInitialized, isAuthenticated, id, navigate]);
 
-  return null;
-  // return (
-  //   <div className="flex min-h-screen bg-gray-50">
-  //     <Sidebar />
+  if (!isInitialized) {
+    return null;
+  }
+  if (!id && (!isAuthenticated || userInfo.id === null)) {
+    return null;
+  }
+  if (id && (!targetId || Number.isNaN(targetId))) {
+    return null;
+  }
 
-  //     <div className="flex-1 ml-64">
-  //       <div className="max-w-4xl mx-auto p-8">
-  //         <Header user={mockUser} />
-  //         <RecentPosts user={mockUser} />
-  //         <LikedPosts />
-  //         <Settings />
-  //       </div>
-  //     </div>
-  //   </div>
-  // );
+  const currentTab: ProfileTab = isOwner ? activeTab : "mypage";
+
+  return (
+    <Layout>
+      <div className="flex min-h-screen">
+        <ProfileSidebar activeTab={currentTab} onTabChange={setActiveTab} isOwner={isOwner} />
+
+        <div className="flex-1 min-w-0 px-4 py-8 md:px-8">
+          {currentTab === "mypage" && (
+            <MyPage
+              userId={targetId as number}
+              name={isOwner ? (userInfo.userName ?? "") : ""}
+              email={isOwner ? (userInfo.email ?? "") : ""}
+            />
+          )}
+          {isOwner && currentTab === "rss" && <RssManagementTab userId={targetId as number} />}
+          {isOwner && currentTab === "settings" && (
+            <ProfileEditTab userId={targetId as number} email={userInfo.email ?? ""} />
+          )}
+        </div>
+      </div>
+    </Layout>
+  );
 }

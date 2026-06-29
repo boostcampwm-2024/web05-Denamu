@@ -4,8 +4,11 @@ import { Loader } from "lucide-react";
 
 import { AdminHeader } from "@/components/admin/layout/AdminHeader";
 import AdminMember from "@/components/admin/layout/AdminMember";
+import AdminMyPage from "@/components/admin/layout/AdminMyPage";
 import { AdminTabs } from "@/components/admin/layout/AdminTabs";
 import AdminLogin from "@/components/admin/login/AdminLoginModal";
+import AdminPostTab from "@/components/admin/post/AdminPostTab";
+import AdminChatTab from "@/components/admin/chat/AdminChatTab";
 import { RssRequestSearchBar } from "@/components/admin/rss/RssSearchBar";
 
 import { useAdminCheck } from "@/hooks/queries/useAdminAuth";
@@ -13,7 +16,7 @@ import { useAdminCheck } from "@/hooks/queries/useAdminAuth";
 export default function Admin() {
   const [isLogin, setIsLogin] = useState<boolean>(false);
   const { status, isLoading, data } = useAdminCheck();
-  const [tap, setTap] = useState<"RSS" | "MEMBER">("RSS");
+  const [tap, setTap] = useState<"RSS" | "MEMBER" | "MYPAGE" | "POST" | "CHAT">("RSS");
 
   useEffect(() => {
     setIsLogin(status === "success");
@@ -28,6 +31,15 @@ export default function Admin() {
         </>
       );
     }
+    if (tap === "MYPAGE") {
+      return <AdminMyPage onBack={() => setTap("RSS")} />;
+    }
+    if (tap === "POST") {
+      return <AdminPostTab />;
+    }
+    if (tap === "CHAT") {
+      return <AdminChatTab />;
+    }
     return <AdminMember />;
   };
 
@@ -40,7 +52,7 @@ export default function Admin() {
 
   return isLogin ? (
     <main className="min-h-screen bg-background">
-      <AdminHeader setLogin={() => setIsLogin(false)} handleTap={setTap} name={data?.name} parent={data?.parent} />
+      <AdminHeader setLogin={() => setIsLogin(false)} handleTap={setTap} name={data?.name} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 h-full">{renderContent()} </div>
     </main>
   ) : (

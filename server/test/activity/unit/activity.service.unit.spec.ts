@@ -47,7 +47,7 @@ describe(`${ActivityService.name} Unit Test`, () => {
       userService.getUser.mockResolvedValue(user);
     });
 
-    it('조회된 활동을 날짜별 DTO로 매핑하고 사용자 스트릭 정보와 함께 반환한다.', async () => {
+    it('조회된 활동을 날짜별 DTO로 매핑해 반환한다.', async () => {
       // given
       const activities = ActivityFixture.createActivitiesFixture(user, 3);
       activityRepository.findActivitiesByUserIdAndYear.mockResolvedValue(
@@ -63,9 +63,6 @@ describe(`${ActivityService.name} Unit Test`, () => {
           date: activity.activityDate.toISOString().split('T')[0],
           viewCount: activity.viewCount,
         })),
-        maxStreak: user.maxStreak,
-        currentStreak: user.currentStreak,
-        totalViews: user.totalViews,
       });
     });
 

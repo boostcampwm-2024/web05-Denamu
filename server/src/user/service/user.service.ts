@@ -11,6 +11,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import * as uuid from 'uuid';
 import { Response } from 'express';
+import { DataSource, IsNull } from 'typeorm';
 
 import { cookieConfig } from '@common/cookie/cookie.config';
 import { EmailProducer } from '@common/email/email.producer';
@@ -18,14 +19,31 @@ import { Payload } from '@common/guard/jwt.guard';
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
 
+import { FeedRepository } from '@feed/repository/feed.repository';
+
 import { FileService } from '@file/service/file.service';
 
+import { RssAccept } from '@rss/entity/rss.entity';
+import { RssAcceptRepository } from '@rss/repository/rss.repository';
+
 import { REFRESH_TOKEN_TTL, SALT_ROUNDS } from '@user/constant/user.constants';
+import { ChangePasswordRequestDto } from '@user/dto/request/changePassword.dto';
 import { LoginUserRequestDto } from '@user/dto/request/loginUser.dto';
 import { RegisterUserRequestDto } from '@user/dto/request/registerUser.dto';
+import { SearchUserRequestDto } from '@user/dto/request/searchUser.dto';
 import { UpdateUserRequestDto } from '@user/dto/request/updateUser.dto';
 import { CheckEmailDuplicationResponseDto } from '@user/dto/response/checkEmailDuplication.dto';
+import { CheckUserNameDuplicationResponseDto } from '@user/dto/response/checkUserNameDuplication.dto';
 import { CreateAccessTokenResponseDto } from '@user/dto/response/createAccessToken.dto';
+import { GetUserProfileResponseDto } from '@user/dto/response/getUserProfile.dto';
+import {
+  SearchUserResponseDto,
+  SearchUserResult,
+} from '@user/dto/response/searchUser.dto';
+import { GetUserRssResponseDto } from '@user/dto/response/getUserRss.dto';
+import { GetUserRssFeedsRequestDto } from '@user/dto/request/getUserRssFeeds.dto';
+import { GetUserRssFeedsResponseDto } from '@user/dto/response/getUserRssFeeds.dto';
+import { User } from '@user/entity/user.entity';
 import { UserRepository } from '@user/repository/user.repository';
 
 @Injectable()
@@ -37,6 +55,9 @@ export class UserService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly fileService: FileService,
+    private readonly rssAcceptRepository: RssAcceptRepository,
+    private readonly feedRepository: FeedRepository,
+    private readonly dataSource: DataSource,
   ) {}
 
   async getUser(userId: number) {
@@ -47,6 +68,32 @@ export class UserService {
       throw new NotFoundException('존재하지 않는 유저입니다.');
     }
     return user;
+  }
+
+  async getUserProfile(userId: number) {
+    const user = await this.getUser(userId);
+    return GetUserProfileResponseDto.toResponseDto(user);
+  }
+
+  async searchUserList(searchUserQueryDto: SearchUserRequestDto) {
+    const { find, page, limit } = searchUserQueryDto;
+    const offset = (page - 1) * limit;
+
+    const [searchResult, totalCount] = await this.userRepository.searchUserList(
+      find,
+      limit,
+      offset,
+    );
+
+    const users = SearchUserResult.toResultDtoArray(searchResult);
+    const totalPages = Math.ceil(totalCount / limit);
+
+    return SearchUserResponseDto.toResponseDto(
+      totalCount,
+      users,
+      totalPages,
+      limit,
+    );
   }
 
   async checkEmailDuplication(email: string) {
@@ -64,6 +111,14 @@ export class UserService {
 
     if (user) {
       throw new ConflictException('이미 존재하는 이메일입니다.');
+    }
+
+    const existingName = await this.userRepository.findOne({
+      where: { userName: registerDto.userName },
+    });
+
+    if (existingName) {
+      throw new ConflictException('이미 존재하는 닉네임입니다.');
     }
 
     const newUser = registerDto.toEntity();
@@ -91,7 +146,45 @@ export class UserService {
       throw new NotFoundException('인증에 실패했습니다.');
     }
     await this.redisService.del(`${REDIS_KEYS.USER_AUTH_KEY}:${uuid}`);
-    await this.userRepository.save(JSON.parse(user));
+
+    try {
+      const newUser = await this.userRepository.save(JSON.parse(user) as User);
+      await this.rssAcceptRepository.update(
+        { email: newUser.email, userId: IsNull() },
+        { userId: newUser.id },
+      );
+    } catch (error) {
+      if ((error as { code?: string })?.code === 'ER_DUP_ENTRY') {
+        throw new ConflictException('이미 존재하는 이메일 또는 닉네임입니다.');
+      }
+      throw error;
+    }
+  }
+
+  async getUserRss(userId: number) {
+    const rssList = await this.rssAcceptRepository.find({
+      where: { userId },
+      order: { id: 'DESC' },
+    });
+    const feedCountMap = await this.feedRepository.countPublicFeedsByBlogIds(
+      rssList.map((rss) => rss.id),
+    );
+    return GetUserRssResponseDto.toResponseDtoArray(rssList, feedCountMap);
+  }
+
+  async getUserRssFeeds(rssId: number, feedDto: GetUserRssFeedsRequestDto) {
+    const feeds = await this.feedRepository.getFeedsByBlog(
+      rssId,
+      feedDto.lastId,
+      feedDto.limit,
+      true,
+    );
+
+    const hasMore = feeds.length > feedDto.limit;
+    if (hasMore) feeds.pop();
+    const lastId = feeds.length ? feeds[feeds.length - 1].id : 0;
+
+    return GetUserRssFeedsResponseDto.toResponseDto(feeds, lastId, hasMore);
   }
 
   async loginUser(loginDto: LoginUserRequestDto, response: Response) {
@@ -189,7 +282,16 @@ export class UserService {
   ): Promise<void> {
     const user = await this.getUser(userId);
 
-    if (updateData.userName !== undefined) {
+    if (
+      updateData.userName !== undefined &&
+      updateData.userName !== user.userName
+    ) {
+      const existingName = await this.userRepository.findOne({
+        where: { userName: updateData.userName },
+      });
+      if (existingName) {
+        throw new ConflictException('이미 존재하는 닉네임입니다.');
+      }
       user.userName = updateData.userName;
     }
     if (
@@ -203,7 +305,47 @@ export class UserService {
       user.introduction = updateData.introduction;
     }
 
+    try {
+      await this.userRepository.save(user);
+    } catch (error) {
+      if ((error as { code?: string })?.code === 'ER_DUP_ENTRY') {
+        throw new ConflictException('이미 존재하는 닉네임입니다.');
+      }
+      throw error;
+    }
+  }
+
+  async checkUserNameDuplication(userName: string) {
+    const user = await this.userRepository.findOne({
+      where: { userName },
+    });
+
+    return CheckUserNameDuplicationResponseDto.toResponseDto(!!user);
+  }
+
+  async changePassword(
+    userId: number,
+    changePasswordDto: ChangePasswordRequestDto,
+  ): Promise<void> {
+    const user = await this.getUser(userId);
+
+    if (user.password) {
+      const matched =
+        !!changePasswordDto.currentPassword &&
+        (await bcrypt.compare(
+          changePasswordDto.currentPassword,
+          user.password,
+        ));
+      if (!matched) {
+        throw new UnauthorizedException('현재 비밀번호가 일치하지 않습니다.');
+      }
+    }
+
+    user.password = await this.createHashedPassword(
+      changePasswordDto.newPassword,
+    );
     await this.userRepository.save(user);
+    await this.invalidateUserTokens(user.id);
   }
 
   async forgotPassword(email: string) {
@@ -266,14 +408,14 @@ export class UserService {
     );
   }
 
-  async requestDeleteAccount(userId: number): Promise<void> {
+  async requestDeleteAccount(userId: number, deleteRss = true): Promise<void> {
     const user = await this.getUser(userId);
 
     const userDeleteCode = uuid.v4();
 
     await this.redisService.set(
       `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${userDeleteCode}`,
-      user.id.toString(),
+      JSON.stringify({ userId: user.id, deleteRss }),
       'EX',
       600,
     );
@@ -289,16 +431,28 @@ export class UserService {
       throw new NotFoundException('유효하지 않거나 만료된 토큰입니다.');
     }
 
-    const userId = parseInt(data, 10);
+    const { userId, deleteRss } = JSON.parse(data) as {
+      userId: number;
+      deleteRss: boolean;
+    };
     const user = await this.getUser(userId);
 
     if (user.profileImage) {
       await this.fileService.deleteByPath(user.profileImage);
     }
 
+    // RSS 삭제(true)와 user 삭제는 반드시 순차 실행해야 한다.
+    // user를 먼저 지우면 FK ON DELETE SET NULL이 rss_accept.user_id를 NULL로 만들어
+    // 이후 user_id 기준 RSS 삭제가 0건이 된다. deleteRss=false면 SET NULL로 연결만 끊긴다.
+    await this.dataSource.transaction(async (manager) => {
+      if (deleteRss) {
+        await manager.delete(RssAccept, { userId });
+      }
+      await manager.remove(user);
+    });
+
     await Promise.all([
       this.invalidateUserTokens(userId),
-      this.userRepository.remove(user),
       this.redisService.del(deleteRequestKey),
     ]);
   }

@@ -10,10 +10,10 @@ export class GetChildAdminResponseDto {
   id: number;
 
   @ApiProperty({
-    example: 'sub-admin',
-    description: '관리자 로그인 아이디',
+    example: 'sub-admin@example.com',
+    description: '관리자 이메일',
   })
-  loginId: string;
+  email: string;
 
   @ApiProperty({
     example: '홍길동',
@@ -28,7 +28,7 @@ export class GetChildAdminResponseDto {
   static toResponseDto(admin: Admin) {
     return new GetChildAdminResponseDto({
       id: admin.id,
-      loginId: admin.loginId,
+      email: admin.email,
       name: admin.name,
     });
   }

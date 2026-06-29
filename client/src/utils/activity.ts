@@ -1,71 +1,51 @@
-import { formatActivityDate, getShortMonthName, subtractDays } from "@/utils/date.ts";
+import { formatActivityDate } from "@/utils/date.ts";
 
 import { ActivityData, DayInfo, WeekInfo } from "@/types/activity.ts";
 import { DailyActivity } from "@/types/profile.ts";
-import { pipe } from "lodash/fp";
 
 const createActivityMapFromData = (activities: DailyActivity[]): Map<string, number> =>
   new Map(activities.map((activity) => [activity.date, activity.viewCount]));
 
-const TOTAL_DAYS = 365;
-
-const generateDayInfo =
-  (baseDate: Date, activityMap: Map<string, number>) =>
-  (dayOffset: number): DayInfo => {
-    const daysToAdjust = baseDate.getDay();
-
-    const date = subtractDays(baseDate, TOTAL_DAYS - daysToAdjust - dayOffset);
-    const dateStr = formatActivityDate(date);
-    return {
-      date,
-      dateStr,
-      count: activityMap.get(dateStr) || 0,
-    };
-  };
-
-const generateWeekInfo =
-  (baseDate: Date, activityMap: Map<string, number>) =>
-  (weekNumber: number): WeekInfo => {
-    const generateDay = generateDayInfo(baseDate, activityMap);
-    const currentDayOfWeek = baseDate.getDay();
-    const daysToAdjust = currentDayOfWeek;
-
-    const days = Array.from({ length: 7 }, (_, day) => {
-      const dayIndex = weekNumber * 7 + day;
-      const date = subtractDays(baseDate, TOTAL_DAYS - daysToAdjust - dayIndex);
-
-      if (weekNumber === 51 && day > currentDayOfWeek) {
-        return null;
-      }
-
-      if (date > baseDate) {
-        return null;
-      }
-
-      return dayIndex < 365 ? generateDay(dayIndex) : null;
-    }).filter(Boolean) as DayInfo[];
-
-    return { days, weekNumber };
-  };
-
-export const processActivityData = (activities: DailyActivity[], baseDate: Date): ActivityData => {
+// 선택한 연도(1/1~12/31)를 GitHub 잔디 형태로 가공한다.
+// 첫/마지막 주의 빈 칸과 미래 날짜는 empty 셀로 채워 요일 정렬을 유지한다.
+export const processYearActivityData = (
+  activities: DailyActivity[],
+  year: number,
+  today: Date
+): ActivityData => {
   const activityMap = createActivityMapFromData(activities);
 
-  const processWeeks = pipe(
-    () => [...Array(52)].map((_, i) => i),
-    (weeks: number[]) => weeks.map((weekNumber) => generateWeekInfo(baseDate, activityMap)(weekNumber))
-  );
+  const jan1 = new Date(year, 0, 1);
+  const dec31 = new Date(year, 11, 31);
 
-  const processMonths = pipe(
-    () => [...Array(53)].map((_, i) => i * 7),
-    (indices: number[]) => indices.map((i) => subtractDays(baseDate, 364 - i)),
-    (dates: Date[]) => dates.map(getShortMonthName),
-    (months: string[]) => Array.from(new Set(months))
-  );
+  const start = new Date(jan1);
+  start.setDate(jan1.getDate() - jan1.getDay()); // 1월 1일이 속한 주의 일요일
 
-  return {
-    weeks: processWeeks(),
-    months: processMonths(),
-    activityMap,
-  };
+  const end = new Date(dec31);
+  end.setDate(dec31.getDate() + (6 - dec31.getDay())); // 12월 31일이 속한 주의 토요일
+
+  const weeks: WeekInfo[] = [];
+  const cursor = new Date(start);
+  let weekNumber = 0;
+
+  while (cursor <= end) {
+    const days: DayInfo[] = [];
+    for (let d = 0; d < 7; d++) {
+      const date = new Date(cursor);
+      const dateStr = formatActivityDate(date);
+      const inYear = date >= jan1 && date <= dec31;
+      const future = date > today;
+
+      if (!inYear || future) {
+        days.push({ date, dateStr: `empty-${weekNumber}-${d}`, count: 0, empty: true });
+      } else {
+        days.push({ date, dateStr, count: activityMap.get(dateStr) || 0 });
+      }
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    weeks.push({ days, weekNumber });
+    weekNumber++;
+  }
+
+  return { weeks, months: [], activityMap };
 };

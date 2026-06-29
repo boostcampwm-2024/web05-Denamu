@@ -6,27 +6,48 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
+import { CurrentUser } from '@common/decorator';
 import { AdminAuthGuard } from '@common/guard/session.guard';
+import { JwtGuard, Payload } from '@common/guard/jwt.guard';
 import { ApiResponse } from '@common/response/common.response';
 
 import { ApiAcceptRss } from '@rss/api-docs/acceptRss.api-docs';
 import { ApiCreateRss } from '@rss/api-docs/createRss.api-docs';
+import { ApiCreateRssCertification } from '@rss/api-docs/createRssCertification.api-docs';
 import { ApiDeleteCertificateRss } from '@rss/api-docs/deleteCertificateRss.api-docs';
 import { ApiDeleteRss } from '@rss/api-docs/deleteRss.api-docs';
+import { ApiDeleteRssCertification } from '@rss/api-docs/deleteRssCertification.api-docs';
+import { ApiGetOwnedRssFeeds } from '@rss/api-docs/getOwnedRssFeeds.api-docs';
+import { ApiSetFeedVisibility } from '@rss/api-docs/setFeedVisibility.api-docs';
+import { ApiPreviewRssCertification } from '@rss/api-docs/previewRssCertification.api-docs';
 import { ApiReadAllRss } from '@rss/api-docs/readAllRss.api-docs';
 import { ApiReadRssAcceptHistory } from '@rss/api-docs/readRssAcceptHistory.api-docs';
 import { ApiReadRssRejectHistory } from '@rss/api-docs/readRssRejectHistory.api-docs';
 import { ApiRejectRss } from '@rss/api-docs/rejectRss.api-docs';
+import { ApiUpdateRssCertification } from '@rss/api-docs/updateRssCertification.api-docs';
+import { ApiVerifyRssCertification } from '@rss/api-docs/verifyRssCertification.api-docs';
+import { CreateRssCertificationRequestDto } from '@rss/dto/request/createRssCertification.dto';
 import { DeleteCertificateRssRequestDto } from '@rss/dto/request/deleteCertificateRss.dto';
+import { DeleteRssCertificationParamRequestDto } from '@rss/dto/request/deleteRssCertificationParam.dto';
+import { GetOwnedRssFeedsRequestDto } from '@rss/dto/request/getOwnedRssFeeds.dto';
+import { GetOwnedRssFeedsParamRequestDto } from '@rss/dto/request/getOwnedRssFeedsParam.dto';
+import { SetFeedVisibilityRequestDto } from '@rss/dto/request/setFeedVisibility.dto';
+import { SetFeedVisibilityParamRequestDto } from '@rss/dto/request/setFeedVisibilityParam.dto';
 import { DeleteRssRequestDto } from '@rss/dto/request/deleteRss.dto';
 import { ManageRssRequestDto } from '@rss/dto/request/manageRss.dto';
+import { PreviewRssCertificationRequestDto } from '@rss/dto/request/previewRssCertification.dto';
 import { RegisterRssRequestDto } from '@rss/dto/request/registerRss.dto';
 import { RejectRssRequestDto } from '@rss/dto/request/rejectRss';
+import { UpdateRssCertificationRequestDto } from '@rss/dto/request/updateRssCertification.dto';
+import { UpdateRssCertificationParamRequestDto } from '@rss/dto/request/updateRssCertificationParam.dto';
+import { VerifyRssCertificationRequestDto } from '@rss/dto/request/verifyRssCertification.dto';
 import { RssService } from '@rss/service/rss.service';
 
 @ApiTags('RSS')
@@ -110,5 +131,120 @@ export class RssController {
   async deleteRss(@Param() deleteRssDto: DeleteCertificateRssRequestDto) {
     await this.rssService.deleteRss(deleteRssDto);
     return ApiResponse.responseWithNoContent('RSS 삭제를 성공했습니다.');
+  }
+
+  @ApiPreviewRssCertification()
+  @UseGuards(JwtGuard)
+  @Get('certifications/preview')
+  @HttpCode(HttpStatus.OK)
+  async previewRssCertification(
+    @CurrentUser() user: Payload,
+    @Query() previewRssCertificationDto: PreviewRssCertificationRequestDto,
+  ) {
+    return ApiResponse.responseWithData(
+      'RSS 소유 인증 미리보기를 처리했습니다.',
+      await this.rssService.previewRssCertification(
+        user,
+        previewRssCertificationDto.blogName,
+      ),
+    );
+  }
+
+  @ApiCreateRssCertification()
+  @UseGuards(JwtGuard)
+  @Post('certifications')
+  @HttpCode(HttpStatus.OK)
+  async createRssCertification(
+    @CurrentUser() user: Payload,
+    @Body() createRssCertificationDto: CreateRssCertificationRequestDto,
+  ) {
+    return ApiResponse.responseWithData(
+      'RSS 소유 인증 요청을 처리했습니다.',
+      await this.rssService.createRssCertification(
+        user,
+        createRssCertificationDto.blogName,
+      ),
+    );
+  }
+
+  @ApiVerifyRssCertification()
+  @UseGuards(JwtGuard)
+  @Post('certifications/verify')
+  @HttpCode(HttpStatus.OK)
+  async verifyRssCertification(
+    @CurrentUser() user: Payload,
+    @Body() verifyRssCertificationDto: VerifyRssCertificationRequestDto,
+  ) {
+    await this.rssService.verifyRssCertification(
+      user,
+      verifyRssCertificationDto.code,
+    );
+    return ApiResponse.responseWithNoContent('RSS 소유 인증을 완료했습니다.');
+  }
+
+  @ApiUpdateRssCertification()
+  @UseGuards(JwtGuard)
+  @Patch('certifications/:id')
+  @HttpCode(HttpStatus.OK)
+  async updateRssCertification(
+    @CurrentUser() user: Payload,
+    @Param() updateRssCertificationParamDto: UpdateRssCertificationParamRequestDto,
+    @Body() updateRssCertificationDto: UpdateRssCertificationRequestDto,
+  ) {
+    await this.rssService.updateRssCertification(
+      user,
+      updateRssCertificationParamDto.id,
+      updateRssCertificationDto.name,
+      updateRssCertificationDto.userName,
+    );
+    return ApiResponse.responseWithNoContent('RSS 정보를 수정했습니다.');
+  }
+
+  @ApiDeleteRssCertification()
+  @UseGuards(JwtGuard)
+  @Delete('certifications/:id')
+  @HttpCode(HttpStatus.OK)
+  async deleteRssCertification(
+    @CurrentUser() user: Payload,
+    @Param() deleteRssCertificationDto: DeleteRssCertificationParamRequestDto,
+  ) {
+    await this.rssService.deleteRssCertification(
+      user,
+      deleteRssCertificationDto.id,
+    );
+    return ApiResponse.responseWithNoContent('RSS 소유 인증을 해제했습니다.');
+  }
+
+  @ApiGetOwnedRssFeeds()
+  @UseGuards(JwtGuard)
+  @Get('certifications/:id/feeds')
+  @HttpCode(HttpStatus.OK)
+  async getOwnedRssFeeds(
+    @CurrentUser() user: Payload,
+    @Param() paramDto: GetOwnedRssFeedsParamRequestDto,
+    @Query() queryDto: GetOwnedRssFeedsRequestDto,
+  ) {
+    return ApiResponse.responseWithData(
+      '소유 RSS 게시글 목록 조회를 처리했습니다.',
+      await this.rssService.getOwnedRssFeeds(user, paramDto.id, queryDto),
+    );
+  }
+
+  @ApiSetFeedVisibility()
+  @UseGuards(JwtGuard)
+  @Patch('certifications/:id/feeds/:feedId/visibility')
+  @HttpCode(HttpStatus.OK)
+  async setFeedVisibility(
+    @CurrentUser() user: Payload,
+    @Param() paramDto: SetFeedVisibilityParamRequestDto,
+    @Body() bodyDto: SetFeedVisibilityRequestDto,
+  ) {
+    await this.rssService.setFeedVisibility(
+      user,
+      paramDto.id,
+      paramDto.feedId,
+      bodyDto.isPublic,
+    );
+    return ApiResponse.responseWithNoContent('게시글 공개 상태를 변경했습니다.');
   }
 }

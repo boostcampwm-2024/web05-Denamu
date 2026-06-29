@@ -127,6 +127,7 @@ services:
       - /var/web05-Denamu/email-worker/node_modules
     environment:
       NODE_ENV: 'DEV'
+      PRODUCT_DOMAIN: 'http://localhost:5173'
       TZ: 'Asia/Seoul'
     stop_grace_period: 30s
     develop:

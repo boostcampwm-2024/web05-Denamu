@@ -9,7 +9,7 @@ import { useCustomToast } from "@/hooks/common/useCustomToast";
 import { TOAST_MESSAGES } from "@/constants/messages.ts";
 
 import { useMediaStore } from "@/store/useMediaStore";
-import { Post } from "@/types/post";
+import { FeedDetail } from "@/types/post";
 
 declare global {
   interface Window {
@@ -20,7 +20,7 @@ type ButtonType = {
   handleCopy: () => void;
   shareKakao: () => void;
 };
-export default function ShareButton({ post }: { post: Post }) {
+export default function ShareButton({ post }: { post: FeedDetail }) {
   const postUrl = `https://denamu.dev/${post.id}`;
   const { toast } = useCustomToast();
   const isMobile = useMediaStore((state) => state.isMobile);

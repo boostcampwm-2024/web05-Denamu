@@ -45,7 +45,7 @@ export class Feed extends BaseEntity {
   path: string;
 
   @Column({
-    length: 255,
+    type: 'text',
     nullable: true,
   })
   thumbnail: string;
@@ -69,6 +69,13 @@ export class Feed extends BaseEntity {
     default: 0,
   })
   commentCount: number;
+
+  @Column({
+    name: 'is_public',
+    nullable: false,
+    default: true,
+  })
+  isPublic: boolean;
 
   @ManyToOne(() => RssAccept, (rssAccept) => rssAccept.feeds, {
     nullable: false,
@@ -117,6 +124,7 @@ export class Feed extends BaseEntity {
       )
       .from(Feed, 'f')
       .innerJoin(RssAccept, 'r', 'r.id = f.blog_id')
+      .where('f.is_public = 1')
       .groupBy('f.id'),
   name: 'feed_view',
 })

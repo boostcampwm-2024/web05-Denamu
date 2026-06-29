@@ -19,68 +19,6 @@ describe(`${RegisterAdminRequestDto.name} Test`, () => {
     expect(errors).toHaveLength(0);
   });
 
-  describe('loginId', () => {
-    it('ID의 길이가 6 미만일 경우 유효성 검사에 실패한다.', async () => {
-      //given
-      dto.loginId = 'test';
-
-      //when
-      const errors = await validate(dto);
-
-      //then
-      expect(errors).toHaveLength(1);
-      expect(errors[0].constraints).toHaveProperty('isLength');
-    });
-
-    it('ID의 길이가 255 초과일 경우 유효성 검사에 실패한다.', async () => {
-      //given
-      dto.loginId = 'a'.repeat(256);
-
-      //when
-      const errors = await validate(dto);
-
-      //then
-      expect(errors).toHaveLength(1);
-      expect(errors[0].constraints).toHaveProperty('isLength');
-    });
-
-    it('ID가 없을 경우 유효성 검사에 실패한다.', async () => {
-      //given
-      dto.loginId = null;
-
-      //when
-      const errors = await validate(dto);
-
-      //then
-      expect(errors).toHaveLength(1);
-      expect(errors[0].constraints).toHaveProperty('isNotEmpty');
-    });
-
-    it('ID가 빈 문자열일 경우 유효성 검사에 실패한다.', async () => {
-      //given
-      dto.loginId = '';
-
-      //when
-      const errors = await validate(dto);
-
-      //then
-      expect(errors).toHaveLength(1);
-      expect(errors[0].constraints).toHaveProperty('isNotEmpty');
-    });
-
-    it('ID가 문자열이 아니고 정수일 경우 유효성 검사에 실패한다.', async () => {
-      //given
-      dto.loginId = 1 as any;
-
-      //when
-      const errors = await validate(dto);
-
-      //then
-      expect(errors).toHaveLength(1);
-      expect(errors[0].constraints).toHaveProperty('isString');
-    });
-  });
-
   describe('password', () => {
     it('패스워드 길이가 6 미만일 경우 유효성 검사에 실패한다.', async () => {
       //given
@@ -190,6 +128,32 @@ describe(`${RegisterAdminRequestDto.name} Test`, () => {
       //then
       expect(errors).toHaveLength(1);
       expect(errors[0].constraints).toHaveProperty('isString');
+    });
+  });
+
+  describe('email', () => {
+    it('이메일 형식이 아닐 경우 유효성 검사에 실패한다.', async () => {
+      //given
+      dto.email = 'not-an-email';
+
+      //when
+      const errors = await validate(dto);
+
+      //then
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isEmail');
+    });
+
+    it('이메일이 없을 경우 유효성 검사에 실패한다.', async () => {
+      //given
+      dto.email = null;
+
+      //when
+      const errors = await validate(dto);
+
+      //then
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isEmail');
     });
   });
 });

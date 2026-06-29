@@ -36,6 +36,7 @@ export class User extends BaseEntity {
     name: 'user_name',
     length: '60',
     nullable: false,
+    unique: true,
   })
   userName: string;
 

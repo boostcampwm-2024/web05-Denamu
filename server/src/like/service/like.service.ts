@@ -10,10 +10,14 @@ import { Payload } from '@common/guard/jwt.guard';
 
 import { FeedService } from '@feed/service/feed.service';
 
+import { GetUserLikesRequestDto } from '@like/dto/request/getUserLikes.dto';
 import { ManageLikeRequestDto } from '@like/dto/request/manageLike.dto';
 import { GetLikeResponseDto } from '@like/dto/response/getLike.dto';
+import { GetUserLikesResponseDto } from '@like/dto/response/getUserLikes.dto';
 import { Like } from '@like/entity/like.entity';
 import { LikeRepository } from '@like/repository/like.repository';
+
+import { UserService } from '@user/service/user.service';
 
 @Injectable()
 export class LikeService {
@@ -21,13 +25,30 @@ export class LikeService {
     private readonly likeRepository: LikeRepository,
     private readonly feedService: FeedService,
     private readonly dataSource: DataSource,
+    private readonly userService: UserService,
   ) {}
+
+  async getLikesByUser(userId: number, likeDto: GetUserLikesRequestDto) {
+    await this.userService.getUser(userId);
+
+    const likes = await this.likeRepository.getLikesByUser(
+      userId,
+      likeDto.lastId,
+      likeDto.limit,
+    );
+
+    const hasMore = likes.length > likeDto.limit;
+    if (hasMore) likes.pop();
+    const lastId = likes.length ? likes[likes.length - 1].id : 0;
+
+    return GetUserLikesResponseDto.toResponseDto(likes, lastId, hasMore);
+  }
 
   async get(
     userInformation: Payload | null,
     feedLikeGetDto: ManageLikeRequestDto,
   ) {
-    await this.feedService.getFeed(feedLikeGetDto.feedId);
+    await this.feedService.getPublicFeed(feedLikeGetDto.feedId);
     let isLike = false;
 
     if (userInformation) {
@@ -46,7 +67,7 @@ export class LikeService {
     feedLikeCreateDto: ManageLikeRequestDto,
   ) {
     await this.dataSource.transaction(async (manager) => {
-      const feed = await this.feedService.getFeed(feedLikeCreateDto.feedId);
+      const feed = await this.feedService.getPublicFeed(feedLikeCreateDto.feedId);
       const existing = await this.likeRepository.findOneBy({
         user: { id: userInformation.id },
         feed,

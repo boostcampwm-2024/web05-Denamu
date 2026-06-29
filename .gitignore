@@ -55,3 +55,6 @@ PRD.md
 
 # CLAUDE
 .claude/**/*.local.*
+
+# Playwright MCP
+.playwright-mcp

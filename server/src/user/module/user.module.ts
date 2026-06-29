@@ -2,7 +2,11 @@ import { Module } from '@nestjs/common';
 
 import { JwtAuthModule } from '@common/auth/jwt.module';
 
+import { FeedRepository } from '@feed/repository/feed.repository';
+
 import { FileModule } from '@file/module/file.module';
+
+import { RssModule } from '@rss/module/rss.module';
 
 import { OAuthController } from '@user/controller/oAuth.controller';
 import { UserController } from '@user/controller/user.controller';
@@ -15,13 +19,14 @@ import { OAuthService } from '@user/service/oAuth.service';
 import { UserService } from '@user/service/user.service';
 
 @Module({
-  imports: [JwtAuthModule, FileModule],
+  imports: [JwtAuthModule, FileModule, RssModule],
   controllers: [UserController, OAuthController],
   providers: [
     UserService,
     OAuthService,
     UserRepository,
     ProviderRepository,
+    FeedRepository,
     GoogleOAuthProvider,
     GithubOAuthProvider,
     UserScheduler,

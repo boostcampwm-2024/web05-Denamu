@@ -123,6 +123,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     );
 
     const redisPayload: RedisMessagePayload = {
+      messageId: payload.messageId,
       userId: payload.userId,
       userName,
       message: payload.message,
@@ -130,14 +131,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       room: roomId,
     };
 
-    const broadcastPayload: BroadcastPayload = {
-      ...redisPayload,
-      messageId: payload.messageId,
-    };
-
     this.anonymousRoomManager.trackMessageSent(roomId);
 
     await this.chatService.saveMessageToRedis(redisPayload);
-    this.server.to(roomId).emit('message', broadcastPayload);
+    this.server.to(roomId).emit('message', redisPayload);
+  }
+
+  getRoomClientCount(roomId: string): number {
+    return this.anonymousRoomManager.getRoomClientCount(this.server, roomId);
+  }
+
+  broadcastDeletedMessage(roomId: string, payload: BroadcastPayload) {
+    this.server.to(roomId).emit('messageDeleted', payload);
   }
 }

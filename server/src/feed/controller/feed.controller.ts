@@ -19,14 +19,17 @@ import { Request, Response } from 'express';
 import { Observable } from 'rxjs';
 
 import { CurrentUser } from '@common/decorator/current-user.decorator';
+import { AdminAuthGuard } from '@common/guard/session.guard';
 import { OptionalJwtGuard, Payload } from '@common/guard/jwt.guard';
 import { ApiResponse } from '@common/response/common.response';
 
 import { ApiDeleteCheckFeed } from '@feed/api-docs/deleteCheckFeed.api-docs';
 import { ApiGetFeedDetail } from '@feed/api-docs/getFeedDetail.api-docs';
 import { ApiReadFeedPagination } from '@feed/api-docs/readFeedPagination.api-docs';
+import { ApiReadNoSummaryFeedList } from '@feed/api-docs/readNoSummaryFeedList.api-docs';
 import { ApiReadRecentFeedList } from '@feed/api-docs/readRecentFeedList.api-docs';
 import { ApiReadTrendFeedList } from '@feed/api-docs/readTrendFeedList.api-docs';
+import { ApiRequestAiSummary } from '@feed/api-docs/requestAiSummary.api-docs';
 import { ApiSearchFeedList } from '@feed/api-docs/searchFeedList.api-docs';
 import { ApiUpdateFeedViewCount } from '@feed/api-docs/updateFeedViewCount.api-docs';
 import { ManageFeedRequestDto } from '@feed/dto/request/manageFeed.dto';
@@ -115,6 +118,28 @@ export class FeedController {
     );
   }
 
+  @ApiReadNoSummaryFeedList()
+  @UseGuards(AdminAuthGuard)
+  @Get('/no-summary')
+  @HttpCode(HttpStatus.OK)
+  async readFeedsWithoutSummary() {
+    return ApiResponse.responseWithData(
+      'AI 요약 없는 게시글 목록 조회 완료',
+      await this.feedService.readFeedsWithoutSummary(),
+    );
+  }
+
+  @ApiRequestAiSummary()
+  @UseGuards(AdminAuthGuard)
+  @Post('/:feedId/ai-summary-requests')
+  @HttpCode(HttpStatus.ACCEPTED)
+  async requestAiSummary(@Param() aiSummaryParamDto: ManageFeedRequestDto) {
+    await this.feedService.requestAiSummary(aiSummaryParamDto.feedId);
+    return ApiResponse.responseWithNoContent(
+      'AI 요약 재요청이 접수되었습니다.',
+    );
+  }
+
   @ApiReadRecentFeedList()
   @Get('/recent')
   @HttpCode(HttpStatus.OK)
@@ -151,7 +176,7 @@ export class FeedController {
     }
     return ApiResponse.responseWithData(
       '요청이 성공적으로 처리되었습니다.',
-      await this.feedService.getFeedDetail(feedDetailRequestDto),
+      await this.feedService.getFeedDetail(feedDetailRequestDto, user?.id),
     );
   }
 }

@@ -1,5 +1,7 @@
 import { injectable } from 'tsyringe';
 
+import logger from '@common/logger/logger';
+
 import { NotificationEventPayloadMap } from '@notification/notification-event.constant';
 import { Notifier } from '@notification/notifier.interface';
 
@@ -11,8 +13,9 @@ export class NotifierRegistry implements Notifier {
     this.notifiers.set(name, notifier);
   }
 
-  initialize(): void {
-    this.notifiers.forEach((notifier) => notifier.initialize());
+  start(): void {
+    this.notifiers.forEach((notifier) => notifier.start());
+    logger.info('Notifier 초기화 완료');
   }
 
   publish<K extends keyof NotificationEventPayloadMap>(

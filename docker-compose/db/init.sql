@@ -2,11 +2,14 @@
 
 CREATE TABLE `admin` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `login_id` varchar(255) NOT NULL,
+  `email` varchar(255) NOT NULL,
   `password` varchar(60) NOT NULL,
   `name` varchar(255) NOT NULL,
+  `email_notification` tinyint NOT NULL DEFAULT 1,
   `parent_admin_id` int DEFAULT NULL,
   PRIMARY KEY (`id`),
+  UNIQUE KEY `UQ_admin_email` (`email`),
+  UNIQUE KEY `UQ_admin_name` (`name`),
     CONSTRAINT `FK_admin_parent_admin`
     FOREIGN KEY (`parent_admin_id`)
     REFERENCES `admin` (`id`)
@@ -26,6 +29,25 @@ CREATE TABLE `rss` (
   UNIQUE KEY `UQ_af1d102908727aa95ef09e16065` (`rss_url`)
 );
 
+-- denamu.`user` definition
+
+CREATE TABLE `user` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `email` varchar(255) NOT NULL,
+  `password` varchar(60) DEFAULT NULL,
+  `user_name` varchar(60) NOT NULL,
+  `profile_image` varchar(255) DEFAULT NULL,
+  `introduction` varchar(255) DEFAULT NULL,
+  `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `updated_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  `totalViews` int NOT NULL DEFAULT '0',
+  `currentStreak` int NOT NULL DEFAULT '0',
+  `lastActiveDate` date DEFAULT NULL,
+  `maxStreak` int NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UQ_user_user_name` (`user_name`)
+);
+
 -- denamu.rss_accept definition
 
 CREATE TABLE `rss_accept` (
@@ -35,10 +57,13 @@ CREATE TABLE `rss_accept` (
   `email` varchar(255) NOT NULL,
   `rss_url` varchar(255) NOT NULL,
   `blog_platform` varchar(255) NOT NULL DEFAULT 'etc',
+  `user_id` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `UQ_59f4be4de3817b3f975acff0766` (`name`),
   UNIQUE KEY `UQ_b3a5d4196368864d938dae4e9ff` (`rss_url`),
-  FULLTEXT KEY (`name`)
+  KEY `FK_c6af67149ff8aa87d001091acbe` (`user_id`),
+  FULLTEXT KEY (`name`),
+  CONSTRAINT `FK_c6af67149ff8aa87d001091acbe` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 -- denamu.rss_reject definition
@@ -61,34 +86,17 @@ CREATE TABLE `feed` (
   `title` varchar(255) NOT NULL,
   `view_count` int NOT NULL DEFAULT '0',
   `path` varchar(512) NOT NULL,
-  `thumbnail` varchar(255) DEFAULT NULL,
+  `thumbnail` text,
   `blog_id` int NOT NULL,
   `summary` text,
   `like_count` int NOT NULL DEFAULT '0',
+  `is_public` tinyint NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`),
   UNIQUE KEY `IDX_cbdceca2d71f784a8bb160268e` (`path`),
   KEY `IDX_fda780ffdcc013b739cdc6f31d` (`created_at`),
   KEY `FK_7474d489d05b8051874b227f868` (`blog_id`),
   FULLTEXT KEY `IDX_7d93e66e624232af470d2f7bb3` (`title`) /*!50100 WITH PARSER `ngram` */ ,
   CONSTRAINT `FK_7474d489d05b8051874b227f868` FOREIGN KEY (`blog_id`) REFERENCES `rss_accept` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-);
-
--- denamu.`user` definition
-
-CREATE TABLE `user` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `email` varchar(255) NOT NULL,
-  `password` varchar(60) DEFAULT NULL,
-  `user_name` varchar(60) NOT NULL,
-  `profile_image` varchar(255) DEFAULT NULL,
-  `introduction` varchar(255) DEFAULT NULL,
-  `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-  `updated_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
-  `totalViews` int NOT NULL DEFAULT '0',
-  `currentStreak` int NOT NULL DEFAULT '0',
-  `lastActiveDate` date DEFAULT NULL,
-  `maxStreak` int NOT NULL DEFAULT '0',
-  PRIMARY KEY (`id`)
 );
 
 -- denamu.activity definition
@@ -104,12 +112,23 @@ CREATE TABLE `activity` (
   CONSTRAINT `FK_10bf0c2dd4736190070e8475119` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
 );
 
+-- denamu.category definition
+
+CREATE TABLE `category` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(30) NOT NULL UNIQUE,
+  `display_order` int NOT NULL,
+  PRIMARY KEY (`id`)
+);
+
 -- denamu.tag definition
 
 CREATE TABLE `tag` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(50) NOT NULL UNIQUE,
-  PRIMARY KEY (`id`)
+  `category_id` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  CONSTRAINT `FK_tag_category` FOREIGN KEY (`category_id`) REFERENCES `category` (`id`) ON DELETE SET NULL
 );
 
 -- denamu.tag_map definition
@@ -126,14 +145,19 @@ CREATE TABLE `tag_map` (
 CREATE TABLE `comment` (
   `id` int NOT NULL AUTO_INCREMENT,
   `comment` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `is_deleted` tinyint NOT NULL DEFAULT '0',
+  `is_admin_deleted` tinyint NOT NULL DEFAULT '0',
   `date` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   `feed_id` int NOT NULL,
   `user_id` int NOT NULL,
+  `parent_id` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `FK_df1fd1eaf7cc0224ab5e829bf64` (`feed_id`),
   KEY `FK_bbfe153fa60aa06483ed35ff4a7` (`user_id`),
+  KEY `FK_8bd8d0985c0d077c8129fb4a209` (`parent_id`),
   CONSTRAINT `FK_bbfe153fa60aa06483ed35ff4a7` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `FK_df1fd1eaf7cc0224ab5e829bf64` FOREIGN KEY (`feed_id`) REFERENCES `feed` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+  CONSTRAINT `FK_df1fd1eaf7cc0224ab5e829bf64` FOREIGN KEY (`feed_id`) REFERENCES `feed` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_8bd8d0985c0d077c8129fb4a209` FOREIGN KEY (`parent_id`) REFERENCES `comment` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- denamu.likes definition
@@ -156,28 +180,39 @@ CREATE TABLE `provider` (
   `id` int NOT NULL AUTO_INCREMENT,
   `provider_type` varchar(255) NOT NULL,
   `provider_user_id` varchar(255) NOT NULL,
-  `refresh_token` varchar(255) NOT NULL,
+  `provider_user_name` varchar(255) DEFAULT NULL,
+  `refresh_token` varchar(255) DEFAULT NULL,
   `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   `updated_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
   `user_id` int NOT NULL,
   PRIMARY KEY (`id`),
+  UNIQUE KEY `UQ_provider_type_user_id` (`provider_type`,`provider_user_id`),
+  UNIQUE KEY `UQ_user_provider_type` (`user_id`,`provider_type`),
   KEY `FK_d3d18186b602240b93c9f1621ea` (`user_id`),
   CONSTRAINT `FK_d3d18186b602240b93c9f1621ea` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- denamu.admin insert data
+-- id: test1234@denamu.dev, password: test1234!
+-- id: test5678@denamu.dev, password: test1234!
+INSERT INTO admin (email,password, name, parent_admin_id) VALUES
+	('test1234@denamu.dev','$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정', NULL),
+	('test5678@denamu.dev','$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정의 자식', 1);
 
-INSERT INTO admin (login_id, password, name, parent_admin_id) VALUES
-	('test1234','$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정', NULL),
-	('test5678','$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정의 자식', 1);
+-- denamu.user insert data
+-- id: test@test.com, password: test1234!
+-- id: example@example.com, password: test1234!
+INSERT INTO user (email, password, user_name, profile_image, introduction) VALUES
+	('test@test.com', '$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정', NULL, '안녕하세요 테스트입니다.'),
+	('example@example.com', '$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '예제 계정', NULL, '안녕하세요 예제입니다.');
 
 -- denamu.rss_accept insert data
 
-INSERT INTO rss_accept (name,user_name,email,rss_url,blog_platform) VALUES
-	 ('seok3765.log','조민석','seok3765@naver.com','https://v2.velog.io/rss/@seok3765','velog'),
-	 ('나무보다 숲을','채준혁','cjh4302@gmail.com','https://laurent.tistory.com/rss','tistory'),
-	 ('월성참치','정명기','jmk101711@naver.com','https://tunaspace.tistory.com/rss','tistory'),
-	 ('해야지 뭐','안성윤','asn6878@gmail.com','https://asn6878.tistory.com/rss','tistory');
+INSERT INTO rss_accept (name,user_name,email,rss_url,blog_platform, user_id) VALUES
+	 ('seok3765.log','조민석','seok3765@naver.com','https://v2.velog.io/rss/@seok3765','velog', 1),
+	 ('나무보다 숲을','채준혁','cjh4302@gmail.com','https://laurent.tistory.com/rss','tistory', NULL),
+	 ('월성참치','정명기','jmk101711@naver.com','https://tunaspace.tistory.com/rss','tistory', NULL),
+	 ('해야지 뭐','안성윤','asn6878@gmail.com','https://asn6878.tistory.com/rss','tistory', NULL);
 
 -- denamu.rss_reject insert data
 
@@ -330,34 +365,37 @@ TypeScript 등으로 단점 극복 노력
 
 결국 상황에 맞는 도구를 선택하는 문제 해결력이 중요하다는 개발자의 통찰력 있는 회고입니다! 💡',1);
 
--- denamu.user insert data
--- id: test@test.com, password: test1234!
-INSERT INTO user (email, password, user_name, profile_image, introduction) VALUES
-	('test@test.com', '$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정', NULL, '안녕하세요 테스트입니다.');
-
 -- denamu.tag insert data
 
-INSERT INTO tag (name) VALUES
-	('Backend'),
-	('Spring'),
-	('Frontend'),
-	('회고'),
-	('Java'),
-	('MySQL'),
-	('Network'),
-	('DB'),
-	('OS'),
-	('JavaScript'),
-	('Docker'),
-	('Infra'),
-	('React'),
-	('Algorithm'),
-	('TypeScript'),
-	('Nest.JS'),
-	('Next.JS'),
-	('PostgreSQL'),
-	('Express.JS'),
-	('Browser');
+INSERT INTO category (name, display_order) VALUES
+	('Frontend', 1),
+	('Backend', 2),
+	('ETC', 3),
+	('DB', 4),
+	('Infra', 5),
+	('CS', 6);
+
+INSERT INTO tag (name, category_id) VALUES
+	('Backend', 2),
+	('Spring', 2),
+	('Frontend', 1),
+	('회고', 3),
+	('Java', 2),
+	('MySQL', 4),
+	('Network', 6),
+	('DB', 4),
+	('OS', 6),
+	('JavaScript', 1),
+	('Docker', 5),
+	('Infra', 5),
+	('React', 1),
+	('Algorithm', 6),
+	('TypeScript', 1),
+	('Nest.JS', 2),
+	('Next.JS', 1),
+	('PostgreSQL', 4),
+	('Express.JS', 2),
+	('Browser', 1);
 
 -- denamu.tag_map insert data
 

@@ -39,11 +39,11 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
 
   beforeEach(async () => {
     const admin = await adminRepository.save(
-      await AdminFixture.createAdminCryptFixture({ loginId: 'testAdminId' }),
+      await AdminFixture.createAdminCryptFixture(),
     );
     [rss] = await Promise.all([
       rssRepository.save(RssFixture.createRssFixture()),
-      redisService.set(redisKeyMake(sessionKey), admin.loginId),
+      redisService.set(redisKeyMake(sessionKey), admin.email),
     ]);
   });
 

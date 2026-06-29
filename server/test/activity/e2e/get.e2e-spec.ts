@@ -72,9 +72,6 @@ describe(`GET ${URL}/{userId} E2E Test`, () => {
         date: activity.activityDate.toISOString().split('T')[0],
         viewCount: activity.viewCount,
       })),
-      maxStreak: user.maxStreak,
-      currentStreak: user.currentStreak,
-      totalViews: user.totalViews,
     });
   });
 
@@ -92,9 +89,6 @@ describe(`GET ${URL}/{userId} E2E Test`, () => {
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual({
       dailyActivities: [],
-      maxStreak: user.maxStreak,
-      currentStreak: user.currentStreak,
-      totalViews: user.totalViews,
     });
   });
 });

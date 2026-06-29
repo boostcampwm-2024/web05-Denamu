@@ -5,12 +5,24 @@ import SMTPTransport from 'nodemailer/lib/smtp-transport';
 
 import logger from '@common/logger/logger';
 import { EmailMetrics } from '@common/metrics/email-metrics';
-import { Rss, RssRegistration, RssRemoval, User } from '@common/types';
+import {
+  AdminCertification,
+  Rss,
+  RssCertification,
+  RssRegistration,
+  RssRegistrationRequest,
+  RssRemoval,
+  User,
+} from '@common/types';
 
 import {
+  createAdminDeleteAccountContent,
+  createAdminVerificationMailContent,
   createDeleteAccountContent,
   createPasswordResetMailContent,
+  createRssCertificationContent,
   createRssRegistrationContent,
+  createRssRegistrationRequestContent,
   createRssRemoveCertificateContent,
   createVerificationMailContent,
   PRODUCT_DOMAIN,
@@ -24,9 +36,7 @@ export class EmailService {
   >;
   private emailUser: string;
 
-  constructor(
-    @inject(EmailMetrics) private readonly metrics: EmailMetrics,
-  ) {
+  constructor(@inject(EmailMetrics) private readonly metrics: EmailMetrics) {
     this.emailUser = process.env.EMAIL_USER;
     const emailPassword = process.env.EMAIL_PASSWORD;
     if (!this.emailUser) {
@@ -65,6 +75,75 @@ export class EmailService {
     }
   }
 
+  async sendAdminCertificationMail(admin: AdminCertification): Promise<void> {
+    const mailOptions = this.createAdminCertificationMail(admin);
+
+    await this.sendMail(mailOptions);
+  }
+
+  private createAdminCertificationMail(
+    admin: AdminCertification,
+  ): nodemailer.SendMailOptions {
+    const redirectUrl = `${PRODUCT_DOMAIN}/admins/email-verifications?token=${admin.uuid}`;
+
+    return {
+      from: `Denamu<${this.emailUser}>`,
+      to: admin.email,
+      subject: `[🎋 Denamu] 관리자 계정 인증 메일`,
+      html: createAdminVerificationMailContent(
+        admin.name,
+        redirectUrl,
+        this.emailUser,
+      ),
+    };
+  }
+
+  async sendAdminDeleteAccountMail(admin: AdminCertification): Promise<void> {
+    const mailOptions = this.createAdminDeleteAccountMail(admin);
+
+    await this.sendMail(mailOptions);
+  }
+
+  private createAdminDeleteAccountMail(
+    admin: AdminCertification,
+  ): nodemailer.SendMailOptions {
+    const redirectUrl = `${PRODUCT_DOMAIN}/admins/deletion-requests/confirm?token=${admin.uuid}`;
+
+    return {
+      from: `Denamu<${this.emailUser}>`,
+      to: admin.email,
+      subject: `[🎋 Denamu] 관리자 회원탈퇴 확인 메일`,
+      html: createAdminDeleteAccountContent(
+        admin.name,
+        redirectUrl,
+        this.emailUser,
+      ),
+    };
+  }
+
+  async sendAdminPasswordResetEmail(admin: AdminCertification): Promise<void> {
+    const mailOptions = this.createAdminPasswordResetMail(admin);
+
+    await this.sendMail(mailOptions);
+  }
+
+  private createAdminPasswordResetMail(
+    admin: AdminCertification,
+  ): nodemailer.SendMailOptions {
+    const redirectUrl = `${PRODUCT_DOMAIN}/admins/password-resets/confirm?token=${admin.uuid}`;
+
+    return {
+      from: `Denamu<${this.emailUser}>`,
+      to: admin.email,
+      subject: `[🎋 Denamu] 관리자 비밀번호 재설정`,
+      html: createPasswordResetMailContent(
+        admin.name,
+        redirectUrl,
+        this.emailUser,
+      ),
+    };
+  }
+
   async sendRssMail(rssRegistrationReuslt: RssRegistration): Promise<void> {
     const mailOptions = this.createRssRegistrationMail(
       rssRegistrationReuslt.rss,
@@ -73,6 +152,29 @@ export class EmailService {
     );
 
     await this.sendMail(mailOptions);
+  }
+
+  async sendRssRegistrationRequestMail(
+    rssRegistrationRequest: RssRegistrationRequest,
+  ): Promise<void> {
+    const mailOptions = this.createRssRegistrationRequestMail(
+      rssRegistrationRequest.rss,
+      rssRegistrationRequest.adminEmail,
+    );
+
+    await this.sendMail(mailOptions);
+  }
+
+  private createRssRegistrationRequestMail(
+    rss: Rss,
+    adminEmail: string,
+  ): nodemailer.SendMailOptions {
+    return {
+      from: `Denamu<${this.emailUser}>`,
+      to: adminEmail,
+      subject: `[🎋 Denamu] 새로운 RSS 등록 신청이 접수되었습니다.`,
+      html: createRssRegistrationRequestContent(rss, this.emailUser),
+    };
   }
 
   async sendUserCertificationMail(user: User): Promise<void> {
@@ -131,15 +233,50 @@ export class EmailService {
     rssUrl: string,
     certificateCode: string,
   ) {
+    const removalLink = `${PRODUCT_DOMAIN}/rss/removals/confirm?code=${certificateCode}`;
+
     return {
       from: `Denamu<${this.emailUser}>`,
       to: `${userName}<${email}>`,
       subject: `[🎋 Denamu] RSS 삭제 신청 인증 메일입니다.`,
       html: createRssRemoveCertificateContent(
         userName,
-        certificateCode,
         this.emailUser,
         rssUrl,
+        removalLink,
+      ),
+    };
+  }
+
+  async sendRssCertificationMail(rssCertification: RssCertification) {
+    const mailOption = this.createRssCertificationMail(
+      rssCertification.userName,
+      rssCertification.email,
+      rssCertification.blogName,
+      rssCertification.certificateCode,
+      rssCertification.userEmail,
+    );
+    await this.sendMail(mailOption);
+  }
+
+  private createRssCertificationMail(
+    userName: string,
+    email: string,
+    blogName: string,
+    certificateCode: string,
+    userEmail: string,
+  ) {
+    const certificationLink = `${PRODUCT_DOMAIN}/rss/certifications/confirm?code=${certificateCode}`;
+    return {
+      from: `Denamu<${this.emailUser}>`,
+      to: `${userName}<${email}>`,
+      subject: `[🎋 Denamu] RSS 소유 인증 메일입니다.`,
+      html: createRssCertificationContent(
+        userName,
+        this.emailUser,
+        blogName,
+        userEmail,
+        certificationLink,
       ),
     };
   }

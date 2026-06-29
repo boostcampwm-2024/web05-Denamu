@@ -3,13 +3,13 @@ import { useEffect } from "react";
 import { BASE_URL } from "@/constants/endpoints";
 import { BLOG } from "@/constants/endpoints";
 
-import { TrendingPostsApiResponse } from "@/types/post";
+import { TrendingFeedsApiResponse } from "@/types/post";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const useTrendingPosts = () => {
   const queryClient = useQueryClient();
 
-  const query = useQuery<TrendingPostsApiResponse>({
+  const query = useQuery<TrendingFeedsApiResponse>({
     queryKey: ["trending-posts"],
     queryFn: () => Promise.resolve({ message: "", data: [] }),
     refetchOnWindowFocus: false,

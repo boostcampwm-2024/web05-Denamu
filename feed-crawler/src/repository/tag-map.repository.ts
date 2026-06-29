@@ -1,6 +1,6 @@
 import { inject, injectable } from 'tsyringe';
 
-import { DatabaseConnection } from '@common/database-connection';
+import { DatabaseConnection } from '@common/database/database-connection';
 import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
 import { DbMetrics } from '@common/metrics/db-metrics';
 

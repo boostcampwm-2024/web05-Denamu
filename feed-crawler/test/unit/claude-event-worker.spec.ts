@@ -1,20 +1,23 @@
 import 'reflect-metadata';
 
-import { redisConstant } from '@common/constant';
+import { ClaudeResponse, FeedAIQueueItem } from '@common/ai/ai.type';
+import { PermanentError, RetryableError } from '@common/errors';
 import { AiMetrics } from '@common/metrics/ai-metrics';
 import { RedisMetrics } from '@common/metrics/redis-metrics';
 import { Notifier } from '@common/notification/notifier.interface';
-import { RedisConnection } from '@common/redis-access';
-import { ClaudeResponse, FeedAIQueueItem } from '@common/types';
+import { RedisConnection } from '@common/redis/redis-access';
+import { redisConstant } from '@common/redis/redis.constant';
 
 import { ClaudeEventWorker } from '@event_worker/workers/claude-event-worker';
 
 import { FeedRepository } from '@repository/feed.repository';
 import { TagMapRepository } from '@repository/tag-map.repository';
+import { TagRepository } from '@repository/tag.repository';
 
 describe('ClaudeEventWorker', () => {
   let claudeEventWorker: ClaudeEventWorker;
   let mockTagMapRepository: jest.Mocked<TagMapRepository>;
+  let mockTagRepository: jest.Mocked<TagRepository>;
   let mockFeedRepository: jest.Mocked<FeedRepository>;
   let mockRedisConnection: jest.Mocked<RedisConnection>;
   let mockAnthropicClient: any;
@@ -61,6 +64,10 @@ describe('ClaudeEventWorker', () => {
       insertTags: insertTagsMock,
     } as any;
 
+    mockTagRepository = {
+      findAllNames: jest.fn().mockResolvedValue(['JavaScript', 'React']),
+    } as any;
+
     mockFeedRepository = {
       updateSummary: updateSummaryMock,
       updateNullSummary: updateNullSummaryMock,
@@ -80,7 +87,7 @@ describe('ClaudeEventWorker', () => {
     };
 
     mockNotifier = {
-      initialize: jest.fn(),
+      start: jest.fn(),
       publish: jest.fn(),
     };
 
@@ -101,6 +108,7 @@ describe('ClaudeEventWorker', () => {
 
     claudeEventWorker = new ClaudeEventWorker(
       mockTagMapRepository,
+      mockTagRepository,
       mockFeedRepository,
       mockRedisConnection,
       mockNotifier,
@@ -212,16 +220,30 @@ describe('ClaudeEventWorker', () => {
       expect(result).toEqual([mockFeedAIQueueItem]);
     });
 
-    it('JSON 파싱 에러를 처리해야 한다', async () => {
+    it('malformed 메시지는 스킵하고 나머지를 반환해야 한다 (poison message 격리)', async () => {
       // Given
-      const mockRedisResults = [[null, 'invalid-json']];
+      const mockRedisResults = [
+        [null, 'invalid-json'],
+        [null, JSON.stringify(mockFeedAIQueueItem)],
+      ];
       executePipelineMock.mockResolvedValue(mockRedisResults as any);
 
       // When
       const result = await claudeEventWorker['loadFeeds']();
 
       // Then
-      expect(result).toBeUndefined();
+      expect(result).toEqual([mockFeedAIQueueItem]);
+    });
+
+    it('파이프라인 실패 시 빈 배열을 반환해야 한다', async () => {
+      // Given
+      executePipelineMock.mockRejectedValue(new Error('redis down'));
+
+      // When
+      const result = await claudeEventWorker['loadFeeds']();
+
+      // Then
+      expect(result).toEqual([]);
     });
   });
 
@@ -341,6 +363,36 @@ describe('ClaudeEventWorker', () => {
       );
     });
 
+    it('PermanentError는 deathCount와 무관하게 재시도 없이 영구 실패 처리해야 한다', async () => {
+      // Given - 재시도 여유가 있어도(0/3) 영구 에러면 재시도 금지
+      const feed = { ...mockFeedAIQueueItem, deathCount: 0 };
+      const error = new PermanentError('삭제된 게시글 (원본 HTTP 404)');
+
+      // When
+      await claudeEventWorker['handleFailure'](feed, error);
+
+      // Then
+      expect(rpushMock).not.toHaveBeenCalled();
+      expect(updateNullSummaryMock).toHaveBeenCalledWith(feed.id);
+    });
+
+    it('RetryableError(json 파싱 실패)는 재시도 큐에 재투입해야 한다', async () => {
+      // Given - LLM 비결정 출력은 재요청 시 회복 가능
+      const feed = { ...mockFeedAIQueueItem, deathCount: 0 };
+      const error = new RetryableError(
+        'AI 응답이 json으로 반환되지 않았습니다',
+      );
+
+      // When
+      await claudeEventWorker['handleFailure'](feed, error);
+
+      // Then
+      expect(rpushMock).toHaveBeenCalledWith(redisConstant.FEED_AI_QUEUE, [
+        JSON.stringify({ ...feed, deathCount: 1 }),
+      ]);
+      expect(updateNullSummaryMock).not.toHaveBeenCalled();
+    });
+
     it('deathCount가 정확히 2일 때 재시도해야 한다 (경계값-1)', async () => {
       // Given - 경계값 바로 아래 (2 < 3이므로 재시도)
       const feedWithDeathCount2 = { ...mockFeedAIQueueItem, deathCount: 2 };
@@ -354,6 +406,90 @@ describe('ClaudeEventWorker', () => {
         JSON.stringify({ ...feedWithDeathCount2, deathCount: 3 }),
       ]);
       expect(updateNullSummaryMock).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getQueueKey', () => {
+    it('AI 큐 키를 반환해야 한다', () => {
+      expect(claudeEventWorker['getQueueKey']()).toBe(
+        redisConstant.FEED_AI_QUEUE,
+      );
+    });
+  });
+
+  describe('loadFeeds 파이프라인', () => {
+    it('AI_RATE_LIMIT_COUNT만큼 rpop을 파이프라인에 등록해야 한다', async () => {
+      // Given
+      process.env.AI_RATE_LIMIT_COUNT = '3';
+      const pipelineRpop = jest.fn();
+      executePipelineMock.mockImplementation((cb: (pipeline: any) => void) => {
+        cb({ rpop: pipelineRpop });
+        return Promise.resolve([]);
+      });
+
+      // When
+      await claudeEventWorker['loadFeeds']();
+
+      // Then
+      expect(pipelineRpop).toHaveBeenCalledTimes(3);
+      expect(pipelineRpop).toHaveBeenCalledWith(redisConstant.FEED_AI_QUEUE);
+    });
+  });
+
+  describe('requestAI 실패 처리', () => {
+    it('Anthropic API 호출이 실패하면 에러를 전파해야 한다', async () => {
+      // Given
+      messagesCreateMock.mockRejectedValue(new Error('API down'));
+
+      // When & Then
+      await expect(
+        claudeEventWorker['requestAI'](mockFeedAIQueueItem),
+      ).rejects.toThrow('API down');
+    });
+
+    it('응답에 JSON이 없으면 RetryableError를 던져야 한다', async () => {
+      // Given
+      messagesCreateMock.mockResolvedValue({
+        content: [{ text: 'JSON이 아닌 응답' }],
+      } as any);
+
+      // When & Then
+      await expect(
+        claudeEventWorker['requestAI'](mockFeedAIQueueItem),
+      ).rejects.toThrow(RetryableError);
+    });
+  });
+
+  describe('saveAIResult 실패 처리', () => {
+    it('Redis hset이 실패하면 에러를 전파해야 한다', async () => {
+      // Given
+      const feedWithAIResult = {
+        ...mockFeedAIQueueItem,
+        summary: mockClaudeResponse.summary,
+        tagList: Object.keys(mockClaudeResponse.tags),
+      };
+      hsetMock.mockRejectedValue(new Error('redis down'));
+
+      // When & Then
+      await expect(
+        claudeEventWorker['saveAIResult'](feedWithAIResult),
+      ).rejects.toThrow('redis down');
+      expect(updateSummaryMock).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('pushToRetryQueue 실패 처리', () => {
+    it('재시도 큐 재투입이 실패하면 에러를 전파해야 한다', async () => {
+      // Given
+      rpushMock.mockRejectedValue(new Error('redis down'));
+
+      // When & Then
+      await expect(
+        claudeEventWorker['pushToRetryQueue'](mockFeedAIQueueItem),
+      ).rejects.toThrow('redis down');
+      expect(rpushMock).toHaveBeenCalledWith(redisConstant.FEED_AI_QUEUE, [
+        JSON.stringify(mockFeedAIQueueItem),
+      ]);
     });
   });
 

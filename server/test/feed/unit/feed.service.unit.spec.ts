@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 
 import axios from 'axios';
 import { Request, Response } from 'express';
@@ -9,6 +9,7 @@ import { RedisService } from '@common/redis/redis.service';
 import { ReadFeedPaginationRequestDto } from '@feed/dto/request/readFeedPagination.dto';
 import { SearchFeedRequestDto } from '@feed/dto/request/searchFeed.dto';
 import { GetFeedDetailResponseDto } from '@feed/dto/response/getFeedDetail';
+import { ReadNoSummaryFeedResponseDto } from '@feed/dto/response/readNoSummaryFeed.dto';
 import {
   FeedRepository,
   FeedViewRepository,
@@ -21,7 +22,15 @@ const mockedAxios = axios as jest.Mocked<typeof axios>;
 describe(`${FeedService.name} Unit Test`, () => {
   let feedService: FeedService;
   let feedRepository: jest.Mocked<
-    Pick<FeedRepository, 'findOneBy' | 'searchFeedList' | 'update' | 'delete'>
+    Pick<
+      FeedRepository,
+      | 'findOneBy'
+      | 'searchFeedList'
+      | 'update'
+      | 'delete'
+      | 'isOwnedByUser'
+      | 'findFeedsWithoutSummary'
+    >
   >;
   let feedViewRepository: jest.Mocked<
     Pick<FeedViewRepository, 'findOneBy' | 'findFeedPagination'>
@@ -29,7 +38,14 @@ describe(`${FeedService.name} Unit Test`, () => {
   let redisService: jest.Mocked<
     Pick<
       RedisService,
-      'keys' | 'lrange' | 'sismember' | 'sadd' | 'zincrby' | 'executePipeline'
+      | 'keys'
+      | 'lrange'
+      | 'sismember'
+      | 'sadd'
+      | 'zincrby'
+      | 'executePipeline'
+      | 'rpush'
+      | 'set'
     >
   >;
 
@@ -42,6 +58,8 @@ describe(`${FeedService.name} Unit Test`, () => {
       searchFeedList: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
+      isOwnedByUser: jest.fn(),
+      findFeedsWithoutSummary: jest.fn(),
     };
     feedViewRepository = {
       findOneBy: jest.fn(),
@@ -54,6 +72,8 @@ describe(`${FeedService.name} Unit Test`, () => {
       sadd: jest.fn(),
       zincrby: jest.fn(),
       executePipeline: jest.fn(),
+      rpush: jest.fn(),
+      set: jest.fn().mockResolvedValue('OK'),
     };
 
     feedService = new FeedService(
@@ -76,12 +96,117 @@ describe(`${FeedService.name} Unit Test`, () => {
     });
   });
 
+  describe('getPublicFeed', () => {
+    it('존재하지 않으면 NotFoundException을 던진다.', async () => {
+      feedRepository.findOneBy.mockResolvedValue(null);
+      await expect(feedService.getPublicFeed(1)).rejects.toThrow(NotFoundException);
+    });
+
+    it('비공개 게시글이면 NotFoundException을 던진다.', async () => {
+      feedRepository.findOneBy.mockResolvedValue({ id: 1, isPublic: false } as any);
+      await expect(feedService.getPublicFeed(1)).rejects.toThrow(NotFoundException);
+    });
+
+    it('공개 게시글이면 피드를 반환한다.', async () => {
+      const feed = { id: 1, isPublic: true } as any;
+      feedRepository.findOneBy.mockResolvedValue(feed);
+      await expect(feedService.getPublicFeed(1)).resolves.toBe(feed);
+    });
+  });
+
   describe('getFeedByView', () => {
     it('존재하지 않으면 NotFoundException을 던진다.', async () => {
       feedViewRepository.findOneBy.mockResolvedValue(null);
       await expect(feedService.getFeedByView(1)).rejects.toThrow(
         NotFoundException,
       );
+    });
+  });
+
+  describe('requestAiSummary', () => {
+    const parseEnqueued = () =>
+      JSON.parse(redisService.rpush.mock.calls[0][1] as string);
+
+    it('존재하지 않는 피드면 NotFoundException을 던지고 큐에 넣지 않는다.', async () => {
+      // given
+      feedRepository.findOneBy.mockResolvedValue(null);
+
+      // when & then
+      await expect(feedService.requestAiSummary(7)).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(redisService.rpush).not.toHaveBeenCalled();
+    });
+
+    it('요약이 NULL(영구 실패)이면 deathCount 0으로 재요청 큐에 넣는다.', async () => {
+      // given
+      feedRepository.findOneBy.mockResolvedValue({
+        id: 7,
+        summary: null,
+      } as any);
+
+      // when
+      await feedService.requestAiSummary(7);
+
+      // then
+      expect(redisService.set).toHaveBeenCalledWith(
+        `${REDIS_KEYS.FEED_AI_RETRY_LOCK}:7`,
+        '1',
+        'NX',
+        'EX',
+        expect.any(Number),
+      );
+      expect(redisService.rpush).toHaveBeenCalledWith(
+        REDIS_KEYS.FEED_AI_RETRY_QUEUE,
+        expect.any(String),
+      );
+      expect(parseEnqueued()).toMatchObject({ feedId: 7, deathCount: 0 });
+    });
+
+    it('이미 처리 중(락 점유)이면 ConflictException을 던지고 큐에 넣지 않는다.', async () => {
+      // given
+      feedRepository.findOneBy.mockResolvedValue({
+        id: 7,
+        summary: null,
+      } as any);
+      redisService.set.mockResolvedValue(null); // NX 실패 = 이미 락 존재
+
+      // when & then
+      await expect(feedService.requestAiSummary(7)).rejects.toThrow(
+        ConflictException,
+      );
+      expect(redisService.rpush).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('readFeedsWithoutSummary', () => {
+    it('레포지토리 조회 결과를 응답 DTO 배열로 변환해 반환한다.', async () => {
+      // given
+      const feeds = [
+        { id: 2, title: 'b', likeCount: 5, commentCount: 1 },
+        { id: 1, title: 'a', likeCount: 0, commentCount: 0 },
+      ] as any[];
+      feedRepository.findFeedsWithoutSummary.mockResolvedValue(feeds);
+
+      // when
+      const result = await feedService.readFeedsWithoutSummary();
+
+      // then
+      expect(feedRepository.findFeedsWithoutSummary).toHaveBeenCalledTimes(1);
+      expect(result).toStrictEqual(
+        ReadNoSummaryFeedResponseDto.toResponseDtoArray(feeds),
+      );
+    });
+
+    it('조회 결과가 없으면 빈 배열을 반환한다.', async () => {
+      // given
+      feedRepository.findFeedsWithoutSummary.mockResolvedValue([]);
+
+      // when
+      const result = await feedService.readFeedsWithoutSummary();
+
+      // then
+      expect(result).toStrictEqual([]);
     });
   });
 
@@ -280,7 +405,40 @@ describe(`${FeedService.name} Unit Test`, () => {
 
       // then
       expect(feedViewRepository.findOneBy).toHaveBeenCalledWith({ feedId: 10 });
+      expect(feedRepository.isOwnedByUser).not.toHaveBeenCalled();
       expect(result).toEqual(GetFeedDetailResponseDto.toResponseDto(feed));
+    });
+
+    it('RSS 소유자가 조회하면 isOwner=true로 응답한다.', async () => {
+      // given
+      const feed = { feedId: 10, title: 'detail', tag: ['a'] } as any;
+      feedViewRepository.findOneBy.mockResolvedValue(feed);
+      feedRepository.isOwnedByUser.mockResolvedValue(true);
+
+      // when
+      const result = await feedService.getFeedDetail({ feedId: 10 }, 7);
+
+      // then
+      expect(feedRepository.isOwnedByUser).toHaveBeenCalledWith(10, 7);
+      expect(result).toEqual(
+        GetFeedDetailResponseDto.toResponseDto(feed, true),
+      );
+    });
+
+    it('소유자가 아니면 isOwner=false로 응답한다.', async () => {
+      // given
+      const feed = { feedId: 10, title: 'detail', tag: ['a'] } as any;
+      feedViewRepository.findOneBy.mockResolvedValue(feed);
+      feedRepository.isOwnedByUser.mockResolvedValue(false);
+
+      // when
+      const result = await feedService.getFeedDetail({ feedId: 10 }, 7);
+
+      // then
+      expect(feedRepository.isOwnedByUser).toHaveBeenCalledWith(10, 7);
+      expect(result).toEqual(
+        GetFeedDetailResponseDto.toResponseDto(feed, false),
+      );
     });
   });
 

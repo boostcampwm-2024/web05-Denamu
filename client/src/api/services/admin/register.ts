@@ -14,6 +14,10 @@ export const register = {
     const response = await axiosInstance.post<RegisterResponse>(ADMIN.REGISTER, data);
     return response.data;
   },
+  certificate: async (token: string): Promise<RegisterResponse> => {
+    const response = await axiosInstance.post<RegisterResponse>(ADMIN.CERTIFICATE, { uuid: token });
+    return response.data;
+  },
   children: async (): Promise<ChildAdmin[]> => {
     const response = await axiosInstance.get<ChildAdminResponse>(ADMIN.CHILDREN);
     return response.data.data;

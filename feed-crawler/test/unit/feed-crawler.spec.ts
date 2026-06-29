@@ -1,7 +1,10 @@
 import 'reflect-metadata';
 
+import axios from 'axios';
+
+import { PermanentError, RetryableError } from '@common/errors';
+import { FeedDetail, RssObj } from '@common/feed/feed.type';
 import { FeedParserManager } from '@common/parser/feed-parser-manager';
-import { FeedDetail, RssObj } from '@common/types';
 
 import { FeedRepository } from '@repository/feed.repository';
 import { RssRepository } from '@repository/rss.repository';
@@ -18,6 +21,8 @@ describe('FeedCrawler', () => {
   let saveAiQueueMock: jest.Mock;
   let setRecentFeedListMock: jest.Mock;
   let selectAllRssMock: jest.Mock;
+  let selectFeedByIdMock: jest.Mock;
+  let selectRssByIdMock: jest.Mock;
   let fetchAndParseMock: jest.Mock;
   let fetchAndParseAllMock: jest.Mock;
 
@@ -73,6 +78,8 @@ describe('FeedCrawler', () => {
     saveAiQueueMock = jest.fn();
     setRecentFeedListMock = jest.fn();
     selectAllRssMock = jest.fn();
+    selectFeedByIdMock = jest.fn();
+    selectRssByIdMock = jest.fn();
     fetchAndParseMock = jest.fn();
     fetchAndParseAllMock = jest.fn();
 
@@ -83,11 +90,12 @@ describe('FeedCrawler', () => {
       setRecentFeedList: setRecentFeedListMock,
       updateSummary: jest.fn(),
       updateNullSummary: jest.fn(),
+      selectFeedById: selectFeedByIdMock,
     } as any;
 
     mockRssRepository = {
       selectAllRss: selectAllRssMock,
-      selectRssById: jest.fn(),
+      selectRssById: selectRssByIdMock,
     } as any;
 
     mockFeedParserManager = {
@@ -255,6 +263,117 @@ describe('FeedCrawler', () => {
       // Then
       expect(fetchAndParseMock).not.toHaveBeenCalled();
       expect(result).toEqual([]);
+    });
+  });
+
+  describe('requeueFeedForAiSummary', () => {
+    const mockFeed = { id: 10, blogId: 1, path: 'https://test1.tistory.com/1' };
+    let axiosGetSpy: jest.SpyInstance;
+
+    afterEach(() => {
+      axiosGetSpy?.mockRestore();
+    });
+
+    it('RSS에서 매칭되는 게시글을 찾으면 AI 큐에 다시 넣어야 한다', async () => {
+      // Given
+      selectFeedByIdMock.mockResolvedValue(mockFeed);
+      selectRssByIdMock.mockResolvedValue(mockRssObjects[0]);
+      fetchAndParseAllMock.mockResolvedValue([
+        { ...mockFeedDetails[0], link: mockFeed.path },
+      ]);
+
+      // When
+      await feedCrawler.requeueFeedForAiSummary(mockFeed.id);
+
+      // Then
+      expect(selectFeedByIdMock).toHaveBeenCalledWith(mockFeed.id);
+      expect(selectRssByIdMock).toHaveBeenCalledWith(mockFeed.blogId);
+      expect(saveAiQueueMock).toHaveBeenCalledWith([
+        expect.objectContaining({ id: mockFeed.id, deathCount: 0 }),
+      ]);
+    });
+
+    it('피드를 찾을 수 없으면 PermanentError를 던져야 한다', async () => {
+      // Given
+      selectFeedByIdMock.mockResolvedValue(null);
+
+      // When & Then
+      await expect(
+        feedCrawler.requeueFeedForAiSummary(mockFeed.id),
+      ).rejects.toThrow(PermanentError);
+      expect(saveAiQueueMock).not.toHaveBeenCalled();
+    });
+
+    it('RSS를 찾을 수 없으면 PermanentError를 던져야 한다', async () => {
+      // Given
+      selectFeedByIdMock.mockResolvedValue(mockFeed);
+      selectRssByIdMock.mockResolvedValue(null);
+
+      // When & Then
+      await expect(
+        feedCrawler.requeueFeedForAiSummary(mockFeed.id),
+      ).rejects.toThrow(PermanentError);
+      expect(saveAiQueueMock).not.toHaveBeenCalled();
+    });
+
+    describe('RSS에 매칭되는 게시글이 없을 때', () => {
+      beforeEach(() => {
+        selectFeedByIdMock.mockResolvedValue(mockFeed);
+        selectRssByIdMock.mockResolvedValue(mockRssObjects[0]);
+        // 다른 link만 반환하여 매칭 실패 유도
+        fetchAndParseAllMock.mockResolvedValue([
+          { ...mockFeedDetails[0], link: 'https://other.com/different' },
+        ]);
+      });
+
+      it('원본 HTTP 200이면 PermanentError를 던져야 한다 (오래된 게시글)', async () => {
+        // Given
+        axiosGetSpy = jest
+          .spyOn(axios, 'get')
+          .mockResolvedValue({ status: 200 });
+
+        // When & Then
+        await expect(
+          feedCrawler.requeueFeedForAiSummary(mockFeed.id),
+        ).rejects.toThrow(PermanentError);
+        expect(saveAiQueueMock).not.toHaveBeenCalled();
+      });
+
+      it('원본 HTTP 404이면 PermanentError를 던져야 한다 (삭제된 게시글)', async () => {
+        // Given
+        axiosGetSpy = jest
+          .spyOn(axios, 'get')
+          .mockResolvedValue({ status: 404 });
+
+        // When & Then
+        await expect(
+          feedCrawler.requeueFeedForAiSummary(mockFeed.id),
+        ).rejects.toThrow(PermanentError);
+      });
+
+      it('원본 HTTP 500이면 RetryableError를 던져야 한다 (일시적 서버 오류)', async () => {
+        // Given
+        axiosGetSpy = jest
+          .spyOn(axios, 'get')
+          .mockResolvedValue({ status: 500 });
+
+        // When & Then
+        await expect(
+          feedCrawler.requeueFeedForAiSummary(mockFeed.id),
+        ).rejects.toThrow(RetryableError);
+      });
+
+      it('원본 요청이 네트워크 에러로 실패하면 RetryableError를 던져야 한다', async () => {
+        // Given
+        axiosGetSpy = jest
+          .spyOn(axios, 'get')
+          .mockRejectedValue(new Error('ECONNREFUSED'));
+
+        // When & Then
+        await expect(
+          feedCrawler.requeueFeedForAiSummary(mockFeed.id),
+        ).rejects.toThrow(RetryableError);
+      });
     });
   });
 });

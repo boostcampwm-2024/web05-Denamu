@@ -6,6 +6,7 @@ import { PostCardGrid } from "@/components/common/Card/PostCardGrid";
 import { PostGridSkeleton } from "@/components/common/Card/PostCardSkeleton.tsx";
 import { SectionHeader } from "@/components/common/SectionHeader";
 import Filter from "@/components/filter/Filter";
+import LatestSectionTimer from "@/components/sections/LatestSectionTimer";
 
 import { useRecentTag } from "@/hooks/common/useRecentTag";
 import { useInfiniteScrollQuery } from "@/hooks/queries/useInfiniteScrollQuery";
@@ -14,7 +15,7 @@ import { Badge } from "../ui/badge";
 import { posts } from "@/api/services/posts";
 import { useFilterStore } from "@/store/useFilterStore";
 import { usePostTypeStore } from "@/store/usePostTypeStore";
-import { Post } from "@/types/post";
+import { FeedList } from "@/types/post";
 
 export default function LatestSection() {
   const pickedFilter = useFilterStore((state) => state.filters);
@@ -24,7 +25,7 @@ export default function LatestSection() {
   const recentTags = useRecentTag();
   const tags = postType === "latest" ? pickedFilter : recentTags;
 
-  const { items, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } = useInfiniteScrollQuery<Post>({
+  const { items, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } = useInfiniteScrollQuery<FeedList>({
     queryKey: "latest-posts",
     fetchFn: posts.latest,
     tags: tags,
@@ -74,6 +75,9 @@ export default function LatestSection() {
             <span className="text-gray-400 text-xs">카테고리 지정은 최대 5개까지 가능합니다.</span>
           </div>
         )}
+        <div className="ml-auto">
+          <LatestSectionTimer />
+        </div>
       </div>
       {postType === "latest" && <Filter />}
       <div className="flex-1 mt-4 md:p-6 md:pt-0 rounded-lg">

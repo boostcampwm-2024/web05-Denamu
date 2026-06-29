@@ -1,24 +1,19 @@
+import { ApiData, ApiMessage } from "@/types/api";
+
 export type RegisterRequest = {
-  loginId: string;
   password: string;
   name: string;
+  email: string;
 };
 
-export type RegisterResponse = {
-  message: string;
-};
+export type RegisterResponse = ApiMessage;
 
 export type ChildAdmin = {
   id: number;
-  loginId: string;
+  email: string;
   name: string;
 };
 
-export type ChildAdminResponse = {
-  message: string;
-  data: ChildAdmin[];
-};
+export type ChildAdminResponse = ApiData<ChildAdmin[]>;
 
-export type DeleteChildResponse = {
-  message: string;
-};
+export type DeleteChildResponse = ApiMessage;
