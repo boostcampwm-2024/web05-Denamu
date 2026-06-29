@@ -21,6 +21,10 @@ export type FeedList = FeedBase;
 export interface FeedDetail extends FeedBase {
   summary: string;
   isOwner: boolean;
+  blogId: number | null;
+  ownerName: string | null;
+  isOwnerCertified: boolean;
+  isSubscribed: boolean;
 }
 
 export interface InfiniteScrollResponse<T> {
