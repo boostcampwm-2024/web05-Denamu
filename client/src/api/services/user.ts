@@ -79,6 +79,8 @@ export const changePassword = async (uuid: string, password: string): Promise<{ 
     }
     throw new Error("서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.");
   }
+};
+
 export const confirmDeleteAccount = async (token: string): Promise<ApiMessage> => {
   const response = await axiosInstance.delete<ApiMessage>(USER.WITHDRAW_CONFIRM(token));
   return response.data;

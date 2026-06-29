@@ -146,14 +146,6 @@ export const AppRouter = ({ location, state }: RouterProps) => {
           }
         />
         <Route
-          path="/profile"
-          element={
-            <Suspense fallback={<Loading />}>
-              <Profile />
-            </Suspense>
-          }
-        />
-        <Route
           path="/users/forgot-password"
           element={
             <Suspense fallback={<Loading />}>
@@ -166,6 +158,18 @@ export const AppRouter = ({ location, state }: RouterProps) => {
           element={
             <Suspense fallback={<Loading />}>
               <ResetPassword />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <Suspense fallback={<Loading />}>
+              <Profile />
+            </Suspense>
+          }
+        />
+        <Route
           path="/profile/:id"
           element={
             <Suspense fallback={<Loading />}>
@@ -182,11 +186,14 @@ export const AppRouter = ({ location, state }: RouterProps) => {
           }
         />
       </Routes>
-      {state?.backgroundLocation && (
-        <Routes>
-          <Route path="/:id" element={<PostDetail />} />
-        </Routes>
-      )}
+      {
+        state?.backgroundLocation && (
+          <Routes>
+            <Route path="/:id" element={<PostDetail />} />
+          </Routes>
+        );
+      }
     </>
-  );
+  )
+    ;
 };
