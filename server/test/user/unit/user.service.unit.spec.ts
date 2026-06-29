@@ -22,6 +22,8 @@ import { FileService } from '@file/service/file.service';
 import { RssAccept } from '@rss/entity/rss.entity';
 import { RssAcceptRepository } from '@rss/repository/rss.repository';
 
+import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
+
 import { RegisterUserRequestDto } from '@user/dto/request/registerUser.dto';
 import { SearchUserRequestDto } from '@user/dto/request/searchUser.dto';
 import { CheckEmailDuplicationResponseDto } from '@user/dto/response/checkEmailDuplication.dto';
@@ -66,6 +68,9 @@ describe(`${UserService.name} Unit Test`, () => {
   let feedRepository: jest.Mocked<
     Pick<FeedRepository, 'getFeedsByBlog' | 'countPublicFeedsByBlogIds'>
   >;
+  let subscriptionRepository: jest.Mocked<
+    Pick<SubscriptionRepository, 'countByBlogIds' | 'getSubscribedBlogIds'>
+  >;
   let manager: { remove: jest.Mock; delete: jest.Mock };
   let dataSource: jest.Mocked<Pick<DataSource, 'transaction'>>;
 
@@ -107,6 +112,10 @@ describe(`${UserService.name} Unit Test`, () => {
       getFeedsByBlog: jest.fn(),
       countPublicFeedsByBlogIds: jest.fn().mockResolvedValue(new Map()),
     };
+    subscriptionRepository = {
+      countByBlogIds: jest.fn().mockResolvedValue(new Map()),
+      getSubscribedBlogIds: jest.fn().mockResolvedValue([]),
+    };
     manager = { remove: jest.fn(), delete: jest.fn() };
     dataSource = {
       transaction: jest.fn((cb: any) => cb(manager)),
@@ -121,6 +130,7 @@ describe(`${UserService.name} Unit Test`, () => {
       fileService as unknown as FileService,
       rssAcceptRepository as unknown as RssAcceptRepository,
       feedRepository as unknown as FeedRepository,
+      subscriptionRepository as unknown as SubscriptionRepository,
       dataSource as unknown as DataSource,
     );
   });
@@ -450,7 +460,12 @@ describe(`${UserService.name} Unit Test`, () => {
       });
       expect(feedRepository.countPublicFeedsByBlogIds).toHaveBeenCalledWith([7]);
       expect(result).toEqual(
-        GetUserRssResponseDto.toResponseDtoArray(rssList, feedCountMap),
+        GetUserRssResponseDto.toResponseDtoArray(
+          rssList,
+          feedCountMap,
+          new Map(),
+          new Set(),
+        ),
       );
       expect(result[0].feedCount).toBe(3);
     });
