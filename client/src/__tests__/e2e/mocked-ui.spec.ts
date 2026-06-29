@@ -4,9 +4,12 @@ const API_PATTERN = /\/\/[^/]+\/api\//;
 const VISIT_FLAG_KEY = "visit-flag";
 
 const markVisited = async (page: Page) => {
-  await page.addInitScript(({ key }) => {
-    window.localStorage.setItem(key, JSON.stringify({ state: { hasVisited: true }, version: 0 }));
-  }, { key: VISIT_FLAG_KEY });
+  await page.addInitScript(
+    ({ key }) => {
+      window.localStorage.setItem(key, JSON.stringify({ state: { hasVisited: true }, version: 0 }));
+    },
+    { key: VISIT_FLAG_KEY }
+  );
 };
 
 const makeFakeJwt = () => {
@@ -72,7 +75,7 @@ test("/signin 에서 회원가입 링크로 이동할 수 있다", async ({ page
   await markVisited(page);
   await page.goto("/signin");
 
-  await page.getByRole("button", { name: "계정이 없으신가요?" }).click();
+  await page.getByRole("button", { name: "회원가입" }).click();
 
   await expect(page).toHaveURL(/\/signup$/);
 });
