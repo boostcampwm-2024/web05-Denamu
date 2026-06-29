@@ -17,7 +17,12 @@ import { ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 
 import { CurrentUser } from '@common/decorator';
-import { JwtGuard, Payload, RefreshJwtGuard } from '@common/guard/jwt.guard';
+import {
+  JwtGuard,
+  OptionalJwtGuard,
+  Payload,
+  RefreshJwtGuard,
+} from '@common/guard/jwt.guard';
 import { ApiResponse } from '@common/response/common.response';
 
 import { ApiCertificateUser } from '@user/api-docs/certificateUser.api-docs';
@@ -113,10 +118,14 @@ export class UserController {
   @ApiGetUserRss()
   @Get('/:id/rss')
   @HttpCode(HttpStatus.OK)
-  async getUserRss(@Param() paramDto: GetUserProfileParamRequestDto) {
+  @UseGuards(OptionalJwtGuard)
+  async getUserRss(
+    @Param() paramDto: GetUserProfileParamRequestDto,
+    @CurrentUser() viewer: Payload | null,
+  ) {
     return ApiResponse.responseWithData(
       '사용자 소유 RSS 조회가 성공적으로 처리되었습니다.',
-      await this.userService.getUserRss(paramDto.id),
+      await this.userService.getUserRss(paramDto.id, viewer?.id),
     );
   }
 

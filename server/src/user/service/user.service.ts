@@ -25,6 +25,8 @@ import { FileService } from '@file/service/file.service';
 import { RssAccept } from '@rss/entity/rss.entity';
 import { RssAcceptRepository } from '@rss/repository/rss.repository';
 
+import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
+
 import { REFRESH_TOKEN_TTL, SALT_ROUNDS } from '@user/constant/user.constants';
 import { ChangePasswordRequestDto } from '@user/dto/request/changePassword.dto';
 import { LoginUserRequestDto } from '@user/dto/request/loginUser.dto';
@@ -56,6 +58,7 @@ export class UserService {
     private readonly fileService: FileService,
     private readonly rssAcceptRepository: RssAcceptRepository,
     private readonly feedRepository: FeedRepository,
+    private readonly subscriptionRepository: SubscriptionRepository,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -160,15 +163,31 @@ export class UserService {
     }
   }
 
-  async getUserRss(userId: number) {
+  async getUserRss(userId: number, viewerId?: number) {
     const rssList = await this.rssAcceptRepository.find({
       where: { userId },
       order: { id: 'DESC' },
     });
-    const feedCountMap = await this.feedRepository.countPublicFeedsByBlogIds(
-      rssList.map((rss) => rss.id),
+    const blogIds = rssList.map((rss) => rss.id);
+
+    const feedCountMap =
+      await this.feedRepository.countPublicFeedsByBlogIds(blogIds);
+    const subscriberCountMap =
+      await this.subscriptionRepository.countByBlogIds(blogIds);
+
+    const subscribedBlogIds = new Set<number>();
+    if (viewerId) {
+      const viewerBlogIds =
+        await this.subscriptionRepository.getSubscribedBlogIds(viewerId);
+      viewerBlogIds.forEach((id) => subscribedBlogIds.add(id));
+    }
+
+    return GetUserRssResponseDto.toResponseDtoArray(
+      rssList,
+      feedCountMap,
+      subscriberCountMap,
+      subscribedBlogIds,
     );
-    return GetUserRssResponseDto.toResponseDtoArray(rssList, feedCountMap);
   }
 
   async getUserRssFeeds(rssId: number, feedDto: GetUserRssFeedsRequestDto) {

@@ -8,6 +8,8 @@ import { FileModule } from '@file/module/file.module';
 
 import { RssModule } from '@rss/module/rss.module';
 
+import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
+
 import { OAuthController } from '@user/controller/oAuth.controller';
 import { UserController } from '@user/controller/user.controller';
 import { GithubOAuthProvider } from '@user/provider/github.provider';
@@ -27,6 +29,7 @@ import { UserService } from '@user/service/user.service';
     UserRepository,
     ProviderRepository,
     FeedRepository,
+    SubscriptionRepository,
     GoogleOAuthProvider,
     GithubOAuthProvider,
     UserScheduler,
