@@ -19,13 +19,11 @@ export const AuthResetPasswordForm = () => {
       toast({ title: "비밀번호 변경 완료", description: result.message });
       navigate("/signin");
     } else {
-      const isAuthFailure = result.status === 404;
       toast({
-        title: isAuthFailure ? "인증 실패" : "오류",
+        title: "오류",
         description: result.message,
         variant: "destructive",
       });
-      if (isAuthFailure) navigate("/signin");
     }
   }, [result, toast, navigate]);
 

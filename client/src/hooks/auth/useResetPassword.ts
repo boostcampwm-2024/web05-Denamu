@@ -1,7 +1,7 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 import axios from "axios";
-import { useSearchParams } from "react-router-dom";
 
 import { changePassword } from "@/api/services/user";
 import { ResetPasswordResult } from "@/types/auth";
@@ -53,9 +53,8 @@ export function useResetPassword() {
           success: false,
           message:
             status === 404
-              ? "인증에 실패했습니다."
+              ? "비밀번호 재설정 링크가 만료되었거나 이미 사용되었습니다. 비밀번호 찾기를 다시 시도해주세요."
               : (error.response?.data?.message ?? "비밀번호 변경 중 오류가 발생했습니다."),
-          status,
         });
       } else {
         setResult({ success: false, message: "비밀번호 변경 중 오류가 발생했습니다." });

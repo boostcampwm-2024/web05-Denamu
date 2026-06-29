@@ -81,5 +81,4 @@ export interface ForgotPasswordResult {
 export interface ResetPasswordResult {
   success: boolean;
   message: string;
-  status?: number;
 }
