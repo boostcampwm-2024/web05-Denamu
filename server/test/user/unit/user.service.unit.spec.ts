@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   NotFoundException,
   UnauthorizedException,
@@ -164,7 +165,11 @@ describe(`${UserService.name} Unit Test`, () => {
       expect(result).toEqual({
         totalCount: 2,
         result: [
-          { id: 1, userName: '김개발', profileImage: 'https://denamu.dev/profile.png' },
+          {
+            id: 1,
+            userName: '김개발',
+            profileImage: 'https://denamu.dev/profile.png',
+          },
           { id: 2, userName: '김철수', profileImage: null },
         ],
         totalPages: 1,
@@ -345,7 +350,9 @@ describe(`${UserService.name} Unit Test`, () => {
     it('이메일이 존재하면 exists=true 응답을 반환한다.', async () => {
       userRepository.findOne.mockResolvedValue(UserFixture.createUserFixture());
       const result = await userService.checkEmailDuplication('a@test.com');
-      expect(result).toEqual(CheckEmailDuplicationResponseDto.toResponseDto(true));
+      expect(result).toEqual(
+        CheckEmailDuplicationResponseDto.toResponseDto(true),
+      );
     });
 
     it('이메일이 없으면 exists=false 응답을 반환한다.', async () => {
@@ -399,7 +406,9 @@ describe(`${UserService.name} Unit Test`, () => {
 
     it('인증에 성공하면 Redis 키를 지우고 사용자를 저장한다.', async () => {
       // given
-      redisService.get.mockResolvedValue(JSON.stringify({ email: 'a@test.com' }));
+      redisService.get.mockResolvedValue(
+        JSON.stringify({ email: 'a@test.com' }),
+      );
       userRepository.save.mockResolvedValue({
         id: 5,
         email: 'a@test.com',
@@ -415,7 +424,9 @@ describe(`${UserService.name} Unit Test`, () => {
 
     it('가입 완료 후 동일 이메일의 미연결 RSS에 user_id를 연결한다.', async () => {
       // given
-      redisService.get.mockResolvedValue(JSON.stringify({ email: 'a@test.com' }));
+      redisService.get.mockResolvedValue(
+        JSON.stringify({ email: 'a@test.com' }),
+      );
       userRepository.save.mockResolvedValue({
         id: 5,
         email: 'a@test.com',
@@ -448,7 +459,9 @@ describe(`${UserService.name} Unit Test`, () => {
         where: { userId: 1 },
         order: { id: 'DESC' },
       });
-      expect(feedRepository.countPublicFeedsByBlogIds).toHaveBeenCalledWith([7]);
+      expect(feedRepository.countPublicFeedsByBlogIds).toHaveBeenCalledWith([
+        7,
+      ]);
       expect(result).toEqual(
         GetUserRssResponseDto.toResponseDtoArray(rssList, feedCountMap),
       );
@@ -458,7 +471,13 @@ describe(`${UserService.name} Unit Test`, () => {
 
   describe('getUserRssFeeds', () => {
     const makeFeed = (id: number) =>
-      ({ id, title: `t${id}`, path: `p${id}`, createdAt: new Date(), commentCount: id }) as Feed;
+      ({
+        id,
+        title: `t${id}`,
+        path: `p${id}`,
+        createdAt: new Date(),
+        commentCount: id,
+      }) as Feed;
 
     it('limit보다 많이 조회되면 마지막 항목을 잘라내고 hasMore=true로 반환한다.', async () => {
       // given (limit=2인데 3개 조회 → 다음 페이지 존재)
@@ -469,10 +488,18 @@ describe(`${UserService.name} Unit Test`, () => {
       ]);
 
       // when
-      const result = await userService.getUserRssFeeds(5, { lastId: 11, limit: 2 });
+      const result = await userService.getUserRssFeeds(5, {
+        lastId: 11,
+        limit: 2,
+      });
 
       // then
-      expect(feedRepository.getFeedsByBlog).toHaveBeenCalledWith(5, 11, 2, true);
+      expect(feedRepository.getFeedsByBlog).toHaveBeenCalledWith(
+        5,
+        11,
+        2,
+        true,
+      );
       expect(result.result).toHaveLength(2);
       expect(result.hasMore).toBe(true);
       expect(result.lastId).toBe(9);
@@ -515,10 +542,7 @@ describe(`${UserService.name} Unit Test`, () => {
       const user = await UserFixture.createUserCryptFixture();
       userRepository.findOne.mockResolvedValue(user);
       await expect(
-        userService.loginUser(
-          { ...dto, password: 'wrong!' },
-          createResponse(),
-        ),
+        userService.loginUser({ ...dto, password: 'wrong!' }, createResponse()),
       ).rejects.toThrow(UnauthorizedException);
     });
 
@@ -697,7 +721,10 @@ describe(`${UserService.name} Unit Test`, () => {
 
     it('비밀번호 미설정 소셜 계정은 현재 비밀번호 없이 새로 설정하고 전 기기를 로그아웃한다.', async () => {
       // given
-      const user = UserFixture.createUserFixture({ id: userId, password: null });
+      const user = UserFixture.createUserFixture({
+        id: userId,
+        password: null,
+      });
       userRepository.findOneBy.mockResolvedValue(user);
 
       // when
@@ -732,7 +759,7 @@ describe(`${UserService.name} Unit Test`, () => {
     it('사용자가 있으면 인증 코드를 저장하고 메일을 발송한다.', async () => {
       // given
       userRepository.findOne.mockResolvedValue(
-        UserFixture.createUserFixture({ id: 1 }),
+        UserFixture.createUserFixture({ id: 1, providers: [] }),
       );
 
       // when
@@ -746,6 +773,20 @@ describe(`${UserService.name} Unit Test`, () => {
         600,
       );
       expect(emailProducer.producePasswordReset).toHaveBeenCalled();
+    });
+
+    it('OAuth 회원가입자면 BadRequestException을 던지고 메일을 발송하지 않는다.', async () => {
+      // given
+      userRepository.findOne.mockResolvedValue(
+        UserFixture.createUserFixture({ id: 1, providers: [{}] as any }),
+      );
+
+      // when & then
+      await expect(userService.forgotPassword('a@test.com')).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(redisService.set).not.toHaveBeenCalled();
+      expect(emailProducer.producePasswordReset).not.toHaveBeenCalled();
     });
   });
 
