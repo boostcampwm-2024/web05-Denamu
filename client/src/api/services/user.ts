@@ -71,7 +71,7 @@ export const requestPasswordReset = async (email: string): Promise<{ message: st
 
 export const changePassword = async (uuid: string, password: string): Promise<{ message: string }> => {
   try {
-    const response = await axiosInstance.patch<{ message: string }>(USER.PASSWORD, { uuid, password });
+    const response = await axiosInstance.patch<{ message: string }>(USER.PASSWORD_RESET_CONFIRM(uuid), { password });
     return response.data;
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
