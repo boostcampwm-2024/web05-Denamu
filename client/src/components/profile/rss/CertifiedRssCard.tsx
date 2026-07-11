@@ -1,7 +1,8 @@
 import { useState } from "react";
 
-import { ChevronDown, FileText } from "lucide-react";
+import { ChevronDown, FileText, Users } from "lucide-react";
 
+import { SubscribeButton } from "@/components/common/Card/detail/SubscribeButton.tsx";
 import { PlatformIcon } from "@/components/profile/rss/PlatformIcon.tsx";
 import { RssFeedRow } from "@/components/profile/rss/RssFeedRow.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
@@ -14,9 +15,10 @@ import { CertifiedRss } from "@/types/profile.ts";
 interface CertifiedRssCardProps {
   userId: number;
   rss: CertifiedRss;
+  isOwner: boolean;
 }
 
-export const CertifiedRssCard = ({ userId, rss }: CertifiedRssCardProps) => {
+export const CertifiedRssCard = ({ userId, rss, isOwner }: CertifiedRssCardProps) => {
   const [expanded, setExpanded] = useState(false);
 
   const { data, isLoading, isError, hasNextPage, fetchNextPage, isFetchingNextPage } = useRssFeeds(
@@ -29,27 +31,44 @@ export const CertifiedRssCard = ({ userId, rss }: CertifiedRssCardProps) => {
 
   return (
     <li className="border border-gray-100 rounded-lg">
-      <div className="flex items-center justify-between p-3">
-        <div className="flex items-center min-w-0 space-x-3">
+      <div className="flex items-center justify-between gap-3 p-4">
+        <div className="flex items-center min-w-0 gap-3">
           <PlatformIcon platform={rss.blogPlatform} className="flex-shrink-0 w-10 h-10" />
           <div className="min-w-0">
-            <p className="font-medium truncate">{rss.name}</p>
+            <div className="flex items-center gap-2">
+              <p className="font-medium truncate">{rss.name}</p>
+              <Badge variant="secondary" className="flex-shrink-0">
+                {rss.blogPlatform}
+              </Badge>
+            </div>
             <a
               href={rss.rssUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-gray-500 truncate hover:underline"
+              className="text-sm text-gray-400 truncate hover:underline"
             >
               {rss.rssUrl}
             </a>
-            <p className="flex items-center gap-1 text-sm text-gray-400">
-              <FileText className="w-3.5 h-3.5" />
-              게시글 {rss.feedCount}개
+            <p className="flex items-center gap-3 text-sm text-gray-400">
+              <span className="flex items-center gap-1">
+                <FileText className="w-3.5 h-3.5" />
+                게시글 {rss.feedCount}개
+              </span>
+              <span className="flex items-center gap-1">
+                <Users className="w-3.5 h-3.5" />
+                구독자 {rss.subscriberCount}명
+              </span>
             </p>
           </div>
         </div>
         <div className="flex items-center flex-shrink-0 gap-2 ml-3">
-          <Badge variant="secondary">{rss.blogPlatform}</Badge>
+          {!isOwner && (
+            <SubscribeButton
+              rssId={rss.id}
+              isSubscribed={rss.isSubscribed}
+              invalidateKeys={[["certifiedRss", userId]]}
+            />
+          )}
           <Button
             variant="ghost"
             size="icon"

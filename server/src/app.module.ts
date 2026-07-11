@@ -33,6 +33,8 @@ import { RssModule } from '@rss/module/rss.module';
 
 import { StatisticModule } from '@statistic/module/statistic.module';
 
+import { SubscribeModule } from '@subscribe/module/subscribe.module';
+
 import { TagModule } from '@tag/module/tag.module';
 
 import { UserModule } from '@user/module/user.module';
@@ -87,6 +89,7 @@ const exists = !!chosen && fs.existsSync(chosen);
     StatisticModule,
     CommentModule,
     LikeModule,
+    SubscribeModule,
     FileModule,
     RabbitMQModule,
   ],

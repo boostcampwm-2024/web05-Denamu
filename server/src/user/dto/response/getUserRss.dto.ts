@@ -39,11 +39,28 @@ export class GetUserRssResponseDto {
   })
   feedCount: number;
 
+  @ApiProperty({
+    example: 0,
+    description: 'RSS의 총 구독자 수',
+  })
+  subscriberCount: number;
+
+  @ApiProperty({
+    example: false,
+    description: '요청자가 해당 RSS를 구독 중인지 여부 (비로그인 시 false)',
+  })
+  isSubscribed: boolean;
+
   constructor(partial: Partial<GetUserRssResponseDto>) {
     Object.assign(this, partial);
   }
 
-  static toResponseDto(rssAccept: RssAccept, feedCount: number) {
+  static toResponseDto(
+    rssAccept: RssAccept,
+    feedCount: number,
+    subscriberCount: number,
+    isSubscribed: boolean,
+  ) {
     return new GetUserRssResponseDto({
       id: rssAccept.id,
       name: rssAccept.name,
@@ -51,15 +68,24 @@ export class GetUserRssResponseDto {
       rssUrl: rssAccept.rssUrl,
       blogPlatform: rssAccept.blogPlatform,
       feedCount,
+      subscriberCount,
+      isSubscribed,
     });
   }
 
   static toResponseDtoArray(
     rssAcceptList: RssAccept[],
     feedCountMap: Map<number, number>,
+    subscriberCountMap: Map<number, number>,
+    subscribedBlogIds: Set<number>,
   ) {
     return rssAcceptList.map((rssAccept) =>
-      this.toResponseDto(rssAccept, feedCountMap.get(rssAccept.id) ?? 0),
+      this.toResponseDto(
+        rssAccept,
+        feedCountMap.get(rssAccept.id) ?? 0,
+        subscriberCountMap.get(rssAccept.id) ?? 0,
+        subscribedBlogIds.has(rssAccept.id),
+      ),
     );
   }
 }

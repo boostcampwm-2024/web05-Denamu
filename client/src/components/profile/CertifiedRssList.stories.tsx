@@ -18,7 +18,7 @@ const mockRssFeeds = {
 const meta = {
   title: "profile/CertifiedRssList",
   component: CertifiedRssList,
-  args: { userId: 1, rssList: [mockCertifiedRss] },
+  args: { userId: 1, rssList: [mockCertifiedRss], isOwner: false },
 } satisfies Meta<typeof CertifiedRssList>;
 
 export default meta;

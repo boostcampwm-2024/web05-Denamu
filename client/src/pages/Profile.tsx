@@ -4,6 +4,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import { MyPage } from "@/components/profile/MyPage.tsx";
 import { ProfileSidebar } from "@/components/profile/ProfileSidebar.tsx";
+import { SubscriptionManagementTab } from "@/components/profile/SubscriptionManagementTab.tsx";
 import { RssManagementTab } from "@/components/profile/rss/RssManagementTab.tsx";
 import { ProfileEditTab } from "@/components/profile/sections/ProfileEditTab.tsx";
 
@@ -16,6 +17,7 @@ export default function Profile() {
   const { isAuthenticated, isInitialized, userInfo } = useAuthStore();
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<ProfileTab>(searchParams.get("oauthLink") ? "settings" : "mypage");
+  const [showSubscriptions, setShowSubscriptions] = useState(false);
 
   const targetId = id ? Number(id) : userInfo.id;
   const isOwner = isAuthenticated && userInfo.id !== null && userInfo.id === targetId;
@@ -39,19 +41,33 @@ export default function Profile() {
 
   const currentTab: ProfileTab = isOwner ? activeTab : "mypage";
 
+  const handleTabChange = (tab: ProfileTab) => {
+    setShowSubscriptions(false);
+    setActiveTab(tab);
+  };
+
   return (
     <Layout>
       <div className="flex min-h-screen">
-        <ProfileSidebar activeTab={currentTab} onTabChange={setActiveTab} isOwner={isOwner} />
+        <ProfileSidebar activeTab={currentTab} onTabChange={handleTabChange} isOwner={isOwner} />
 
         <div className="flex-1 min-w-0 px-4 py-8 md:px-8">
-          {currentTab === "mypage" && (
-            <MyPage
-              userId={targetId as number}
-              name={isOwner ? (userInfo.userName ?? "") : ""}
-              email={isOwner ? (userInfo.email ?? "") : ""}
-            />
-          )}
+          {currentTab === "mypage" &&
+            (showSubscriptions ? (
+              <SubscriptionManagementTab
+                userId={targetId as number}
+                isOwner={isOwner}
+                onBack={() => setShowSubscriptions(false)}
+              />
+            ) : (
+              <MyPage
+                userId={targetId as number}
+                name={isOwner ? (userInfo.userName ?? "") : ""}
+                email={isOwner ? (userInfo.email ?? "") : ""}
+                isOwner={isOwner}
+                onShowSubscriptions={() => setShowSubscriptions(true)}
+              />
+            ))}
           {isOwner && currentTab === "rss" && <RssManagementTab userId={targetId as number} />}
           {isOwner && currentTab === "settings" && (
             <ProfileEditTab userId={targetId as number} email={userInfo.email ?? ""} />

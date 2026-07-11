@@ -19,6 +19,7 @@ import type {
 import type { AdminRssData } from "@/types/rss";
 import type { SearchResult, UserSearchResult } from "@/types/search";
 import type { ChildAdmin } from "@/types/admin";
+import type { SubscribedRss } from "@/types/subscription";
 
 export const mockFeedList: FeedList = {
   id: 1,
@@ -40,6 +41,10 @@ export const mockFeedDetail: FeedDetail = {
   ...mockFeedList,
   summary: "이 글은 Storybook을 활용해 프론트엔드 컴포넌트를 문서화하고 테스트하는 방법을 다룹니다.",
   isOwner: false,
+  blogId: 1,
+  ownerName: "조민석",
+  isOwnerCertified: true,
+  isSubscribed: false,
 };
 
 export const mockUser: User = {
@@ -69,7 +74,28 @@ export const mockCertifiedRss: CertifiedRss = {
   rssUrl: "https://denamu.dev/rss",
   blogPlatform: "tistory",
   feedCount: 42,
+  subscriberCount: 12,
+  isSubscribed: false,
 };
+
+export const mockSubscribedRss: SubscribedRss[] = [
+  {
+    id: 1,
+    name: "데나무 블로그",
+    userName: "조민석",
+    rssUrl: "https://denamu.dev/rss",
+    blogPlatform: "tistory",
+    feedCount: 42,
+  },
+  {
+    id: 2,
+    name: "벨로그 기술 블로그",
+    userName: "김개발",
+    rssUrl: "https://velog.io/@dev/rss",
+    blogPlatform: "velog",
+    feedCount: 18,
+  },
+];
 
 export const mockChatItem: ChatType = {
   chatImg: "https://picsum.photos/seed/chat/64/64",

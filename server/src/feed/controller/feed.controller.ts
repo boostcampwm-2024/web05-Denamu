@@ -20,7 +20,7 @@ import { Observable } from 'rxjs';
 
 import { CurrentUser } from '@common/decorator/current-user.decorator';
 import { AdminAuthGuard } from '@common/guard/session.guard';
-import { OptionalJwtGuard, Payload } from '@common/guard/jwt.guard';
+import { JwtGuard, OptionalJwtGuard, Payload } from '@common/guard/jwt.guard';
 import { ApiResponse } from '@common/response/common.response';
 
 import { ApiDeleteCheckFeed } from '@feed/api-docs/deleteCheckFeed.api-docs';
@@ -28,6 +28,7 @@ import { ApiGetFeedDetail } from '@feed/api-docs/getFeedDetail.api-docs';
 import { ApiReadFeedPagination } from '@feed/api-docs/readFeedPagination.api-docs';
 import { ApiReadNoSummaryFeedList } from '@feed/api-docs/readNoSummaryFeedList.api-docs';
 import { ApiReadRecentFeedList } from '@feed/api-docs/readRecentFeedList.api-docs';
+import { ApiReadSubscriptionFeed } from '@feed/api-docs/readSubscriptionFeed.api-docs';
 import { ApiReadTrendFeedList } from '@feed/api-docs/readTrendFeedList.api-docs';
 import { ApiRequestAiSummary } from '@feed/api-docs/requestAiSummary.api-docs';
 import { ApiSearchFeedList } from '@feed/api-docs/searchFeedList.api-docs';
@@ -147,6 +148,23 @@ export class FeedController {
     return ApiResponse.responseWithData(
       '최신 피드 업데이트 완료',
       await this.feedService.readRecentFeedList(),
+    );
+  }
+
+  @ApiReadSubscriptionFeed()
+  @Get('/subscriptions')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtGuard)
+  async readSubscriptionFeeds(
+    @CurrentUser() user: Payload,
+    @Query() feedPaginationQueryDto: ReadFeedPaginationRequestDto,
+  ) {
+    return ApiResponse.responseWithData(
+      '구독 피드 조회 완료',
+      await this.feedService.readSubscriptionFeeds(
+        user.id,
+        feedPaginationQueryDto,
+      ),
     );
   }
 

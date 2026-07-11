@@ -11,7 +11,7 @@ vi.mock("@/components/profile/rss/CertifiedRssCard.tsx", () => ({
 
 describe("CertifiedRssList", () => {
   it("rssList가 비어있으면 안내 문구를 표시해야 한다", () => {
-    render(<CertifiedRssList userId={1} rssList={[]} />);
+    render(<CertifiedRssList userId={1} rssList={[]} isOwner />);
 
     expect(screen.getByText("인증된 RSS가 없습니다.")).toBeInTheDocument();
   });
@@ -21,7 +21,7 @@ describe("CertifiedRssList", () => {
       { id: 1, name: "블로그A" },
       { id: 2, name: "블로그B" },
     ] as CertifiedRss[];
-    render(<CertifiedRssList userId={1} rssList={rssList} />);
+    render(<CertifiedRssList userId={1} rssList={rssList} isOwner />);
 
     expect(screen.getAllByTestId("rss-card")).toHaveLength(2);
   });

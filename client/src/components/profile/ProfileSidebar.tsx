@@ -15,10 +15,10 @@ interface ProfileSidebarProps {
   isOwner: boolean;
 }
 
-const tabs: { id: ProfileTab; label: string; icon: typeof UserIcon }[] = [
-  { id: "mypage", label: "마이페이지", icon: UserIcon },
-  { id: "rss", label: "RSS 관리", icon: Rss },
-  { id: "settings", label: "정보 수정", icon: SettingsIcon },
+const tabs: { id: ProfileTab; label: string; icon: typeof UserIcon; activeClass: string }[] = [
+  { id: "mypage", label: "마이페이지", icon: UserIcon, activeClass: "bg-blue-50 text-blue-600" },
+  { id: "rss", label: "RSS 관리", icon: Rss, activeClass: "bg-[#FF870D]/10 text-[#FF870D]" },
+  { id: "settings", label: "정보 수정", icon: SettingsIcon, activeClass: "bg-purple-50 text-purple-600" },
 ];
 
 export const ProfileSidebar = ({ activeTab, onTabChange, isOwner }: ProfileSidebarProps) => {
@@ -56,11 +56,7 @@ export const ProfileSidebar = ({ activeTab, onTabChange, isOwner }: ProfileSideb
                       className={cn(
                         "flex items-center w-full p-3 rounded-lg transition-colors",
                         isActive
-                          ? tab.id === "rss"
-                            ? "bg-[#FF870D]/10 text-[#FF870D] font-semibold"
-                            : tab.id === "settings"
-                              ? "bg-purple-50 text-purple-600 font-semibold"
-                              : "bg-blue-50 text-blue-600 font-semibold"
+                          ? cn(tab.activeClass, "font-semibold")
                           : "text-gray-600 hover:bg-gray-50"
                       )}
                     >

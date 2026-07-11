@@ -174,6 +174,20 @@ CREATE TABLE `likes` (
   CONSTRAINT `FK_85b0dbd1e7836d0f8cdc38fe830` FOREIGN KEY (`feed_id`) REFERENCES `feed` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+-- denamu.subscription definition
+
+CREATE TABLE `subscription` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `subscribed_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `rss_accept_id` int NOT NULL,
+  `user_id` int NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UQ_subscription_user_rss` (`user_id`,`rss_accept_id`),
+  KEY `FK_subscription_rss` (`rss_accept_id`),
+  CONSTRAINT `FK_subscription_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_subscription_rss` FOREIGN KEY (`rss_accept_id`) REFERENCES `rss_accept` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
 -- denamu.provider definition
 
 CREATE TABLE `provider` (
@@ -428,3 +442,11 @@ INSERT INTO activity (activity_date, view_count, user_id) VALUES
 INSERT INTO likes(feed_id, user_id, like_date) VALUES
 	(94,1,'2025-06-13 17:47:05.575811'),
 	(95,1,'2025-06-13 17:47:07.575811');
+
+-- denamu.subscription insert data
+
+INSERT INTO subscription(user_id, rss_accept_id, subscribed_at) VALUES
+	(2, 1, '2025-06-14 10:00:00.000000'),
+	(2, 2, '2025-06-14 10:01:00.000000'),
+	(2, 3, '2025-06-14 10:02:00.000000'),
+	(1, 2, '2025-06-14 10:03:00.000000');

@@ -130,6 +130,43 @@ export class FeedRepository extends Repository<Feed> {
     return count > 0;
   }
 
+  async getBlogMetaByFeedId(
+    feedId: number,
+  ): Promise<{ id: number; userName: string; userId: number | null } | null> {
+    const feed = await this.createQueryBuilder('feed')
+      .innerJoin('feed.blog', 'blog')
+      .select(['feed.id', 'blog.id', 'blog.userName', 'blog.userId'])
+      .where('feed.id = :feedId', { feedId })
+      .getOne();
+
+    if (!feed?.blog) return null;
+
+    return {
+      id: feed.blog.id,
+      userName: feed.blog.userName,
+      userId: feed.blog.userId,
+    };
+  }
+
+  async getSubscriptionFeeds(blogIds: number[], lastId: number, limit: number) {
+    if (!blogIds.length) return [];
+
+    const query = this.createQueryBuilder('feed')
+      .innerJoinAndSelect('feed.blog', 'blog')
+      .leftJoinAndSelect('feed.tags', 'tag')
+      .where('feed.blog_id IN (:...blogIds)', { blogIds })
+      .andWhere('feed.is_public = 1');
+
+    if (lastId) {
+      query.andWhere('feed.id < :lastId', { lastId });
+    }
+
+    return await query
+      .orderBy('feed.id', 'DESC')
+      .take(limit + 1)
+      .getMany();
+  }
+
   async findFeedsWithoutSummary() {
     return this.createQueryBuilder('feed')
       .select(['feed.id', 'feed.title', 'feed.likeCount', 'feed.commentCount'])

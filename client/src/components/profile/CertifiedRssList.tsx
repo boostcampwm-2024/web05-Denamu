@@ -6,9 +6,10 @@ import { CertifiedRss } from "@/types/profile.ts";
 interface CertifiedRssListProps {
   userId: number;
   rssList: CertifiedRss[];
+  isOwner: boolean;
 }
 
-export const CertifiedRssList = ({ userId, rssList }: CertifiedRssListProps) => {
+export const CertifiedRssList = ({ userId, rssList, isOwner }: CertifiedRssListProps) => {
   return (
     <Card className="mb-8">
       <CardContent className="p-6">
@@ -18,7 +19,7 @@ export const CertifiedRssList = ({ userId, rssList }: CertifiedRssListProps) => 
         ) : (
           <ul className="space-y-3">
             {rssList.map((rss) => (
-              <CertifiedRssCard key={rss.id} userId={userId} rss={rss} />
+              <CertifiedRssCard key={rss.id} userId={userId} rss={rss} isOwner={isOwner} />
             ))}
           </ul>
         )}

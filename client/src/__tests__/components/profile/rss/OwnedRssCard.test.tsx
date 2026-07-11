@@ -24,6 +24,7 @@ vi.mock("@/hooks/queries/useRssCertification.ts", () => ({
   useSetFeedVisibility: () => ({ mutate: visibilityMutate, isPending: false }),
 }));
 
+vi.mock("@/components/profile/rss/SubscribersModal.tsx", () => ({ SubscribersModal: () => null }));
 vi.mock("@/components/profile/rss/PlatformIcon.tsx", () => ({ PlatformIcon: () => <div data-testid="platform-icon" /> }));
 vi.mock("@/components/profile/rss/RssFeedRow.tsx", () => ({
   RssFeedRow: ({ title, onToggleVisibility }: { title: string; onToggleVisibility?: (n: boolean) => void }) => (

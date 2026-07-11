@@ -100,6 +100,10 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
       title: feedList[0].title,
       viewCount: feedList[0].viewCount,
       isOwner: false,
+      blogId: feedList[0].blog.id,
+      ownerName: feedList[0].blog.userName,
+      isOwnerCertified: false,
+      isSubscribed: false,
     });
   });
 
@@ -129,6 +133,10 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
       title: feedList[1].title,
       viewCount: feedList[1].viewCount,
       isOwner: false,
+      blogId: feedList[1].blog.id,
+      ownerName: feedList[1].blog.userName,
+      isOwnerCertified: false,
+      isSubscribed: false,
     });
   });
 
