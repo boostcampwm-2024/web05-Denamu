@@ -32,7 +32,7 @@ const HIGHLIGHTS = [
   {
     icon: Database,
     title: "수집 항목",
-    body: ["이메일, 닉네임, 비밀번호", "IP·쿠키, 서비스 이용기록"],
+    body: ["이메일, 닉네임, 비밀번호", "IP·쿠키, 서비스 이용기록", "RSS 신청: 실명·블로그 정보"],
   },
   {
     icon: Clock,
@@ -47,7 +47,7 @@ const HIGHLIGHTS = [
   {
     icon: Truck,
     title: "처리 위탁",
-    body: ["AWS, Google LLC", "(인프라·통계 분석)"],
+    body: ["AWS, Google LLC", "(인프라·통계·메일 발송)"],
   },
   {
     icon: Trash2,
@@ -136,6 +136,9 @@ export default function PrivacyPolicy() {
                 RSS 기반 기술 블로그 큐레이션, 검색, 댓글·좋아요, 개발자 채팅 등 기본적인 서비스 제공을 목적으로
                 개인정보를 처리합니다.
               </Li>
+              <Li label="RSS(블로그) 등록 신청 처리">
+                블로그 소유자의 RSS 등록 신청 접수, 심사 및 승인·거부 결과 통지를 목적으로 개인정보를 처리합니다.
+              </Li>
               <Li label="서비스 이용 통계 분석 및 개선">
                 서비스 이용에 대한 분석, 인구통계학적 분석 및 서비스 개선을 목적으로 개인정보를 처리합니다.
               </Li>
@@ -144,8 +147,8 @@ export default function PrivacyPolicy() {
 
           <Article id={2} title="처리하는 개인정보의 항목">
             <P>
-              {SERVICE_NAME}는 서비스 제공을 위해 필요 최소한의 범위에서 정보주체의 동의 없이 다음의 개인정보를
-              수집·이용하며, 각 항목의 처리 법적 근거는 다음과 같습니다.
+              {SERVICE_NAME}는 서비스 제공을 위해 필요 최소한의 범위에서 다음의 개인정보를 수집·이용하며, 각 항목의 처리
+              법적 근거는 다음과 같습니다.
             </P>
             <Ol>
               <Li label="회원 가입 시 (이메일 가입)">
@@ -158,7 +161,17 @@ export default function PrivacyPolicy() {
               <Li label="소셜 로그인 시 (Google, GitHub)">
                 <Ul>
                   <li>법적 근거: 「개인정보 보호법」 제15조제1항제4호(계약의 체결·이행)</li>
-                  <li>소셜 서비스 제공자(Google, GitHub)로부터 제공받는 계정 식별자, 이메일, 닉네임, 프로필 정보</li>
+                  <li>
+                    소셜 서비스 제공자(Google, GitHub)로부터 제공받는 계정 식별자, 이메일, 이름(닉네임), 프로필
+                    이미지(URL)
+                  </li>
+                </Ul>
+              </Li>
+              <Li label="RSS(블로그) 등록 신청 시">
+                <Ul>
+                  <li>법적 근거: 「개인정보 보호법」 제15조제1항제1호(정보주체의 동의)</li>
+                  <li>필수: 실명, 이메일, 블로그명, RSS 주소</li>
+                  <li>회원 가입 없이도 신청할 수 있으며, 신청 시 위 정보가 수집·저장됩니다.</li>
                 </Ul>
               </Li>
               <Li label="서비스 이용 과정에서 자동으로 수집되는 정보">
@@ -192,6 +205,15 @@ export default function PrivacyPolicy() {
                 <Ul>
                   <li>회원 탈퇴 시까지 보유하며, 탈퇴 시 지체 없이 파기합니다.</li>
                   <li>다만, 관계 법령에 따라 보존할 필요가 있는 경우 해당 기간 동안 보관합니다.</li>
+                </Ul>
+              </Li>
+              <Li label="RSS 등록 신청 정보">
+                <Ul>
+                  <li>
+                    RSS 등록 신청 시 수집된 정보(실명, 이메일, 블로그명, RSS 주소)는 등록 심사 및 서비스 운영을 위해
+                    보유합니다.
+                  </li>
+                  <li>정보주체는 제12조에 따라 삭제를 요청할 수 있으며, 요청 시 지체 없이 파기합니다.</li>
                 </Ul>
               </Li>
               <Li label="서비스 이용 통계 분석 정보">
@@ -249,7 +271,10 @@ export default function PrivacyPolicy() {
                   </tr>
                   <tr className="border-t border-gray-200">
                     <td className="px-4 py-3">Google LLC</td>
-                    <td className="px-4 py-3">홈페이지 이용자 접속 및 이용 통계 분석</td>
+                    <td className="px-4 py-3">
+                      홈페이지 이용자 접속 및 이용 통계 분석, 이메일 발송 (회원 인증, 비밀번호 재설정, RSS 등록 신청 결과
+                      통지)
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -263,37 +288,57 @@ export default function PrivacyPolicy() {
           </Article>
 
           <Article id={8} title="개인정보의 국외 수집 및 이전에 관한 사항">
-            <P>{SERVICE_NAME}는 서비스 이용 통계 분석을 위하여 개인정보를 국외에 이전하고 있습니다.</P>
+            <P>
+              {SERVICE_NAME}는 서비스 이용 통계 분석 및 이메일 발송을 위하여 다음과 같이 개인정보를 국외로 이전하고
+              있습니다.
+            </P>
+            <div className="mt-4 overflow-hidden rounded-lg border border-gray-200">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 text-left text-gray-600">
+                  <tr>
+                    <th className="px-4 py-3 font-medium">이전받는 자</th>
+                    <th className="px-4 py-3 font-medium">이전 국가</th>
+                    <th className="px-4 py-3 font-medium">이전 항목</th>
+                    <th className="px-4 py-3 font-medium">이전 목적</th>
+                    <th className="px-4 py-3 font-medium">보유·이용기간</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-t border-gray-200">
+                    <td className="px-4 py-3">Google LLC</td>
+                    <td className="px-4 py-3">미국</td>
+                    <td className="px-4 py-3">쿠키, IP 주소, 기기 및 브라우저 정보, 서비스 이용 기록</td>
+                    <td className="px-4 py-3">서비스 이용 통계 분석</td>
+                    <td className="px-4 py-3">최대 14개월</td>
+                  </tr>
+                  <tr className="border-t border-gray-200">
+                    <td className="px-4 py-3">Google LLC</td>
+                    <td className="px-4 py-3">미국</td>
+                    <td className="px-4 py-3">이메일 주소, 이름(실명 또는 닉네임)</td>
+                    <td className="px-4 py-3">이메일 발송 (회원 인증, 비밀번호 재설정, RSS 등록 신청 결과 통지)</td>
+                    <td className="px-4 py-3">발송 목적 달성 시까지</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
             <Ol>
               <Li label="국외이전의 법적 근거">
                 <Ul>
                   <li>「개인정보 보호법」 제28조의8제1항제3호 (계약 이행을 위한 국외 처리위탁·보관)</li>
                 </Ul>
               </Li>
-              <Li label="이전하는 개인정보 항목">
+              <Li label="이전 일시 및 방법">
                 <Ul>
-                  <li>쿠키, IP 주소, 기기 및 브라우저 정보, 서비스 이용 기록</li>
-                </Ul>
-              </Li>
-              <Li label="개인정보를 이전 받는 자 및 이전 국가">
-                <Ul>
-                  <li>Google LLC (미국)</li>
-                </Ul>
-              </Li>
-              <Li label="개인정보 이전 시기 및 방법">
-                <Ul>
-                  <li>사용자가 서비스를 이용하는 시점에 네트워크를 통한 전송</li>
-                </Ul>
-              </Li>
-              <Li label="이용 목적 및 보유·이용기간">
-                <Ul>
-                  <li>서비스 이용 통계 분석 / 최대 14개월</li>
+                  <li>서비스 이용 및 이메일 발송 시점에 정보통신망을 통해 전송</li>
                 </Ul>
               </Li>
               <Li label="이전 거부 방법 및 거부 효과">
                 <Ul>
-                  <li>정보주체는 브라우저 설정을 통해 쿠키 저장을 거부할 수 있습니다.</li>
-                  <li>쿠키 저장을 거부할 경우 일부 서비스 이용에 제한이 있을 수 있습니다.</li>
+                  <li>
+                    통계 분석 목적의 이전은 브라우저 쿠키 설정을 통해 거부할 수 있으며, 이 경우 일부 서비스 이용에
+                    제한이 있을 수 있습니다.
+                  </li>
+                  <li>이메일 발송은 회원 인증 및 계정 관리에 필수적이므로 거부 시 서비스 이용이 제한될 수 있습니다.</li>
                 </Ul>
               </Li>
             </Ol>
