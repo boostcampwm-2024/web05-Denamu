@@ -1,10 +1,11 @@
+import { MemoryRouter } from "react-router-dom";
+
 import { describe, expect, it, vi } from "vitest";
 
-import { lucideProxy } from "@/__tests__/__mocks__/external/lucide-proxy.tsx";
 import PrivacyPolicy from "@/pages/PrivacyPolicy.tsx";
 
+import { lucideProxy } from "@/__tests__/__mocks__/external/lucide-proxy.tsx";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
 
 vi.mock("lucide-react", () => lucideProxy());
 
@@ -26,7 +27,7 @@ describe("PrivacyPolicy", () => {
     renderPage();
 
     expect(screen.getByRole("heading", { level: 1, name: "개인정보처리방침" })).toBeInTheDocument();
-    expect(screen.getByText(/시행일: 2026\. 06\. 29/)).toBeInTheDocument();
+    expect(screen.getByText(/시행일: 2026\. 08\. 01/)).toBeInTheDocument();
   });
 
   it("15개 조항 제목이 모두 렌더링되어야 한다", () => {
