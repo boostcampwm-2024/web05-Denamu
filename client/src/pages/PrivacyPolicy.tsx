@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Clock, Database, Home, Share2, Trash2, Truck } from "lucide-react";
 
 import { Footer } from "@/components/about/Footer";
+import Header from "@/components/layout/Header";
 
 const SERVICE_NAME = "데나무";
 const CONTACT_EMAIL = "boostcamp9web05@gmail.com";
@@ -69,6 +70,8 @@ export default function PrivacyPolicy() {
         <title>개인정보처리방침 - {SERVICE_NAME}</title>
         <meta name="description" content={`${SERVICE_NAME} 개인정보처리방침`} />
       </Helmet>
+
+      <Header />
 
       <main className="mx-auto max-w-4xl px-6 py-16">
         {/* Hero */}

@@ -4,10 +4,12 @@ import { describe, expect, it, vi } from "vitest";
 
 import PrivacyPolicy from "@/pages/PrivacyPolicy.tsx";
 
-import { lucideProxy } from "@/__tests__/__mocks__/external/lucide-proxy.tsx";
 import { fireEvent, render, screen } from "@testing-library/react";
 
-vi.mock("lucide-react", () => lucideProxy());
+vi.mock("lucide-react", async () => {
+  const { lucideProxy } = await import("@/__tests__/__mocks__/external/lucide-proxy.tsx");
+  return lucideProxy();
+});
 
 const mockNavigate = vi.fn();
 vi.mock("react-router-dom", async (importOriginal) => {
