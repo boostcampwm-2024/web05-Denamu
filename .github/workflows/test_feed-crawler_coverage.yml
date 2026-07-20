@@ -18,7 +18,7 @@ jobs:
 
       # 2. Node.js 환경 설정
       - name: Set up Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: 'npm'
