@@ -6,7 +6,7 @@ export const isGAEnabled = Boolean(GA_ID) && import.meta.env.PROD;
 
 export const initGA = () => {
   if (!isGAEnabled) return;
-  ReactGA.initialize(GA_ID);
+  ReactGA.initialize(GA_ID, { gtagOptions: { send_page_view: false } });
 };
 
 export const trackPageView = (path: string) => {
