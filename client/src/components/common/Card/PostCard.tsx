@@ -10,6 +10,17 @@ import { PostCardImage } from "./PostCardImage";
 import { cn } from "@/lib/utils";
 import { useMediaStore } from "@/store/useMediaStore";
 import { PostCardProps } from "@/types/card";
+import { FeedList } from "@/types/post";
+import { trackEvent } from "@/utils/analytics";
+
+const trackPostDetailOpen = (post: FeedList) => {
+  trackEvent("post_detail_open", {
+    post_id: post.id,
+    post_title: post.title,
+    platform: post.blogPlatform,
+    author: post.author,
+  });
+};
 
 export const PostCard = ({ post, className }: PostCardProps) => {
   const isMobile = useMediaStore((state) => state.isMobile);
@@ -26,6 +37,7 @@ const DesktopCard = ({ post, className }: PostCardProps) => {
   const location = useLocation();
   const { incrementView } = usePostCardActions(post);
   const openPostDetail = (modalUrl: string) => {
+    trackPostDetailOpen(post);
     incrementView({ post, isWindowOpened: true });
     useUpdateRecentTags(post.tag);
     navigate(modalUrl, { state: { backgroundLocation: location } });
@@ -49,6 +61,7 @@ const MobileCard = ({ post, className }: PostCardProps) => {
   return (
     <MCard
       onClick={() => {
+        trackPostDetailOpen(post);
         navigate(`/${post.id}`);
       }}
       className={cn("aspect-[5/3] transition-all duration-300 flex flex-col gap-2", className)}
