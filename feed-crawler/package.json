@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.96.0",
+    "@anthropic-ai/sdk": "^0.112.3",
     "axios": "^1.16.0",
     "dotenv": "^16.6.1",
     "fast-xml-parser": "^4.5.6",
