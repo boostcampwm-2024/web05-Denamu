@@ -8,6 +8,7 @@ import Loading from "@/pages/Loading";
 const Home = lazy(() => import("@/pages/Home"));
 const Admin = lazy(() => import("@/pages/Admin"));
 const AboutService = lazy(() => import("@/pages/AboutService"));
+const PrivacyPolicy = lazy(() => import("@/pages/PrivacyPolicy"));
 const PostDetailPage = lazy(() => import("@/pages/PostDetailPage"));
 const Profile = lazy(() => import("@/pages/Profile"));
 const SignIn = lazy(() => import("@/pages/SignIn"));
@@ -52,6 +53,14 @@ export const AppRouter = ({ location, state }: RouterProps) => {
           element={
             <Suspense fallback={<Loading />}>
               <AboutService />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/privacy"
+          element={
+            <Suspense fallback={<Loading />}>
+              <PrivacyPolicy />
             </Suspense>
           }
         />

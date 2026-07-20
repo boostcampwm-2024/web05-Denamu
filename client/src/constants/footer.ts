@@ -10,7 +10,7 @@ export const footerLinks = [
   {
     icon: Github,
     label: "GitHub",
-    value: "Team Repository",
+    value: "Repository",
     href: "https://github.com/boostcampwm-2024/web05-Denamu",
     subLinks: [
       {

@@ -1,5 +1,6 @@
 import ChartTab from "@/components/chart/ChartTab.tsx";
 import Layout from "@/components/layout/Layout";
+import ScrollAwareFooter from "@/components/layout/ScrollAwareFooter";
 import MainContent from "@/components/sections/MainContent";
 
 import { useTapStore } from "@/store/useTapStore";
@@ -12,5 +13,10 @@ export default function Home() {
     return <ChartTab />;
   };
 
-  return <Layout>{renderFunction()}</Layout>;
+  return (
+    <>
+      <Layout>{renderFunction()}</Layout>
+      <ScrollAwareFooter />
+    </>
+  );
 }
