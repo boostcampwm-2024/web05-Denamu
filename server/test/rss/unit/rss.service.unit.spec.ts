@@ -40,7 +40,10 @@ describe(`${RssService.name} Unit Test`, () => {
     Pick<RssRepository, 'findOne' | 'find' | 'insert' | 'delete'>
   >;
   let rssAcceptRepository: jest.Mocked<
-    Pick<RssAcceptRepository, 'findOne' | 'find' | 'delete' | 'update'>
+    Pick<
+      RssAcceptRepository,
+      'findOne' | 'find' | 'delete' | 'update' | 'findRecentlyPublished'
+    >
   >;
   let rssRejectRepository: jest.Mocked<Pick<RssRejectRepository, 'find'>>;
   let feedRepository: jest.Mocked<
@@ -88,6 +91,7 @@ describe(`${RssService.name} Unit Test`, () => {
       find: jest.fn(),
       delete: jest.fn(),
       update: jest.fn().mockResolvedValue({ affected: 1 }),
+      findRecentlyPublished: jest.fn().mockResolvedValue([]),
     };
     rssRejectRepository = { find: jest.fn() };
     feedRepository = {
@@ -680,6 +684,40 @@ describe(`${RssService.name} Unit Test`, () => {
       await rssService.setFeedVisibility(user, 1, 5, false);
 
       expect(feedRepository.setVisibilityForBlog).toHaveBeenCalledWith(5, 1, false);
+    });
+  });
+
+  describe('getRecentRss', () => {
+    it('limit 10으로 조회하고 응답 DTO 배열로 변환한다.', async () => {
+      // given
+      const lastPublishedAt = new Date('2025-12-10T00:00:00.000Z');
+      rssAcceptRepository.findRecentlyPublished.mockResolvedValue([
+        { id: 1, name: 'blogA', blogPlatform: 'velog', lastPublishedAt },
+        { id: 2, name: 'blogB', blogPlatform: 'tistory', lastPublishedAt },
+      ]);
+
+      // when
+      const result = await rssService.getRecentRss();
+
+      // then
+      expect(rssAcceptRepository.findRecentlyPublished).toHaveBeenCalledWith(
+        10,
+      );
+      expect(result).toEqual([
+        { id: 1, name: 'blogA', blogPlatform: 'velog', lastPublishedAt },
+        { id: 2, name: 'blogB', blogPlatform: 'tistory', lastPublishedAt },
+      ]);
+    });
+
+    it('발행된 RSS가 없으면 빈 배열을 반환한다.', async () => {
+      // given
+      rssAcceptRepository.findRecentlyPublished.mockResolvedValue([]);
+
+      // when
+      const result = await rssService.getRecentRss();
+
+      // then
+      expect(result).toEqual([]);
     });
   });
 
