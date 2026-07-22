@@ -63,6 +63,25 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(data).toBeUndefined();
   });
 
+  it('[401] 비밀번호가 설정되지 않은 소셜 계정일 경우 로그인을 실패한다.', async () => {
+    // given
+    const socialUser = await userRepository.save(
+      UserFixture.createUserFixture({ password: null }),
+    );
+    const requestDto = new LoginUserRequestDto({
+      email: socialUser.email,
+      password: USER_DEFAULT_PASSWORD,
+    });
+
+    // Http when
+    const response = await agent.post(URL).send(requestDto);
+
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(data).toBeUndefined();
+  });
+
   it('[200] 아이디와 비밀번호에 해당하는 유저가 존재할 경우 로그인을 성공한다.', async () => {
     // given
     const requestDto = new LoginUserRequestDto({

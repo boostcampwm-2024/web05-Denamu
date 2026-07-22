@@ -8,9 +8,9 @@ CREATE TABLE `admin` (
   `email_notification` tinyint NOT NULL DEFAULT 1,
   `parent_admin_id` int DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UQ_admin_email` (`email`),
-  UNIQUE KEY `UQ_admin_name` (`name`),
-    CONSTRAINT `FK_admin_parent_admin`
+  UNIQUE KEY `IDX_a026be7ca12f8999cbdf96dec2` (`name`),
+  UNIQUE KEY `IDX_de87485f6489f5d0995f584195` (`email`),
+    CONSTRAINT `FK_78ba73b3dd2c586476eccd1867f`
     FOREIGN KEY (`parent_admin_id`)
     REFERENCES `admin` (`id`)
     ON DELETE CASCADE
@@ -25,8 +25,8 @@ CREATE TABLE `rss` (
   `email` varchar(255) NOT NULL,
   `rss_url` varchar(255) NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UQ_21beac47feacb87e57c59d6958f` (`name`),
-  UNIQUE KEY `UQ_af1d102908727aa95ef09e16065` (`rss_url`)
+  UNIQUE KEY `IDX_21beac47feacb87e57c59d6958` (`name`),
+  UNIQUE KEY `IDX_af1d102908727aa95ef09e1606` (`rss_url`)
 );
 
 -- denamu.`user` definition
@@ -45,7 +45,8 @@ CREATE TABLE `user` (
   `lastActiveDate` date DEFAULT NULL,
   `maxStreak` int NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UQ_user_user_name` (`user_name`)
+  UNIQUE KEY `IDX_d34106f8ec1ebaf66f4f8609dd` (`user_name`),
+  UNIQUE KEY `IDX_e12875dfb3b1d92d7d7c5377e2` (`email`)
 );
 
 -- denamu.rss_accept definition
@@ -59,10 +60,10 @@ CREATE TABLE `rss_accept` (
   `blog_platform` varchar(255) NOT NULL DEFAULT 'etc',
   `user_id` int DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UQ_59f4be4de3817b3f975acff0766` (`name`),
-  UNIQUE KEY `UQ_b3a5d4196368864d938dae4e9ff` (`rss_url`),
+  UNIQUE KEY `IDX_59f4be4de3817b3f975acff076` (`name`),
+  UNIQUE KEY `IDX_b3a5d4196368864d938dae4e9f` (`rss_url`),
   KEY `FK_c6af67149ff8aa87d001091acbe` (`user_id`),
-  FULLTEXT KEY (`name`),
+  FULLTEXT KEY `FT_rss_accept_name` (`name`),
   CONSTRAINT `FK_c6af67149ff8aa87d001091acbe` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 );
 
@@ -95,7 +96,7 @@ CREATE TABLE `feed` (
   UNIQUE KEY `IDX_cbdceca2d71f784a8bb160268e` (`path`),
   KEY `IDX_fda780ffdcc013b739cdc6f31d` (`created_at`),
   KEY `FK_7474d489d05b8051874b227f868` (`blog_id`),
-  FULLTEXT KEY `IDX_7d93e66e624232af470d2f7bb3` (`title`) /*!50100 WITH PARSER `ngram` */ ,
+  FULLTEXT KEY `IDX_7d93e66e624232af470d2f7bb3` (`title`),
   CONSTRAINT `FK_7474d489d05b8051874b227f868` FOREIGN KEY (`blog_id`) REFERENCES `rss_accept` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -116,19 +117,21 @@ CREATE TABLE `activity` (
 
 CREATE TABLE `category` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(30) NOT NULL UNIQUE,
+  `name` varchar(30) NOT NULL,
   `display_order` int NOT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `IDX_23c05c292c439d77b0de816b50` (`name`)
 );
 
 -- denamu.tag definition
 
 CREATE TABLE `tag` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(50) NOT NULL UNIQUE,
+  `name` varchar(50) NOT NULL,
   `category_id` int DEFAULT NULL,
   PRIMARY KEY (`id`),
-  CONSTRAINT `FK_tag_category` FOREIGN KEY (`category_id`) REFERENCES `category` (`id`) ON DELETE SET NULL
+  UNIQUE KEY `IDX_6a9775008add570dc3e5a0bab7` (`name`),
+  CONSTRAINT `FK_3249fd70734f41f513a1d5d3ef7` FOREIGN KEY (`category_id`) REFERENCES `category` (`id`) ON DELETE SET NULL
 );
 
 -- denamu.tag_map definition
@@ -136,8 +139,11 @@ CREATE TABLE `tag` (
 CREATE TABLE `tag_map` (
   `tag_id` int NOT NULL,
   `feed_id` int NOT NULL,
-  CONSTRAINT `FK_170d19639c49b5735ae8261ff0b` FOREIGN KEY (`tag_id`) REFERENCES `tag` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `FK_9a3ed1e034e7f378f89f5902941` FOREIGN KEY (`feed_id`) REFERENCES `feed` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+  PRIMARY KEY (`feed_id`,`tag_id`),
+  KEY `IDX_170d19639c49b5735ae8261ff0` (`feed_id`),
+  KEY `IDX_9a3ed1e034e7f378f89f590294` (`tag_id`),
+  CONSTRAINT `FK_170d19639c49b5735ae8261ff0b` FOREIGN KEY (`feed_id`) REFERENCES `feed` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_9a3ed1e034e7f378f89f5902941` FOREIGN KEY (`tag_id`) REFERENCES `tag` (`id`)
 );
 
 -- denamu.comment definition
@@ -182,10 +188,25 @@ CREATE TABLE `subscription` (
   `rss_accept_id` int NOT NULL,
   `user_id` int NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UQ_subscription_user_rss` (`user_id`,`rss_accept_id`),
-  KEY `FK_subscription_rss` (`rss_accept_id`),
-  CONSTRAINT `FK_subscription_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `FK_subscription_rss` FOREIGN KEY (`rss_accept_id`) REFERENCES `rss_accept` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+  UNIQUE KEY `IDX_be6abee15b8a92cc7fe2a25975` (`user_id`,`rss_accept_id`),
+  KEY `FK_f196cabdcb20cfbcf552ae61321` (`rss_accept_id`),
+  CONSTRAINT `FK_940d49a105d50bbd616be540013` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_f196cabdcb20cfbcf552ae61321` FOREIGN KEY (`rss_accept_id`) REFERENCES `rss_accept` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- denamu.file definition
+
+CREATE TABLE `file` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `original_name` varchar(255) NOT NULL,
+  `mimetype` varchar(255) NOT NULL,
+  `path` varchar(255) NOT NULL,
+  `size` int NOT NULL,
+  `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `user_id` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `FK_516f1cf15166fd07b732b4b6ab0` (`user_id`),
+  CONSTRAINT `FK_516f1cf15166fd07b732b4b6ab0` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
 );
 
 -- denamu.provider definition

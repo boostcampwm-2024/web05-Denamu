@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   ConflictException,
   NotFoundException,
   UnauthorizedException,
@@ -561,6 +560,17 @@ describe(`${UserService.name} Unit Test`, () => {
       ).rejects.toThrow(UnauthorizedException);
     });
 
+    it('비밀번호 미설정 소셜 계정이면 UnauthorizedException을 던진다.', async () => {
+      // given
+      const user = UserFixture.createUserFixture({ password: null });
+      userRepository.findOne.mockResolvedValue(user);
+
+      // when & then
+      await expect(
+        userService.loginUser(dto, createResponse()),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
     it('로그인에 성공하면 refresh 쿠키를 설정하고 access token을 반환한다.', async () => {
       // given
       const user = await UserFixture.createUserCryptFixture();
@@ -790,18 +800,27 @@ describe(`${UserService.name} Unit Test`, () => {
       expect(emailProducer.producePasswordReset).toHaveBeenCalled();
     });
 
-    it('OAuth 회원가입자면 BadRequestException을 던지고 메일을 발송하지 않는다.', async () => {
+    it('OAuth 회원가입자도 인증 코드를 저장하고 메일을 발송한다.', async () => {
       // given
       userRepository.findOne.mockResolvedValue(
-        UserFixture.createUserFixture({ id: 1, providers: [{}] as any }),
+        UserFixture.createUserFixture({
+          id: 1,
+          password: null,
+          providers: [{}] as any,
+        }),
       );
 
-      // when & then
-      await expect(userService.forgotPassword('a@test.com')).rejects.toThrow(
-        BadRequestException,
+      // when
+      await userService.forgotPassword('a@test.com');
+
+      // then
+      expect(redisService.set).toHaveBeenCalledWith(
+        expect.stringContaining(REDIS_KEYS.USER_RESET_PASSWORD_KEY),
+        expect.any(String),
+        'EX',
+        600,
       );
-      expect(redisService.set).not.toHaveBeenCalled();
-      expect(emailProducer.producePasswordReset).not.toHaveBeenCalled();
+      expect(emailProducer.producePasswordReset).toHaveBeenCalled();
     });
   });
 
@@ -811,6 +830,21 @@ describe(`${UserService.name} Unit Test`, () => {
       await expect(
         userService.resetPassword('uuid', 'newPass1!'),
       ).rejects.toThrow(NotFoundException);
+    });
+
+    it('인증 코드는 유효하지만 유저가 없으면 코드를 삭제하고 NotFoundException을 던진다.', async () => {
+      // given
+      redisService.get.mockResolvedValue('1');
+      userRepository.findOne.mockResolvedValue(null);
+
+      // when & then
+      await expect(
+        userService.resetPassword('uuid', 'newPass1!'),
+      ).rejects.toThrow(NotFoundException);
+      expect(redisService.del).toHaveBeenCalledWith(
+        `${REDIS_KEYS.USER_RESET_PASSWORD_KEY}:uuid`,
+      );
+      expect(userRepository.save).not.toHaveBeenCalled();
     });
 
     it('인증에 성공하면 비밀번호를 해시해 저장하고 코드를 정리한다.', async () => {
