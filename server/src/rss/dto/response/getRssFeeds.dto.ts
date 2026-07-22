@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 import { Feed } from '@feed/entity/feed.entity';
 
-export class OwnedRssFeedResult {
+export class RssFeedResult {
   @ApiProperty({
     example: 1,
     description: '게시글 ID',
@@ -17,7 +17,7 @@ export class OwnedRssFeedResult {
 
   @ApiProperty({
     example: 'https://example.com/feed',
-    description: '게시글 원본 URL',
+    description: '게시글 URL',
   })
   path: string;
 
@@ -45,18 +45,12 @@ export class OwnedRssFeedResult {
   })
   likeCount: number;
 
-  @ApiProperty({
-    example: true,
-    description: '공개 여부 (true: 공개, false: 비공개)',
-  })
-  isPublic: boolean;
-
-  private constructor(partial: Partial<OwnedRssFeedResult>) {
+  private constructor(partial: Partial<RssFeedResult>) {
     Object.assign(this, partial);
   }
 
   static toResultDto(feed: Feed) {
-    return new OwnedRssFeedResult({
+    return new RssFeedResult({
       id: feed.id,
       title: feed.title,
       path: feed.path,
@@ -64,7 +58,6 @@ export class OwnedRssFeedResult {
       createdAt: feed.createdAt,
       commentCount: feed.commentCount,
       likeCount: feed.likeCount,
-      isPublic: feed.isPublic,
     });
   }
 
@@ -73,9 +66,9 @@ export class OwnedRssFeedResult {
   }
 }
 
-export class GetOwnedRssFeedsResponseDto {
-  @ApiProperty({ type: [OwnedRssFeedResult], description: 'RSS의 게시글 목록' })
-  result: OwnedRssFeedResult[];
+export class GetRssFeedsResponseDto {
+  @ApiProperty({ type: [RssFeedResult], description: 'RSS의 게시글 목록' })
+  result: RssFeedResult[];
 
   @ApiProperty({
     example: 1,
@@ -89,13 +82,13 @@ export class GetOwnedRssFeedsResponseDto {
   })
   hasMore: boolean;
 
-  constructor(partial: Partial<GetOwnedRssFeedsResponseDto>) {
+  constructor(partial: Partial<GetRssFeedsResponseDto>) {
     Object.assign(this, partial);
   }
 
   static toResponseDto(feeds: Feed[], lastId: number, hasMore: boolean) {
-    return new GetOwnedRssFeedsResponseDto({
-      result: OwnedRssFeedResult.toResultDtoArray(feeds),
+    return new GetRssFeedsResponseDto({
+      result: RssFeedResult.toResultDtoArray(feeds),
       lastId,
       hasMore,
     });

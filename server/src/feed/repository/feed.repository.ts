@@ -64,6 +64,7 @@ export class FeedRepository extends Repository<Feed> {
         'feed.id',
         'feed.title',
         'feed.path',
+        'feed.thumbnail',
         'feed.createdAt',
         'feed.commentCount',
         'feed.likeCount',
@@ -83,6 +84,44 @@ export class FeedRepository extends Repository<Feed> {
       .orderBy('feed.id', 'DESC')
       .take(limit + 1)
       .getMany();
+  }
+
+  async getLatestPublicFeedDate(blogId: number): Promise<Date | null> {
+    const row = await this.createQueryBuilder('feed')
+      .select('MAX(feed.created_at)', 'latest')
+      .where('feed.blog_id = :blogId', { blogId })
+      .andWhere('feed.is_public = 1')
+      .getRawOne<{ latest: Date | null }>();
+
+    return row?.latest ?? null;
+  }
+
+  async findPublishActivityByBlogAndYear(
+    blogId: number,
+    year: number,
+  ): Promise<Array<{ date: string; count: number }>> {
+    const rows = await this.createQueryBuilder('feed')
+      .select("DATE_FORMAT(feed.created_at, '%Y-%m-%d')", 'date')
+      .addSelect('COUNT(*)', 'count')
+      .where('feed.blog_id = :blogId', { blogId })
+      .andWhere('feed.is_public = 1')
+      .andWhere('YEAR(feed.created_at) = :year', { year })
+      .groupBy('date')
+      .orderBy('date', 'ASC')
+      .getRawMany<{ date: string; count: number }>();
+
+    return rows.map((row) => ({ date: row.date, count: Number(row.count) }));
+  }
+
+  async findPublishYearsByBlogId(blogId: number): Promise<number[]> {
+    const rows = await this.createQueryBuilder('feed')
+      .select('DISTINCT YEAR(feed.created_at)', 'year')
+      .where('feed.blog_id = :blogId', { blogId })
+      .andWhere('feed.is_public = 1')
+      .orderBy('year', 'DESC')
+      .getRawMany<{ year: number }>();
+
+    return rows.map((row) => Number(row.year));
   }
 
   async countPublicFeedsByBlogIds(
