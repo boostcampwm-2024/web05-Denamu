@@ -560,6 +560,17 @@ describe(`${UserService.name} Unit Test`, () => {
       ).rejects.toThrow(UnauthorizedException);
     });
 
+    it('비밀번호 미설정 소셜 계정이면 UnauthorizedException을 던진다.', async () => {
+      // given
+      const user = UserFixture.createUserFixture({ password: null });
+      userRepository.findOne.mockResolvedValue(user);
+
+      // when & then
+      await expect(
+        userService.loginUser(dto, createResponse()),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
     it('로그인에 성공하면 refresh 쿠키를 설정하고 access token을 반환한다.', async () => {
       // given
       const user = await UserFixture.createUserCryptFixture();
@@ -819,6 +830,21 @@ describe(`${UserService.name} Unit Test`, () => {
       await expect(
         userService.resetPassword('uuid', 'newPass1!'),
       ).rejects.toThrow(NotFoundException);
+    });
+
+    it('인증 코드는 유효하지만 유저가 없으면 코드를 삭제하고 NotFoundException을 던진다.', async () => {
+      // given
+      redisService.get.mockResolvedValue('1');
+      userRepository.findOne.mockResolvedValue(null);
+
+      // when & then
+      await expect(
+        userService.resetPassword('uuid', 'newPass1!'),
+      ).rejects.toThrow(NotFoundException);
+      expect(redisService.del).toHaveBeenCalledWith(
+        `${REDIS_KEYS.USER_RESET_PASSWORD_KEY}:uuid`,
+      );
+      expect(userRepository.save).not.toHaveBeenCalled();
     });
 
     it('인증에 성공하면 비밀번호를 해시해 저장하고 코드를 정리한다.', async () => {

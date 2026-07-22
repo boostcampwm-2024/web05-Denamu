@@ -60,6 +60,34 @@ describe(`PATCH /api/users/password-resets/:uuid E2E Test`, () => {
     expect(savedPasswordCode).toBeNull();
   });
 
+  it('[404] 비밀번호 세션 ID는 유효하지만 유저가 존재하지 않을 경우 코드를 삭제하고 비밀번호 변경을 실패한다.', async () => {
+    // given
+    const nonExistentUserId = 999999;
+    const requestDto = new ResetPasswordRequestDto({ password: 'test1234@' });
+    await redisService.set(
+      redisKeyMake(passwordPatchCode),
+      JSON.stringify(nonExistentUserId),
+    );
+
+    // Http when
+    const response = await agent
+      .patch(makeURL(passwordPatchCode))
+      .send(requestDto);
+
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedPasswordCode = await redisService.get(
+      redisKeyMake(passwordPatchCode),
+    );
+
+    // DB, Redis then
+    expect(savedPasswordCode).toBeNull();
+  });
+
   it('[200] 존재하는 비밀번호 세션 ID를 통해 비밀번호 변경 요청을 할 경우 비밀번호 변경을 성공한다.', async () => {
     // given
     const updatedPassword = 'test1234@';
