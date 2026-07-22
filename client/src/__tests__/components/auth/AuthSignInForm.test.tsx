@@ -90,9 +90,7 @@ describe("AuthSignInForm", () => {
     signInState.result = { success: false, message: "실패" };
     render(<AuthSignInForm />);
 
-    expect(mockToast).toHaveBeenCalledWith(
-      expect.objectContaining({ title: "로그인 실패", variant: "destructive" })
-    );
+    expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: "로그인 실패", variant: "destructive" }));
   });
 
   it("onSuccess가 주어지면 성공 시 onSuccess만 호출하고 navigate하지 않아야 한다", () => {
@@ -104,9 +102,9 @@ describe("AuthSignInForm", () => {
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
-  it("hideBackButton이 true면 '메인 페이지로 돌아가기' 버튼이 없어야 한다", () => {
+  it("hideBackButton이 true면 'Denamu 홈으로 돌아가기' 버튼이 없어야 한다", () => {
     render(<AuthSignInForm hideBackButton />);
 
-    expect(screen.queryByRole("button", { name: "메인 페이지로 돌아가기" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Denamu 홈으로 돌아가기" })).not.toBeInTheDocument();
   });
 });

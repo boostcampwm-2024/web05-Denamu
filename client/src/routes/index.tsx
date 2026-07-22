@@ -21,6 +21,8 @@ const UserWithdraw = lazy(() => import("@/pages/email-actions/UserWithdraw"));
 const RssCertificate = lazy(() => import("@/pages/email-actions/RssCertificate"));
 const RssRemoval = lazy(() => import("@/pages/email-actions/RssRemoval"));
 const OAuthSuccessPage = lazy(() => import("@/pages/OAuthSuccessPage"));
+const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
+const UserPasswordReset = lazy(() => import("@/pages/ResetPassword"));
 const OAuthSignUpPage = lazy(() => import("@/pages/OAuthSignUpPage"));
 
 interface RouterProps {
@@ -149,6 +151,22 @@ export const AppRouter = ({ location, state }: RouterProps) => {
           element={
             <Suspense fallback={<Loading />}>
               <RssRemoval />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/users/forgot-password"
+          element={
+            <Suspense fallback={<Loading />}>
+              <ForgotPassword />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/users/password-resets/confirm"
+          element={
+            <Suspense fallback={<Loading />}>
+              <UserPasswordReset />
             </Suspense>
           }
         />

@@ -49,8 +49,7 @@ export const BLOG = {
     CERTIFICATION_VERIFY: "/api/rss/certifications/verify",
     CERTIFICATION_BY_ID: (id: number) => `/api/rss/certifications/${id}`,
     OWNED_FEEDS: (id: number) => `/api/rss/certifications/${id}/feeds`,
-    FEED_VISIBILITY: (id: number, feedId: number) =>
-      `/api/rss/certifications/${id}/feeds/${feedId}/visibility`,
+    FEED_VISIBILITY: (id: number, feedId: number) => `/api/rss/certifications/${id}/feeds/${feedId}/visibility`,
     REMOVE_CONFIRM: (code: string) => `/api/rss/remove/${code}`,
   },
 };
@@ -84,6 +83,8 @@ export const USER = {
   REFRESH_TOKEN: "/api/users/tokens",
   LOGOUT: "/api/users/logout",
   CERTIFICATE: "/api/users/email-verifications",
+  PASSWORD_RESET: "/api/users/password-resets",
+  PASSWORD_RESET_CONFIRM: (uuid: string) => `/api/users/password-resets/${uuid}`,
   WITHDRAW_CONFIRM: (token: string) => `/api/users/deletion-requests/${token}`,
   USERNAME_AVAILABILITY: "/api/users/username-availability",
   PASSWORD: "/api/users/password",
