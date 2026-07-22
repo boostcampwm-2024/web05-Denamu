@@ -32,4 +32,26 @@ export class RssAcceptRepository extends Repository<RssAccept> {
       .orderBy('count', 'DESC')
       .getRawMany();
   }
+
+  findRecentlyPublished(limit: number) {
+    return this.createQueryBuilder('rss')
+      .innerJoin(
+        'feed',
+        'feed',
+        'feed.blog_id = rss.id AND feed.is_public = 1',
+      )
+      .select('rss.id', 'id')
+      .addSelect('rss.name', 'name')
+      .addSelect('rss.blog_platform', 'blogPlatform')
+      .addSelect('MAX(feed.created_at)', 'lastPublishedAt')
+      .groupBy('rss.id')
+      .orderBy('MAX(feed.created_at)', 'DESC')
+      .limit(limit)
+      .getRawMany<{
+        id: number;
+        name: string;
+        blogPlatform: string;
+        lastPublishedAt: Date;
+      }>();
+  }
 }

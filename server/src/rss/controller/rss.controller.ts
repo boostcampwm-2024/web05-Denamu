@@ -25,6 +25,7 @@ import { ApiDeleteCertificateRss } from '@rss/api-docs/deleteCertificateRss.api-
 import { ApiDeleteRss } from '@rss/api-docs/deleteRss.api-docs';
 import { ApiDeleteRssCertification } from '@rss/api-docs/deleteRssCertification.api-docs';
 import { ApiGetOwnedRssFeeds } from '@rss/api-docs/getOwnedRssFeeds.api-docs';
+import { ApiGetRecentRss } from '@rss/api-docs/getRecentRss.api-docs';
 import { ApiGetRssActivities } from '@rss/api-docs/getRssActivities.api-docs';
 import { ApiGetRssActivityYears } from '@rss/api-docs/getRssActivityYears.api-docs';
 import { ApiGetRssFeeds } from '@rss/api-docs/getRssFeeds.api-docs';
@@ -254,6 +255,16 @@ export class RssController {
       bodyDto.isPublic,
     );
     return ApiResponse.responseWithNoContent('게시글 공개 상태를 변경했습니다.');
+  }
+
+  @ApiGetRecentRss()
+  @Get('recent')
+  @HttpCode(HttpStatus.OK)
+  async getRecentRss() {
+    return ApiResponse.responseWithData(
+      '최근 발행 RSS 목록 조회를 처리했습니다.',
+      await this.rssService.getRecentRss(),
+    );
   }
 
   @ApiGetRssActivityYears()
