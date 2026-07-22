@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   ConflictException,
   NotFoundException,
   UnauthorizedException,
@@ -790,18 +789,27 @@ describe(`${UserService.name} Unit Test`, () => {
       expect(emailProducer.producePasswordReset).toHaveBeenCalled();
     });
 
-    it('OAuth 회원가입자면 BadRequestException을 던지고 메일을 발송하지 않는다.', async () => {
+    it('OAuth 회원가입자도 인증 코드를 저장하고 메일을 발송한다.', async () => {
       // given
       userRepository.findOne.mockResolvedValue(
-        UserFixture.createUserFixture({ id: 1, providers: [{}] as any }),
+        UserFixture.createUserFixture({
+          id: 1,
+          password: null,
+          providers: [{}] as any,
+        }),
       );
 
-      // when & then
-      await expect(userService.forgotPassword('a@test.com')).rejects.toThrow(
-        BadRequestException,
+      // when
+      await userService.forgotPassword('a@test.com');
+
+      // then
+      expect(redisService.set).toHaveBeenCalledWith(
+        expect.stringContaining(REDIS_KEYS.USER_RESET_PASSWORD_KEY),
+        expect.any(String),
+        'EX',
+        600,
       );
-      expect(redisService.set).not.toHaveBeenCalled();
-      expect(emailProducer.producePasswordReset).not.toHaveBeenCalled();
+      expect(emailProducer.producePasswordReset).toHaveBeenCalled();
     });
   });
 

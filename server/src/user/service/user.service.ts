@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -30,6 +29,7 @@ import { SubscriptionRepository } from '@subscribe/repository/subscription.repos
 
 import { REFRESH_TOKEN_TTL, SALT_ROUNDS } from '@user/constant/user.constants';
 import { ChangePasswordRequestDto } from '@user/dto/request/changePassword.dto';
+import { GetUserRssFeedsRequestDto } from '@user/dto/request/getUserRssFeeds.dto';
 import { LoginUserRequestDto } from '@user/dto/request/loginUser.dto';
 import { RegisterUserRequestDto } from '@user/dto/request/registerUser.dto';
 import { SearchUserRequestDto } from '@user/dto/request/searchUser.dto';
@@ -38,13 +38,12 @@ import { CheckEmailDuplicationResponseDto } from '@user/dto/response/checkEmailD
 import { CheckUserNameDuplicationResponseDto } from '@user/dto/response/checkUserNameDuplication.dto';
 import { CreateAccessTokenResponseDto } from '@user/dto/response/createAccessToken.dto';
 import { GetUserProfileResponseDto } from '@user/dto/response/getUserProfile.dto';
+import { GetUserRssResponseDto } from '@user/dto/response/getUserRss.dto';
+import { GetUserRssFeedsResponseDto } from '@user/dto/response/getUserRssFeeds.dto';
 import {
   SearchUserResponseDto,
   SearchUserResult,
 } from '@user/dto/response/searchUser.dto';
-import { GetUserRssResponseDto } from '@user/dto/response/getUserRss.dto';
-import { GetUserRssFeedsRequestDto } from '@user/dto/request/getUserRssFeeds.dto';
-import { GetUserRssFeedsResponseDto } from '@user/dto/response/getUserRssFeeds.dto';
 import { User } from '@user/entity/user.entity';
 import { UserRepository } from '@user/repository/user.repository';
 
@@ -211,7 +210,11 @@ export class UserService {
       where: { email: loginDto.email },
     });
 
-    if (!user || !(await bcrypt.compare(loginDto.password, user.password))) {
+    if (
+      !user ||
+      !user.password ||
+      !(await bcrypt.compare(loginDto.password, user.password))
+    ) {
       throw new UnauthorizedException('아이디 혹은 비밀번호가 잘못되었습니다.');
     }
 
@@ -370,17 +373,10 @@ export class UserService {
   async forgotPassword(email: string) {
     const user = await this.userRepository.findOne({
       where: { email: email },
-      relations: ['providers'],
     });
 
     if (!user) {
       return;
-    }
-
-    if (user.providers.length > 0) {
-      throw new BadRequestException(
-        '소셜 로그인 계정은 비밀번호를 변경할 수 없습니다. 소셜 로그인을 이용해주세요.',
-      );
     }
 
     const forgotPasswordCode = uuid.v4();
