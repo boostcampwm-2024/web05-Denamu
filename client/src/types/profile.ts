@@ -106,9 +106,30 @@ export interface RssFeedItem {
   id: number;
   title: string;
   path: string;
+  thumbnail: string;
   createdAt: string;
   commentCount: number;
   likeCount: number;
+}
+
+export interface RssOwner {
+  id: number;
+  userName: string;
+  profileImage: string | null;
+}
+
+export interface RssInfo {
+  id: number;
+  name: string;
+  userName: string;
+  rssUrl: string;
+  blogPlatform: string;
+  feedCount: number;
+  subscriberCount: number;
+  isSubscribed: boolean;
+  isOwner: boolean;
+  lastPublishedAt: string | null;
+  owner: RssOwner | null;
 }
 
 export interface OwnedRssFeedItem extends RssFeedItem {

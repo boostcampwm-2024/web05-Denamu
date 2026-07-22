@@ -23,4 +23,11 @@ describe("DayCell", () => {
 
     expect(screen.getByText("2024-03-26: 5 views")).toBeInTheDocument();
   });
+
+  it("unit prop을 넘기면 툴팁 단위를 바꿔 렌더링해야 한다", () => {
+    const dayInfo = { empty: false, count: 3, dateStr: "2025-01-15" } as DayInfo;
+    render(<DayCell dayInfo={dayInfo} unit="포스트" />);
+
+    expect(screen.getByText("2025-01-15: 3 포스트")).toBeInTheDocument();
+  });
 });

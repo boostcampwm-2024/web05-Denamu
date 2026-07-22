@@ -6,12 +6,14 @@ import { lucideProxy } from "@/__tests__/__mocks__/external/lucide-proxy.tsx";
 import { CertifiedRssCard } from "@/components/profile/rss/CertifiedRssCard.tsx";
 
 import { CertifiedRss } from "@/types/profile.ts";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 
 vi.mock("lucide-react", () => lucideProxy());
 
+const navigateMock = vi.fn();
+
 vi.mock("react-router-dom", () => ({
-  useNavigate: () => vi.fn(),
+  useNavigate: () => navigateMock,
   Link: ({ to, children, ...props }: { to: string; children: ReactNode }) => (
     <a href={to} {...props}>
       {children}
@@ -51,6 +53,23 @@ describe("CertifiedRssCard", () => {
     render(<CertifiedRssCard userId={1} rss={rss} isOwner={false} />);
 
     expect(screen.getByRole("link", { name: "내 블로그" })).toHaveAttribute("href", "/rss/10");
+  });
+
+  it("카드 클릭 시 RSS 페이지(/rss/:id)로 이동해야 한다", () => {
+    render(<CertifiedRssCard userId={1} rss={rss} isOwner={false} />);
+
+    fireEvent.click(screen.getByText(/게시글 3개/));
+
+    expect(navigateMock).toHaveBeenCalledWith("/rss/10");
+  });
+
+  it("RSS URL 클릭 시 카드 네비게이션이 발생하지 않아야 한다", () => {
+    navigateMock.mockClear();
+    render(<CertifiedRssCard userId={1} rss={rss} isOwner={false} />);
+
+    fireEvent.click(screen.getByRole("link", { name: "https://blog.test/rss" }));
+
+    expect(navigateMock).not.toHaveBeenCalled();
   });
 
   it("게시글 목록을 펼치는 버튼(잔재 기능)이 없어야 한다", () => {
