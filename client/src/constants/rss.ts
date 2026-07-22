@@ -8,6 +8,14 @@ interface Platform {
   placeholder: string;
 }
 
+export const PLATFORM_BADGE_COLORS: Record<string, string> = {
+  tistory: "#EB531F",
+  velog: "#20C997",
+  github: "#000000",
+};
+
+export const DEFAULT_BADGE_COLOR = "#6B7280";
+
 export const PLATFORMS: Record<PlatformType, Platform> = {
   tistory: {
     name: "Tistory",
