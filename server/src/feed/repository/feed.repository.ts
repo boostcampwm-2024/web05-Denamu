@@ -58,6 +58,7 @@ export class FeedRepository extends Repository<Feed> {
     lastId: number,
     limit: number,
     onlyPublic: boolean,
+    date?: string,
   ) {
     const query = this.createQueryBuilder('feed')
       .select([
@@ -78,6 +79,14 @@ export class FeedRepository extends Repository<Feed> {
 
     if (lastId) {
       query.andWhere('feed.id < :lastId', { lastId });
+    }
+
+    // 잔디 집계(DATE_FORMAT 기준)와 동일한 날짜 범위. 인덱스 활용을 위해 범위 조건 사용.
+    if (date) {
+      query.andWhere(
+        'feed.created_at >= :date AND feed.created_at < DATE_ADD(:date, INTERVAL 1 DAY)',
+        { date },
+      );
     }
 
     return await query

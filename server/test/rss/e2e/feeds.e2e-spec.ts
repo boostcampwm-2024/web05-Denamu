@@ -78,4 +78,34 @@ describe(`GET /api/rss/:rssId/feeds E2E Test`, () => {
     expect(data.hasMore).toBe(true);
     expect(data.lastId).toBe(feeds[1].id);
   });
+
+  it('[200] date로 해당 날짜에 발행된 게시글만 조회한다.', async () => {
+    const targetFeed = await feedRepository.save(
+      FeedFixture.createFeedFixture(rssAccept, {
+        title: 'target day feed',
+        isPublic: true,
+        createdAt: new Date('2025-06-10T09:00:00'),
+      }),
+    );
+    await feedRepository.save(
+      FeedFixture.createFeedFixture(rssAccept, {
+        title: 'other day feed',
+        isPublic: true,
+        createdAt: new Date('2025-06-11T09:00:00'),
+      }),
+    );
+
+    const response = await agent.get(`${makeURL(rssAccept.id)}?date=2025-06-10`);
+
+    expect(response.status).toBe(HttpStatus.OK);
+    const { data }: { data: GetRssFeedsResponseDto } = response.body;
+    expect(data.result).toHaveLength(1);
+    expect(data.result[0].id).toBe(targetFeed.id);
+    expect(data.hasMore).toBe(false);
+  });
+
+  it('[400] date 형식이 잘못되면 400을 반환한다.', async () => {
+    const response = await agent.get(`${makeURL(rssAccept.id)}?date=2025/06/10`);
+    expect(response.status).toBe(HttpStatus.BAD_REQUEST);
+  });
 });

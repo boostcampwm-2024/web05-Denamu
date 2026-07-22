@@ -383,6 +383,7 @@ export class RssService {
       feedDto.lastId,
       feedDto.limit,
       true,
+      feedDto.date,
     );
 
     const hasMore = feeds.length > feedDto.limit;

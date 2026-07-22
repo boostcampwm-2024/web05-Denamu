@@ -803,11 +803,32 @@ describe(`${RssService.name} Unit Test`, () => {
 
       const result = await rssService.getRssFeeds(1, { lastId: 11, limit: 2 });
 
-      expect(feedRepository.getFeedsByBlog).toHaveBeenCalledWith(1, 11, 2, true);
+      expect(feedRepository.getFeedsByBlog).toHaveBeenCalledWith(
+        1,
+        11,
+        2,
+        true,
+        undefined,
+      );
       expect(result.result).toHaveLength(2);
       expect(result.hasMore).toBe(true);
       expect(result.lastId).toBe(9);
       expect(result.result[0].thumbnail).toBe('th10');
+    });
+
+    it('date를 넘기면 해당 날짜 필터를 저장소에 전달한다.', async () => {
+      rssAcceptRepository.findOne.mockResolvedValue({ id: 1 } as any);
+      feedRepository.getFeedsByBlog.mockResolvedValue([makeFeed(10)]);
+
+      await rssService.getRssFeeds(1, { limit: 10, date: '2025-01-15' });
+
+      expect(feedRepository.getFeedsByBlog).toHaveBeenCalledWith(
+        1,
+        undefined,
+        10,
+        true,
+        '2025-01-15',
+      );
     });
 
     it('조회 결과가 없으면 lastId=0, hasMore=false로 반환한다.', async () => {
