@@ -403,6 +403,14 @@ export class UserService {
     const user = await this.userRepository.findOne({
       where: { id: userId },
     });
+
+    if (!user) {
+      await this.redisService.del(
+        `${REDIS_KEYS.USER_RESET_PASSWORD_KEY}:${uuid}`,
+      );
+      throw new NotFoundException('존재하지 않는 유저입니다.');
+    }
+
     user.password = await this.createHashedPassword(password);
 
     await this.redisService.del(
