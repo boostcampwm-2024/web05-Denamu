@@ -11,7 +11,7 @@ import {
 } from "@/api/services/rss";
 import { ApiMessage } from "@/types/api";
 import { CreateRssCertificationResult, RssCertificationPreview } from "@/types/profile";
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { QueryKey, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 type ApiError = AxiosError<{ message?: string }>;
 
@@ -30,7 +30,6 @@ export const useCreateRssCertification = (userId: number) => {
   return useMutation<CreateRssCertificationResult, ApiError, string>({
     mutationFn: createRssCertification,
     onSuccess: (data) => {
-      // 즉시 인증(certified=true)된 경우에만 목록이 즉시 갱신된다.
       if (data.certified) invalidate();
     },
   });
@@ -44,11 +43,15 @@ export const useVerifyRssCertification = (userId: number) => {
   });
 };
 
-export const useUpdateRssCertification = (userId: number) => {
+export const useUpdateRssCertification = (userId: number, extraKeys: QueryKey[] = []) => {
   const invalidate = useInvalidateCertifiedRss(userId);
+  const queryClient = useQueryClient();
   return useMutation<ApiMessage, ApiError, { id: number; name: string; userName: string }>({
     mutationFn: ({ id, name, userName }) => updateRssCertification(id, { name, userName }),
-    onSuccess: () => invalidate(),
+    onSuccess: () => {
+      invalidate();
+      extraKeys.forEach((queryKey) => queryClient.invalidateQueries({ queryKey }));
+    },
   });
 };
 
@@ -69,10 +72,13 @@ export const useOwnedRssFeeds = (rssId: number, enabled: boolean) =>
     enabled: enabled && !!rssId,
   });
 
-export const useSetFeedVisibility = (rssId: number) => {
+export const useSetFeedVisibility = (rssId: number, extraKeys: QueryKey[] = []) => {
   const queryClient = useQueryClient();
   return useMutation<ApiMessage, ApiError, { feedId: number; isPublic: boolean }>({
     mutationFn: ({ feedId, isPublic }) => setFeedVisibility(rssId, feedId, isPublic),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["ownedRssFeeds", rssId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ownedRssFeeds", rssId] });
+      extraKeys.forEach((queryKey) => queryClient.invalidateQueries({ queryKey }));
+    },
   });
 };

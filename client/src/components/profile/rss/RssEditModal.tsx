@@ -14,6 +14,8 @@ import {
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
 
+import { QueryKey } from "@tanstack/react-query";
+
 import { useCustomToast } from "@/hooks/common/useCustomToast.ts";
 import { useUpdateRssCertification } from "@/hooks/queries/useRssCertification.ts";
 
@@ -23,17 +25,18 @@ interface RssEditModalProps {
   target: CertifiedRss | null;
   userId: number;
   onClose: () => void;
+  extraInvalidateKeys?: QueryKey[];
 }
 
 const getErrorMessage = (error: AxiosError<{ message?: string }>, fallback: string) =>
   error.response?.data?.message ?? fallback;
 
-export const RssEditModal = ({ target, userId, onClose }: RssEditModalProps) => {
+export const RssEditModal = ({ target, userId, onClose, extraInvalidateKeys = [] }: RssEditModalProps) => {
   const { toast } = useCustomToast();
   const [name, setName] = useState("");
   const [userName, setUserName] = useState("");
 
-  const updateMutation = useUpdateRssCertification(userId);
+  const updateMutation = useUpdateRssCertification(userId, extraInvalidateKeys);
 
   useEffect(() => {
     if (target) {

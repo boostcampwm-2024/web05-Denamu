@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { FileText, Users } from "lucide-react";
 
@@ -15,8 +15,13 @@ interface CertifiedRssCardProps {
 }
 
 export const CertifiedRssCard = ({ userId, rss, isOwner }: CertifiedRssCardProps) => {
+  const navigate = useNavigate();
+
   return (
-    <li className="border border-gray-100 rounded-lg">
+    <li
+      className="transition-colors border border-gray-100 rounded-lg cursor-pointer hover:bg-gray-50"
+      onClick={() => navigate(`/rss/${rss.id}`)}
+    >
       <div className="flex items-center justify-between gap-3 p-4">
         <div className="flex items-center min-w-0 gap-3">
           <PlatformIcon platform={rss.blogPlatform} className="flex-shrink-0 w-10 h-10" />
@@ -34,6 +39,7 @@ export const CertifiedRssCard = ({ userId, rss, isOwner }: CertifiedRssCardProps
               target="_blank"
               rel="noopener noreferrer"
               className="text-sm text-gray-400 truncate hover:underline"
+              onClick={(e) => e.stopPropagation()}
             >
               {rss.rssUrl}
             </a>
@@ -50,7 +56,7 @@ export const CertifiedRssCard = ({ userId, rss, isOwner }: CertifiedRssCardProps
           </div>
         </div>
         {!isOwner && (
-          <div className="flex-shrink-0 ml-3">
+          <div className="flex-shrink-0 ml-3" onClick={(e) => e.stopPropagation()}>
             <SubscribeButton
               rssId={rss.id}
               isSubscribed={rss.isSubscribed}

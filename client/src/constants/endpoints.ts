@@ -44,6 +44,10 @@ export const BLOG = {
   },
   RSS: {
     REGISTRER_RSS: "/api/rss",
+    INFO: (id: number) => `/api/rss/${id}`,
+    FEEDS: (id: number) => `/api/rss/${id}/feeds`,
+    ACTIVITIES: (id: number) => `/api/rss/${id}/activities`,
+    ACTIVITY_YEARS: (id: number) => `/api/rss/${id}/activities/years`,
     CERTIFICATION: "/api/rss/certifications",
     CERTIFICATION_PREVIEW: "/api/rss/certifications/preview",
     CERTIFICATION_VERIFY: "/api/rss/certifications/verify",
@@ -106,7 +110,6 @@ export const PROFILE = {
   PROFILE: (id: number) => `/api/users/${id}/profile`,
   UPDATE: "/api/users/profile",
   RSS: (id: number) => `/api/users/${id}/rss`,
-  RSS_FEEDS: (id: number, rssId: number) => `/api/users/${id}/rss/${rssId}/feeds`,
   LIKES: (id: number) => `/api/users/${id}/likes`,
   COMMENTS: (id: number) => `/api/users/${id}/comments`,
   ACTIVITIES: (id: number) => `/api/activities/${id}`,

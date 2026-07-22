@@ -11,6 +11,7 @@ const AboutService = lazy(() => import("@/pages/AboutService"));
 const PrivacyPolicy = lazy(() => import("@/pages/PrivacyPolicy"));
 const PostDetailPage = lazy(() => import("@/pages/PostDetailPage"));
 const Profile = lazy(() => import("@/pages/Profile"));
+const RssPage = lazy(() => import("@/pages/RssPage"));
 const SignIn = lazy(() => import("@/pages/SignIn"));
 const SignUp = lazy(() => import("@/pages/SignUp"));
 const UserCertificate = lazy(() => import("@/pages/email-actions/UserCertificate"));
@@ -183,6 +184,14 @@ export const AppRouter = ({ location, state }: RouterProps) => {
           element={
             <Suspense fallback={<Loading />}>
               <Profile />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/rss/:rssId"
+          element={
+            <Suspense fallback={<Loading />}>
+              <RssPage />
             </Suspense>
           }
         />

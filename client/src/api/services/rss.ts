@@ -6,13 +6,44 @@ import {
   CreateRssCertificationResult,
   CursorPage,
   OwnedRssFeedItem,
+  ProfileActivity,
   RssCertificationPreview,
+  RssFeedItem,
+  RssInfo,
 } from "@/types/profile";
 import { RegisterRss, RegisterResponse } from "@/types/rss";
 
 export const registerRss = async (data: RegisterRss): Promise<RegisterResponse> => {
   const response = await axiosInstance.post<RegisterResponse>(BLOG.RSS.REGISTRER_RSS, data);
   return response.data;
+};
+
+export const getRssInfo = async (rssId: number): Promise<RssInfo> => {
+  const response = await axiosInstance.get<ApiData<RssInfo>>(BLOG.RSS.INFO(rssId));
+  return response.data.data;
+};
+
+export const getRssPageFeeds = async (
+  rssId: number,
+  lastId?: number,
+  limit = 10
+): Promise<CursorPage<RssFeedItem>> => {
+  const response = await axiosInstance.get<ApiData<CursorPage<RssFeedItem>>>(BLOG.RSS.FEEDS(rssId), {
+    params: { lastId, limit },
+  });
+  return response.data.data;
+};
+
+export const getRssActivities = async (rssId: number, year: number): Promise<ProfileActivity> => {
+  const response = await axiosInstance.get<ApiData<ProfileActivity>>(BLOG.RSS.ACTIVITIES(rssId), {
+    params: { year },
+  });
+  return response.data.data;
+};
+
+export const getRssActivityYears = async (rssId: number): Promise<number[]> => {
+  const response = await axiosInstance.get<ApiData<number[]>>(BLOG.RSS.ACTIVITY_YEARS(rssId));
+  return response.data.data;
 };
 
 export const previewRssCertification = async (blogName: string): Promise<RssCertificationPreview> => {
