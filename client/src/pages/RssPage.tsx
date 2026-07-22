@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 
 import { CalendarClock, CheckCircle2, FileText, Pencil, Users } from "lucide-react";
 
+import { Footer } from "@/components/about/Footer";
 import Layout from "@/components/layout/Layout";
 import { SubscribeButton } from "@/components/common/Card/detail/SubscribeButton.tsx";
 import { ActivityGraph } from "@/components/profile/header/ui/ActivityGraph/ActivityGraph.tsx";
@@ -222,76 +223,84 @@ export default function RssPage() {
   };
 
   return (
-    <Layout>
-      <div className="max-w-4xl px-4 py-8 mx-auto md:px-8">
-        <RssHeader rss={rss} onEdit={() => setEditOpen(true)} />
+    <>
+      <Layout>
+        <div className="max-w-4xl px-4 py-8 mx-auto md:px-8">
+          <RssHeader rss={rss} onEdit={() => setEditOpen(true)} />
 
-        {rss.owner && <OwnerProfileCard owner={rss.owner} />}
+          {rss.owner && <OwnerProfileCard owner={rss.owner} />}
 
-        {rss.isOwner && (
-          <>
-            <OwnerFeedManager rssId={rss.id} />
-            <RssEditModal
-              target={editOpen ? rss : null}
-              userId={rss.owner?.id ?? 0}
-              onClose={() => setEditOpen(false)}
-              extraInvalidateKeys={[["rssInfo", rss.id]]}
-            />
-          </>
-        )}
+          {rss.isOwner && (
+            <>
+              <OwnerFeedManager rssId={rss.id} />
+              <RssEditModal
+                target={editOpen ? rss : null}
+                userId={rss.owner?.id ?? 0}
+                onClose={() => setEditOpen(false)}
+                extraInvalidateKeys={[["rssInfo", rss.id]]}
+              />
+            </>
+          )}
 
-        <Card className="mb-8">
-          <CardContent className="p-6">
-            <ActivityGraph
-              dailyActivities={activity?.dailyActivities ?? []}
-              year={year}
-              years={years}
-              onYearChange={handleYearChange}
-              scale="posts"
-              selectedDate={selectedDate}
-              onDayClick={handleDayClick}
-            />
-          </CardContent>
-        </Card>
+          <Card className="mb-8">
+            <CardContent className="p-6">
+              <ActivityGraph
+                dailyActivities={activity?.dailyActivities ?? []}
+                year={year}
+                years={years}
+                onYearChange={handleYearChange}
+                scale="posts"
+                selectedDate={selectedDate}
+                onDayClick={handleDayClick}
+              />
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="p-6">
-            <h3 className="mb-4 text-lg font-semibold">
-              포스트
-              {selectedDate && (
-                <span className="ml-2 text-sm font-normal text-gray-500">{selectedDate} 발행분</span>
+          <Card>
+            <CardContent className="p-6">
+              <h3 className="mb-4 text-lg font-semibold">
+                포스트
+                {selectedDate && (
+                  <span className="ml-2 text-sm font-normal text-gray-500">{selectedDate} 발행분</span>
+                )}
+              </h3>
+              {feedsLoading && <p className="text-sm text-gray-400">포스트를 불러오는 중...</p>}
+              {feedsError && <p className="text-sm text-red-500">포스트를 불러오지 못했습니다.</p>}
+              {!feedsLoading && !feedsError && feeds.length === 0 && (
+                <p className="text-sm text-gray-400">포스트가 없습니다.</p>
               )}
-            </h3>
-            {feedsLoading && <p className="text-sm text-gray-400">포스트를 불러오는 중...</p>}
-            {feedsError && <p className="text-sm text-red-500">포스트를 불러오지 못했습니다.</p>}
-            {!feedsLoading && !feedsError && feeds.length === 0 && (
-              <p className="text-sm text-gray-400">포스트가 없습니다.</p>
-            )}
 
-            <ul className="space-y-3">
-              {feeds.map((feed) => (
-                <RssFeedCard
-                  key={feed.id}
-                  id={feed.id}
-                  title={feed.title}
-                  thumbnail={feed.thumbnail}
-                  createdAt={feed.createdAt}
-                  commentCount={feed.commentCount}
-                  likeCount={feed.likeCount}
-                />
-              ))}
-            </ul>
+              <ul className="space-y-3">
+                {feeds.map((feed) => (
+                  <RssFeedCard
+                    key={feed.id}
+                    id={feed.id}
+                    title={feed.title}
+                    thumbnail={feed.thumbnail}
+                    createdAt={feed.createdAt}
+                    commentCount={feed.commentCount}
+                    likeCount={feed.likeCount}
+                  />
+                ))}
+              </ul>
 
-            {hasNextPage && (
-              <div className="mt-4 text-center">
-                <Button variant="outline" size="sm" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
-                  {isFetchingNextPage ? "불러오는 중..." : "더 보기"}
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </Layout>
+              {hasNextPage && (
+                <div className="mt-4 text-center">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fetchNextPage()}
+                    disabled={isFetchingNextPage}
+                  >
+                    {isFetchingNextPage ? "불러오는 중..." : "더 보기"}
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </Layout>
+      <Footer />
+    </>
   );
 }
