@@ -6,6 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip.tsx";
 
 import { processYearActivityData } from "@/utils/activity.ts";
 
+import { ActivityScale } from "@/utils/color.ts";
+
 import { cn } from "@/lib/utils.ts";
 
 import { DailyActivity } from "@/types/profile.ts";
@@ -15,9 +17,20 @@ interface ActivityGraphProps {
   year: number;
   years: number[];
   onYearChange: (year: number) => void;
+  scale?: ActivityScale;
+  selectedDate?: string | null;
+  onDayClick?: (dateStr: string) => void;
 }
 
-export const ActivityGraph = ({ dailyActivities, year, years, onYearChange }: ActivityGraphProps) => {
+export const ActivityGraph = ({
+  dailyActivities,
+  year,
+  years,
+  onYearChange,
+  scale,
+  selectedDate,
+  onDayClick,
+}: ActivityGraphProps) => {
   const { weeks } = processYearActivityData(dailyActivities, year, new Date());
 
   return (
@@ -32,13 +45,19 @@ export const ActivityGraph = ({ dailyActivities, year, years, onYearChange }: Ac
                 <DayLabels />
                 <div className="flex gap-0.5">
                   {weeks.map((weekInfo) => (
-                    <Week key={weekInfo.weekNumber} weekInfo={weekInfo} />
+                    <Week
+                      key={weekInfo.weekNumber}
+                      weekInfo={weekInfo}
+                      scale={scale}
+                      selectedDate={selectedDate}
+                      onDayClick={onDayClick}
+                    />
                   ))}
                 </div>
               </div>
             </div>
           </TooltipProvider>
-          <Legend />
+          <Legend scale={scale} />
         </div>
       </div>
 

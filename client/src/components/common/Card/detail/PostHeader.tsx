@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 import { CheckCircle2 } from "lucide-react";
 
@@ -14,10 +15,9 @@ interface PostHeaderProps {
   data: FeedDetail;
 }
 
-export const PostHeader = React.memo(({ data }: PostHeaderProps) => (
-  <div className="flex flex-col gap-2">
-    <h1 className="text-[2rem] font-bold">{data.title}</h1>
-    <span className="flex gap-2 items-center">
+export const PostHeader = React.memo(({ data }: PostHeaderProps) => {
+  const profileContent = (
+    <>
       <PostAvatar blogPlatform={data.blogPlatform} className="h-8 w-8" author={data.author} />
       <span className="flex flex-col min-w-0">
         <span className="flex items-center gap-1.5">
@@ -41,16 +41,38 @@ export const PostHeader = React.memo(({ data }: PostHeaderProps) => (
           <span>{data.viewCount} views</span>
         </span>
       </span>
-      {data.blogId != null && !data.isOwner && (
-        <span className="ml-auto flex-shrink-0">
-          <SubscribeButton rssId={data.blogId} isSubscribed={data.isSubscribed} invalidateKeys={[["getDetail", data.id]]} />
-        </span>
-      )}
-    </span>
-    <span>
-      <SimpleTagList tags={data.tag} />
-    </span>
-  </div>
-));
+    </>
+  );
+
+  return (
+    <div className="flex flex-col gap-2">
+      <h1 className="text-[2rem] font-bold">{data.title}</h1>
+      <span className="flex gap-2 items-center">
+        {data.blogId != null ? (
+          <Link
+            to={`/rss/${data.blogId}`}
+            className="flex gap-2 items-center min-w-0 transition-opacity hover:opacity-80"
+          >
+            {profileContent}
+          </Link>
+        ) : (
+          profileContent
+        )}
+        {data.blogId != null && !data.isOwner && (
+          <span className="ml-auto flex-shrink-0">
+            <SubscribeButton
+              rssId={data.blogId}
+              isSubscribed={data.isSubscribed}
+              invalidateKeys={[["getDetail", data.id]]}
+            />
+          </span>
+        )}
+      </span>
+      <span>
+        <SimpleTagList tags={data.tag} />
+      </span>
+    </div>
+  );
+});
 
 PostHeader.displayName = "PostHeader";

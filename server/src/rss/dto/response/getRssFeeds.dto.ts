@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 import { Feed } from '@feed/entity/feed.entity';
 
-export class UserRssFeedResult {
+export class RssFeedResult {
   @ApiProperty({
     example: 1,
     description: '게시글 ID',
@@ -22,6 +22,12 @@ export class UserRssFeedResult {
   path: string;
 
   @ApiProperty({
+    example: 'https://example.com/thumbnail.png',
+    description: '게시글 썸네일 URL',
+  })
+  thumbnail: string;
+
+  @ApiProperty({
     example: '2025-01-01T00:00:00.000Z',
     description: '게시글 작성일',
   })
@@ -39,15 +45,16 @@ export class UserRssFeedResult {
   })
   likeCount: number;
 
-  private constructor(partial: Partial<UserRssFeedResult>) {
+  private constructor(partial: Partial<RssFeedResult>) {
     Object.assign(this, partial);
   }
 
   static toResultDto(feed: Feed) {
-    return new UserRssFeedResult({
+    return new RssFeedResult({
       id: feed.id,
       title: feed.title,
       path: feed.path,
+      thumbnail: feed.thumbnail,
       createdAt: feed.createdAt,
       commentCount: feed.commentCount,
       likeCount: feed.likeCount,
@@ -59,9 +66,9 @@ export class UserRssFeedResult {
   }
 }
 
-export class GetUserRssFeedsResponseDto {
-  @ApiProperty({ type: [UserRssFeedResult], description: 'RSS의 게시글 목록' })
-  result: UserRssFeedResult[];
+export class GetRssFeedsResponseDto {
+  @ApiProperty({ type: [RssFeedResult], description: 'RSS의 게시글 목록' })
+  result: RssFeedResult[];
 
   @ApiProperty({
     example: 1,
@@ -75,13 +82,13 @@ export class GetUserRssFeedsResponseDto {
   })
   hasMore: boolean;
 
-  constructor(partial: Partial<GetUserRssFeedsResponseDto>) {
+  constructor(partial: Partial<GetRssFeedsResponseDto>) {
     Object.assign(this, partial);
   }
 
   static toResponseDto(feeds: Feed[], lastId: number, hasMore: boolean) {
-    return new GetUserRssFeedsResponseDto({
-      result: UserRssFeedResult.toResultDtoArray(feeds),
+    return new GetRssFeedsResponseDto({
+      result: RssFeedResult.toResultDtoArray(feeds),
       lastId,
       hasMore,
     });

@@ -15,7 +15,7 @@ import { ApiTags } from '@nestjs/swagger';
 
 import { CurrentUser } from '@common/decorator';
 import { AdminAuthGuard } from '@common/guard/session.guard';
-import { JwtGuard, Payload } from '@common/guard/jwt.guard';
+import { JwtGuard, OptionalJwtGuard, Payload } from '@common/guard/jwt.guard';
 import { ApiResponse } from '@common/response/common.response';
 
 import { ApiAcceptRss } from '@rss/api-docs/acceptRss.api-docs';
@@ -25,6 +25,10 @@ import { ApiDeleteCertificateRss } from '@rss/api-docs/deleteCertificateRss.api-
 import { ApiDeleteRss } from '@rss/api-docs/deleteRss.api-docs';
 import { ApiDeleteRssCertification } from '@rss/api-docs/deleteRssCertification.api-docs';
 import { ApiGetOwnedRssFeeds } from '@rss/api-docs/getOwnedRssFeeds.api-docs';
+import { ApiGetRssActivities } from '@rss/api-docs/getRssActivities.api-docs';
+import { ApiGetRssActivityYears } from '@rss/api-docs/getRssActivityYears.api-docs';
+import { ApiGetRssFeeds } from '@rss/api-docs/getRssFeeds.api-docs';
+import { ApiGetRssInfo } from '@rss/api-docs/getRssInfo.api-docs';
 import { ApiSetFeedVisibility } from '@rss/api-docs/setFeedVisibility.api-docs';
 import { ApiPreviewRssCertification } from '@rss/api-docs/previewRssCertification.api-docs';
 import { ApiReadAllRss } from '@rss/api-docs/readAllRss.api-docs';
@@ -38,6 +42,10 @@ import { DeleteCertificateRssRequestDto } from '@rss/dto/request/deleteCertifica
 import { DeleteRssCertificationParamRequestDto } from '@rss/dto/request/deleteRssCertificationParam.dto';
 import { GetOwnedRssFeedsRequestDto } from '@rss/dto/request/getOwnedRssFeeds.dto';
 import { GetOwnedRssFeedsParamRequestDto } from '@rss/dto/request/getOwnedRssFeedsParam.dto';
+import { GetRssFeedsRequestDto } from '@rss/dto/request/getRssFeeds.dto';
+import { GetRssInfoParamRequestDto } from '@rss/dto/request/getRssInfoParam.dto';
+
+import { ReadActivityQueryRequestDto } from '@activity/dto/request/readActivity.dto';
 import { SetFeedVisibilityRequestDto } from '@rss/dto/request/setFeedVisibility.dto';
 import { SetFeedVisibilityParamRequestDto } from '@rss/dto/request/setFeedVisibilityParam.dto';
 import { DeleteRssRequestDto } from '@rss/dto/request/deleteRss.dto';
@@ -246,5 +254,55 @@ export class RssController {
       bodyDto.isPublic,
     );
     return ApiResponse.responseWithNoContent('게시글 공개 상태를 변경했습니다.');
+  }
+
+  @ApiGetRssActivityYears()
+  @Get(':rssId/activities/years')
+  @HttpCode(HttpStatus.OK)
+  async getRssActivityYears(@Param() paramDto: GetRssInfoParamRequestDto) {
+    return ApiResponse.responseWithData(
+      'RSS 발행 활동 연도 목록 조회를 처리했습니다.',
+      await this.rssService.getRssActivityYears(paramDto.rssId),
+    );
+  }
+
+  @ApiGetRssActivities()
+  @Get(':rssId/activities')
+  @HttpCode(HttpStatus.OK)
+  async getRssActivities(
+    @Param() paramDto: GetRssInfoParamRequestDto,
+    @Query() queryDto: ReadActivityQueryRequestDto,
+  ) {
+    return ApiResponse.responseWithData(
+      'RSS 발행 활동 조회를 처리했습니다.',
+      await this.rssService.getRssActivities(paramDto.rssId, queryDto.year),
+    );
+  }
+
+  @ApiGetRssInfo()
+  @UseGuards(OptionalJwtGuard)
+  @Get(':rssId')
+  @HttpCode(HttpStatus.OK)
+  async getRssInfo(
+    @Param() paramDto: GetRssInfoParamRequestDto,
+    @CurrentUser() viewer: Payload | null,
+  ) {
+    return ApiResponse.responseWithData(
+      'RSS 정보 조회를 처리했습니다.',
+      await this.rssService.getRssInfo(paramDto.rssId, viewer?.id),
+    );
+  }
+
+  @ApiGetRssFeeds()
+  @Get(':rssId/feeds')
+  @HttpCode(HttpStatus.OK)
+  async getRssFeeds(
+    @Param() paramDto: GetRssInfoParamRequestDto,
+    @Query() queryDto: GetRssFeedsRequestDto,
+  ) {
+    return ApiResponse.responseWithData(
+      'RSS 게시글 목록 조회를 처리했습니다.',
+      await this.rssService.getRssFeeds(paramDto.rssId, queryDto),
+    );
   }
 }

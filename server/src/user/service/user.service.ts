@@ -29,7 +29,6 @@ import { SubscriptionRepository } from '@subscribe/repository/subscription.repos
 
 import { REFRESH_TOKEN_TTL, SALT_ROUNDS } from '@user/constant/user.constants';
 import { ChangePasswordRequestDto } from '@user/dto/request/changePassword.dto';
-import { GetUserRssFeedsRequestDto } from '@user/dto/request/getUserRssFeeds.dto';
 import { LoginUserRequestDto } from '@user/dto/request/loginUser.dto';
 import { RegisterUserRequestDto } from '@user/dto/request/registerUser.dto';
 import { SearchUserRequestDto } from '@user/dto/request/searchUser.dto';
@@ -39,7 +38,6 @@ import { CheckUserNameDuplicationResponseDto } from '@user/dto/response/checkUse
 import { CreateAccessTokenResponseDto } from '@user/dto/response/createAccessToken.dto';
 import { GetUserProfileResponseDto } from '@user/dto/response/getUserProfile.dto';
 import { GetUserRssResponseDto } from '@user/dto/response/getUserRss.dto';
-import { GetUserRssFeedsResponseDto } from '@user/dto/response/getUserRssFeeds.dto';
 import {
   SearchUserResponseDto,
   SearchUserResult,
@@ -188,21 +186,6 @@ export class UserService {
       subscriberCountMap,
       subscribedBlogIds,
     );
-  }
-
-  async getUserRssFeeds(rssId: number, feedDto: GetUserRssFeedsRequestDto) {
-    const feeds = await this.feedRepository.getFeedsByBlog(
-      rssId,
-      feedDto.lastId,
-      feedDto.limit,
-      true,
-    );
-
-    const hasMore = feeds.length > feedDto.limit;
-    if (hasMore) feeds.pop();
-    const lastId = feeds.length ? feeds[feeds.length - 1].id : 0;
-
-    return GetUserRssFeedsResponseDto.toResponseDto(feeds, lastId, hasMore);
   }
 
   async loginUser(loginDto: LoginUserRequestDto, response: Response) {

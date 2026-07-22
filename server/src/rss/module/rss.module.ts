@@ -7,6 +7,8 @@ import { AdminModule } from '@admin/module/admin.module';
 
 import { FeedRepository } from '@feed/repository/feed.repository';
 
+import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
+
 import { RssController } from '@rss/controller/rss.controller';
 import {
   RssAcceptRepository,
@@ -24,6 +26,7 @@ import { RssService } from '@rss/service/rss.service';
     RssAcceptRepository,
     RssRejectRepository,
     FeedRepository,
+    SubscriptionRepository,
   ],
   exports: [RssAcceptRepository],
 })

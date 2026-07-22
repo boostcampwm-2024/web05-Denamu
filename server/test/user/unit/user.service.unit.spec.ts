@@ -14,7 +14,6 @@ import { Payload } from '@common/guard/jwt.guard';
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
 
-import { Feed } from '@feed/entity/feed.entity';
 import { FeedRepository } from '@feed/repository/feed.repository';
 
 import { FileService } from '@file/service/file.service';
@@ -66,7 +65,7 @@ describe(`${UserService.name} Unit Test`, () => {
     Pick<RssAcceptRepository, 'find' | 'update'>
   >;
   let feedRepository: jest.Mocked<
-    Pick<FeedRepository, 'getFeedsByBlog' | 'countPublicFeedsByBlogIds'>
+    Pick<FeedRepository, 'countPublicFeedsByBlogIds'>
   >;
   let subscriptionRepository: jest.Mocked<
     Pick<SubscriptionRepository, 'countByBlogIds' | 'getSubscribedBlogIds'>
@@ -109,7 +108,6 @@ describe(`${UserService.name} Unit Test`, () => {
     fileService = { deleteByPath: jest.fn() };
     rssAcceptRepository = { find: jest.fn(), update: jest.fn() };
     feedRepository = {
-      getFeedsByBlog: jest.fn(),
       countPublicFeedsByBlogIds: jest.fn().mockResolvedValue(new Map()),
     };
     subscriptionRepository = {
@@ -480,69 +478,6 @@ describe(`${UserService.name} Unit Test`, () => {
         ),
       );
       expect(result[0].feedCount).toBe(3);
-    });
-  });
-
-  describe('getUserRssFeeds', () => {
-    const makeFeed = (id: number) =>
-      ({
-        id,
-        title: `t${id}`,
-        path: `p${id}`,
-        createdAt: new Date(),
-        commentCount: id,
-      }) as Feed;
-
-    it('limit보다 많이 조회되면 마지막 항목을 잘라내고 hasMore=true로 반환한다.', async () => {
-      // given (limit=2인데 3개 조회 → 다음 페이지 존재)
-      feedRepository.getFeedsByBlog.mockResolvedValue([
-        makeFeed(10),
-        makeFeed(9),
-        makeFeed(8),
-      ]);
-
-      // when
-      const result = await userService.getUserRssFeeds(5, {
-        lastId: 11,
-        limit: 2,
-      });
-
-      // then
-      expect(feedRepository.getFeedsByBlog).toHaveBeenCalledWith(
-        5,
-        11,
-        2,
-        true,
-      );
-      expect(result.result).toHaveLength(2);
-      expect(result.hasMore).toBe(true);
-      expect(result.lastId).toBe(9);
-      expect(result.result[0].commentCount).toBe(10);
-    });
-
-    it('limit 이하로 조회되면 hasMore=false로 반환한다.', async () => {
-      // given
-      feedRepository.getFeedsByBlog.mockResolvedValue([makeFeed(3)]);
-
-      // when
-      const result = await userService.getUserRssFeeds(5, { limit: 10 });
-
-      // then
-      expect(result.hasMore).toBe(false);
-      expect(result.lastId).toBe(3);
-    });
-
-    it('조회 결과가 없으면 lastId=0, hasMore=false로 반환한다.', async () => {
-      // given
-      feedRepository.getFeedsByBlog.mockResolvedValue([]);
-
-      // when
-      const result = await userService.getUserRssFeeds(5, { limit: 10 });
-
-      // then
-      expect(result.result).toHaveLength(0);
-      expect(result.lastId).toBe(0);
-      expect(result.hasMore).toBe(false);
     });
   });
 

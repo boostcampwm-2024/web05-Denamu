@@ -22,6 +22,12 @@ export class OwnedRssFeedResult {
   path: string;
 
   @ApiProperty({
+    example: 'https://example.com/thumbnail.png',
+    description: '게시글 썸네일 URL',
+  })
+  thumbnail: string;
+
+  @ApiProperty({
     example: '2025-01-01T00:00:00.000Z',
     description: '게시글 작성일',
   })
@@ -54,6 +60,7 @@ export class OwnedRssFeedResult {
       id: feed.id,
       title: feed.title,
       path: feed.path,
+      thumbnail: feed.thumbnail,
       createdAt: feed.createdAt,
       commentCount: feed.commentCount,
       likeCount: feed.likeCount,

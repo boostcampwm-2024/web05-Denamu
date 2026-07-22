@@ -58,12 +58,14 @@ export class FeedRepository extends Repository<Feed> {
     lastId: number,
     limit: number,
     onlyPublic: boolean,
+    date?: string,
   ) {
     const query = this.createQueryBuilder('feed')
       .select([
         'feed.id',
         'feed.title',
         'feed.path',
+        'feed.thumbnail',
         'feed.createdAt',
         'feed.commentCount',
         'feed.likeCount',
@@ -79,10 +81,56 @@ export class FeedRepository extends Repository<Feed> {
       query.andWhere('feed.id < :lastId', { lastId });
     }
 
+    // 잔디 집계(DATE_FORMAT 기준)와 동일한 날짜 범위. 인덱스 활용을 위해 범위 조건 사용.
+    if (date) {
+      query.andWhere(
+        'feed.created_at >= :date AND feed.created_at < DATE_ADD(:date, INTERVAL 1 DAY)',
+        { date },
+      );
+    }
+
     return await query
       .orderBy('feed.id', 'DESC')
       .take(limit + 1)
       .getMany();
+  }
+
+  async getLatestPublicFeedDate(blogId: number): Promise<Date | null> {
+    const row = await this.createQueryBuilder('feed')
+      .select('MAX(feed.created_at)', 'latest')
+      .where('feed.blog_id = :blogId', { blogId })
+      .andWhere('feed.is_public = 1')
+      .getRawOne<{ latest: Date | null }>();
+
+    return row?.latest ?? null;
+  }
+
+  async findPublishActivityByBlogAndYear(
+    blogId: number,
+    year: number,
+  ): Promise<Array<{ date: string; count: number }>> {
+    const rows = await this.createQueryBuilder('feed')
+      .select("DATE_FORMAT(feed.created_at, '%Y-%m-%d')", 'date')
+      .addSelect('COUNT(*)', 'count')
+      .where('feed.blog_id = :blogId', { blogId })
+      .andWhere('feed.is_public = 1')
+      .andWhere('YEAR(feed.created_at) = :year', { year })
+      .groupBy('date')
+      .orderBy('date', 'ASC')
+      .getRawMany<{ date: string; count: number }>();
+
+    return rows.map((row) => ({ date: row.date, count: Number(row.count) }));
+  }
+
+  async findPublishYearsByBlogId(blogId: number): Promise<number[]> {
+    const rows = await this.createQueryBuilder('feed')
+      .select('DISTINCT YEAR(feed.created_at)', 'year')
+      .where('feed.blog_id = :blogId', { blogId })
+      .andWhere('feed.is_public = 1')
+      .orderBy('year', 'DESC')
+      .getRawMany<{ year: number }>();
+
+    return rows.map((row) => Number(row.year));
   }
 
   async countPublicFeedsByBlogIds(

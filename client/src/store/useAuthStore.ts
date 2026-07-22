@@ -21,7 +21,7 @@ type AuthState = {
   setRole: (role: "guest" | "user" | "admin") => void;
   setUserName: (userName: string) => void;
   setUserFromToken: (token: string) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
   initialize: () => void;
 };
 

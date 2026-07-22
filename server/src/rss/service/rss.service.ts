@@ -25,8 +25,11 @@ import { ManageRssRequestDto } from '@rss/dto/request/manageRss.dto';
 import { RegisterRssRequestDto } from '@rss/dto/request/registerRss.dto';
 import { RejectRssRequestDto } from '@rss/dto/request/rejectRss';
 import { GetOwnedRssFeedsRequestDto } from '@rss/dto/request/getOwnedRssFeeds.dto';
+import { GetRssFeedsRequestDto } from '@rss/dto/request/getRssFeeds.dto';
 import { CreateRssCertificationResponseDto } from '@rss/dto/response/createRssCertification.dto';
 import { GetOwnedRssFeedsResponseDto } from '@rss/dto/response/getOwnedRssFeeds.dto';
+import { GetRssFeedsResponseDto } from '@rss/dto/response/getRssFeeds.dto';
+import { GetRssInfoResponseDto } from '@rss/dto/response/getRssInfo.dto';
 import { PreviewRssCertificationResponseDto } from '@rss/dto/response/previewRssCertification.dto';
 import { ReadRssResponseDto } from '@rss/dto/response/readRss.dto';
 import { ReadRssAcceptHistoryResponseDto } from '@rss/dto/response/readRssAcceptHistory.dto';
@@ -38,7 +41,14 @@ import {
   RssRepository,
 } from '@rss/repository/rss.repository';
 
+import {
+  DailyActivityDto,
+  ReadActivityResponseDto,
+} from '@activity/dto/response/readActivity.dto';
+
 import { FeedRepository } from '@feed/repository/feed.repository';
+
+import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
 
 type FullFeedCrawlMessage = {
   rssId: number;
@@ -53,6 +63,7 @@ export class RssService {
     private readonly rssAcceptRepository: RssAcceptRepository,
     private readonly rssRejectRepository: RssRejectRepository,
     private readonly feedRepository: FeedRepository,
+    private readonly subscriptionRepository: SubscriptionRepository,
     private readonly emailProducer: EmailProducer,
     private readonly dataSource: DataSource,
     private readonly redisService: RedisService,
@@ -290,6 +301,96 @@ export class RssService {
     } finally {
       await this.redisService.del(redisKey);
     }
+  }
+
+  async getRssInfo(rssId: number, viewerId?: number) {
+    const rssAccept = await this.rssAcceptRepository.findOne({
+      where: { id: rssId },
+      relations: { user: true },
+    });
+
+    if (!rssAccept) {
+      throw new NotFoundException('RSS를 찾을 수 없습니다.');
+    }
+
+    const [feedCountMap, subscriberCountMap, lastPublishedAt] =
+      await Promise.all([
+        this.feedRepository.countPublicFeedsByBlogIds([rssId]),
+        this.subscriptionRepository.countByBlogIds([rssId]),
+        this.feedRepository.getLatestPublicFeedDate(rssId),
+      ]);
+
+    let isSubscribed = false;
+    if (viewerId) {
+      const viewerBlogIds =
+        await this.subscriptionRepository.getSubscribedBlogIds(viewerId);
+      isSubscribed = viewerBlogIds.includes(rssId);
+    }
+
+    const isOwner = viewerId != null && rssAccept.userId === viewerId;
+
+    return GetRssInfoResponseDto.toResponseDto(
+      rssAccept,
+      feedCountMap.get(rssId) ?? 0,
+      subscriberCountMap.get(rssId) ?? 0,
+      isSubscribed,
+      isOwner,
+      lastPublishedAt,
+    );
+  }
+
+  private async assertRssAcceptExists(rssId: number) {
+    const rssAccept = await this.rssAcceptRepository.findOne({
+      where: { id: rssId },
+      select: { id: true },
+    });
+    if (!rssAccept) {
+      throw new NotFoundException('RSS를 찾을 수 없습니다.');
+    }
+  }
+
+  async getRssActivities(rssId: number, year: number) {
+    await this.assertRssAcceptExists(rssId);
+
+    const rows = await this.feedRepository.findPublishActivityByBlogAndYear(
+      rssId,
+      year,
+    );
+
+    const dailyActivities = rows.map(
+      (row) => new DailyActivityDto({ date: row.date, viewCount: row.count }),
+    );
+
+    return ReadActivityResponseDto.toResponseDto(dailyActivities);
+  }
+
+  async getRssActivityYears(rssId: number) {
+    await this.assertRssAcceptExists(rssId);
+    return this.feedRepository.findPublishYearsByBlogId(rssId);
+  }
+
+  async getRssFeeds(rssId: number, feedDto: GetRssFeedsRequestDto) {
+    const rssAccept = await this.rssAcceptRepository.findOne({
+      where: { id: rssId },
+    });
+
+    if (!rssAccept) {
+      throw new NotFoundException('RSS를 찾을 수 없습니다.');
+    }
+
+    const feeds = await this.feedRepository.getFeedsByBlog(
+      rssId,
+      feedDto.lastId,
+      feedDto.limit,
+      true,
+      feedDto.date,
+    );
+
+    const hasMore = feeds.length > feedDto.limit;
+    if (hasMore) feeds.pop();
+    const lastId = feeds.length ? feeds[feeds.length - 1].id : 0;
+
+    return GetRssFeedsResponseDto.toResponseDto(feeds, lastId, hasMore);
   }
 
   async createRssCertification(user: Payload, blogName: string) {

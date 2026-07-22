@@ -1,4 +1,6 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { ReactNode } from "react";
+
+import { describe, expect, it, vi } from "vitest";
 
 import { lucideProxy } from "@/__tests__/__mocks__/external/lucide-proxy.tsx";
 import { CertifiedRssCard } from "@/components/profile/rss/CertifiedRssCard.tsx";
@@ -6,23 +8,17 @@ import { CertifiedRssCard } from "@/components/profile/rss/CertifiedRssCard.tsx"
 import { CertifiedRss } from "@/types/profile.ts";
 import { fireEvent, render, screen } from "@testing-library/react";
 
-let feedsState: {
-  data: { pages: Array<{ result: Array<{ id: number; title: string }> }> } | undefined;
-  isLoading: boolean;
-  isError: boolean;
-  hasNextPage: boolean;
-  fetchNextPage: () => void;
-  isFetchingNextPage: boolean;
-};
-
 vi.mock("lucide-react", () => lucideProxy());
 
-vi.mock("@/hooks/queries/useProfile.ts", () => ({
-  useRssFeeds: () => feedsState,
-}));
+const navigateMock = vi.fn();
 
 vi.mock("react-router-dom", () => ({
-  useNavigate: () => vi.fn(),
+  useNavigate: () => navigateMock,
+  Link: ({ to, children, ...props }: { to: string; children: ReactNode }) => (
+    <a href={to} {...props}>
+      {children}
+    </a>
+  ),
 }));
 
 vi.mock("@/hooks/queries/useSubscription.ts", () => ({
@@ -35,9 +31,6 @@ vi.mock("@/store/useAuthStore.ts", () => ({
 }));
 
 vi.mock("@/components/profile/rss/PlatformIcon.tsx", () => ({ PlatformIcon: () => <div data-testid="platform-icon" /> }));
-vi.mock("@/components/profile/rss/RssFeedRow.tsx", () => ({
-  RssFeedRow: ({ title }: { title: string }) => <li data-testid="feed-row">{title}</li>,
-}));
 
 const rss = {
   id: 10,
@@ -48,17 +41,6 @@ const rss = {
 } as CertifiedRss;
 
 describe("CertifiedRssCard", () => {
-  beforeEach(() => {
-    feedsState = {
-      data: { pages: [{ result: [{ id: 1, title: "피드1" }] }] },
-      isLoading: false,
-      isError: false,
-      hasNextPage: false,
-      fetchNextPage: vi.fn(),
-      isFetchingNextPage: false,
-    };
-  });
-
   it("블로그명, URL, 게시글 수를 렌더링해야 한다", () => {
     render(<CertifiedRssCard userId={1} rss={rss} isOwner={false} />);
 
@@ -67,13 +49,32 @@ describe("CertifiedRssCard", () => {
     expect(screen.getByText(/게시글 3개/)).toBeInTheDocument();
   });
 
-  it("초기에는 게시글 목록이 접혀 있고 펼치면 RssFeedRow가 보여야 한다", () => {
+  it("블로그명 클릭 시 RSS 정보 페이지(/rss/:id)로 연결되어야 한다", () => {
     render(<CertifiedRssCard userId={1} rss={rss} isOwner={false} />);
 
-    expect(screen.queryByTestId("feed-row")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "내 블로그" })).toHaveAttribute("href", "/rss/10");
+  });
 
-    fireEvent.click(screen.getByRole("button", { name: "게시글 목록 펼치기" }));
+  it("카드 클릭 시 RSS 페이지(/rss/:id)로 이동해야 한다", () => {
+    render(<CertifiedRssCard userId={1} rss={rss} isOwner={false} />);
 
-    expect(screen.getByTestId("feed-row")).toHaveTextContent("피드1");
+    fireEvent.click(screen.getByText(/게시글 3개/));
+
+    expect(navigateMock).toHaveBeenCalledWith("/rss/10");
+  });
+
+  it("RSS URL 클릭 시 카드 네비게이션이 발생하지 않아야 한다", () => {
+    navigateMock.mockClear();
+    render(<CertifiedRssCard userId={1} rss={rss} isOwner={false} />);
+
+    fireEvent.click(screen.getByRole("link", { name: "https://blog.test/rss" }));
+
+    expect(navigateMock).not.toHaveBeenCalled();
+  });
+
+  it("게시글 목록을 펼치는 버튼(잔재 기능)이 없어야 한다", () => {
+    render(<CertifiedRssCard userId={1} rss={rss} isOwner={false} />);
+
+    expect(screen.queryByRole("button", { name: "게시글 목록 펼치기" })).not.toBeInTheDocument();
   });
 });

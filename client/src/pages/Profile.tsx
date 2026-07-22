@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
+import { Footer } from "@/components/about/Footer";
 import Layout from "@/components/layout/Layout";
 import { MyPage } from "@/components/profile/MyPage.tsx";
 import { ProfileSidebar } from "@/components/profile/ProfileSidebar.tsx";
@@ -47,33 +48,36 @@ export default function Profile() {
   };
 
   return (
-    <Layout>
-      <div className="flex min-h-screen">
-        <ProfileSidebar activeTab={currentTab} onTabChange={handleTabChange} isOwner={isOwner} />
+    <>
+      <Layout>
+        <div className="flex min-h-screen">
+          <ProfileSidebar activeTab={currentTab} onTabChange={handleTabChange} isOwner={isOwner} />
 
-        <div className="flex-1 min-w-0 px-4 py-8 md:px-8">
-          {currentTab === "mypage" &&
-            (showSubscriptions ? (
-              <SubscriptionManagementTab
-                userId={targetId as number}
-                isOwner={isOwner}
-                onBack={() => setShowSubscriptions(false)}
-              />
-            ) : (
-              <MyPage
-                userId={targetId as number}
-                name={isOwner ? (userInfo.userName ?? "") : ""}
-                email={isOwner ? (userInfo.email ?? "") : ""}
-                isOwner={isOwner}
-                onShowSubscriptions={() => setShowSubscriptions(true)}
-              />
-            ))}
-          {isOwner && currentTab === "rss" && <RssManagementTab userId={targetId as number} />}
-          {isOwner && currentTab === "settings" && (
-            <ProfileEditTab userId={targetId as number} email={userInfo.email ?? ""} />
-          )}
+          <div className="flex-1 min-w-0 px-4 py-8 md:px-8">
+            {currentTab === "mypage" &&
+              (showSubscriptions ? (
+                <SubscriptionManagementTab
+                  userId={targetId as number}
+                  isOwner={isOwner}
+                  onBack={() => setShowSubscriptions(false)}
+                />
+              ) : (
+                <MyPage
+                  userId={targetId as number}
+                  name={isOwner ? (userInfo.userName ?? "") : ""}
+                  email={isOwner ? (userInfo.email ?? "") : ""}
+                  isOwner={isOwner}
+                  onShowSubscriptions={() => setShowSubscriptions(true)}
+                />
+              ))}
+            {isOwner && currentTab === "rss" && <RssManagementTab userId={targetId as number} />}
+            {isOwner && currentTab === "settings" && (
+              <ProfileEditTab userId={targetId as number} email={userInfo.email ?? ""} />
+            )}
+          </div>
         </div>
-      </div>
-    </Layout>
+      </Layout>
+      <Footer />
+    </>
   );
 }

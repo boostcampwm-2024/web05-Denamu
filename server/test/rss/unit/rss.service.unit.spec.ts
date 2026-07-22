@@ -12,6 +12,8 @@ import { AdminRepository } from '@admin/repository/admin.repository';
 
 import { FeedRepository } from '@feed/repository/feed.repository';
 
+import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
+
 import { EmailProducer } from '@common/email/email.producer';
 import { WinstonLoggerService } from '@common/logger/logger.service';
 import { NotifierRegistry } from '@common/notification/notifier-registry';
@@ -42,7 +44,18 @@ describe(`${RssService.name} Unit Test`, () => {
   >;
   let rssRejectRepository: jest.Mocked<Pick<RssRejectRepository, 'find'>>;
   let feedRepository: jest.Mocked<
-    Pick<FeedRepository, 'getFeedsByBlog' | 'setVisibilityForBlog'>
+    Pick<
+      FeedRepository,
+      | 'getFeedsByBlog'
+      | 'setVisibilityForBlog'
+      | 'countPublicFeedsByBlogIds'
+      | 'getLatestPublicFeedDate'
+      | 'findPublishActivityByBlogAndYear'
+      | 'findPublishYearsByBlogId'
+    >
+  >;
+  let subscriptionRepository: jest.Mocked<
+    Pick<SubscriptionRepository, 'countByBlogIds' | 'getSubscribedBlogIds'>
   >;
   let emailProducer: jest.Mocked<
     Pick<
@@ -80,6 +93,14 @@ describe(`${RssService.name} Unit Test`, () => {
     feedRepository = {
       getFeedsByBlog: jest.fn(),
       setVisibilityForBlog: jest.fn().mockResolvedValue(1),
+      countPublicFeedsByBlogIds: jest.fn().mockResolvedValue(new Map()),
+      getLatestPublicFeedDate: jest.fn().mockResolvedValue(null),
+      findPublishActivityByBlogAndYear: jest.fn().mockResolvedValue([]),
+      findPublishYearsByBlogId: jest.fn().mockResolvedValue([]),
+    };
+    subscriptionRepository = {
+      countByBlogIds: jest.fn().mockResolvedValue(new Map()),
+      getSubscribedBlogIds: jest.fn().mockResolvedValue([]),
     };
     emailProducer = {
       produceRssRegistration: jest.fn(),
@@ -106,6 +127,7 @@ describe(`${RssService.name} Unit Test`, () => {
       rssAcceptRepository as unknown as RssAcceptRepository,
       rssRejectRepository as unknown as RssRejectRepository,
       feedRepository as unknown as FeedRepository,
+      subscriptionRepository as unknown as SubscriptionRepository,
       emailProducer as unknown as EmailProducer,
       dataSource as unknown as DataSource,
       redisService as unknown as RedisService,
@@ -658,6 +680,218 @@ describe(`${RssService.name} Unit Test`, () => {
       await rssService.setFeedVisibility(user, 1, 5, false);
 
       expect(feedRepository.setVisibilityForBlog).toHaveBeenCalledWith(5, 1, false);
+    });
+  });
+
+  describe('getRssInfo', () => {
+    it('RSS가 없으면 NotFoundException을 던진다.', async () => {
+      rssAcceptRepository.findOne.mockResolvedValue(null);
+
+      await expect(rssService.getRssInfo(1)).rejects.toThrow(NotFoundException);
+    });
+
+    it('소유자 없는 RSS는 owner=null, isOwner=false로 반환한다.', async () => {
+      // given
+      rssAcceptRepository.findOne.mockResolvedValue({
+        id: 1,
+        name: 'blog',
+        userName: '작성자',
+        rssUrl: 'https://blog.test/rss',
+        blogPlatform: 'etc',
+        userId: null,
+        user: null,
+      } as any);
+      feedRepository.countPublicFeedsByBlogIds.mockResolvedValue(
+        new Map([[1, 5]]),
+      );
+      subscriptionRepository.countByBlogIds.mockResolvedValue(new Map([[1, 2]]));
+      const latest = new Date('2025-01-02T00:00:00.000Z');
+      feedRepository.getLatestPublicFeedDate.mockResolvedValue(latest);
+
+      // when
+      const result = await rssService.getRssInfo(1);
+
+      // then
+      expect(rssAcceptRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 1 },
+        relations: { user: true },
+      });
+      expect(result.owner).toBeNull();
+      expect(result.isOwner).toBe(false);
+      expect(result.isSubscribed).toBe(false);
+      expect(result.feedCount).toBe(5);
+      expect(result.subscriberCount).toBe(2);
+      expect(result.lastPublishedAt).toBe(latest);
+    });
+
+    it('소유자 있는 RSS는 owner 정보를 포함하고 viewer가 소유자면 isOwner=true.', async () => {
+      // given
+      rssAcceptRepository.findOne.mockResolvedValue({
+        id: 1,
+        name: 'blog',
+        userName: '작성자',
+        rssUrl: 'https://blog.test/rss',
+        blogPlatform: 'velog',
+        userId: 10,
+        user: { id: 10, userName: '김개발', profileImage: 'img.png' },
+      } as any);
+      feedRepository.countPublicFeedsByBlogIds.mockResolvedValue(new Map());
+      subscriptionRepository.countByBlogIds.mockResolvedValue(new Map());
+      feedRepository.getLatestPublicFeedDate.mockResolvedValue(null);
+      subscriptionRepository.getSubscribedBlogIds.mockResolvedValue([1]);
+
+      // when
+      const result = await rssService.getRssInfo(1, 10);
+
+      // then
+      expect(result.owner).toEqual({
+        id: 10,
+        userName: '김개발',
+        profileImage: 'img.png',
+      });
+      expect(result.isOwner).toBe(true);
+      expect(result.isSubscribed).toBe(true);
+    });
+
+    it('viewer가 소유자가 아니면 isOwner=false, 구독 여부를 반영한다.', async () => {
+      rssAcceptRepository.findOne.mockResolvedValue({
+        id: 1,
+        userId: 10,
+        user: { id: 10, userName: '김개발', profileImage: null },
+      } as any);
+      feedRepository.countPublicFeedsByBlogIds.mockResolvedValue(new Map());
+      subscriptionRepository.countByBlogIds.mockResolvedValue(new Map());
+      feedRepository.getLatestPublicFeedDate.mockResolvedValue(null);
+      subscriptionRepository.getSubscribedBlogIds.mockResolvedValue([99]);
+
+      const result = await rssService.getRssInfo(1, 20);
+
+      expect(result.isOwner).toBe(false);
+      expect(result.isSubscribed).toBe(false);
+      expect(result.owner?.profileImage).toBeNull();
+    });
+  });
+
+  describe('getRssFeeds', () => {
+    const makeFeed = (id: number) =>
+      ({
+        id,
+        title: `t${id}`,
+        path: `p${id}`,
+        thumbnail: `th${id}`,
+        createdAt: new Date(),
+        commentCount: id,
+        likeCount: id,
+      }) as any;
+
+    it('RSS가 없으면 NotFoundException을 던진다.', async () => {
+      rssAcceptRepository.findOne.mockResolvedValue(null);
+
+      await expect(
+        rssService.getRssFeeds(1, { limit: 10 }),
+      ).rejects.toThrow(NotFoundException);
+      expect(feedRepository.getFeedsByBlog).not.toHaveBeenCalled();
+    });
+
+    it('공개 게시글만 커서로 조회하고 썸네일을 포함한다(onlyPublic=true).', async () => {
+      rssAcceptRepository.findOne.mockResolvedValue({ id: 1 } as any);
+      feedRepository.getFeedsByBlog.mockResolvedValue([
+        makeFeed(10),
+        makeFeed(9),
+        makeFeed(8),
+      ]);
+
+      const result = await rssService.getRssFeeds(1, { lastId: 11, limit: 2 });
+
+      expect(feedRepository.getFeedsByBlog).toHaveBeenCalledWith(
+        1,
+        11,
+        2,
+        true,
+        undefined,
+      );
+      expect(result.result).toHaveLength(2);
+      expect(result.hasMore).toBe(true);
+      expect(result.lastId).toBe(9);
+      expect(result.result[0].thumbnail).toBe('th10');
+    });
+
+    it('date를 넘기면 해당 날짜 필터를 저장소에 전달한다.', async () => {
+      rssAcceptRepository.findOne.mockResolvedValue({ id: 1 } as any);
+      feedRepository.getFeedsByBlog.mockResolvedValue([makeFeed(10)]);
+
+      await rssService.getRssFeeds(1, { limit: 10, date: '2025-01-15' });
+
+      expect(feedRepository.getFeedsByBlog).toHaveBeenCalledWith(
+        1,
+        undefined,
+        10,
+        true,
+        '2025-01-15',
+      );
+    });
+
+    it('조회 결과가 없으면 lastId=0, hasMore=false로 반환한다.', async () => {
+      rssAcceptRepository.findOne.mockResolvedValue({ id: 1 } as any);
+      feedRepository.getFeedsByBlog.mockResolvedValue([]);
+
+      const result = await rssService.getRssFeeds(1, { limit: 10 });
+
+      expect(result.result).toHaveLength(0);
+      expect(result.lastId).toBe(0);
+      expect(result.hasMore).toBe(false);
+    });
+  });
+
+  describe('getRssActivities', () => {
+    it('RSS가 없으면 NotFoundException을 던진다.', async () => {
+      rssAcceptRepository.findOne.mockResolvedValue(null);
+
+      await expect(rssService.getRssActivities(1, 2025)).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(
+        feedRepository.findPublishActivityByBlogAndYear,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('일별 발행 건수를 viewCount로 매핑해 반환한다.', async () => {
+      rssAcceptRepository.findOne.mockResolvedValue({ id: 1 } as any);
+      feedRepository.findPublishActivityByBlogAndYear.mockResolvedValue([
+        { date: '2025-01-05', count: 2 },
+        { date: '2025-03-01', count: 5 },
+      ]);
+
+      const result = await rssService.getRssActivities(1, 2025);
+
+      expect(
+        feedRepository.findPublishActivityByBlogAndYear,
+      ).toHaveBeenCalledWith(1, 2025);
+      expect(result.dailyActivities).toEqual([
+        { date: '2025-01-05', viewCount: 2 },
+        { date: '2025-03-01', viewCount: 5 },
+      ]);
+    });
+  });
+
+  describe('getRssActivityYears', () => {
+    it('RSS가 없으면 NotFoundException을 던진다.', async () => {
+      rssAcceptRepository.findOne.mockResolvedValue(null);
+
+      await expect(rssService.getRssActivityYears(1)).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(feedRepository.findPublishYearsByBlogId).not.toHaveBeenCalled();
+    });
+
+    it('발행 이력이 있는 연도 목록을 반환한다.', async () => {
+      rssAcceptRepository.findOne.mockResolvedValue({ id: 1 } as any);
+      feedRepository.findPublishYearsByBlogId.mockResolvedValue([2025, 2024]);
+
+      const result = await rssService.getRssActivityYears(1);
+
+      expect(feedRepository.findPublishYearsByBlogId).toHaveBeenCalledWith(1);
+      expect(result).toEqual([2025, 2024]);
     });
   });
 

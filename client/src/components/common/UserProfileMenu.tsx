@@ -13,21 +13,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { useCustomToast } from "@/hooks/common/useCustomToast";
-
 import { useAuthStore } from "@/store/useAuthStore";
 
 export const UserProfileMenu = () => {
   const { isAuthenticated, userInfo, logout } = useAuthStore();
   const navigate = useNavigate();
-  const { toast } = useCustomToast();
 
-  const handleLogout = () => {
-    logout();
-    toast({
-      title: "로그아웃 성공",
-      description: "성공적으로 로그아웃되었습니다.",
-    });
+  const handleLogout = async () => {
+    await logout();
+    window.location.reload();
   };
 
   const handleProfileClick = () => {
