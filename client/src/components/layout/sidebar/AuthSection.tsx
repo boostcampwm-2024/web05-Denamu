@@ -29,13 +29,10 @@ export const AuthSection = ({ onAction }: AuthSectionProps) => {
     onAction();
   };
 
-  const handleLogout = () => {
-    logout();
-    toast({
-      title: "로그아웃 성공",
-      description: "성공적으로 로그아웃되었습니다.",
-    });
-    onAction();
+  const handleLogout = async () => {
+    await logout();
+    // 로그인 상태 기준으로 캐시된 데이터(React Query 등)를 모두 초기화하기 위해 새로고침
+    window.location.reload();
   };
 
   if (isAuthenticated) {

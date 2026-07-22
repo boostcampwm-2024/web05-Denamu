@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { lucideProxy } from "@/__tests__/__mocks__/external/lucide-proxy.tsx";
 import { AuthSection } from "@/components/layout/sidebar/AuthSection.tsx";
 
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 const mockNavigate = vi.fn();
 const mockToast = vi.fn();
@@ -70,15 +70,18 @@ describe("AuthSection", () => {
     expect(onAction).toHaveBeenCalledTimes(1);
   });
 
-  it("로그아웃 클릭 시 logout과 toast, onAction을 호출해야 한다", () => {
+  it("로그아웃 클릭 시 logout 후 페이지를 새로고침해야 한다", async () => {
+    const reloadMock = vi.fn();
+    Object.defineProperty(window, "location", {
+      value: { ...window.location, reload: reloadMock },
+      writable: true,
+    });
     authState.isAuthenticated = true;
-    const onAction = vi.fn();
-    render(<AuthSection onAction={onAction} />);
+    render(<AuthSection onAction={vi.fn()} />);
 
     fireEvent.click(screen.getByRole("button", { name: /로그아웃/ }));
 
     expect(logout).toHaveBeenCalledTimes(1);
-    expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: "로그아웃 성공" }));
-    expect(onAction).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(reloadMock).toHaveBeenCalledTimes(1));
   });
 });
