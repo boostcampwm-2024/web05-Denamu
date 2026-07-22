@@ -23,6 +23,7 @@ export class User extends BaseEntity {
     name: 'email',
     length: 255,
     nullable: false,
+    unique: true,
   })
   email: string;
 
