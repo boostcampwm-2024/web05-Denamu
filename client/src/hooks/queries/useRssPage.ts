@@ -8,10 +8,10 @@ export const useRssInfo = (rssId: number) =>
     enabled: !!rssId,
   });
 
-export const useRssPageFeeds = (rssId: number) =>
+export const useRssPageFeeds = (rssId: number, date?: string) =>
   useInfiniteQuery({
-    queryKey: ["rssPageFeeds", rssId],
-    queryFn: ({ pageParam }) => getRssPageFeeds(rssId, pageParam),
+    queryKey: ["rssPageFeeds", rssId, date ?? null],
+    queryFn: ({ pageParam }) => getRssPageFeeds(rssId, pageParam, 10, date),
     initialPageParam: undefined as number | undefined,
     getNextPageParam: (lastPage) => (lastPage.hasMore ? lastPage.lastId : undefined),
     enabled: !!rssId,

@@ -26,10 +26,11 @@ export const getRssInfo = async (rssId: number): Promise<RssInfo> => {
 export const getRssPageFeeds = async (
   rssId: number,
   lastId?: number,
-  limit = 10
+  limit = 10,
+  date?: string
 ): Promise<CursorPage<RssFeedItem>> => {
   const response = await axiosInstance.get<ApiData<CursorPage<RssFeedItem>>>(BLOG.RSS.FEEDS(rssId), {
-    params: { lastId, limit },
+    params: { lastId, limit, date },
   });
   return response.data.data;
 };

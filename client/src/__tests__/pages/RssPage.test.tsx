@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { lucideProxy } from "@/__tests__/__mocks__/external/lucide-proxy.tsx";
 
 import { RssInfo } from "@/types/profile.ts";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 
 let rssInfoState: { data: RssInfo | undefined; isLoading: boolean; isError: boolean };
 
@@ -25,22 +25,39 @@ vi.mock("@/components/layout/Layout", () => ({
   default: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
 
-vi.mock("@/hooks/queries/useRssPage.ts", () => ({
-  useRssInfo: () => rssInfoState,
-  useRssPageFeeds: () => ({
+const useRssPageFeedsMock = vi.hoisted(() =>
+  vi.fn((_rssId: number, _date?: string) => ({
     data: { pages: [{ result: [] }] },
     isLoading: false,
     isError: false,
     hasNextPage: false,
     fetchNextPage: vi.fn(),
     isFetchingNextPage: false,
-  }),
+  }))
+);
+
+vi.mock("@/hooks/queries/useRssPage.ts", () => ({
+  useRssInfo: () => rssInfoState,
+  useRssPageFeeds: (rssId: number, date?: string) => useRssPageFeedsMock(rssId, date),
   useRssActivities: () => ({ data: { dailyActivities: [] } }),
   useRssActivityYears: () => ({ data: [] }),
 }));
 
 vi.mock("@/components/profile/header/ui/ActivityGraph/ActivityGraph.tsx", () => ({
-  ActivityGraph: ({ unit }: { unit?: string }) => <div data-testid="activity-graph">{unit}</div>,
+  ActivityGraph: ({
+    scale,
+    onDayClick,
+  }: {
+    scale?: string;
+    onDayClick?: (dateStr: string) => void;
+  }) => (
+    <div data-testid="activity-graph">
+      {scale}
+      <button data-testid="day-cell" onClick={() => onDayClick?.("2025-01-15")}>
+        cell
+      </button>
+    </div>
+  ),
 }));
 
 vi.mock("@/hooks/queries/useRssCertification.ts", () => ({
@@ -95,12 +112,12 @@ describe("RssPage", () => {
     expect(screen.getByTestId("subscribe-button")).toBeInTheDocument();
   });
 
-  it("발행 활동 잔디(ActivityGraph)를 '포스트' 단위로 렌더링한다", () => {
+  it("발행 활동 잔디(ActivityGraph)를 posts 스케일로 렌더링한다", () => {
     render(<RssPage />);
 
     const graph = screen.getByTestId("activity-graph");
     expect(graph).toBeInTheDocument();
-    expect(graph).toHaveTextContent("포스트");
+    expect(graph).toHaveTextContent("posts");
   });
 
   it("소유자 있는 RSS는 인증 배지와 소유자 프로필 링크를 노출한다", () => {
@@ -133,6 +150,22 @@ describe("RssPage", () => {
     expect(screen.getByRole("button", { name: "정보 수정" })).toBeInTheDocument();
     expect(screen.getByText("포스트 공개 관리")).toBeInTheDocument();
     expect(screen.queryByTestId("subscribe-button")).not.toBeInTheDocument();
+  });
+
+  it("잔디 칸 클릭 시 해당 날짜로 포스트를 필터링하고, 재클릭 시 해제한다", () => {
+    render(<RssPage />);
+
+    expect(useRssPageFeedsMock).toHaveBeenLastCalledWith(5, undefined);
+
+    fireEvent.click(screen.getByTestId("day-cell"));
+
+    expect(useRssPageFeedsMock).toHaveBeenLastCalledWith(5, "2025-01-15");
+    expect(screen.getByText("2025-01-15 발행분")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId("day-cell"));
+
+    expect(useRssPageFeedsMock).toHaveBeenLastCalledWith(5, undefined);
+    expect(screen.queryByText("2025-01-15 발행분")).not.toBeInTheDocument();
   });
 
   it("존재하지 않는 RSS는 NotFound를 렌더링한다", () => {

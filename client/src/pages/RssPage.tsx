@@ -180,6 +180,7 @@ export default function RssPage() {
 
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState(currentYear);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const { data: rss, isLoading, isError } = useRssInfo(numericId);
   const {
@@ -189,13 +190,12 @@ export default function RssPage() {
     hasNextPage,
     fetchNextPage,
     isFetchingNextPage,
-  } = useRssPageFeeds(numericId);
+  } = useRssPageFeeds(numericId, selectedDate ?? undefined);
   const { data: activityYears = [] } = useRssActivityYears(numericId);
   const { data: activity } = useRssActivities(numericId, year);
 
   const [editOpen, setEditOpen] = useState(false);
 
-  // 현재 연도 기준 최근 5년 윈도우 중 발행 이력이 있는 연도만 노출. 올해는 기본값이라 항상 포함.
   const years = Array.from({ length: MAX_YEARS }, (_, i) => currentYear - i).filter(
     (y) => y === currentYear || activityYears.includes(y)
   );
@@ -211,6 +211,15 @@ export default function RssPage() {
   }
 
   const feeds = feedData?.pages.flatMap((page) => page.result) ?? [];
+
+  const handleYearChange = (nextYear: number) => {
+    setSelectedDate(null); // 다른 연도로 이동하면 선택한 잔디 칸이 사라지므로 필터 해제
+    setYear(nextYear);
+  };
+
+  const handleDayClick = (dateStr: string) => {
+    setSelectedDate((prev) => (prev === dateStr ? null : dateStr));
+  };
 
   return (
     <Layout>
@@ -237,16 +246,22 @@ export default function RssPage() {
               dailyActivities={activity?.dailyActivities ?? []}
               year={year}
               years={years}
-              onYearChange={setYear}
-              unit="포스트"
+              onYearChange={handleYearChange}
               scale="posts"
+              selectedDate={selectedDate}
+              onDayClick={handleDayClick}
             />
           </CardContent>
         </Card>
 
         <Card>
           <CardContent className="p-6">
-            <h3 className="mb-4 text-lg font-semibold">포스트</h3>
+            <h3 className="mb-4 text-lg font-semibold">
+              포스트
+              {selectedDate && (
+                <span className="ml-2 text-sm font-normal text-gray-500">{selectedDate} 발행분</span>
+              )}
+            </h3>
             {feedsLoading && <p className="text-sm text-gray-400">포스트를 불러오는 중...</p>}
             {feedsError && <p className="text-sm text-red-500">포스트를 불러오지 못했습니다.</p>}
             {!feedsLoading && !feedsError && feeds.length === 0 && (
