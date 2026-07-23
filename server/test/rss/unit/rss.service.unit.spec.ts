@@ -692,8 +692,20 @@ describe(`${RssService.name} Unit Test`, () => {
       // given
       const lastPublishedAt = new Date('2025-12-10T00:00:00.000Z');
       rssAcceptRepository.findRecentlyPublished.mockResolvedValue([
-        { id: 1, name: 'blogA', blogPlatform: 'velog', lastPublishedAt },
-        { id: 2, name: 'blogB', blogPlatform: 'tistory', lastPublishedAt },
+        {
+          id: 1,
+          name: 'blogA',
+          blogPlatform: 'velog',
+          lastPublishedAt,
+          latestFeedId: '11',
+        },
+        {
+          id: 2,
+          name: 'blogB',
+          blogPlatform: 'tistory',
+          lastPublishedAt,
+          latestFeedId: '22',
+        },
       ]);
 
       // when
@@ -704,8 +716,20 @@ describe(`${RssService.name} Unit Test`, () => {
         10,
       );
       expect(result).toEqual([
-        { id: 1, name: 'blogA', blogPlatform: 'velog', lastPublishedAt },
-        { id: 2, name: 'blogB', blogPlatform: 'tistory', lastPublishedAt },
+        {
+          id: 1,
+          name: 'blogA',
+          blogPlatform: 'velog',
+          lastPublishedAt,
+          latestFeedId: 11,
+        },
+        {
+          id: 2,
+          name: 'blogB',
+          blogPlatform: 'tistory',
+          lastPublishedAt,
+          latestFeedId: 22,
+        },
       ]);
     });
 

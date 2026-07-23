@@ -32,16 +32,20 @@ describe(`GET ${URL} E2E Test`, () => {
     const rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
-    await feedRepository.save(
+    const feed = await feedRepository.save(
       FeedFixture.createFeedFixture(rssAccept, { createdAt, isPublic }),
     );
-    return rssAccept;
+    return { rssAccept, feed };
   };
 
   it('[200] 최신 공개 게시글 발행 순서대로 RSS 목록을 반환한다.', async () => {
     // given
-    const oldRss = await createRssWithFeed(new Date('2025-12-01'));
-    const newRss = await createRssWithFeed(new Date('2025-12-10'));
+    const { rssAccept: oldRss } = await createRssWithFeed(
+      new Date('2025-12-01'),
+    );
+    const { rssAccept: newRss, feed: newFeed } = await createRssWithFeed(
+      new Date('2025-12-10'),
+    );
 
     // when
     const response = await agent.get(URL);
@@ -56,12 +60,44 @@ describe(`GET ${URL} E2E Test`, () => {
       name: newRss.name,
       blogPlatform: newRss.blogPlatform,
       lastPublishedAt: expect.any(String),
+      latestFeedId: newFeed.id,
     });
+  });
+
+  it('[200] 게시글이 여러 개면 가장 최근 공개 게시글의 Feed ID를 반환한다.', async () => {
+    // given
+    const { rssAccept, feed: oldFeed } = await createRssWithFeed(
+      new Date('2025-12-01'),
+    );
+    const latestFeed = await feedRepository.save(
+      FeedFixture.createFeedFixture(rssAccept, {
+        createdAt: new Date('2025-12-10'),
+      }),
+    );
+    await feedRepository.save(
+      FeedFixture.createFeedFixture(rssAccept, {
+        createdAt: new Date('2025-12-15'),
+        isPublic: false,
+      }),
+    );
+
+    // when
+    const response = await agent.get(URL);
+
+    // then
+    expect(response.status).toBe(HttpStatus.OK);
+    const { data }: { data: GetRecentRssResponseDto[] } = response.body;
+    const target = data.find((rss) => rss.id === rssAccept.id);
+    expect(target.latestFeedId).toBe(latestFeed.id);
+    expect(target.latestFeedId).not.toBe(oldFeed.id);
   });
 
   it('[200] 비공개 게시글만 있는 RSS는 목록에 포함하지 않는다.', async () => {
     // given
-    const privateRss = await createRssWithFeed(new Date('2025-12-10'), false);
+    const { rssAccept: privateRss } = await createRssWithFeed(
+      new Date('2025-12-10'),
+      false,
+    );
 
     // when
     const response = await agent.get(URL);
