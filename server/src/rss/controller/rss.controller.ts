@@ -258,12 +258,13 @@ export class RssController {
   }
 
   @ApiGetRecentRss()
+  @UseGuards(OptionalJwtGuard)
   @Get('recent')
   @HttpCode(HttpStatus.OK)
-  async getRecentRss() {
+  async getRecentRss(@CurrentUser() viewer: Payload | null) {
     return ApiResponse.responseWithData(
       '최근 발행 RSS 목록 조회를 처리했습니다.',
-      await this.rssService.getRecentRss(),
+      await this.rssService.getRecentRss(viewer?.id),
     );
   }
 

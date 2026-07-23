@@ -10,7 +10,14 @@ import * as uuid from 'uuid';
 import axios from 'axios';
 import { DataSource, IsNull } from 'typeorm';
 
+import {
+  DailyActivityDto,
+  ReadActivityResponseDto,
+} from '@activity/dto/response/readActivity.dto';
+
 import { AdminRepository } from '@admin/repository/admin.repository';
+
+import { RssBlockRepository } from '@block/repository/rssBlock.repository';
 
 import { EmailProducer } from '@common/email/email.producer';
 import { Payload } from '@common/guard/jwt.guard';
@@ -19,17 +26,19 @@ import { NotifierRegistry } from '@common/notification/notifier-registry';
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
 
+import { FeedRepository } from '@feed/repository/feed.repository';
+
 import { DeleteCertificateRssRequestDto } from '@rss/dto/request/deleteCertificateRss.dto';
 import { DeleteRssRequestDto } from '@rss/dto/request/deleteRss.dto';
+import { GetOwnedRssFeedsRequestDto } from '@rss/dto/request/getOwnedRssFeeds.dto';
+import { GetRssFeedsRequestDto } from '@rss/dto/request/getRssFeeds.dto';
 import { ManageRssRequestDto } from '@rss/dto/request/manageRss.dto';
 import { RegisterRssRequestDto } from '@rss/dto/request/registerRss.dto';
 import { RejectRssRequestDto } from '@rss/dto/request/rejectRss';
-import { GetOwnedRssFeedsRequestDto } from '@rss/dto/request/getOwnedRssFeeds.dto';
-import { GetRssFeedsRequestDto } from '@rss/dto/request/getRssFeeds.dto';
 import { CreateRssCertificationResponseDto } from '@rss/dto/response/createRssCertification.dto';
 import { GetOwnedRssFeedsResponseDto } from '@rss/dto/response/getOwnedRssFeeds.dto';
-import { GetRssFeedsResponseDto } from '@rss/dto/response/getRssFeeds.dto';
 import { GetRecentRssResponseDto } from '@rss/dto/response/getRecentRss.dto';
+import { GetRssFeedsResponseDto } from '@rss/dto/response/getRssFeeds.dto';
 import { GetRssInfoResponseDto } from '@rss/dto/response/getRssInfo.dto';
 import { PreviewRssCertificationResponseDto } from '@rss/dto/response/previewRssCertification.dto';
 import { ReadRssResponseDto } from '@rss/dto/response/readRss.dto';
@@ -41,13 +50,6 @@ import {
   RssRejectRepository,
   RssRepository,
 } from '@rss/repository/rss.repository';
-
-import {
-  DailyActivityDto,
-  ReadActivityResponseDto,
-} from '@activity/dto/response/readActivity.dto';
-
-import { FeedRepository } from '@feed/repository/feed.repository';
 
 import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
 
@@ -73,6 +75,7 @@ export class RssService {
     private readonly adminRepository: AdminRepository,
     private readonly notifierRegistry: NotifierRegistry,
     private readonly logger: WinstonLoggerService,
+    private readonly rssBlockRepository: RssBlockRepository,
   ) {}
 
   async createRss(rssRegisterBodyDto: RegisterRssRequestDto) {
@@ -306,11 +309,14 @@ export class RssService {
     }
   }
 
-  async getRecentRss() {
+  async getRecentRss(viewerId?: number) {
     const recentRssList = await this.rssAcceptRepository.findRecentlyPublished(
       RssService.RECENT_RSS_LIMIT,
+      viewerId,
     );
-    return recentRssList.map((row) => GetRecentRssResponseDto.toResponseDto(row));
+    return recentRssList.map((row) =>
+      GetRecentRssResponseDto.toResponseDto(row),
+    );
   }
 
   async getRssInfo(rssId: number, viewerId?: number) {
@@ -331,10 +337,15 @@ export class RssService {
       ]);
 
     let isSubscribed = false;
+    let isBlocked = false;
     if (viewerId) {
       const viewerBlogIds =
         await this.subscriptionRepository.getSubscribedBlogIds(viewerId);
       isSubscribed = viewerBlogIds.includes(rssId);
+      isBlocked = await this.rssBlockRepository.existsByBlockerAndRss(
+        viewerId,
+        rssId,
+      );
     }
 
     const isOwner = viewerId != null && rssAccept.userId === viewerId;
@@ -346,6 +357,7 @@ export class RssService {
       isSubscribed,
       isOwner,
       lastPublishedAt,
+      isBlocked,
     );
   }
 
@@ -551,7 +563,10 @@ export class RssService {
       throw new ForbiddenException('본인이 인증한 RSS가 아닙니다.');
     }
 
-    await this.rssAcceptRepository.update({ id: rssAcceptId }, { userId: null });
+    await this.rssAcceptRepository.update(
+      { id: rssAcceptId },
+      { userId: null },
+    );
   }
 
   private async assertRssOwnership(rssAcceptId: number, userId: number) {
