@@ -7,7 +7,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 
 const mockNavigate = vi.fn();
 let params: { id?: string };
-let detail: { data: { title: string } } | undefined;
+let detail: { data: { title: string; isBlocked?: boolean } } | undefined;
 let isHeaderVisible: boolean;
 
 vi.mock("lucide-react", () => lucideProxy());
@@ -80,5 +80,14 @@ describe("PostDetail", () => {
     render(<PostDetail />);
 
     expect(screen.getByTestId("fixed-header")).toBeInTheDocument();
+  });
+
+  it("차단된 RSS의 게시글이면 차단 안내를 렌더링하고 본문은 숨겨야 한다", () => {
+    detail = { data: { title: "상세 제목", isBlocked: true } };
+    render(<PostDetail />);
+
+    expect(screen.getByText("차단된 RSS의 게시글입니다.")).toBeInTheDocument();
+    expect(screen.queryByTestId("post-header")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("post-content")).not.toBeInTheDocument();
   });
 });

@@ -26,7 +26,7 @@ vi.mock("@/components/layout/Layout", () => ({
 }));
 
 const useRssPageFeedsMock = vi.hoisted(() =>
-  vi.fn((_rssId: number, _date?: string) => ({
+  vi.fn<(rssId: number, date?: string) => object>(() => ({
     data: { pages: [{ result: [] }] },
     isLoading: false,
     isError: false,
@@ -60,6 +60,14 @@ vi.mock("@/components/profile/header/ui/ActivityGraph/ActivityGraph.tsx", () => 
   ),
 }));
 
+const blockRssMock = vi.hoisted(() => vi.fn());
+const unblockRssMock = vi.hoisted(() => vi.fn());
+
+vi.mock("@/hooks/queries/useBlock.ts", () => ({
+  useBlockRss: () => ({ mutate: blockRssMock, isPending: false }),
+  useUnblockRss: () => ({ mutate: unblockRssMock, isPending: false }),
+}));
+
 vi.mock("@/hooks/queries/useRssCertification.ts", () => ({
   useOwnedRssFeeds: () => ({
     data: { pages: [{ result: [] }] },
@@ -84,6 +92,8 @@ vi.mock("@/components/profile/rss/RssEditModal.tsx", () => ({
 
 import RssPage from "@/pages/RssPage.tsx";
 
+import { useAuthStore } from "@/store/useAuthStore";
+
 const baseRss: RssInfo = {
   id: 5,
   name: "데나무 블로그",
@@ -96,11 +106,13 @@ const baseRss: RssInfo = {
   isOwner: false,
   lastPublishedAt: "2025-01-10T00:00:00Z",
   owner: null,
+  isBlocked: false,
 };
 
 describe("RssPage", () => {
   beforeEach(() => {
     rssInfoState = { data: baseRss, isLoading: false, isError: false };
+    useAuthStore.setState({ isAuthenticated: false });
   });
 
   it("소유자 없는 RSS는 인증 배지와 소유자 카드를 노출하지 않는다", () => {
@@ -174,5 +186,49 @@ describe("RssPage", () => {
     render(<RssPage />);
 
     expect(screen.queryByText("데나무 블로그")).not.toBeInTheDocument();
+  });
+
+  it("로그인한 비소유자에게는 더보기(차단) 버튼을 노출한다", () => {
+    useAuthStore.setState({ isAuthenticated: true });
+
+    render(<RssPage />);
+
+    expect(screen.getByRole("button", { name: "더보기" })).toBeInTheDocument();
+  });
+
+  it("비로그인 사용자에게는 더보기 버튼을 노출하지 않는다", () => {
+    render(<RssPage />);
+
+    expect(screen.queryByRole("button", { name: "더보기" })).not.toBeInTheDocument();
+  });
+
+  it("본인 소유 RSS에는 더보기 버튼을 노출하지 않는다", () => {
+    useAuthStore.setState({ isAuthenticated: true });
+    rssInfoState = { data: { ...baseRss, isOwner: true }, isLoading: false, isError: false };
+
+    render(<RssPage />);
+
+    expect(screen.queryByRole("button", { name: "더보기" })).not.toBeInTheDocument();
+  });
+
+  it("차단된 RSS는 차단 안내 뷰를 렌더링하고 본문은 숨긴다", () => {
+    rssInfoState = { data: { ...baseRss, isBlocked: true }, isLoading: false, isError: false };
+
+    render(<RssPage />);
+
+    expect(screen.getByText("차단된 RSS입니다.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "홈으로" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "차단 해제" })).toBeInTheDocument();
+    expect(screen.queryByText("데나무 블로그")).not.toBeInTheDocument();
+  });
+
+  it("차단 안내 뷰에서 차단 해제 클릭 시 해당 rssId로 mutation을 호출한다", () => {
+    rssInfoState = { data: { ...baseRss, isBlocked: true }, isLoading: false, isError: false };
+
+    render(<RssPage />);
+
+    fireEvent.click(screen.getByRole("button", { name: "차단 해제" }));
+
+    expect(unblockRssMock).toHaveBeenCalledWith(5, expect.any(Object));
   });
 });
