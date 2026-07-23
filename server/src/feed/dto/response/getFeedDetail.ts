@@ -107,6 +107,12 @@ export class GetFeedDetailResponseDto {
   })
   isSubscribed: boolean;
 
+  @ApiProperty({
+    example: false,
+    description: '요청자가 해당 게시글의 RSS를 차단했는지 여부 (비로그인 시 false)',
+  })
+  isBlocked: boolean;
+
   constructor(partial: Partial<GetFeedDetailResponseDto>) {
     Object.assign(this, partial);
   }
@@ -116,6 +122,7 @@ export class GetFeedDetailResponseDto {
     isOwner = false,
     blogMeta: { id: number; userName: string; userId: number | null } | null = null,
     isSubscribed = false,
+    isBlocked = false,
   ) {
     return new GetFeedDetailResponseDto({
       id: feed.feedId,
@@ -135,6 +142,7 @@ export class GetFeedDetailResponseDto {
       ownerName: blogMeta?.userName ?? null,
       isOwnerCertified: blogMeta?.userId != null,
       isSubscribed,
+      isBlocked,
     });
   }
 }

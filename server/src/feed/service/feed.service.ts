@@ -12,6 +12,8 @@ import { cookieConfig } from '@common/cookie/cookie.config';
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
 
+import { RssBlockRepository } from '@block/repository/rssBlock.repository';
+
 import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
 
 import { AI_RETRY_LOCK_TTL_SECONDS } from '@feed/constant/feed.constant';
@@ -53,6 +55,7 @@ export class FeedService {
     private readonly feedViewRepository: FeedViewRepository,
     private readonly redisService: RedisService,
     private readonly subscriptionRepository: SubscriptionRepository,
+    private readonly rssBlockRepository: RssBlockRepository,
   ) {}
 
   async getFeed(feedId: number) {
@@ -116,9 +119,11 @@ export class FeedService {
 
   async readFeedPagination(
     feedPaginationQueryDto: ReadFeedPaginationRequestDto,
+    blockerId?: number,
   ) {
     const feedList = await this.feedViewRepository.findFeedPagination(
       feedPaginationQueryDto,
+      blockerId,
     );
 
     const hasMore = this.existNextFeed(feedList, feedPaginationQueryDto.limit);
@@ -173,7 +178,10 @@ export class FeedService {
     );
   }
 
-  async searchFeedList(searchFeedQueryDto: SearchFeedRequestDto) {
+  async searchFeedList(
+    searchFeedQueryDto: SearchFeedRequestDto,
+    blockerId?: number,
+  ) {
     const { find, page, limit, type } = searchFeedQueryDto;
     const offset = (page - 1) * limit;
 
@@ -182,6 +190,7 @@ export class FeedService {
       limit,
       type,
       offset,
+      blockerId,
     );
 
     const feeds = SearchFeedResult.toResultDtoArray(searchResult);
@@ -328,11 +337,20 @@ export class FeedService {
       isSubscribed = !!subscription;
     }
 
+    let isBlocked = false;
+    if (userId && blogMeta) {
+      isBlocked = await this.rssBlockRepository.existsByBlockerAndRss(
+        userId,
+        blogMeta.id,
+      );
+    }
+
     return GetFeedDetailResponseDto.toResponseDto(
       feed,
       isOwner,
       blogMeta,
       isSubscribed,
+      isBlocked,
     );
   }
 
@@ -341,10 +359,15 @@ export class FeedService {
     feedPaginationQueryDto: ReadFeedPaginationRequestDto,
   ) {
     const limit = feedPaginationQueryDto.limit ?? 12;
-    const blogIds =
-      await this.subscriptionRepository.getSubscribedBlogIds(userId);
+    const [blogIds, blockedRssIds] = await Promise.all([
+      this.subscriptionRepository.getSubscribedBlogIds(userId),
+      this.rssBlockRepository.getBlockedRssIds(userId),
+    ]);
+    const visibleBlogIds = blogIds.filter(
+      (blogId) => !blockedRssIds.includes(blogId),
+    );
     const feeds = await this.feedRepository.getSubscriptionFeeds(
-      blogIds,
+      visibleBlogIds,
       feedPaginationQueryDto.lastId ?? 0,
       limit,
     );

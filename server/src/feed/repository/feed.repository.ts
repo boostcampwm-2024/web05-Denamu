@@ -17,6 +17,7 @@ export class FeedRepository extends Repository<Feed> {
     limit: number,
     type: SearchType,
     offset: number,
+    blockerId?: number,
   ) {
     const queryBuilder = this.createQueryBuilder('feed')
       .innerJoinAndSelect('feed.blog', 'rss_accept')
@@ -27,6 +28,13 @@ export class FeedRepository extends Repository<Feed> {
       .addOrderBy('feed.createdAt', 'DESC')
       .skip(offset)
       .take(limit);
+
+    if (blockerId) {
+      queryBuilder.andWhere(
+        'feed.blog_id NOT IN (SELECT rss_block.blocked_rss_id FROM rss_blocks rss_block WHERE rss_block.blocker_id = :blockerId)',
+        { blockerId },
+      );
+    }
 
     return queryBuilder.getManyAndCount();
   }
@@ -246,6 +254,7 @@ export class FeedViewRepository extends Repository<FeedView> {
 
   async findFeedPagination(
     feedPaginationQueryDto: ReadFeedPaginationRequestDto,
+    blockerId?: number,
   ) {
     const { lastId, limit, tags } = feedPaginationQueryDto;
 
@@ -278,6 +287,13 @@ export class FeedViewRepository extends Repository<FeedView> {
           }),
         );
       }
+    }
+
+    if (blockerId) {
+      query.andWhere(
+        'id NOT IN (SELECT f.id FROM feed f INNER JOIN rss_blocks rss_block ON rss_block.blocked_rss_id = f.blog_id WHERE rss_block.blocker_id = :blockerId)',
+        { blockerId },
+      );
     }
 
     query.orderBy('order_id', 'DESC').take(limit + 1);
