@@ -78,11 +78,12 @@ export class CommentService {
     return commentObj;
   }
 
-  async get(commentDto: GetCommentRequestDto) {
+  async get(commentDto: GetCommentRequestDto, requester: Payload | null = null) {
     await this.feedService.getPublicFeed(commentDto.feedId);
 
     const comments = await this.commentRepository.getCommentInformation(
       commentDto.feedId,
+      requester?.id,
     );
     return GetCommentResponseDto.toResponseDtoArray(comments);
   }
