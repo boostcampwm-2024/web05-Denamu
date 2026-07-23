@@ -11,6 +11,8 @@ import { ActivityModule } from '@activity/module/activity.module';
 
 import { AdminModule } from '@admin/module/admin.module';
 
+import { BlockModule } from '@block/module/block.module';
+
 import { ChatModule } from '@chat/module/chat.module';
 
 import { CommentModule } from '@comment/module/comment.module';
@@ -89,6 +91,7 @@ const exists = !!chosen && fs.existsSync(chosen);
     StatisticModule,
     CommentModule,
     LikeModule,
+    BlockModule,
     SubscribeModule,
     FileModule,
     RabbitMQModule,
