@@ -3,7 +3,7 @@ import { expect, userEvent, waitFor, within } from "storybook/test";
 
 import { BlockManagementTab } from "@/components/profile/BlockManagementTab";
 import { BLOCK } from "@/constants/endpoints";
-import { mockBlockedUsers } from "@/__storybook__/fixtures";
+import { mockBlockedRss, mockBlockedUsers } from "@/__storybook__/fixtures";
 import { mockApi, ok, fail } from "@/__storybook__/mockApi";
 
 const meta = {
@@ -17,6 +17,7 @@ type Story = StoryObj<typeof meta>;
 export const WithData: Story = {
   name: "차단 목록 있음",
   beforeEach: () => {
+    mockApi.onGet(BLOCK.RSS_LIST).reply(...ok(mockBlockedRss));
     mockApi.onGet(BLOCK.LIST).reply(...ok(mockBlockedUsers));
   },
 };
@@ -24,6 +25,7 @@ export const WithData: Story = {
 export const Empty: Story = {
   name: "차단 목록 없음",
   beforeEach: () => {
+    mockApi.onGet(BLOCK.RSS_LIST).reply(...ok([]));
     mockApi.onGet(BLOCK.LIST).reply(...ok([]));
   },
 };
@@ -31,6 +33,7 @@ export const Empty: Story = {
 export const Loading: Story = {
   name: "로딩 중",
   beforeEach: () => {
+    mockApi.onGet(BLOCK.RSS_LIST).reply(() => new Promise(() => {}));
     mockApi.onGet(BLOCK.LIST).reply(() => new Promise(() => {}));
   },
 };
@@ -38,13 +41,31 @@ export const Loading: Story = {
 export const Error: Story = {
   name: "오류",
   beforeEach: () => {
+    mockApi.onGet(BLOCK.RSS_LIST).reply(...fail());
     mockApi.onGet(BLOCK.LIST).reply(...fail());
+  },
+};
+
+export const RssTab: Story = {
+  name: "RSS 차단 목록",
+  beforeEach: () => {
+    mockApi.onGet(BLOCK.RSS_LIST).reply(...ok(mockBlockedRss));
+    mockApi.onGet(BLOCK.LIST).reply(...ok([]));
+    mockApi.onDelete(`${BLOCK.RSS_LIST}/${mockBlockedRss[0].rssId}`).reply(...ok(null));
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(await canvas.findByRole("tab", { name: "RSS" }));
+    await expect(await canvas.findByText(mockBlockedRss[0].name)).toBeInTheDocument();
+    await userEvent.click(await canvas.findByRole("button", { name: "차단 해제" }));
+    await waitFor(() => expect(mockApi.history.delete).toHaveLength(1));
   },
 };
 
 export const Unblock: Story = {
   name: "차단 해제 클릭",
   beforeEach: () => {
+    mockApi.onGet(BLOCK.RSS_LIST).reply(...ok([]));
     mockApi.onGet(BLOCK.LIST).reply(...ok(mockBlockedUsers));
     mockApi.onDelete(BLOCK.MANAGE(mockBlockedUsers[0].userId)).reply(...ok(null));
   },

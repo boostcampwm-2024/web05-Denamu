@@ -46,6 +46,13 @@ export interface BlockedUser {
   blockedAt: string;
 }
 
+export interface BlockedRss {
+  rssId: number;
+  name: string;
+  blogPlatform: string;
+  blockedAt: string;
+}
+
 export interface ProfileActivity {
   dailyActivities: DailyActivity[];
 }
@@ -138,6 +145,7 @@ export interface RssInfo {
   isOwner: boolean;
   lastPublishedAt: string | null;
   owner: RssOwner | null;
+  isBlocked: boolean;
 }
 
 export interface OwnedRssFeedItem extends RssFeedItem {
