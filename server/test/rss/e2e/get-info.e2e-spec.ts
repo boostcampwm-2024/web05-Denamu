@@ -3,6 +3,8 @@ import { HttpStatus } from '@nestjs/common';
 import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 
+import { RssBlockRepository } from '@block/repository/rssBlock.repository';
+
 import { FeedRepository } from '@feed/repository/feed.repository';
 
 import { GetRssInfoResponseDto } from '@rss/dto/response/getRssInfo.dto';
@@ -134,5 +136,46 @@ describe(`GET /api/rss/:rssId E2E Test`, () => {
     const { data }: { data: GetRssInfoResponseDto } = response.body;
     expect(data.isSubscribed).toBe(true);
     expect(data.subscriberCount).toBe(1);
+  });
+
+  it('[200] 차단한 사용자가 조회하면 isBlocked=true를 반환한다.', async () => {
+    // given
+    const rssBlockRepository = testApp.get(RssBlockRepository);
+    const viewer = await userRepository.save(
+      await UserFixture.createUserCryptFixture(),
+    );
+    const rssAccept: RssAccept = await rssAcceptRepository.save(
+      RssAcceptFixture.createRssAcceptFixture(),
+    );
+    await rssBlockRepository.save({
+      blocker: { id: viewer.id },
+      blockedRss: { id: rssAccept.id },
+    });
+    const accessToken = createAccessToken(viewer);
+
+    // when
+    const response = await agent
+      .get(makeURL(rssAccept.id))
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    // then
+    expect(response.status).toBe(HttpStatus.OK);
+    const { data }: { data: GetRssInfoResponseDto } = response.body;
+    expect(data.isBlocked).toBe(true);
+  });
+
+  it('[200] 차단하지 않았거나 비로그인으로 조회하면 isBlocked=false를 반환한다.', async () => {
+    // given
+    const rssAccept: RssAccept = await rssAcceptRepository.save(
+      RssAcceptFixture.createRssAcceptFixture(),
+    );
+
+    // when - 비로그인
+    const response = await agent.get(makeURL(rssAccept.id));
+
+    // then
+    expect(response.status).toBe(HttpStatus.OK);
+    const { data }: { data: GetRssInfoResponseDto } = response.body;
+    expect(data.isBlocked).toBe(false);
   });
 });
