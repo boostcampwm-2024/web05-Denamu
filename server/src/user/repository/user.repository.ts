@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 
 import { DataSource, Repository } from 'typeorm';
 
+import { Block } from '@block/entity/block.entity';
+
 import { User } from '@user/entity/user.entity';
 
 @Injectable()
@@ -10,17 +12,39 @@ export class UserRepository extends Repository<User> {
     super(User, dataSource.createEntityManager());
   }
 
-  async searchUserList(find: string, limit: number, offset: number) {
+  async searchUserList(
+    find: string,
+    limit: number,
+    offset: number,
+    blockerId?: number,
+  ) {
     const escaped = find.replace(/[\\%_]/g, (char) => `\\${char}`);
 
-    return this.createQueryBuilder('user')
+    const query = this.createQueryBuilder('user')
       .where('user.userName LIKE :pattern', { pattern: `%${escaped}%` })
       .orderBy('user.userName = :find', 'DESC')
       .addOrderBy('user.userName LIKE :prefix', 'DESC')
       .addOrderBy('user.userName', 'ASC')
       .setParameters({ find, prefix: `${escaped}%` })
       .skip(offset)
-      .take(limit)
-      .getManyAndCount();
+      .take(limit);
+
+    if (blockerId) {
+      query.andWhere(
+        'user.id NOT IN (SELECT block.blocked_id FROM blocks block WHERE block.blocker_id = :blockerId)',
+        { blockerId },
+      );
+    }
+
+    return query.getManyAndCount();
+  }
+
+  async isUserBlocked(blockerId: number, blockedId: number) {
+    return await this.manager.exists(Block, {
+      where: {
+        blocker: { id: blockerId },
+        blocked: { id: blockedId },
+      },
+    });
   }
 }
