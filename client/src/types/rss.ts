@@ -46,4 +46,5 @@ export interface RecentRss {
   name: string;
   blogPlatform: string;
   lastPublishedAt: string;
+  latestFeedId: number;
 }
