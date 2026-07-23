@@ -106,6 +106,8 @@ export const OAUTH = {
 export const BLOCK = {
   LIST: "/api/blocks",
   MANAGE: (userId: number) => `/api/blocks/${userId}`,
+  RSS_LIST: "/api/blocks/rss",
+  RSS_MANAGE: (rssId: number) => `/api/blocks/rss/${rssId}`,
 };
 
 export const FILE = {
