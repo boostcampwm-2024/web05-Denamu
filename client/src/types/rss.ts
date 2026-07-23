@@ -40,3 +40,11 @@ export interface RegisterRss {
 }
 
 export type RegisterResponse = ApiMessage;
+
+export interface RecentRss {
+  id: number;
+  name: string;
+  blogPlatform: string;
+  lastPublishedAt: string;
+  latestFeedId: number;
+}

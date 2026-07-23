@@ -14,6 +14,10 @@ vi.mock("@/components/sections/TrendingSection", () => ({
   default: () => <div data-testid="trending-section" />,
 }));
 
+vi.mock("@/components/sections/RecentRssSection", () => ({
+  default: () => <div data-testid="recent-rss-section" />,
+}));
+
 vi.mock("@/components/sections/LatestSection", () => ({
   default: () => <div data-testid="latest-section" />,
 }));
@@ -29,6 +33,7 @@ describe("MainContent", () => {
     render(<MainContent />);
 
     expect(screen.getByTestId("trending-section")).toBeInTheDocument();
+    expect(screen.getByTestId("recent-rss-section")).toBeInTheDocument();
     expect(screen.getByTestId("latest-section")).toBeInTheDocument();
     expect(scrollSpy).toHaveBeenCalledWith(0, 0);
     scrollSpy.mockRestore();

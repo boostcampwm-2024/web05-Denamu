@@ -11,11 +11,16 @@ import {
   RssFeedItem,
   RssInfo,
 } from "@/types/profile";
-import { RegisterRss, RegisterResponse } from "@/types/rss";
+import { RecentRss, RegisterRss, RegisterResponse } from "@/types/rss";
 
 export const registerRss = async (data: RegisterRss): Promise<RegisterResponse> => {
   const response = await axiosInstance.post<RegisterResponse>(BLOG.RSS.REGISTRER_RSS, data);
   return response.data;
+};
+
+export const getRecentRss = async (): Promise<RecentRss[]> => {
+  const response = await axiosInstance.get<ApiData<RecentRss[]>>(BLOG.RSS.RECENT);
+  return response.data.data;
 };
 
 export const getRssInfo = async (rssId: number): Promise<RssInfo> => {

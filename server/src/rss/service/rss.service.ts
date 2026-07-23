@@ -29,6 +29,7 @@ import { GetRssFeedsRequestDto } from '@rss/dto/request/getRssFeeds.dto';
 import { CreateRssCertificationResponseDto } from '@rss/dto/response/createRssCertification.dto';
 import { GetOwnedRssFeedsResponseDto } from '@rss/dto/response/getOwnedRssFeeds.dto';
 import { GetRssFeedsResponseDto } from '@rss/dto/response/getRssFeeds.dto';
+import { GetRecentRssResponseDto } from '@rss/dto/response/getRecentRss.dto';
 import { GetRssInfoResponseDto } from '@rss/dto/response/getRssInfo.dto';
 import { PreviewRssCertificationResponseDto } from '@rss/dto/response/previewRssCertification.dto';
 import { ReadRssResponseDto } from '@rss/dto/response/readRss.dto';
@@ -58,6 +59,8 @@ type FullFeedCrawlMessage = {
 
 @Injectable()
 export class RssService {
+  private static readonly RECENT_RSS_LIMIT = 10;
+
   constructor(
     private readonly rssRepository: RssRepository,
     private readonly rssAcceptRepository: RssAcceptRepository,
@@ -301,6 +304,13 @@ export class RssService {
     } finally {
       await this.redisService.del(redisKey);
     }
+  }
+
+  async getRecentRss() {
+    const recentRssList = await this.rssAcceptRepository.findRecentlyPublished(
+      RssService.RECENT_RSS_LIMIT,
+    );
+    return recentRssList.map((row) => GetRecentRssResponseDto.toResponseDto(row));
   }
 
   async getRssInfo(rssId: number, viewerId?: number) {

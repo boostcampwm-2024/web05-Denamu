@@ -44,6 +44,7 @@ export const BLOG = {
   },
   RSS: {
     REGISTRER_RSS: "/api/rss",
+    RECENT: "/api/rss/recent",
     INFO: (id: number) => `/api/rss/${id}`,
     FEEDS: (id: number) => `/api/rss/${id}/feeds`,
     ACTIVITIES: (id: number) => `/api/rss/${id}/activities`,

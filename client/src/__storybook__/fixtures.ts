@@ -16,7 +16,7 @@ import type {
   User,
   UserProfile,
 } from "@/types/profile";
-import type { AdminRssData } from "@/types/rss";
+import type { AdminRssData, RecentRss } from "@/types/rss";
 import type { SearchResult, UserSearchResult } from "@/types/search";
 import type { ChildAdmin } from "@/types/admin";
 import type { SubscribedRss } from "@/types/subscription";
@@ -303,3 +303,14 @@ export const mockNoSummaryFeeds = mockFeedsList.slice(0, 3).map(({ id, title, li
   likes,
   comments,
 }));
+
+const RECENT_RSS_PLATFORMS = ["velog", "tistory", "medium", "github", "etc"];
+
+export const makeRecentRssList = (count: number, publishedHoursAgo: (index: number) => number): RecentRss[] =>
+  Array.from({ length: count }, (_, i) => ({
+    id: i + 1,
+    name: `블로그 ${i + 1}.log`,
+    blogPlatform: RECENT_RSS_PLATFORMS[i % RECENT_RSS_PLATFORMS.length],
+    lastPublishedAt: new Date(Date.now() - publishedHoursAgo(i) * 3600000).toISOString(),
+    latestFeedId: (i + 1) * 100,
+  }));
