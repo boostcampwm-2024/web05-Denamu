@@ -31,6 +31,8 @@ import {
 } from '@rss/repository/rss.repository';
 import { RssService } from '@rss/service/rss.service';
 
+import { RssBlockRepository } from '@block/repository/rssBlock.repository';
+
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
@@ -77,6 +79,9 @@ describe(`${RssService.name} Unit Test`, () => {
   let adminRepository: jest.Mocked<Pick<AdminRepository, 'find'>>;
   let notifierRegistry: jest.Mocked<Pick<NotifierRegistry, 'sendAlert'>>;
   let logger: jest.Mocked<Pick<WinstonLoggerService, 'error'>>;
+  let rssBlockRepository: jest.Mocked<
+    Pick<RssBlockRepository, 'existsByBlockerAndRss'>
+  >;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -125,6 +130,9 @@ describe(`${RssService.name} Unit Test`, () => {
     adminRepository = { find: jest.fn().mockResolvedValue([]) };
     notifierRegistry = { sendAlert: jest.fn() };
     logger = { error: jest.fn() };
+    rssBlockRepository = {
+      existsByBlockerAndRss: jest.fn().mockResolvedValue(false),
+    };
 
     rssService = new RssService(
       rssRepository as unknown as RssRepository,
@@ -138,6 +146,7 @@ describe(`${RssService.name} Unit Test`, () => {
       adminRepository as unknown as AdminRepository,
       notifierRegistry as unknown as NotifierRegistry,
       logger as unknown as WinstonLoggerService,
+      rssBlockRepository as unknown as RssBlockRepository,
     );
   });
 
@@ -714,6 +723,7 @@ describe(`${RssService.name} Unit Test`, () => {
       // then
       expect(rssAcceptRepository.findRecentlyPublished).toHaveBeenCalledWith(
         10,
+        undefined,
       );
       expect(result).toEqual([
         {
