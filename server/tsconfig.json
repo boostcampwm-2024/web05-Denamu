@@ -20,6 +20,7 @@
     "paths": {
       "@activity/*": ["./src/activity/*"],
       "@admin/*": ["./src/admin/*"],
+      "@block/*": ["./src/block/*"],
       "@chat/*": ["./src/chat/*"],
       "@comment/*": ["./src/comment/*"],
       "@common/*": ["./src/common/*"],

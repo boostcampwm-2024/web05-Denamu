@@ -13,6 +13,7 @@ module.exports = {
     '<THIRD_PARTY_MODULES>',
     '^@activity/(.*)?$',
     '^@admin/(.*)?$',
+    '^@block/(.*)?$',
     '^@chat/(.*)?$',
     '^@comment/(.*)?$',
     '^@common/(.*)?$',
