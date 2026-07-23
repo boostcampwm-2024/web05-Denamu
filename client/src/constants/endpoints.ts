@@ -103,6 +103,11 @@ export const OAUTH = {
   UNLINK: (provider: string) => `/api/oauth/links/${provider}`,
 };
 
+export const BLOCK = {
+  LIST: "/api/blocks",
+  MANAGE: (userId: number) => `/api/blocks/${userId}`,
+};
+
 export const FILE = {
   UPLOAD: "/api/files",
 };
