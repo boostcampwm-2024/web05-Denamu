@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { MoreVertical, Ban } from "lucide-react";
+import { MoreVertical, Ban, FileText, Users } from "lucide-react";
 
 import {
   AlertDialog,
@@ -20,9 +20,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
+import { PlatformIcon } from "@/components/profile/rss/PlatformIcon.tsx";
+import { Badge } from "@/components/ui/badge.tsx";
+import { Switch } from "@/components/ui/switch.tsx";
 
 import { useCustomToast } from "@/hooks/common/useCustomToast.ts";
-import { useBlockUser } from "@/hooks/queries/useBlock.ts";
+import { useBlockRss, useBlockUser } from "@/hooks/queries/useBlock.ts";
+import { useCertifiedRss } from "@/hooks/queries/useProfile.ts";
 
 interface ProfileHeaderProps {
   name: string;
@@ -35,20 +39,53 @@ interface ProfileHeaderProps {
 export const ProfileHeader = ({ name, email, profileImage, introduction, blockableUserId }: ProfileHeaderProps) => {
   const initials = name ? name.substring(0, 2).toUpperCase() : "사용자";
   const [showBlockConfirm, setShowBlockConfirm] = useState(false);
+  const [selectedRssIds, setSelectedRssIds] = useState<Set<number>>(new Set());
   const { toast } = useCustomToast();
-  const { mutate: blockUser } = useBlockUser();
+  const { mutateAsync: blockUser } = useBlockUser();
+  const { mutateAsync: blockRss } = useBlockRss();
+  const { data: ownedRss = [] } = useCertifiedRss(blockableUserId ?? 0);
 
-  const handleBlock = () => {
-    if (!blockableUserId) return;
-    blockUser(blockableUserId, {
-      onSuccess: () => {
-        toast({ title: "차단 완료", description: `${name}님을 차단했습니다.` });
-      },
-      onError: () => {
-        toast({ title: "차단 실패", description: "잠시 후 다시 시도해주세요." });
-      },
+  const allSelected = ownedRss.length > 0 && ownedRss.every((rss) => selectedRssIds.has(rss.id));
+
+  const toggleRss = (rssId: number) => {
+    setSelectedRssIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(rssId)) {
+        next.delete(rssId);
+      } else {
+        next.add(rssId);
+      }
+      return next;
     });
+  };
+
+  const toggleAll = () => {
+    setSelectedRssIds(allSelected ? new Set() : new Set(ownedRss.map((rss) => rss.id)));
+  };
+
+  const handleBlock = async () => {
+    if (!blockableUserId) return;
+    const rssIdsToBlock = [...selectedRssIds];
     setShowBlockConfirm(false);
+
+    try {
+      await blockUser(blockableUserId);
+      const results = await Promise.allSettled(rssIdsToBlock.map((rssId) => blockRss(rssId)));
+      const failedRssCount = results.filter((result) => result.status === "rejected").length;
+
+      if (failedRssCount > 0) {
+        toast({
+          title: "차단 완료",
+          description: `${name}님을 차단했습니다. RSS ${failedRssCount}건은 차단하지 못했습니다.`,
+        });
+      } else {
+        toast({ title: "차단 완료", description: `${name}님을 차단했습니다.` });
+      }
+    } catch {
+      toast({ title: "차단 실패", description: "잠시 후 다시 시도해주세요." });
+    } finally {
+      setSelectedRssIds(new Set());
+    }
   };
 
   return (
@@ -93,6 +130,56 @@ export const ProfileHeader = ({ name, email, profileImage, introduction, blockab
             <AlertDialogTitle>{name} 유저를 차단하시겠습니까?</AlertDialogTitle>
             <AlertDialogDescription>댓글, 프로필 페이지 열람이 제한됩니다.</AlertDialogDescription>
           </AlertDialogHeader>
+          {ownedRss.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium text-gray-700">함께 차단할 RSS</p>
+                <button
+                  type="button"
+                  onClick={toggleAll}
+                  className="text-xs font-medium text-[#FF870D] hover:underline"
+                >
+                  {allSelected ? "모두 해제" : "모두 선택"}
+                </button>
+              </div>
+              <ul className="pr-1 space-y-2 overflow-y-auto max-h-60">
+                {ownedRss.map((rss) => (
+                  <li
+                    key={rss.id}
+                    className="flex items-center justify-between gap-3 p-3 border border-gray-100 rounded-lg"
+                  >
+                    <div className="flex items-center min-w-0 gap-3">
+                      <PlatformIcon platform={rss.blogPlatform} className="flex-shrink-0 w-9 h-9" />
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium truncate">{rss.name}</p>
+                          <Badge variant="secondary" className="flex-shrink-0">
+                            {rss.blogPlatform}
+                          </Badge>
+                        </div>
+                        <p className="flex items-center gap-3 mt-0.5 text-xs text-gray-400">
+                          <span className="flex items-center gap-1">
+                            <FileText className="w-3.5 h-3.5" />
+                            게시글 {rss.feedCount}개
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Users className="w-3.5 h-3.5" />
+                            구독자 {rss.subscriberCount}명
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={selectedRssIds.has(rss.id)}
+                      onCheckedChange={() => toggleRss(rss.id)}
+                      aria-label={`${rss.name} 차단`}
+                      className="flex-shrink-0"
+                    />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           <AlertDialogFooter>
             <AlertDialogCancel>취소</AlertDialogCancel>
             <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={handleBlock}>
