@@ -194,7 +194,12 @@ describe(`${UserService.name} Unit Test`, () => {
       );
 
       // then
-      expect(userRepository.searchUserList).toHaveBeenCalledWith('김', 4, 8);
+      expect(userRepository.searchUserList).toHaveBeenCalledWith(
+        '김',
+        4,
+        8,
+        undefined,
+      );
     });
 
     it('검색 결과가 없으면 빈 배열과 0건을 반환한다.', async () => {

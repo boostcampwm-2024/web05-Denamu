@@ -3,21 +3,34 @@ import { HttpStatus } from '@nestjs/common';
 import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 
+import { BlockRepository } from '@block/repository/block.repository';
+
 import { User } from '@user/entity/user.entity';
 import { UserRepository } from '@user/repository/user.repository';
 
 import { UserFixture } from '@test/config/common/fixture/user.fixture';
-import { testApp } from '@test/config/e2e/env/jest.setup';
+import { createAccessToken, testApp } from '@test/config/e2e/env/jest.setup';
 
 const URL = '/api/users/search';
+
+type SearchResponseBody = {
+  data: {
+    totalCount: number;
+    totalPages: number;
+    limit: number;
+    result: { id: number; userName: string; profileImage: string | null }[];
+  };
+};
 
 describe(`GET ${URL}?find={} E2E Test`, () => {
   let agent: TestAgent;
   let userRepository: UserRepository;
+  let blockRepository: BlockRepository;
 
   beforeAll(() => {
     agent = supertest(testApp.getHttpServer());
     userRepository = testApp.get(UserRepository);
+    blockRepository = testApp.get(BlockRepository);
   });
 
   const saveUser = (userName: string, overwrites: Partial<User> = {}) =>
@@ -37,12 +50,12 @@ describe(`GET ${URL}?find={} E2E Test`, () => {
     const response = await agent.get(URL).query({ find: '김' });
 
     // then
-    const { data } = response.body;
+    const { data } = response.body as SearchResponseBody;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data.totalCount).toBe(4);
     expect(data.totalPages).toBe(1);
     expect(data.limit).toBe(5);
-    expect(data.result.map((user: { id: number }) => user.id)).toStrictEqual([
+    expect(data.result.map((user) => user.id)).toStrictEqual([
       exact.id,
       prefixA.id,
       prefixB.id,
@@ -61,7 +74,7 @@ describe(`GET ${URL}?find={} E2E Test`, () => {
     const response = await agent.get(URL).query({ find: '프로필유저' });
 
     // then
-    const { data } = response.body;
+    const { data } = response.body as SearchResponseBody;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data.result).toStrictEqual([
       {
@@ -80,7 +93,7 @@ describe(`GET ${URL}?find={} E2E Test`, () => {
     const response = await agent.get(URL).query({ find: '이미지없음' });
 
     // then
-    const { data } = response.body;
+    const { data } = response.body as SearchResponseBody;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data.result[0]).toStrictEqual({
       id: user.id,
@@ -98,7 +111,7 @@ describe(`GET ${URL}?find={} E2E Test`, () => {
     const response = await agent.get(URL).query({ find: 'a%b' });
 
     // then
-    const { data } = response.body;
+    const { data } = response.body as SearchResponseBody;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data.totalCount).toBe(1);
     expect(data.result[0].id).toBe(literal.id);
@@ -132,15 +145,62 @@ describe(`GET ${URL}?find={} E2E Test`, () => {
     const response = await agent.get(URL).query({ find: '김', page: 2, limit: 2 });
 
     // then
-    const { data } = response.body;
+    const { data } = response.body as SearchResponseBody;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data.totalCount).toBe(6);
     expect(data.totalPages).toBe(3);
     expect(data.limit).toBe(2);
-    expect(data.result.map((user: { id: number }) => user.id)).toStrictEqual([
+    expect(data.result.map((user) => user.id)).toStrictEqual([
       users[2].id,
       users[3].id,
     ]);
+  });
+
+  it('[200] 로그인 사용자의 검색 결과에서 차단한 유저를 제외하고 totalCount에도 반영한다.', async () => {
+    // given
+    const viewer = await userRepository.save(
+      await UserFixture.createUserCryptFixture(),
+    );
+    const blocked = await saveUser('김차단');
+    const visible = await saveUser('김공개');
+    await blockRepository.save({
+      blocker: { id: viewer.id },
+      blocked: { id: blocked.id },
+    });
+    const accessToken = createAccessToken(viewer);
+
+    // when
+    const response = await agent
+      .get(URL)
+      .query({ find: '김' })
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    // then
+    const { data } = response.body as SearchResponseBody;
+    expect(response.status).toBe(HttpStatus.OK);
+    expect(data.totalCount).toBe(1);
+    expect(data.result.map((user) => user.id)).toStrictEqual([visible.id]);
+  });
+
+  it('[200] 비로그인 사용자의 검색 결과에는 차단 필터가 적용되지 않는다.', async () => {
+    // given - 다른 유저가 차단했더라도 비로그인 검색에는 영향이 없다
+    const otherUser = await userRepository.save(
+      UserFixture.createUserFixture(),
+    );
+    const blocked = await saveUser('김차단');
+    await blockRepository.save({
+      blocker: { id: otherUser.id },
+      blocked: { id: blocked.id },
+    });
+
+    // when
+    const response = await agent.get(URL).query({ find: '김차단' });
+
+    // then
+    const { data } = response.body as SearchResponseBody;
+    expect(response.status).toBe(HttpStatus.OK);
+    expect(data.totalCount).toBe(1);
+    expect(data.result[0].id).toBe(blocked.id);
   });
 
   it('[400] 검색어(find)가 없으면 검증에 실패한다.', async () => {
