@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 
+import { BlockedFeedNotice } from "@/components/common/Card/detail/BlockedFeedNotice";
 import { PostContent } from "@/components/common/Card/detail/PostContent";
 import { PostHeader } from "@/components/common/Card/detail/PostHeader";
 import Header from "@/components/layout/Header";
@@ -32,6 +33,15 @@ export default function PostDetailPage() {
   }
   if (error || !data) {
     return <NotFound />;
+  }
+
+  if (data.data.isBlocked) {
+    return (
+      <div className="bg-white overflow-y-auto relative">
+        <Header />
+        <BlockedFeedNotice />
+      </div>
+    );
   }
 
   return (
