@@ -3,7 +3,8 @@ import { HttpStatus } from '@nestjs/common';
 import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 
-import { Feed } from '@feed/entity/feed.entity';
+import { RssBlockRepository } from '@block/repository/rssBlock.repository';
+
 import { FeedRepository } from '@feed/repository/feed.repository';
 
 import { RssAccept } from '@rss/entity/rss.entity';
@@ -24,6 +25,14 @@ import { UserFixture } from '@test/config/common/fixture/user.fixture';
 import { createAccessToken, testApp } from '@test/config/e2e/env/jest.setup';
 
 const URL = '/api/feeds/subscriptions';
+
+type SubscriptionFeedBody = {
+  data: {
+    result: { id: number; author: string; tag: string[] }[];
+    hasMore: boolean;
+    lastId: number;
+  };
+};
 
 describe(`GET ${URL} E2E Test`, () => {
   let agent: TestAgent;
@@ -48,7 +57,9 @@ describe(`GET ${URL} E2E Test`, () => {
   });
 
   beforeEach(async () => {
-    user = await userRepository.save(await UserFixture.createUserCryptFixture());
+    user = await userRepository.save(
+      await UserFixture.createUserCryptFixture(),
+    );
     accessToken = createAccessToken(user);
 
     subscribedBlog = await rssAcceptRepository.save(
@@ -71,9 +82,10 @@ describe(`GET ${URL} E2E Test`, () => {
       .set('Authorization', `Bearer ${accessToken}`);
 
     expect(response.status).toBe(HttpStatus.OK);
-    expect(response.body.data.result).toEqual([]);
-    expect(response.body.data.hasMore).toBe(false);
-    expect(response.body.data.lastId).toBe(0);
+    const { data } = response.body as SubscriptionFeedBody;
+    expect(data.result).toEqual([]);
+    expect(data.hasMore).toBe(false);
+    expect(data.lastId).toBe(0);
   });
 
   it('[200] 구독한 블로그의 공개 게시글만 반환하고 비공개·미구독 블로그는 제외한다.', async () => {
@@ -102,14 +114,12 @@ describe(`GET ${URL} E2E Test`, () => {
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
-    const { result } = response.body.data;
+    const { result } = (response.body as SubscriptionFeedBody).data;
     expect(result).toHaveLength(2);
-    expect(
-      result.every((feed: { author: string }) => feed.author === subscribedBlog.name),
-    ).toBe(true);
-    const taggedResult = result.find(
-      (feed: { tag: string[] }) => feed.tag.length > 0,
+    expect(result.every((feed) => feed.author === subscribedBlog.name)).toBe(
+      true,
     );
+    const taggedResult = result.find((feed) => feed.tag.length > 0);
     expect(taggedResult.tag).toContain(tag.name);
   });
 
@@ -128,24 +138,54 @@ describe(`GET ${URL} E2E Test`, () => {
       .set('Authorization', `Bearer ${accessToken}`);
 
     expect(firstPage.status).toBe(HttpStatus.OK);
-    expect(firstPage.body.data.result).toHaveLength(2);
-    expect(firstPage.body.data.hasMore).toBe(true);
+    const firstPageData = (firstPage.body as SubscriptionFeedBody).data;
+    expect(firstPageData.result).toHaveLength(2);
+    expect(firstPageData.hasMore).toBe(true);
 
     // 다음 페이지
     const secondPage = await agent
       .get(URL)
-      .query({ limit: 2, lastId: firstPage.body.data.lastId })
+      .query({ limit: 2, lastId: firstPageData.lastId })
       .set('Authorization', `Bearer ${accessToken}`);
 
     expect(secondPage.status).toBe(HttpStatus.OK);
-    expect(secondPage.body.data.result).toHaveLength(1);
-    expect(secondPage.body.data.hasMore).toBe(false);
+    const secondPageData = (secondPage.body as SubscriptionFeedBody).data;
+    expect(secondPageData.result).toHaveLength(1);
+    expect(secondPageData.hasMore).toBe(false);
     // 전체 3개 ID가 중복 없이 반환되었는지
     const ids = [
-      ...firstPage.body.data.result.map((f: { id: number }) => f.id),
-      ...secondPage.body.data.result.map((f: { id: number }) => f.id),
+      ...firstPageData.result.map((f) => f.id),
+      ...secondPageData.result.map((f) => f.id),
     ];
     expect(new Set(ids).size).toBe(3);
     expect(ids.sort()).toEqual(feeds.map((f) => f.id).sort());
+  });
+
+  it('[200] 구독 중이어도 차단한 RSS의 게시글은 구독 피드에서 제외된다.', async () => {
+    // given - 두 블로그 모두 구독, 한 블로그는 차단
+    const rssBlockRepository = testApp.get(RssBlockRepository);
+    await feedRepository.save(
+      FeedFixture.createFeedFixture(subscribedBlog, { isPublic: true }),
+    );
+    await feedRepository.save(
+      FeedFixture.createFeedFixture(otherBlog, { isPublic: true }),
+    );
+    await subscriptionRepository.insert({ user, rssAccept: subscribedBlog });
+    await subscriptionRepository.insert({ user, rssAccept: otherBlog });
+    await rssBlockRepository.save({
+      blocker: { id: user.id },
+      blockedRss: { id: otherBlog.id },
+    });
+
+    // when
+    const response = await agent
+      .get(URL)
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    // then
+    expect(response.status).toBe(HttpStatus.OK);
+    const { result } = (response.body as SubscriptionFeedBody).data;
+    expect(result).toHaveLength(1);
+    expect(result[0].author).toBe(subscribedBlog.name);
   });
 });

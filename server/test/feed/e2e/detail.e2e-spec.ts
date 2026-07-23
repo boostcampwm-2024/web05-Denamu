@@ -8,6 +8,8 @@ import { ActivityRepository } from '@activity/repository/activity.repository';
 
 import { RedisService } from '@common/redis/redis.service';
 
+import { RssBlockRepository } from '@block/repository/rssBlock.repository';
+
 import { ManageFeedRequestDto } from '@feed/dto/request/manageFeed.dto';
 import { Feed } from '@feed/entity/feed.entity';
 import { FeedRepository } from '@feed/repository/feed.repository';
@@ -104,6 +106,7 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
       ownerName: feedList[0].blog.userName,
       isOwnerCertified: false,
       isSubscribed: false,
+      isBlocked: false,
     });
   });
 
@@ -137,6 +140,7 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
       ownerName: feedList[1].blog.userName,
       isOwnerCertified: false,
       isSubscribed: false,
+      isBlocked: false,
     });
   });
 
@@ -166,8 +170,9 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
         .set('Authorization', `Bearer ${accessToken}`);
 
       // Http then
+      const { data } = response.body as { data: { isOwner: boolean } };
       expect(response.status).toBe(HttpStatus.OK);
-      expect(response.body.data.isOwner).toBe(true);
+      expect(data.isOwner).toBe(true);
     });
 
     it('[200] RSS 소유자가 아닌 사용자가 조회할 경우 isOwner=false로 응답한다.', async () => {
@@ -180,8 +185,76 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
         .set('Authorization', `Bearer ${accessToken}`);
 
       // Http then
+      const { data } = response.body as { data: { isOwner: boolean } };
       expect(response.status).toBe(HttpStatus.OK);
-      expect(response.body.data.isOwner).toBe(false);
+      expect(data.isOwner).toBe(false);
+    });
+  });
+
+  describe('isBlocked 필드', () => {
+    let user: User;
+    let userRepository: UserRepository;
+    let rssBlockRepository: RssBlockRepository;
+
+    beforeAll(() => {
+      userRepository = testApp.get(UserRepository);
+      rssBlockRepository = testApp.get(RssBlockRepository);
+    });
+
+    beforeEach(async () => {
+      user = await userRepository.save(
+        await UserFixture.createUserCryptFixture(),
+      );
+    });
+
+    it('[200] 차단한 RSS의 게시글을 조회할 경우 isBlocked=true로 응답한다.', async () => {
+      // given
+      await rssBlockRepository.save({
+        blocker: { id: user.id },
+        blockedRss: { id: rssAccept.id },
+      });
+      const accessToken = createAccessToken(user);
+
+      // Http when
+      const response = await agent
+        .get(`${URL}/${feedList[0].id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Http then
+      const { data } = response.body as { data: { isBlocked: boolean } };
+      expect(response.status).toBe(HttpStatus.OK);
+      expect(data.isBlocked).toBe(true);
+    });
+
+    it('[200] 차단하지 않은 RSS의 게시글을 조회할 경우 isBlocked=false로 응답한다.', async () => {
+      // given
+      const accessToken = createAccessToken(user);
+
+      // Http when
+      const response = await agent
+        .get(`${URL}/${feedList[0].id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Http then
+      const { data } = response.body as { data: { isBlocked: boolean } };
+      expect(response.status).toBe(HttpStatus.OK);
+      expect(data.isBlocked).toBe(false);
+    });
+
+    it('[200] 비로그인으로 조회할 경우 isBlocked=false로 응답한다.', async () => {
+      // given
+      await rssBlockRepository.save({
+        blocker: { id: user.id },
+        blockedRss: { id: rssAccept.id },
+      });
+
+      // Http when
+      const response = await agent.get(`${URL}/${feedList[0].id}`);
+
+      // Http then
+      const { data } = response.body as { data: { isBlocked: boolean } };
+      expect(response.status).toBe(HttpStatus.OK);
+      expect(data.isBlocked).toBe(false);
     });
   });
 

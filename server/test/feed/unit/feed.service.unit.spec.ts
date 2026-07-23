@@ -16,6 +16,8 @@ import {
 } from '@feed/repository/feed.repository';
 import { FeedService } from '@feed/service/feed.service';
 
+import { RssBlockRepository } from '@block/repository/rssBlock.repository';
+
 import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
 
 jest.mock('axios');
@@ -40,6 +42,9 @@ describe(`${FeedService.name} Unit Test`, () => {
   >;
   let subscriptionRepository: jest.Mocked<
     Pick<SubscriptionRepository, 'findOneBy' | 'getSubscribedBlogIds'>
+  >;
+  let rssBlockRepository: jest.Mocked<
+    Pick<RssBlockRepository, 'existsByBlockerAndRss'>
   >;
   let redisService: jest.Mocked<
     Pick<
@@ -88,11 +93,16 @@ describe(`${FeedService.name} Unit Test`, () => {
       getSubscribedBlogIds: jest.fn().mockResolvedValue([]),
     };
 
+    rssBlockRepository = {
+      existsByBlockerAndRss: jest.fn().mockResolvedValue(false),
+    };
+
     feedService = new FeedService(
       feedRepository as unknown as FeedRepository,
       feedViewRepository as unknown as FeedViewRepository,
       redisService as unknown as RedisService,
       subscriptionRepository as unknown as SubscriptionRepository,
+      rssBlockRepository as unknown as RssBlockRepository,
     );
   });
 
@@ -306,6 +316,7 @@ describe(`${FeedService.name} Unit Test`, () => {
         10,
         'title',
         10, // offset = (2-1)*10
+        undefined,
       );
       expect(result.totalCount).toBe(25);
       expect(result.totalPages).toBe(3); // ceil(25/10)
