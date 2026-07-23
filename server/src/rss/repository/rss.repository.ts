@@ -44,6 +44,20 @@ export class RssAcceptRepository extends Repository<RssAccept> {
       .addSelect('rss.name', 'name')
       .addSelect('rss.blog_platform', 'blogPlatform')
       .addSelect('MAX(feed.created_at)', 'lastPublishedAt')
+      .addSelect(
+        (qb) =>
+          qb
+            .subQuery()
+            .select('latest_feed.id')
+            .from('feed', 'latest_feed')
+            .where(
+              'latest_feed.blog_id = rss.id AND latest_feed.is_public = 1',
+            )
+            .orderBy('latest_feed.created_at', 'DESC')
+            .addOrderBy('latest_feed.id', 'DESC')
+            .limit(1),
+        'latestFeedId',
+      )
       .groupBy('rss.id')
       .orderBy('MAX(feed.created_at)', 'DESC')
       .limit(limit)
@@ -52,6 +66,7 @@ export class RssAcceptRepository extends Repository<RssAccept> {
         name: string;
         blogPlatform: string;
         lastPublishedAt: Date;
+        latestFeedId: string;
       }>();
   }
 }

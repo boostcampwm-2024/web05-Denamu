@@ -25,6 +25,12 @@ export class GetRecentRssResponseDto {
   })
   lastPublishedAt: Date;
 
+  @ApiProperty({
+    example: 10,
+    description: '가장 최근 공개 게시글의 Feed ID',
+  })
+  latestFeedId: number;
+
   constructor(partial: Partial<GetRecentRssResponseDto>) {
     Object.assign(this, partial);
   }
@@ -34,12 +40,14 @@ export class GetRecentRssResponseDto {
     name: string;
     blogPlatform: string;
     lastPublishedAt: Date;
+    latestFeedId: string;
   }) {
     return new GetRecentRssResponseDto({
       id: row.id,
       name: row.name,
       blogPlatform: row.blogPlatform,
       lastPublishedAt: row.lastPublishedAt,
+      latestFeedId: Number(row.latestFeedId),
     });
   }
 }

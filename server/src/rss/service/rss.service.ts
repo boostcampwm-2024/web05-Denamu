@@ -307,10 +307,10 @@ export class RssService {
   }
 
   async getRecentRss() {
-    const rows = await this.rssAcceptRepository.findRecentlyPublished(
+    const recentRssList = await this.rssAcceptRepository.findRecentlyPublished(
       RssService.RECENT_RSS_LIMIT,
     );
-    return rows.map((row) => GetRecentRssResponseDto.toResponseDto(row));
+    return recentRssList.map((row) => GetRecentRssResponseDto.toResponseDto(row));
   }
 
   async getRssInfo(rssId: number, viewerId?: number) {
