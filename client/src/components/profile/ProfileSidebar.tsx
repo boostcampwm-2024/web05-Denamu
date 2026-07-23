@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 
-import { Home, LogOut, Rss, Settings as SettingsIcon, User as UserIcon } from "lucide-react";
+import { Ban, Home, LogOut, Rss, Settings as SettingsIcon, User as UserIcon } from "lucide-react";
 
 import { useCustomToast } from "@/hooks/common/useCustomToast.ts";
 
@@ -18,6 +18,7 @@ interface ProfileSidebarProps {
 const tabs: { id: ProfileTab; label: string; icon: typeof UserIcon; activeClass: string }[] = [
   { id: "mypage", label: "마이페이지", icon: UserIcon, activeClass: "bg-blue-50 text-blue-600" },
   { id: "rss", label: "RSS 관리", icon: Rss, activeClass: "bg-[#FF870D]/10 text-[#FF870D]" },
+  { id: "blocks", label: "차단 관리", icon: Ban, activeClass: "bg-red-50 text-red-600" },
   { id: "settings", label: "정보 수정", icon: SettingsIcon, activeClass: "bg-purple-50 text-purple-600" },
 ];
 

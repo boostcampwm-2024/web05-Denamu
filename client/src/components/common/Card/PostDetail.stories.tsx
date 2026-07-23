@@ -63,6 +63,15 @@ export const WithLiked: Story = {
   },
 };
 
+export const Blocked: Story = {
+  name: "차단된 RSS의 게시글",
+  beforeEach: () => {
+    mockApi.onGet(`${BLOG.POST}/1`).reply(...ok({ ...mockFeedDetail, isBlocked: true }));
+    mockApi.onGet(BLOG.LIKE(1)).reply(...ok({ isLike: false }));
+    mockApi.onGet(BLOG.COMMENT.LIST(1)).reply(...ok([]));
+  },
+};
+
 export const Loading: Story = {
   name: "로딩 중",
   beforeEach: () => {

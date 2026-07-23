@@ -92,6 +92,12 @@ export class GetRssInfoResponseDto {
   })
   owner: RssOwnerDto | null;
 
+  @ApiProperty({
+    example: false,
+    description: '요청자가 해당 RSS를 차단했는지 여부 (비로그인 시 false)',
+  })
+  isBlocked: boolean;
+
   constructor(partial: Partial<GetRssInfoResponseDto>) {
     Object.assign(this, partial);
   }
@@ -103,6 +109,7 @@ export class GetRssInfoResponseDto {
     isSubscribed: boolean,
     isOwner: boolean,
     lastPublishedAt: Date | null,
+    isBlocked = false,
   ) {
     const owner = rssAccept.user
       ? {
@@ -124,6 +131,7 @@ export class GetRssInfoResponseDto {
       isOwner,
       lastPublishedAt,
       owner,
+      isBlocked,
     });
   }
 }

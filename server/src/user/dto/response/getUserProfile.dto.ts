@@ -41,11 +41,17 @@ export class GetUserProfileResponseDto {
   })
   totalViews: number;
 
+  @ApiProperty({
+    example: false,
+    description: '요청자가 해당 사용자를 차단했는지 여부 (비로그인 시 false)',
+  })
+  isBlocked: boolean;
+
   constructor(partial: Partial<GetUserProfileResponseDto>) {
     Object.assign(this, partial);
   }
 
-  static toResponseDto(user: User) {
+  static toResponseDto(user: User, isBlocked = false) {
     return new GetUserProfileResponseDto({
       userName: user.userName,
       profileImage: user.profileImage ?? null,
@@ -53,6 +59,7 @@ export class GetUserProfileResponseDto {
       maxStreak: user.maxStreak,
       currentStreak: user.currentStreak,
       totalViews: user.totalViews,
+      isBlocked,
     });
   }
 }

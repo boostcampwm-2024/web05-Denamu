@@ -3,11 +3,15 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import { Footer } from "@/components/about/Footer";
 import Layout from "@/components/layout/Layout";
+import { BlockManagementTab } from "@/components/profile/BlockManagementTab.tsx";
+import { BlockedProfileView } from "@/components/profile/BlockedProfileView.tsx";
 import { MyPage } from "@/components/profile/MyPage.tsx";
 import { ProfileSidebar } from "@/components/profile/ProfileSidebar.tsx";
 import { SubscriptionManagementTab } from "@/components/profile/SubscriptionManagementTab.tsx";
 import { RssManagementTab } from "@/components/profile/rss/RssManagementTab.tsx";
 import { ProfileEditTab } from "@/components/profile/sections/ProfileEditTab.tsx";
+
+import { useUserProfile } from "@/hooks/queries/useProfile.ts";
 
 import { useAuthStore } from "@/store/useAuthStore.ts";
 import { ProfileTab } from "@/types/profile.ts";
@@ -22,6 +26,12 @@ export default function Profile() {
 
   const targetId = id ? Number(id) : userInfo.id;
   const isOwner = isAuthenticated && userInfo.id !== null && userInfo.id === targetId;
+  const isVisitor = !isOwner && !!targetId && !Number.isNaN(targetId);
+
+  const { data: visitorProfile, isLoading: isVisitorProfileLoading } = useUserProfile(
+    isVisitor ? (targetId as number) : 0
+  );
+  const isBlocked = isVisitor && (visitorProfile?.isBlocked ?? false);
 
   useEffect(() => {
     if (!isInitialized) return;
@@ -55,7 +65,9 @@ export default function Profile() {
 
           <div className="flex-1 min-w-0 px-4 py-8 md:px-8">
             {currentTab === "mypage" &&
-              (showSubscriptions ? (
+              (isBlocked ? (
+                <BlockedProfileView userId={targetId as number} />
+              ) : isVisitor && isVisitorProfileLoading ? null : showSubscriptions ? (
                 <SubscriptionManagementTab
                   userId={targetId as number}
                   isOwner={isOwner}
@@ -67,10 +79,12 @@ export default function Profile() {
                   name={isOwner ? (userInfo.userName ?? "") : ""}
                   email={isOwner ? (userInfo.email ?? "") : ""}
                   isOwner={isOwner}
+                  canBlock={isAuthenticated && isVisitor}
                   onShowSubscriptions={() => setShowSubscriptions(true)}
                 />
               ))}
             {isOwner && currentTab === "rss" && <RssManagementTab userId={targetId as number} />}
+            {isOwner && currentTab === "blocks" && <BlockManagementTab />}
             {isOwner && currentTab === "settings" && (
               <ProfileEditTab userId={targetId as number} email={userInfo.email ?? ""} />
             )}

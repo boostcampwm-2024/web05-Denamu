@@ -85,7 +85,10 @@ describe(`${CommentService.name} Unit Test`, () => {
 
       // then
       expect(feedService.getPublicFeed).toHaveBeenCalledWith(10);
-      expect(commentRepository.getCommentInformation).toHaveBeenCalledWith(10);
+      expect(commentRepository.getCommentInformation).toHaveBeenCalledWith(
+        10,
+        undefined,
+      );
       expect(result).toEqual(
         GetCommentResponseDto.toResponseDtoArray(comments),
       );

@@ -3,14 +3,19 @@ import { HttpStatus } from '@nestjs/common';
 import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 
+import { RssBlockRepository } from '@block/repository/rssBlock.repository';
+
 import { FeedRepository } from '@feed/repository/feed.repository';
 
 import { GetRecentRssResponseDto } from '@rss/dto/response/getRecentRss.dto';
 import { RssAcceptRepository } from '@rss/repository/rss.repository';
 
+import { UserRepository } from '@user/repository/user.repository';
+
 import { FeedFixture } from '@test/config/common/fixture/feed.fixture';
 import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture';
-import { testApp } from '@test/config/e2e/env/jest.setup';
+import { UserFixture } from '@test/config/common/fixture/user.fixture';
+import { createAccessToken, testApp } from '@test/config/e2e/env/jest.setup';
 
 const URL = '/api/rss/recent';
 
@@ -123,5 +128,61 @@ describe(`GET ${URL} E2E Test`, () => {
     expect(response.status).toBe(HttpStatus.OK);
     const { data }: { data: GetRecentRssResponseDto[] } = response.body;
     expect(data.length).toBe(10);
+  });
+
+  it('[200] 로그인한 사용자가 차단한 RSS는 목록에서 제외된다.', async () => {
+    // given
+    const userRepository = testApp.get(UserRepository);
+    const rssBlockRepository = testApp.get(RssBlockRepository);
+    const { rssAccept: blockedRss } = await createRssWithFeed(
+      new Date('2025-12-10'),
+    );
+    const { rssAccept: normalRss } = await createRssWithFeed(
+      new Date('2025-12-01'),
+    );
+    const viewer = await userRepository.save(
+      await UserFixture.createUserCryptFixture(),
+    );
+    await rssBlockRepository.save({
+      blocker: { id: viewer.id },
+      blockedRss: { id: blockedRss.id },
+    });
+    const accessToken = createAccessToken(viewer);
+
+    // when
+    const response = await agent
+      .get(URL)
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    // then
+    expect(response.status).toBe(HttpStatus.OK);
+    const { data }: { data: GetRecentRssResponseDto[] } = response.body;
+    const ids = data.map((rss) => rss.id);
+    expect(ids).not.toContain(blockedRss.id);
+    expect(ids).toContain(normalRss.id);
+  });
+
+  it('[200] 비로그인 사용자에게는 차단 여부와 관계없이 모든 RSS가 제공된다.', async () => {
+    // given
+    const userRepository = testApp.get(UserRepository);
+    const rssBlockRepository = testApp.get(RssBlockRepository);
+    const { rssAccept: blockedRss } = await createRssWithFeed(
+      new Date('2025-12-10'),
+    );
+    const viewer = await userRepository.save(
+      await UserFixture.createUserCryptFixture(),
+    );
+    await rssBlockRepository.save({
+      blocker: { id: viewer.id },
+      blockedRss: { id: blockedRss.id },
+    });
+
+    // when
+    const response = await agent.get(URL);
+
+    // then
+    expect(response.status).toBe(HttpStatus.OK);
+    const { data }: { data: GetRecentRssResponseDto[] } = response.body;
+    expect(data.map((rss) => rss.id)).toContain(blockedRss.id);
   });
 });

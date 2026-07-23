@@ -3,11 +3,16 @@ import { useEffect } from "react";
 import { BASE_URL } from "@/constants/endpoints";
 import { BLOG } from "@/constants/endpoints";
 
+import { useBlockedRss } from "@/hooks/queries/useBlock";
+
+import { useAuthStore } from "@/store/useAuthStore";
 import { TrendingFeedsApiResponse } from "@/types/post";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const useTrendingPosts = () => {
   const queryClient = useQueryClient();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const { data: blockedRss = [] } = useBlockedRss(isAuthenticated);
 
   const query = useQuery<TrendingFeedsApiResponse>({
     queryKey: ["trending-posts"],
@@ -32,8 +37,10 @@ export const useTrendingPosts = () => {
     };
   }, [queryClient]);
 
+  const blockedRssNames = new Set(blockedRss.map((rss) => rss.name));
+
   return {
     ...query,
-    posts: query.data?.data || [],
+    posts: (query.data?.data || []).filter((post) => !blockedRssNames.has(post.author)),
   };
 };

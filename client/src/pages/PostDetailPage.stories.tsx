@@ -28,3 +28,10 @@ export const Error: Story = {
     mockApi.onGet("/api/feeds/1").reply(...fail(404, "게시글을 찾을 수 없습니다."));
   },
 };
+
+export const Blocked: Story = {
+  name: "차단된 RSS의 게시글",
+  beforeEach: () => {
+    mockApi.onGet("/api/feeds/1").reply(...ok({ ...mockFeedDetail, isBlocked: true }, "피드 상세 조회 완료"));
+  },
+};

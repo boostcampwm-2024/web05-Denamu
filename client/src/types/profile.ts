@@ -27,7 +27,7 @@ export interface SidebarItem {
   id: string;
 }
 
-export type ProfileTab = "mypage" | "rss" | "settings";
+export type ProfileTab = "mypage" | "rss" | "blocks" | "settings";
 
 export interface UserProfile {
   userName: string;
@@ -36,6 +36,21 @@ export interface UserProfile {
   maxStreak: number;
   currentStreak: number;
   totalViews: number;
+  isBlocked: boolean;
+}
+
+export interface BlockedUser {
+  userId: number;
+  userName: string;
+  profileImage: string | null;
+  blockedAt: string;
+}
+
+export interface BlockedRss {
+  rssId: number;
+  name: string;
+  blogPlatform: string;
+  blockedAt: string;
 }
 
 export interface ProfileActivity {
@@ -130,6 +145,7 @@ export interface RssInfo {
   isOwner: boolean;
   lastPublishedAt: string | null;
   owner: RssOwner | null;
+  isBlocked: boolean;
 }
 
 export interface OwnedRssFeedItem extends RssFeedItem {

@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 
 import RssPage from "@/pages/RssPage";
-import { BLOG } from "@/constants/endpoints";
+import { BLOCK, BLOG } from "@/constants/endpoints";
 import { mockApi, ok } from "@/__storybook__/mockApi";
 import { useAuthStore } from "@/store/useAuthStore";
 
@@ -52,6 +53,7 @@ const baseRss: RssInfo = {
   isOwner: false,
   lastPublishedAt: "2025-01-15T00:00:00Z",
   owner: null,
+  isBlocked: false,
 };
 
 const resetAuth = () => {
@@ -96,6 +98,52 @@ export const Certified: Story = {
       .reply(...ok({ ...baseRss, owner: { id: 99, userName: "김개발", profileImage: null } }));
     setupFeeds();
     return resetAuth;
+  },
+};
+
+export const Blocked: Story = {
+  name: "차단된 RSS",
+  beforeEach: () => {
+    useAuthStore.setState({
+      isInitialized: true,
+      isAuthenticated: true,
+      role: "user",
+      userInfo: { id: 1, email: "me@test.com", userName: "테스터" },
+    });
+    mockApi.onGet(BLOG.RSS.INFO(RSS_ID)).reply(...ok({ ...baseRss, isBlocked: true }));
+    mockApi.onDelete(BLOCK.RSS_MANAGE(RSS_ID)).reply(...ok(null));
+    setupFeeds();
+    return resetAuth;
+  },
+};
+
+export const BlockFlow: Story = {
+  name: "차단하기 플로우 (로그인 방문자)",
+  beforeEach: () => {
+    useAuthStore.setState({
+      isInitialized: true,
+      isAuthenticated: true,
+      role: "user",
+      userInfo: { id: 1, email: "me@test.com", userName: "테스터" },
+    });
+    mockApi.onGet(BLOG.RSS.INFO(RSS_ID)).replyOnce(...ok(baseRss));
+    mockApi.onGet(BLOG.RSS.INFO(RSS_ID)).reply(...ok({ ...baseRss, isBlocked: true }));
+    mockApi.onPost(BLOCK.RSS_MANAGE(RSS_ID)).reply(...ok(null));
+    mockApi.onDelete(BLOCK.RSS_MANAGE(RSS_ID)).reply(...ok(null));
+    mockApi.onGet(BLOCK.RSS_LIST).reply(...ok([]));
+    setupFeeds();
+    return resetAuth;
+  },
+  play: async ({ canvasElement }) => {
+    const body = within(canvasElement.ownerDocument.body);
+    await userEvent.click(await body.findByRole("button", { name: "더보기" }));
+    await userEvent.click(await body.findByRole("menuitem", { name: /차단하기/ }));
+    await expect(
+      await body.findByText("데나무 블로그 RSS를 차단하시겠습니까?")
+    ).toBeInTheDocument();
+    await userEvent.click(await body.findByRole("button", { name: "차단" }));
+    await waitFor(() => expect(mockApi.history.post).toHaveLength(1));
+    await expect(await body.findByText("차단된 RSS입니다.")).toBeInTheDocument();
   },
 };
 

@@ -23,7 +23,7 @@ import { UpdateCommentRequestDto } from '@comment/dto/request/updateComment.dto'
 import { CommentService } from '@comment/service/comment.service';
 
 import { CurrentUser } from '@common/decorator';
-import { JwtGuard, Payload } from '@common/guard/jwt.guard';
+import { JwtGuard, OptionalJwtGuard, Payload } from '@common/guard/jwt.guard';
 import { ApiResponse } from '@common/response/common.response';
 
 @ApiTags('Comment')
@@ -34,10 +34,14 @@ export class CommentController {
   @ApiGetComment()
   @Get()
   @HttpCode(HttpStatus.OK)
-  async getComment(@Param() feedDto: GetCommentRequestDto) {
+  @UseGuards(OptionalJwtGuard)
+  async getComment(
+    @CurrentUser() user: Payload | null,
+    @Param() feedDto: GetCommentRequestDto,
+  ) {
     return ApiResponse.responseWithData(
       '댓글 조회를 성공했습니다.',
-      await this.commentService.get(feedDto),
+      await this.commentService.get(feedDto, user),
     );
   }
 

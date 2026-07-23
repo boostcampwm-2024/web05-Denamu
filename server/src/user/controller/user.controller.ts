@@ -95,20 +95,28 @@ export class UserController {
   @ApiSearchUser()
   @Get('/search')
   @HttpCode(HttpStatus.OK)
-  async searchUser(@Query() searchUserQueryDto: SearchUserRequestDto) {
+  @UseGuards(OptionalJwtGuard)
+  async searchUser(
+    @CurrentUser() user: Payload | null,
+    @Query() searchUserQueryDto: SearchUserRequestDto,
+  ) {
     return ApiResponse.responseWithData(
       '유저 검색 결과 조회 완료',
-      await this.userService.searchUserList(searchUserQueryDto),
+      await this.userService.searchUserList(searchUserQueryDto, user),
     );
   }
 
   @ApiGetUserProfile()
   @Get('/:id/profile')
   @HttpCode(HttpStatus.OK)
-  async getUserProfile(@Param() paramDto: GetUserProfileParamRequestDto) {
+  @UseGuards(OptionalJwtGuard)
+  async getUserProfile(
+    @CurrentUser() user: Payload | null,
+    @Param() paramDto: GetUserProfileParamRequestDto,
+  ) {
     return ApiResponse.responseWithData(
       '프로필 조회가 성공적으로 처리되었습니다.',
-      await this.userService.getUserProfile(paramDto.id),
+      await this.userService.getUserProfile(paramDto.id, user),
     );
   }
 

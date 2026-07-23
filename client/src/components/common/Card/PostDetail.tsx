@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import { X } from "lucide-react";
 
+import { BlockedFeedNotice } from "@/components/common/Card/detail/BlockedFeedNotice";
 import { FixedHeader } from "@/components/common/Card/detail/FixedHeader";
 import { PostContent } from "@/components/common/Card/detail/PostContent";
 import { PostHeader } from "@/components/common/Card/detail/PostHeader";
@@ -62,10 +63,14 @@ export default function PostDetail() {
           </button>
         </div>
 
-        <div className="mt-5 flex flex-col gap-2 px-10 ">
-          <PostHeader data={data.data} />
-          <PostContent post={data.data} />
-        </div>
+        {data.data.isBlocked ? (
+          <BlockedFeedNotice />
+        ) : (
+          <div className="mt-5 flex flex-col gap-2 px-10 ">
+            <PostHeader data={data.data} />
+            <PostContent post={data.data} />
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,24 +1,28 @@
 import { HttpStatus } from '@nestjs/common';
 
+import { BlockRepository } from '@block/repository/block.repository';
 import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 
+import { GetUserProfileResponseDto } from '@user/dto/response/getUserProfile.dto';
 import { User } from '@user/entity/user.entity';
 import { UserRepository } from '@user/repository/user.repository';
 
 import { UserFixture } from '@test/config/common/fixture/user.fixture';
-import { testApp } from '@test/config/e2e/env/jest.setup';
+import { createAccessToken, testApp } from '@test/config/e2e/env/jest.setup';
 
 const URL = (id: number | string) => `/api/users/${id}/profile`;
 
 describe(`GET /api/users/:id/profile E2E Test`, () => {
   let agent: TestAgent;
   let userRepository: UserRepository;
+  let blockRepository: BlockRepository;
   let user: User;
 
   beforeAll(() => {
     agent = supertest(testApp.getHttpServer());
     userRepository = testApp.get(UserRepository);
+    blockRepository = testApp.get(BlockRepository);
   });
 
   beforeEach(async () => {
@@ -49,6 +53,7 @@ describe(`GET /api/users/:id/profile E2E Test`, () => {
       maxStreak: user.maxStreak,
       currentStreak: user.currentStreak,
       totalViews: user.totalViews,
+      isBlocked: false,
     });
   });
 
@@ -75,7 +80,52 @@ describe(`GET /api/users/:id/profile E2E Test`, () => {
       maxStreak: minimalUser.maxStreak,
       currentStreak: minimalUser.currentStreak,
       totalViews: minimalUser.totalViews,
+      isBlocked: false,
     });
+  });
+
+  it('[200] 차단한 유저의 프로필을 조회하면 isBlocked가 true로 반환된다.', async () => {
+    // given
+    const viewer = await userRepository.save(
+      await UserFixture.createUserCryptFixture(),
+    );
+    await blockRepository.save({
+      blocker: { id: viewer.id },
+      blocked: { id: user.id },
+    });
+    const accessToken = createAccessToken(viewer);
+
+    // Http when
+    const response = await agent
+      .get(URL(user.id))
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    // Http then
+    const { data }: { data: GetUserProfileResponseDto } = response.body;
+    expect(response.status).toBe(HttpStatus.OK);
+    expect(data.isBlocked).toBe(true);
+  });
+
+  it('[200] 차단당한 유저가 차단한 유저의 프로필을 조회하면 isBlocked가 false로 반환된다.', async () => {
+    // given - 차단은 단방향이므로 반대 방향 조회에는 영향이 없다
+    const viewer = await userRepository.save(
+      await UserFixture.createUserCryptFixture(),
+    );
+    await blockRepository.save({
+      blocker: { id: user.id },
+      blocked: { id: viewer.id },
+    });
+    const accessToken = createAccessToken(viewer);
+
+    // Http when
+    const response = await agent
+      .get(URL(user.id))
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    // Http then
+    const { data }: { data: GetUserProfileResponseDto } = response.body;
+    expect(response.status).toBe(HttpStatus.OK);
+    expect(data.isBlocked).toBe(false);
   });
 
   it('[404] 존재하지 않는 유저를 조회하면 실패한다.', async () => {

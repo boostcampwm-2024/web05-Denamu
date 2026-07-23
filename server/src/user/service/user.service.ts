@@ -70,12 +70,19 @@ export class UserService {
     return user;
   }
 
-  async getUserProfile(userId: number) {
+  async getUserProfile(userId: number, requester: Payload | null = null) {
     const user = await this.getUser(userId);
-    return GetUserProfileResponseDto.toResponseDto(user);
+    const isBlocked =
+      requester && requester.id !== userId
+        ? await this.userRepository.isUserBlocked(requester.id, userId)
+        : false;
+    return GetUserProfileResponseDto.toResponseDto(user, isBlocked);
   }
 
-  async searchUserList(searchUserQueryDto: SearchUserRequestDto) {
+  async searchUserList(
+    searchUserQueryDto: SearchUserRequestDto,
+    requester: Payload | null = null,
+  ) {
     const { find, page, limit } = searchUserQueryDto;
     const offset = (page - 1) * limit;
 
@@ -83,6 +90,7 @@ export class UserService {
       find,
       limit,
       offset,
+      requester?.id,
     );
 
     const users = SearchUserResult.toResultDtoArray(searchResult);

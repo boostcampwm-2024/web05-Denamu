@@ -4,6 +4,8 @@ import { ActivityModule } from '@activity/module/activity.module';
 
 import { JwtAuthModule } from '@common/auth/jwt.module';
 
+import { RssBlockRepository } from '@block/repository/rssBlock.repository';
+
 import { FeedController } from '@feed/controller/feed.controller';
 import { FeedViewedListener } from '@feed/listener/feed-viewed.listener';
 import {
@@ -27,6 +29,7 @@ import { UserModule } from '@user/module/user.module';
     FeedScheduler,
     FeedViewedListener,
     SubscriptionRepository,
+    RssBlockRepository,
   ],
   exports: [FeedRepository, FeedService],
 })

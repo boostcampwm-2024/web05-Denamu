@@ -25,6 +25,7 @@ export interface FeedDetail extends FeedBase {
   ownerName: string | null;
   isOwnerCertified: boolean;
   isSubscribed: boolean;
+  isBlocked: boolean;
 }
 
 export interface InfiniteScrollResponse<T> {
