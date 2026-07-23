@@ -27,7 +27,7 @@ export interface SidebarItem {
   id: string;
 }
 
-export type ProfileTab = "mypage" | "rss" | "settings";
+export type ProfileTab = "mypage" | "rss" | "blocks" | "settings";
 
 export interface UserProfile {
   userName: string;
@@ -36,6 +36,14 @@ export interface UserProfile {
   maxStreak: number;
   currentStreak: number;
   totalViews: number;
+  isBlocked: boolean;
+}
+
+export interface BlockedUser {
+  userId: number;
+  userName: string;
+  profileImage: string | null;
+  blockedAt: string;
 }
 
 export interface ProfileActivity {

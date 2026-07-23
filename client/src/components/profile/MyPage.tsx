@@ -18,12 +18,13 @@ interface MyPageProps {
   name: string;
   email: string;
   isOwner: boolean;
+  canBlock?: boolean;
   onShowSubscriptions?: () => void;
 }
 
 const MAX_YEARS = 5;
 
-export const MyPage = ({ userId, name, email, isOwner, onShowSubscriptions }: MyPageProps) => {
+export const MyPage = ({ userId, name, email, isOwner, canBlock, onShowSubscriptions }: MyPageProps) => {
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState(currentYear);
 
@@ -45,6 +46,7 @@ export const MyPage = ({ userId, name, email, isOwner, onShowSubscriptions }: My
         email={email}
         profileImage={profile?.profileImage ?? null}
         introduction={profile?.introduction ?? null}
+        blockableUserId={canBlock ? userId : undefined}
       />
 
       <StreakStats

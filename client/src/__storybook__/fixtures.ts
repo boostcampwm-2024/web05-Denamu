@@ -8,6 +8,7 @@ import type { ChartPlatform, ChartType } from "@/types/chart";
 import type { AdminChatRoom, ChatType } from "@/types/chat";
 import type { FeedDetail, FeedList } from "@/types/post";
 import type {
+  BlockedUser,
   CertifiedRss,
   CommentItem,
   CursorPage,
@@ -206,7 +207,23 @@ export const mockUserProfile: UserProfile = {
   maxStreak: 30,
   currentStreak: 7,
   totalViews: 98765,
+  isBlocked: false,
 };
+
+export const mockBlockedUsers: BlockedUser[] = [
+  {
+    userId: 2,
+    userName: "차단된개발자",
+    profileImage: "https://picsum.photos/seed/blocked1/80/80",
+    blockedAt: "2026-06-20T09:00:00.000Z",
+  },
+  {
+    userId: 3,
+    userName: "스팸유저",
+    profileImage: null,
+    blockedAt: "2026-06-21T12:30:00.000Z",
+  },
+];
 
 export const mockProfileActivity: ProfileActivity = {
   dailyActivities: [
