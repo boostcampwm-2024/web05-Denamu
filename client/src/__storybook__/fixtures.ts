@@ -8,6 +8,7 @@ import type { ChartPlatform, ChartType } from "@/types/chart";
 import type { AdminChatRoom, ChatType } from "@/types/chat";
 import type { FeedDetail, FeedList } from "@/types/post";
 import type {
+  BlockedRss,
   BlockedUser,
   CertifiedRss,
   CommentItem,
@@ -46,6 +47,7 @@ export const mockFeedDetail: FeedDetail = {
   ownerName: "조민석",
   isOwnerCertified: true,
   isSubscribed: false,
+  isBlocked: false,
 };
 
 export const mockUser: User = {
@@ -222,6 +224,15 @@ export const mockBlockedUsers: BlockedUser[] = [
     userName: "스팸유저",
     profileImage: null,
     blockedAt: "2026-06-21T12:30:00.000Z",
+  },
+];
+
+export const mockBlockedRss: BlockedRss[] = [
+  {
+    rssId: 5,
+    name: "차단된블로그",
+    blogPlatform: "velog",
+    blockedAt: "2026-06-22T09:00:00.000Z",
   },
 ];
 
