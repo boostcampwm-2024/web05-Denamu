@@ -6,6 +6,7 @@ import TestAgent from 'supertest/lib/agent';
 import { Feed } from '@feed/entity/feed.entity';
 import { FeedRepository } from '@feed/repository/feed.repository';
 
+import { GetLikeResponseDto } from '@like/dto/response/getLike.dto';
 import { LikeRepository } from '@like/repository/like.repository';
 
 import { RssAccept } from '@rss/entity/rss.entity';
@@ -74,7 +75,8 @@ describe(`GET ${BASE_URL}/:feedId/likes E2E Test`, () => {
 
     // Http then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
-    expect(response.body.data).toBeUndefined();
+    const { data }: { data: GetLikeResponseDto } = response.body;
+    expect(data).toBeUndefined();
   });
 
   it('[200] 로그인하지 않은 상황에서 게시글에 대한 좋아요 조회 요청을 받을 경우 좋아요 정보 제공을 성공한다.', async () => {

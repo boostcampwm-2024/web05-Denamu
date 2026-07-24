@@ -6,6 +6,8 @@ import TestAgent from 'supertest/lib/agent';
 import { RssAccept } from '@rss/entity/rss.entity';
 import { RssAcceptRepository } from '@rss/repository/rss.repository';
 
+import { SubscribedRssResponseDto } from '@subscribe/dto/response/getMySubscriptions.dto';
+import { GetSubscriptionResponseDto } from '@subscribe/dto/response/getSubscription.dto';
 import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
 
 import { User } from '@user/entity/user.entity';
@@ -51,8 +53,9 @@ describe(`GET 구독 상태/목록 E2E Test`, () => {
     const response = await agent.get(makeStatusURL(rssAccept.id));
 
     expect(response.status).toBe(HttpStatus.OK);
-    expect(response.body.data.isSubscribed).toBe(false);
-    expect(response.body.data.subscriberCount).toBe(1);
+    const { data }: { data: GetSubscriptionResponseDto } = response.body;
+    expect(data.isSubscribed).toBe(false);
+    expect(data.subscriberCount).toBe(1);
   });
 
   it('[200] 로그인 + 구독 상태면 isSubscribed=true 를 반환한다.', async () => {
@@ -63,8 +66,9 @@ describe(`GET 구독 상태/목록 E2E Test`, () => {
       .set('Authorization', `Bearer ${accessToken}`);
 
     expect(response.status).toBe(HttpStatus.OK);
-    expect(response.body.data.isSubscribed).toBe(true);
-    expect(response.body.data.subscriberCount).toBe(1);
+    const { data }: { data: GetSubscriptionResponseDto } = response.body;
+    expect(data.isSubscribed).toBe(true);
+    expect(data.subscriberCount).toBe(1);
   });
 
   it('[200] 특정 사용자의 구독 목록을 반환한다.', async () => {
@@ -73,8 +77,9 @@ describe(`GET 구독 상태/목록 E2E Test`, () => {
     const response = await agent.get(makeUserSubsURL(user.id));
 
     expect(response.status).toBe(HttpStatus.OK);
-    expect(response.body.data).toHaveLength(1);
-    expect(response.body.data[0].id).toBe(rssAccept.id);
+    const { data }: { data: SubscribedRssResponseDto[] } = response.body;
+    expect(data).toHaveLength(1);
+    expect(data[0].id).toBe(rssAccept.id);
   });
 
   it('[200] 비로그인 상태에서도 타 사용자의 구독 목록을 조회할 수 있다.', async () => {
@@ -86,7 +91,8 @@ describe(`GET 구독 상태/목록 E2E Test`, () => {
     const response = await agent.get(makeUserSubsURL(other.id));
 
     expect(response.status).toBe(HttpStatus.OK);
-    expect(response.body.data).toHaveLength(1);
-    expect(response.body.data[0].id).toBe(rssAccept.id);
+    const { data }: { data: SubscribedRssResponseDto[] } = response.body;
+    expect(data).toHaveLength(1);
+    expect(data[0].id).toBe(rssAccept.id);
   });
 });

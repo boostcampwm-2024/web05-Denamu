@@ -11,6 +11,10 @@ import {
   ADMIN_DELETED_USERNAME,
 } from '@chat/constant/constant';
 import { RedisMessagePayload } from '@chat/constant/type';
+import {
+  AdminChatMessageDto,
+  AdminChatRoomDto,
+} from '@chat/dto/response/adminChat.dto';
 
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
@@ -86,10 +90,9 @@ describe('Admin Chat (/api/admins/chats) E2E Test', () => {
 
       // then
       expect(response.status).toBe(HttpStatus.OK);
-      expect(response.body.data).toHaveLength(3);
-      const room1 = response.body.data.find(
-        (r: { roomId: string }) => r.roomId === ROOM,
-      );
+      const { data }: { data: AdminChatRoomDto[] } = response.body;
+      expect(data).toHaveLength(3);
+      const room1 = data.find((r) => r.roomId === ROOM);
       expect(room1).toMatchObject({
         roomId: ROOM,
         roomName: '익명 채팅방 1',
@@ -134,10 +137,8 @@ describe('Admin Chat (/api/admins/chats) E2E Test', () => {
 
       // then
       expect(response.status).toBe(HttpStatus.OK);
-      expect(response.body.data.map((m: RedisMessagePayload) => m.message)).toStrictEqual([
-        'older',
-        'newer',
-      ]);
+      const { data }: { data: AdminChatMessageDto[] } = response.body;
+      expect(data.map((m) => m.message)).toStrictEqual(['older', 'newer']);
     });
 
     it('[200] 메시지가 없으면 빈 배열을 반환한다.', async () => {
@@ -146,7 +147,8 @@ describe('Admin Chat (/api/admins/chats) E2E Test', () => {
         .set('Cookie', `sessionId=${sessionKey}`);
 
       expect(response.status).toBe(HttpStatus.OK);
-      expect(response.body.data).toStrictEqual([]);
+      const { data }: { data: AdminChatMessageDto[] } = response.body;
+      expect(data).toStrictEqual([]);
     });
   });
 

@@ -3,6 +3,7 @@ import { HttpStatus } from '@nestjs/common';
 import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 
+import { CheckUserNameDuplicationResponseDto } from '@user/dto/response/checkUserNameDuplication.dto';
 import { User } from '@user/entity/user.entity';
 import { UserRepository } from '@user/repository/user.repository';
 
@@ -35,7 +36,8 @@ describe(`GET ${URL} E2E Test`, () => {
 
     // Http then
     expect(response.status).toBe(HttpStatus.OK);
-    expect(response.body.data).toEqual({ exists: true });
+    const { data }: { data: CheckUserNameDuplicationResponseDto } = response.body;
+    expect(data).toEqual({ exists: true });
   });
 
   it('[200] 존재하지 않는 닉네임이면 exists=false를 반환한다.', async () => {
@@ -46,7 +48,8 @@ describe(`GET ${URL} E2E Test`, () => {
 
     // Http then
     expect(response.status).toBe(HttpStatus.OK);
-    expect(response.body.data).toEqual({ exists: false });
+    const { data }: { data: CheckUserNameDuplicationResponseDto } = response.body;
+    expect(data).toEqual({ exists: false });
   });
 
   it('[400] 닉네임이 비어 있으면 유효성 검사에 실패한다.', async () => {

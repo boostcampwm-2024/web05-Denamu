@@ -6,6 +6,7 @@ import TestAgent from 'supertest/lib/agent';
 import { Feed } from '@feed/entity/feed.entity';
 import { FeedRepository } from '@feed/repository/feed.repository';
 
+import { GetOwnedRssFeedsResponseDto } from '@rss/dto/response/getOwnedRssFeeds.dto';
 import { RssAccept } from '@rss/entity/rss.entity';
 import { RssAcceptRepository } from '@rss/repository/rss.repository';
 
@@ -85,10 +86,9 @@ describe(`소유 RSS 게시글 관리 E2E Test`, () => {
         .set('Authorization', `Bearer ${accessToken}`);
 
       expect(response.status).toBe(HttpStatus.OK);
-      const { data } = response.body;
+      const { data }: { data: GetOwnedRssFeedsResponseDto } = response.body;
       expect(data.result).toHaveLength(3);
-      // id DESC → feeds[2], feeds[1](비공개), feeds[0]
-      expect(data.result.map((f: { id: number }) => f.id)).toStrictEqual([
+      expect(data.result.map((f) => f.id)).toStrictEqual([
         feeds[2].id,
         feeds[1].id,
         feeds[0].id,

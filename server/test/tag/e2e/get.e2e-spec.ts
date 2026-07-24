@@ -3,6 +3,7 @@ import { HttpStatus } from '@nestjs/common';
 import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 
+import { ReadTagResponseDto } from '@tag/dto/response/readTag.dto';
 import { Category } from '@tag/entity/category.entity';
 import { Tag } from '@tag/entity/tag.entity';
 import { CategoryRepository } from '@tag/repository/category.repository';
@@ -46,7 +47,8 @@ describe(`GET ${URL} E2E Test`, () => {
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
-    expect(response.body.data).toStrictEqual([
+    const { data }: { data: ReadTagResponseDto[] } = response.body;
+    expect(data).toStrictEqual([
       { category: 'FrontEnd', tags: ['Frontend', 'React'] },
       { category: 'BackEnd', tags: ['Backend'] },
     ]);
@@ -58,6 +60,7 @@ describe(`GET ${URL} E2E Test`, () => {
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
-    expect(response.body.data).toStrictEqual([]);
+    const { data }: { data: ReadTagResponseDto[] } = response.body;
+    expect(data).toStrictEqual([]);
   });
 });
