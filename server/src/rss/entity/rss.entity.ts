@@ -67,6 +67,9 @@ export class Rss extends RssInformation {
 
   @Column({ name: 'rss_url', length: 255, nullable: false, unique: true })
   rssUrl: string;
+
+  @Column({ name: 'image', type: 'text', nullable: true })
+  image: string | null;
 }
 
 @Entity({
@@ -108,6 +111,9 @@ export class RssAccept extends RssInformation {
   @JoinColumn({ name: 'user_id' })
   user: User | null;
 
+  @Column({ name: 'image', type: 'text', nullable: true })
+  image: string | null;
+
   static fromRss(rss: Rss) {
     const blog = new RssAccept();
     blog.name = rss.name;
@@ -116,6 +122,7 @@ export class RssAccept extends RssInformation {
     blog.rssUrl = rss.rssUrl;
     blog.blogUrl = rss.blogUrl;
     blog.blogPlatform = rss.blogPlatform;
+    blog.image = rss.image;
     blog.feeds = [];
 
     return blog;

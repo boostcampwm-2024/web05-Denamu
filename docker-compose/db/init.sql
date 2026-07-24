@@ -26,6 +26,7 @@ CREATE TABLE `rss` (
   `rss_url` varchar(255) NOT NULL,
   `blog_url` varchar(255) NOT NULL DEFAULT '',
   `blog_platform` varchar(255) NOT NULL DEFAULT 'etc',
+  `image` text,
   PRIMARY KEY (`id`),
   UNIQUE KEY `IDX_21beac47feacb87e57c59d6958` (`name`),
   UNIQUE KEY `IDX_af1d102908727aa95ef09e1606` (`rss_url`)
@@ -62,6 +63,7 @@ CREATE TABLE `rss_accept` (
   `blog_url` varchar(255) NOT NULL DEFAULT '',
   `blog_platform` varchar(255) NOT NULL DEFAULT 'etc',
   `user_id` int DEFAULT NULL,
+  `image` text,
   PRIMARY KEY (`id`),
   UNIQUE KEY `IDX_59f4be4de3817b3f975acff076` (`name`),
   UNIQUE KEY `IDX_b3a5d4196368864d938dae4e9f` (`rss_url`),
