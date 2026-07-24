@@ -1,3 +1,23 @@
+pre-commit:
+    parallel: true
+    commands:
+        client:
+            root: client/
+            glob: '*.{ts,tsx,js,jsx}'
+            run: npx eslint {staged_files}
+        server:
+            root: server/
+            glob: '*.ts'
+            run: npx eslint {staged_files}
+        feed-crawler:
+            root: feed-crawler/
+            glob: '*.ts'
+            run: npx eslint {staged_files}
+        email-worker:
+            root: email-worker/
+            glob: '*.ts'
+            run: npx eslint {staged_files}
+
 commit-msg:
     parallel: true
     commands:
