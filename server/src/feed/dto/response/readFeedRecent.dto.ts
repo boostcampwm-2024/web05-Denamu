@@ -73,6 +73,13 @@ export class ReadFeedRecentResponseDto {
   })
   tag: string[] | string;
 
+  @ApiProperty({
+    example: 'https://example.com/profile.png',
+    description: 'RSS 채널 프로필 이미지 URL',
+    nullable: true,
+  })
+  blogImage: string | null;
+
   constructor(partial: Partial<ReadFeedRecentResponseDto>) {
     Object.assign(this, partial);
   }
@@ -91,6 +98,7 @@ export class ReadFeedRecentResponseDto {
       likes: parseInt(feed.likes),
       comments: parseInt(feed.comments),
       tag: feed.tagList,
+      blogImage: feed.blogImage || null,
     });
   }
 
@@ -102,6 +110,7 @@ export class ReadFeedRecentResponseDto {
 export type FeedRecentRedis = {
   id: string;
   blogPlatform: string;
+  blogImage?: string;
   createdAt: string;
   viewCount: string;
   blogName: string;

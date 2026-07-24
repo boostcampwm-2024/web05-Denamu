@@ -39,6 +39,13 @@ export class SearchFeedResult {
   @ApiProperty({ example: 0, description: '댓글 수' })
   comments: number;
 
+  @ApiProperty({
+    example: 'https://example.com/profile.png',
+    description: 'RSS 채널 프로필 이미지 URL',
+    nullable: true,
+  })
+  blogImage: string | null;
+
   private constructor(partial: Partial<SearchFeedResult>) {
     Object.assign(this, partial);
   }
@@ -57,6 +64,7 @@ export class SearchFeedResult {
       tag: [],
       likes: feed.likeCount,
       comments: feed.commentCount,
+      blogImage: feed.blog.image ?? null,
     });
   }
 

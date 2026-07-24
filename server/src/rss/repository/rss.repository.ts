@@ -52,6 +52,7 @@ export class RssAcceptRepository extends Repository<RssAccept> {
       .select('rss.id', 'id')
       .addSelect('rss.name', 'name')
       .addSelect('rss.blog_platform', 'blogPlatform')
+      .addSelect('rss.image', 'image')
       .addSelect('MAX(feed.created_at)', 'lastPublishedAt')
       .addSelect(
         (qb) =>
@@ -74,6 +75,7 @@ export class RssAcceptRepository extends Repository<RssAccept> {
         id: number;
         name: string;
         blogPlatform: string;
+        image: string | null;
         lastPublishedAt: Date;
         latestFeedId: string;
       }>();

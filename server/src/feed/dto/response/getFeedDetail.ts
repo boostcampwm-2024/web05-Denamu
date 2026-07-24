@@ -113,6 +113,13 @@ export class GetFeedDetailResponseDto {
   })
   isBlocked: boolean;
 
+  @ApiProperty({
+    example: 'https://example.com/profile.png',
+    description: 'RSS 채널 프로필 이미지 URL',
+    nullable: true,
+  })
+  blogImage: string | null;
+
   constructor(partial: Partial<GetFeedDetailResponseDto>) {
     Object.assign(this, partial);
   }
@@ -143,6 +150,7 @@ export class GetFeedDetailResponseDto {
       isOwnerCertified: blogMeta?.userId != null,
       isSubscribed,
       isBlocked,
+      blogImage: feed.blogImage ?? null,
     });
   }
 }

@@ -39,6 +39,13 @@ export class ReadRssAcceptHistoryResponseDto {
   })
   blogPlatform: string;
 
+  @ApiProperty({
+    example: 'https://blog-platform.com/blog-profile-image.png',
+    description: 'RSS 피드에서 추출한 블로그 프로필 이미지 URL (미설정 시 null)',
+    nullable: true,
+  })
+  image: string | null;
+
   constructor(partial: Partial<ReadRssAcceptHistoryResponseDto>) {
     Object.assign(this, partial);
   }
@@ -51,6 +58,7 @@ export class ReadRssAcceptHistoryResponseDto {
       email: rssAccept.email,
       rssUrl: rssAccept.rssUrl,
       blogPlatform: rssAccept.blogPlatform,
+      image: rssAccept.image ?? null,
     });
   }
 

@@ -39,6 +39,13 @@ export class SubscribedRssResponseDto {
   })
   feedCount: number;
 
+  @ApiProperty({
+    example: 'https://example.com/profile.png',
+    description: 'RSS 채널 프로필 이미지 URL',
+    nullable: true,
+  })
+  image: string | null;
+
   constructor(partial: Partial<SubscribedRssResponseDto>) {
     Object.assign(this, partial);
   }
@@ -51,6 +58,7 @@ export class SubscribedRssResponseDto {
       rssUrl: rssAccept.rssUrl,
       blogPlatform: rssAccept.blogPlatform,
       feedCount,
+      image: rssAccept.image ?? null,
     });
   }
 

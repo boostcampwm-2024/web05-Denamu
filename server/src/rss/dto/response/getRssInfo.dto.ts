@@ -98,6 +98,13 @@ export class GetRssInfoResponseDto {
   })
   isBlocked: boolean;
 
+  @ApiProperty({
+    example: 'https://blog-platform.com/blog-profile-image.png',
+    description: 'RSS 피드에서 추출한 블로그 프로필 이미지 URL (미설정 시 null)',
+    nullable: true,
+  })
+  image: string | null;
+
   constructor(partial: Partial<GetRssInfoResponseDto>) {
     Object.assign(this, partial);
   }
@@ -132,6 +139,7 @@ export class GetRssInfoResponseDto {
       lastPublishedAt,
       owner,
       isBlocked,
+      image: rssAccept.image ?? null,
     });
   }
 }
