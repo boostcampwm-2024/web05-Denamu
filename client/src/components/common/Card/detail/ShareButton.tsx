@@ -11,9 +11,24 @@ import { TOAST_MESSAGES } from "@/constants/messages.ts";
 import { useMediaStore } from "@/store/useMediaStore";
 import { FeedDetail } from "@/types/post";
 
+type KakaoSDK = {
+  init: (appKey: string) => void;
+  cleanup?: () => void;
+  Share: {
+    sendDefault: (settings: {
+      objectType: "feed";
+      content: {
+        title: string;
+        imageUrl: string;
+        link: { webUrl: string };
+      };
+    }) => void;
+  };
+};
+
 declare global {
   interface Window {
-    Kakao: any;
+    Kakao: KakaoSDK;
   }
 }
 type ButtonType = {

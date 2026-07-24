@@ -6,9 +6,9 @@ import { useMutation, UseMutationResult } from "@tanstack/react-query";
 
 export const useRegisterRss = (
   onSuccess: (data: RegisterResponse) => void,
-  onError: (error: AxiosError<unknown, any>) => void
-): UseMutationResult<RegisterResponse, AxiosError<unknown, any>, RegisterRss, unknown> => {
-  return useMutation<RegisterResponse, AxiosError<unknown, any>, RegisterRss>({
+  onError: (error: AxiosError<unknown>) => void
+): UseMutationResult<RegisterResponse, AxiosError<unknown>, RegisterRss, unknown> => {
+  return useMutation<RegisterResponse, AxiosError<unknown>, RegisterRss>({
     mutationFn: registerRss,
     onSuccess,
     onError,

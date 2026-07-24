@@ -6,6 +6,7 @@ import TestAgent from 'supertest/lib/agent';
 import { RssAccept } from '@rss/entity/rss.entity';
 import { RssAcceptRepository } from '@rss/repository/rss.repository';
 
+import { GetSubscribersResponseDto } from '@subscribe/dto/response/getSubscribers.dto';
 import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
 
 import { User } from '@user/entity/user.entity';
@@ -85,9 +86,10 @@ describe(`GET /api/rss/:rssId/subscribers E2E Test`, () => {
       .set('Authorization', `Bearer ${accessToken}`);
 
     expect(response.status).toBe(HttpStatus.OK);
-    expect(response.body.data.result).toHaveLength(1);
-    expect(response.body.data.result[0].id).toBe(subscription.id);
-    expect(response.body.data.hasMore).toBe(false);
+    const { data }: { data: GetSubscribersResponseDto } = response.body;
+    expect(data.result).toHaveLength(1);
+    expect(data.result[0].id).toBe(subscription.id);
+    expect(data.hasMore).toBe(false);
   });
 
   it('[200] limit 기반 커서 페이지네이션이 동작한다.', async () => {
@@ -102,23 +104,20 @@ describe(`GET /api/rss/:rssId/subscribers E2E Test`, () => {
       .set('Authorization', `Bearer ${accessToken}`);
 
     expect(page1.status).toBe(HttpStatus.OK);
-    expect(page1.body.data.result.map((r: { id: number }) => r.id)).toEqual([
-      third.id,
-      second.id,
-    ]);
-    expect(page1.body.data.hasMore).toBe(true);
-    expect(page1.body.data.lastId).toBe(second.id);
+    const { data: page1Data }: { data: GetSubscribersResponseDto } = page1.body;
+    expect(page1Data.result.map((r) => r.id)).toEqual([third.id, second.id]);
+    expect(page1Data.hasMore).toBe(true);
+    expect(page1Data.lastId).toBe(second.id);
 
     // 2페이지: 커서(lastId) 이후 남은 1개 + hasMore=false
     const page2 = await agent
       .get(makeURL(ownedRss.id))
-      .query({ limit: 2, lastId: page1.body.data.lastId })
+      .query({ limit: 2, lastId: page1Data.lastId })
       .set('Authorization', `Bearer ${accessToken}`);
 
     expect(page2.status).toBe(HttpStatus.OK);
-    expect(page2.body.data.result.map((r: { id: number }) => r.id)).toEqual([
-      first.id,
-    ]);
-    expect(page2.body.data.hasMore).toBe(false);
+    const { data: page2Data }: { data: GetSubscribersResponseDto } = page2.body;
+    expect(page2Data.result.map((r) => r.id)).toEqual([first.id]);
+    expect(page2Data.hasMore).toBe(false);
   });
 });

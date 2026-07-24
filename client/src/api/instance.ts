@@ -1,4 +1,4 @@
-import axios, { AxiosError } from "axios";
+import axios, { AxiosError, AxiosHeaders, InternalAxiosRequestConfig } from "axios";
 
 import { BASE_URL } from "@/constants/endpoints";
 import { useAuthStore } from "@/store/useAuthStore.ts";
@@ -28,17 +28,15 @@ axiosInstance.interceptors.request.use((config) => {
   return config;
 });
 
-type RetryConfig = {
+type RetryConfig = InternalAxiosRequestConfig & {
   _retry?: boolean;
   _skipRefresh?: boolean;
-  headers?: any;
-  [key: string]: any;
 };
 
 // 응답 인터셉터: 401이면 refresh 1회 후 재시도
 axiosInstance.interceptors.response.use((res) => res, async (error: AxiosError) => {
   const status = error.response?.status;
-  const originalRequest = (error.config ?? {}) as RetryConfig;
+  const originalRequest = error.config as RetryConfig | undefined;
 
   if (status !== 401 || !originalRequest) {
     return Promise.reject(error);
@@ -74,7 +72,7 @@ axiosInstance.interceptors.response.use((res) => res, async (error: AxiosError) 
       return Promise.reject(error);
     }
 
-    originalRequest.headers = originalRequest.headers ?? {};
+    originalRequest.headers = originalRequest.headers ?? new AxiosHeaders();
     originalRequest.headers.Authorization = `Bearer ${newToken}`;
     return axiosInstance.request(originalRequest);
   } catch (e) {

@@ -6,11 +6,11 @@ import {
 
 import { DataSource } from 'typeorm';
 
-import { CommentService } from '@comment/service/comment.service';
 import { GetCommentResponseDto } from '@comment/dto/response/getComment.dto';
 import { GetUserCommentsResponseDto } from '@comment/dto/response/getUserComments.dto';
 import { Comment } from '@comment/entity/comment.entity';
 import { CommentRepository } from '@comment/repository/comment.repository';
+import { CommentService } from '@comment/service/comment.service';
 
 import { Payload } from '@common/guard/jwt.guard';
 
@@ -77,7 +77,10 @@ describe(`${CommentService.name} Unit Test`, () => {
           user: { id: 1, userName: 'tester', profileImage: null },
         },
       ] as any;
-      feedService.getPublicFeed.mockResolvedValue({ id: 10, isPublic: true } as any);
+      feedService.getPublicFeed.mockResolvedValue({
+        id: 10,
+        isPublic: true,
+      } as any);
       commentRepository.getCommentInformation.mockResolvedValue(comments);
 
       // when
@@ -198,13 +201,13 @@ describe(`${CommentService.name} Unit Test`, () => {
     it('비공개 게시글이면 NotFoundException을 던지고 저장하지 않는다.', async () => {
       // given - getPublicFeed가 비공개 게시글에 대해 404를 던진다.
       feedService.getPublicFeed.mockRejectedValue(
-        new NotFoundException('존재하지 않는 게시글입니다.')
+        new NotFoundException('존재하지 않는 게시글입니다.'),
       );
 
       // when & then
-      await expect(commentService.create(user, 10, { comment: 'x' })).rejects.toThrow(
-        NotFoundException
-      );
+      await expect(
+        commentService.create(user, 10, { comment: 'x' }),
+      ).rejects.toThrow(NotFoundException);
       expect(manager.save).not.toHaveBeenCalled();
     });
 
@@ -346,7 +349,7 @@ describe(`${CommentService.name} Unit Test`, () => {
         isDeleted: false,
         user: { id: user.id },
         feed,
-      } as any;
+      } as Comment;
       commentRepository.findOne.mockResolvedValue(comment);
       commentRepository.count.mockResolvedValue(2);
 
@@ -414,8 +417,8 @@ describe(`${CommentService.name} Unit Test`, () => {
         id: 5,
         isDeleted: false,
         isAdminDeleted: false,
-      } as any;
-      commentRepository.findOne.mockResolvedValue(comment);
+      };
+      commentRepository.findOne.mockResolvedValue(comment as unknown as Comment);
 
       // when
       await commentService.deleteByAdmin(5);
@@ -455,7 +458,11 @@ describe(`${CommentService.name} Unit Test`, () => {
       // then
       expect(dto.comment).toBe('관리자에 의해 제거된 댓글입니다.');
       expect(dto.isDeleted).toBe(true);
-      expect(dto.user).toEqual({ id: 0, userName: '(알 수 없음)', profileImage: null });
+      expect(dto.user).toEqual({
+        id: 0,
+        userName: '(알 수 없음)',
+        profileImage: null,
+      });
     });
 
     it('일반 soft delete 댓글은 "삭제된 댓글입니다." placeholder로 변환한다.', () => {

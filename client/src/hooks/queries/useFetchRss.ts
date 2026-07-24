@@ -1,7 +1,7 @@
 import { admin } from "@/api/services/admin/rss";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
-export const useFetchData = (queryKey: string, queryFn: () => Promise<any>) => {
+export const useFetchData = <TData,>(queryKey: string, queryFn: () => Promise<TData>) => {
   const queryClient = useQueryClient();
 
   const { data, isLoading, error } = useQuery({

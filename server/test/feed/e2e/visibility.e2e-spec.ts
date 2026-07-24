@@ -3,6 +3,8 @@ import { HttpStatus } from '@nestjs/common';
 import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 
+import { GetFeedDetailResponseDto } from '@feed/dto/response/getFeedDetail';
+import { ReadFeedPaginationResponseDto } from '@feed/dto/response/readFeedPagination.dto';
 import { Feed } from '@feed/entity/feed.entity';
 import { FeedRepository } from '@feed/repository/feed.repository';
 
@@ -45,7 +47,8 @@ describe(`비공개 게시글 공개 노출 제외 E2E Test (feed_view 필터)`,
     const response = await agent.get(URL).query({ limit: 10 });
 
     expect(response.status).toBe(HttpStatus.OK);
-    const ids = response.body.data.result.map((f: { id: number }) => f.id);
+    const { data }: { data: ReadFeedPaginationResponseDto } = response.body;
+    const ids = data.result.map((f) => f.id);
     expect(ids).toContain(publicFeed.id);
     expect(ids).not.toContain(privateFeed.id);
   });
@@ -58,6 +61,7 @@ describe(`비공개 게시글 공개 노출 제외 E2E Test (feed_view 필터)`,
   it('[200] 공개 게시글 상세 조회는 정상 제공된다.', async () => {
     const response = await agent.get(`${URL}/${publicFeed.id}`);
     expect(response.status).toBe(HttpStatus.OK);
-    expect(response.body.data.id).toBe(publicFeed.id);
+    const { data }: { data: GetFeedDetailResponseDto } = response.body;
+    expect(data.id).toBe(publicFeed.id);
   });
 });
