@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 
 import { DataSource, Repository } from 'typeorm';
 
-import { Block } from '@block/entity/block.entity';
+import { UserBlock } from '@block/entity/userBlock.entity';
 
 import { User } from '@user/entity/user.entity';
 
@@ -40,7 +40,7 @@ export class UserRepository extends Repository<User> {
   }
 
   async isUserBlocked(blockerId: number, blockedId: number) {
-    return await this.manager.exists(Block, {
+    return await this.manager.exists(UserBlock, {
       where: {
         blocker: { id: blockerId },
         blocked: { id: blockedId },

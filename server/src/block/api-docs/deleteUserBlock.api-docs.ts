@@ -7,7 +7,7 @@ import {
   ApiUnauthorizedDoc,
 } from '@common/swagger/swagger.helper';
 
-export function ApiDeleteBlock() {
+export function ApiDeleteUserBlock() {
   return applyDecorators(
     ApiOperation({ summary: '사용자 차단 해제 API' }),
     ApiBearerAuth(),

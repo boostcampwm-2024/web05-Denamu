@@ -4,15 +4,15 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import { Payload } from '@common/guard/jwt.guard';
-
 import { GetBlockedRssResponseDto } from '@block/dto/response/getBlockedRss.dto';
 import { GetBlockedUsersResponseDto } from '@block/dto/response/getBlockedUsers.dto';
-import { Block } from '@block/entity/block.entity';
 import { RssBlock } from '@block/entity/rssBlock.entity';
-import { BlockRepository } from '@block/repository/block.repository';
+import { UserBlock } from '@block/entity/userBlock.entity';
 import { RssBlockRepository } from '@block/repository/rssBlock.repository';
+import { UserBlockRepository } from '@block/repository/userBlock.repository';
 import { BlockService } from '@block/service/block.service';
+
+import { Payload } from '@common/guard/jwt.guard';
 
 import { RssAcceptRepository } from '@rss/repository/rss.repository';
 
@@ -21,7 +21,7 @@ import { UserService } from '@user/service/user.service';
 describe(`${BlockService.name} Unit Test`, () => {
   let blockService: BlockService;
   let blockRepository: jest.Mocked<
-    Pick<BlockRepository, 'insert' | 'delete' | 'getBlockedUsers'>
+    Pick<UserBlockRepository, 'insert' | 'delete' | 'getBlockedUsers'>
   >;
   let rssBlockRepository: jest.Mocked<
     Pick<RssBlockRepository, 'insert' | 'delete' | 'getBlockedRssList'>
@@ -52,7 +52,7 @@ describe(`${BlockService.name} Unit Test`, () => {
     userService = { getUser: jest.fn() };
 
     blockService = new BlockService(
-      blockRepository as unknown as BlockRepository,
+      blockRepository as unknown as UserBlockRepository,
       rssBlockRepository as unknown as RssBlockRepository,
       rssAcceptRepository as unknown as RssAcceptRepository,
       userService as unknown as UserService,
@@ -157,7 +157,7 @@ describe(`${BlockService.name} Unit Test`, () => {
             profileImage: null,
           },
         },
-      ] as Block[];
+      ] as UserBlock[];
       blockRepository.getBlockedUsers.mockResolvedValue(blocks);
 
       // when

@@ -9,7 +9,7 @@ import {
   ApiUnauthorizedDoc,
 } from '@common/swagger/swagger.helper';
 
-export function ApiCreateBlock() {
+export function ApiCreateUserBlock() {
   return applyDecorators(
     ApiOperation({ summary: '사용자 차단 등록 API' }),
     ApiBearerAuth(),

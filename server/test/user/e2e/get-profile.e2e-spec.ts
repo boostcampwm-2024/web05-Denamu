@@ -1,8 +1,9 @@
 import { HttpStatus } from '@nestjs/common';
 
-import { BlockRepository } from '@block/repository/block.repository';
 import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
+
+import { UserBlockRepository } from '@block/repository/userBlock.repository';
 
 import { GetUserProfileResponseDto } from '@user/dto/response/getUserProfile.dto';
 import { User } from '@user/entity/user.entity';
@@ -16,13 +17,13 @@ const URL = (id: number | string) => `/api/users/${id}/profile`;
 describe(`GET /api/users/:id/profile E2E Test`, () => {
   let agent: TestAgent;
   let userRepository: UserRepository;
-  let blockRepository: BlockRepository;
+  let blockRepository: UserBlockRepository;
   let user: User;
 
   beforeAll(() => {
     agent = supertest(testApp.getHttpServer());
     userRepository = testApp.get(UserRepository);
-    blockRepository = testApp.get(BlockRepository);
+    blockRepository = testApp.get(UserBlockRepository);
   });
 
   beforeEach(async () => {

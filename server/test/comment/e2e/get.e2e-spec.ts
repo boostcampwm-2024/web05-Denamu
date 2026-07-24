@@ -3,7 +3,7 @@ import { HttpStatus } from '@nestjs/common';
 import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 
-import { BlockRepository } from '@block/repository/block.repository';
+import { UserBlockRepository } from '@block/repository/userBlock.repository';
 
 import { Comment } from '@comment/entity/comment.entity';
 import { CommentRepository } from '@comment/repository/comment.repository';
@@ -29,7 +29,7 @@ describe(`GET ${BASE_URL}/:feedId/comments E2E Test`, () => {
   let agent: TestAgent;
   let feed: Feed;
   let commentRepository: CommentRepository;
-  let blockRepository: BlockRepository;
+  let blockRepository: UserBlockRepository;
   let userRepository: UserRepository;
   let rssAcceptRepository: RssAcceptRepository;
   let feedRepository: FeedRepository;
@@ -40,7 +40,7 @@ describe(`GET ${BASE_URL}/:feedId/comments E2E Test`, () => {
   beforeAll(() => {
     agent = supertest(testApp.getHttpServer());
     commentRepository = testApp.get(CommentRepository);
-    blockRepository = testApp.get(BlockRepository);
+    blockRepository = testApp.get(UserBlockRepository);
     userRepository = testApp.get(UserRepository);
     rssAcceptRepository = testApp.get(RssAcceptRepository);
     feedRepository = testApp.get(FeedRepository);

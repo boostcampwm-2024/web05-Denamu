@@ -3,7 +3,7 @@ import { HttpStatus } from '@nestjs/common';
 import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 
-import { BlockRepository } from '@block/repository/block.repository';
+import { UserBlockRepository } from '@block/repository/userBlock.repository';
 
 import { User } from '@user/entity/user.entity';
 import { UserRepository } from '@user/repository/user.repository';
@@ -25,12 +25,12 @@ type SearchResponseBody = {
 describe(`GET ${URL}?find={} E2E Test`, () => {
   let agent: TestAgent;
   let userRepository: UserRepository;
-  let blockRepository: BlockRepository;
+  let blockRepository: UserBlockRepository;
 
   beforeAll(() => {
     agent = supertest(testApp.getHttpServer());
     userRepository = testApp.get(UserRepository);
-    blockRepository = testApp.get(BlockRepository);
+    blockRepository = testApp.get(UserBlockRepository);
   });
 
   const saveUser = (userName: string, overwrites: Partial<User> = {}) =>
@@ -142,7 +142,9 @@ describe(`GET ${URL}?find={} E2E Test`, () => {
     );
 
     // when
-    const response = await agent.get(URL).query({ find: '김', page: 2, limit: 2 });
+    const response = await agent
+      .get(URL)
+      .query({ find: '김', page: 2, limit: 2 });
 
     // then
     const { data } = response.body as SearchResponseBody;

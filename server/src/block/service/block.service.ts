@@ -5,14 +5,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import { Payload } from '@common/guard/jwt.guard';
-
 import { ManageBlockRequestDto } from '@block/dto/request/manageBlock.dto';
 import { ManageRssBlockRequestDto } from '@block/dto/request/manageRssBlock.dto';
 import { GetBlockedRssResponseDto } from '@block/dto/response/getBlockedRss.dto';
 import { GetBlockedUsersResponseDto } from '@block/dto/response/getBlockedUsers.dto';
-import { BlockRepository } from '@block/repository/block.repository';
 import { RssBlockRepository } from '@block/repository/rssBlock.repository';
+import { UserBlockRepository } from '@block/repository/userBlock.repository';
+
+import { Payload } from '@common/guard/jwt.guard';
 
 import { RssAcceptRepository } from '@rss/repository/rss.repository';
 
@@ -21,7 +21,7 @@ import { UserService } from '@user/service/user.service';
 @Injectable()
 export class BlockService {
   constructor(
-    private readonly blockRepository: BlockRepository,
+    private readonly userBlockRepository: UserBlockRepository,
     private readonly rssBlockRepository: RssBlockRepository,
     private readonly rssAcceptRepository: RssAcceptRepository,
     private readonly userService: UserService,
@@ -34,7 +34,7 @@ export class BlockService {
     await this.userService.getUser(blockDto.userId);
 
     try {
-      await this.blockRepository.insert({
+      await this.userBlockRepository.insert({
         blocker: { id: userInformation.id },
         blocked: { id: blockDto.userId },
       });
@@ -47,7 +47,7 @@ export class BlockService {
   }
 
   async delete(userInformation: Payload, blockDto: ManageBlockRequestDto) {
-    const result = await this.blockRepository.delete({
+    const result = await this.userBlockRepository.delete({
       blocker: { id: userInformation.id },
       blocked: { id: blockDto.userId },
     });
@@ -58,7 +58,7 @@ export class BlockService {
   }
 
   async getBlockedUsers(userInformation: Payload) {
-    const blocks = await this.blockRepository.getBlockedUsers(
+    const blocks = await this.userBlockRepository.getBlockedUsers(
       userInformation.id,
     );
     return GetBlockedUsersResponseDto.toResponseDtoArray(blocks);

@@ -3,7 +3,7 @@ import { HttpStatus } from '@nestjs/common';
 import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 
-import { BlockRepository } from '@block/repository/block.repository';
+import { UserBlockRepository } from '@block/repository/userBlock.repository';
 
 import { User } from '@user/entity/user.entity';
 import { UserRepository } from '@user/repository/user.repository';
@@ -11,11 +11,11 @@ import { UserRepository } from '@user/repository/user.repository';
 import { UserFixture } from '@test/config/common/fixture/user.fixture';
 import { createAccessToken, testApp } from '@test/config/e2e/env/jest.setup';
 
-const BASE_URL = '/api/blocks';
+const BASE_URL = '/api/blocks/user';
 
 describe(`POST ${BASE_URL}/:userId E2E Test`, () => {
   let agent: TestAgent;
-  let blockRepository: BlockRepository;
+  let blockRepository: UserBlockRepository;
   let userRepository: UserRepository;
   let blocker: User;
   let target: User;
@@ -23,7 +23,7 @@ describe(`POST ${BASE_URL}/:userId E2E Test`, () => {
 
   beforeAll(() => {
     agent = supertest(testApp.getHttpServer());
-    blockRepository = testApp.get(BlockRepository);
+    blockRepository = testApp.get(UserBlockRepository);
     userRepository = testApp.get(UserRepository);
   });
 

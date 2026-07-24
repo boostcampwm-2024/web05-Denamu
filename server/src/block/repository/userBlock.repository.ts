@@ -2,12 +2,12 @@ import { Injectable } from '@nestjs/common';
 
 import { DataSource, Repository } from 'typeorm';
 
-import { Block } from '@block/entity/block.entity';
+import { UserBlock } from '@block/entity/userBlock.entity';
 
 @Injectable()
-export class BlockRepository extends Repository<Block> {
+export class UserBlockRepository extends Repository<UserBlock> {
   constructor(private dataSource: DataSource) {
-    super(Block, dataSource.createEntityManager());
+    super(UserBlock, dataSource.createEntityManager());
   }
 
   async getBlockedUsers(blockerId: number) {
