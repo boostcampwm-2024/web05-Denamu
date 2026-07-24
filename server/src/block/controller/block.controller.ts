@@ -30,7 +30,7 @@ export class BlockController {
   constructor(private readonly blockService: BlockService) {}
 
   @ApiGetBlockedUsers()
-  @Get()
+  @Get('/user')
   @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.OK)
   async getBlockedUsers(@CurrentUser() user: Payload) {
@@ -76,7 +76,7 @@ export class BlockController {
   }
 
   @ApiCreateUserBlock()
-  @Post('/:userId')
+  @Post('/user/:userId')
   @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.CREATED)
   async createBlock(
@@ -88,7 +88,7 @@ export class BlockController {
   }
 
   @ApiDeleteUserBlock()
-  @Delete('/:userId')
+  @Delete('/user/:userId')
   @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.OK)
   async deleteBlock(
