@@ -103,27 +103,17 @@ export const AdminTabs = ({ setLogout }: { setLogout: () => void }) => {
       </div>
     );
 
-  const pendingRss: AdminRssData[] =
+  const filterBySearchParam = (rssList: AdminRssData[] = []): AdminRssData[] =>
     searchParam === ""
-      ? pendingData.data
-      : pendingData.data.filter(
+      ? rssList
+      : rssList.filter(
           (data: AdminRssData) =>
             data.name.includes(searchParam) || data.userName.includes(searchParam) || data.rssUrl.includes(searchParam)
         );
-  const acceptedRss: AdminRssData[] =
-    searchParam === ""
-      ? acceptedData.data
-      : acceptedData.data.filter(
-          (data: AdminRssData) =>
-            data.name.includes(searchParam) || data.userName.includes(searchParam) || data.rssUrl.includes(searchParam)
-        );
-  const rejectedRss: AdminRssData[] =
-    searchParam === ""
-      ? rejectedData.data
-      : rejectedData.data.filter(
-          (data: AdminRssData) =>
-            data.name.includes(searchParam) || data.userName.includes(searchParam) || data.rssUrl.includes(searchParam)
-        );
+
+  const pendingRss: AdminRssData[] = filterBySearchParam(pendingData?.data);
+  const acceptedRss: AdminRssData[] = filterBySearchParam(acceptedData?.data);
+  const rejectedRss: AdminRssData[] = filterBySearchParam(rejectedData?.data);
 
   return (
     <div>

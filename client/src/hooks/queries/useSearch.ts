@@ -10,7 +10,7 @@ export const useSearch = ({ query, filter, page, pageSize }: SearchRequest) => {
   const [debouncedQuery, setDebouncedQuery] = useState(query);
   const queryClient = useQueryClient();
   useEffect(() => {
-    const handler = debounce((newQuery) => {
+    const handler = debounce((newQuery: string) => {
       setDebouncedQuery(newQuery);
     }, 300);
 

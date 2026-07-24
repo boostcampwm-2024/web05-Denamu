@@ -9,7 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 export const useUserSearch = ({ query, page, pageSize }: UserSearchRequest) => {
   const [debouncedQuery, setDebouncedQuery] = useState(query);
   useEffect(() => {
-    const handler = debounce((newQuery) => {
+    const handler = debounce((newQuery: string) => {
       setDebouncedQuery(newQuery);
     }, 300);
 
