@@ -14,9 +14,9 @@ import { CurrentUser } from '@common/decorator';
 import { JwtGuard, Payload } from '@common/guard/jwt.guard';
 import { ApiResponse } from '@common/response/common.response';
 
-import { ApiCreateBlock } from '@block/api-docs/createBlock.api-docs';
+import { ApiCreateUserBlock } from '@block/api-docs/createUserBlock.api-docs';
 import { ApiCreateRssBlock } from '@block/api-docs/createRssBlock.api-docs';
-import { ApiDeleteBlock } from '@block/api-docs/deleteBlock.api-docs';
+import { ApiDeleteUserBlock } from '@block/api-docs/deleteUserBlock.api-docs';
 import { ApiDeleteRssBlock } from '@block/api-docs/deleteRssBlock.api-docs';
 import { ApiGetBlockedRss } from '@block/api-docs/getBlockedRss.api-docs';
 import { ApiGetBlockedUsers } from '@block/api-docs/getBlockedUsers.api-docs';
@@ -30,7 +30,7 @@ export class BlockController {
   constructor(private readonly blockService: BlockService) {}
 
   @ApiGetBlockedUsers()
-  @Get()
+  @Get('/user')
   @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.OK)
   async getBlockedUsers(@CurrentUser() user: Payload) {
@@ -75,8 +75,8 @@ export class BlockController {
     return ApiResponse.responseWithNoContent('RSS 차단 해제를 성공했습니다.');
   }
 
-  @ApiCreateBlock()
-  @Post('/:userId')
+  @ApiCreateUserBlock()
+  @Post('/user/:userId')
   @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.CREATED)
   async createBlock(
@@ -87,8 +87,8 @@ export class BlockController {
     return ApiResponse.responseWithNoContent('사용자 차단을 성공했습니다.');
   }
 
-  @ApiDeleteBlock()
-  @Delete('/:userId')
+  @ApiDeleteUserBlock()
+  @Delete('/user/:userId')
   @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.OK)
   async deleteBlock(

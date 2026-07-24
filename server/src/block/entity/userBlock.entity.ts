@@ -12,7 +12,7 @@ import { User } from '@user/entity/user.entity';
 
 @Entity({ name: 'blocks' })
 @Unique(['blocker', 'blocked'])
-export class Block extends BaseEntity {
+export class UserBlock extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 

@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-import { Block } from '@block/entity/block.entity';
+import { UserBlock } from '@block/entity/userBlock.entity';
 
 export class GetBlockedUsersResponseDto {
   @ApiProperty({
@@ -32,7 +32,7 @@ export class GetBlockedUsersResponseDto {
     Object.assign(this, partial);
   }
 
-  static toResponseDtoArray(blocks: Block[]) {
+  static toResponseDtoArray(blocks: UserBlock[]) {
     return blocks.map(
       (block) =>
         new GetBlockedUsersResponseDto({

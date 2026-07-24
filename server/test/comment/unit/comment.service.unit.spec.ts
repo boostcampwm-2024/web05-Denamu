@@ -76,7 +76,7 @@ describe(`${CommentService.name} Unit Test`, () => {
           date: new Date('2025-01-01'),
           user: { id: 1, userName: 'tester', profileImage: null },
         },
-      ] as any;
+      ] as Comment[];
       feedService.getPublicFeed.mockResolvedValue({
         id: 10,
         isPublic: true,
@@ -105,7 +105,7 @@ describe(`${CommentService.name} Unit Test`, () => {
         comment: `c${id}`,
         date: new Date('2025-01-01'),
         feed: { id, title: `t${id}`, path: `https://example.com/${id}` },
-      }) as any;
+      }) as Comment;
 
     it('존재하지 않는 유저면 NotFoundException을 던진다.', async () => {
       // given
@@ -371,7 +371,7 @@ describe(`${CommentService.name} Unit Test`, () => {
         parentId: 1,
         user: { id: user.id },
         feed,
-      } as any;
+      } as Comment;
       commentRepository.findOne.mockResolvedValue(comment);
 
       // when
@@ -386,7 +386,7 @@ describe(`${CommentService.name} Unit Test`, () => {
     it('본인 댓글이 아니어도 RSS 소유자면 댓글 수를 감소시키고 댓글을 제거한다.', async () => {
       // given
       const feed = { id: 10, commentCount: 3, blog: { userId: user.id } };
-      const comment = { id: 5, user: { id: 999 }, feed } as any;
+      const comment = { id: 5, user: { id: 999 }, feed } as Comment;
       commentRepository.findOne.mockResolvedValue(comment);
 
       // when
@@ -417,8 +417,8 @@ describe(`${CommentService.name} Unit Test`, () => {
         id: 5,
         isDeleted: false,
         isAdminDeleted: false,
-      };
-      commentRepository.findOne.mockResolvedValue(comment as unknown as Comment);
+      } as Comment;
+      commentRepository.findOne.mockResolvedValue(comment);
 
       // when
       await commentService.deleteByAdmin(5);
@@ -450,7 +450,7 @@ describe(`${CommentService.name} Unit Test`, () => {
         ...baseComment,
         isDeleted: true,
         isAdminDeleted: true,
-      } as any;
+      } as Comment;
 
       // when
       const dto = GetCommentResponseDto.toResponseDto(comment);
@@ -471,7 +471,7 @@ describe(`${CommentService.name} Unit Test`, () => {
         ...baseComment,
         isDeleted: true,
         isAdminDeleted: false,
-      } as any;
+      } as Comment;
 
       // when
       const dto = GetCommentResponseDto.toResponseDto(comment);
@@ -486,7 +486,7 @@ describe(`${CommentService.name} Unit Test`, () => {
         ...baseComment,
         isDeleted: false,
         isAdminDeleted: false,
-      } as any;
+      } as Comment;
 
       // when
       const dto = GetCommentResponseDto.toResponseDto(comment);
@@ -504,8 +504,8 @@ describe(`${CommentService.name} Unit Test`, () => {
         comment: '이전',
         user: { id: user.id },
         feed: { id: 10 },
-      };
-      commentRepository.findOne.mockResolvedValue(comment as any);
+      } as Comment;
+      commentRepository.findOne.mockResolvedValue(comment);
       const dto = { newComment: '수정됨' };
 
       // when

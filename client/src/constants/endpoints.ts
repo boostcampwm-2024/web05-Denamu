@@ -104,8 +104,8 @@ export const OAUTH = {
 };
 
 export const BLOCK = {
-  LIST: "/api/blocks",
-  MANAGE: (userId: number) => `/api/blocks/${userId}`,
+  LIST: "/api/blocks/user",
+  MANAGE: (userId: number) => `/api/blocks/user/${userId}`,
   RSS_LIST: "/api/blocks/rss",
   RSS_MANAGE: (rssId: number) => `/api/blocks/rss/${rssId}`,
 };
