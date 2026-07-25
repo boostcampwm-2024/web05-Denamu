@@ -30,7 +30,7 @@ export interface SearchRequest {
 }
 export type FilterType = "title" | "blogName" | "all";
 
-export type SearchMode = "feed" | "user";
+export type SearchMode = "feed" | "user" | "rss";
 
 export interface UserSearchResult {
   id: number;
@@ -47,6 +47,27 @@ export interface UserSearchData {
 export type UserSearchResponse = ApiData<UserSearchData>;
 
 export interface UserSearchRequest {
+  query: string;
+  page: number;
+  pageSize: number;
+}
+
+export interface RssSearchResult {
+  id: number;
+  name: string;
+  blogPlatform: string;
+  blogImage: string | null;
+}
+
+export interface RssSearchData {
+  totalCount: number;
+  result: RssSearchResult[];
+  totalPages: number;
+}
+
+export type RssSearchResponse = ApiData<RssSearchData>;
+
+export interface RssSearchRequest {
   query: string;
   page: number;
   pageSize: number;

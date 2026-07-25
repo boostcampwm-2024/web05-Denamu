@@ -4,6 +4,7 @@ import { FileText, Sparkles } from "lucide-react";
 
 import type { FeatureItem } from "@/types/about";
 import type { DayInfo, WeekInfo } from "@/types/activity";
+import type { ChildAdmin } from "@/types/admin";
 import type { ChartPlatform, ChartType } from "@/types/chart";
 import type { AdminChatRoom, ChatType } from "@/types/chat";
 import type { FeedDetail, FeedList } from "@/types/post";
@@ -19,8 +20,7 @@ import type {
   UserProfile,
 } from "@/types/profile";
 import type { AdminRssData, RecentRss } from "@/types/rss";
-import type { SearchResult, UserSearchResult } from "@/types/search";
-import type { ChildAdmin } from "@/types/admin";
+import type { RssSearchResult, SearchResult, UserSearchResult } from "@/types/search";
 import type { SubscribedRss } from "@/types/subscription";
 
 export const mockFeedList: FeedList = {
@@ -133,6 +133,13 @@ export const mockUserSearchResult: UserSearchResult = {
   profileImage: "https://picsum.photos/seed/usearch/80/80",
 };
 
+export const mockRssSearchResult: RssSearchResult = {
+  id: 1,
+  name: "seok3765.log",
+  blogPlatform: "velog",
+  blogImage: "https://picsum.photos/seed/rsearch/80/80",
+};
+
 export const mockAdminRssList: AdminRssData[] = [
   {
     id: 1,
@@ -186,15 +193,7 @@ const makeDay = (day: number, count: number): DayInfo => {
 
 export const mockWeekInfo: WeekInfo = {
   weekNumber: 1,
-  days: [
-    makeDay(1, 0),
-    makeDay(2, 2),
-    makeDay(3, 5),
-    makeDay(4, 1),
-    makeDay(5, 8),
-    makeDay(6, 3),
-    makeDay(7, 0),
-  ],
+  days: [makeDay(1, 0), makeDay(2, 2), makeDay(3, 5), makeDay(4, 1), makeDay(5, 8), makeDay(6, 3), makeDay(7, 0)],
 };
 
 export const mockDayInfo: DayInfo = makeDay(5, 8);
@@ -259,9 +258,21 @@ export const mockActivityYears: number[] = [2026, 2025, 2024];
 
 export const mockLikedItemsPage: CursorPage<LikedItem> = {
   result: [
-    { id: 1, likeDate: "2026-06-25T09:00:00.000Z", feed: { id: 1, title: "Storybook으로 컴포넌트 문서화하기", path: "https://example.com/post/1" } },
-    { id: 2, likeDate: "2026-06-24T09:00:00.000Z", feed: { id: 2, title: "TypeScript 5.0 새로운 기능 살펴보기", path: "https://example.com/post/2" } },
-    { id: 3, likeDate: "2026-06-23T09:00:00.000Z", feed: { id: 3, title: "React Query v5 마이그레이션 가이드", path: "https://example.com/post/3" } },
+    {
+      id: 1,
+      likeDate: "2026-06-25T09:00:00.000Z",
+      feed: { id: 1, title: "Storybook으로 컴포넌트 문서화하기", path: "https://example.com/post/1" },
+    },
+    {
+      id: 2,
+      likeDate: "2026-06-24T09:00:00.000Z",
+      feed: { id: 2, title: "TypeScript 5.0 새로운 기능 살펴보기", path: "https://example.com/post/2" },
+    },
+    {
+      id: 3,
+      likeDate: "2026-06-23T09:00:00.000Z",
+      feed: { id: 3, title: "React Query v5 마이그레이션 가이드", path: "https://example.com/post/3" },
+    },
   ],
   lastId: 3,
   hasMore: false,
@@ -269,8 +280,18 @@ export const mockLikedItemsPage: CursorPage<LikedItem> = {
 
 export const mockCommentItemsPage: CursorPage<CommentItem> = {
   result: [
-    { id: 1, comment: "좋은 글 감사합니다!", date: "2026-06-25T09:00:00.000Z", feed: { id: 1, title: "Storybook으로 컴포넌트 문서화하기", path: "https://example.com/post/1" } },
-    { id: 2, comment: "정말 유익한 내용이네요. 특히 마이그레이션 가이드 부분이 도움이 많이 됐습니다.", date: "2026-06-24T09:00:00.000Z", feed: { id: 2, title: "TypeScript 5.0 새로운 기능 살펴보기", path: "https://example.com/post/2" } },
+    {
+      id: 1,
+      comment: "좋은 글 감사합니다!",
+      date: "2026-06-25T09:00:00.000Z",
+      feed: { id: 1, title: "Storybook으로 컴포넌트 문서화하기", path: "https://example.com/post/1" },
+    },
+    {
+      id: 2,
+      comment: "정말 유익한 내용이네요. 특히 마이그레이션 가이드 부분이 도움이 많이 됐습니다.",
+      date: "2026-06-24T09:00:00.000Z",
+      feed: { id: 2, title: "TypeScript 5.0 새로운 기능 살펴보기", path: "https://example.com/post/2" },
+    },
   ],
   lastId: 2,
   hasMore: false,
@@ -283,9 +304,27 @@ export const mockAdminChatRooms: AdminChatRoom[] = [
 ];
 
 export const mockAdminChatMessages: ChatType[] = [
-  { userName: "사용자1", timestamp: "2026-06-25T09:00:00.000Z", message: "안녕하세요!", userId: "user-1", messageId: "msg-1" },
-  { userName: "사용자2", timestamp: "2026-06-25T09:01:00.000Z", message: "반갑습니다. Storybook 설정 완료했나요?", userId: "user-2", messageId: "msg-2" },
-  { userName: "사용자1", timestamp: "2026-06-25T09:02:00.000Z", message: "네, 방금 완료했습니다!", userId: "user-1", messageId: "msg-3" },
+  {
+    userName: "사용자1",
+    timestamp: "2026-06-25T09:00:00.000Z",
+    message: "안녕하세요!",
+    userId: "user-1",
+    messageId: "msg-1",
+  },
+  {
+    userName: "사용자2",
+    timestamp: "2026-06-25T09:01:00.000Z",
+    message: "반갑습니다. Storybook 설정 완료했나요?",
+    userId: "user-2",
+    messageId: "msg-2",
+  },
+  {
+    userName: "사용자1",
+    timestamp: "2026-06-25T09:02:00.000Z",
+    message: "네, 방금 완료했습니다!",
+    userId: "user-1",
+    messageId: "msg-3",
+  },
 ];
 
 export const mockChildAdmins: ChildAdmin[] = [
