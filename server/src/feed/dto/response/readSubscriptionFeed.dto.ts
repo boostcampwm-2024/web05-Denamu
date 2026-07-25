@@ -70,7 +70,7 @@ export class SubscriptionFeedResult {
       tag: feed.tags ? feed.tags.map((tag) => tag.name) : [],
       likes: feed.likeCount,
       comments: feed.commentCount,
-      blogImage: feed.blog.image ?? null,
+      blogImage: feed.blog.blogImage ?? null,
     });
   }
 

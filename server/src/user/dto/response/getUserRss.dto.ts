@@ -56,7 +56,7 @@ export class GetUserRssResponseDto {
     description: 'RSS 피드에서 추출한 블로그 프로필 이미지 URL (미설정 시 null)',
     nullable: true,
   })
-  image: string | null;
+  blogImage: string | null;
 
   constructor(partial: Partial<GetUserRssResponseDto>) {
     Object.assign(this, partial);
@@ -77,7 +77,7 @@ export class GetUserRssResponseDto {
       feedCount,
       subscriberCount,
       isSubscribed,
-      image: rssAccept.image ?? null,
+      blogImage: rssAccept.blogImage ?? null,
     });
   }
 

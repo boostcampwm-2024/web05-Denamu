@@ -64,7 +64,7 @@ export class SearchFeedResult {
       tag: [],
       likes: feed.likeCount,
       comments: feed.commentCount,
-      blogImage: feed.blog.image ?? null,
+      blogImage: feed.blog.blogImage ?? null,
     });
   }
 

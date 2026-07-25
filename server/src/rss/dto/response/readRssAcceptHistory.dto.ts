@@ -44,7 +44,7 @@ export class ReadRssAcceptHistoryResponseDto {
     description: 'RSS 피드에서 추출한 블로그 프로필 이미지 URL (미설정 시 null)',
     nullable: true,
   })
-  image: string | null;
+  blogImage: string | null;
 
   constructor(partial: Partial<ReadRssAcceptHistoryResponseDto>) {
     Object.assign(this, partial);
@@ -58,7 +58,7 @@ export class ReadRssAcceptHistoryResponseDto {
       email: rssAccept.email,
       rssUrl: rssAccept.rssUrl,
       blogPlatform: rssAccept.blogPlatform,
-      image: rssAccept.image ?? null,
+      blogImage: rssAccept.blogImage ?? null,
     });
   }
 

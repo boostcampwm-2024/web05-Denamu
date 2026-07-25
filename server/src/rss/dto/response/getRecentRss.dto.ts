@@ -36,7 +36,7 @@ export class GetRecentRssResponseDto {
     description: 'RSS 채널 프로필 이미지 URL',
     nullable: true,
   })
-  image: string | null;
+  blogImage: string | null;
 
   constructor(partial: Partial<GetRecentRssResponseDto>) {
     Object.assign(this, partial);
@@ -46,7 +46,7 @@ export class GetRecentRssResponseDto {
     id: number;
     name: string;
     blogPlatform: string;
-    image: string | null;
+    blogImage: string | null;
     lastPublishedAt: Date;
     latestFeedId: string;
   }) {
@@ -56,7 +56,7 @@ export class GetRecentRssResponseDto {
       blogPlatform: row.blogPlatform,
       lastPublishedAt: row.lastPublishedAt,
       latestFeedId: Number(row.latestFeedId),
-      image: row.image ?? null,
+      blogImage: row.blogImage ?? null,
     });
   }
 }
