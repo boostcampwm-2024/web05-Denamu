@@ -42,3 +42,20 @@ export const PLATFORMS: Record<PlatformType, Platform> = {
     placeholder: "블로그 주소",
   },
 };
+
+export const BLOG_ADDRESS_PLATFORM_TYPES = ["tistory", "velog", "medium", "github", "naver"] as const;
+export type BlogAddressPlatformType = (typeof BLOG_ADDRESS_PLATFORM_TYPES)[number];
+
+interface BlogAddressTemplate {
+  prefix: string;
+  suffix: string;
+  placeholder: string;
+}
+
+export const BLOG_ADDRESS_TEMPLATES: Record<BlogAddressPlatformType, BlogAddressTemplate> = {
+  tistory: { prefix: "https://", suffix: ".tistory.com", placeholder: "서브도메인" },
+  velog: { prefix: "https://velog.io/@", suffix: "", placeholder: "사용자명" },
+  medium: { prefix: "https://medium.com/@", suffix: "", placeholder: "사용자명" },
+  github: { prefix: "https://", suffix: ".github.io", placeholder: "사용자명" },
+  naver: { prefix: "https://blog.naver.com/", suffix: "", placeholder: "사용자명" },
+};

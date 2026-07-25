@@ -1,16 +1,19 @@
 import { validate } from 'class-validator';
 
 import { RegisterRssRequestDto } from '@rss/dto/request/registerRss.dto';
+import { BlogPlatform } from '@rss/util/blogUrlToRss';
 
 describe(`${RegisterRssRequestDto.name} Test`, () => {
   let dto: RegisterRssRequestDto;
 
   beforeEach(() => {
     dto = new RegisterRssRequestDto({
-      blog: 'test',
+      blogName: 'test',
       name: 'test',
       email: 'test@test.com',
-      rssUrl: 'https://test.com',
+      blogUrl: 'https://test.com',
+      blogPlatform: 'etc',
+      rssUrl: 'https://test.com/rss',
     });
   });
 
@@ -22,10 +25,10 @@ describe(`${RegisterRssRequestDto.name} Test`, () => {
     expect(errors).toHaveLength(0);
   });
 
-  describe('blog', () => {
+  describe('blogName', () => {
     it('블로그 이름이 없을 경우 유효성 검사에 실패한다.', async () => {
       // given
-      dto.blog = null;
+      dto.blogName = null;
 
       // when
       const errors = await validate(dto);
@@ -37,7 +40,7 @@ describe(`${RegisterRssRequestDto.name} Test`, () => {
 
     it('블로그 이름이 빈 문자열일 경우 유효성 검사에 실패한다.', async () => {
       // given
-      dto.blog = '';
+      dto.blogName = '';
 
       // when
       const errors = await validate(dto);
@@ -49,7 +52,7 @@ describe(`${RegisterRssRequestDto.name} Test`, () => {
 
     it('블로그 이름이 문자열이 아니고 정수일 경우 유효성 검사에 실패한다.', async () => {
       // given
-      dto.blog = 1 as any;
+      dto.blogName = 1 as any;
 
       // when
       const errors = await validate(dto);
@@ -160,10 +163,74 @@ describe(`${RegisterRssRequestDto.name} Test`, () => {
     });
   });
 
+  describe('blogUrl', () => {
+    it('블로그 주소가 없을 경우 유효성 검사에 실패한다.', async () => {
+      // given
+      dto.blogUrl = null;
+
+      // when
+      const errors = await validate(dto);
+
+      // then
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isUrl');
+    });
+
+    it('블로그 주소가 빈 문자열일 경우 유효성 검사에 실패한다.', async () => {
+      // given
+      dto.blogUrl = '';
+
+      // when
+      const errors = await validate(dto);
+
+      // then
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isUrl');
+    });
+
+    it('블로그 주소가 유효하지 않을 경우 유효성 검사에 실패한다.', async () => {
+      // given
+      dto.blogUrl = 'http://test';
+
+      // when
+      const errors = await validate(dto);
+
+      // then
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isUrl');
+    });
+
+    it('블로그 주소가 HTTP, HTTPS 프로토콜이 아닐 경우 유효성 검사에 실패한다.', async () => {
+      // given
+      dto.blogUrl = 'ftp://test.com';
+
+      // when
+      const errors = await validate(dto);
+
+      // then
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isUrl');
+    });
+  });
+
+  describe('blogPlatform', () => {
+    it('블로그 플랫폼이 허용된 값이 아닐 경우 유효성 검사에 실패한다.', async () => {
+      // given
+      dto.blogPlatform = 'wordpress' as BlogPlatform;
+
+      // when
+      const errors = await validate(dto);
+
+      // then
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isIn');
+    });
+  });
+
   describe('rssUrl', () => {
-    it('RSS 주소가 없을 경우 유효성 검사에 실패한다.', async () => {
+    it('블로그 플랫폼이 etc이고 RSS 주소가 없을 경우 유효성 검사에 실패한다.', async () => {
       // given
-      dto.rssUrl = null;
+      dto.rssUrl = undefined;
 
       // when
       const errors = await validate(dto);
@@ -173,9 +240,9 @@ describe(`${RegisterRssRequestDto.name} Test`, () => {
       expect(errors[0].constraints).toHaveProperty('isUrl');
     });
 
-    it('RSS 주소가 빈 문자열일 경우 유효성 검사에 실패한다.', async () => {
+    it('블로그 플랫폼이 etc이고 RSS 주소가 유효하지 않을 경우 유효성 검사에 실패한다.', async () => {
       // given
-      dto.rssUrl = '';
+      dto.rssUrl = 'invalid-url';
 
       // when
       const errors = await validate(dto);
@@ -185,28 +252,16 @@ describe(`${RegisterRssRequestDto.name} Test`, () => {
       expect(errors[0].constraints).toHaveProperty('isUrl');
     });
 
-    it('RSS 주소가 유효하지 않을 경우 유효성 검사에 실패한다.', async () => {
+    it('블로그 플랫폼이 etc가 아니면 RSS 주소가 없어도 유효성 검사를 통과한다.', async () => {
       // given
-      dto.rssUrl = 'http://test';
+      dto.blogPlatform = 'tistory';
+      dto.rssUrl = undefined;
 
       // when
       const errors = await validate(dto);
 
       // then
-      expect(errors).toHaveLength(1);
-      expect(errors[0].constraints).toHaveProperty('isUrl');
-    });
-
-    it('RSS 주소가 HTTP, HTTPS 프로토콜이 아닐 경우 유효성 검사에 실패한다.', async () => {
-      // given
-      dto.rssUrl = 'ftp://test.com';
-
-      // when
-      const errors = await validate(dto);
-
-      // then
-      expect(errors).toHaveLength(1);
-      expect(errors[0].constraints).toHaveProperty('isUrl');
+      expect(errors).toHaveLength(0);
     });
   });
 });

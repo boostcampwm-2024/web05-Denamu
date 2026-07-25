@@ -30,9 +30,11 @@ describe(`POST ${URL} E2E Test`, () => {
     // given
     const rss = await rssRepository.save(RssFixture.createRssFixture());
     const requestDto = new RegisterRssRequestDto({
-      blog: 'blog1',
+      blogName: 'blog1',
       name: 'name1',
       email: 'test1@test.com',
+      blogUrl: rss.rssUrl,
+      blogPlatform: 'etc',
       rssUrl: rss.rssUrl,
     });
 
@@ -65,9 +67,11 @@ describe(`POST ${URL} E2E Test`, () => {
       RssAcceptFixture.createRssAcceptFixture(),
     );
     const requestDto = new RegisterRssRequestDto({
-      blog: acceptedRss.name,
+      blogName: acceptedRss.name,
       name: acceptedRss.userName,
       email: acceptedRss.email,
+      blogUrl: acceptedRss.rssUrl,
+      blogPlatform: 'etc',
       rssUrl: acceptedRss.rssUrl,
     });
 
@@ -97,10 +101,11 @@ describe(`POST ${URL} E2E Test`, () => {
   it('[201] 등록되지 않은 RSS 등록 요청을 받았을 경우 RSS 등록 요청을 성공한다.', async () => {
     // given
     const requestDto = new RegisterRssRequestDto({
-      blog: 'blog1',
+      blogName: 'blog1',
       name: 'name1',
       email: 'test1@test.com',
-      rssUrl: 'https://test.com/rss',
+      blogUrl: 'https://test1234.tistory.com',
+      blogPlatform: 'tistory',
     });
 
     // Http when
@@ -113,10 +118,12 @@ describe(`POST ${URL} E2E Test`, () => {
 
     // DB, Redis when
     const savedRss = await rssRepository.findOneBy({
-      name: requestDto.blog,
+      name: requestDto.blogName,
       userName: requestDto.name,
       email: requestDto.email,
-      rssUrl: requestDto.rssUrl,
+      blogUrl: requestDto.blogUrl,
+      blogPlatform: requestDto.blogPlatform,
+      rssUrl: 'https://test1234.tistory.com/rss',
     });
 
     // DB, Redis then

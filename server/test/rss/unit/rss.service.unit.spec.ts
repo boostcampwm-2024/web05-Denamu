@@ -152,10 +152,22 @@ describe(`${RssService.name} Unit Test`, () => {
 
   describe('createRss', () => {
     const dto = {
-      blog: 'My Blog',
+      blogName: 'My Blog',
+      blogUrl: 'https://blog.test/rss',
+      blogPlatform: 'etc',
       rssUrl: 'https://blog.test/rss',
-      toEntity: () => ({ name: 'My Blog', rssUrl: 'https://blog.test/rss' }),
+      toEntity: (rssUrl: string) => ({
+        name: 'My Blog',
+        blogUrl: 'https://blog.test/rss',
+        blogPlatform: 'etc',
+        rssUrl,
+      }),
     } as unknown as RegisterRssRequestDto;
+
+    beforeEach(() => {
+      mockedAxios.get.mockResolvedValue({ status: 200 });
+      mockedAxios.isAxiosError.mockReturnValue(false);
+    });
 
     it('이미 신청된 RSS가 있으면 ConflictException을 던진다.', async () => {
       // given
@@ -172,6 +184,51 @@ describe(`${RssService.name} Unit Test`, () => {
       expect(rssRepository.insert).not.toHaveBeenCalled();
     });
 
+    it('blogUrl 또는 rssUrl이 404를 반환하면 NotFoundException을 던지고 저장하지 않는다.', async () => {
+      // given
+      rssRepository.findOne.mockResolvedValue(null);
+      rssAcceptRepository.findOne.mockResolvedValue(null);
+      mockedAxios.isAxiosError.mockReturnValue(true);
+      mockedAxios.get.mockRejectedValue({
+        response: { status: 404 },
+      });
+
+      // when & then
+      await expect(rssService.createRss(dto)).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(rssRepository.insert).not.toHaveBeenCalled();
+    });
+
+    it('blogUrl 또는 rssUrl에 접속할 수 없으면 BadRequestException을 던지고 저장하지 않는다.', async () => {
+      // given
+      rssRepository.findOne.mockResolvedValue(null);
+      rssAcceptRepository.findOne.mockResolvedValue(null);
+      mockedAxios.get.mockRejectedValue(new Error('network'));
+
+      // when & then
+      await expect(rssService.createRss(dto)).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(rssRepository.insert).not.toHaveBeenCalled();
+    });
+
+    it('blogUrl 또는 rssUrl이 4xx(404 제외)를 반환하면 BadRequestException을 던지고 저장하지 않는다.', async () => {
+      // given
+      rssRepository.findOne.mockResolvedValue(null);
+      rssAcceptRepository.findOne.mockResolvedValue(null);
+      mockedAxios.isAxiosError.mockReturnValue(true);
+      mockedAxios.get.mockRejectedValue({
+        response: { status: 403 },
+      });
+
+      // when & then
+      await expect(rssService.createRss(dto)).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(rssRepository.insert).not.toHaveBeenCalled();
+    });
+
     it('중복이 없으면 RSS를 저장한다.', async () => {
       // given
       rssRepository.findOne.mockResolvedValue(null);
@@ -181,7 +238,9 @@ describe(`${RssService.name} Unit Test`, () => {
       await rssService.createRss(dto);
 
       // then
-      expect(rssRepository.insert).toHaveBeenCalledWith(dto.toEntity());
+      expect(rssRepository.insert).toHaveBeenCalledWith(
+        dto.toEntity('https://blog.test/rss'),
+      );
     });
 
     it('저장 후 수신 동의한 관리자에게 메일을 발송하고 디스코드 알림을 보낸다.', async () => {
@@ -205,7 +264,7 @@ describe(`${RssService.name} Unit Test`, () => {
         2,
       );
       expect(emailProducer.produceRssRegistrationRequest).toHaveBeenCalledWith(
-        dto.toEntity(),
+        dto.toEntity('https://blog.test/rss'),
         'a@denamu.dev',
       );
       expect(notifierRegistry.sendAlert).toHaveBeenCalledTimes(1);
@@ -964,21 +1023,6 @@ describe(`${RssService.name} Unit Test`, () => {
 
       expect(feedRepository.findPublishYearsByBlogId).toHaveBeenCalledWith(1);
       expect(result).toEqual([2025, 2024]);
-    });
-  });
-
-  describe('identifyPlatformFromRssUrl (private)', () => {
-    it.each([
-      ['https://medium.com/feed', 'medium'],
-      ['https://blog.tistory.com/rss', 'tistory'],
-      ['https://v2.velog.io/rss', 'velog'],
-      ['https://user.github.io/feed', 'github'],
-      ['https://unknown.dev/rss', 'etc'],
-    ])('%s → %s 플랫폼으로 식별한다.', (url, expected) => {
-      const svc = rssService as unknown as {
-        identifyPlatformFromRssUrl(rssUrl: string): string;
-      };
-      expect(svc.identifyPlatformFromRssUrl(url)).toBe(expected);
     });
   });
 });

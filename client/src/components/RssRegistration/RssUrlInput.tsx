@@ -1,20 +1,19 @@
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
 
-import { PLATFORMS, PlatformType } from "@/constants/rss";
-
 interface RssUrlInputProps {
-  platform: PlatformType;
+  label?: string;
+  prefix: string;
+  suffix?: string;
+  placeholder: string;
   value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onChange: (value: string) => void;
 }
 
-export const RssUrlInput = ({ platform, value, onChange }: RssUrlInputProps) => {
-  const { prefix, suffix, placeholder } = PLATFORMS[platform];
-
+export const RssUrlInput = ({ label = "RSS URL", prefix, suffix, placeholder, value, onChange }: RssUrlInputProps) => {
   return (
     <div className="space-y-2">
-      <Label>RSS URL</Label>
+      <Label>{label}</Label>
       <div className="flex items-center bg-background relative group">
         <div className="px-3 h-9 flex items-center text-sm text-muted-foreground bg-muted/30 rounded-l-md border-y border-l border-input">
           {prefix}
@@ -22,7 +21,7 @@ export const RssUrlInput = ({ platform, value, onChange }: RssUrlInputProps) => 
         <div className="relative flex-grow h-9">
           <Input
             value={value}
-            onChange={onChange}
+            onChange={(e) => onChange(e.target.value)}
             className="peer h-full border-0 border-y border-input bg-transparent focus:outline-none focus-visible:ring-0 focus-visible:ring-transparent focus-visible:ring-offset-0 rounded-none"
             placeholder={placeholder}
           />

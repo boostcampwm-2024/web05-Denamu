@@ -50,6 +50,7 @@ import {
   RssRejectRepository,
   RssRepository,
 } from '@rss/repository/rss.repository';
+import { blogUrlToRss } from '@rss/util/blogUrlToRss';
 
 import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
 
@@ -79,13 +80,18 @@ export class RssService {
   ) {}
 
   async createRss(rssRegisterBodyDto: RegisterRssRequestDto) {
-    const { blog, rssUrl } = rssRegisterBodyDto;
+    const { blogName, blogUrl, blogPlatform } = rssRegisterBodyDto;
+    const rssUrl =
+      blogPlatform === 'etc'
+        ? rssRegisterBodyDto.rssUrl
+        : blogUrlToRss(blogPlatform, blogUrl);
+
     const [duplicateRss, duplicateBlog] = await Promise.all([
       this.rssRepository.findOne({
-        where: [{ rssUrl }, { name: blog }],
+        where: [{ rssUrl }, { name: blogName }],
       }),
       this.rssAcceptRepository.findOne({
-        where: [{ rssUrl }, { name: blog }],
+        where: [{ rssUrl }, { name: blogName }],
       }),
     ]);
 
@@ -96,15 +102,44 @@ export class RssService {
       throw new ConflictException(`이미 ${status}된 ${field}입니다.`);
     }
 
-    const rssEntity = rssRegisterBodyDto.toEntity();
+    await Promise.all([
+      this.assertUrlAccessible(blogUrl),
+      this.assertUrlAccessible(rssUrl),
+    ]);
+
+    const rssEntity = rssRegisterBodyDto.toEntity(rssUrl);
     await this.rssRepository.insert(rssEntity);
 
     await this.notifyRssRegistrationRequest(rssEntity);
   }
 
+  private async assertUrlAccessible(url: string) {
+    try {
+      await axios.get(url, {
+        timeout: 5000,
+        maxRedirects: 5,
+        maxContentLength: 5 * 1024 * 1024,
+      });
+    } catch (error) {
+      const status = axios.isAxiosError(error)
+        ? error.response?.status
+        : undefined;
+
+      if (status === 404) {
+        throw new NotFoundException(
+          `${url}을(를) 찾을 수 없습니다. 올바른 블로그 주소를 입력해주세요.`,
+        );
+      }
+
+      throw new BadRequestException(
+        `${url}에 접속할 수 없습니다. 올바른 블로그 주소를 입력해주세요.`,
+      );
+    }
+  }
+
   private async notifyRssRegistrationRequest(rss: Rss) {
     void this.notifierRegistry.sendAlert(
-      `📥 새로운 RSS 등록 신청이 접수되었습니다.\n블로그: ${rss.name}\n신청자: ${rss.userName}\nRSS: ${rss.rssUrl}`,
+      `📥 새로운 RSS 등록 신청이 접수되었습니다.\n블로그: ${rss.name}(rss.blogUrl)\n신청자: ${rss.userName}\nRSS: ${rss.rssUrl}`,
     );
 
     try {
@@ -201,32 +236,9 @@ export class RssService {
     return ReadRssRejectHistoryResponseDto.toResponseDtoArray(rejectRssList);
   }
 
-  private identifyPlatformFromRssUrl(rssUrl: string) {
-    type Platform = 'medium' | 'tistory' | 'velog' | 'github' | 'etc';
-
-    const platformRegexp: Record<Platform, RegExp> = {
-      medium: /^https:\/\/medium\.com/,
-      tistory: /^https:\/\/[a-zA-Z0-9-]+\.tistory\.com/,
-      velog: /^https:\/\/v2\.velog\.io/,
-      github: /^https:\/\/[\w-]+\.github\.io/,
-      etc: /.*/,
-    };
-
-    for (const [platform, regex] of Object.entries(platformRegexp)) {
-      if (regex.test(rssUrl)) {
-        return platform;
-      }
-    }
-    return 'etc';
-  }
-
   private async acceptRssBackProcess(rss: Rss) {
-    const blogPlatform = this.identifyPlatformFromRssUrl(rss.rssUrl);
-
     const rssAccept = await this.dataSource.transaction(async (manager) => {
-      const rssAccept = await manager.save(
-        RssAccept.fromRss(rss, blogPlatform),
-      );
+      const rssAccept = await manager.save(RssAccept.fromRss(rss));
       await manager.delete(Rss, rss.id);
       return rssAccept;
     });

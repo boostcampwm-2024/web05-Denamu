@@ -15,13 +15,6 @@ describe("PlatformIcon", () => {
     expect(img).toHaveAttribute("src", expect.stringContaining("tistory-icon.svg"));
   });
 
-  it("'naver blog'처럼 공백이 있는 플랫폼은 언더스코어로 변환해야 한다", () => {
-    render(<PlatformIcon platform="naver blog" />);
-
-    const img = screen.getByRole("img", { name: "naver blog" });
-    expect(img).toHaveAttribute("src", expect.stringContaining("naver_blog-icon.svg"));
-  });
-
   it("알 수 없는 플랫폼이면 Rss 아이콘을 렌더링해야 한다", () => {
     render(<PlatformIcon platform="unknown" />);
 

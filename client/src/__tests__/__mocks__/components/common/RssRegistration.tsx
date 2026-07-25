@@ -29,9 +29,9 @@ export const mockPlatformSelector = {
 };
 
 export const mockRssUrlInput = {
-  RssUrlInput: vi.fn().mockImplementation(({ value, onChange }) => (
+  RssUrlInput: vi.fn().mockImplementation(({ value, onChange, label = "RSS URL" }) => (
     <div>
-      <input type="text" value={value} onChange={(e) => onChange(e.target.value)} aria-label="RSS URL" />
+      <input type="text" value={value} onChange={(e) => onChange(e.target.value)} aria-label={label} />
     </div>
   )),
 };

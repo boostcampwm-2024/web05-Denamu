@@ -6,7 +6,7 @@ import { RssUrlInput } from "@/components/RssRegistration/RssUrlInput";
 const meta = {
   title: "RssRegistration/RssUrlInput",
   component: RssUrlInput,
-  args: { platform: "tistory", value: "", onChange: fn() },
+  args: { prefix: "https://", suffix: ".tistory.com", placeholder: "서브도메인", value: "", onChange: fn() },
 } satisfies Meta<typeof RssUrlInput>;
 
 export default meta;

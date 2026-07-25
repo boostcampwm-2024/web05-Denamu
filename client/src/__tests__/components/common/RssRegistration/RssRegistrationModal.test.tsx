@@ -82,11 +82,11 @@ describe("RssRegistrationModal", () => {
     fireEvent.click(registerButton);
 
     expect(mutateSpy).toHaveBeenCalledWith({
-      rssUrl: "https://test.com/rss",
-      blog: "블로그",
+      blogUrl: "https://test.tistory.com",
+      blogName: "블로그",
       name: "테스트",
       email: "test@example.com",
-      blogType: "",
+      blogPlatform: "tistory",
     });
   });
 
