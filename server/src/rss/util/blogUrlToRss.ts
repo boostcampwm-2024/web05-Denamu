@@ -3,7 +3,7 @@ export const BLOG_PLATFORMS = [
   'velog',
   'medium',
   'github',
-  'naver_blog',
+  'naver',
   'etc',
 ] as const;
 
@@ -36,7 +36,7 @@ export function blogUrlToRss(
     }
     case 'github':
       return `${urlObj.protocol}//${urlObj.hostname}/feed.xml`;
-    case 'naver_blog': {
+    case 'naver': {
       const blogId = urlObj.pathname.replace(/^\//, '').split('/')[0];
       return `https://rss.blog.naver.com/${blogId}`;
     }

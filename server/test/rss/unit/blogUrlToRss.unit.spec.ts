@@ -7,7 +7,7 @@ describe(`${blogUrlToRss.name} Unit Test`, () => {
     ['medium', 'https://medium.com/@seok3765', 'https://medium.com/feed/@seok3765'],
     ['github', 'https://seok3765.github.io', 'https://seok3765.github.io/feed.xml'],
     [
-      'naver_blog',
+      'naver',
       'https://blog.naver.com/seok3765',
       'https://rss.blog.naver.com/seok3765',
     ],
