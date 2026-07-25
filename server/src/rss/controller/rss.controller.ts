@@ -13,9 +13,11 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
+import { ReadActivityQueryRequestDto } from '@activity/dto/request/readActivity.dto';
+
 import { CurrentUser } from '@common/decorator';
-import { AdminAuthGuard } from '@common/guard/session.guard';
 import { JwtGuard, OptionalJwtGuard, Payload } from '@common/guard/jwt.guard';
+import { AdminAuthGuard } from '@common/guard/session.guard';
 import { ApiResponse } from '@common/response/common.response';
 
 import { ApiAcceptRss } from '@rss/api-docs/acceptRss.api-docs';
@@ -30,30 +32,30 @@ import { ApiGetRssActivities } from '@rss/api-docs/getRssActivities.api-docs';
 import { ApiGetRssActivityYears } from '@rss/api-docs/getRssActivityYears.api-docs';
 import { ApiGetRssFeeds } from '@rss/api-docs/getRssFeeds.api-docs';
 import { ApiGetRssInfo } from '@rss/api-docs/getRssInfo.api-docs';
-import { ApiSetFeedVisibility } from '@rss/api-docs/setFeedVisibility.api-docs';
 import { ApiPreviewRssCertification } from '@rss/api-docs/previewRssCertification.api-docs';
 import { ApiReadAllRss } from '@rss/api-docs/readAllRss.api-docs';
 import { ApiReadRssAcceptHistory } from '@rss/api-docs/readRssAcceptHistory.api-docs';
 import { ApiReadRssRejectHistory } from '@rss/api-docs/readRssRejectHistory.api-docs';
 import { ApiRejectRss } from '@rss/api-docs/rejectRss.api-docs';
+import { ApiSearchRss } from '@rss/api-docs/searchRss.api-docs';
+import { ApiSetFeedVisibility } from '@rss/api-docs/setFeedVisibility.api-docs';
 import { ApiUpdateRssCertification } from '@rss/api-docs/updateRssCertification.api-docs';
 import { ApiVerifyRssCertification } from '@rss/api-docs/verifyRssCertification.api-docs';
 import { CreateRssCertificationRequestDto } from '@rss/dto/request/createRssCertification.dto';
 import { DeleteCertificateRssRequestDto } from '@rss/dto/request/deleteCertificateRss.dto';
+import { DeleteRssRequestDto } from '@rss/dto/request/deleteRss.dto';
 import { DeleteRssCertificationParamRequestDto } from '@rss/dto/request/deleteRssCertificationParam.dto';
 import { GetOwnedRssFeedsRequestDto } from '@rss/dto/request/getOwnedRssFeeds.dto';
 import { GetOwnedRssFeedsParamRequestDto } from '@rss/dto/request/getOwnedRssFeedsParam.dto';
 import { GetRssFeedsRequestDto } from '@rss/dto/request/getRssFeeds.dto';
 import { GetRssInfoParamRequestDto } from '@rss/dto/request/getRssInfoParam.dto';
-
-import { ReadActivityQueryRequestDto } from '@activity/dto/request/readActivity.dto';
-import { SetFeedVisibilityRequestDto } from '@rss/dto/request/setFeedVisibility.dto';
-import { SetFeedVisibilityParamRequestDto } from '@rss/dto/request/setFeedVisibilityParam.dto';
-import { DeleteRssRequestDto } from '@rss/dto/request/deleteRss.dto';
 import { ManageRssRequestDto } from '@rss/dto/request/manageRss.dto';
 import { PreviewRssCertificationRequestDto } from '@rss/dto/request/previewRssCertification.dto';
 import { RegisterRssRequestDto } from '@rss/dto/request/registerRss.dto';
 import { RejectRssRequestDto } from '@rss/dto/request/rejectRss';
+import { SearchRssRequestDto } from '@rss/dto/request/searchRss.dto';
+import { SetFeedVisibilityRequestDto } from '@rss/dto/request/setFeedVisibility.dto';
+import { SetFeedVisibilityParamRequestDto } from '@rss/dto/request/setFeedVisibilityParam.dto';
 import { UpdateRssCertificationRequestDto } from '@rss/dto/request/updateRssCertification.dto';
 import { UpdateRssCertificationParamRequestDto } from '@rss/dto/request/updateRssCertificationParam.dto';
 import { VerifyRssCertificationRequestDto } from '@rss/dto/request/verifyRssCertification.dto';
@@ -197,7 +199,8 @@ export class RssController {
   @HttpCode(HttpStatus.OK)
   async updateRssCertification(
     @CurrentUser() user: Payload,
-    @Param() updateRssCertificationParamDto: UpdateRssCertificationParamRequestDto,
+    @Param()
+    updateRssCertificationParamDto: UpdateRssCertificationParamRequestDto,
     @Body() updateRssCertificationDto: UpdateRssCertificationRequestDto,
   ) {
     await this.rssService.updateRssCertification(
@@ -254,7 +257,9 @@ export class RssController {
       paramDto.feedId,
       bodyDto.isPublic,
     );
-    return ApiResponse.responseWithNoContent('게시글 공개 상태를 변경했습니다.');
+    return ApiResponse.responseWithNoContent(
+      '게시글 공개 상태를 변경했습니다.',
+    );
   }
 
   @ApiGetRecentRss()
@@ -265,6 +270,20 @@ export class RssController {
     return ApiResponse.responseWithData(
       '최근 발행 RSS 목록 조회를 처리했습니다.',
       await this.rssService.getRecentRss(viewer?.id),
+    );
+  }
+
+  @ApiSearchRss()
+  @UseGuards(OptionalJwtGuard)
+  @Get('search')
+  @HttpCode(HttpStatus.OK)
+  async searchRss(
+    @CurrentUser() viewer: Payload | null,
+    @Query() searchRssQueryDto: SearchRssRequestDto,
+  ) {
+    return ApiResponse.responseWithData(
+      'RSS 검색 결과 조회 완료',
+      await this.rssService.searchRss(searchRssQueryDto, viewer?.id),
     );
   }
 
