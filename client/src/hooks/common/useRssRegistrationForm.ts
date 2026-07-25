@@ -7,132 +7,76 @@ import {
   validateBlogger,
 } from "@/components/RssRegistration/RssValidation";
 
-import { PLATFORMS, PlatformType } from "@/constants/rss";
+import { BLOG_ADDRESS_TEMPLATES, BlogAddressPlatformType } from "@/constants/rss";
 
 import { blogUrlToRss } from "@/utils/blogUrlToRss";
 
 import { useRegisterModalStore } from "@/store/useRegisterModalStore";
 
-type BlogPlatform = "Tistory" | "Velog" | "Medium" | "네이버 블로그" | "기타";
-
 export const PLATFORM_OPTIONS = [
   { value: "tistory", label: "Tistory" },
   { value: "velog", label: "Velog" },
   { value: "medium", label: "Medium" },
-  { value: "naver_blog", label: "네이버 블로그" },
+  { value: "github", label: "GitHub" },
+  { value: "naver", label: "Naver" },
   { value: "other", label: "기타" },
 ];
 
-const mapPlatformToValue = (platform: BlogPlatform | null): string => {
-  if (!platform) return "other";
+const isTemplatedPlatform = (value: string): value is BlogAddressPlatformType =>
+  value in BLOG_ADDRESS_TEMPLATES;
 
-  switch (platform) {
-    case "Tistory":
-      return "tistory";
-    case "Velog":
-      return "velog";
-    case "Medium":
-      return "medium";
-    case "네이버 블로그":
-      return "naver_blog";
-    default:
-      return "other";
-  }
-};
+const buildBlogUrl = (platformValue: string, addressInput: string): string => {
+  if (!isTemplatedPlatform(platformValue)) return "";
+  if (!addressInput.trim()) return "";
 
-const detectBlogPlatform = (url: string): BlogPlatform | null => {
-  if (!url.trim()) return null;
-
-  try {
-    const urlObj = new URL(url.startsWith("http") ? url : `https://${url}`);
-    const hostname = urlObj.hostname;
-
-    if (hostname.endsWith("tistory.com")) return "Tistory";
-    if (hostname === "velog.io") return "Velog";
-    if (hostname === "medium.com") return "Medium";
-    if (hostname.endsWith("blog.naver.com")) return "네이버 블로그";
-    return "기타";
-  } catch {
-    return null;
-  }
+  const { prefix, suffix } = BLOG_ADDRESS_TEMPLATES[platformValue];
+  return `${prefix}${addressInput}${suffix}`;
 };
 
 export const useRssRegistrationForm = () => {
-  const [platform, setPlatform] = useState<PlatformType>("tistory");
-  const [blogUrl, setBlogUrl] = useState<string>("");
-  const [blogPlatform, setBlogPlatform] = useState<BlogPlatform | null>(null);
   const [selectedPlatformValue, setSelectedPlatformValue] = useState<string>("");
+  const [addressInput, setAddressInput] = useState<string>("");
   const store = useRegisterModalStore();
-
-  const handlePlatformChange = (newPlatform: string) => {
-    setPlatform(newPlatform as PlatformType);
-    setBlogUrl("");
-    store.handleInputChange("", store.setRssUrl, store.setRssUrlValid, validateRssUrl);
-  };
 
   const handlePlatformSelection = (newPlatformValue: string) => {
     setSelectedPlatformValue(newPlatformValue);
+    setAddressInput("");
+    store.handleInputChange("", store.setRssUrl, store.setRssUrlValid, validateRssUrl);
   };
 
-  const handleBadgeClick = () => {
-    if (blogPlatform) {
-      const platformValue = mapPlatformToValue(blogPlatform);
-      setSelectedPlatformValue(platformValue);
-
-      if (blogUrl) {
-        const rssUrl = blogUrlToRss(blogUrl);
-        store.handleInputChange(rssUrl, store.setRssUrl, store.setRssUrlValid, validateRssUrl);
-      }
-    }
-  };
-
-  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const username = e.target.value;
-    const { prefix, suffix } = PLATFORMS[platform];
-    const fullUrl = `${prefix}${username}${suffix}`;
-    store.handleInputChange(fullUrl, store.setRssUrl, store.setRssUrlValid, validateRssUrl);
-  };
-
-  const handleBlogUrlChange = (value: string) => {
-    setBlogUrl(value);
-    const detectedPlatform = detectBlogPlatform(value);
-    setBlogPlatform(detectedPlatform);
-
-    if (value.trim()) {
-      const rssUrl = blogUrlToRss(value);
-      store.handleInputChange(rssUrl, store.setRssUrl, store.setRssUrlValid, validateRssUrl);
-    } else {
-      store.handleInputChange("", store.setRssUrl, store.setRssUrlValid, validateRssUrl);
-    }
+  const handleAddressInputChange = (value: string) => {
+    setAddressInput(value);
+    const blogUrl = buildBlogUrl(selectedPlatformValue, value);
+    const rssUrl = blogUrl ? blogUrlToRss(blogUrl) : "";
+    store.handleInputChange(rssUrl, store.setRssUrl, store.setRssUrlValid, validateRssUrl);
   };
 
   const handleRssDirectInput = (value: string) => {
     store.handleInputChange(value, store.setRssUrl, store.setRssUrlValid, validateRssUrl);
   };
 
-  const getUsernameFromUrl = () => {
-    const { prefix, suffix } = PLATFORMS[platform];
-    return store.rssUrl.replace(prefix, "").replace(suffix, "");
+  const reset = () => {
+    store.resetInputs();
+    setSelectedPlatformValue("");
+    setAddressInput("");
   };
 
   return {
-    platform,
     selectedPlatformValue,
+    addressTemplate: isTemplatedPlatform(selectedPlatformValue)
+      ? BLOG_ADDRESS_TEMPLATES[selectedPlatformValue]
+      : null,
     values: {
       rssUrl: store.rssUrl,
       bloggerName: store.bloggerName,
       userName: store.userName,
       email: store.email,
-      urlUsername: getUsernameFromUrl(),
-      blogUrl: blogUrl,
+      addressInput,
       platformValue: selectedPlatformValue,
     },
     handlers: {
-      handlePlatformChange,
-      handleUsernameChange,
-      handleBlogUrlChange,
       handlePlatformSelection,
-      handleBadgeClick,
+      handleAddressInputChange,
       handleRssDirectInput,
       handleBloggerName: (value: string) =>
         store.handleInputChange(value, store.setBloggerName, store.setBloggerNameValid, validateBlogger),
@@ -143,8 +87,7 @@ export const useRssRegistrationForm = () => {
     },
     formState: {
       isValid: store.isFormValid(),
-      reset: store.resetInputs,
+      reset,
     },
-    blogPlatform,
   };
 };

@@ -5,8 +5,7 @@ const DEFAULT_VALUES = {
   userName: "",
   bloggerName: "",
   rssUrl: "",
-  urlUsername: "",
-  blogUrl: "",
+  addressInput: "",
   platformValue: "",
 };
 
@@ -15,25 +14,20 @@ const DEFAULT_SUCCESS_VALUES = {
   userName: "테스트",
   bloggerName: "블로그",
   rssUrl: "https://test.com/rss",
-  urlUsername: "test",
-  blogUrl: "",
+  addressInput: "test",
   platformValue: "",
 };
 
 const DEFAULT_FORM_STATE = {
-  platform: "tistory",
   selectedPlatformValue: "",
-  blogPlatform: null,
+  addressTemplate: null,
   values: DEFAULT_VALUES,
   handlers: {
     handleEmail: vi.fn(),
     handleUserName: vi.fn(),
     handleBloggerName: vi.fn(),
-    handlePlatformChange: vi.fn(),
-    handleUsernameChange: vi.fn(),
-    handleBlogUrlChange: vi.fn(),
     handlePlatformSelection: vi.fn(),
-    handleBadgeClick: vi.fn(),
+    handleAddressInputChange: vi.fn(),
     handleRssDirectInput: vi.fn(),
   },
   formState: {
@@ -46,7 +40,8 @@ export const PLATFORM_OPTIONS = [
   { value: "tistory", label: "Tistory" },
   { value: "velog", label: "Velog" },
   { value: "medium", label: "Medium" },
-  { value: "naver_blog", label: "네이버 블로그" },
+  { value: "github", label: "GitHub" },
+  { value: "naver", label: "Naver" },
   { value: "other", label: "기타" },
 ];
 
@@ -81,7 +76,7 @@ export const createFailureFormMock = () => {
       userName: "asdf", // 빈 값
       bloggerName: "asdf", // 빈 값
       rssUrl: "invalid-url", // 잘못된 URL 형식
-      urlUsername: "asdf",
+      addressInput: "asdf",
     },
     isValid: false,
   });

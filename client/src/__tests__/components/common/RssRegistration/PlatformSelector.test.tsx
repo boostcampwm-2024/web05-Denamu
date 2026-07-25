@@ -34,16 +34,9 @@ describe("BlogPlatformSelector", () => {
     expect(screen.getAllByRole("option")).toHaveLength(2);
   });
 
-  it("값이 없으면 안내 문구를 표시해야 한다", () => {
-    render(<BlogPlatformSelector platforms={platforms} value="" onChange={vi.fn()} />);
-
-    expect(screen.getByText(/플랫폼 배지를 클릭/)).toBeInTheDocument();
-  });
-
-  it("값이 선택되면 해당 라벨을 표시하고 안내 문구를 숨겨야 한다", () => {
+  it("값이 선택되면 해당 라벨을 표시해야 한다", () => {
     render(<BlogPlatformSelector platforms={platforms} value="velog" onChange={vi.fn()} />);
 
     expect(screen.getAllByText("Velog").length).toBeGreaterThan(0);
-    expect(screen.queryByText(/플랫폼 배지를 클릭/)).not.toBeInTheDocument();
   });
 });
