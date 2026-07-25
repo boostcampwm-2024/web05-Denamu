@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { lucideProxy } from "@/__tests__/__mocks__/external/lucide-proxy.tsx";
+
 import { SubscribedRssCard } from "@/components/profile/rss/SubscribedRssCard.tsx";
 
-import { lucideProxy } from "@/__tests__/__mocks__/external/lucide-proxy.tsx";
 import { SubscribedRss } from "@/types/subscription.ts";
 import { fireEvent, render, screen } from "@testing-library/react";
 

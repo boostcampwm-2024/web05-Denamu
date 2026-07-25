@@ -2,9 +2,10 @@ import type { ReactNode } from "react";
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { lucideProxy } from "@/__tests__/__mocks__/external/lucide-proxy.tsx";
+
 import RssPage from "@/pages/RssPage.tsx";
 
-import { lucideProxy } from "@/__tests__/__mocks__/external/lucide-proxy.tsx";
 import { useAuthStore } from "@/store/useAuthStore";
 import { RssInfo } from "@/types/profile.ts";
 import { fireEvent, render, screen } from "@testing-library/react";
