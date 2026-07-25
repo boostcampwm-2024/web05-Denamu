@@ -9,6 +9,7 @@ export class RssAcceptFixture {
       userName: 'test user name',
       email: `test${uuid.v4()}@test.com`,
       rssUrl: `https://example${uuid.v4()}.com/rss`,
+      blogUrl: `https://example${uuid.v4()}.com`,
       blogPlatform: 'etc',
     };
   }

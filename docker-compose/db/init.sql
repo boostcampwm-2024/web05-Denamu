@@ -24,6 +24,8 @@ CREATE TABLE `rss` (
   `user_name` varchar(50) NOT NULL,
   `email` varchar(255) NOT NULL,
   `rss_url` varchar(255) NOT NULL,
+  `blog_url` varchar(255) NOT NULL DEFAULT '',
+  `blog_platform` varchar(255) NOT NULL DEFAULT 'etc',
   PRIMARY KEY (`id`),
   UNIQUE KEY `IDX_21beac47feacb87e57c59d6958` (`name`),
   UNIQUE KEY `IDX_af1d102908727aa95ef09e1606` (`rss_url`)
@@ -57,6 +59,7 @@ CREATE TABLE `rss_accept` (
   `user_name` varchar(50) NOT NULL,
   `email` varchar(255) NOT NULL,
   `rss_url` varchar(255) NOT NULL,
+  `blog_url` varchar(255) NOT NULL DEFAULT '',
   `blog_platform` varchar(255) NOT NULL DEFAULT 'etc',
   `user_id` int DEFAULT NULL,
   PRIMARY KEY (`id`),
@@ -75,6 +78,8 @@ CREATE TABLE `rss_reject` (
   `user_name` varchar(50) NOT NULL,
   `email` varchar(255) NOT NULL,
   `rss_url` varchar(255) NOT NULL,
+  `blog_url` varchar(255) NOT NULL DEFAULT '',
+  `blog_platform` varchar(255) NOT NULL DEFAULT 'etc',
   `description` varchar(512) NOT NULL,
   PRIMARY KEY (`id`)
 );

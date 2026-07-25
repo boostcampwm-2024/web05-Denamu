@@ -50,6 +50,7 @@ import {
   RssRejectRepository,
   RssRepository,
 } from '@rss/repository/rss.repository';
+import { blogUrlToRss } from '@rss/util/blogUrlToRss';
 
 import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
 
@@ -79,7 +80,12 @@ export class RssService {
   ) {}
 
   async createRss(rssRegisterBodyDto: RegisterRssRequestDto) {
-    const { blog, rssUrl } = rssRegisterBodyDto;
+    const { blog, blogUrl, blogPlatform } = rssRegisterBodyDto;
+    const rssUrl =
+      blogPlatform === 'etc'
+        ? rssRegisterBodyDto.rssUrl
+        : blogUrlToRss(blogPlatform, blogUrl);
+
     const [duplicateRss, duplicateBlog] = await Promise.all([
       this.rssRepository.findOne({
         where: [{ rssUrl }, { name: blog }],
@@ -96,7 +102,7 @@ export class RssService {
       throw new ConflictException(`이미 ${status}된 ${field}입니다.`);
     }
 
-    const rssEntity = rssRegisterBodyDto.toEntity();
+    const rssEntity = rssRegisterBodyDto.toEntity(rssUrl);
     await this.rssRepository.insert(rssEntity);
 
     await this.notifyRssRegistrationRequest(rssEntity);
@@ -201,32 +207,9 @@ export class RssService {
     return ReadRssRejectHistoryResponseDto.toResponseDtoArray(rejectRssList);
   }
 
-  private identifyPlatformFromRssUrl(rssUrl: string) {
-    type Platform = 'medium' | 'tistory' | 'velog' | 'github' | 'etc';
-
-    const platformRegexp: Record<Platform, RegExp> = {
-      medium: /^https:\/\/medium\.com/,
-      tistory: /^https:\/\/[a-zA-Z0-9-]+\.tistory\.com/,
-      velog: /^https:\/\/v2\.velog\.io/,
-      github: /^https:\/\/[\w-]+\.github\.io/,
-      etc: /.*/,
-    };
-
-    for (const [platform, regex] of Object.entries(platformRegexp)) {
-      if (regex.test(rssUrl)) {
-        return platform;
-      }
-    }
-    return 'etc';
-  }
-
   private async acceptRssBackProcess(rss: Rss) {
-    const blogPlatform = this.identifyPlatformFromRssUrl(rss.rssUrl);
-
     const rssAccept = await this.dataSource.transaction(async (manager) => {
-      const rssAccept = await manager.save(
-        RssAccept.fromRss(rss, blogPlatform),
-      );
+      const rssAccept = await manager.save(RssAccept.fromRss(rss));
       await manager.delete(Rss, rss.id);
       return rssAccept;
     });
