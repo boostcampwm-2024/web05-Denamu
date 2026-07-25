@@ -4,7 +4,7 @@ import { BLOG } from "@/constants/endpoints";
 
 import { fail, mockApi, ok } from "@/__storybook__/mockApi";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fn, userEvent, within } from "storybook/test";
+import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
 const meta = {
   title: "RssRegistration/RssRegistrationModal",
@@ -20,10 +20,12 @@ type Story = StoryObj<typeof meta>;
 const fillForm = async (canvasElement: HTMLElement) => {
   const body = within(canvasElement.ownerDocument.body);
 
-  await userEvent.click(body.getByRole("combobox"));
+  // Dialog open 애니메이션 중 Radix가 body에 일시적으로 pointer-events: none을 걸었다가 풀기 때문에,
+  // 렌더 직후 바로 클릭하면 CI처럼 느린 환경에서 그 창을 밟아 실패할 수 있어 재시도로 감싼다.
+  await waitFor(() => userEvent.click(body.getByRole("combobox")));
   await userEvent.click(await body.findByRole("option", { name: "Tistory" }));
 
-  await userEvent.type(body.getByPlaceholderText("서브도메인"), "myblog");
+  await userEvent.type(await body.findByPlaceholderText("서브도메인"), "myblog");
   await userEvent.type(body.getByRole("textbox", { name: "블로그명" }), "테스트 블로그");
   await userEvent.type(body.getByRole("textbox", { name: "신청자 이름" }), "테스터");
   await userEvent.type(body.getByRole("textbox", { name: "이메일" }), "test@example.com");
