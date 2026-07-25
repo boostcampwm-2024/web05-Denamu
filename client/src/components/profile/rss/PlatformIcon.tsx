@@ -1,6 +1,6 @@
 import { Rss } from "lucide-react";
 
-const KNOWN_PLATFORMS = ["tistory", "velog", "medium", "naver_blog"];
+const KNOWN_PLATFORMS = ["tistory", "velog", "medium", "naver"];
 
 interface PlatformIconProps {
   platform: string;

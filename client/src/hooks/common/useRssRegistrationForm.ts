@@ -9,8 +9,6 @@ import {
 
 import { BLOG_ADDRESS_TEMPLATES, BlogAddressPlatformType } from "@/constants/rss";
 
-import { blogUrlToRss } from "@/utils/blogUrlToRss";
-
 import { useRegisterModalStore } from "@/store/useRegisterModalStore";
 
 export const PLATFORM_OPTIONS = [
@@ -19,11 +17,10 @@ export const PLATFORM_OPTIONS = [
   { value: "medium", label: "Medium" },
   { value: "github", label: "GitHub" },
   { value: "naver", label: "Naver" },
-  { value: "other", label: "기타" },
+  { value: "etc", label: "기타" },
 ];
 
-const isTemplatedPlatform = (value: string): value is BlogAddressPlatformType =>
-  value in BLOG_ADDRESS_TEMPLATES;
+const isTemplatedPlatform = (value: string): value is BlogAddressPlatformType => value in BLOG_ADDRESS_TEMPLATES;
 
 const buildBlogUrl = (platformValue: string, addressInput: string): string => {
   if (!isTemplatedPlatform(platformValue)) return "";
@@ -41,18 +38,17 @@ export const useRssRegistrationForm = () => {
   const handlePlatformSelection = (newPlatformValue: string) => {
     setSelectedPlatformValue(newPlatformValue);
     setAddressInput("");
-    store.handleInputChange("", store.setRssUrl, store.setRssUrlValid, validateRssUrl);
+    store.handleInputChange("", store.setBlogUrl, store.setBlogUrlValid, validateRssUrl);
   };
 
   const handleAddressInputChange = (value: string) => {
     setAddressInput(value);
     const blogUrl = buildBlogUrl(selectedPlatformValue, value);
-    const rssUrl = blogUrl ? blogUrlToRss(blogUrl) : "";
-    store.handleInputChange(rssUrl, store.setRssUrl, store.setRssUrlValid, validateRssUrl);
+    store.handleInputChange(blogUrl, store.setBlogUrl, store.setBlogUrlValid, validateRssUrl);
   };
 
   const handleRssDirectInput = (value: string) => {
-    store.handleInputChange(value, store.setRssUrl, store.setRssUrlValid, validateRssUrl);
+    store.handleInputChange(value, store.setBlogUrl, store.setBlogUrlValid, validateRssUrl);
   };
 
   const reset = () => {
@@ -63,16 +59,14 @@ export const useRssRegistrationForm = () => {
 
   return {
     selectedPlatformValue,
-    addressTemplate: isTemplatedPlatform(selectedPlatformValue)
-      ? BLOG_ADDRESS_TEMPLATES[selectedPlatformValue]
-      : null,
+    addressTemplate: isTemplatedPlatform(selectedPlatformValue) ? BLOG_ADDRESS_TEMPLATES[selectedPlatformValue] : null,
     values: {
-      rssUrl: store.rssUrl,
+      blogUrl: store.blogUrl,
       bloggerName: store.bloggerName,
       userName: store.userName,
       email: store.email,
       addressInput,
-      platformValue: selectedPlatformValue,
+      blogPlatform: selectedPlatformValue,
     },
     handlers: {
       handlePlatformSelection,

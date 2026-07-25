@@ -32,11 +32,11 @@ export type AdminRequest = {
 };
 
 export interface RegisterRss {
-  blog: string; 
-  name: string; 
-  email: string; 
-  rssUrl: string; 
-  blogType?: string; 
+  blog: string;
+  name: string;
+  email: string;
+  blogUrl: string;
+  blogPlatform: string;
 }
 
 export type RegisterResponse = ApiMessage;

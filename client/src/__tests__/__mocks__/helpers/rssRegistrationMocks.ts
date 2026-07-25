@@ -4,18 +4,18 @@ const DEFAULT_VALUES = {
   email: "",
   userName: "",
   bloggerName: "",
-  rssUrl: "",
+  blogUrl: "",
   addressInput: "",
-  platformValue: "",
+  blogPlatform: "",
 };
 
 const DEFAULT_SUCCESS_VALUES = {
   email: "test@example.com",
   userName: "테스트",
   bloggerName: "블로그",
-  rssUrl: "https://test.com/rss",
+  blogUrl: "https://test.tistory.com",
   addressInput: "test",
-  platformValue: "",
+  blogPlatform: "tistory",
 };
 
 const DEFAULT_FORM_STATE = {
@@ -42,7 +42,7 @@ export const PLATFORM_OPTIONS = [
   { value: "medium", label: "Medium" },
   { value: "github", label: "GitHub" },
   { value: "naver", label: "Naver" },
-  { value: "other", label: "기타" },
+  { value: "etc", label: "기타" },
 ];
 
 export const mockUseRssRegistrationForm = {
@@ -75,7 +75,7 @@ export const createFailureFormMock = () => {
       email: "invalid-email", // 잘못된 이메일 형식
       userName: "asdf", // 빈 값
       bloggerName: "asdf", // 빈 값
-      rssUrl: "invalid-url", // 잘못된 URL 형식
+      blogUrl: "invalid-url", // 잘못된 URL 형식
       addressInput: "asdf",
     },
     isValid: false,

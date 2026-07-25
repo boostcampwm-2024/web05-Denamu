@@ -52,11 +52,11 @@ export function RssRegistrationModal({ onClose, rssOpen }: { onClose: () => void
 
   const handleRegister = () => {
     const data: RegisterRss = {
-      rssUrl: values.rssUrl,
+      blogUrl: values.blogUrl,
       blog: values.bloggerName,
       name: values.userName,
       email: values.email,
-      blogType: values.platformValue,
+      blogPlatform: values.blogPlatform,
     };
     mutate(data);
   };
@@ -90,7 +90,7 @@ export function RssRegistrationModal({ onClose, rssOpen }: { onClose: () => void
               value={values.addressInput}
             />
           )}
-          {selectedPlatformValue === "other" && (
+          {selectedPlatformValue === "etc" && (
             <div className="space-y-4">
               <FormInput
                 id="blogUrl"
@@ -107,7 +107,7 @@ export function RssRegistrationModal({ onClose, rssOpen }: { onClose: () => void
                   label="RSS URL"
                   onChange={handlers.handleRssDirectInput}
                   placeholder="https://myblog.com/rss"
-                  value={values.rssUrl}
+                  value={values.blogUrl}
                 />
                 <p className="text-xs text-muted-foreground mt-1">기타 플랫폼은 RSS URL을 직접 입력해주세요.</p>
               </div>
