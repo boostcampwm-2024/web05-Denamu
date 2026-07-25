@@ -83,6 +83,7 @@ describe(`GET ${URL} E2E Test`, () => {
         blogPlatform: rssAccept.blogPlatform,
         email: rssAccept.email,
         id: rssAccept.id,
+        blogImage: rssAccept.blogImage ?? null,
         name: rssAccept.name,
         rssUrl: rssAccept.rssUrl,
         userName: rssAccept.userName,

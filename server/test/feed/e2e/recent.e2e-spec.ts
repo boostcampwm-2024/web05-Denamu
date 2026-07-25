@@ -78,6 +78,7 @@ describe(`GET ${URL} E2E Test`, () => {
           id: feed.id,
           author: feed.blog.name,
           blogPlatform: feed.blog.blogPlatform,
+          blogImage: null,
           title: feed.title,
           path: feed.path,
           tag: [],

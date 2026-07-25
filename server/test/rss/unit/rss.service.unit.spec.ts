@@ -10,15 +10,15 @@ import { DataSource } from 'typeorm';
 
 import { AdminRepository } from '@admin/repository/admin.repository';
 
-import { FeedRepository } from '@feed/repository/feed.repository';
-
-import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
+import { RssBlockRepository } from '@block/repository/rssBlock.repository';
 
 import { EmailProducer } from '@common/email/email.producer';
 import { WinstonLoggerService } from '@common/logger/logger.service';
 import { NotifierRegistry } from '@common/notification/notifier-registry';
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
+
+import { FeedRepository } from '@feed/repository/feed.repository';
 
 import { RegisterRssRequestDto } from '@rss/dto/request/registerRss.dto';
 import { ReadRssResponseDto } from '@rss/dto/response/readRss.dto';
@@ -31,7 +31,7 @@ import {
 } from '@rss/repository/rss.repository';
 import { RssService } from '@rss/service/rss.service';
 
-import { RssBlockRepository } from '@block/repository/rssBlock.repository';
+import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
 
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
@@ -165,7 +165,10 @@ describe(`${RssService.name} Unit Test`, () => {
     } as unknown as RegisterRssRequestDto;
 
     beforeEach(() => {
-      mockedAxios.get.mockResolvedValue({ status: 200 });
+      mockedAxios.get.mockResolvedValue({
+        status: 200,
+        data: '<rss><channel><image><url>https://img.test/logo.png</url></image></channel></rss>',
+      });
       mockedAxios.isAxiosError.mockReturnValue(false);
     });
 
@@ -229,7 +232,52 @@ describe(`${RssService.name} Unit Test`, () => {
       expect(rssRepository.insert).not.toHaveBeenCalled();
     });
 
-    it('중복이 없으면 RSS를 저장한다.', async () => {
+    it('blogUrl 또는 rssUrl이 404를 반환하면 NotFoundException을 던지고 저장하지 않는다.', async () => {
+      // given
+      rssRepository.findOne.mockResolvedValue(null);
+      rssAcceptRepository.findOne.mockResolvedValue(null);
+      mockedAxios.isAxiosError.mockReturnValue(true);
+      mockedAxios.get.mockRejectedValue({
+        response: { status: 404 },
+      });
+
+      // when & then
+      await expect(rssService.createRss(dto)).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(rssRepository.insert).not.toHaveBeenCalled();
+    });
+
+    it('blogUrl 또는 rssUrl에 접속할 수 없으면 BadRequestException을 던지고 저장하지 않는다.', async () => {
+      // given
+      rssRepository.findOne.mockResolvedValue(null);
+      rssAcceptRepository.findOne.mockResolvedValue(null);
+      mockedAxios.get.mockRejectedValue(new Error('network'));
+
+      // when & then
+      await expect(rssService.createRss(dto)).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(rssRepository.insert).not.toHaveBeenCalled();
+    });
+
+    it('blogUrl 또는 rssUrl이 4xx(404 제외)를 반환하면 BadRequestException을 던지고 저장하지 않는다.', async () => {
+      // given
+      rssRepository.findOne.mockResolvedValue(null);
+      rssAcceptRepository.findOne.mockResolvedValue(null);
+      mockedAxios.isAxiosError.mockReturnValue(true);
+      mockedAxios.get.mockRejectedValue({
+        response: { status: 403 },
+      });
+
+      // when & then
+      await expect(rssService.createRss(dto)).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(rssRepository.insert).not.toHaveBeenCalled();
+    });
+
+    it('중복이 없으면 RSS 채널의 프로필 이미지를 조회해 함께 저장한다.', async () => {
       // given
       rssRepository.findOne.mockResolvedValue(null);
       rssAcceptRepository.findOne.mockResolvedValue(null);
@@ -238,9 +286,29 @@ describe(`${RssService.name} Unit Test`, () => {
       await rssService.createRss(dto);
 
       // then
-      expect(rssRepository.insert).toHaveBeenCalledWith(
-        dto.toEntity('https://blog.test/rss'),
-      );
+      expect(rssRepository.insert).toHaveBeenCalledWith({
+        ...dto.toEntity('https://blog.test/rss'),
+        blogImage: 'https://img.test/logo.png',
+      });
+    });
+
+    it('채널 이미지 조회에 실패해도 RSS 신청 자체는 blogImage: null로 저장된다.', async () => {
+      // given
+      rssRepository.findOne.mockResolvedValue(null);
+      rssAcceptRepository.findOne.mockResolvedValue(null);
+      mockedAxios.get
+        .mockResolvedValueOnce({ status: 200 })
+        .mockResolvedValueOnce({ status: 200 })
+        .mockRejectedValueOnce(new Error('network'));
+
+      // when
+      await rssService.createRss(dto);
+
+      // then
+      expect(rssRepository.insert).toHaveBeenCalledWith({
+        ...dto.toEntity('https://blog.test/rss'),
+        blogImage: null,
+      });
     });
 
     it('저장 후 수신 동의한 관리자에게 메일을 발송하고 디스코드 알림을 보낸다.', async () => {
@@ -264,7 +332,10 @@ describe(`${RssService.name} Unit Test`, () => {
         2,
       );
       expect(emailProducer.produceRssRegistrationRequest).toHaveBeenCalledWith(
-        dto.toEntity('https://blog.test/rss'),
+        {
+          ...dto.toEntity('https://blog.test/rss'),
+          blogImage: 'https://img.test/logo.png',
+        },
         'a@denamu.dev',
       );
       expect(notifierRegistry.sendAlert).toHaveBeenCalledTimes(1);
@@ -699,7 +770,10 @@ describe(`${RssService.name} Unit Test`, () => {
     const user = { id: 10, email: 'me@test.com', userName: 'me', role: 'user' };
 
     it('본인이 인증한 RSS가 아니면 ForbiddenException을 던진다.', async () => {
-      rssAcceptRepository.findOne.mockResolvedValue({ id: 1, userId: 99 } as any);
+      rssAcceptRepository.findOne.mockResolvedValue({
+        id: 1,
+        userId: 99,
+      } as any);
 
       await expect(
         rssService.getOwnedRssFeeds(user, 1, { limit: 10 }),
@@ -708,16 +782,27 @@ describe(`${RssService.name} Unit Test`, () => {
     });
 
     it('비공개 글 포함 전체 게시글을 커서로 조회한다(onlyPublic=false).', async () => {
-      rssAcceptRepository.findOne.mockResolvedValue({ id: 1, userId: 10 } as any);
+      rssAcceptRepository.findOne.mockResolvedValue({
+        id: 1,
+        userId: 10,
+      } as any);
       feedRepository.getFeedsByBlog.mockResolvedValue([
         { id: 3, isPublic: true },
         { id: 2, isPublic: false },
         { id: 1, isPublic: true },
       ] as any);
 
-      const result = await rssService.getOwnedRssFeeds(user, 1, { lastId: 4, limit: 2 });
+      const result = await rssService.getOwnedRssFeeds(user, 1, {
+        lastId: 4,
+        limit: 2,
+      });
 
-      expect(feedRepository.getFeedsByBlog).toHaveBeenCalledWith(1, 4, 2, false);
+      expect(feedRepository.getFeedsByBlog).toHaveBeenCalledWith(
+        1,
+        4,
+        2,
+        false,
+      );
       expect(result.result).toHaveLength(2);
       expect(result.hasMore).toBe(true);
       expect(result.lastId).toBe(2);
@@ -728,7 +813,10 @@ describe(`${RssService.name} Unit Test`, () => {
     const user = { id: 10, email: 'me@test.com', userName: 'me', role: 'user' };
 
     it('본인이 인증한 RSS가 아니면 ForbiddenException을 던진다.', async () => {
-      rssAcceptRepository.findOne.mockResolvedValue({ id: 1, userId: 99 } as any);
+      rssAcceptRepository.findOne.mockResolvedValue({
+        id: 1,
+        userId: 99,
+      } as any);
 
       await expect(
         rssService.setFeedVisibility(user, 1, 5, false),
@@ -737,7 +825,10 @@ describe(`${RssService.name} Unit Test`, () => {
     });
 
     it('게시글이 해당 RSS 소속이 아니면(affected=0) NotFoundException을 던진다.', async () => {
-      rssAcceptRepository.findOne.mockResolvedValue({ id: 1, userId: 10 } as any);
+      rssAcceptRepository.findOne.mockResolvedValue({
+        id: 1,
+        userId: 10,
+      } as any);
       feedRepository.setVisibilityForBlog.mockResolvedValue(0);
 
       await expect(
@@ -746,12 +837,19 @@ describe(`${RssService.name} Unit Test`, () => {
     });
 
     it('소유/소속 검증 통과 시 공개 상태를 변경한다.', async () => {
-      rssAcceptRepository.findOne.mockResolvedValue({ id: 1, userId: 10 } as any);
+      rssAcceptRepository.findOne.mockResolvedValue({
+        id: 1,
+        userId: 10,
+      } as any);
       feedRepository.setVisibilityForBlog.mockResolvedValue(1);
 
       await rssService.setFeedVisibility(user, 1, 5, false);
 
-      expect(feedRepository.setVisibilityForBlog).toHaveBeenCalledWith(5, 1, false);
+      expect(feedRepository.setVisibilityForBlog).toHaveBeenCalledWith(
+        5,
+        1,
+        false,
+      );
     });
   });
 
@@ -764,6 +862,7 @@ describe(`${RssService.name} Unit Test`, () => {
           id: 1,
           name: 'blogA',
           blogPlatform: 'velog',
+          blogImage: 'https://img.test/a.png',
           lastPublishedAt,
           latestFeedId: '11',
         },
@@ -771,6 +870,7 @@ describe(`${RssService.name} Unit Test`, () => {
           id: 2,
           name: 'blogB',
           blogPlatform: 'tistory',
+          blogImage: null,
           lastPublishedAt,
           latestFeedId: '22',
         },
@@ -789,6 +889,7 @@ describe(`${RssService.name} Unit Test`, () => {
           id: 1,
           name: 'blogA',
           blogPlatform: 'velog',
+          blogImage: 'https://img.test/a.png',
           lastPublishedAt,
           latestFeedId: 11,
         },
@@ -796,6 +897,7 @@ describe(`${RssService.name} Unit Test`, () => {
           id: 2,
           name: 'blogB',
           blogPlatform: 'tistory',
+          blogImage: null,
           lastPublishedAt,
           latestFeedId: 22,
         },
@@ -835,7 +937,9 @@ describe(`${RssService.name} Unit Test`, () => {
       feedRepository.countPublicFeedsByBlogIds.mockResolvedValue(
         new Map([[1, 5]]),
       );
-      subscriptionRepository.countByBlogIds.mockResolvedValue(new Map([[1, 2]]));
+      subscriptionRepository.countByBlogIds.mockResolvedValue(
+        new Map([[1, 2]]),
+      );
       const latest = new Date('2025-01-02T00:00:00.000Z');
       feedRepository.getLatestPublicFeedDate.mockResolvedValue(latest);
 
@@ -918,9 +1022,9 @@ describe(`${RssService.name} Unit Test`, () => {
     it('RSS가 없으면 NotFoundException을 던진다.', async () => {
       rssAcceptRepository.findOne.mockResolvedValue(null);
 
-      await expect(
-        rssService.getRssFeeds(1, { limit: 10 }),
-      ).rejects.toThrow(NotFoundException);
+      await expect(rssService.getRssFeeds(1, { limit: 10 })).rejects.toThrow(
+        NotFoundException,
+      );
       expect(feedRepository.getFeedsByBlog).not.toHaveBeenCalled();
     });
 
