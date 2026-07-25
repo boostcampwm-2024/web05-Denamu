@@ -8,7 +8,7 @@ describe(`${RegisterRssRequestDto.name} Test`, () => {
 
   beforeEach(() => {
     dto = new RegisterRssRequestDto({
-      blog: 'test',
+      blogName: 'test',
       name: 'test',
       email: 'test@test.com',
       blogUrl: 'https://test.com',
@@ -25,10 +25,10 @@ describe(`${RegisterRssRequestDto.name} Test`, () => {
     expect(errors).toHaveLength(0);
   });
 
-  describe('blog', () => {
+  describe('blogName', () => {
     it('블로그 이름이 없을 경우 유효성 검사에 실패한다.', async () => {
       // given
-      dto.blog = null;
+      dto.blogName = null;
 
       // when
       const errors = await validate(dto);
@@ -40,7 +40,7 @@ describe(`${RegisterRssRequestDto.name} Test`, () => {
 
     it('블로그 이름이 빈 문자열일 경우 유효성 검사에 실패한다.', async () => {
       // given
-      dto.blog = '';
+      dto.blogName = '';
 
       // when
       const errors = await validate(dto);
@@ -52,7 +52,7 @@ describe(`${RegisterRssRequestDto.name} Test`, () => {
 
     it('블로그 이름이 문자열이 아니고 정수일 경우 유효성 검사에 실패한다.', async () => {
       // given
-      dto.blog = 1 as any;
+      dto.blogName = 1 as any;
 
       // when
       const errors = await validate(dto);

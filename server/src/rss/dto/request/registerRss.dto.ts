@@ -24,7 +24,7 @@ export class RegisterRssRequestDto {
   @IsNotEmpty({
     message: '블로그 이름이 없습니다.',
   })
-  blog: string;
+  blogName: string;
 
   @ApiProperty({
     example: 'test',
@@ -98,7 +98,7 @@ export class RegisterRssRequestDto {
 
   toEntity(rssUrl: string) {
     const rss = new Rss();
-    rss.name = this.blog;
+    rss.name = this.blogName;
     rss.userName = this.name;
     rss.email = this.email;
     rss.blogUrl = this.blogUrl;

@@ -32,7 +32,7 @@ export type AdminRequest = {
 };
 
 export interface RegisterRss {
-  blog: string;
+  blogName: string;
   name: string;
   email: string;
   blogUrl: string;

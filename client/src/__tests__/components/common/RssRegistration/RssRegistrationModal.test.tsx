@@ -83,7 +83,7 @@ describe("RssRegistrationModal", () => {
 
     expect(mutateSpy).toHaveBeenCalledWith({
       blogUrl: "https://test.tistory.com",
-      blog: "블로그",
+      blogName: "블로그",
       name: "테스트",
       email: "test@example.com",
       blogPlatform: "tistory",
