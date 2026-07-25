@@ -152,7 +152,7 @@ describe(`${RssService.name} Unit Test`, () => {
 
   describe('createRss', () => {
     const dto = {
-      blog: 'My Blog',
+      blogName: 'My Blog',
       blogUrl: 'https://blog.test/rss',
       blogPlatform: 'etc',
       rssUrl: 'https://blog.test/rss',
@@ -163,6 +163,11 @@ describe(`${RssService.name} Unit Test`, () => {
         rssUrl,
       }),
     } as unknown as RegisterRssRequestDto;
+
+    beforeEach(() => {
+      mockedAxios.get.mockResolvedValue({ status: 200 });
+      mockedAxios.isAxiosError.mockReturnValue(false);
+    });
 
     it('이미 신청된 RSS가 있으면 ConflictException을 던진다.', async () => {
       // given
@@ -175,6 +180,51 @@ describe(`${RssService.name} Unit Test`, () => {
       // when & then
       await expect(rssService.createRss(dto)).rejects.toThrow(
         ConflictException,
+      );
+      expect(rssRepository.insert).not.toHaveBeenCalled();
+    });
+
+    it('blogUrl 또는 rssUrl이 404를 반환하면 NotFoundException을 던지고 저장하지 않는다.', async () => {
+      // given
+      rssRepository.findOne.mockResolvedValue(null);
+      rssAcceptRepository.findOne.mockResolvedValue(null);
+      mockedAxios.isAxiosError.mockReturnValue(true);
+      mockedAxios.get.mockRejectedValue({
+        response: { status: 404 },
+      });
+
+      // when & then
+      await expect(rssService.createRss(dto)).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(rssRepository.insert).not.toHaveBeenCalled();
+    });
+
+    it('blogUrl 또는 rssUrl에 접속할 수 없으면 BadRequestException을 던지고 저장하지 않는다.', async () => {
+      // given
+      rssRepository.findOne.mockResolvedValue(null);
+      rssAcceptRepository.findOne.mockResolvedValue(null);
+      mockedAxios.get.mockRejectedValue(new Error('network'));
+
+      // when & then
+      await expect(rssService.createRss(dto)).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(rssRepository.insert).not.toHaveBeenCalled();
+    });
+
+    it('blogUrl 또는 rssUrl이 4xx(404 제외)를 반환하면 BadRequestException을 던지고 저장하지 않는다.', async () => {
+      // given
+      rssRepository.findOne.mockResolvedValue(null);
+      rssAcceptRepository.findOne.mockResolvedValue(null);
+      mockedAxios.isAxiosError.mockReturnValue(true);
+      mockedAxios.get.mockRejectedValue({
+        response: { status: 403 },
+      });
+
+      // when & then
+      await expect(rssService.createRss(dto)).rejects.toThrow(
+        BadRequestException,
       );
       expect(rssRepository.insert).not.toHaveBeenCalled();
     });

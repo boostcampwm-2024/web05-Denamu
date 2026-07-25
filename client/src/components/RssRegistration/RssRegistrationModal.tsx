@@ -34,7 +34,15 @@ export function RssRegistrationModal({ onClose, rssOpen }: { onClose: () => void
         isOpen: true,
       });
     },
-    () => {
+    (error) => {
+      if (error?.response?.status === 404) {
+        setAlertOpen({
+          title: "블로그 주소를 확인해주세요!",
+          content: "입력하신 블로그 주소에서 페이지를 찾을 수 없어요. 올바른 블로그 주소를 입력해주세요.",
+          isOpen: true,
+        });
+        return;
+      }
       setAlertOpen({
         title: "RSS 요청 실패!",
         content: "입력한 정보를 확인하거나 다시 시도해주세요. 문제가 계속되면 관리자에게 문의하세요!",
@@ -53,7 +61,7 @@ export function RssRegistrationModal({ onClose, rssOpen }: { onClose: () => void
   const handleRegister = () => {
     const data: RegisterRss = {
       blogUrl: values.blogUrl,
-      blog: values.bloggerName,
+      blogName: values.bloggerName,
       name: values.userName,
       email: values.email,
       blogPlatform: values.blogPlatform,

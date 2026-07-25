@@ -80,7 +80,7 @@ export class RssService {
   ) {}
 
   async createRss(rssRegisterBodyDto: RegisterRssRequestDto) {
-    const { blog, blogUrl, blogPlatform } = rssRegisterBodyDto;
+    const { blogName, blogUrl, blogPlatform } = rssRegisterBodyDto;
     const rssUrl =
       blogPlatform === 'etc'
         ? rssRegisterBodyDto.rssUrl
@@ -88,10 +88,10 @@ export class RssService {
 
     const [duplicateRss, duplicateBlog] = await Promise.all([
       this.rssRepository.findOne({
-        where: [{ rssUrl }, { name: blog }],
+        where: [{ rssUrl }, { name: blogName }],
       }),
       this.rssAcceptRepository.findOne({
-        where: [{ rssUrl }, { name: blog }],
+        where: [{ rssUrl }, { name: blogName }],
       }),
     ]);
 
@@ -102,15 +102,44 @@ export class RssService {
       throw new ConflictException(`이미 ${status}된 ${field}입니다.`);
     }
 
+    await Promise.all([
+      this.assertUrlAccessible(blogUrl),
+      this.assertUrlAccessible(rssUrl),
+    ]);
+
     const rssEntity = rssRegisterBodyDto.toEntity(rssUrl);
     await this.rssRepository.insert(rssEntity);
 
     await this.notifyRssRegistrationRequest(rssEntity);
   }
 
+  private async assertUrlAccessible(url: string) {
+    try {
+      await axios.get(url, {
+        timeout: 5000,
+        maxRedirects: 5,
+        maxContentLength: 5 * 1024 * 1024,
+      });
+    } catch (error) {
+      const status = axios.isAxiosError(error)
+        ? error.response?.status
+        : undefined;
+
+      if (status === 404) {
+        throw new NotFoundException(
+          `${url}을(를) 찾을 수 없습니다. 올바른 블로그 주소를 입력해주세요.`,
+        );
+      }
+
+      throw new BadRequestException(
+        `${url}에 접속할 수 없습니다. 올바른 블로그 주소를 입력해주세요.`,
+      );
+    }
+  }
+
   private async notifyRssRegistrationRequest(rss: Rss) {
     void this.notifierRegistry.sendAlert(
-      `📥 새로운 RSS 등록 신청이 접수되었습니다.\n블로그: ${rss.name}\n신청자: ${rss.userName}\nRSS: ${rss.rssUrl}`,
+      `📥 새로운 RSS 등록 신청이 접수되었습니다.\n블로그: ${rss.name}(rss.blogUrl)\n신청자: ${rss.userName}\nRSS: ${rss.rssUrl}`,
     );
 
     try {
