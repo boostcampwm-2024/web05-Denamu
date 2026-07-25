@@ -3,7 +3,7 @@ import { inject, injectable } from 'tsyringe';
 import axios from 'axios';
 
 import { PermanentError, RetryableError } from '@common/errors';
-import { FeedDetail, RssObj } from '@common/feed/feed.type';
+import { FeedDetail, FeedFetchResult, RssObj } from '@common/feed/feed.type';
 import logger from '@common/logger/logger';
 import { FeedParserManager } from '@common/parser/feed-parser-manager';
 
@@ -32,8 +32,9 @@ export class FeedCrawler {
       return;
     }
 
-    const newFeedsByRss = await this.feedGroupByRss(rssObjects, startTime);
-    const newFeeds = newFeedsByRss.flat();
+    const crawlResults = await this.feedGroupByRss(rssObjects, startTime);
+    await this.syncChannelImages(rssObjects, crawlResults);
+    const newFeeds = crawlResults.flatMap((result) => result.feeds);
 
     if (!newFeeds.length) {
       logger.info('새로운 피드가 없습니다.');
@@ -54,7 +55,12 @@ export class FeedCrawler {
   async startFullCrawl(rssObj: RssObj): Promise<FeedDetail[]> {
     logger.info(`전체 피드 크롤링 시작: ${rssObj.blogName}(${rssObj.rssUrl})`);
 
-    const newFeeds = await this.feedParserManager.fetchAndParseAll(rssObj);
+    const { feeds: newFeeds, channelImage } =
+      await this.feedParserManager.fetchAndParseAll(rssObj);
+    await this.syncChannelImages(
+      [rssObj],
+      [{ rssId: rssObj.id, channelImage }],
+    );
 
     if (!newFeeds.length) {
       logger.info(`${rssObj.blogName}에서 가져올 피드가 없습니다.`);
@@ -82,7 +88,8 @@ export class FeedCrawler {
       throw new PermanentError(`RSS를 찾을 수 없습니다: blogId=${feed.blogId}`);
     }
 
-    const allFeeds = await this.feedParserManager.fetchAndParseAll(rssObj);
+    const { feeds: allFeeds } =
+      await this.feedParserManager.fetchAndParseAll(rssObj);
     const matched = allFeeds.find((parsed) => parsed.link === feed.path);
     if (!matched) {
       throw await this.buildMissingFeedError(feedId, feed.path);
@@ -130,14 +137,37 @@ export class FeedCrawler {
   private feedGroupByRss(
     rssObjects: RssObj[],
     startTime: Date,
-  ): Promise<FeedDetail[][]> {
+  ): Promise<(FeedFetchResult & { rssId: number })[]> {
     return Promise.all(
       rssObjects.map(async (rssObj: RssObj) => {
         logger.info(
           `${rssObj.blogName}(${rssObj.rssUrl}) 에서 데이터 조회하는 중...`,
         );
-        return this.feedParserManager.fetchAndParse(rssObj, startTime);
+        const result = await this.feedParserManager.fetchAndParse(
+          rssObj,
+          startTime,
+        );
+        return { ...result, rssId: rssObj.id };
       }),
+    );
+  }
+
+  private async syncChannelImages(
+    rssObjects: RssObj[],
+    crawlResults: { rssId: number; channelImage: string | null | undefined }[],
+  ) {
+    const rssById = new Map(rssObjects.map((rssObj) => [rssObj.id, rssObj]));
+
+    await Promise.all(
+      crawlResults
+        .filter((result) => result.channelImage !== undefined)
+        .filter(
+          (result) =>
+            result.channelImage !== rssById.get(result.rssId)?.blogImage,
+        )
+        .map((result) =>
+          this.rssRepository.updateImage(result.rssId, result.channelImage),
+        ),
     );
   }
 }

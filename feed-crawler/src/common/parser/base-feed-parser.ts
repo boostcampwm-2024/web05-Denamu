@@ -64,6 +64,7 @@ export abstract class BaseFeedParser {
   }
 
   abstract canParse(xmlData: string): boolean;
+  abstract extractChannelImage(xmlData: string): string | null;
   protected abstract extractRawFeeds(xmlData: string): RawFeed[];
 
   private filterByTime(rawFeeds: RawFeed[], startTime: Date): RawFeed[] {
@@ -101,6 +102,7 @@ export abstract class BaseFeedParser {
           blogId: rssObj.id,
           blogName: rssObj.blogName,
           blogPlatform: rssObj.blogPlatform,
+          blogImage: rssObj.blogImage,
           pubDate: formattedDate,
           title: feed.title,
           link: decodeURIComponent(feed.link),

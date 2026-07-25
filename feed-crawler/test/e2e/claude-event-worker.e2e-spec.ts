@@ -15,7 +15,7 @@ describe('Claude AI e2e-test', () => {
     claudeEventWorker = testContext.claudeEventWorker;
 
     const rssData = (await testContext.dbConnection.executeQuery(
-      `INSERT INTO rss_accept (name, user_name, email, rss_url, blog_platform) VALUES (?, ?, ?, ?, ?)`,
+      `INSERT INTO rss_accept (name, user_name, email, rss_url, platform) VALUES (?, ?, ?, ?, ?)`,
       ['test', 'test_name', 'test@test.com', 'https://test.com/rss', 'etc'],
     )) as any as ResultSetHeader;
 

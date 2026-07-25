@@ -16,7 +16,7 @@ describe('AI 요약 재요청 e2e-test', () => {
     feedCrawler = testContext.feedCrawler;
 
     const rssData = (await testContext.dbConnection.executeQuery(
-      `INSERT INTO rss_accept (name, user_name, email, rss_url, blog_platform) VALUES (?, ?, ?, ?, ?)`,
+      `INSERT INTO rss_accept (name, user_name, email, rss_url, platform) VALUES (?, ?, ?, ?, ?)`,
       [
         'requeue blog',
         'tester',
@@ -38,21 +38,25 @@ describe('AI 요약 재요청 e2e-test', () => {
     // given - RSS 파싱 결과가 DB의 feed.path와 동일한 link를 갖도록 모킹
     jest
       .spyOn(testContext.feedParserManager, 'fetchAndParseAll')
-      .mockResolvedValue([
-        {
-          id: null,
-          blogId: rssId,
-          blogName: 'requeue blog',
-          blogPlatform: 'etc',
-          title: 'requeue title',
-          link: feedPath,
-          pubDate: new Date().toISOString().slice(0, 19).replace('T', ' '),
-          imageUrl: 'thumb',
-          content: 'requeue content',
-          summary: '요약 생성 중...',
-          deathCount: 0,
-        },
-      ]);
+      .mockResolvedValue({
+        feeds: [
+          {
+            id: null,
+            blogId: rssId,
+            blogName: 'requeue blog',
+            blogPlatform: 'etc',
+            blogImage: null,
+            title: 'requeue title',
+            link: feedPath,
+            pubDate: new Date().toISOString().slice(0, 19).replace('T', ' '),
+            imageUrl: 'thumb',
+            content: 'requeue content',
+            summary: '요약 생성 중...',
+            deathCount: 0,
+          },
+        ],
+        channelImage: null,
+      });
 
     // when
     await feedCrawler.requeueFeedForAiSummary(feedId);

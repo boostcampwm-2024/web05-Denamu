@@ -32,6 +32,7 @@ describe('FeedParserManager', () => {
     blogName: '테스트 블로그',
     blogPlatform: 'tistory',
     rssUrl: 'https://test.tistory.com/rss',
+    blogImage: null,
   };
 
   const mockFeedDetails: FeedDetail[] = [
@@ -40,6 +41,7 @@ describe('FeedParserManager', () => {
       blogId: 1,
       blogName: '테스트 블로그',
       blogPlatform: 'tistory',
+      blogImage: null,
       pubDate: '2024-01-01 12:00:00',
       title: '테스트 피드 1',
       link: 'https://test.tistory.com/1',
@@ -65,12 +67,14 @@ describe('FeedParserManager', () => {
       canParse: rss20CanParseMock,
       parseFeed: rss20ParseFeedMock,
       parseAllFeeds: rss20ParseAllFeedsMock,
+      extractChannelImage: jest.fn().mockReturnValue(null),
     } as any;
 
     mockAtom10Parser = {
       canParse: atom10CanParseMock,
       parseFeed: atom10ParseFeedMock,
       parseAllFeeds: atom10ParseAllFeedsMock,
+      extractChannelImage: jest.fn().mockReturnValue(null),
     } as any;
 
     notifierPublishMock = jest.fn();
@@ -137,7 +141,7 @@ describe('FeedParserManager', () => {
         rssXmlData,
         startTime,
       );
-      expect(result).toEqual(mockFeedDetails);
+      expect(result).toEqual({ feeds: mockFeedDetails, channelImage: null });
     });
 
     it('Atom 1.0 피드를 성공적으로 파싱해야 한다', async () => {
@@ -165,7 +169,7 @@ describe('FeedParserManager', () => {
         atomXmlData,
         startTime,
       );
-      expect(result).toEqual(mockFeedDetails);
+      expect(result).toEqual({ feeds: mockFeedDetails, channelImage: null });
     });
 
     it('HTTP 요청이 실패할 때 빈 배열을 반환해야 한다', async () => {
@@ -181,7 +185,7 @@ describe('FeedParserManager', () => {
       );
 
       // Then
-      expect(result).toEqual([]);
+      expect(result).toEqual({ feeds: [], channelImage: undefined });
     });
 
     it('지원하지 않는 피드 형식일 때 빈 배열을 반환해야 한다', async () => {
@@ -201,7 +205,7 @@ describe('FeedParserManager', () => {
       );
 
       // Then
-      expect(result).toEqual([]);
+      expect(result).toEqual({ feeds: [], channelImage: undefined });
     });
 
     it('파서에서 에러가 발생할 때 빈 배열을 반환해야 한다', async () => {
@@ -221,7 +225,7 @@ describe('FeedParserManager', () => {
       );
 
       // Then
-      expect(result).toEqual([]);
+      expect(result).toEqual({ feeds: [], channelImage: undefined });
     });
   });
 
@@ -245,7 +249,7 @@ describe('FeedParserManager', () => {
         mockRssObj,
         rssXmlData,
       );
-      expect(result).toEqual(mockFeedDetails);
+      expect(result).toEqual({ feeds: mockFeedDetails, channelImage: null });
       expect(metricsTotalIncMock).toHaveBeenCalledWith({ type: 'full' });
       expect(metricsSuccessIncMock).toHaveBeenCalledWith({ type: 'full' });
     });
@@ -270,7 +274,7 @@ describe('FeedParserManager', () => {
         mockRssObj,
         atomXmlData,
       );
-      expect(result).toEqual(mockFeedDetails);
+      expect(result).toEqual({ feeds: mockFeedDetails, channelImage: null });
     });
 
     it('HTTP 요청이 실패하면 빈 배열을 반환하고 알림을 발행해야 한다', async () => {
@@ -281,7 +285,7 @@ describe('FeedParserManager', () => {
       const result = await feedParserManager.fetchAndParseAll(mockRssObj);
 
       // Then
-      expect(result).toEqual([]);
+      expect(result).toEqual({ feeds: [], channelImage: undefined });
       expect(metricsFailureIncMock).toHaveBeenCalledWith({ type: 'full' });
       expect(notifierPublishMock).toHaveBeenCalled();
     });
@@ -299,7 +303,7 @@ describe('FeedParserManager', () => {
       const result = await feedParserManager.fetchAndParseAll(mockRssObj);
 
       // Then
-      expect(result).toEqual([]);
+      expect(result).toEqual({ feeds: [], channelImage: undefined });
       expect(metricsFailureIncMock).toHaveBeenCalledWith({ type: 'full' });
     });
 
@@ -317,7 +321,7 @@ describe('FeedParserManager', () => {
       const result = await feedParserManager.fetchAndParseAll(mockRssObj);
 
       // Then
-      expect(result).toEqual([]);
+      expect(result).toEqual({ feeds: [], channelImage: undefined });
     });
   });
 
@@ -339,7 +343,7 @@ describe('FeedParserManager', () => {
       );
 
       // Then
-      expect(result).toEqual([]);
+      expect(result).toEqual({ feeds: [], channelImage: undefined });
     });
 
     it('매우 큰 응답을 처리해야 한다', async () => {
@@ -362,7 +366,7 @@ describe('FeedParserManager', () => {
       );
 
       // Then
-      expect(result).toEqual(mockFeedDetails);
+      expect(result).toEqual({ feeds: mockFeedDetails, channelImage: null });
       expect(rss20ParseFeedMock).toHaveBeenCalledWith(
         mockRssObj,
         largeXmlData,

@@ -22,6 +22,18 @@ export class Atom10Parser extends BaseFeedParser {
     }
   }
 
+  extractChannelImage(xmlData: string): string | null {
+    try {
+      const parsed = this.xmlParser.parse(xmlData) as {
+        feed?: { logo?: unknown; icon?: unknown };
+      };
+      const image = parsed.feed?.logo ?? parsed.feed?.icon;
+      return typeof image === 'string' && image.trim() ? image.trim() : null;
+    } catch {
+      return null;
+    }
+  }
+
   protected extractRawFeeds(xmlData: string): RawFeed[] {
     type Atom10Entry = { title: any; link: any; published?: any; updated?: any; summary?: any; content?: any };
     type Atom10Parsed = { feed: { entry: Atom10Entry | Atom10Entry[] } };

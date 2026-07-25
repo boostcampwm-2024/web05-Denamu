@@ -111,6 +111,7 @@ export class FeedRepository {
           pipeline.hset(`feed:recent:${feed.id}`, {
             id: feed.id,
             blogPlatform: feed.blogPlatform,
+            blogImage: feed.blogImage ?? '',
             createdAt: feed.pubDate,
             viewCount: 0,
             blogName: feed.blogName,
