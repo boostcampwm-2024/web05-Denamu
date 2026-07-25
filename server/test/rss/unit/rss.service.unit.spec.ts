@@ -153,8 +153,15 @@ describe(`${RssService.name} Unit Test`, () => {
   describe('createRss', () => {
     const dto = {
       blog: 'My Blog',
+      blogUrl: 'https://blog.test/rss',
+      blogPlatform: 'etc',
       rssUrl: 'https://blog.test/rss',
-      toEntity: () => ({ name: 'My Blog', rssUrl: 'https://blog.test/rss' }),
+      toEntity: (rssUrl: string) => ({
+        name: 'My Blog',
+        blogUrl: 'https://blog.test/rss',
+        blogPlatform: 'etc',
+        rssUrl,
+      }),
     } as unknown as RegisterRssRequestDto;
 
     it('이미 신청된 RSS가 있으면 ConflictException을 던진다.', async () => {
@@ -181,7 +188,9 @@ describe(`${RssService.name} Unit Test`, () => {
       await rssService.createRss(dto);
 
       // then
-      expect(rssRepository.insert).toHaveBeenCalledWith(dto.toEntity());
+      expect(rssRepository.insert).toHaveBeenCalledWith(
+        dto.toEntity('https://blog.test/rss'),
+      );
     });
 
     it('저장 후 수신 동의한 관리자에게 메일을 발송하고 디스코드 알림을 보낸다.', async () => {
@@ -205,7 +214,7 @@ describe(`${RssService.name} Unit Test`, () => {
         2,
       );
       expect(emailProducer.produceRssRegistrationRequest).toHaveBeenCalledWith(
-        dto.toEntity(),
+        dto.toEntity('https://blog.test/rss'),
         'a@denamu.dev',
       );
       expect(notifierRegistry.sendAlert).toHaveBeenCalledTimes(1);
@@ -964,21 +973,6 @@ describe(`${RssService.name} Unit Test`, () => {
 
       expect(feedRepository.findPublishYearsByBlogId).toHaveBeenCalledWith(1);
       expect(result).toEqual([2025, 2024]);
-    });
-  });
-
-  describe('identifyPlatformFromRssUrl (private)', () => {
-    it.each([
-      ['https://medium.com/feed', 'medium'],
-      ['https://blog.tistory.com/rss', 'tistory'],
-      ['https://v2.velog.io/rss', 'velog'],
-      ['https://user.github.io/feed', 'github'],
-      ['https://unknown.dev/rss', 'etc'],
-    ])('%s → %s 플랫폼으로 식별한다.', (url, expected) => {
-      const svc = rssService as unknown as {
-        identifyPlatformFromRssUrl(rssUrl: string): string;
-      };
-      expect(svc.identifyPlatformFromRssUrl(url)).toBe(expected);
     });
   });
 });
