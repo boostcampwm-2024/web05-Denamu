@@ -3,6 +3,12 @@ export interface RssObj {
   rssUrl: string;
   blogName: string;
   blogPlatform: string;
+  blogImage: string | null;
+}
+
+export interface FeedFetchResult {
+  feeds: FeedDetail[];
+  channelImage: string | null | undefined;
 }
 
 export interface FeedDetail {
@@ -10,6 +16,7 @@ export interface FeedDetail {
   blogId: number;
   blogName: string;
   blogPlatform: string;
+  blogImage: string | null;
   pubDate: string;
   title: string;
   link: string;

@@ -14,7 +14,7 @@ export class RssBlockRepository extends Repository<RssBlock> {
     return await this.createQueryBuilder('rssBlock')
       .innerJoin('rssBlock.blockedRss', 'blockedRss')
       .select(['rssBlock.id', 'rssBlock.createdAt'])
-      .addSelect(['blockedRss.id', 'blockedRss.name', 'blockedRss.blogPlatform'])
+      .addSelect(['blockedRss.id', 'blockedRss.name', 'blockedRss.blogPlatform', 'blockedRss.blogImage'])
       .where('rssBlock.blocker_id = :blockerId', { blockerId })
       .orderBy('rssBlock.id', 'DESC')
       .getMany();

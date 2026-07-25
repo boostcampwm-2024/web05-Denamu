@@ -2,10 +2,10 @@ import { useState } from "react";
 
 import { ChevronDown, FileText, Pencil, Trash2, Users } from "lucide-react";
 
+import { BlogPlatformBadge } from "@/components/profile/rss/BlogPlatformBadge.tsx";
 import { PlatformIcon } from "@/components/profile/rss/PlatformIcon.tsx";
 import { RssFeedRow } from "@/components/profile/rss/RssFeedRow.tsx";
 import { SubscribersModal } from "@/components/profile/rss/SubscribersModal.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 
 import { useCustomToast } from "@/hooks/common/useCustomToast.ts";
@@ -45,13 +45,11 @@ export const OwnedRssCard = ({ rss, onEdit, onDelete }: OwnedRssCardProps) => {
     <li className="border border-gray-100 rounded-lg">
       <div className="flex items-center justify-between p-4">
         <div className="flex items-center min-w-0 space-x-3">
-          <PlatformIcon platform={rss.blogPlatform} className="flex-shrink-0 w-10 h-10" />
+          <PlatformIcon platform={rss.blogPlatform} image={rss.blogImage} className="flex-shrink-0 w-10 h-10" />
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <p className="font-medium truncate">{rss.name}</p>
-              <Badge variant="secondary" className="flex-shrink-0">
-                {rss.blogPlatform}
-              </Badge>
+              <BlogPlatformBadge platform={rss.blogPlatform} className="flex-shrink-0" />
             </div>
             <p className="text-sm text-gray-500 truncate">{rss.userName}</p>
             <a

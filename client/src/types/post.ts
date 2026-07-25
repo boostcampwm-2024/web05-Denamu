@@ -8,11 +8,11 @@ export interface FeedBase {
   path: string;
   author: string;
   thumbnail: string;
-  authorImageUrl?: string;
   tag: string[];
   likes: number;
   comments: number;
   blogPlatform: string;
+  blogImage?: string | null;
   isNew?: boolean;
 }
 

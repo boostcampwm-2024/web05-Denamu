@@ -51,6 +51,7 @@ import {
   RssRepository,
 } from '@rss/repository/rss.repository';
 import { blogUrlToRss } from '@rss/util/blogUrlToRss';
+import { extractChannelImage } from '@rss/util/extractChannelImage';
 
 import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
 
@@ -108,6 +109,7 @@ export class RssService {
     ]);
 
     const rssEntity = rssRegisterBodyDto.toEntity(rssUrl);
+    rssEntity.blogImage = await this.fetchChannelImage(rssUrl);
     await this.rssRepository.insert(rssEntity);
 
     await this.notifyRssRegistrationRequest(rssEntity);
@@ -134,6 +136,22 @@ export class RssService {
       throw new BadRequestException(
         `${url}에 접속할 수 없습니다. 올바른 블로그 주소를 입력해주세요.`,
       );
+    }
+  }
+
+  private async fetchChannelImage(rssUrl: string): Promise<string | null> {
+    try {
+      const { data } = await axios.get<string>(rssUrl, {
+        headers: {
+          Accept: 'application/rss+xml, application/xml, text/xml',
+        },
+        responseType: 'text',
+        timeout: 5000,
+        maxContentLength: 5 * 1024 * 1024,
+      });
+      return typeof data === 'string' ? extractChannelImage(data) : null;
+    } catch {
+      return null;
     }
   }
 

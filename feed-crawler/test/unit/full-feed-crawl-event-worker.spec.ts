@@ -35,6 +35,7 @@ describe('FullFeedCrawlEventWorker', () => {
     blogName: '테스트 블로그',
     blogPlatform: 'tistory',
     rssUrl: 'https://test.tistory.com/rss',
+    blogImage: null,
   };
 
   beforeEach(() => {

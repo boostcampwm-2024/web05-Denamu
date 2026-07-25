@@ -91,6 +91,8 @@ describe(`GET ${URL} E2E Test`, () => {
         userName: rss.userName,
         email: rss.email,
         rssUrl: rss.rssUrl,
+        blogPlatform: rss.blogPlatform,
+        blogImage: rss.blogImage ?? null,
       },
     ]);
   });

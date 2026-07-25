@@ -75,6 +75,7 @@ describe(`GET ${URL}?type={}&find={} E2E Test`, () => {
           createdAt: feed.createdAt.toISOString(),
           author: feed.blog.name,
           blogPlatform: feed.blog.blogPlatform,
+          blogImage: feed.blog.blogImage ?? null,
           thumbnail: feed.thumbnail,
           viewCount: feed.viewCount,
           tag: [],

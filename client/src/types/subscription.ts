@@ -5,6 +5,7 @@ export interface SubscribedRss {
   rssUrl: string;
   blogPlatform: string;
   feedCount: number;
+  blogImage: string | null;
 }
 
 export interface Subscriber {

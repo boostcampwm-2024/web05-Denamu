@@ -3,7 +3,7 @@ import { inject, injectable } from 'tsyringe';
 import axios from 'axios';
 
 import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
-import { FeedDetail, RssObj } from '@common/feed/feed.type';
+import { FeedFetchResult, RssObj } from '@common/feed/feed.type';
 import logger from '@common/logger/logger';
 import { FeedMetrics } from '@common/metrics/feed-metrics';
 import { NOTIFICATION_EVENT } from '@common/notification/notification-event.constant';
@@ -25,7 +25,10 @@ export class FeedParserManager {
     this.parsers = [rss20Parser, atom10Parser];
   }
 
-  async fetchAndParse(rssObj: RssObj, startTime: Date): Promise<FeedDetail[]> {
+  async fetchAndParse(
+    rssObj: RssObj,
+    startTime: Date,
+  ): Promise<FeedFetchResult> {
     this.metrics.total.inc({ type: 'scheduled' });
     try {
       const response = await axios.get<string>(rssObj.rssUrl, {
@@ -43,9 +46,9 @@ export class FeedParserManager {
         throw new Error(`지원하지 않는 피드 형식: ${rssObj.rssUrl}`);
       }
 
-      const result = await parser.parseFeed(rssObj, xmlData, startTime);
+      const feeds = await parser.parseFeed(rssObj, xmlData, startTime);
       this.metrics.success.inc({ type: 'scheduled' });
-      return result;
+      return { feeds, channelImage: parser.extractChannelImage(xmlData) };
     } catch (error) {
       this.metrics.failure.inc({ type: 'scheduled' });
       logger.warn(`[${rssObj.rssUrl}] 피드 파싱 중 오류 발생: ${error}`);
@@ -54,11 +57,11 @@ export class FeedParserManager {
         blogUrl: rssObj.rssUrl,
         errorSource: '[Scheduled FeedCrawling]',
       });
-      return [];
+      return { feeds: [], channelImage: undefined };
     }
   }
 
-  async fetchAndParseAll(rssObj: RssObj): Promise<FeedDetail[]> {
+  async fetchAndParseAll(rssObj: RssObj): Promise<FeedFetchResult> {
     this.metrics.total.inc({ type: 'full' });
     try {
       const response = await axios.get<string>(rssObj.rssUrl, {
@@ -79,9 +82,9 @@ export class FeedParserManager {
         `${rssObj.blogName}: ${parser.constructor.name} 사용 (전체 피드)`,
       );
 
-      const result = await parser.parseAllFeeds(rssObj, xmlData);
+      const feeds = await parser.parseAllFeeds(rssObj, xmlData);
       this.metrics.success.inc({ type: 'full' });
-      return result;
+      return { feeds, channelImage: parser.extractChannelImage(xmlData) };
     } catch (error) {
       this.metrics.failure.inc({ type: 'full' });
       logger.warn(`[${rssObj.rssUrl}] 전체 피드 파싱 중 오류 발생: ${error}`);
@@ -90,7 +93,7 @@ export class FeedParserManager {
         blogUrl: rssObj.rssUrl,
         errorSource: '[Full FeedCrawling]',
       });
-      return [];
+      return { feeds: [], channelImage: undefined };
     }
   }
 

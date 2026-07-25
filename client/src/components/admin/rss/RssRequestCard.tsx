@@ -1,5 +1,6 @@
 import { CheckCircle, XCircle } from "lucide-react";
 
+import { PlatformIcon } from "@/components/profile/rss/PlatformIcon";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -14,15 +15,22 @@ interface RssRequestCardProps {
 export const RssRequestCard = ({ request, onApprove, onReject }: RssRequestCardProps) => {
   return (
     <Card>
-      <CardContent className="flex justify-between p-6">
-        <div className="space-y-2">
-          <h3 className="text-lg font-semibold">{request.name}</h3>
-          <p className="text-sm text-muted-foreground">{request.rssUrl}</p>
-          <div className="flex items-center space-x-4">
-            <span className="text-sm text-muted-foreground">신청자: {request.userName}</span>
+      <CardContent className="flex items-center justify-between gap-3 p-6">
+        <div className="flex items-center min-w-0 gap-3">
+          <PlatformIcon
+            platform={request.blogPlatform ?? "etc"}
+            image={request.blogImage}
+            className="flex-shrink-0 w-10 h-10"
+          />
+          <div className="min-w-0 space-y-2">
+            <h3 className="text-lg font-semibold truncate">{request.name}</h3>
+            <p className="text-sm truncate text-muted-foreground">{request.rssUrl}</p>
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-muted-foreground">신청자: {request.userName}</span>
+            </div>
           </div>
         </div>
-        <div className="flex space-x-2">
+        <div className="flex flex-shrink-0 space-x-2">
           <Button
             variant="outline"
             className="text-green-600 hover:text-green-700 hover:bg-green-50"

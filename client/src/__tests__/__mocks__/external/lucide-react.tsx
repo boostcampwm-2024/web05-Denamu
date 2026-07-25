@@ -11,4 +11,5 @@ export const mockLucideIcons = {
   ChevronRight: () => <div data-testid="chevron-right-icon">Mock Chevron Right Icon</div>,
   MoreHorizontal: () => <div data-testid="more-horizontal-icon">Mock More Horizontal Icon</div>,
   ArrowLeft: () => <div data-testid="arrow-left-icon">Mock Arrow Left Icon</div>,
+  Rss: () => <div data-testid="rss-icon">Mock Rss Icon</div>,
 };

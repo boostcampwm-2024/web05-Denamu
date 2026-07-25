@@ -51,6 +51,7 @@ export interface BlockedRss {
   name: string;
   blogPlatform: string;
   blockedAt: string;
+  blogImage: string | null;
 }
 
 export interface ProfileActivity {
@@ -82,6 +83,7 @@ export interface CertifiedRss {
   feedCount: number;
   subscriberCount: number;
   isSubscribed: boolean;
+  blogImage: string | null;
 }
 
 export interface RssCertificationPreview {
@@ -146,6 +148,7 @@ export interface RssInfo {
   lastPublishedAt: string | null;
   owner: RssOwner | null;
   isBlocked: boolean;
+  blogImage: string | null;
 }
 
 export interface OwnedRssFeedItem extends RssFeedItem {

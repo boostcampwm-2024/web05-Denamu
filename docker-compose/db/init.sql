@@ -25,7 +25,8 @@ CREATE TABLE `rss` (
   `email` varchar(255) NOT NULL,
   `rss_url` varchar(255) NOT NULL,
   `blog_url` varchar(255) NOT NULL DEFAULT '',
-  `blog_platform` varchar(255) NOT NULL DEFAULT 'etc',
+  `platform` varchar(255) NOT NULL DEFAULT 'etc',
+  `image` text,
   PRIMARY KEY (`id`),
   UNIQUE KEY `IDX_21beac47feacb87e57c59d6958` (`name`),
   UNIQUE KEY `IDX_af1d102908727aa95ef09e1606` (`rss_url`)
@@ -60,8 +61,9 @@ CREATE TABLE `rss_accept` (
   `email` varchar(255) NOT NULL,
   `rss_url` varchar(255) NOT NULL,
   `blog_url` varchar(255) NOT NULL DEFAULT '',
-  `blog_platform` varchar(255) NOT NULL DEFAULT 'etc',
+  `platform` varchar(255) NOT NULL DEFAULT 'etc',
   `user_id` int DEFAULT NULL,
+  `image` text,
   PRIMARY KEY (`id`),
   UNIQUE KEY `IDX_59f4be4de3817b3f975acff076` (`name`),
   UNIQUE KEY `IDX_b3a5d4196368864d938dae4e9f` (`rss_url`),
@@ -79,8 +81,9 @@ CREATE TABLE `rss_reject` (
   `email` varchar(255) NOT NULL,
   `rss_url` varchar(255) NOT NULL,
   `blog_url` varchar(255) NOT NULL DEFAULT '',
-  `blog_platform` varchar(255) NOT NULL DEFAULT 'etc',
+  `platform` varchar(255) NOT NULL DEFAULT 'etc',
   `description` varchar(512) NOT NULL,
+  `image` text,
   PRIMARY KEY (`id`)
 );
 
@@ -276,7 +279,7 @@ INSERT INTO user (email, password, user_name, profile_image, introduction) VALUE
 
 -- denamu.rss_accept insert data
 
-INSERT INTO rss_accept (name,user_name,email,rss_url,blog_platform, user_id) VALUES
+INSERT INTO rss_accept (name,user_name,email,rss_url,platform, user_id) VALUES
 	 ('seok3765.log','조민석','seok3765@naver.com','https://v2.velog.io/rss/@seok3765','velog', 1),
 	 ('나무보다 숲을','채준혁','cjh4302@gmail.com','https://laurent.tistory.com/rss','tistory', NULL),
 	 ('월성참치','정명기','jmk101711@naver.com','https://tunaspace.tistory.com/rss','tistory', NULL),

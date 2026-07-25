@@ -7,6 +7,7 @@ import { Footer } from "@/components/about/Footer";
 import Layout from "@/components/layout/Layout";
 import { SubscribeButton } from "@/components/common/Card/detail/SubscribeButton.tsx";
 import { ActivityGraph } from "@/components/profile/header/ui/ActivityGraph/ActivityGraph.tsx";
+import { BlogPlatformBadge } from "@/components/profile/rss/BlogPlatformBadge.tsx";
 import { PlatformIcon } from "@/components/profile/rss/PlatformIcon.tsx";
 import { RssEditModal } from "@/components/profile/rss/RssEditModal.tsx";
 import { RssFeedCard } from "@/components/profile/rss/RssFeedCard.tsx";
@@ -22,7 +23,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog.tsx";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import {
@@ -144,11 +144,11 @@ const RssHeader = ({ rss, onEdit, onBlock }: { rss: RssInfo; onEdit: () => void;
     <CardContent className="p-6">
       <div className="flex items-start justify-between gap-4">
         <div className="flex min-w-0 gap-4">
-          <PlatformIcon platform={rss.blogPlatform} className="flex-shrink-0 w-14 h-14" />
+          <PlatformIcon platform={rss.blogPlatform} image={rss.blogImage} className="flex-shrink-0 w-14 h-14" />
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-2xl font-bold truncate">{rss.name}</h1>
-              <Badge variant="secondary">{rss.blogPlatform}</Badge>
+              <BlogPlatformBadge platform={rss.blogPlatform} />
               {rss.owner && (
                 <span
                   className="flex items-center gap-0.5 text-xs text-blue-500"

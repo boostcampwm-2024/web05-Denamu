@@ -114,7 +114,7 @@ describe('Parser 모듈 테스트', () => {
             startTime,
           );
 
-          expect(result[0]).toMatchObject({
+          expect(result.feeds[0]).toMatchObject({
             blogId: MOCK_RSS_OBJ.id,
             blogName: MOCK_RSS_OBJ.blogName,
             blogPlatform: MOCK_RSS_OBJ.blogPlatform,
@@ -153,7 +153,7 @@ describe('Parser 모듈 테스트', () => {
             startTime,
           );
 
-          expect(result[0]).toMatchObject({
+          expect(result.feeds[0]).toMatchObject({
             blogId: MOCK_RSS_OBJ.id,
             blogName: MOCK_RSS_OBJ.blogName,
             blogPlatform: MOCK_RSS_OBJ.blogPlatform,

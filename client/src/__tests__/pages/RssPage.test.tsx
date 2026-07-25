@@ -4,6 +4,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { lucideProxy } from "@/__tests__/__mocks__/external/lucide-proxy.tsx";
 
+import RssPage from "@/pages/RssPage.tsx";
+
+import { useAuthStore } from "@/store/useAuthStore";
 import { RssInfo } from "@/types/profile.ts";
 import { fireEvent, render, screen } from "@testing-library/react";
 
@@ -44,13 +47,7 @@ vi.mock("@/hooks/queries/useRssPage.ts", () => ({
 }));
 
 vi.mock("@/components/profile/header/ui/ActivityGraph/ActivityGraph.tsx", () => ({
-  ActivityGraph: ({
-    scale,
-    onDayClick,
-  }: {
-    scale?: string;
-    onDayClick?: (dateStr: string) => void;
-  }) => (
+  ActivityGraph: ({ scale, onDayClick }: { scale?: string; onDayClick?: (dateStr: string) => void }) => (
     <div data-testid="activity-graph">
       {scale}
       <button data-testid="day-cell" onClick={() => onDayClick?.("2025-01-15")}>
@@ -83,16 +80,14 @@ vi.mock("@/hooks/queries/useRssCertification.ts", () => ({
 vi.mock("@/components/common/Card/detail/SubscribeButton.tsx", () => ({
   SubscribeButton: () => <button data-testid="subscribe-button">구독</button>,
 }));
-vi.mock("@/components/profile/rss/PlatformIcon.tsx", () => ({ PlatformIcon: () => <div data-testid="platform-icon" /> }));
+vi.mock("@/components/profile/rss/PlatformIcon.tsx", () => ({
+  PlatformIcon: () => <div data-testid="platform-icon" />,
+}));
 vi.mock("@/components/profile/rss/RssFeedCard.tsx", () => ({ RssFeedCard: () => <li data-testid="feed-card" /> }));
 vi.mock("@/components/profile/rss/RssFeedRow.tsx", () => ({ RssFeedRow: () => <li data-testid="feed-row" /> }));
 vi.mock("@/components/profile/rss/RssEditModal.tsx", () => ({
   RssEditModal: ({ target }: { target: unknown }) => (target ? <div data-testid="edit-modal" /> : null),
 }));
-
-import RssPage from "@/pages/RssPage.tsx";
-
-import { useAuthStore } from "@/store/useAuthStore";
 
 const baseRss: RssInfo = {
   id: 5,
@@ -107,6 +102,7 @@ const baseRss: RssInfo = {
   lastPublishedAt: "2025-01-10T00:00:00Z",
   owner: null,
   isBlocked: false,
+  blogImage: null,
 };
 
 describe("RssPage", () => {

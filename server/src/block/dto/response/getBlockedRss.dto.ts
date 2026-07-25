@@ -27,6 +27,13 @@ export class GetBlockedRssResponseDto {
   })
   blockedAt: Date;
 
+  @ApiProperty({
+    example: 'https://example.com/profile.png',
+    description: 'RSS 채널 프로필 이미지 URL',
+    nullable: true,
+  })
+  blogImage: string | null;
+
   constructor(partial: Partial<GetBlockedRssResponseDto>) {
     Object.assign(this, partial);
   }
@@ -39,6 +46,7 @@ export class GetBlockedRssResponseDto {
           name: rssBlock.blockedRss.name,
           blogPlatform: rssBlock.blockedRss.blogPlatform,
           blockedAt: rssBlock.createdAt,
+          blogImage: rssBlock.blockedRss.blogImage ?? null,
         }),
     );
   }

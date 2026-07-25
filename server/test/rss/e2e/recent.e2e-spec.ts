@@ -64,6 +64,7 @@ describe(`GET ${URL} E2E Test`, () => {
       id: newRss.id,
       name: newRss.name,
       blogPlatform: newRss.blogPlatform,
+      blogImage: newRss.blogImage ?? null,
       lastPublishedAt: expect.any(String),
       latestFeedId: newFeed.id,
     });

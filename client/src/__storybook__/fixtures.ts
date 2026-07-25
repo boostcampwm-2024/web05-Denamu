@@ -31,7 +31,6 @@ export const mockFeedList: FeedList = {
   path: "https://example.com/post/1",
   author: "데나무",
   thumbnail: "https://picsum.photos/seed/denamu/400/240",
-  authorImageUrl: "https://picsum.photos/seed/author/80/80",
   tag: ["React", "Storybook", "TypeScript"],
   likes: 42,
   comments: 7,
@@ -79,6 +78,7 @@ export const mockCertifiedRss: CertifiedRss = {
   feedCount: 42,
   subscriberCount: 12,
   isSubscribed: false,
+  blogImage: null,
 };
 
 export const mockSubscribedRss: SubscribedRss[] = [
@@ -89,6 +89,7 @@ export const mockSubscribedRss: SubscribedRss[] = [
     rssUrl: "https://denamu.dev/rss",
     blogPlatform: "tistory",
     feedCount: 42,
+    blogImage: null,
   },
   {
     id: 2,
@@ -97,6 +98,7 @@ export const mockSubscribedRss: SubscribedRss[] = [
     rssUrl: "https://velog.io/@dev/rss",
     blogPlatform: "velog",
     feedCount: 18,
+    blogImage: null,
   },
 ];
 
@@ -139,6 +141,8 @@ export const mockAdminRssList: AdminRssData[] = [
     email: "denamu@example.com",
     rssUrl: "https://denamu.dev/rss",
     description: "기술 블로그",
+    blogPlatform: "tistory",
+    blogImage: null,
   },
   {
     id: 2,
@@ -146,6 +150,8 @@ export const mockAdminRssList: AdminRssData[] = [
     userName: "홍길동",
     email: "hong@example.com",
     rssUrl: "https://velog.io/@hong/rss",
+    blogPlatform: "velog",
+    blogImage: null,
   },
 ];
 
@@ -233,6 +239,7 @@ export const mockBlockedRss: BlockedRss[] = [
     name: "차단된블로그",
     blogPlatform: "velog",
     blockedAt: "2026-06-22T09:00:00.000Z",
+    blogImage: null,
   },
 ];
 
@@ -317,7 +324,6 @@ export const mockFeedsList: FeedList[] = Array.from({ length: 8 }, (_, i) => ({
   path: `https://example.com/post/${i + 1}`,
   author: `작성자 ${(i % 4) + 1}`,
   thumbnail: `https://picsum.photos/seed/feed${i}/400/240`,
-  authorImageUrl: `https://picsum.photos/seed/author${i}/80/80`,
   tag: i % 2 === 0 ? ["React", "TypeScript"] : ["NestJS", "Node.js"],
   likes: (i + 1) * 5,
   comments: i + 1,
@@ -341,4 +347,5 @@ export const makeRecentRssList = (count: number, publishedHoursAgo: (index: numb
     blogPlatform: RECENT_RSS_PLATFORMS[i % RECENT_RSS_PLATFORMS.length],
     lastPublishedAt: new Date(Date.now() - publishedHoursAgo(i) * 3600000).toISOString(),
     latestFeedId: (i + 1) * 100,
+    blogImage: null,
   }));

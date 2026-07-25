@@ -51,7 +51,7 @@ export class RssInformation extends BaseEntity {
   blogUrl: string;
 
   @Column({
-    name: 'blog_platform',
+    name: 'platform',
     length: 255,
     nullable: false,
   })
@@ -67,6 +67,9 @@ export class Rss extends RssInformation {
 
   @Column({ name: 'rss_url', length: 255, nullable: false, unique: true })
   rssUrl: string;
+
+  @Column({ name: 'image', type: 'text', nullable: true })
+  blogImage: string | null;
 }
 
 @Entity({
@@ -78,6 +81,9 @@ export class RssReject extends RssInformation {
     nullable: false,
   })
   description: string;
+
+  @Column({ name: 'image', type: 'text', nullable: true })
+  blogImage: string | null;
 }
 
 @Entity({
@@ -94,7 +100,7 @@ export class RssAccept extends RssInformation {
   @Column({ name: 'rss_url', length: 255, nullable: false, unique: true })
   rssUrl: string;
 
-  @Column({ name: 'blog_platform', default: 'etc', nullable: false })
+  @Column({ name: 'platform', default: 'etc', nullable: false })
   blogPlatform: string;
 
   @Column({ name: 'user_id', type: 'int', nullable: true })
@@ -108,6 +114,9 @@ export class RssAccept extends RssInformation {
   @JoinColumn({ name: 'user_id' })
   user: User | null;
 
+  @Column({ name: 'image', type: 'text', nullable: true })
+  blogImage: string | null;
+
   static fromRss(rss: Rss) {
     const blog = new RssAccept();
     blog.name = rss.name;
@@ -116,6 +125,7 @@ export class RssAccept extends RssInformation {
     blog.rssUrl = rss.rssUrl;
     blog.blogUrl = rss.blogUrl;
     blog.blogPlatform = rss.blogPlatform;
+    blog.blogImage = rss.blogImage;
     blog.feeds = [];
 
     return blog;

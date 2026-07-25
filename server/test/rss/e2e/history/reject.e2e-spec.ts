@@ -80,6 +80,8 @@ describe(`GET ${URL} E2E Test`, () => {
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual(
       rssRejectList.map((rssReject) => ({
+        blogImage: null,
+        blogPlatform: rssReject.blogPlatform,
         description: rssReject.description,
         email: rssReject.email,
         id: rssReject.id,

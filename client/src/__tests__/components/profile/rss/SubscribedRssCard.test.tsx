@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { lucideProxy } from "@/__tests__/__mocks__/external/lucide-proxy.tsx";
+
 import { SubscribedRssCard } from "@/components/profile/rss/SubscribedRssCard.tsx";
 
 import { SubscribedRss } from "@/types/subscription.ts";
@@ -28,6 +29,7 @@ const rss: SubscribedRss = {
   rssUrl: "https://blog.test/rss",
   blogPlatform: "velog",
   feedCount: 8,
+  blogImage: null,
 };
 
 describe("SubscribedRssCard", () => {

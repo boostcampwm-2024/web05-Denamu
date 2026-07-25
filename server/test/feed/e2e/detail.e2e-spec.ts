@@ -91,6 +91,7 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
     expect(data).toStrictEqual({
       author: feedList[0].blog.name,
       blogPlatform: 'etc',
+      blogImage: feedList[0].blog.blogImage ?? null,
       comments: feedList[0].commentCount,
       createdAt: feedList[0].createdAt.toISOString(),
       id: feedList[0].id,
@@ -125,6 +126,7 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
     expect(data).toStrictEqual({
       author: feedList[1].blog.name,
       blogPlatform: feedList[1].blog.blogPlatform,
+      blogImage: feedList[1].blog.blogImage ?? null,
       comments: feedList[1].commentCount,
       createdAt: feedList[1].createdAt.toISOString(),
       id: feedList[1].id,

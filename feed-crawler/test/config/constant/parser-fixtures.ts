@@ -101,4 +101,5 @@ export const MOCK_RSS_OBJ: RssObj = {
   blogName: '테스트 블로그',
   blogPlatform: 'etc',
   rssUrl: 'https://denamu.dev/rss',
+  blogImage: null,
 };

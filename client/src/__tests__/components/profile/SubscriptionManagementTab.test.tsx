@@ -28,8 +28,24 @@ vi.mock("@/components/profile/rss/PlatformIcon.tsx", () => ({
 }));
 
 const rssList: SubscribedRss[] = [
-  { id: 1, name: "블로그A", userName: "작가A", rssUrl: "https://a.test/rss", blogPlatform: "velog", feedCount: 5 },
-  { id: 2, name: "블로그B", userName: "작가B", rssUrl: "https://b.test/rss", blogPlatform: "tistory", feedCount: 9 },
+  {
+    id: 1,
+    name: "블로그A",
+    userName: "작가A",
+    rssUrl: "https://a.test/rss",
+    blogPlatform: "velog",
+    feedCount: 5,
+    blogImage: null,
+  },
+  {
+    id: 2,
+    name: "블로그B",
+    userName: "작가B",
+    rssUrl: "https://b.test/rss",
+    blogPlatform: "tistory",
+    feedCount: 9,
+    blogImage: null,
+  },
 ];
 
 describe("SubscriptionManagementTab", () => {

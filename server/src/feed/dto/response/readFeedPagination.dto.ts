@@ -39,6 +39,13 @@ export class FeedResult {
   @ApiProperty({ example: 0, description: '댓글 수' })
   comments: number;
 
+  @ApiProperty({
+    example: 'https://example.com/profile.png',
+    description: 'RSS 채널 프로필 이미지 URL',
+    nullable: true,
+  })
+  blogImage: string | null;
+
   private constructor(partial: Partial<FeedResult>) {
     Object.assign(this, partial);
   }
@@ -57,6 +64,7 @@ export class FeedResult {
       tag: feed.tag ? feed.tag : [],
       likes: feed.likeCount,
       comments: feed.commentCount,
+      blogImage: feed.blogImage ?? null,
     });
   }
 
@@ -167,6 +175,13 @@ export class FeedTrendResponseDto {
   })
   tag: string[];
 
+  @ApiProperty({
+    example: 'https://example.com/profile.png',
+    description: 'RSS 채널 프로필 이미지 URL',
+    nullable: true,
+  })
+  blogImage: string | null;
+
   private constructor(partial: Partial<FeedTrendResponseDto>) {
     Object.assign(this, partial);
   }
@@ -184,6 +199,7 @@ export class FeedTrendResponseDto {
       likes: feed.likeCount,
       comments: feed.commentCount,
       tag: feed.tag ? feed.tag : [],
+      blogImage: feed.blogImage ?? null,
     });
   }
 

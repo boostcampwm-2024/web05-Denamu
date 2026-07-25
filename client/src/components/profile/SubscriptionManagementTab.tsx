@@ -1,8 +1,8 @@
 import { ChevronLeft, FileText } from "lucide-react";
 
 import { SubscribeButton } from "@/components/common/Card/detail/SubscribeButton.tsx";
+import { BlogPlatformBadge } from "@/components/profile/rss/BlogPlatformBadge.tsx";
 import { PlatformIcon } from "@/components/profile/rss/PlatformIcon.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 
 import { useUserSubscriptions } from "@/hooks/queries/useSubscription.ts";
@@ -48,13 +48,11 @@ export const SubscriptionManagementTab = ({ userId, isOwner, onBack }: Subscript
                 className="flex items-center justify-between gap-3 p-4 border border-gray-100 rounded-lg"
               >
                 <div className="flex items-center min-w-0 gap-3">
-                  <PlatformIcon platform={rss.blogPlatform} className="flex-shrink-0 w-10 h-10" />
+                  <PlatformIcon platform={rss.blogPlatform} image={rss.blogImage} className="flex-shrink-0 w-10 h-10" />
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <p className="font-medium truncate">{rss.name}</p>
-                      <Badge variant="secondary" className="flex-shrink-0">
-                        {rss.blogPlatform}
-                      </Badge>
+                      <BlogPlatformBadge platform={rss.blogPlatform} className="flex-shrink-0" />
                     </div>
                     <p className="text-sm text-gray-500 truncate">{rss.userName}</p>
                     <a

@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { blockRss, blockUser, getBlockedRss, getBlockedUsers, unblockRss, unblockUser } from "@/api/services/block";
 import {
   useBlockedRss,
   useBlockedUsers,
@@ -12,6 +11,7 @@ import {
   useUnblockUser,
 } from "@/hooks/queries/useBlock";
 
+import { blockRss, blockUser, getBlockedRss, getBlockedUsers, unblockRss, unblockUser } from "@/api/services/block";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
 
@@ -120,7 +120,9 @@ describe("useBlockedRss", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("RSS 차단 목록을 조회한다", async () => {
-    const blockedRss = [{ rssId: 5, name: "차단블로그", blogPlatform: "velog", blockedAt: "2025-08-16" }];
+    const blockedRss = [
+      { rssId: 5, name: "차단블로그", blogPlatform: "velog", blockedAt: "2025-08-16", blogImage: null },
+    ];
     mockedGetBlockedRss.mockResolvedValue(blockedRss);
     const { wrapper } = createWrapper();
 

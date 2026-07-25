@@ -22,6 +22,18 @@ export class Rss20Parser extends BaseFeedParser {
     }
   }
 
+  extractChannelImage(xmlData: string): string | null {
+    try {
+      const parsed = this.xmlParser.parse(xmlData) as {
+        rss?: { channel?: { image?: { url?: unknown } } };
+      };
+      const url = parsed.rss?.channel?.image?.url;
+      return typeof url === 'string' && url.trim() ? url.trim() : null;
+    } catch {
+      return null;
+    }
+  }
+
   protected extractRawFeeds(xmlData: string): RawFeed[] {
     type RssItem = { title: any; link: any; pubDate: any; description: any };
     type Rss20Parsed = { rss: { channel: { item: RssItem | RssItem[] } } };

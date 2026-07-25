@@ -22,6 +22,8 @@ export interface AdminRssData {
   email: string;
   rssUrl: string;
   description?: string;
+  blogImage: string | null;
+  blogPlatform: string;
 }
 export type AdminRss = ApiData<AdminRssData[]>;
 
@@ -47,4 +49,5 @@ export interface RecentRss {
   blogPlatform: string;
   lastPublishedAt: string;
   latestFeedId: number;
+  blogImage: string | null;
 }

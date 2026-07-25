@@ -112,7 +112,8 @@ export class Feed extends BaseEntity {
       .addSelect('f.like_count', 'like_count')
       .addSelect('f.comment_count', 'comment_count')
       .addSelect('r.name', 'blog_name')
-      .addSelect('r.blog_platform', 'blog_platform')
+      .addSelect('r.platform', 'blog_platform')
+      .addSelect('r.image', 'blog_image')
       .addSelect(
         `(
           SELECT JSON_ARRAYAGG(t.name)
@@ -173,6 +174,11 @@ export class FeedView {
     name: 'blog_platform',
   })
   blogPlatform: string;
+
+  @ViewColumn({
+    name: 'blog_image',
+  })
+  blogImage: string | null;
 
   @ViewColumn({
     name: 'summary',

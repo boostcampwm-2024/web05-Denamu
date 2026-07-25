@@ -1,0 +1,87 @@
+import { MigrationInterface, QueryRunner } from 'typeorm';
+
+export class RenameRssPlatformAndAddRejectImage1781900000000
+  implements MigrationInterface
+{
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(
+      `ALTER TABLE \`rss_reject\` ADD COLUMN \`image\` text NULL;`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE \`rss\` CHANGE \`blog_platform\` \`platform\` varchar(255) NOT NULL DEFAULT 'etc';`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE \`rss_accept\` CHANGE \`blog_platform\` \`platform\` varchar(255) NOT NULL DEFAULT 'etc';`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE \`rss_reject\` CHANGE \`blog_platform\` \`platform\` varchar(255) NOT NULL DEFAULT 'etc';`,
+    );
+    await queryRunner.query(
+      `CREATE OR REPLACE VIEW feed_view AS
+      SELECT
+        ROW_NUMBER() OVER (ORDER BY f.created_at) AS order_id,
+        f.id AS id,
+        f.title AS title,
+        f.path AS path,
+        f.created_at AS created_at,
+        f.thumbnail AS thumbnail,
+        f.view_count AS view_count,
+        f.summary AS summary,
+        f.like_count AS like_count,
+        f.comment_count AS comment_count,
+        r.name AS blog_name,
+        r.platform AS blog_platform,
+        r.image AS blog_image,
+        (
+          SELECT JSON_ARRAYAGG(t.name)
+          FROM tag_map tm
+          INNER JOIN tag t ON t.id = tm.tag_id
+          WHERE tm.feed_id = f.id
+        ) AS tag
+      FROM feed f
+      INNER JOIN rss_accept r ON r.id = f.blog_id
+      WHERE f.is_public = 1
+      GROUP BY f.id;`,
+    );
+  }
+
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(
+      `ALTER TABLE \`rss_reject\` CHANGE \`platform\` \`blog_platform\` varchar(255) NOT NULL DEFAULT 'etc';`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE \`rss_accept\` CHANGE \`platform\` \`blog_platform\` varchar(255) NOT NULL DEFAULT 'etc';`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE \`rss\` CHANGE \`platform\` \`blog_platform\` varchar(255) NOT NULL DEFAULT 'etc';`,
+    );
+    await queryRunner.query(
+      `CREATE OR REPLACE VIEW feed_view AS
+      SELECT
+        ROW_NUMBER() OVER (ORDER BY f.created_at) AS order_id,
+        f.id AS id,
+        f.title AS title,
+        f.path AS path,
+        f.created_at AS created_at,
+        f.thumbnail AS thumbnail,
+        f.view_count AS view_count,
+        f.summary AS summary,
+        f.like_count AS like_count,
+        f.comment_count AS comment_count,
+        r.name AS blog_name,
+        r.blog_platform AS blog_platform,
+        r.image AS blog_image,
+        (
+          SELECT JSON_ARRAYAGG(t.name)
+          FROM tag_map tm
+          INNER JOIN tag t ON t.id = tm.tag_id
+          WHERE tm.feed_id = f.id
+        ) AS tag
+      FROM feed f
+      INNER JOIN rss_accept r ON r.id = f.blog_id
+      WHERE f.is_public = 1
+      GROUP BY f.id;`,
+    );
+    await queryRunner.query(`ALTER TABLE \`rss_reject\` DROP COLUMN \`image\`;`);
+  }
+}

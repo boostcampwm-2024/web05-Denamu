@@ -26,9 +26,9 @@ export class RssAcceptRepository extends Repository<RssAccept> {
 
   countByBlogPlatform() {
     return this.createQueryBuilder()
-      .select('blog_platform', 'platform')
-      .addSelect('COUNT(blog_platform)', 'count')
-      .groupBy('blog_platform')
+      .select('platform', 'platform')
+      .addSelect('COUNT(platform)', 'count')
+      .groupBy('platform')
       .orderBy('count', 'DESC')
       .getRawMany();
   }
@@ -51,7 +51,8 @@ export class RssAcceptRepository extends Repository<RssAccept> {
     return query
       .select('rss.id', 'id')
       .addSelect('rss.name', 'name')
-      .addSelect('rss.blog_platform', 'blogPlatform')
+      .addSelect('rss.blogPlatform', 'blogPlatform')
+      .addSelect('rss.blogImage', 'blogImage')
       .addSelect('MAX(feed.created_at)', 'lastPublishedAt')
       .addSelect(
         (qb) =>
@@ -74,6 +75,7 @@ export class RssAcceptRepository extends Repository<RssAccept> {
         id: number;
         name: string;
         blogPlatform: string;
+        blogImage: string | null;
         lastPublishedAt: Date;
         latestFeedId: string;
       }>();

@@ -19,7 +19,9 @@ vi.mock("react-router-dom", () => ({
     </a>
   ),
 }));
-vi.mock("@/components/profile/rss/PlatformIcon.tsx", () => ({ PlatformIcon: () => <div data-testid="platform-icon" /> }));
+vi.mock("@/components/profile/rss/PlatformIcon.tsx", () => ({
+  PlatformIcon: () => <div data-testid="platform-icon" />,
+}));
 vi.mock("@/components/ui/tabs.tsx", () => {
   const pass = ({ children }: { children: React.ReactNode }) => <div>{children}</div>;
   return { Tabs: pass, TabsList: pass, TabsTrigger: pass, TabsContent: pass };
@@ -84,7 +86,9 @@ describe("BlockManagementTab", () => {
   });
 
   it("차단한 RSS 목록을 렌더링하고 차단 해제 시 해당 rssId로 mutation을 호출해야 한다", () => {
-    mockBlockedRss = [{ rssId: 5, name: "차단블로그", blogPlatform: "velog", blockedAt: "2025-08-16" }];
+    mockBlockedRss = [
+      { rssId: 5, name: "차단블로그", blogPlatform: "velog", blockedAt: "2025-08-16", blogImage: null },
+    ];
 
     render(<BlockManagementTab />);
 
