@@ -2,6 +2,8 @@ import { useState } from "react";
 
 import { MoreVertical, Ban, FileText, Users } from "lucide-react";
 
+import { BlogPlatformBadge } from "@/components/profile/rss/BlogPlatformBadge.tsx";
+import { PlatformIcon } from "@/components/profile/rss/PlatformIcon.tsx";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,8 +22,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
-import { PlatformIcon } from "@/components/profile/rss/PlatformIcon.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 
 import { useCustomToast } from "@/hooks/common/useCustomToast.ts";
@@ -149,13 +149,15 @@ export const ProfileHeader = ({ name, email, profileImage, introduction, blockab
                     className="flex items-center justify-between gap-3 p-3 border border-gray-100 rounded-lg"
                   >
                     <div className="flex items-center min-w-0 gap-3">
-                      <PlatformIcon platform={rss.blogPlatform} className="flex-shrink-0 w-9 h-9" />
+                      <PlatformIcon
+                        platform={rss.blogPlatform}
+                        image={rss.blogImage}
+                        className="flex-shrink-0 w-9 h-9"
+                      />
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
                           <p className="text-sm font-medium truncate">{rss.name}</p>
-                          <Badge variant="secondary" className="flex-shrink-0">
-                            {rss.blogPlatform}
-                          </Badge>
+                          <BlogPlatformBadge platform={rss.blogPlatform} className="flex-shrink-0" />
                         </div>
                         <p className="flex items-center gap-3 mt-0.5 text-xs text-gray-400">
                           <span className="flex items-center gap-1">

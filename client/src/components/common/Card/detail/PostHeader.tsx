@@ -18,7 +18,12 @@ interface PostHeaderProps {
 export const PostHeader = React.memo(({ data }: PostHeaderProps) => {
   const profileContent = (
     <>
-      <PostAvatar blogPlatform={data.blogPlatform} className="h-8 w-8" author={data.author} />
+      <PostAvatar
+        blogPlatform={data.blogPlatform}
+        blogImage={data.blogImage}
+        className="h-8 w-8"
+        author={data.author}
+      />
       <span className="flex flex-col min-w-0">
         <span className="flex items-center gap-1.5">
           <span className="font-medium truncate">{data.author}</span>

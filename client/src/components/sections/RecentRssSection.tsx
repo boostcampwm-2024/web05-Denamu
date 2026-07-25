@@ -3,14 +3,13 @@ import { Link, useLocation } from "react-router-dom";
 import { Rss } from "lucide-react";
 
 import { SectionHeader } from "@/components/common/SectionHeader";
+import { BlogPlatformBadge } from "@/components/profile/rss/BlogPlatformBadge";
 import { PlatformIcon } from "@/components/profile/rss/PlatformIcon";
 
 import { useIncrementViewByPostId } from "@/hooks/common/usePostCardActions";
-
-import { DEFAULT_BADGE_COLOR, PLATFORM_BADGE_COLORS } from "@/constants/rss";
-import { RecentRss } from "@/types/rss";
-
 import { useRecentRss } from "@/hooks/queries/useRecentRss";
+
+import { RecentRss } from "@/types/rss";
 
 const STORY_WINDOW_MS = 24 * 60 * 60 * 1000;
 
@@ -38,21 +37,12 @@ function RssStoryItem({ rss }: { rss: RecentRss }) {
         >
           <div className={`rounded-full p-[2px] ${isStory ? "bg-white" : ""}`}>
             <div className="overflow-hidden bg-white border rounded-full w-14 h-14">
-              <PlatformIcon platform={rss.blogPlatform} className="object-cover w-full h-full" />
+              <PlatformIcon platform={rss.blogPlatform} image={rss.blogImage} className="object-cover w-full h-full" />
             </div>
           </div>
         </div>
-        <span className="w-full mt-1 text-xs font-medium text-center truncate group-hover:underline">
-          {rss.name}
-        </span>
-        <span
-          className="px-2 py-0.5 text-[10px] text-white rounded-full max-w-full truncate"
-          style={{
-            backgroundColor: PLATFORM_BADGE_COLORS[rss.blogPlatform.toLowerCase()] ?? DEFAULT_BADGE_COLOR,
-          }}
-        >
-          {rss.blogPlatform}
-        </span>
+        <span className="w-full mt-1 text-xs font-medium text-center truncate group-hover:underline">{rss.name}</span>
+        <BlogPlatformBadge platform={rss.blogPlatform} className="max-w-full" />
       </Link>
     </li>
   );
@@ -65,12 +55,7 @@ export default function RecentRssSection() {
 
   return (
     <section className="flex flex-col md:p-4">
-      <SectionHeader
-        icon={Rss}
-        text="RSS"
-        description="최근 게시글을 발행한 블로그"
-        iconColor="text-orange-500"
-      />
+      <SectionHeader icon={Rss} text="RSS" description="최근 게시글을 발행한 블로그" iconColor="text-orange-500" />
 
       <div className="p-4 md:mt-4 md:p-0">
         {isLoading ? (

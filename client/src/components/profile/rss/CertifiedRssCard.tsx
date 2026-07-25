@@ -3,8 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { FileText, Users } from "lucide-react";
 
 import { SubscribeButton } from "@/components/common/Card/detail/SubscribeButton.tsx";
+import { BlogPlatformBadge } from "@/components/profile/rss/BlogPlatformBadge.tsx";
 import { PlatformIcon } from "@/components/profile/rss/PlatformIcon.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
 
 import { CertifiedRss } from "@/types/profile.ts";
 
@@ -24,15 +24,13 @@ export const CertifiedRssCard = ({ userId, rss, isOwner }: CertifiedRssCardProps
     >
       <div className="flex items-center justify-between gap-3 p-4">
         <div className="flex items-center min-w-0 gap-3">
-          <PlatformIcon platform={rss.blogPlatform} className="flex-shrink-0 w-10 h-10" />
+          <PlatformIcon platform={rss.blogPlatform} image={rss.blogImage} className="flex-shrink-0 w-10 h-10" />
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <Link to={`/rss/${rss.id}`} className="font-medium truncate hover:underline">
                 {rss.name}
               </Link>
-              <Badge variant="secondary" className="flex-shrink-0">
-                {rss.blogPlatform}
-              </Badge>
+              <BlogPlatformBadge platform={rss.blogPlatform} className="flex-shrink-0" />
             </div>
             <a
               href={rss.rssUrl}

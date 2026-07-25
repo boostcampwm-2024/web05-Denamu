@@ -54,6 +54,7 @@ const baseRss: RssInfo = {
   lastPublishedAt: "2025-01-15T00:00:00Z",
   owner: null,
   isBlocked: false,
+  blogImage: null,
 };
 
 const resetAuth = () => {

@@ -69,7 +69,7 @@ describe("useTrendingPosts", () => {
 
   it("로그인 상태면 차단한 RSS의 포스트를 필터링한다", async () => {
     useAuthStore.setState({ isAuthenticated: true });
-    blockedRssState = [{ rssId: 5, name: "블로그B", blogPlatform: "velog", blockedAt: "2025-08-16" }];
+    blockedRssState = [{ rssId: 5, name: "블로그B", blogPlatform: "velog", blockedAt: "2025-08-16", blogImage: null }];
     const { wrapper } = createWrapper();
     const { result } = renderHook(() => useTrendingPosts(), { wrapper });
 

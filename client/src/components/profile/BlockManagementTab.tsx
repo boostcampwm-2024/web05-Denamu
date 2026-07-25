@@ -104,7 +104,11 @@ export const BlockManagementTab = () => {
                     className="flex items-center justify-between gap-3 p-4 border border-gray-100 rounded-lg"
                   >
                     <Link to={`/rss/${rss.rssId}`} className="flex items-center min-w-0 gap-3">
-                      <PlatformIcon platform={rss.blogPlatform} className="flex-shrink-0 w-10 h-10" />
+                      <PlatformIcon
+                        platform={rss.blogPlatform}
+                        image={rss.blogImage}
+                        className="flex-shrink-0 w-10 h-10"
+                      />
                       <p className="font-medium truncate">{rss.name}</p>
                     </Link>
                     <div className="flex-shrink-0">
