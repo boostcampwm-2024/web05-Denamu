@@ -49,6 +49,12 @@ export class GetRssInfoResponseDto {
   rssUrl: string;
 
   @ApiProperty({
+    example: 'https://seok3765.tistory.com',
+    description: '블로그 원본 URL',
+  })
+  blogUrl: string;
+
+  @ApiProperty({
     example: 'velog',
     description: 'RSS 블로그 플랫폼 종류',
   })
@@ -131,6 +137,7 @@ export class GetRssInfoResponseDto {
       name: rssAccept.name,
       userName: rssAccept.userName,
       rssUrl: rssAccept.rssUrl,
+      blogUrl: rssAccept.blogUrl,
       blogPlatform: rssAccept.blogPlatform,
       feedCount,
       subscriberCount,

@@ -140,6 +140,7 @@ export interface RssInfo {
   name: string;
   userName: string;
   rssUrl: string;
+  blogUrl: string;
   blogPlatform: string;
   feedCount: number;
   subscriberCount: number;
