@@ -15,11 +15,23 @@ interface ReportDialogProps {
   title: string;
   isPending?: boolean;
   onSubmit: (payload: CreateReportPayload) => void;
+  /**
+   * 이미 자체적으로 스크롤을 잠그는 커스텀 모달(예: 게시글 detail 모달) 안에서 쓸 때는
+   * false로 넘겨서 Radix의 자체 scroll-lock과 중복되어 배경이 밀리는 현상을 막는다.
+   */
+  modal?: boolean;
 }
 
 const REPORT_REASON_OPTIONS = Object.entries(REPORT_REASON_LABELS) as [ReportReason, string][];
 
-export function ReportDialog({ open, onOpenChange, title, isPending = false, onSubmit }: ReportDialogProps) {
+export function ReportDialog({
+  open,
+  onOpenChange,
+  title,
+  isPending = false,
+  onSubmit,
+  modal = true,
+}: ReportDialogProps) {
   const [reason, setReason] = useState<ReportReason | "">("");
   const [detail, setDetail] = useState("");
 
@@ -37,7 +49,7 @@ export function ReportDialog({ open, onOpenChange, title, isPending = false, onS
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange} modal={modal}>
       <DialogContent className="z-[1000]" onClick={(event) => event.stopPropagation()}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
@@ -47,7 +59,7 @@ export function ReportDialog({ open, onOpenChange, title, isPending = false, onS
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
             <Label htmlFor="report-reason">신고 사유</Label>
-            <Select value={reason || undefined} onValueChange={(value) => setReason(value as ReportReason)}>
+            <Select value={reason || undefined} onValueChange={(value) => setReason(value as ReportReason)} modal={modal}>
               <SelectTrigger id="report-reason">
                 <SelectValue placeholder="사유를 선택해주세요" />
               </SelectTrigger>
