@@ -1031,6 +1031,7 @@ describe(`${RssService.name} Unit Test`, () => {
         name: 'blog',
         userName: '작성자',
         rssUrl: 'https://blog.test/rss',
+        blogUrl: 'https://blog.test',
         blogPlatform: 'etc',
         userId: null,
         user: null,
@@ -1058,6 +1059,7 @@ describe(`${RssService.name} Unit Test`, () => {
       expect(result.feedCount).toBe(5);
       expect(result.subscriberCount).toBe(2);
       expect(result.lastPublishedAt).toBe(latest);
+      expect(result.blogUrl).toBe('https://blog.test');
     });
 
     it('소유자 있는 RSS는 owner 정보를 포함하고 viewer가 소유자면 isOwner=true.', async () => {

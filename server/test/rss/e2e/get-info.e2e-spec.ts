@@ -68,6 +68,7 @@ describe(`GET /api/rss/:rssId E2E Test`, () => {
     expect(data.isSubscribed).toBe(false);
     expect(data.feedCount).toBe(2);
     expect(data.lastPublishedAt).not.toBeNull();
+    expect(data.blogUrl).toBe(rssAccept.blogUrl);
     expect(data).not.toHaveProperty('email');
   });
 
