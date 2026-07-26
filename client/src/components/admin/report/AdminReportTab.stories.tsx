@@ -55,14 +55,14 @@ export const FilterByStatus: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await expect(await canvas.findByText("제보자1")).toBeInTheDocument();
-    await expect(canvas.getByText("제보자2")).toBeInTheDocument();
-    await expect(canvas.getByText("제보자3")).toBeInTheDocument();
+    await expect(await canvas.findByText("제보자1", { exact: false })).toBeInTheDocument();
+    await expect(canvas.getByText("제보자2", { exact: false })).toBeInTheDocument();
+    await expect(canvas.getByText("제보자3", { exact: false })).toBeInTheDocument();
 
     await userEvent.click(canvas.getByRole("tab", { name: "미처리" }));
 
-    await waitFor(() => expect(canvas.getByText("제보자1")).toBeInTheDocument());
-    await expect(canvas.queryByText("제보자2")).not.toBeInTheDocument();
-    await expect(canvas.queryByText("제보자3")).not.toBeInTheDocument();
+    await waitFor(() => expect(canvas.getByText("제보자1", { exact: false })).toBeInTheDocument());
+    await expect(canvas.queryByText("제보자2", { exact: false })).not.toBeInTheDocument();
+    await expect(canvas.queryByText("제보자3", { exact: false })).not.toBeInTheDocument();
   },
 };
