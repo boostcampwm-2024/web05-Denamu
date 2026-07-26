@@ -1,4 +1,4 @@
-import { FileText, Users } from "lucide-react";
+import { FileText, Rss, Users } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -14,6 +14,7 @@ interface ModeOption {
 const modeOptions: ModeOption[] = [
   { label: "게시글", mode: "feed", icon: <FileText size={16} /> },
   { label: "유저", mode: "user", icon: <Users size={16} /> },
+  { label: "RSS", mode: "rss", icon: <Rss size={16} /> },
 ];
 
 export default function SearchModeTabs() {

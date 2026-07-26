@@ -1,6 +1,7 @@
 import FilterButton from "@/components/search/SearchFilters/FilterButton";
 import SearchInput from "@/components/search/SearchHeader/SearchInput";
 import SearchModeTabs from "@/components/search/SearchModeTabs";
+import RssSearchResultList from "@/components/search/SearchResults/RssSearchResultList";
 import SearchResultList from "@/components/search/SearchResults/SearchResultList";
 import UserSearchResultList from "@/components/search/SearchResults/UserSearchResultList";
 import { Command, CommandSeparator } from "@/components/ui/command";
@@ -26,15 +27,15 @@ export default function SearchModal({ onClose }: { onClose: () => void }) {
         <CommandSeparator />
         <SearchModeTabs />
         <CommandSeparator />
-        {searchMode === "feed" ? (
+        {searchMode === "feed" && (
           <>
             <FilterButton />
             <CommandSeparator />
             <SearchResultList />
           </>
-        ) : (
-          <UserSearchResultList onClose={handleClose} />
         )}
+        {searchMode === "user" && <UserSearchResultList onClose={handleClose} />}
+        {searchMode === "rss" && <RssSearchResultList onClose={handleClose} />}
       </div>
     </Command>
   );

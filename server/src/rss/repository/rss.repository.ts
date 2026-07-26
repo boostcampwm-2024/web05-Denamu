@@ -33,6 +33,35 @@ export class RssAcceptRepository extends Repository<RssAccept> {
       .getRawMany();
   }
 
+  searchRssList(
+    find: string,
+    limit: number,
+    offset: number,
+    blockerId?: number,
+  ) {
+    const query = this.createQueryBuilder('rss_accept')
+      .addSelect(
+        'MATCH(rss_accept.name) AGAINST (:find IN NATURAL LANGUAGE MODE)',
+        'relevance',
+      )
+      .where(
+        'MATCH(rss_accept.name) AGAINST (:find IN NATURAL LANGUAGE MODE)',
+        { find },
+      )
+      .orderBy('relevance', 'DESC')
+      .skip(offset)
+      .take(limit);
+
+    if (blockerId) {
+      query.andWhere(
+        'rss_accept.id NOT IN (SELECT rss_block.blocked_rss_id FROM rss_blocks rss_block WHERE rss_block.blocker_id = :blockerId)',
+        { blockerId },
+      );
+    }
+
+    return query.getManyAndCount();
+  }
+
   findRecentlyPublished(limit: number, blockerId?: number) {
     const query = this.createQueryBuilder('rss')
       .innerJoin(

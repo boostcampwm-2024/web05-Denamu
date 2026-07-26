@@ -24,6 +24,7 @@ import { RegisterRssRequestDto } from '@rss/dto/request/registerRss.dto';
 import { ReadRssResponseDto } from '@rss/dto/response/readRss.dto';
 import { ReadRssAcceptHistoryResponseDto } from '@rss/dto/response/readRssAcceptHistory.dto';
 import { ReadRssRejectHistoryResponseDto } from '@rss/dto/response/readRssRejectHistory.dto';
+import { SearchRssResponseDto } from '@rss/dto/response/searchRss.dto';
 import {
   RssAcceptRepository,
   RssRejectRepository,
@@ -44,7 +45,12 @@ describe(`${RssService.name} Unit Test`, () => {
   let rssAcceptRepository: jest.Mocked<
     Pick<
       RssAcceptRepository,
-      'findOne' | 'find' | 'delete' | 'update' | 'findRecentlyPublished'
+      | 'findOne'
+      | 'find'
+      | 'delete'
+      | 'update'
+      | 'findRecentlyPublished'
+      | 'searchRssList'
     >
   >;
   let rssRejectRepository: jest.Mocked<Pick<RssRejectRepository, 'find'>>;
@@ -97,6 +103,7 @@ describe(`${RssService.name} Unit Test`, () => {
       delete: jest.fn(),
       update: jest.fn().mockResolvedValue({ affected: 1 }),
       findRecentlyPublished: jest.fn().mockResolvedValue([]),
+      searchRssList: jest.fn().mockResolvedValue([[], 0]),
     };
     rssRejectRepository = { find: jest.fn() };
     feedRepository = {
@@ -913,6 +920,100 @@ describe(`${RssService.name} Unit Test`, () => {
 
       // then
       expect(result).toEqual([]);
+    });
+  });
+
+  describe('searchRss', () => {
+    const makeRssAccept = (id: number, name: string) =>
+      ({
+        id,
+        name,
+        blogPlatform: 'velog',
+        blogImage: null,
+      }) as any;
+
+    it('page와 limit으로 offset을 계산해 저장소에 전달하고 응답 DTO로 변환한다.', async () => {
+      // given
+      const rssList = [makeRssAccept(1, 'seok3765.log')];
+      rssAcceptRepository.searchRssList.mockResolvedValue([rssList, 1]);
+
+      // when
+      const result = await rssService.searchRss({
+        find: 'seok3765',
+        page: 3,
+        limit: 5,
+      });
+
+      // then
+      expect(rssAcceptRepository.searchRssList).toHaveBeenCalledWith(
+        'seok3765',
+        5,
+        10,
+        undefined,
+      );
+      expect(result).toEqual(
+        SearchRssResponseDto.toResponseDto(
+          1,
+          [
+            {
+              id: 1,
+              name: 'seok3765.log',
+              blogPlatform: 'velog',
+              blogImage: null,
+            },
+          ],
+          1,
+          5,
+        ),
+      );
+    });
+
+    it('viewerId가 있으면 차단 필터링을 위해 저장소에 함께 전달한다.', async () => {
+      // given
+      rssAcceptRepository.searchRssList.mockResolvedValue([[], 0]);
+
+      // when
+      await rssService.searchRss({ find: 'seok3765', page: 1, limit: 5 }, 10);
+
+      // then
+      expect(rssAcceptRepository.searchRssList).toHaveBeenCalledWith(
+        'seok3765',
+        5,
+        0,
+        10,
+      );
+    });
+
+    it('전체 개수를 limit으로 나눠 totalPages를 올림 계산한다.', async () => {
+      // given
+      rssAcceptRepository.searchRssList.mockResolvedValue([[], 12]);
+
+      // when
+      const result = await rssService.searchRss({
+        find: 'seok3765',
+        page: 1,
+        limit: 5,
+      });
+
+      // then
+      expect(result.totalPages).toBe(3);
+    });
+
+    it('검색 결과가 없으면 빈 배열을 반환한다.', async () => {
+      // given
+      rssAcceptRepository.searchRssList.mockResolvedValue([[], 0]);
+
+      // when
+      const result = await rssService.searchRss({
+        find: 'no-match',
+        page: 1,
+        limit: 5,
+      });
+
+      // then
+      expect(result.result).toEqual([]);
+      expect(result.totalCount).toBe(0);
+      expect(result.totalPages).toBe(0);
     });
   });
 

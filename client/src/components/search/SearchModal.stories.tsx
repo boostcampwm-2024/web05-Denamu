@@ -3,7 +3,7 @@ import { expect, fn, userEvent, within } from "storybook/test";
 
 import SearchModal from "@/components/search/SearchModal";
 import { SEARCH } from "@/constants/endpoints";
-import { mockSearchResult, mockUserSearchResult } from "@/__storybook__/fixtures";
+import { mockRssSearchResult, mockSearchResult, mockUserSearchResult } from "@/__storybook__/fixtures";
 import { mockApi, ok } from "@/__storybook__/mockApi";
 
 const meta = {
@@ -13,6 +13,7 @@ const meta = {
   beforeEach: () => {
     mockApi.onGet(SEARCH.GET_RESULT).reply(...ok({ result: [mockSearchResult], totalCount: 1, totalPages: 1 }));
     mockApi.onGet(SEARCH.GET_USER_RESULT).reply(...ok([mockUserSearchResult]));
+    mockApi.onGet(SEARCH.GET_RSS_RESULT).reply(...ok({ result: [mockRssSearchResult], totalCount: 1, totalPages: 1 }));
   },
 } satisfies Meta<typeof SearchModal>;
 

@@ -35,6 +35,7 @@ import { GetRssFeedsRequestDto } from '@rss/dto/request/getRssFeeds.dto';
 import { ManageRssRequestDto } from '@rss/dto/request/manageRss.dto';
 import { RegisterRssRequestDto } from '@rss/dto/request/registerRss.dto';
 import { RejectRssRequestDto } from '@rss/dto/request/rejectRss';
+import { SearchRssRequestDto } from '@rss/dto/request/searchRss.dto';
 import { CreateRssCertificationResponseDto } from '@rss/dto/response/createRssCertification.dto';
 import { GetOwnedRssFeedsResponseDto } from '@rss/dto/response/getOwnedRssFeeds.dto';
 import { GetRecentRssResponseDto } from '@rss/dto/response/getRecentRss.dto';
@@ -44,6 +45,10 @@ import { PreviewRssCertificationResponseDto } from '@rss/dto/response/previewRss
 import { ReadRssResponseDto } from '@rss/dto/response/readRss.dto';
 import { ReadRssAcceptHistoryResponseDto } from '@rss/dto/response/readRssAcceptHistory.dto';
 import { ReadRssRejectHistoryResponseDto } from '@rss/dto/response/readRssRejectHistory.dto';
+import {
+  SearchRssResponseDto,
+  SearchRssResult,
+} from '@rss/dto/response/searchRss.dto';
 import { Rss, RssAccept, RssReject } from '@rss/entity/rss.entity';
 import {
   RssAcceptRepository,
@@ -346,6 +351,29 @@ export class RssService {
     );
     return recentRssList.map((row) =>
       GetRecentRssResponseDto.toResponseDto(row),
+    );
+  }
+
+  async searchRss(searchRssQueryDto: SearchRssRequestDto, viewerId?: number) {
+    const { find, page, limit } = searchRssQueryDto;
+    const offset = (page - 1) * limit;
+
+    const [searchResult, totalCount] =
+      await this.rssAcceptRepository.searchRssList(
+        find,
+        limit,
+        offset,
+        viewerId,
+      );
+
+    const rssList = SearchRssResult.toResultDtoArray(searchResult);
+    const totalPages = Math.ceil(totalCount / limit);
+
+    return SearchRssResponseDto.toResponseDto(
+      totalCount,
+      rssList,
+      totalPages,
+      limit,
     );
   }
 
