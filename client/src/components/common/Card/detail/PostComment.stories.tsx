@@ -1,8 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 
 import PostComment from "@/components/common/Card/detail/PostComment";
-import { BLOG } from "@/constants/endpoints";
+import { BLOG, REPORT } from "@/constants/endpoints";
 import { mockApi, ok } from "@/__storybook__/mockApi";
+import { useAuthStore } from "@/store/useAuthStore";
 
 const mockComments = [
   {
@@ -32,6 +34,14 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+const resetAuth = () => {
+  useAuthStore.setState({
+    isAuthenticated: false,
+    role: "guest",
+    userInfo: { id: null, email: null, userName: null },
+  });
+};
+
 export const Empty: Story = {
   name: "댓글 없음",
   beforeEach: () => {
@@ -49,5 +59,33 @@ export const WithComments: Story = {
     mockApi.onPost(BLOG.COMMENT.LIST(1)).reply(...ok(null));
     mockApi.onPatch(/\/api\/feeds\/1\/comments\/\d+/).reply(...ok(null));
     mockApi.onDelete(/\/api\/feeds\/1\/comments\/\d+/).reply(...ok(null));
+  },
+};
+
+export const ReportFlow: Story = {
+  name: "댓글 신고하기 플로우 (로그인 방문자)",
+  beforeEach: () => {
+    useAuthStore.setState({
+      isInitialized: true,
+      isAuthenticated: true,
+      role: "user",
+      userInfo: { id: 1, email: "me@test.com", userName: "테스터" },
+    });
+    mockApi.onGet(BLOG.COMMENT.LIST(1)).reply(...ok(mockComments));
+    mockApi.onPost(BLOG.COMMENT.LIST(1)).reply(...ok(null));
+    mockApi.onPost(REPORT.COMMENT(mockComments[0].id)).reply(...ok(null));
+    return resetAuth;
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
+
+    await userEvent.click((await canvas.findAllByRole("button", { name: "댓글 옵션" }))[0]);
+    await userEvent.click(await body.findByRole("menuitem", { name: "신고하기" }));
+    await userEvent.click(await body.findByRole("combobox"));
+    await userEvent.click(await body.findByRole("option", { name: "기타" }));
+    await userEvent.click(await body.findByRole("button", { name: "신고하기" }));
+
+    await waitFor(() => expect(mockApi.history.post).toHaveLength(1));
   },
 };

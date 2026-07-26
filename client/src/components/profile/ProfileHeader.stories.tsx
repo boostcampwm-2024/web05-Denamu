@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
-import { BLOCK, PROFILE } from "@/constants/endpoints";
+import { BLOCK, PROFILE, REPORT } from "@/constants/endpoints";
 import { mockApi, ok } from "@/__storybook__/mockApi";
 
 const ownedRss = [
@@ -45,6 +45,27 @@ export const BlockFlow: Story = {
     await userEvent.click(body.getByRole("button", { name: "차단" }));
 
     await waitFor(() => expect(mockApi.history.post).toHaveLength(2));
+  },
+};
+
+export const ReportFlow: Story = {
+  name: "신고 플로우",
+  args: { email: "", blockableUserId: 2 },
+  beforeEach: () => {
+    mockApi.onGet(PROFILE.RSS(2)).reply(...ok(ownedRss));
+    mockApi.onPost(REPORT.USER(2)).reply(...ok(null));
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
+
+    await userEvent.click(canvas.getByRole("button", { name: "더보기" }));
+    await userEvent.click(await body.findByRole("menuitem", { name: "신고하기" }, { timeout: 5000 }));
+    await userEvent.click(await body.findByRole("combobox"));
+    await userEvent.click(await body.findByRole("option", { name: "욕설/혐오 표현" }));
+    await userEvent.click(await body.findByRole("button", { name: "신고하기" }));
+
+    await waitFor(() => expect(mockApi.history.post).toHaveLength(1));
   },
 };
 

@@ -25,6 +25,9 @@ vi.mock("@/hooks/queries/useComments", () => ({
 }));
 
 vi.mock("@/hooks/queries/useProfile", () => ({ useUserProfile: () => ({ data: undefined }) }));
+vi.mock("@/hooks/queries/useReport", () => ({
+  useReportComment: () => ({ mutate: vi.fn(), isPending: false }),
+}));
 vi.mock("@/hooks/common/useNavigateToProfile", () => ({ useNavigateToProfile: () => vi.fn() }));
 vi.mock("@/utils/timeago", () => ({ timeAgo: () => "방금 전" }));
 vi.mock("@/components/auth/AuthSignInForm", () => ({ AuthSignInForm: () => <div data-testid="signin-form" /> }));

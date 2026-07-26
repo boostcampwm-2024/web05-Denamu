@@ -6,6 +6,7 @@ export const TAB_TYPES = {
   MEMBER: "MEMBER",
   POST: "POST",
   CHAT: "CHAT",
+  REPORT: "REPORT",
 } as const;
 
 type TabType = (typeof TAB_TYPES)[keyof typeof TAB_TYPES];
@@ -32,6 +33,11 @@ export const AdminNavigationMenu = ({ handleTap }: { handleTap: (tabType: TabTyp
         <NavigationMenuItem>
           <Button variant="ghost" className="w-full justify-start" onClick={() => handleTap("CHAT")}>
             채팅 관리
+          </Button>
+        </NavigationMenuItem>
+        <NavigationMenuItem>
+          <Button variant="ghost" className="w-full justify-start" onClick={() => handleTap("REPORT")}>
+            신고 관리
           </Button>
         </NavigationMenuItem>
       </NavigationMenuList>

@@ -19,6 +19,9 @@ vi.mock("@/hooks/queries/useBlock.ts", () => ({
   useBlockRss: () => ({ mutateAsync: mockBlockRss }),
 }));
 vi.mock("@/hooks/queries/useProfile.ts", () => ({ useCertifiedRss: () => mockCertifiedRss() }));
+vi.mock("@/hooks/queries/useReport", () => ({
+  useReportUser: () => ({ mutate: vi.fn(), isPending: false }),
+}));
 
 describe("ProfileHeader", () => {
   beforeEach(() => {
