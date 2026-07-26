@@ -94,6 +94,7 @@ const baseRss: RssInfo = {
   name: "데나무 블로그",
   userName: "작성자",
   rssUrl: "https://blog.test/rss",
+  blogUrl: "https://blog.test",
   blogPlatform: "velog",
   feedCount: 12,
   subscriberCount: 3,

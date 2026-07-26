@@ -46,6 +46,7 @@ const baseRss: RssInfo = {
   name: "데나무 블로그",
   userName: "조민석",
   rssUrl: "https://v2.velog.io/rss/@denamu",
+  blogUrl: "https://velog.io/@denamu",
   blogPlatform: "velog",
   feedCount: 12,
   subscriberCount: 34,

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
-import { Ban, CalendarClock, CheckCircle2, FileText, MoreVertical, Pencil, Users } from "lucide-react";
+import { Ban, CalendarClock, CheckCircle2, ExternalLink, FileText, MoreVertical, Pencil, Users } from "lucide-react";
 
 import { Footer } from "@/components/about/Footer";
 import Layout from "@/components/layout/Layout";
@@ -184,6 +184,15 @@ const RssHeader = ({ rss, onEdit, onBlock }: { rss: RssInfo; onEdit: () => void;
           </div>
         </div>
         <div className="flex items-center flex-shrink-0 gap-1">
+          <Button
+            asChild
+            className="gap-1.5 rounded-full bg-[#FF870D] font-semibold text-white hover:bg-[#e6790b]"
+          >
+            <a href={rss.blogUrl} target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="w-4 h-4" />
+              블로그 가기
+            </a>
+          </Button>
           {rss.isOwner ? (
             <Button variant="outline" className="gap-1" onClick={onEdit}>
               <Pencil className="w-4 h-4" />
