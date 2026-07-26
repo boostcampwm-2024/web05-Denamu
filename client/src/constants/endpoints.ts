@@ -111,6 +111,14 @@ export const BLOCK = {
   RSS_MANAGE: (rssId: number) => `/api/blocks/rss/${rssId}`,
 };
 
+export const REPORT = {
+  USER: (userId: number) => `/api/reports/users/${userId}`,
+  RSS: (rssId: number) => `/api/reports/rss/${rssId}`,
+  COMMENT: (commentId: number) => `/api/reports/comments/${commentId}`,
+  FEED: (feedId: number) => `/api/reports/feeds/${feedId}`,
+  ADMIN_LIST: "/api/admins/reports",
+};
+
 export const FILE = {
   UPLOAD: "/api/files",
 };
