@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
-import { CreateReportPayload, REPORT_REASON_LABELS, ReportReason } from "@/types/report";
+import { REPORT_REASON_LABELS } from "@/constants/report";
+import { CreateReportPayload, ReportReason } from "@/types/report";
 
 interface ReportDialogProps {
   open: boolean;

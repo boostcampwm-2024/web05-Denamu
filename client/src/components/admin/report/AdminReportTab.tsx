@@ -8,7 +8,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { getReports } from "@/api/services/report";
-import { REPORT_REASON_LABELS, REPORT_STATUS_LABELS, ReportItem, ReportStatus } from "@/types/report";
+import { REPORT_REASON_LABELS, REPORT_STATUS_LABELS } from "@/constants/report";
+import { ReportItem, ReportStatus } from "@/types/report";
 
 type StatusFilter = ReportStatus | "ALL";
 
