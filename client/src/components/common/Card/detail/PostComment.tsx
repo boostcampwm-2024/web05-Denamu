@@ -1,10 +1,15 @@
 import { useState } from "react";
 
+import { Flag, MoreVertical } from "lucide-react";
+
 import { AuthSignInForm } from "@/components/auth/AuthSignInForm";
 import CommentAction from "@/components/common/Card/detail/CommentAction";
+import { ReportDialog } from "@/components/common/ReportDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
+import { useCustomToast } from "@/hooks/common/useCustomToast";
 import { useNavigateToProfile } from "@/hooks/common/useNavigateToProfile";
 import {
   useComments,
@@ -14,11 +19,13 @@ import {
   useAdminDeleteComment,
 } from "@/hooks/queries/useComments";
 import { useUserProfile } from "@/hooks/queries/useProfile";
+import { useReportComment } from "@/hooks/queries/useReport";
 
 import { timeAgo } from "@/utils/timeago";
 
 import { useAuthStore } from "@/store/useAuthStore";
 import { FeedCommentType } from "@/types/post";
+import { CreateReportPayload } from "@/types/report";
 
 interface PostCommentProps {
   feedId: number;
@@ -30,6 +37,7 @@ interface CommentItemProps {
   comment: FeedCommentType;
   canEdit: boolean;
   canDelete: boolean;
+  canReport: boolean;
   canReply?: boolean;
   isReply?: boolean;
   modifyId: number | null;
@@ -37,6 +45,7 @@ interface CommentItemProps {
   onUpdate: (commentId: number, newComment: string) => void;
   onDelete: (commentId: number) => void;
   onReply: (rootId: number, mention?: string) => void;
+  onReport: (commentId: number) => void;
 }
 
 const INITIAL_VISIBLE = 3;
@@ -52,6 +61,8 @@ export default function PostComment({ feedId, isFeedOwner = false, isAdmin = fal
   const { mutate: deleteCommentUser } = useDeleteComment(feedId);
   const { mutate: deleteCommentAdmin } = useAdminDeleteComment(feedId);
   const deleteComment = isAdmin ? deleteCommentAdmin : deleteCommentUser;
+  const { mutate: reportComment, isPending: isReportPending } = useReportComment();
+  const { toast } = useCustomToast();
 
   const [content, setContent] = useState("");
   const [modifyId, setModifyId] = useState<number | null>(null);
@@ -59,6 +70,7 @@ export default function PostComment({ feedId, isFeedOwner = false, isAdmin = fal
   const [loginOpen, setLoginOpen] = useState(false);
   const [replyTo, setReplyTo] = useState<number | null>(null);
   const [replyContent, setReplyContent] = useState("");
+  const [reportCommentId, setReportCommentId] = useState<number | null>(null);
 
   const handleModify = (id: number | null) => setModifyId(id);
 
@@ -101,10 +113,28 @@ export default function PostComment({ feedId, isFeedOwner = false, isAdmin = fal
     updateComment({ commentId, newComment: trimmed }, { onSuccess: () => setModifyId(null) });
   };
 
+  const handleReportSubmit = (payload: CreateReportPayload) => {
+    if (reportCommentId === null) return;
+    reportComment(
+      { commentId: reportCommentId, payload },
+      {
+        onSuccess: () => {
+          setReportCommentId(null);
+          toast({ title: "신고 접수 완료", description: "신고가 접수되었습니다." });
+        },
+        onError: () => {
+          toast({ title: "신고 실패", description: "잠시 후 다시 시도해주세요." });
+        },
+      }
+    );
+  };
+
   const canEditComment = (comment: FeedCommentType) =>
     !isAdmin && !comment.isDeleted && comment.user.id === userId;
   const canDeleteComment = (comment: FeedCommentType) =>
     !comment.isDeleted && (isAdmin || comment.user.id === userId || isFeedOwner);
+  const canReportComment = (comment: FeedCommentType) =>
+    !isAdmin && isAuthenticated && !comment.isDeleted && comment.user.id !== userId;
 
   const repliesByParent = comments.reduce<Record<number, FeedCommentType[]>>((acc, comment) => {
     if (comment.parentId !== null) {
@@ -167,12 +197,14 @@ export default function PostComment({ feedId, isFeedOwner = false, isAdmin = fal
               comment={root}
               canEdit={canEditComment(root)}
               canDelete={canDeleteComment(root)}
+              canReport={canReportComment(root)}
               canReply={!isAdmin}
               modifyId={modifyId}
               handleModify={handleModify}
               onUpdate={handleUpdate}
               onDelete={deleteComment}
               onReply={handleReplyOpen}
+              onReport={setReportCommentId}
             />
 
             {/* 답글 목록 */}
@@ -184,6 +216,7 @@ export default function PostComment({ feedId, isFeedOwner = false, isAdmin = fal
                       comment={reply}
                       canEdit={canEditComment(reply)}
                       canDelete={canDeleteComment(reply)}
+                      canReport={canReportComment(reply)}
                       canReply={!isAdmin}
                       isReply
                       modifyId={modifyId}
@@ -191,6 +224,7 @@ export default function PostComment({ feedId, isFeedOwner = false, isAdmin = fal
                       onUpdate={handleUpdate}
                       onDelete={deleteComment}
                       onReply={() => handleReplyOpen(root.id, reply.user.userName)}
+                      onReport={setReportCommentId}
                     />
                   </li>
                 ))}
@@ -250,6 +284,14 @@ export default function PostComment({ feedId, isFeedOwner = false, isAdmin = fal
           </DialogContent>
         </Dialog>
       </div>
+
+      <ReportDialog
+        open={reportCommentId !== null}
+        onOpenChange={(open) => !open && setReportCommentId(null)}
+        title="댓글 신고"
+        isPending={isReportPending}
+        onSubmit={handleReportSubmit}
+      />
     </div>
   );
 }
@@ -258,6 +300,7 @@ const CommentItem = ({
   comment,
   canEdit,
   canDelete,
+  canReport,
   canReply = true,
   isReply = false,
   modifyId,
@@ -265,6 +308,7 @@ const CommentItem = ({
   onUpdate,
   onDelete,
   onReply,
+  onReport,
 }: CommentItemProps) => {
   const [editContent, setEditContent] = useState(comment.comment);
   const isEditing = modifyId === comment.id;
@@ -297,14 +341,36 @@ const CommentItem = ({
               </p>
               <p className="text-sm text-gray-400">{timeAgo(comment.date)}</p>
             </div>
-            {(canEdit || canDelete) && !isEditing && (
-              <CommentAction
-                id={comment.id}
-                canEdit={canEdit}
-                canDelete={canDelete}
-                handleModify={handleModify}
-                onDelete={onDelete}
-              />
+            {!isEditing && (
+              <div className="flex items-center gap-1">
+                {(canEdit || canDelete) && (
+                  <CommentAction
+                    id={comment.id}
+                    canEdit={canEdit}
+                    canDelete={canDelete}
+                    handleModify={handleModify}
+                    onDelete={onDelete}
+                  />
+                )}
+                {canReport && (
+                  <DropdownMenu modal={false}>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        className="flex items-center justify-center w-6 h-6 text-gray-400 rounded hover:bg-gray-100"
+                        aria-label="댓글 옵션"
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="z-[1000]" onClick={(event) => event.stopPropagation()}>
+                      <DropdownMenuItem onClick={() => onReport(comment.id)}>
+                        <Flag className="w-4 h-4 mr-2" />
+                        신고하기
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+              </div>
             )}
           </div>
         </div>
