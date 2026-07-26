@@ -65,6 +65,10 @@ vi.mock("@/hooks/queries/useBlock.ts", () => ({
   useUnblockRss: () => ({ mutate: unblockRssMock, isPending: false }),
 }));
 
+vi.mock("@/hooks/queries/useReport", () => ({
+  useReportRss: () => ({ mutate: vi.fn(), isPending: false }),
+}));
+
 vi.mock("@/hooks/queries/useRssCertification.ts", () => ({
   useOwnedRssFeeds: () => ({
     data: { pages: [{ result: [] }] },
