@@ -11,6 +11,7 @@ export const useScrollbarAdjustment = () => {
     document.querySelectorAll(".side-btn").forEach((btn) => {
       (btn as HTMLElement).style.transform = `translateX(-${width}px)`;
     });
+    document.documentElement.style.overflow = "hidden";
     document.body.style.overflow = "hidden";
 
     return () => {
@@ -18,6 +19,7 @@ export const useScrollbarAdjustment = () => {
       document.querySelectorAll(".side-btn").forEach((btn) => {
         (btn as HTMLElement).style.transform = "";
       });
+      document.documentElement.style.overflow = "";
       document.body.style.overflow = "auto";
     };
   }, []);

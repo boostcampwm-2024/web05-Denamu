@@ -50,6 +50,7 @@ export default function PostDetail() {
     <div
       ref={modalContainerRef}
       className="fixed inset-0 bg-black/50 flex justify-center items-start z-[999] overflow-y-auto py-10"
+      style={{ paddingRight: scrollbarWidth }}
       onClick={handleClickOutside}
     >
       <div ref={modalRef} className="bg-white rounded-md w-[90%] max-w-4xl h-auto relative">
