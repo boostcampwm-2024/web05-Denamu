@@ -130,7 +130,6 @@ export const PostHeader = React.memo(({ data }: PostHeaderProps) => {
         title="게시글 신고"
         isPending={isReportPending}
         onSubmit={handleReport}
-        modal={false}
       />
     </div>
   );

@@ -291,7 +291,6 @@ export default function PostComment({ feedId, isFeedOwner = false, isAdmin = fal
         title="댓글 신고"
         isPending={isReportPending}
         onSubmit={handleReportSubmit}
-        modal={false}
       />
     </div>
   );

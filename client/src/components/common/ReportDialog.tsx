@@ -23,19 +23,11 @@ interface ReportDialogProps {
   title: string;
   isPending?: boolean;
   onSubmit: (payload: CreateReportPayload) => void;
-  modal?: boolean;
 }
 
 const REPORT_REASON_OPTIONS = Object.entries(REPORT_REASON_LABELS) as [ReportReason, string][];
 
-export function ReportDialog({
-  open,
-  onOpenChange,
-  title,
-  isPending = false,
-  onSubmit,
-  modal = true,
-}: ReportDialogProps) {
+export function ReportDialog({ open, onOpenChange, title, isPending = false, onSubmit }: ReportDialogProps) {
   const [reason, setReason] = useState<ReportReason | "">("");
   const [detail, setDetail] = useState("");
 
@@ -53,53 +45,55 @@ export function ReportDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange} modal={modal}>
-      <DialogContent className="z-[1000]" onClick={(event) => event.stopPropagation()}>
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>신고 사유를 선택해주세요. 접수된 신고는 관리자가 검토합니다.</DialogDescription>
-        </DialogHeader>
+    <div onClick={(event) => event.stopPropagation()}>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+        <DialogContent className="z-[1000]">
+          <DialogHeader>
+            <DialogTitle>{title}</DialogTitle>
+            <DialogDescription>신고 사유를 선택해주세요. 접수된 신고는 관리자가 검토합니다.</DialogDescription>
+          </DialogHeader>
 
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="report-reason">신고 사유</Label>
-            <Select value={reason || undefined} onValueChange={(value) => setReason(value as ReportReason)}>
-              <SelectTrigger id="report-reason">
-                <SelectValue placeholder="사유를 선택해주세요" />
-              </SelectTrigger>
-              <SelectContent className="z-[1001]">
-                {REPORT_REASON_OPTIONS.map(([value, label]) => (
-                  <SelectItem key={value} value={value}>
-                    {label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="report-reason">신고 사유</Label>
+              <Select value={reason || undefined} onValueChange={(value) => setReason(value as ReportReason)}>
+                <SelectTrigger id="report-reason">
+                  <SelectValue placeholder="사유를 선택해주세요" />
+                </SelectTrigger>
+                <SelectContent className="z-[1001]">
+                  {REPORT_REASON_OPTIONS.map(([value, label]) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="report-detail">상세 내용 (선택)</Label>
+              <Textarea
+                id="report-detail"
+                value={detail}
+                onChange={(event) => setDetail(event.target.value)}
+                placeholder="신고 사유에 대해 자세히 설명해주세요."
+                maxLength={500}
+                className="resize-none"
+              />
+              <span className="self-end text-xs text-muted-foreground">{detail.length}/500</span>
+            </div>
           </div>
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="report-detail">상세 내용 (선택)</Label>
-            <Textarea
-              id="report-detail"
-              value={detail}
-              onChange={(event) => setDetail(event.target.value)}
-              placeholder="신고 사유에 대해 자세히 설명해주세요."
-              maxLength={500}
-              className="resize-none"
-            />
-            <span className="self-end text-xs text-muted-foreground">{detail.length}/500</span>
-          </div>
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={() => handleOpenChange(false)}>
-            취소
-          </Button>
-          <Button onClick={handleSubmit} disabled={!reason || isPending} className="bg-red-600 hover:bg-red-700">
-            {isPending ? "신고 접수 중..." : "신고하기"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => handleOpenChange(false)}>
+              취소
+            </Button>
+            <Button onClick={handleSubmit} disabled={!reason || isPending} className="bg-red-600 hover:bg-red-700">
+              {isPending ? "신고 접수 중..." : "신고하기"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
