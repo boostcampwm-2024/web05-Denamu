@@ -3,12 +3,15 @@ import {
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 import { DataSource } from 'typeorm';
 
 import { GetCommentResponseDto } from '@comment/dto/response/getComment.dto';
 import { GetUserCommentsResponseDto } from '@comment/dto/response/getUserComments.dto';
 import { Comment } from '@comment/entity/comment.entity';
+import { CommentCreatedEvent } from '@comment/event/comment-created.event';
+import { CommentDeletedEvent } from '@comment/event/comment-deleted.event';
 import { CommentRepository } from '@comment/repository/comment.repository';
 import { CommentService } from '@comment/service/comment.service';
 
@@ -34,6 +37,7 @@ describe(`${CommentService.name} Unit Test`, () => {
   let userService: jest.Mocked<Pick<UserService, 'getUser'>>;
   let manager: { save: jest.Mock; remove: jest.Mock };
   let dataSource: jest.Mocked<Pick<DataSource, 'transaction'>>;
+  let eventEmitter: jest.Mocked<Pick<EventEmitter2, 'emit'>>;
 
   const user: Payload = {
     id: 1,
@@ -56,12 +60,14 @@ describe(`${CommentService.name} Unit Test`, () => {
     dataSource = {
       transaction: jest.fn((cb: any) => cb(manager)),
     } as any;
+    eventEmitter = { emit: jest.fn() };
 
     commentService = new CommentService(
       commentRepository as unknown as CommentRepository,
       dataSource as unknown as DataSource,
       feedService as unknown as FeedService,
       userService as unknown as UserService,
+      eventEmitter as unknown as EventEmitter2,
     );
   });
 
@@ -196,6 +202,10 @@ describe(`${CommentService.name} Unit Test`, () => {
         user: { id: user.id },
         parentId: null,
       });
+      expect(eventEmitter.emit).toHaveBeenCalledWith(
+        'comment.created',
+        new CommentCreatedEvent(10, user.id),
+      );
     });
 
     it('비공개 게시글이면 NotFoundException을 던지고 저장하지 않는다.', async () => {
@@ -209,6 +219,7 @@ describe(`${CommentService.name} Unit Test`, () => {
         commentService.create(user, 10, { comment: 'x' }),
       ).rejects.toThrow(NotFoundException);
       expect(manager.save).not.toHaveBeenCalled();
+      expect(eventEmitter.emit).not.toHaveBeenCalled();
     });
 
     it('유효한 부모 댓글이 있으면 parentId를 포함해 답글을 저장한다.', async () => {
@@ -232,6 +243,10 @@ describe(`${CommentService.name} Unit Test`, () => {
         user: { id: user.id },
         parentId: 7,
       });
+      expect(eventEmitter.emit).toHaveBeenCalledWith(
+        'comment.created',
+        new CommentCreatedEvent(10, user.id),
+      );
     });
 
     it('존재하지 않는 부모 댓글이면 NotFoundException을 던지고 저장하지 않는다.', async () => {
@@ -338,6 +353,10 @@ describe(`${CommentService.name} Unit Test`, () => {
       expect(feed.commentCount).toBe(2);
       expect(manager.save).toHaveBeenCalledWith(feed);
       expect(manager.remove).toHaveBeenCalledWith(comment);
+      expect(eventEmitter.emit).toHaveBeenCalledWith(
+        'comment.deleted',
+        new CommentDeletedEvent(10),
+      );
     });
 
     it('답글이 달린 최상위 댓글은 soft delete 처리하고 commentCount를 유지한다.', async () => {
@@ -361,6 +380,10 @@ describe(`${CommentService.name} Unit Test`, () => {
       expect(feed.commentCount).toBe(3);
       expect(manager.save).toHaveBeenCalledWith(comment);
       expect(manager.remove).not.toHaveBeenCalled();
+      expect(eventEmitter.emit).toHaveBeenCalledWith(
+        'comment.deleted',
+        new CommentDeletedEvent(10),
+      );
     });
 
     it('답글(parentId 존재)은 replyCount 조회 없이 hard delete 한다.', async () => {
@@ -381,6 +404,10 @@ describe(`${CommentService.name} Unit Test`, () => {
       expect(commentRepository.count).not.toHaveBeenCalled();
       expect(feed.commentCount).toBe(2);
       expect(manager.remove).toHaveBeenCalledWith(comment);
+      expect(eventEmitter.emit).toHaveBeenCalledWith(
+        'comment.deleted',
+        new CommentDeletedEvent(10),
+      );
     });
 
     it('본인 댓글이 아니어도 RSS 소유자면 댓글 수를 감소시키고 댓글을 제거한다.', async () => {
@@ -396,6 +423,10 @@ describe(`${CommentService.name} Unit Test`, () => {
       expect(feed.commentCount).toBe(2);
       expect(manager.save).toHaveBeenCalledWith(feed);
       expect(manager.remove).toHaveBeenCalledWith(comment);
+      expect(eventEmitter.emit).toHaveBeenCalledWith(
+        'comment.deleted',
+        new CommentDeletedEvent(10),
+      );
     });
   });
 
@@ -417,6 +448,7 @@ describe(`${CommentService.name} Unit Test`, () => {
         id: 5,
         isDeleted: false,
         isAdminDeleted: false,
+        feed: { id: 10 },
       } as Comment;
       commentRepository.findOne.mockResolvedValue(comment);
 
@@ -426,12 +458,17 @@ describe(`${CommentService.name} Unit Test`, () => {
       // then
       expect(commentRepository.findOne).toHaveBeenCalledWith({
         where: { id: 5 },
+        relations: ['feed'],
       });
       expect(comment.isDeleted).toBe(true);
       expect(comment.isAdminDeleted).toBe(true);
       expect(commentRepository.save).toHaveBeenCalledWith(comment);
       expect(commentRepository.count).not.toHaveBeenCalled();
       expect(dataSource.transaction).not.toHaveBeenCalled();
+      expect(eventEmitter.emit).toHaveBeenCalledWith(
+        'comment.deleted',
+        new CommentDeletedEvent(10),
+      );
     });
   });
 
