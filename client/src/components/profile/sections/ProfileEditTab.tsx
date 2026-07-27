@@ -27,6 +27,7 @@ import { Textarea } from "@/components/ui/textarea.tsx";
 
 import { GitHub } from "@/components/icons/social/GitHub.tsx";
 import { Google } from "@/components/icons/social/Google.tsx";
+import { MarketingConsentNotice } from "@/components/common/MarketingConsentNotice.tsx";
 
 import { useCustomToast } from "@/hooks/common/useCustomToast.ts";
 import { useUserProfile } from "@/hooks/queries/useProfile.ts";
@@ -87,6 +88,10 @@ export const ProfileEditTab = ({ userId, email }: ProfileEditTabProps) => {
 
   const [deleteRss, setDeleteRss] = useState(true);
 
+  const [marketingEmailAgreed, setMarketingEmailAgreed] = useState(false);
+  const [inactivityEmailAgreed, setInactivityEmailAgreed] = useState(false);
+  const [noticeEmailAgreed, setNoticeEmailAgreed] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const updateProfile = useUpdateProfile(userId);
@@ -112,6 +117,9 @@ export const ProfileEditTab = ({ userId, email }: ProfileEditTabProps) => {
       setUserName(profile.userName);
       setIntroduction(profile.introduction ?? "");
       setProfileImage(profile.profileImage ?? null);
+      setMarketingEmailAgreed(profile.marketingEmailAgreed ?? false);
+      setInactivityEmailAgreed(profile.inactivityEmailAgreed ?? false);
+      setNoticeEmailAgreed(profile.noticeEmailAgreed ?? false);
     }
   }, [profile]);
 
@@ -254,6 +262,29 @@ export const ProfileEditTab = ({ userId, email }: ProfileEditTabProps) => {
     });
   };
 
+  type EmailAgreementKey = "marketingEmailAgreed" | "inactivityEmailAgreed" | "noticeEmailAgreed";
+
+  const handleToggleEmailAgreement = (
+    key: EmailAgreementKey,
+    setState: (value: boolean) => void,
+    checked: boolean
+  ) => {
+    setState(checked);
+    updateProfile.mutate(
+      { [key]: checked },
+      {
+        onError: (error) => {
+          setState(!checked);
+          toast({
+            title: "이메일 수신 설정 변경 실패",
+            description: getErrorMessage(error, "설정 변경에 실패했습니다."),
+            variant: "destructive",
+          });
+        },
+      }
+    );
+  };
+
   const handleChangePassword = () => {
     if (newPassword !== confirmPassword) {
       toast({ title: "새 비밀번호가 일치하지 않습니다.", variant: "destructive" });
@@ -379,6 +410,64 @@ export const ProfileEditTab = ({ userId, email }: ProfileEditTabProps) => {
             <Button onClick={handleSaveProfile} disabled={updateProfile.isPending}>
               {updateProfile.isPending ? "저장 중..." : "저장"}
             </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>이메일 수신 설정</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1">
+              <Label htmlFor="marketingEmailAgreed" className="font-medium">
+                마케팅 활용 및 광고성 정보 수신 동의
+              </Label>
+              <MarketingConsentNotice showChangeGuide={false} />
+            </div>
+            <Switch
+              id="marketingEmailAgreed"
+              checked={marketingEmailAgreed}
+              onCheckedChange={(checked) =>
+                handleToggleEmailAgreement("marketingEmailAgreed", setMarketingEmailAgreed, checked)
+              }
+              className="mt-1 shrink-0"
+            />
+          </div>
+
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1">
+              <Label htmlFor="inactivityEmailAgreed" className="font-medium">
+                미접속 알림 이메일 수신 동의
+              </Label>
+              <p className="text-sm text-gray-500">장기간 접속하지 않을 경우 알림 이메일을 받아봅니다.</p>
+            </div>
+            <Switch
+              id="inactivityEmailAgreed"
+              checked={inactivityEmailAgreed}
+              onCheckedChange={(checked) =>
+                handleToggleEmailAgreement("inactivityEmailAgreed", setInactivityEmailAgreed, checked)
+              }
+              className="mt-1 shrink-0"
+            />
+          </div>
+
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1">
+              <Label htmlFor="noticeEmailAgreed" className="font-medium">
+                공지사항 이메일 수신 동의
+              </Label>
+              <p className="text-sm text-gray-500">서비스 공지사항을 이메일로 받아봅니다.</p>
+            </div>
+            <Switch
+              id="noticeEmailAgreed"
+              checked={noticeEmailAgreed}
+              onCheckedChange={(checked) =>
+                handleToggleEmailAgreement("noticeEmailAgreed", setNoticeEmailAgreed, checked)
+              }
+              className="mt-1 shrink-0"
+            />
           </div>
         </CardContent>
       </Card>
@@ -523,7 +612,7 @@ export const ProfileEditTab = ({ userId, email }: ProfileEditTabProps) => {
                 </AlertDialogDescription>
               </AlertDialogHeader>
 
-              <div className="flex items-start justify-between gap-4 rounded-md border p-4">
+              <div className="flex items-start justify-between gap-4">
                 <div className="space-y-1">
                   <Label htmlFor="deleteRss" className="font-medium">
                     소유한 RSS 함께 삭제
