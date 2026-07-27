@@ -21,6 +21,7 @@ module.exports = {
     '^@file/(.*)?$',
     '^@health/(.*)?$',
     '^@like/(.*)?$',
+    "^@notification/(.*)?$",
     '^@report/(.*)?$',
     '^@rss/(.*)?$',
     '^@statistic/(.*)?$',

@@ -1,4 +1,5 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 import { DataSource } from 'typeorm';
 
@@ -23,6 +24,7 @@ describe(`${LikeService.name} Unit Test`, () => {
   let userService: jest.Mocked<Pick<UserService, 'getUser'>>;
   let manager: { save: jest.Mock; delete: jest.Mock };
   let dataSource: jest.Mocked<Pick<DataSource, 'transaction'>>;
+  let eventEmitter: jest.Mocked<Pick<EventEmitter2, 'emit'>>;
 
   const user: Payload = {
     id: 1,
@@ -40,12 +42,14 @@ describe(`${LikeService.name} Unit Test`, () => {
     dataSource = {
       transaction: jest.fn((cb: any) => cb(manager)),
     } as any;
+    eventEmitter = { emit: jest.fn() };
 
     likeService = new LikeService(
       likeRepository as unknown as LikeRepository,
       feedService as unknown as FeedService,
       dataSource as unknown as DataSource,
       userService as unknown as UserService,
+      eventEmitter as unknown as EventEmitter2,
     );
   });
 
@@ -116,6 +120,10 @@ describe(`${LikeService.name} Unit Test`, () => {
         user: { id: user.id },
         feed: { id: dto.feedId },
       });
+      expect(eventEmitter.emit).toHaveBeenCalledWith(
+        'like.created',
+        expect.objectContaining({ feedId: dto.feedId, likerUserId: user.id }),
+      );
     });
   });
 
@@ -148,6 +156,10 @@ describe(`${LikeService.name} Unit Test`, () => {
         user: { id: user.id },
         feed: { id: dto.feedId },
       });
+      expect(eventEmitter.emit).toHaveBeenCalledWith(
+        'like.deleted',
+        expect.objectContaining({ feedId: dto.feedId, likerUserId: user.id }),
+      );
     });
   });
 

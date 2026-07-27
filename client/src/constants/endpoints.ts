@@ -123,6 +123,12 @@ export const FILE = {
   UPLOAD: "/api/files",
 };
 
+export const NOTIFICATION = {
+  UNREAD_COUNT: "/api/notifications/unread-count",
+  LIST: "/api/notifications",
+  READ: (id: number) => `/api/notifications/${id}/read`,
+};
+
 export const PROFILE = {
   PROFILE: (id: number) => `/api/users/${id}/profile`,
   UPDATE: "/api/users/profile",

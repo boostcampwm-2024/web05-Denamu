@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 
+import { NotificationBell } from "@/components/common/NotificationBell";
 import { UserProfileMenu } from "@/components/common/UserProfileMenu";
 import SideButton from "@/components/layout/SideButton";
 import SearchButton from "@/components/search/SearchButton";
@@ -50,6 +51,9 @@ export default function DesktopNavigation({ toggleModal }: { toggleModal: (modal
               >
                 서비스 소개
               </NavigationMenuLink>
+            </NavigationMenuItem>
+            <NavigationMenuItem>
+              <NotificationBell />
             </NavigationMenuItem>
             <NavigationMenuItem>
               <UserProfileMenu />
