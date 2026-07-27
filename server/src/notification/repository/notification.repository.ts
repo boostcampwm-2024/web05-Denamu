@@ -25,7 +25,7 @@ export class NotificationRepository extends Repository<Notification> {
         feed: { id: feedId } as Feed,
         isRead: false,
       })
-      .orUpdate(['is_read'], ['recipient_user_id', 'type', 'feed_id'])
+      .orUpdate(['is_read', 'updated_at'], ['recipient_user_id', 'type', 'feed_id'])
       .execute();
   }
 
