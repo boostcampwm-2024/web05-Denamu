@@ -19,7 +19,6 @@ import { CommentModule } from '@comment/module/comment.module';
 
 import { loadDBSetting } from '@common/database/load.config';
 import { EmailModule } from '@common/email/email.module';
-import { HealthController } from '@health/health.controller';
 import { WinstonLoggerModule } from '@common/logger/logger.module';
 import { MetricsModule } from '@common/metrics/metrics.module';
 import { RabbitMQModule } from '@common/rabbitmq/rabbitmq.module';
@@ -29,7 +28,11 @@ import { FeedModule } from '@feed/module/feed.module';
 
 import { FileModule } from '@file/module/file.module';
 
+import { HealthController } from '@health/health.controller';
+
 import { LikeModule } from '@like/module/like.module';
+
+import { NotificationModule } from '@notification/module/notification.module';
 
 import { RssModule } from '@rss/module/rss.module';
 
@@ -91,6 +94,7 @@ const exists = !!chosen && fs.existsSync(chosen);
     StatisticModule,
     CommentModule,
     LikeModule,
+    NotificationModule,
     BlockModule,
     SubscribeModule,
     FileModule,
