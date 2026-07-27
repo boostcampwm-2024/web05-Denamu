@@ -60,8 +60,9 @@ export const Empty: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
     await userEvent.click(canvas.getByRole("button", { name: "알림" }));
-    await expect(await canvas.findByText("알림이 없습니다.")).toBeInTheDocument();
+    await expect(await body.findByText("알림이 없습니다.")).toBeInTheDocument();
   },
 };
 
@@ -74,10 +75,11 @@ export const WithUnread: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
     await expect(await canvas.findByTestId("unread-badge")).toHaveTextContent("1");
 
     await userEvent.click(canvas.getByRole("button", { name: "알림" }));
-    const items = await canvas.findAllByTestId("notification-item");
+    const items = await body.findAllByTestId("notification-item");
     await expect(items[0]).toHaveTextContent("댓글러님이 Storybook으로 알림 미리보기에 좋아요를 표시했습니다.");
     await expect(items[1]).toHaveTextContent("먼저읽음님이 이미 읽은 알림 예시에 좋아요를 표시했습니다.");
   },
@@ -92,8 +94,9 @@ export const WithMultipleLikers: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
     await userEvent.click(canvas.getByRole("button", { name: "알림" }));
-    const item = await canvas.findByTestId("notification-item");
+    const item = await body.findByTestId("notification-item");
     await expect(item).toHaveTextContent("최신좋아요러님 외 3명이 여러 명이 좋아요한 게시글에 좋아요를 표시했습니다.");
   },
 };
@@ -108,8 +111,9 @@ export const MarkAsRead: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
     await userEvent.click(canvas.getByRole("button", { name: "알림" }));
-    await userEvent.click(await canvas.findByTestId("notification-item"));
+    await userEvent.click(await body.findByTestId("notification-item"));
 
     await expect(mockApi.history.patch).toHaveLength(1);
     await expect(mockApi.history.patch[0].url).toBe(NOTIFICATION.READ(unreadItem.id));
