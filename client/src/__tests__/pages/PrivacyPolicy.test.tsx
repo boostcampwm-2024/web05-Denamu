@@ -11,6 +11,8 @@ vi.mock("lucide-react", async () => {
   return lucideProxy();
 });
 
+vi.mock("@/components/layout/Header", () => ({ default: () => <div data-testid="header" /> }));
+
 const mockNavigate = vi.fn();
 vi.mock("react-router-dom", async (importOriginal) => {
   const actual = await importOriginal<typeof import("react-router-dom")>();
