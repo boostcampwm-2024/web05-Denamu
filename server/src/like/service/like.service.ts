@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 import { DataSource } from 'typeorm';
 
@@ -15,6 +16,8 @@ import { ManageLikeRequestDto } from '@like/dto/request/manageLike.dto';
 import { GetLikeResponseDto } from '@like/dto/response/getLike.dto';
 import { GetUserLikesResponseDto } from '@like/dto/response/getUserLikes.dto';
 import { Like } from '@like/entity/like.entity';
+import { LikeCreatedEvent } from '@like/event/like-created.event';
+import { LikeDeletedEvent } from '@like/event/like-deleted.event';
 import { LikeRepository } from '@like/repository/like.repository';
 
 import { UserService } from '@user/service/user.service';
@@ -26,6 +29,7 @@ export class LikeService {
     private readonly feedService: FeedService,
     private readonly dataSource: DataSource,
     private readonly userService: UserService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async getLikesByUser(userId: number, likeDto: GetUserLikesRequestDto) {
@@ -67,7 +71,9 @@ export class LikeService {
     feedLikeCreateDto: ManageLikeRequestDto,
   ) {
     await this.dataSource.transaction(async (manager) => {
-      const feed = await this.feedService.getPublicFeed(feedLikeCreateDto.feedId);
+      const feed = await this.feedService.getPublicFeed(
+        feedLikeCreateDto.feedId,
+      );
       const existing = await this.likeRepository.findOneBy({
         user: { id: userInformation.id },
         feed,
@@ -83,6 +89,11 @@ export class LikeService {
         feed: { id: feedLikeCreateDto.feedId },
       });
     });
+
+    this.eventEmitter.emit(
+      'like.created',
+      new LikeCreatedEvent(feedLikeCreateDto.feedId, userInformation.id),
+    );
   }
 
   async delete(
@@ -106,5 +117,10 @@ export class LikeService {
         feed: { id: feedLikeDeleteDto.feedId },
       });
     });
+
+    this.eventEmitter.emit(
+      'like.deleted',
+      new LikeDeletedEvent(feedLikeDeleteDto.feedId, userInformation.id),
+    );
   }
 }
