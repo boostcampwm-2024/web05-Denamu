@@ -47,6 +47,8 @@ const makeItem = (overrides: Partial<NotificationItem> = {}): NotificationItem =
   feed: { id: 10, title: "테스트 게시글", path: "https://example.com/10" },
   actor: { userName: "liker", profileImage: null },
   otherCount: 0,
+  commentPreview: null,
+  commentId: null,
   ...overrides,
 });
 
@@ -94,7 +96,39 @@ describe("NotificationBell", () => {
     expect(item).toHaveTextContent("liker님이 테스트 게시글에 좋아요를 표시했습니다.");
 
     const bolded = item.querySelectorAll(".font-semibold");
-    expect(Array.from(bolded).map((el) => el.textContent)).toEqual(["liker", "테스트 게시글", "좋아요를 표시했습니다"]);
+    expect(Array.from(bolded).map((el) => el.textContent)).toEqual(["liker", "테스트 게시글", "좋아요"]);
+  });
+
+  it("댓글 알림 메시지를 템플릿에 맞게 표시한다", () => {
+    listState = {
+      data: [makeItem({ type: "COMMENT", actor: { userName: "commenter", profileImage: null } })],
+      isLoading: false,
+    };
+    render(<NotificationBell />);
+
+    const item = screen.getByTestId("notification-item");
+    expect(item).toHaveTextContent("commenter님이 테스트 게시글에 댓글을 남겼습니다.");
+
+    const bolded = item.querySelectorAll(".font-semibold");
+    expect(Array.from(bolded).map((el) => el.textContent)).toEqual(["commenter", "테스트 게시글", "댓글"]);
+  });
+
+  it("댓글 알림에는 댓글 내용 일부를 인용부호로 표시한다", () => {
+    listState = {
+      data: [makeItem({ type: "COMMENT", commentPreview: "내용 좋네요" })],
+      isLoading: false,
+    };
+    render(<NotificationBell />);
+
+    const item = screen.getByTestId("notification-item");
+    expect(item).toHaveTextContent("“내용 좋네요”");
+  });
+
+  it("좋아요 알림에는 댓글 내용을 표시하지 않는다", () => {
+    listState = { data: [makeItem({ commentPreview: "무시되어야 함" })], isLoading: false };
+    render(<NotificationBell />);
+
+    expect(screen.queryByText("“무시되어야 함”")).not.toBeInTheDocument();
   });
 
   it("다른 좋아요가 더 있으면 '외 N명' 문구를 표시한다", () => {
@@ -112,7 +146,9 @@ describe("NotificationBell", () => {
     fireEvent.click(screen.getByTestId("notification-item"));
 
     expect(markRead).toHaveBeenCalledWith(5);
-    expect(mockNavigate).toHaveBeenCalledWith("/10", { state: { backgroundLocation: { pathname: "/" } } });
+    expect(mockNavigate).toHaveBeenCalledWith("/10", {
+      state: { backgroundLocation: { pathname: "/" }, highlightCommentId: null },
+    });
   });
 
   it("이미 읽은 알림을 클릭하면 읽음 처리를 다시 호출하지 않는다", () => {
@@ -122,6 +158,22 @@ describe("NotificationBell", () => {
     fireEvent.click(screen.getByTestId("notification-item"));
 
     expect(markRead).not.toHaveBeenCalled();
-    expect(mockNavigate).toHaveBeenCalledWith("/10", { state: { backgroundLocation: { pathname: "/" } } });
+    expect(mockNavigate).toHaveBeenCalledWith("/10", {
+      state: { backgroundLocation: { pathname: "/" }, highlightCommentId: null },
+    });
+  });
+
+  it("댓글 알림을 클릭하면 해당 댓글 ID를 하이라이트 상태로 함께 넘긴다", () => {
+    listState = {
+      data: [makeItem({ id: 5, type: "COMMENT", commentId: 77 })],
+      isLoading: false,
+    };
+    render(<NotificationBell />);
+
+    fireEvent.click(screen.getByTestId("notification-item"));
+
+    expect(mockNavigate).toHaveBeenCalledWith("/10", {
+      state: { backgroundLocation: { pathname: "/" }, highlightCommentId: 77 },
+    });
   });
 });
