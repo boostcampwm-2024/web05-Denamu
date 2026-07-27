@@ -169,4 +169,77 @@ describe(`${RegisterUserRequestDto.name} Test`, () => {
       expect(errors[0].constraints).toHaveProperty('isString');
     });
   });
+
+  describe('이메일 수신 동의', () => {
+    it('동의 필드가 없어도 유효성 검사에 성공한다.', async () => {
+      // when
+      const errors = await validate(dto);
+
+      // then
+      expect(errors).toHaveLength(0);
+    });
+
+    it('marketingEmailAgreed가 boolean이 아닐 경우 유효성 검사에 실패한다.', async () => {
+      // given
+      dto.marketingEmailAgreed = 'true' as any;
+
+      // when
+      const errors = await validate(dto);
+
+      // then
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isBoolean');
+    });
+
+    it('inactivityEmailAgreed가 boolean이 아닐 경우 유효성 검사에 실패한다.', async () => {
+      // given
+      dto.inactivityEmailAgreed = 'true' as any;
+
+      // when
+      const errors = await validate(dto);
+
+      // then
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isBoolean');
+    });
+
+    it('noticeEmailAgreed가 boolean이 아닐 경우 유효성 검사에 실패한다.', async () => {
+      // given
+      dto.noticeEmailAgreed = 'true' as any;
+
+      // when
+      const errors = await validate(dto);
+
+      // then
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isBoolean');
+    });
+  });
+
+  describe('toEntity', () => {
+    it('동의 값이 주어지면 엔티티에 반영한다.', () => {
+      // given
+      dto.marketingEmailAgreed = true;
+      dto.inactivityEmailAgreed = false;
+      dto.noticeEmailAgreed = false;
+
+      // when
+      const entity = dto.toEntity();
+
+      // then
+      expect(entity.marketingEmailAgreed).toBe(true);
+      expect(entity.inactivityEmailAgreed).toBe(false);
+      expect(entity.noticeEmailAgreed).toBe(false);
+    });
+
+    it('동의 값이 없으면 엔티티에 해당 필드를 설정하지 않는다(DB 기본값 유지).', () => {
+      // when
+      const entity = dto.toEntity();
+
+      // then
+      expect(entity.marketingEmailAgreed).toBeUndefined();
+      expect(entity.inactivityEmailAgreed).toBeUndefined();
+      expect(entity.noticeEmailAgreed).toBeUndefined();
+    });
+  });
 });

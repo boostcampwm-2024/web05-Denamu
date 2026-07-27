@@ -44,7 +44,12 @@ describe(`${UserService.name} Unit Test`, () => {
   let userRepository: jest.Mocked<
     Pick<
       UserRepository,
-      'findOneBy' | 'findOne' | 'save' | 'remove' | 'searchUserList'
+      | 'findOneBy'
+      | 'findOne'
+      | 'save'
+      | 'remove'
+      | 'searchUserList'
+      | 'isUserBlocked'
     >
   >;
   let redisService: jest.Mocked<
@@ -91,6 +96,7 @@ describe(`${UserService.name} Unit Test`, () => {
       save: jest.fn(),
       remove: jest.fn(),
       searchUserList: jest.fn(),
+      isUserBlocked: jest.fn(),
     };
     redisService = {
       set: jest.fn(),
@@ -265,6 +271,49 @@ describe(`${UserService.name} Unit Test`, () => {
       // then
       expect(result.profileImage).toBeNull();
       expect(result.introduction).toBeNull();
+    });
+
+    it('본인이 조회하면 이메일 수신 동의 필드를 포함한다.', async () => {
+      // given
+      const user = UserFixture.createUserFixture({
+        marketingEmailAgreed: true,
+        inactivityEmailAgreed: false,
+        noticeEmailAgreed: true,
+      });
+      user.id = 1;
+      userRepository.findOneBy.mockResolvedValue(user);
+
+      // when
+      const result = await userService.getUserProfile(1, {
+        id: 1,
+      } as Payload);
+
+      // then
+      expect(result.marketingEmailAgreed).toBe(true);
+      expect(result.inactivityEmailAgreed).toBe(false);
+      expect(result.noticeEmailAgreed).toBe(true);
+    });
+
+    it('타인이 조회하면 이메일 수신 동의 필드를 포함하지 않는다.', async () => {
+      // given
+      const user = UserFixture.createUserFixture({
+        marketingEmailAgreed: true,
+        inactivityEmailAgreed: false,
+        noticeEmailAgreed: true,
+      });
+      user.id = 1;
+      userRepository.findOneBy.mockResolvedValue(user);
+      userRepository.isUserBlocked.mockResolvedValue(false);
+
+      // when
+      const result = await userService.getUserProfile(1, {
+        id: 2,
+      } as Payload);
+
+      // then
+      expect(result.marketingEmailAgreed).toBeUndefined();
+      expect(result.inactivityEmailAgreed).toBeUndefined();
+      expect(result.noticeEmailAgreed).toBeUndefined();
     });
   });
 
@@ -622,6 +671,46 @@ describe(`${UserService.name} Unit Test`, () => {
       await expect(
         userService.updateUser(userId, { userName: 'taken' }),
       ).rejects.toThrow(ConflictException);
+    });
+
+    it('이메일 수신 동의 값이 들어오면 해당 필드만 변경한다.', async () => {
+      // given
+      const user = UserFixture.createUserFixture({
+        marketingEmailAgreed: false,
+        inactivityEmailAgreed: true,
+        noticeEmailAgreed: true,
+      });
+      userRepository.findOneBy.mockResolvedValue(user);
+
+      // when
+      await userService.updateUser(userId, {
+        marketingEmailAgreed: true,
+        inactivityEmailAgreed: false,
+      });
+
+      // then
+      expect(user.marketingEmailAgreed).toBe(true);
+      expect(user.inactivityEmailAgreed).toBe(false);
+      expect(user.noticeEmailAgreed).toBe(true);
+      expect(userRepository.save).toHaveBeenCalledWith(user);
+    });
+
+    it('이메일 수신 동의 값이 없으면 기존 값을 유지한다.', async () => {
+      // given
+      const user = UserFixture.createUserFixture({
+        marketingEmailAgreed: false,
+        inactivityEmailAgreed: true,
+        noticeEmailAgreed: true,
+      });
+      userRepository.findOneBy.mockResolvedValue(user);
+
+      // when
+      await userService.updateUser(userId, { introduction: '변경' });
+
+      // then
+      expect(user.marketingEmailAgreed).toBe(false);
+      expect(user.inactivityEmailAgreed).toBe(true);
+      expect(user.noticeEmailAgreed).toBe(true);
     });
   });
 
