@@ -72,11 +72,12 @@ export class UserService {
 
   async getUserProfile(userId: number, requester: Payload | null = null) {
     const user = await this.getUser(userId);
+    const isOwner = requester?.id === userId;
     const isBlocked =
-      requester && requester.id !== userId
+      requester && !isOwner
         ? await this.userRepository.isUserBlocked(requester.id, userId)
         : false;
-    return GetUserProfileResponseDto.toResponseDto(user, isBlocked);
+    return GetUserProfileResponseDto.toResponseDto(user, isBlocked, isOwner);
   }
 
   async searchUserList(
@@ -316,6 +317,18 @@ export class UserService {
     }
     if (updateData.introduction !== undefined) {
       user.introduction = updateData.introduction;
+    }
+    if (updateData.marketingEmailAgreed !== undefined) {
+      user.marketingEmailAgreed = updateData.marketingEmailAgreed;
+      user.marketingEmailAgreedAt = new Date();
+    }
+    if (updateData.inactivityEmailAgreed !== undefined) {
+      user.inactivityEmailAgreed = updateData.inactivityEmailAgreed;
+      user.inactivityEmailAgreedAt = new Date();
+    }
+    if (updateData.noticeEmailAgreed !== undefined) {
+      user.noticeEmailAgreed = updateData.noticeEmailAgreed;
+      user.noticeEmailAgreedAt = new Date();
     }
 
     try {

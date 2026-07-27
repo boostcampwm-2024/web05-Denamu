@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiPropertyOptional, ApiProperty } from '@nestjs/swagger';
 
 import { User } from '@user/entity/user.entity';
 
@@ -47,11 +47,56 @@ export class GetUserProfileResponseDto {
   })
   isBlocked: boolean;
 
+  @ApiPropertyOptional({
+    example: false,
+    description:
+      '마케팅 활용 및 광고성 정보 수신 동의 여부 (본인 프로필 조회 시에만 포함)',
+  })
+  marketingEmailAgreed?: boolean;
+
+  @ApiPropertyOptional({
+    example: '2026-07-27T12:00:00.000Z',
+    description:
+      '마케팅 활용 및 광고성 정보 수신 동의/철회 시각 (미동의 상태이면 null, 본인 프로필 조회 시에만 포함)',
+    nullable: true,
+  })
+  marketingEmailAgreedAt?: Date | null;
+
+  @ApiPropertyOptional({
+    example: false,
+    description:
+      '미접속 알림 이메일 수신 동의 여부 (본인 프로필 조회 시에만 포함)',
+  })
+  inactivityEmailAgreed?: boolean;
+
+  @ApiPropertyOptional({
+    example: '2026-07-27T12:00:00.000Z',
+    description:
+      '미접속 알림 이메일 수신 동의/철회 시각 (미동의 상태이면 null, 본인 프로필 조회 시에만 포함)',
+    nullable: true,
+  })
+  inactivityEmailAgreedAt?: Date | null;
+
+  @ApiPropertyOptional({
+    example: false,
+    description:
+      '공지사항 이메일 수신 동의 여부 (본인 프로필 조회 시에만 포함)',
+  })
+  noticeEmailAgreed?: boolean;
+
+  @ApiPropertyOptional({
+    example: '2026-07-27T12:00:00.000Z',
+    description:
+      '공지사항 이메일 수신 동의/철회 시각 (미동의 상태이면 null, 본인 프로필 조회 시에만 포함)',
+    nullable: true,
+  })
+  noticeEmailAgreedAt?: Date | null;
+
   constructor(partial: Partial<GetUserProfileResponseDto>) {
     Object.assign(this, partial);
   }
 
-  static toResponseDto(user: User, isBlocked = false) {
+  static toResponseDto(user: User, isBlocked = false, isOwner = false) {
     return new GetUserProfileResponseDto({
       userName: user.userName,
       profileImage: user.profileImage ?? null,
@@ -60,6 +105,16 @@ export class GetUserProfileResponseDto {
       currentStreak: user.currentStreak,
       totalViews: user.totalViews,
       isBlocked,
+      marketingEmailAgreed: isOwner ? user.marketingEmailAgreed : undefined,
+      marketingEmailAgreedAt: isOwner
+        ? user.marketingEmailAgreedAt
+        : undefined,
+      inactivityEmailAgreed: isOwner ? user.inactivityEmailAgreed : undefined,
+      inactivityEmailAgreedAt: isOwner
+        ? user.inactivityEmailAgreedAt
+        : undefined,
+      noticeEmailAgreed: isOwner ? user.noticeEmailAgreed : undefined,
+      noticeEmailAgreedAt: isOwner ? user.noticeEmailAgreedAt : undefined,
     });
   }
 }
