@@ -21,6 +21,10 @@ vi.mock("@/components/common/UserProfileMenu", () => ({
   UserProfileMenu: () => <div data-testid="user-profile-menu" />,
 }));
 
+vi.mock("@/components/common/NotificationBell", () => ({
+  NotificationBell: () => <div data-testid="notification-bell" />,
+}));
+
 vi.mock("@/components/layout/SideButton", () => ({ default: () => <div data-testid="side-button" /> }));
 
 vi.mock("@/components/search/SearchButton", () => ({

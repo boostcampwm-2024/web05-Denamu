@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import PrivacyPolicy from "@/pages/PrivacyPolicy.tsx";
 
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen } from "@testing-library/react";
 
 vi.mock("lucide-react", async () => {
@@ -17,12 +18,16 @@ vi.mock("react-router-dom", async (importOriginal) => {
   return { ...actual, useNavigate: () => mockNavigate };
 });
 
-const renderPage = () =>
-  render(
-    <MemoryRouter>
-      <PrivacyPolicy />
-    </MemoryRouter>
+const renderPage = () => {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <PrivacyPolicy />
+      </MemoryRouter>
+    </QueryClientProvider>
   );
+};
 
 describe("PrivacyPolicy", () => {
   it("제목과 시행일을 렌더링해야 한다", () => {
