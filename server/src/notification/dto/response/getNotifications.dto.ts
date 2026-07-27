@@ -46,7 +46,7 @@ export class NotificationItemResult {
       title: 'example title',
       path: 'https://example.com/feed',
     },
-    description: '알림 대상 게시글 정보',
+    description: '알림 대상 게시글 정보(LIKE/COMMENT 알림에 존재)',
     nullable: true,
   })
   feed: {
