@@ -10,11 +10,21 @@ export function useSignUp() {
     email: "",
     password: "",
     userName: "",
+    marketingEmailAgreed: false,
+    inactivityEmailAgreed: false,
+    noticeEmailAgreed: false,
   });
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<SignUpResult | null>(null);
 
-  const updateField = (field: keyof SignUpForm, value: string) => {
+  const updateField = (field: "email" | "password" | "userName", value: string) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const updateAgreement = (
+    field: "marketingEmailAgreed" | "inactivityEmailAgreed" | "noticeEmailAgreed",
+    value: boolean
+  ) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -61,6 +71,7 @@ export function useSignUp() {
   return {
     form,
     updateField,
+    updateAgreement,
     isLoading,
     result,
     submitForm,

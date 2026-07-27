@@ -35,6 +35,9 @@ export interface UserSignUpRequest {
   email: string;
   password: string;
   userName: string;
+  marketingEmailAgreed?: boolean;
+  inactivityEmailAgreed?: boolean;
+  noticeEmailAgreed?: boolean;
 }
 
 export type UserSignUpResponse = ApiMessage;
@@ -54,6 +57,9 @@ export interface SignUpForm {
   email: string;
   password: string;
   userName: string;
+  marketingEmailAgreed: boolean;
+  inactivityEmailAgreed: boolean;
+  noticeEmailAgreed: boolean;
 }
 
 export interface SignUpResult {

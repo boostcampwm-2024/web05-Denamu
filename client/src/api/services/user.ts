@@ -6,8 +6,15 @@ import { axiosInstance } from "@/api/instance";
 import { ApiMessage } from "@/types/api";
 import { UserSignUpRequest, UserSignUpResponse, UserSignInRequest, UserSignInResponse } from "@/types/auth";
 
-export const completeOAuthRegistration = async (userName: string): Promise<ApiMessage> => {
-  const response = await axiosInstance.post<ApiMessage>(OAUTH.REGISTER, { userName });
+export interface OAuthRegistrationPayload {
+  userName: string;
+  marketingEmailAgreed?: boolean;
+  inactivityEmailAgreed?: boolean;
+  noticeEmailAgreed?: boolean;
+}
+
+export const completeOAuthRegistration = async (payload: OAuthRegistrationPayload): Promise<ApiMessage> => {
+  const response = await axiosInstance.post<ApiMessage>(OAUTH.REGISTER, payload);
   return response.data;
 };
 
