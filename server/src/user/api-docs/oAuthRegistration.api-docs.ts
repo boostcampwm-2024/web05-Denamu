@@ -10,7 +10,9 @@ import { OAuthRegistrationRequestDto } from '@user/dto/request/oAuthRegistration
 
 export function ApiOAuthRegistration() {
   return applyDecorators(
-    ApiOperation({ summary: 'OAuth 신규 회원가입 완료 API (닉네임 입력)' }),
+    ApiOperation({
+      summary: 'OAuth 신규 회원가입 완료 API (닉네임 입력, 이메일 수신 동의)',
+    }),
     ApiBody({ type: OAuthRegistrationRequestDto }),
     ApiResponse({ status: 201, description: '회원가입 완료 및 로그인 처리' }),
     ApiBadRequestDoc('요청 데이터 검증에 실패했습니다.'),
