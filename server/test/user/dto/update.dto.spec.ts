@@ -83,6 +83,48 @@ describe(`${UpdateUserRequestDto.name} Test`, () => {
     });
   });
 
+  describe('marketingEmailAgreed', () => {
+    it('boolean이 아닐 경우 유효성 검사에 실패한다.', async () => {
+      // given
+      dto.marketingEmailAgreed = 'true' as any;
+
+      // when
+      const errors = await validate(dto);
+
+      // then
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isBoolean');
+    });
+  });
+
+  describe('inactivityEmailAgreed', () => {
+    it('boolean이 아닐 경우 유효성 검사에 실패한다.', async () => {
+      // given
+      dto.inactivityEmailAgreed = 'true' as any;
+
+      // when
+      const errors = await validate(dto);
+
+      // then
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isBoolean');
+    });
+  });
+
+  describe('noticeEmailAgreed', () => {
+    it('boolean이 아닐 경우 유효성 검사에 실패한다.', async () => {
+      // given
+      dto.noticeEmailAgreed = 'true' as any;
+
+      // when
+      const errors = await validate(dto);
+
+      // then
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isBoolean');
+    });
+  });
+
   describe('introduction', () => {
     it('소개 글이 문자열이 아니고 정수일 경우 유효성 검사에 실패한다.', async () => {
       // given

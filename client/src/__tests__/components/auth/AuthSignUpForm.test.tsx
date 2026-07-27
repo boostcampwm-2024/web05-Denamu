@@ -8,10 +8,19 @@ const mockNavigate = vi.fn();
 const mockToast = vi.fn();
 const submitForm = vi.fn();
 const updateField = vi.fn();
+const updateAgreement = vi.fn();
 
 let signUpState: {
-  form: { email: string; password: string; userName: string };
+  form: {
+    email: string;
+    password: string;
+    userName: string;
+    marketingEmailAgreed: boolean;
+    inactivityEmailAgreed: boolean;
+    noticeEmailAgreed: boolean;
+  };
   updateField: typeof updateField;
+  updateAgreement: typeof updateAgreement;
   isLoading: boolean;
   result: { success: boolean; message: string } | null;
   submitForm: typeof submitForm;
@@ -34,8 +43,16 @@ describe("AuthSignUpForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     signUpState = {
-      form: { email: "", password: "", userName: "" },
+      form: {
+        email: "",
+        password: "",
+        userName: "",
+        marketingEmailAgreed: false,
+        inactivityEmailAgreed: true,
+        noticeEmailAgreed: true,
+      },
       updateField,
+      updateAgreement,
       isLoading: false,
       result: null,
       submitForm,
@@ -57,6 +74,14 @@ describe("AuthSignUpForm", () => {
     fireEvent.change(screen.getByPlaceholderText("이름을 입력해주세요"), { target: { value: "민석" } });
 
     expect(updateField).toHaveBeenCalledWith("userName", "민석");
+  });
+
+  it("마케팅 수신 동의 토글 클릭 시 updateAgreement가 호출되어야 한다", () => {
+    render(<AuthSignUpForm />);
+
+    fireEvent.click(screen.getByLabelText("마케팅 활용 및 광고성 정보 수신 동의"));
+
+    expect(updateAgreement).toHaveBeenCalledWith("marketingEmailAgreed", true);
   });
 
   it("폼 제출 시 submitForm이 호출되어야 한다", () => {
@@ -86,8 +111,6 @@ describe("AuthSignUpForm", () => {
     signUpState.result = { success: false, message: "이미 가입된 이메일" };
     render(<AuthSignUpForm />);
 
-    expect(mockToast).toHaveBeenCalledWith(
-      expect.objectContaining({ title: "회원가입 실패", variant: "destructive" })
-    );
+    expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: "회원가입 실패", variant: "destructive" }));
   });
 });

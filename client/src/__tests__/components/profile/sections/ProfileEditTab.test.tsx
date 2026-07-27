@@ -14,7 +14,10 @@ const unlinkMutate = vi.fn();
 let linkData: { providers: Array<{ provider: string; providerUserName?: string }>; hasPassword: boolean };
 
 vi.mock("lucide-react", () => lucideProxy());
-vi.mock("react-router-dom", () => ({ useNavigate: () => vi.fn(), useSearchParams: () => [new URLSearchParams(), vi.fn()] }));
+vi.mock("react-router-dom", () => ({
+  useNavigate: () => vi.fn(),
+  useSearchParams: () => [new URLSearchParams(), vi.fn()],
+}));
 vi.mock("@/hooks/common/useCustomToast.ts", () => ({ useCustomToast: () => ({ toast: mockToast }) }));
 vi.mock("@/store/useAuthStore.ts", () => ({ useAuthStore: () => ({ setUserName: vi.fn(), logout: vi.fn() }) }));
 vi.mock("@/hooks/queries/useProfile.ts", () => ({
@@ -66,6 +69,14 @@ describe("ProfileEditTab", () => {
     expect(screen.getByText("연결된 계정")).toBeInTheDocument();
     expect(screen.getAllByText("회원 탈퇴").length).toBeGreaterThan(0);
     expect(screen.getByDisplayValue("min@test.com")).toBeInTheDocument();
+  });
+
+  it("이메일 수신 설정 토글을 클릭하면 즉시 저장을 요청한다", () => {
+    render(<ProfileEditTab userId={1} email="min@test.com" />);
+
+    fireEvent.click(screen.getByLabelText("마케팅 활용 및 광고성 정보 수신 동의"));
+
+    expect(updateProfileMutate).toHaveBeenCalledWith({ marketingEmailAgreed: true }, expect.any(Object));
   });
 
   it("변경사항 없이 저장하면 '변경사항이 없습니다' toast 를 띄운다", () => {

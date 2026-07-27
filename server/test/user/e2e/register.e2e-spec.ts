@@ -112,4 +112,30 @@ describe(`POST ${URL} E2E Test`, () => {
       userName: requestDto.userName,
     });
   });
+
+  it('[201] 이메일 수신 동의 값을 함께 보내면 임시 저장 데이터에 반영된다.', async () => {
+    // given
+    const requestDto = new RegisterUserRequestDto({
+      email: 'agree-test@test.com',
+      password: 'test1234!',
+      userName: 'agree-test',
+      marketingEmailAgreed: true,
+      inactivityEmailAgreed: false,
+      noticeEmailAgreed: false,
+    });
+
+    // Http when
+    const response = await agent.post(URL).send(requestDto);
+
+    // Http then
+    expect(response.status).toBe(HttpStatus.CREATED);
+
+    // Redis then
+    const savedRegisterCode = JSON.parse(
+      await redisService.get(redisKeyMake(userRegisterCode)),
+    ) as User;
+    expect(savedRegisterCode.marketingEmailAgreed).toBe(true);
+    expect(savedRegisterCode.inactivityEmailAgreed).toBe(false);
+    expect(savedRegisterCode.noticeEmailAgreed).toBe(false);
+  });
 });

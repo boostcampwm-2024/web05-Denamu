@@ -74,7 +74,7 @@ export class OAuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     await this.oauthService.completeOAuthRegistration(
-      registrationDto.userName,
+      registrationDto,
       req,
       res,
     );

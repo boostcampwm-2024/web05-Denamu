@@ -131,6 +131,33 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(savedRssAccept.userId).toBe(savedUser.id);
   });
 
+  it('[201] 이메일 수신 동의 값을 함께 보내면 사용자에 반영된다.', async () => {
+    // given
+    await stagePending();
+
+    // Http when
+    const response = await agent
+      .post(URL)
+      .set('Cookie', `oauth_pending_token=${pendingToken}`)
+      .send({
+        userName: 'oauth-agreement-nickname',
+        marketingEmailAgreed: true,
+        inactivityEmailAgreed: false,
+        noticeEmailAgreed: false,
+      });
+
+    // Http then
+    expect(response.status).toBe(HttpStatus.CREATED);
+
+    // DB then
+    const savedUser = await userRepository.findOne({
+      where: { userName: 'oauth-agreement-nickname' },
+    });
+    expect(savedUser.marketingEmailAgreed).toBe(true);
+    expect(savedUser.inactivityEmailAgreed).toBe(false);
+    expect(savedUser.noticeEmailAgreed).toBe(false);
+  });
+
   it('[404] pending 쿠키가 없을 경우 회원가입을 실패한다.', async () => {
     // Http when
     const response = await agent.post(URL).send({ userName: 'whatever' });

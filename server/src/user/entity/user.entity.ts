@@ -75,6 +75,54 @@ export class User extends BaseEntity {
   @Column({ type: 'int', default: 0 })
   maxStreak: number;
 
+  @Column({
+    name: 'marketing_email_agreed',
+    type: 'boolean',
+    nullable: false,
+    default: false,
+  })
+  marketingEmailAgreed: boolean;
+
+  @Column({
+    name: 'marketing_email_agreed_at',
+    type: 'datetime',
+    nullable: true,
+    default: null,
+  })
+  marketingEmailAgreedAt: Date | null;
+
+  @Column({
+    name: 'inactivity_email_agreed',
+    type: 'boolean',
+    nullable: false,
+    default: false,
+  })
+  inactivityEmailAgreed: boolean;
+
+  @Column({
+    name: 'inactivity_email_agreed_at',
+    type: 'datetime',
+    nullable: true,
+    default: null,
+  })
+  inactivityEmailAgreedAt: Date | null;
+
+  @Column({
+    name: 'notice_email_agreed',
+    type: 'boolean',
+    nullable: false,
+    default: false,
+  })
+  noticeEmailAgreed: boolean;
+
+  @Column({
+    name: 'notice_email_agreed_at',
+    type: 'datetime',
+    nullable: true,
+    default: null,
+  })
+  noticeEmailAgreedAt: Date | null;
+
   @OneToMany(() => Activity, (activity) => activity.user)
   activities: Activity[];
 

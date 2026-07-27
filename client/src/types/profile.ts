@@ -37,6 +37,9 @@ export interface UserProfile {
   currentStreak: number;
   totalViews: number;
   isBlocked: boolean;
+  marketingEmailAgreed?: boolean;
+  inactivityEmailAgreed?: boolean;
+  noticeEmailAgreed?: boolean;
 }
 
 export interface BlockedUser {
@@ -62,6 +65,9 @@ export interface UpdateProfilePayload {
   userName?: string;
   profileImage?: string;
   introduction?: string;
+  marketingEmailAgreed?: boolean;
+  inactivityEmailAgreed?: boolean;
+  noticeEmailAgreed?: boolean;
 }
 
 export interface ChangePasswordPayload {

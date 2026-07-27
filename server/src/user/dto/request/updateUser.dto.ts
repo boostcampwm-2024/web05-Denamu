@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
-import { IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsBoolean, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class UpdateUserRequestDto {
   @ApiPropertyOptional({
@@ -41,6 +41,39 @@ export class UpdateUserRequestDto {
     message: '자기소개는 500자 이하여야 합니다.',
   })
   introduction?: string;
+
+  @ApiPropertyOptional({
+    example: false,
+    description: '마케팅 활용 및 광고성 정보 수신 동의 여부',
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean({
+    message: '마케팅 정보 수신 동의 여부는 boolean이어야 합니다.',
+  })
+  marketingEmailAgreed?: boolean;
+
+  @ApiPropertyOptional({
+    example: false,
+    description: '미접속 알림 이메일 수신 동의 여부',
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean({
+    message: '미접속 알림 이메일 수신 동의 여부는 boolean이어야 합니다.',
+  })
+  inactivityEmailAgreed?: boolean;
+
+  @ApiPropertyOptional({
+    example: false,
+    description: '공지사항 이메일 수신 동의 여부',
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean({
+    message: '공지사항 이메일 수신 동의 여부는 boolean이어야 합니다.',
+  })
+  noticeEmailAgreed?: boolean;
 
   constructor(partial: Partial<UpdateUserRequestDto>) {
     Object.assign(this, partial);

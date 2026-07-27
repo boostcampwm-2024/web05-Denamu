@@ -32,6 +32,7 @@ import {
   UserInfo,
 } from '@user/constant/oauth.constant';
 import { OAuthCallbackRequestDto } from '@user/dto/request/oAuthCallbackDto';
+import { OAuthRegistrationRequestDto } from '@user/dto/request/oAuthRegistration.dto';
 import { GetLinkedProvidersResponseDto } from '@user/dto/response/getLinkedProviders.dto';
 import { Provider } from '@user/entity/provider.entity';
 import { User } from '@user/entity/user.entity';
@@ -300,10 +301,11 @@ export class OAuthService {
   }
 
   async completeOAuthRegistration(
-    userName: string,
+    registrationDto: OAuthRegistrationRequestDto,
     req: Request,
     res: Response,
   ) {
+    const { userName } = registrationDto;
     const pendingToken = req.cookies[OAUTH_PENDING_COOKIE];
 
     if (!pendingToken) {
@@ -332,7 +334,7 @@ export class OAuthService {
       throw new ConflictException('이미 존재하는 닉네임입니다.');
     }
 
-    const user = await this.createOAuthUser(pendingData, userName);
+    const user = await this.createOAuthUser(pendingData, registrationDto);
 
     await this.redisService.del(pendingKey);
     res.clearCookie(OAUTH_PENDING_COOKIE);
@@ -349,7 +351,7 @@ export class OAuthService {
 
   private async createOAuthUser(
     pendingData: OAuthPendingData,
-    userName: string,
+    registrationDto: OAuthRegistrationRequestDto,
   ): Promise<User> {
     const {
       providerType,
@@ -359,6 +361,12 @@ export class OAuthService {
       profileImage,
       providerRefreshToken,
     } = pendingData;
+    const {
+      userName,
+      marketingEmailAgreed,
+      inactivityEmailAgreed,
+      noticeEmailAgreed,
+    } = registrationDto;
 
     try {
       return await this.dataSource.transaction(async (entityManager) => {
@@ -366,6 +374,18 @@ export class OAuthService {
           email,
           userName,
           profileImage,
+          ...(marketingEmailAgreed !== undefined && {
+            marketingEmailAgreed,
+            marketingEmailAgreedAt: new Date(),
+          }),
+          ...(inactivityEmailAgreed !== undefined && {
+            inactivityEmailAgreed,
+            inactivityEmailAgreedAt: new Date(),
+          }),
+          ...(noticeEmailAgreed !== undefined && {
+            noticeEmailAgreed,
+            noticeEmailAgreedAt: new Date(),
+          }),
         });
 
         await entityManager.save(Provider, {
