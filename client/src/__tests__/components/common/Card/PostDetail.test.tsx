@@ -15,6 +15,7 @@ vi.mock("lucide-react", () => lucideProxy());
 vi.mock("react-router-dom", () => ({
   useParams: () => params,
   useNavigate: () => mockNavigate,
+  useLocation: () => ({ state: null }),
 }));
 
 vi.mock("@/hooks/queries/usePostDetail", () => ({

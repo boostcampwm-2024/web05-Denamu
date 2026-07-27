@@ -138,4 +138,51 @@ describe("PostComment", () => {
 
     expect(screen.queryByRole("button", { name: "댓글 더보기" })).not.toBeInTheDocument();
   });
+
+  it("highlightCommentId로 지정된 댓글로 스크롤 이동한다", () => {
+    comments = [makeComment(1), makeComment(2)];
+    render(<PostComment feedId={10} highlightCommentId={2} />);
+
+    const target = document.getElementById("comment-2");
+    expect(target).not.toBeNull();
+    expect(target?.scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth", block: "center" });
+  });
+
+  it("댓글이 마운트 이후(react-query 로딩 완료 후) 도착해도 스크롤 이동한다", () => {
+    comments = [];
+    const { rerender } = render(<PostComment feedId={10} highlightCommentId={2} />);
+
+    expect(document.getElementById("comment-2")).toBeNull();
+
+    comments = [makeComment(1), makeComment(2)];
+    rerender(<PostComment feedId={10} highlightCommentId={2} />);
+
+    const target = document.getElementById("comment-2");
+    expect(target).not.toBeNull();
+    expect(target?.scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth", block: "center" });
+  });
+
+  it("highlightCommentId 댓글이 초기 노출 범위(3개) 밖이면 자동으로 '더보기'를 펼친다", () => {
+    // makeComment는 날짜 오름차순(id 1이 가장 오래됨)이고 목록은 최신순 정렬이라
+    // id 1(가장 오래된 루트)이 4개 중 노출 범위(3개) 밖으로 밀려난다.
+    comments = [makeComment(1), makeComment(2), makeComment(3), makeComment(4)];
+    render(<PostComment feedId={10} highlightCommentId={1} />);
+
+    expect(screen.queryByRole("button", { name: "댓글 더보기" })).not.toBeInTheDocument();
+    expect(document.getElementById("comment-1")).not.toBeNull();
+  });
+
+  it("highlightCommentId가 대댓글이면 그 부모 위치 기준으로 노출 범위를 펼친다", () => {
+    comments = [
+      makeComment(1),
+      makeComment(2),
+      makeComment(3),
+      makeComment(4),
+      makeComment(5, { parentId: 1, comment: "대댓글" }),
+    ];
+    render(<PostComment feedId={10} highlightCommentId={5} />);
+
+    expect(screen.queryByRole("button", { name: "댓글 더보기" })).not.toBeInTheDocument();
+    expect(document.getElementById("comment-5")).not.toBeNull();
+  });
 });
