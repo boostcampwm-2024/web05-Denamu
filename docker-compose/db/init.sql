@@ -203,13 +203,17 @@ CREATE TABLE `notification` (
   `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   `updated_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
   `recipient_user_id` int NOT NULL,
-  `feed_id` int NOT NULL,
+  `feed_id` int NULL,
+  `rss_accept_id` int NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `IDX_632ea8b2f172248eccfb067bfc` (`recipient_user_id`,`type`,`feed_id`),
+  UNIQUE KEY `IDX_f87770358a4e011a7ab7f560f9` (`recipient_user_id`,`type`,`rss_accept_id`),
   KEY `IDX_e13cf12d6a05407dbac647761c` (`updated_at`),
   KEY `FK_916163bd318675ea0c33d517f82` (`feed_id`),
+  KEY `FK_70ba9f1bd291e6ad2a9e5c166a3` (`rss_accept_id`),
   CONSTRAINT `FK_7d7f411e854516f615ba846c6a4` FOREIGN KEY (`recipient_user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `FK_916163bd318675ea0c33d517f82` FOREIGN KEY (`feed_id`) REFERENCES `feed` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+  CONSTRAINT `FK_916163bd318675ea0c33d517f82` FOREIGN KEY (`feed_id`) REFERENCES `feed` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_70ba9f1bd291e6ad2a9e5c166a3` FOREIGN KEY (`rss_accept_id`) REFERENCES `rss_accept` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- denamu.blocks definition
