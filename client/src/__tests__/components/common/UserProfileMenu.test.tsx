@@ -24,6 +24,10 @@ vi.mock("@/store/useAuthStore", () => ({
   useAuthStore: () => authState,
 }));
 
+vi.mock("@/hooks/queries/useProfile", () => ({
+  useUserProfile: () => ({ data: { profileImage: null } }),
+}));
+
 vi.mock("@/components/ui/dropdown-menu", () => {
   const passthrough = ({ children }: { children: React.ReactNode }) => <div>{children}</div>;
   return {
