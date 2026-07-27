@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 
 import { User, LogOut } from "lucide-react";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -13,11 +13,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+import { useUserProfile } from "@/hooks/queries/useProfile";
+
 import { useAuthStore } from "@/store/useAuthStore";
 
 export const UserProfileMenu = () => {
   const { isAuthenticated, userInfo, logout } = useAuthStore();
   const navigate = useNavigate();
+  const { data: profile } = useUserProfile(userInfo.id ?? 0);
 
   const handleLogout = async () => {
     await logout();
@@ -43,6 +46,7 @@ export const UserProfileMenu = () => {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full mx-2">
           <Avatar className="h-8 w-8">
+            {profile?.profileImage && <AvatarImage src={profile.profileImage} alt={userInfo.userName ?? ""} />}
             <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>
         </Button>
