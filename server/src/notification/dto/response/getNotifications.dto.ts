@@ -8,9 +8,11 @@ type NotificationRawRow = {
   type: NotificationType;
   isRead: number | boolean;
   updatedAt: Date;
-  feedId: number;
-  feedTitle: string;
-  feedPath: string;
+  feedId: number | null;
+  feedTitle: string | null;
+  feedPath: string | null;
+  rssId: number | null;
+  rssName: string | null;
   actorUserName: string | null;
   actorProfileImage: string | null;
   otherActorsCount: string | number;
@@ -45,17 +47,28 @@ export class NotificationItemResult {
       path: 'https://example.com/feed',
     },
     description: '알림 대상 게시글 정보',
+    nullable: true,
   })
   feed: {
     id: number;
     title: string;
     path: string;
-  };
+  } | null;
+
+  @ApiProperty({
+    example: { id: 1, name: 'seok3765.log' },
+    description: '알림 대상 RSS 정보(SUBSCRIBE 알림에만 존재)',
+    nullable: true,
+  })
+  rss: {
+    id: number;
+    name: string;
+  } | null;
 
   @ApiProperty({
     example: { userName: 'liker', profileImage: null },
     description:
-      '알림을 발생시킨 유저 정보(타입별 최신 행위자에서 파생: LIKE는 좋아요, COMMENT는 댓글)',
+      '알림을 발생시킨 유저 정보(타입별 최신 행위자에서 파생: LIKE는 좋아요, COMMENT는 댓글, SUBSCRIBE는 구독한 유저)',
   })
   actor: {
     userName: string | null;
@@ -65,7 +78,7 @@ export class NotificationItemResult {
   @ApiProperty({
     example: 2,
     description:
-      '표시된 actor를 제외하고 이 게시글에 좋아요/댓글을 남긴 다른 사람 수(수신자 본인 제외)',
+      '표시된 actor를 제외하고 이 게시글에 좋아요/댓글/구독을 한 다른 사람 수(수신자 본인 제외)',
   })
   otherCount: number;
 
@@ -94,11 +107,19 @@ export class NotificationItemResult {
       type: row.type,
       isRead: !!row.isRead,
       updatedAt: row.updatedAt,
-      feed: {
-        id: row.feedId,
-        title: row.feedTitle,
-        path: row.feedPath,
-      },
+      feed: row.feedId
+        ? {
+            id: row.feedId,
+            title: row.feedTitle,
+            path: row.feedPath,
+          }
+        : null,
+      rss: row.rssId
+        ? {
+            id: row.rssId,
+            name: row.rssName,
+          }
+        : null,
       actor: {
         userName: row.actorUserName,
         profileImage: row.actorProfileImage,
