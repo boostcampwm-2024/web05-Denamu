@@ -1,5 +1,3 @@
-// Shared mock data for Storybook stories.
-// Not part of the app bundle or test coverage scope (coverage targets components/** & hooks/**).
 import { FileText, Sparkles } from "lucide-react";
 
 import type { FeatureItem } from "@/types/about";
@@ -19,6 +17,7 @@ import type {
   User,
   UserProfile,
 } from "@/types/profile";
+import type { ReportItem } from "@/types/report";
 import type { AdminRssData, RecentRss } from "@/types/rss";
 import type { RssSearchResult, SearchResult, UserSearchResult } from "@/types/search";
 import type { SubscribedRss } from "@/types/subscription";
@@ -294,6 +293,49 @@ export const mockCommentItemsPage: CursorPage<CommentItem> = {
     },
   ],
   lastId: 2,
+  hasMore: false,
+};
+
+export const mockReportsPage: CursorPage<ReportItem> = {
+  result: [
+    {
+      id: 3,
+      targetType: "COMMENT",
+      targetId: 12,
+      targetLabel: "스팸성 광고 댓글입니다.",
+      reason: "SPAM",
+      detail: "같은 내용을 여러 게시글에 반복해서 남기고 있습니다.",
+      status: "PENDING",
+      reporter: { id: 1, userName: "제보자1" },
+      createdAt: "2026-06-25T09:00:00.000Z",
+      reviewedAt: null,
+    },
+    {
+      id: 2,
+      targetType: "RSS",
+      targetId: 5,
+      targetLabel: "차단된블로그",
+      reason: "COPYRIGHT",
+      detail: null,
+      status: "ACTIONED",
+      reporter: { id: 2, userName: "제보자2" },
+      createdAt: "2026-06-24T12:00:00.000Z",
+      reviewedAt: "2026-06-24T18:00:00.000Z",
+    },
+    {
+      id: 1,
+      targetType: "USER",
+      targetId: 7,
+      targetLabel: "스팸유저",
+      reason: "ABUSE",
+      detail: "댓글마다 욕설을 남깁니다.",
+      status: "REJECTED",
+      reporter: { id: 3, userName: "제보자3" },
+      createdAt: "2026-06-23T09:00:00.000Z",
+      reviewedAt: "2026-06-23T10:00:00.000Z",
+    },
+  ],
+  lastId: 1,
   hasMore: false,
 };
 

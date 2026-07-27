@@ -9,5 +9,10 @@ export function timeAgo(dateString: string) {
 
   if (diffMin < 60) return `${diffMin}분 전`;
   if (diffHour < 24) return `${diffHour}시간 전`;
-  return `${diffDay}일 전`;
+  if (diffDay < 7) return `${diffDay}일 전`;
+
+  const year = past.getFullYear();
+  const month = String(past.getMonth() + 1).padStart(2, "0");
+  const date = String(past.getDate()).padStart(2, "0");
+  return `${year}-${month}-${date}`;
 }

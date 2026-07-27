@@ -34,6 +34,8 @@ import { LikeModule } from '@like/module/like.module';
 
 import { NotificationModule } from '@notification/module/notification.module';
 
+import { ReportModule } from '@report/module/report.module';
+
 import { RssModule } from '@rss/module/rss.module';
 
 import { StatisticModule } from '@statistic/module/statistic.module';
@@ -96,6 +98,7 @@ const exists = !!chosen && fs.existsSync(chosen);
     LikeModule,
     NotificationModule,
     BlockModule,
+    ReportModule,
     SubscribeModule,
     FileModule,
     RabbitMQModule,

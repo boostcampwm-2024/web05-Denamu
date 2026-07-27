@@ -19,7 +19,7 @@ export const AdminHeader = ({
   name,
 }: {
   setLogin: () => void;
-  handleTap: (tap: "RSS" | "MEMBER" | "MYPAGE" | "POST" | "CHAT") => void;
+  handleTap: (tap: "RSS" | "MEMBER" | "MYPAGE" | "POST" | "CHAT" | "REPORT") => void;
   name?: string;
 }) => {
   const handleLogout = () => {

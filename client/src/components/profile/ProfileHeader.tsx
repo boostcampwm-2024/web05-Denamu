@@ -1,7 +1,8 @@
 import { useState } from "react";
 
-import { MoreVertical, Ban, FileText, Users } from "lucide-react";
+import { MoreVertical, Ban, FileText, Flag, Users } from "lucide-react";
 
+import { ReportDialog } from "@/components/common/ReportDialog";
 import { BlogPlatformBadge } from "@/components/profile/rss/BlogPlatformBadge.tsx";
 import { PlatformIcon } from "@/components/profile/rss/PlatformIcon.tsx";
 import {
@@ -27,6 +28,9 @@ import { Switch } from "@/components/ui/switch.tsx";
 import { useCustomToast } from "@/hooks/common/useCustomToast.ts";
 import { useBlockRss, useBlockUser } from "@/hooks/queries/useBlock.ts";
 import { useCertifiedRss } from "@/hooks/queries/useProfile.ts";
+import { useReportUser } from "@/hooks/queries/useReport";
+
+import { CreateReportPayload } from "@/types/report";
 
 interface ProfileHeaderProps {
   name: string;
@@ -39,10 +43,12 @@ interface ProfileHeaderProps {
 export const ProfileHeader = ({ name, email, profileImage, introduction, blockableUserId }: ProfileHeaderProps) => {
   const initials = name ? name.substring(0, 2).toUpperCase() : "사용자";
   const [showBlockConfirm, setShowBlockConfirm] = useState(false);
+  const [showReportDialog, setShowReportDialog] = useState(false);
   const [selectedRssIds, setSelectedRssIds] = useState<Set<number>>(new Set());
   const { toast } = useCustomToast();
   const { mutateAsync: blockUser } = useBlockUser();
   const { mutateAsync: blockRss } = useBlockRss();
+  const { mutate: reportUser, isPending: isReportPending } = useReportUser();
   const { data: ownedRss = [] } = useCertifiedRss(blockableUserId ?? 0);
 
   const allSelected = ownedRss.length > 0 && ownedRss.every((rss) => selectedRssIds.has(rss.id));
@@ -88,6 +94,22 @@ export const ProfileHeader = ({ name, email, profileImage, introduction, blockab
     }
   };
 
+  const handleReport = (payload: CreateReportPayload) => {
+    if (!blockableUserId) return;
+    reportUser(
+      { userId: blockableUserId, payload },
+      {
+        onSuccess: () => {
+          setShowReportDialog(false);
+          toast({ title: "신고 접수 완료", description: "신고가 접수되었습니다." });
+        },
+        onError: () => {
+          toast({ title: "신고 실패", description: "잠시 후 다시 시도해주세요." });
+        },
+      }
+    );
+  };
+
   return (
     <Card className="mb-8 overflow-hidden">
       <CardContent className="p-6">
@@ -114,6 +136,10 @@ export const ProfileHeader = ({ name, email, profileImage, introduction, blockab
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setShowReportDialog(true)}>
+                  <Flag className="w-4 h-4 mr-2" />
+                  신고하기
+                </DropdownMenuItem>
                 <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={() => setShowBlockConfirm(true)}>
                   <Ban className="w-4 h-4 mr-2" />
                   차단하기
@@ -190,6 +216,14 @@ export const ProfileHeader = ({ name, email, profileImage, introduction, blockab
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ReportDialog
+        open={showReportDialog}
+        onOpenChange={setShowReportDialog}
+        title={`${name} 유저 신고`}
+        isPending={isReportPending}
+        onSubmit={handleReport}
+      />
     </Card>
   );
 };

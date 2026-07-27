@@ -65,6 +65,10 @@ vi.mock("@/hooks/queries/useBlock.ts", () => ({
   useUnblockRss: () => ({ mutate: unblockRssMock, isPending: false }),
 }));
 
+vi.mock("@/hooks/queries/useReport", () => ({
+  useReportRss: () => ({ mutate: vi.fn(), isPending: false }),
+}));
+
 vi.mock("@/hooks/queries/useRssCertification.ts", () => ({
   useOwnedRssFeeds: () => ({
     data: { pages: [{ result: [] }] },
@@ -94,6 +98,7 @@ const baseRss: RssInfo = {
   name: "데나무 블로그",
   userName: "작성자",
   rssUrl: "https://blog.test/rss",
+  blogUrl: "https://blog.test",
   blogPlatform: "velog",
   feedCount: 12,
   subscriberCount: 3,

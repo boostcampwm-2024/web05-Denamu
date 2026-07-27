@@ -11,6 +11,10 @@ vi.mock("@/components/common/Card/detail/SubscribeButton", () => ({
   SubscribeButton: () => <button>구독</button>,
 }));
 
+vi.mock("@/hooks/queries/useReport", () => ({
+  useReportFeed: () => ({ mutate: vi.fn(), isPending: false }),
+}));
+
 const data = {
   id: 1,
   title: "상세 제목",

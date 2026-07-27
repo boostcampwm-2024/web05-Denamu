@@ -1,11 +1,22 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
-import { Ban, CalendarClock, CheckCircle2, FileText, MoreVertical, Pencil, Users } from "lucide-react";
+import {
+  Ban,
+  CalendarClock,
+  CheckCircle2,
+  ExternalLink,
+  FileText,
+  Flag,
+  MoreVertical,
+  Pencil,
+  Users,
+} from "lucide-react";
 
 import { Footer } from "@/components/about/Footer";
-import Layout from "@/components/layout/Layout";
 import { SubscribeButton } from "@/components/common/Card/detail/SubscribeButton.tsx";
+import { ReportDialog } from "@/components/common/ReportDialog";
+import Layout from "@/components/layout/Layout";
 import { ActivityGraph } from "@/components/profile/header/ui/ActivityGraph/ActivityGraph.tsx";
 import { BlogPlatformBadge } from "@/components/profile/rss/BlogPlatformBadge.tsx";
 import { PlatformIcon } from "@/components/profile/rss/PlatformIcon.tsx";
@@ -36,25 +47,19 @@ import NotFound from "@/pages/NotFound";
 
 import { useCustomToast } from "@/hooks/common/useCustomToast.ts";
 import { useBlockRss, useUnblockRss } from "@/hooks/queries/useBlock.ts";
+import { useReportRss } from "@/hooks/queries/useReport";
 import { useOwnedRssFeeds, useSetFeedVisibility } from "@/hooks/queries/useRssCertification.ts";
-import {
-  useRssActivities,
-  useRssActivityYears,
-  useRssInfo,
-  useRssPageFeeds,
-} from "@/hooks/queries/useRssPage.ts";
+import { useRssActivities, useRssActivityYears, useRssInfo, useRssPageFeeds } from "@/hooks/queries/useRssPage.ts";
 
 import { formatDate } from "@/utils/date.ts";
 
 import { useAuthStore } from "@/store/useAuthStore";
 import { RssInfo } from "@/types/profile.ts";
+import { CreateReportPayload } from "@/types/report";
 
 const OwnerFeedManager = ({ rssId }: { rssId: number }) => {
   const { toast } = useCustomToast();
-  const { data, isLoading, isError, hasNextPage, fetchNextPage, isFetchingNextPage } = useOwnedRssFeeds(
-    rssId,
-    true
-  );
+  const { data, isLoading, isError, hasNextPage, fetchNextPage, isFetchingNextPage } = useOwnedRssFeeds(rssId, true);
   const visibilityMutation = useSetFeedVisibility(rssId, [
     ["rssInfo", rssId],
     ["rssPageFeeds", rssId],
@@ -139,7 +144,17 @@ const BlockedRssView = ({ rssId }: { rssId: number }) => {
   );
 };
 
-const RssHeader = ({ rss, onEdit, onBlock }: { rss: RssInfo; onEdit: () => void; onBlock?: () => void }) => (
+const RssHeader = ({
+  rss,
+  onEdit,
+  onBlock,
+  onReport,
+}: {
+  rss: RssInfo;
+  onEdit: () => void;
+  onBlock?: () => void;
+  onReport?: () => void;
+}) => (
   <Card className="mb-8">
     <CardContent className="p-6">
       <div className="flex items-start justify-between gap-4">
@@ -150,10 +165,7 @@ const RssHeader = ({ rss, onEdit, onBlock }: { rss: RssInfo; onEdit: () => void;
               <h1 className="text-2xl font-bold truncate">{rss.name}</h1>
               <BlogPlatformBadge platform={rss.blogPlatform} />
               {rss.owner && (
-                <span
-                  className="flex items-center gap-0.5 text-xs text-blue-500"
-                  title="RSS 소유 인증 블로그"
-                >
+                <span className="flex items-center gap-0.5 text-xs text-blue-500" title="RSS 소유 인증 블로그">
                   <CheckCircle2 className="w-4 h-4" />
                   인증된 RSS
                 </span>
@@ -184,19 +196,24 @@ const RssHeader = ({ rss, onEdit, onBlock }: { rss: RssInfo; onEdit: () => void;
           </div>
         </div>
         <div className="flex items-center flex-shrink-0 gap-1">
+          <Button
+            asChild
+            className="h-auto gap-1.5 rounded-full bg-[#FF870D] px-4 py-1.5 font-semibold text-white hover:bg-[#e6790b]"
+          >
+            <a href={rss.blogUrl} target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="w-4 h-4" />
+              블로그 가기
+            </a>
+          </Button>
           {rss.isOwner ? (
             <Button variant="outline" className="gap-1" onClick={onEdit}>
               <Pencil className="w-4 h-4" />
               정보 수정
             </Button>
           ) : (
-            <SubscribeButton
-              rssId={rss.id}
-              isSubscribed={rss.isSubscribed}
-              invalidateKeys={[["rssInfo", rss.id]]}
-            />
+            <SubscribeButton rssId={rss.id} isSubscribed={rss.isSubscribed} invalidateKeys={[["rssInfo", rss.id]]} />
           )}
-          {onBlock && (
+          {(onBlock || onReport) && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
@@ -207,10 +224,18 @@ const RssHeader = ({ rss, onEdit, onBlock }: { rss: RssInfo; onEdit: () => void;
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={onBlock}>
-                  <Ban className="w-4 h-4 mr-2" />
-                  차단하기
-                </DropdownMenuItem>
+                {onReport && (
+                  <DropdownMenuItem onClick={onReport}>
+                    <Flag className="w-4 h-4 mr-2" />
+                    신고하기
+                  </DropdownMenuItem>
+                )}
+                {onBlock && (
+                  <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={onBlock}>
+                    <Ban className="w-4 h-4 mr-2" />
+                    차단하기
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           )}
@@ -251,10 +276,12 @@ export default function RssPage() {
   const [year, setYear] = useState(currentYear);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [showBlockConfirm, setShowBlockConfirm] = useState(false);
+  const [showReportDialog, setShowReportDialog] = useState(false);
 
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const { toast } = useCustomToast();
   const { mutate: blockRss } = useBlockRss();
+  const { mutate: reportRss, isPending: isReportPending } = useReportRss();
 
   const { data: rss, isLoading, isError } = useRssInfo(numericId);
   const {
@@ -309,6 +336,21 @@ export default function RssPage() {
     setShowBlockConfirm(false);
   };
 
+  const handleReport = (payload: CreateReportPayload) => {
+    reportRss(
+      { rssId: rss.id, payload },
+      {
+        onSuccess: () => {
+          setShowReportDialog(false);
+          toast({ title: "신고 접수 완료", description: "신고가 접수되었습니다." });
+        },
+        onError: () => {
+          toast({ title: "신고 실패", description: "잠시 후 다시 시도해주세요." });
+        },
+      }
+    );
+  };
+
   const handleYearChange = (nextYear: number) => {
     setSelectedDate(null); // 다른 연도로 이동하면 선택한 잔디 칸이 사라지므로 필터 해제
     setYear(nextYear);
@@ -326,6 +368,7 @@ export default function RssPage() {
             rss={rss}
             onEdit={() => setEditOpen(true)}
             onBlock={isAuthenticated && !rss.isOwner ? () => setShowBlockConfirm(true) : undefined}
+            onReport={isAuthenticated && !rss.isOwner ? () => setShowReportDialog(true) : undefined}
           />
 
           {rss.owner && <OwnerProfileCard owner={rss.owner} />}
@@ -360,9 +403,7 @@ export default function RssPage() {
             <CardContent className="p-6">
               <h3 className="mb-4 text-lg font-semibold">
                 포스트
-                {selectedDate && (
-                  <span className="ml-2 text-sm font-normal text-gray-500">{selectedDate} 발행분</span>
-                )}
+                {selectedDate && <span className="ml-2 text-sm font-normal text-gray-500">{selectedDate} 발행분</span>}
               </h3>
               {feedsLoading && <p className="text-sm text-gray-400">포스트를 불러오는 중...</p>}
               {feedsError && <p className="text-sm text-red-500">포스트를 불러오지 못했습니다.</p>}
@@ -386,12 +427,7 @@ export default function RssPage() {
 
               {hasNextPage && (
                 <div className="mt-4 text-center">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fetchNextPage()}
-                    disabled={isFetchingNextPage}
-                  >
+                  <Button variant="outline" size="sm" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
                     {isFetchingNextPage ? "불러오는 중..." : "더 보기"}
                   </Button>
                 </div>
@@ -414,6 +450,14 @@ export default function RssPage() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        <ReportDialog
+          open={showReportDialog}
+          onOpenChange={setShowReportDialog}
+          title={`${rss.name} RSS 신고`}
+          isPending={isReportPending}
+          onSubmit={handleReport}
+        />
       </Layout>
       <Footer />
     </>

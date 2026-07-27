@@ -1,12 +1,12 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, waitFor, within } from "storybook/test";
-
 import RssPage from "@/pages/RssPage";
-import { BLOCK, BLOG } from "@/constants/endpoints";
+
+import { BLOCK, BLOG, REPORT } from "@/constants/endpoints";
+
 import { mockApi, ok } from "@/__storybook__/mockApi";
 import { useAuthStore } from "@/store/useAuthStore";
-
 import { CursorPage, OwnedRssFeedItem, RssFeedItem, RssInfo } from "@/types/profile";
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 
 const meta = {
   title: "pages/RssPage",
@@ -46,6 +46,7 @@ const baseRss: RssInfo = {
   name: "데나무 블로그",
   userName: "조민석",
   rssUrl: "https://v2.velog.io/rss/@denamu",
+  blogUrl: "https://velog.io/@denamu",
   blogPlatform: "velog",
   feedCount: 12,
   subscriberCount: 34,
@@ -139,12 +140,35 @@ export const BlockFlow: Story = {
     const body = within(canvasElement.ownerDocument.body);
     await userEvent.click(await body.findByRole("button", { name: "더보기" }));
     await userEvent.click(await body.findByRole("menuitem", { name: /차단하기/ }));
-    await expect(
-      await body.findByText("데나무 블로그 RSS를 차단하시겠습니까?")
-    ).toBeInTheDocument();
+    await expect(await body.findByText("데나무 블로그 RSS를 차단하시겠습니까?")).toBeInTheDocument();
     await userEvent.click(await body.findByRole("button", { name: "차단" }));
     await waitFor(() => expect(mockApi.history.post).toHaveLength(1));
     await expect(await body.findByText("차단된 RSS입니다.")).toBeInTheDocument();
+  },
+};
+
+export const ReportFlow: Story = {
+  name: "신고하기 플로우 (로그인 방문자)",
+  beforeEach: () => {
+    useAuthStore.setState({
+      isInitialized: true,
+      isAuthenticated: true,
+      role: "user",
+      userInfo: { id: 1, email: "me@test.com", userName: "테스터" },
+    });
+    mockApi.onGet(BLOG.RSS.INFO(RSS_ID)).reply(...ok(baseRss));
+    mockApi.onPost(REPORT.RSS(RSS_ID)).reply(...ok(null));
+    setupFeeds();
+    return resetAuth;
+  },
+  play: async ({ canvasElement }) => {
+    const body = within(canvasElement.ownerDocument.body);
+    await userEvent.click(await body.findByRole("button", { name: "더보기" }));
+    await userEvent.click(await body.findByRole("menuitem", { name: "신고하기" }));
+    await userEvent.click(await body.findByRole("combobox"));
+    await userEvent.click(await body.findByRole("option", { name: "저작권 침해" }));
+    await userEvent.click(await body.findByRole("button", { name: "신고하기" }));
+    await waitFor(() => expect(mockApi.history.post).toHaveLength(1));
   },
 };
 
