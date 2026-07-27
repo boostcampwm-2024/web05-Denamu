@@ -4,8 +4,11 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 import { AuthCard } from "@/components/auth/AuthCard.tsx";
+import { MarketingConsentNotice } from "@/components/common/MarketingConsentNotice.tsx";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 
 import { useCustomToast } from "@/hooks/common/useCustomToast.ts";
 
@@ -18,6 +21,9 @@ export default function OAuthSignUpPage() {
   const initialize = useAuthStore((s) => s.initialize);
 
   const [userName, setUserName] = useState("");
+  const [marketingEmailAgreed, setMarketingEmailAgreed] = useState(false);
+  const [inactivityEmailAgreed, setInactivityEmailAgreed] = useState(false);
+  const [noticeEmailAgreed, setNoticeEmailAgreed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -32,7 +38,12 @@ export default function OAuthSignUpPage() {
 
     try {
       setIsLoading(true);
-      await completeOAuthRegistration(userName);
+      await completeOAuthRegistration({
+        userName,
+        marketingEmailAgreed,
+        inactivityEmailAgreed,
+        noticeEmailAgreed,
+      });
       initialize();
       navigate("/", { replace: true });
     } catch (error: unknown) {
@@ -71,6 +82,37 @@ export default function OAuthSignUpPage() {
           value={userName}
           onChange={(e) => setUserName(e.target.value)}
         />
+
+        <div className="space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <Label htmlFor="marketingEmailAgreed" className="text-sm font-normal text-muted-foreground">
+              마케팅 활용 및 광고성 정보 수신 동의
+            </Label>
+            <Switch
+              id="marketingEmailAgreed"
+              checked={marketingEmailAgreed}
+              onCheckedChange={setMarketingEmailAgreed}
+            />
+          </div>
+          <MarketingConsentNotice />
+          <div className="flex items-center justify-between gap-2">
+            <Label htmlFor="inactivityEmailAgreed" className="text-sm font-normal text-muted-foreground">
+              미접속 알림 이메일 수신 동의
+            </Label>
+            <Switch
+              id="inactivityEmailAgreed"
+              checked={inactivityEmailAgreed}
+              onCheckedChange={setInactivityEmailAgreed}
+            />
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            <Label htmlFor="noticeEmailAgreed" className="text-sm font-normal text-muted-foreground">
+              공지사항 이메일 수신 동의
+            </Label>
+            <Switch id="noticeEmailAgreed" checked={noticeEmailAgreed} onCheckedChange={setNoticeEmailAgreed} />
+          </div>
+        </div>
+
         <Button className="w-full" type="submit" disabled={isLoading}>
           {isLoading ? "처리 중..." : "시작하기"}
         </Button>
