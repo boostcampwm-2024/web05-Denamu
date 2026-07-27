@@ -45,6 +45,7 @@ const makeItem = (overrides: Partial<NotificationItem> = {}): NotificationItem =
   isRead: false,
   updatedAt: "2026-07-26T00:00:00.000Z",
   feed: { id: 10, title: "테스트 게시글", path: "https://example.com/10" },
+  rss: null,
   actor: { userName: "liker", profileImage: null },
   otherCount: 0,
   commentPreview: null,
@@ -175,5 +176,29 @@ describe("NotificationBell", () => {
     expect(mockNavigate).toHaveBeenCalledWith("/10", {
       state: { backgroundLocation: { pathname: "/" }, highlightCommentId: 77 },
     });
+  });
+
+  it("구독 알림 메시지를 템플릿에 맞게 표시한다", () => {
+    listState = {
+      data: [makeItem({ type: "SUBSCRIBE", feed: null, rss: { id: 7, name: "테스트 블로그" } })],
+      isLoading: false,
+    };
+    render(<NotificationBell />);
+
+    const item = screen.getByTestId("notification-item");
+    expect(item).toHaveTextContent("liker님이 테스트 블로그을(를) 구독했습니다.");
+  });
+
+  it("구독 알림을 클릭하면 해당 RSS 페이지로 이동한다", () => {
+    listState = {
+      data: [makeItem({ id: 6, type: "SUBSCRIBE", feed: null, rss: { id: 7, name: "테스트 블로그" } })],
+      isLoading: false,
+    };
+    render(<NotificationBell />);
+
+    fireEvent.click(screen.getByTestId("notification-item"));
+
+    expect(markRead).toHaveBeenCalledWith(6);
+    expect(mockNavigate).toHaveBeenCalledWith("/rss/7");
   });
 });

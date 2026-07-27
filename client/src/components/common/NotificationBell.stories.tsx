@@ -67,6 +67,17 @@ const multipleCommentersItem = {
   commentId: 102,
 };
 
+const subscribeItem = {
+  id: 4,
+  type: "SUBSCRIBE",
+  isRead: false,
+  updatedAt: "2026-07-28T00:00:00.000Z",
+  feed: null,
+  rss: { id: 20, name: "denamu.log" },
+  actor: { userName: "새구독자", profileImage: null },
+  otherCount: 0,
+};
+
 const meta = {
   title: "common/NotificationBell",
   component: NotificationBell,
@@ -162,6 +173,22 @@ export const WithMultipleCommenters: Story = {
     await userEvent.click(canvas.getByRole("button", { name: "알림" }));
     const item = await body.findByTestId("notification-item");
     await expect(item).toHaveTextContent("최신댓글러님 외 2명이 여러 명이 댓글단 게시글에 댓글을 남겼습니다.");
+  },
+};
+
+export const WithSubscribe: Story = {
+  name: "구독 알림 표시",
+  beforeEach: () => {
+    useAuthStore.setState({ isAuthenticated: true, accessToken: "mock-token" });
+    mockApi.onGet(NOTIFICATION.UNREAD_COUNT).reply(...ok({ count: 1 }));
+    mockApi.onGet(NOTIFICATION.LIST).reply(...ok({ result: [subscribeItem] }));
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
+    await userEvent.click(canvas.getByRole("button", { name: "알림" }));
+    const item = await body.findByTestId("notification-item");
+    await expect(item).toHaveTextContent("새구독자님이 denamu.log을(를) 구독했습니다.");
   },
 };
 
