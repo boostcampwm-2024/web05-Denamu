@@ -1,5 +1,5 @@
 import React, { useRef, useState, useCallback } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 import { X } from "lucide-react";
 
@@ -17,6 +17,9 @@ import { usePostDetail } from "@/hooks/queries/usePostDetail";
 export default function PostDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const highlightCommentId = (location.state as { highlightCommentId?: number | null } | null)
+    ?.highlightCommentId;
   const modalRef = useRef<HTMLDivElement>(null);
   const { data } = usePostDetail(Number(id));
   const scrollbarWidth = useScrollbarAdjustment();
@@ -69,7 +72,7 @@ export default function PostDetail() {
         ) : (
           <div className="mt-5 flex flex-col gap-2 px-10 ">
             <PostHeader data={data.data} />
-            <PostContent post={data.data} />
+            <PostContent post={data.data} highlightCommentId={highlightCommentId} />
           </div>
         )}
       </div>
