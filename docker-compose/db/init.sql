@@ -47,6 +47,9 @@ CREATE TABLE `user` (
   `currentStreak` int NOT NULL DEFAULT '0',
   `lastActiveDate` date DEFAULT NULL,
   `maxStreak` int NOT NULL DEFAULT '0',
+  `marketing_email_agreed` tinyint NOT NULL DEFAULT 1,
+  `inactivity_email_agreed` tinyint NOT NULL DEFAULT 1,
+  `notice_email_agreed` tinyint NOT NULL DEFAULT 1,
   PRIMARY KEY (`id`),
   UNIQUE KEY `IDX_d34106f8ec1ebaf66f4f8609dd` (`user_name`),
   UNIQUE KEY `IDX_e12875dfb3b1d92d7d7c5377e2` (`email`)
