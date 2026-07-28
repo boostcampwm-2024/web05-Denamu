@@ -195,6 +195,18 @@ export class CommentService {
       feed.commentCount--;
       await manager.save(feed);
       await manager.remove(comment);
+
+      if (comment.parent?.isDeleted) {
+        const remainingReplyCount = await manager.count(Comment, {
+          where: { parentId: comment.parentId },
+        });
+
+        if (remainingReplyCount === 0) {
+          feed.commentCount--;
+          await manager.save(feed);
+          await manager.remove(comment.parent);
+        }
+      }
     });
 
     this.eventEmitter.emit(
