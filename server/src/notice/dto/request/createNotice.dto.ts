@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-import { NoticeStatus } from '@notice/constant/notice.constant';
+import { Transform } from 'class-transformer';
 import {
   IsBoolean,
   IsEnum,
@@ -9,6 +9,10 @@ import {
   IsString,
   MaxLength,
 } from 'class-validator';
+
+import { sanitizeNoticeContent } from '@common/util/sanitizeHtml';
+
+import { NoticeStatus } from '@notice/constant/notice.constant';
 
 export class CreateNoticeRequestDto {
   @ApiProperty({
@@ -25,6 +29,7 @@ export class CreateNoticeRequestDto {
     example: '<p>2026년 8월 1일 서비스 점검이 진행됩니다.</p>',
   })
   @IsString({ message: '문자열로 입력해주세요.' })
+  @Transform(({ value }) => sanitizeNoticeContent(value))
   content: string;
 
   @ApiPropertyOptional({ description: '상단 고정 여부', default: false })

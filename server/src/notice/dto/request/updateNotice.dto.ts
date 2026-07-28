@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
-import { NoticeStatus } from '@notice/constant/notice.constant';
+import { Transform } from 'class-transformer';
 import {
   IsBoolean,
   IsEnum,
@@ -9,6 +9,10 @@ import {
   IsString,
   MaxLength,
 } from 'class-validator';
+
+import { sanitizeNoticeContent } from '@common/util/sanitizeHtml';
+
+import { NoticeStatus } from '@notice/constant/notice.constant';
 
 export class UpdateNoticeRequestDto {
   @ApiPropertyOptional({
@@ -27,6 +31,7 @@ export class UpdateNoticeRequestDto {
   })
   @IsOptional()
   @IsString({ message: '문자열로 입력해주세요.' })
+  @Transform(({ value }) => (value === undefined ? value : sanitizeNoticeContent(value)))
   content?: string;
 
   @ApiPropertyOptional({ description: '상단 고정 여부' })
