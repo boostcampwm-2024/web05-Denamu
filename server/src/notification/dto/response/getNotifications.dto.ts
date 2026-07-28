@@ -68,7 +68,7 @@ export class NotificationItemResult {
   @ApiProperty({
     example: { userName: 'liker', profileImage: null },
     description:
-      '알림을 발생시킨 유저 정보(타입별 최신 행위자에서 파생: LIKE는 좋아요, COMMENT는 댓글, SUBSCRIBE는 구독한 유저)',
+      '알림을 발생시킨 유저 정보(타입별 최신 행위자에서 파생: LIKE는 좋아요, COMMENT는 댓글, REPLY는 답글, SUBSCRIBE는 구독한 유저)',
   })
   actor: {
     userName: string | null;
@@ -86,14 +86,15 @@ export class NotificationItemResult {
     example: '이 글 정말 잘 읽었습니다...',
     nullable: true,
     description:
-      'COMMENT 타입일 때 최신 댓글 내용 일부(40자 초과 시 말줄임). LIKE는 항상 null',
+      'COMMENT/REPLY 타입일 때 최신 댓글(답글) 내용 일부(40자 초과 시 말줄임). LIKE/SUBSCRIBE는 항상 null',
   })
   commentPreview: string | null;
 
   @ApiProperty({
     example: 42,
     nullable: true,
-    description: 'COMMENT 타입일 때 최신 댓글의 ID(하이라이트/이동용). LIKE는 항상 null',
+    description:
+      'COMMENT/REPLY 타입일 때 최신 댓글(답글)의 ID(하이라이트/이동용). LIKE/SUBSCRIBE는 항상 null',
   })
   commentId: number | null;
 
