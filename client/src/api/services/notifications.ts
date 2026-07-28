@@ -3,7 +3,7 @@ import { NOTIFICATION } from "@/constants/endpoints";
 import { axiosInstance } from "@/api/instance";
 import { ApiData } from "@/types/api";
 
-export type NotificationType = "LIKE" | "COMMENT";
+export type NotificationType = "LIKE" | "COMMENT" | "SUBSCRIBE";
 
 export type NotificationItem = {
   id: number;
@@ -14,7 +14,11 @@ export type NotificationItem = {
     id: number;
     title: string;
     path: string;
-  };
+  } | null;
+  rss: {
+    id: number;
+    name: string;
+  } | null;
   actor: {
     userName: string | null;
     profileImage: string | null;

@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 import { In } from 'typeorm';
 
@@ -14,14 +15,16 @@ import { FeedRepository } from '@feed/repository/feed.repository';
 import { RssAccept } from '@rss/entity/rss.entity';
 import { RssAcceptRepository } from '@rss/repository/rss.repository';
 
+import { GetSubscribersRequestDto } from '@subscribe/dto/request/getSubscribers.dto';
+import { ManageSubscriptionRequestDto } from '@subscribe/dto/request/manageSubscription.dto';
 import {
   GetMySubscriptionsResponseDto,
   SubscribedRssResponseDto,
 } from '@subscribe/dto/response/getMySubscriptions.dto';
 import { GetSubscribersResponseDto } from '@subscribe/dto/response/getSubscribers.dto';
 import { GetSubscriptionResponseDto } from '@subscribe/dto/response/getSubscription.dto';
-import { ManageSubscriptionRequestDto } from '@subscribe/dto/request/manageSubscription.dto';
-import { GetSubscribersRequestDto } from '@subscribe/dto/request/getSubscribers.dto';
+import { SubscriptionCreatedEvent } from '@subscribe/event/subscription-created.event';
+import { SubscriptionDeletedEvent } from '@subscribe/event/subscription-deleted.event';
 import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
 
 @Injectable()
@@ -30,6 +33,7 @@ export class SubscriptionService {
     private readonly subscriptionRepository: SubscriptionRepository,
     private readonly rssAcceptRepository: RssAcceptRepository,
     private readonly feedRepository: FeedRepository,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   private async getRssAccept(rssId: number): Promise<RssAccept> {
@@ -88,6 +92,11 @@ export class SubscriptionService {
       }
       throw error;
     }
+
+    this.eventEmitter.emit(
+      'subscription.created',
+      new SubscriptionCreatedEvent(rss.id, user.id, rss.userId),
+    );
   }
 
   async delete(user: Payload, dto: ManageSubscriptionRequestDto) {
@@ -105,6 +114,11 @@ export class SubscriptionService {
       user: { id: user.id },
       rssAccept: { id: rss.id },
     });
+
+    this.eventEmitter.emit(
+      'subscription.deleted',
+      new SubscriptionDeletedEvent(rss.id, user.id),
+    );
   }
 
   async getSubscribers(
@@ -132,7 +146,11 @@ export class SubscriptionService {
       ? subscribers[subscribers.length - 1].id
       : 0;
 
-    return GetSubscribersResponseDto.toResponseDto(subscribers, lastId, hasMore);
+    return GetSubscribersResponseDto.toResponseDto(
+      subscribers,
+      lastId,
+      hasMore,
+    );
   }
 
   async getUserSubscriptions(

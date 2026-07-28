@@ -33,6 +33,18 @@ export class NotificationService {
     await this.notificationRepository.deleteCommentNotification(feedId);
   }
 
+  async upsertSubscribeNotification(recipientId: number, rssAcceptId: number) {
+    await this.notificationRepository.upsertSubscribe(recipientId, rssAcceptId);
+  }
+
+  async removeSubscribeNotificationIfEmpty(
+    rssAcceptId: number,
+    subscriberCount: number,
+  ) {
+    if (subscriberCount > 0) return;
+    await this.notificationRepository.deleteSubscribeNotification(rssAcceptId);
+  }
+
   async getUnreadCount(userId: number) {
     const count = await this.notificationRepository.countUnread(userId);
     return GetUnreadCountResponseDto.toResponseDto(count);

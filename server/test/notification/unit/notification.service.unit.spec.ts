@@ -13,6 +13,8 @@ describe(`${NotificationService.name} Unit Test`, () => {
       | 'upsertComment'
       | 'deleteCommentNotification'
       | 'hasActiveOtherComment'
+      | 'upsertSubscribe'
+      | 'deleteSubscribeNotification'
       | 'countUnread'
       | 'findByRecipient'
       | 'markRead'
@@ -27,6 +29,8 @@ describe(`${NotificationService.name} Unit Test`, () => {
       upsertComment: jest.fn(),
       deleteCommentNotification: jest.fn(),
       hasActiveOtherComment: jest.fn(),
+      upsertSubscribe: jest.fn(),
+      deleteSubscribeNotification: jest.fn(),
       countUnread: jest.fn(),
       findByRecipient: jest.fn(),
       markRead: jest.fn(),
@@ -109,6 +113,34 @@ describe(`${NotificationService.name} Unit Test`, () => {
       expect(
         notificationRepository.deleteCommentNotification,
       ).toHaveBeenCalledWith(10);
+    });
+  });
+
+  describe('upsertSubscribeNotification', () => {
+    it('recipientId, rssAcceptId로 upsertSubscribe를 호출한다.', async () => {
+      // when
+      await notificationService.upsertSubscribeNotification(1, 10);
+
+      // then
+      expect(notificationRepository.upsertSubscribe).toHaveBeenCalledWith(1, 10);
+    });
+  });
+
+  describe('removeSubscribeNotificationIfEmpty', () => {
+    it('구독자가 남아있으면(subscriberCount > 0) 알림을 삭제하지 않는다.', async () => {
+      // when
+      await notificationService.removeSubscribeNotificationIfEmpty(10, 1);
+
+      // then
+      expect(notificationRepository.deleteSubscribeNotification).not.toHaveBeenCalled();
+    });
+
+    it('구독자가 0명이면 해당 RSS의 알림을 삭제한다.', async () => {
+      // when
+      await notificationService.removeSubscribeNotificationIfEmpty(10, 0);
+
+      // then
+      expect(notificationRepository.deleteSubscribeNotification).toHaveBeenCalledWith(10);
     });
   });
 

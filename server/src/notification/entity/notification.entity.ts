@@ -13,15 +13,19 @@ import {
 
 import { Feed } from '@feed/entity/feed.entity';
 
+import { RssAccept } from '@rss/entity/rss.entity';
+
 import { User } from '@user/entity/user.entity';
 
 export enum NotificationType {
   LIKE = 'LIKE',
   COMMENT = 'COMMENT',
+  SUBSCRIBE = 'SUBSCRIBE',
 }
 
 @Entity({ name: 'notification' })
 @Unique(['recipient', 'type', 'feed'])
+@Unique(['recipient', 'type', 'rssAccept'])
 export class Notification extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
@@ -42,12 +46,20 @@ export class Notification extends BaseEntity {
   type: NotificationType;
 
   @ManyToOne(() => Feed, {
-    nullable: false,
+    nullable: true,
     onUpdate: 'CASCADE',
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'feed_id' })
-  feed: Feed;
+  feed: Feed | null;
+
+  @ManyToOne(() => RssAccept, {
+    nullable: true,
+    onUpdate: 'CASCADE',
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'rss_accept_id' })
+  rssAccept: RssAccept | null;
 
   @Column({ name: 'is_read', default: false })
   isRead: boolean;

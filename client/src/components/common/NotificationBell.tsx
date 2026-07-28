@@ -21,18 +21,34 @@ import { useAuthStore } from "@/store/useAuthStore";
 
 const buildMessage = (item: NotificationItem) => {
   const actorSuffix = item.otherCount > 0 ? `님 외 ${item.otherCount}명이 ` : "님이 ";
-  const [actionBold, actionRest] =
-    item.type === "COMMENT" ? ["댓글", "을 남겼습니다"] : ["좋아요", "를 표시했습니다"];
 
-  return (
-    <>
-      <span className="font-semibold">{item.actor.userName ?? "알 수 없는 사용자"}</span>
-      {actorSuffix}
-      <span className="font-semibold">{item.feed.title}</span>에{" "}
-      <span className="font-semibold">{actionBold}</span>
-      {actionRest}.
-    </>
-  );
+  switch (item.type) {
+    case "SUBSCRIBE":
+      return (
+        <>
+          <span className="font-semibold">{item.actor.userName ?? "알 수 없는 사용자"}</span>
+          {actorSuffix}
+          <span className="font-semibold">{item.rss?.name}</span>을(를){" "}
+          <span className="font-semibold">구독했습니다</span>.
+        </>
+      );
+    case "COMMENT":
+    case "LIKE":
+    default: {
+      const [actionBold, actionRest] =
+        item.type === "COMMENT" ? ["댓글", "을 남겼습니다"] : ["좋아요", "를 표시했습니다"];
+
+      return (
+        <>
+          <span className="font-semibold">{item.actor.userName ?? "알 수 없는 사용자"}</span>
+          {actorSuffix}
+          <span className="font-semibold">{item.feed?.title}</span>에{" "}
+          <span className="font-semibold">{actionBold}</span>
+          {actionRest}.
+        </>
+      );
+    }
+  }
 };
 
 export const NotificationBell = () => {
@@ -50,10 +66,17 @@ export const NotificationBell = () => {
   const handleItemClick = (item: NotificationItem) => {
     if (!item.isRead) markRead(item.id);
     setOpen(false);
-    const highlightCommentId = item.type === "COMMENT" ? item.commentId : null;
-    navigate(`/${item.feed.id}`, {
-      state: { backgroundLocation: location, highlightCommentId },
-    });
+
+    if (item.type === "SUBSCRIBE" && item.rss) {
+      navigate(`/rss/${item.rss.id}`);
+      return;
+    }
+    if (item.feed) {
+      const highlightCommentId = item.type === "COMMENT" ? item.commentId : null;
+      navigate(`/${item.feed.id}`, {
+        state: { backgroundLocation: location, highlightCommentId },
+      });
+    }
   };
 
   return (

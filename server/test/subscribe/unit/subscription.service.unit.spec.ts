@@ -4,6 +4,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
+import { EventEmitter2 } from '@nestjs/event-emitter';
+
 import { Payload } from '@common/guard/jwt.guard';
 
 import { FeedRepository } from '@feed/repository/feed.repository';
@@ -35,6 +37,7 @@ describe(`${SubscriptionService.name} Unit Test`, () => {
   >;
   let rssAcceptRepository: jest.Mocked<Pick<RssAcceptRepository, 'findOneBy' | 'find'>>;
   let feedRepository: jest.Mocked<Pick<FeedRepository, 'countPublicFeedsByBlogIds'>>;
+  let eventEmitter: jest.Mocked<Pick<EventEmitter2, 'emit'>>;
 
   const viewer: Payload = {
     id: 1,
@@ -59,11 +62,13 @@ describe(`${SubscriptionService.name} Unit Test`, () => {
     feedRepository = {
       countPublicFeedsByBlogIds: jest.fn().mockResolvedValue(new Map()),
     };
+    eventEmitter = { emit: jest.fn() };
 
     subscriptionService = new SubscriptionService(
       subscriptionRepository as unknown as SubscriptionRepository,
       rssAcceptRepository as unknown as RssAcceptRepository,
       feedRepository as unknown as FeedRepository,
+      eventEmitter as unknown as EventEmitter2,
     );
   });
 
@@ -158,6 +163,25 @@ describe(`${SubscriptionService.name} Unit Test`, () => {
         user: { id: viewer.id },
         rssAccept: { id: 10 },
       });
+      expect(eventEmitter.emit).toHaveBeenCalledWith(
+        'subscription.created',
+        expect.objectContaining({ rssId: 10, subscriberUserId: viewer.id, ownerUserId: 99 }),
+      );
+    });
+
+    it('소유자가 없는 RSS를 구독하면 ownerUserId가 null인 이벤트를 발행한다.', async () => {
+      // given
+      rssAcceptRepository.findOneBy.mockResolvedValue(makeRss({ userId: null }));
+      subscriptionRepository.findOneBy.mockResolvedValue(null);
+
+      // when
+      await subscriptionService.create(viewer, { rssId: 10 });
+
+      // then
+      expect(eventEmitter.emit).toHaveBeenCalledWith(
+        'subscription.created',
+        expect.objectContaining({ rssId: 10, subscriberUserId: viewer.id, ownerUserId: null }),
+      );
     });
 
     it('사전 조회를 통과해도 저장 시 unique 제약 위반(ER_DUP_ENTRY)이면 ConflictException으로 변환한다.', async () => {
@@ -170,6 +194,7 @@ describe(`${SubscriptionService.name} Unit Test`, () => {
       await expect(
         subscriptionService.create(viewer, { rssId: 10 }),
       ).rejects.toThrow(ConflictException);
+      expect(eventEmitter.emit).not.toHaveBeenCalled();
     });
   });
 
@@ -204,6 +229,10 @@ describe(`${SubscriptionService.name} Unit Test`, () => {
         user: { id: viewer.id },
         rssAccept: { id: 10 },
       });
+      expect(eventEmitter.emit).toHaveBeenCalledWith(
+        'subscription.deleted',
+        expect.objectContaining({ rssId: 10, subscriberUserId: viewer.id }),
+      );
     });
   });
 
