@@ -33,6 +33,22 @@ export class NotificationService {
     await this.notificationRepository.deleteCommentNotification(feedId);
   }
 
+  async upsertReplyNotification(recipientId: number, feedId: number) {
+    await this.notificationRepository.upsertReply(recipientId, feedId);
+  }
+
+  async removeReplyNotificationIfEmpty(feedId: number, recipientId: number) {
+    const hasOtherReply = await this.notificationRepository.hasActiveOtherReply(
+      feedId,
+      recipientId,
+    );
+    if (hasOtherReply) return;
+    await this.notificationRepository.deleteReplyNotification(
+      feedId,
+      recipientId,
+    );
+  }
+
   async upsertSubscribeNotification(recipientId: number, rssAcceptId: number) {
     await this.notificationRepository.upsertSubscribe(recipientId, rssAcceptId);
   }
