@@ -125,6 +125,45 @@ describe("NotificationBell", () => {
     expect(item).toHaveTextContent("“내용 좋네요”");
   });
 
+  it("답글 알림 메시지를 템플릿에 맞게 표시한다", () => {
+    listState = {
+      data: [makeItem({ type: "REPLY", actor: { userName: "replier", profileImage: null } })],
+      isLoading: false,
+    };
+    render(<NotificationBell />);
+
+    const item = screen.getByTestId("notification-item");
+    expect(item).toHaveTextContent("replier님이 테스트 게시글에 답글을 남겼습니다.");
+
+    const bolded = item.querySelectorAll(".font-semibold");
+    expect(Array.from(bolded).map((el) => el.textContent)).toEqual(["replier", "테스트 게시글", "답글"]);
+  });
+
+  it("답글 알림에는 답글 내용 일부를 인용부호로 표시한다", () => {
+    listState = {
+      data: [makeItem({ type: "REPLY", commentPreview: "저도 동의합니다" })],
+      isLoading: false,
+    };
+    render(<NotificationBell />);
+
+    const item = screen.getByTestId("notification-item");
+    expect(item).toHaveTextContent("“저도 동의합니다”");
+  });
+
+  it("답글 알림을 클릭하면 해당 답글 ID를 하이라이트 상태로 함께 넘긴다", () => {
+    listState = {
+      data: [makeItem({ id: 5, type: "REPLY", commentId: 88 })],
+      isLoading: false,
+    };
+    render(<NotificationBell />);
+
+    fireEvent.click(screen.getByTestId("notification-item"));
+
+    expect(mockNavigate).toHaveBeenCalledWith("/10", {
+      state: { backgroundLocation: { pathname: "/" }, highlightCommentId: 88 },
+    });
+  });
+
   it("좋아요 알림에는 댓글 내용을 표시하지 않는다", () => {
     listState = { data: [makeItem({ commentPreview: "무시되어야 함" })], isLoading: false };
     render(<NotificationBell />);
@@ -187,6 +226,9 @@ describe("NotificationBell", () => {
 
     const item = screen.getByTestId("notification-item");
     expect(item).toHaveTextContent("liker님이 테스트 블로그을(를) 구독했습니다.");
+
+    const bolded = item.querySelectorAll(".font-semibold");
+    expect(Array.from(bolded).map((el) => el.textContent)).toEqual(["liker", "테스트 블로그", "구독"]);
   });
 
   it("구독 알림을 클릭하면 해당 RSS 페이지로 이동한다", () => {

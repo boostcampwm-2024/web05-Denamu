@@ -19,36 +19,34 @@ import { NotificationItem } from "@/api/services/notifications";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/useAuthStore";
 
+const NOTIFICATION_MESSAGE_CONFIG: Record<
+  NotificationItem["type"],
+  { target: (item: NotificationItem) => string | null | undefined; connector: string; action: [string, string] }
+> = {
+  LIKE: { target: (item) => item.feed?.title, connector: "에", action: ["좋아요", "를 표시했습니다"] },
+  COMMENT: { target: (item) => item.feed?.title, connector: "에", action: ["댓글", "을 남겼습니다"] },
+  REPLY: { target: (item) => item.feed?.title, connector: "에", action: ["답글", "을 남겼습니다"] },
+  SUBSCRIBE: { target: (item) => item.rss?.name, connector: "을(를)", action: ["구독", "했습니다"] },
+};
+
 const buildMessage = (item: NotificationItem) => {
   const actorSuffix = item.otherCount > 0 ? `님 외 ${item.otherCount}명이 ` : "님이 ";
+  const {
+    target,
+    connector,
+    action: [actionBold, actionRest],
+  } = NOTIFICATION_MESSAGE_CONFIG[item.type];
 
-  switch (item.type) {
-    case "SUBSCRIBE":
-      return (
-        <>
-          <span className="font-semibold">{item.actor.userName ?? "알 수 없는 사용자"}</span>
-          {actorSuffix}
-          <span className="font-semibold">{item.rss?.name}</span>을(를){" "}
-          <span className="font-semibold">구독했습니다</span>.
-        </>
-      );
-    case "COMMENT":
-    case "LIKE":
-    default: {
-      const [actionBold, actionRest] =
-        item.type === "COMMENT" ? ["댓글", "을 남겼습니다"] : ["좋아요", "를 표시했습니다"];
-
-      return (
-        <>
-          <span className="font-semibold">{item.actor.userName ?? "알 수 없는 사용자"}</span>
-          {actorSuffix}
-          <span className="font-semibold">{item.feed?.title}</span>에{" "}
-          <span className="font-semibold">{actionBold}</span>
-          {actionRest}.
-        </>
-      );
-    }
-  }
+  return (
+    <>
+      <span className="font-semibold">{item.actor.userName ?? "알 수 없는 사용자"}</span>
+      {actorSuffix}
+      <span className="font-semibold">{target(item)}</span>
+      {connector}{" "}
+      <span className="font-semibold">{actionBold}</span>
+      {actionRest}.
+    </>
+  );
 };
 
 export const NotificationBell = () => {
@@ -72,7 +70,8 @@ export const NotificationBell = () => {
       return;
     }
     if (item.feed) {
-      const highlightCommentId = item.type === "COMMENT" ? item.commentId : null;
+      const highlightCommentId =
+        item.type === "COMMENT" || item.type === "REPLY" ? item.commentId : null;
       navigate(`/${item.feed.id}`, {
         state: { backgroundLocation: location, highlightCommentId },
       });
@@ -122,7 +121,7 @@ export const NotificationBell = () => {
                 </Avatar>
                 <div className="min-w-0 flex-1">
                   <p className="line-clamp-2">{buildMessage(item)}</p>
-                  {item.type === "COMMENT" && item.commentPreview && (
+                  {(item.type === "COMMENT" || item.type === "REPLY") && item.commentPreview && (
                     <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
                       &ldquo;{item.commentPreview}&rdquo;
                     </p>

@@ -67,6 +67,30 @@ const multipleCommentersItem = {
   commentId: 102,
 };
 
+const replyItem = {
+  id: 6,
+  type: "REPLY",
+  isRead: false,
+  updatedAt: "2026-07-28T00:00:00.000Z",
+  feed: { id: 15, title: "답글이 달린 댓글이 있는 게시글", path: "https://example.com/15" },
+  actor: { userName: "답글러", profileImage: null },
+  otherCount: 0,
+  commentPreview: "저도 답글로 남겨봅니다!",
+  commentId: 103,
+};
+
+const multipleRepliersItem = {
+  id: 7,
+  type: "REPLY",
+  isRead: false,
+  updatedAt: "2026-07-28T00:00:00.000Z",
+  feed: { id: 16, title: "답글이 여러 개 달린 댓글이 있는 게시글", path: "https://example.com/16" },
+  actor: { userName: "최신답글러", profileImage: null },
+  otherCount: 2,
+  commentPreview: "저도 같은 의견입니다",
+  commentId: 104,
+};
+
 const subscribeItem = {
   id: 4,
   type: "SUBSCRIBE",
@@ -173,6 +197,41 @@ export const WithMultipleCommenters: Story = {
     await userEvent.click(canvas.getByRole("button", { name: "알림" }));
     const item = await body.findByTestId("notification-item");
     await expect(item).toHaveTextContent("최신댓글러님 외 2명이 여러 명이 댓글단 게시글에 댓글을 남겼습니다.");
+  },
+};
+
+export const WithReply: Story = {
+  name: "답글 알림",
+  beforeEach: () => {
+    useAuthStore.setState({ isAuthenticated: true, accessToken: "mock-token" });
+    mockApi.onGet(NOTIFICATION.UNREAD_COUNT).reply(...ok({ count: 1 }));
+    mockApi.onGet(NOTIFICATION.LIST).reply(...ok({ result: [replyItem] }));
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
+    await userEvent.click(canvas.getByRole("button", { name: "알림" }));
+    const item = await body.findByTestId("notification-item");
+    await expect(item).toHaveTextContent("답글러님이 답글이 달린 댓글이 있는 게시글에 답글을 남겼습니다.");
+    await expect(item).toHaveTextContent("저도 답글로 남겨봅니다!");
+  },
+};
+
+export const WithMultipleRepliers: Story = {
+  name: "여러 명이 답글",
+  beforeEach: () => {
+    useAuthStore.setState({ isAuthenticated: true, accessToken: "mock-token" });
+    mockApi.onGet(NOTIFICATION.UNREAD_COUNT).reply(...ok({ count: 1 }));
+    mockApi.onGet(NOTIFICATION.LIST).reply(...ok({ result: [multipleRepliersItem] }));
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
+    await userEvent.click(canvas.getByRole("button", { name: "알림" }));
+    const item = await body.findByTestId("notification-item");
+    await expect(item).toHaveTextContent(
+      "최신답글러님 외 2명이 답글이 여러 개 달린 댓글이 있는 게시글에 답글을 남겼습니다.",
+    );
   },
 };
 
