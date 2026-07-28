@@ -12,9 +12,10 @@ import { FeedDetail } from "@/types/post";
 
 interface PostContentProps {
   post: FeedDetail;
+  highlightCommentId?: number | null;
 }
 
-export const PostContent = React.memo(({ post }: PostContentProps) => {
+export const PostContent = React.memo(({ post, highlightCommentId }: PostContentProps) => {
   const summary = post.summary;
   const markdownString = (summary ?? "").replace(/\\n/g, "\n").replace(/\\r/g, "\r");
   const isMobile = useMediaStore((state) => state.isMobile);
@@ -56,7 +57,7 @@ export const PostContent = React.memo(({ post }: PostContentProps) => {
         <LikeButton post={post} />
         <ShareButton post={post} />
       </div>
-      <PostComment feedId={post.id} isFeedOwner={post.isOwner} />
+      <PostComment feedId={post.id} isFeedOwner={post.isOwner} highlightCommentId={highlightCommentId} />
     </div>
   );
 });

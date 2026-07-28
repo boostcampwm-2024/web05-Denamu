@@ -3,7 +3,7 @@ import { NOTIFICATION } from "@/constants/endpoints";
 import { axiosInstance } from "@/api/instance";
 import { ApiData } from "@/types/api";
 
-export type NotificationType = "LIKE";
+export type NotificationType = "LIKE" | "COMMENT";
 
 export type NotificationItem = {
   id: number;
@@ -20,6 +20,8 @@ export type NotificationItem = {
     profileImage: string | null;
   };
   otherCount: number;
+  commentPreview: string | null;
+  commentId: number | null;
 };
 
 type GetUnreadCountResponse = ApiData<{ count: number }>;

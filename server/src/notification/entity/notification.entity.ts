@@ -17,6 +17,7 @@ import { User } from '@user/entity/user.entity';
 
 export enum NotificationType {
   LIKE = 'LIKE',
+  COMMENT = 'COMMENT',
 }
 
 @Entity({ name: 'notification' })

@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 import { DataSource } from 'typeorm';
 
@@ -15,6 +16,8 @@ import { UpdateCommentRequestDto } from '@comment/dto/request/updateComment.dto'
 import { GetCommentResponseDto } from '@comment/dto/response/getComment.dto';
 import { GetUserCommentsResponseDto } from '@comment/dto/response/getUserComments.dto';
 import { Comment } from '@comment/entity/comment.entity';
+import { CommentCreatedEvent } from '@comment/event/comment-created.event';
+import { CommentDeletedEvent } from '@comment/event/comment-deleted.event';
 import { CommentRepository } from '@comment/repository/comment.repository';
 
 import { Payload } from '@common/guard/jwt.guard';
@@ -30,6 +33,7 @@ export class CommentService {
     private readonly dataSource: DataSource,
     private readonly feedService: FeedService,
     private readonly userService: UserService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   private async getValidatedComment(
@@ -78,7 +82,10 @@ export class CommentService {
     return commentObj;
   }
 
-  async get(commentDto: GetCommentRequestDto, requester: Payload | null = null) {
+  async get(
+    commentDto: GetCommentRequestDto,
+    requester: Payload | null = null,
+  ) {
     await this.feedService.getPublicFeed(commentDto.feedId);
 
     const comments = await this.commentRepository.getCommentInformation(
@@ -147,6 +154,11 @@ export class CommentService {
         parentId: commentDto.parentId ?? null,
       });
     });
+
+    this.eventEmitter.emit(
+      'comment.created',
+      new CommentCreatedEvent(feedId, userInformation.id),
+    );
   }
 
   async delete(userInformation: Payload, commentDto: CommentParamRequestDto) {
@@ -174,11 +186,17 @@ export class CommentService {
       await manager.save(feed);
       await manager.remove(comment);
     });
+
+    this.eventEmitter.emit(
+      'comment.deleted',
+      new CommentDeletedEvent(comment.feed.id),
+    );
   }
 
   async deleteByAdmin(commentId: number) {
     const comment = await this.commentRepository.findOne({
       where: { id: commentId },
+      relations: ['feed'],
     });
 
     if (!comment) {
@@ -188,6 +206,11 @@ export class CommentService {
     comment.isDeleted = true;
     comment.isAdminDeleted = true;
     await this.commentRepository.save(comment);
+
+    this.eventEmitter.emit(
+      'comment.deleted',
+      new CommentDeletedEvent(comment.feed.id),
+    );
   }
 
   async update(

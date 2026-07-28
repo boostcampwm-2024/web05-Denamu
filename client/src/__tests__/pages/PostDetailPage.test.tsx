@@ -17,6 +17,7 @@ vi.mock("lucide-react", async () => {
 
 vi.mock("react-router-dom", () => ({
   useParams: () => params,
+  useLocation: () => ({ state: null }),
 }));
 
 vi.mock("@/hooks/queries/usePostDetail", () => ({

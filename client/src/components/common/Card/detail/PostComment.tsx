@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Flag, MoreVertical } from "lucide-react";
 
@@ -31,6 +31,7 @@ interface PostCommentProps {
   feedId: number;
   isFeedOwner?: boolean;
   isAdmin?: boolean;
+  highlightCommentId?: number | null;
 }
 
 interface CommentItemProps {
@@ -50,7 +51,12 @@ interface CommentItemProps {
 
 const INITIAL_VISIBLE = 3;
 
-export default function PostComment({ feedId, isFeedOwner = false, isAdmin = false }: PostCommentProps) {
+export default function PostComment({
+  feedId,
+  isFeedOwner = false,
+  isAdmin = false,
+  highlightCommentId = null,
+}: PostCommentProps) {
   const { id: userId, userName } = useAuthStore((state) => state.userInfo);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
@@ -151,6 +157,25 @@ export default function PostComment({ feedId, isFeedOwner = false, isAdmin = fal
     .sort((a, b) => Number(new Date(b.date)) - Number(new Date(a.date)));
   const visibleRoots = showAll ? roots : roots.slice(0, INITIAL_VISIBLE);
 
+  useEffect(() => {
+    if (!highlightCommentId) return;
+    const target = comments.find((comment) => comment.id === highlightCommentId);
+    if (!target) return;
+    const rootId = target.parentId ?? target.id;
+    const rootIndex = roots.findIndex((root) => root.id === rootId);
+    if (rootIndex >= INITIAL_VISIBLE) setShowAll(true);
+  }, [highlightCommentId, comments]);
+
+  const scrolledToRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!highlightCommentId || scrolledToRef.current === highlightCommentId) return;
+    const target = document.getElementById(`comment-${highlightCommentId}`);
+    if (!target) return;
+    target.scrollIntoView({ behavior: "smooth", block: "center" });
+    scrolledToRef.current = highlightCommentId;
+  }, [highlightCommentId, comments, showAll]);
+
   return (
     <div className="w-full space-y-6">
       {/* 댓글 입력 영역 */}
@@ -192,7 +217,13 @@ export default function PostComment({ feedId, isFeedOwner = false, isAdmin = fal
       {/* 댓글 목록 */}
       <ul className="space-y-4">
         {visibleRoots.map((root) => (
-          <li key={root.id} className="border-b border-gray-100 pb-4">
+          <li
+            key={root.id}
+            id={`comment-${root.id}`}
+            className={`border-b border-gray-100 pb-4 transition-colors ${
+              root.id === highlightCommentId ? "-m-2 rounded-md bg-yellow-50 p-2 ring-2 ring-yellow-300" : ""
+            }`}
+          >
             <CommentItem
               comment={root}
               canEdit={canEditComment(root)}
@@ -211,7 +242,15 @@ export default function PostComment({ feedId, isFeedOwner = false, isAdmin = fal
             {(repliesByParent[root.id] ?? []).length > 0 && (
               <ul className="mt-3 ml-11 space-y-3 border-l-2 border-gray-100 pl-4">
                 {repliesByParent[root.id].map((reply) => (
-                  <li key={reply.id}>
+                  <li
+                    key={reply.id}
+                    id={`comment-${reply.id}`}
+                    className={`transition-colors ${
+                      reply.id === highlightCommentId
+                        ? "-m-2 rounded-md bg-yellow-50 p-2 ring-2 ring-yellow-300"
+                        : ""
+                    }`}
+                  >
                     <CommentItem
                       comment={reply}
                       canEdit={canEditComment(reply)}

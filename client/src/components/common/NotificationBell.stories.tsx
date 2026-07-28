@@ -1,10 +1,11 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, within } from "storybook/test";
-
 import { NotificationBell } from "@/components/common/NotificationBell";
+
 import { NOTIFICATION } from "@/constants/endpoints";
+
 import { mockApi, ok } from "@/__storybook__/mockApi";
 import { useAuthStore } from "@/store/useAuthStore";
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect, userEvent, within } from "storybook/test";
 
 const unreadItem = {
   id: 1,
@@ -14,6 +15,8 @@ const unreadItem = {
   feed: { id: 10, title: "Storybook으로 알림 미리보기", path: "https://example.com/10" },
   actor: { userName: "댓글러", profileImage: null },
   otherCount: 0,
+  commentPreview: null,
+  commentId: null,
 };
 
 const readItem = {
@@ -24,6 +27,8 @@ const readItem = {
   feed: { id: 11, title: "이미 읽은 알림 예시", path: "https://example.com/11" },
   actor: { userName: "먼저읽음", profileImage: null },
   otherCount: 0,
+  commentPreview: null,
+  commentId: null,
 };
 
 const multipleLikersItem = {
@@ -34,6 +39,32 @@ const multipleLikersItem = {
   feed: { id: 12, title: "여러 명이 좋아요한 게시글", path: "https://example.com/12" },
   actor: { userName: "최신좋아요러", profileImage: null },
   otherCount: 3,
+  commentPreview: null,
+  commentId: null,
+};
+
+const commentItem = {
+  id: 4,
+  type: "COMMENT",
+  isRead: false,
+  updatedAt: "2026-07-27T00:00:00.000Z",
+  feed: { id: 13, title: "댓글이 달린 게시글", path: "https://example.com/13" },
+  actor: { userName: "댓글러", profileImage: null },
+  otherCount: 0,
+  commentPreview: "저도 이 방법으로 해결했어요, 감사합니다!",
+  commentId: 101,
+};
+
+const multipleCommentersItem = {
+  id: 5,
+  type: "COMMENT",
+  isRead: false,
+  updatedAt: "2026-07-27T00:00:00.000Z",
+  feed: { id: 14, title: "여러 명이 댓글단 게시글", path: "https://example.com/14" },
+  actor: { userName: "최신댓글러", profileImage: null },
+  otherCount: 2,
+  commentPreview: "저도 같은 문제 있었는데 이 글 보고 해결했습니다",
+  commentId: 102,
 };
 
 const meta = {
@@ -98,6 +129,39 @@ export const WithMultipleLikers: Story = {
     await userEvent.click(canvas.getByRole("button", { name: "알림" }));
     const item = await body.findByTestId("notification-item");
     await expect(item).toHaveTextContent("최신좋아요러님 외 3명이 여러 명이 좋아요한 게시글에 좋아요를 표시했습니다.");
+  },
+};
+
+export const WithComment: Story = {
+  name: "댓글 알림",
+  beforeEach: () => {
+    useAuthStore.setState({ isAuthenticated: true, accessToken: "mock-token" });
+    mockApi.onGet(NOTIFICATION.UNREAD_COUNT).reply(...ok({ count: 1 }));
+    mockApi.onGet(NOTIFICATION.LIST).reply(...ok({ result: [commentItem] }));
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
+    await userEvent.click(canvas.getByRole("button", { name: "알림" }));
+    const item = await body.findByTestId("notification-item");
+    await expect(item).toHaveTextContent("댓글러님이 댓글이 달린 게시글에 댓글을 남겼습니다.");
+    await expect(item).toHaveTextContent("저도 이 방법으로 해결했어요, 감사합니다!");
+  },
+};
+
+export const WithMultipleCommenters: Story = {
+  name: "여러 명이 댓글",
+  beforeEach: () => {
+    useAuthStore.setState({ isAuthenticated: true, accessToken: "mock-token" });
+    mockApi.onGet(NOTIFICATION.UNREAD_COUNT).reply(...ok({ count: 1 }));
+    mockApi.onGet(NOTIFICATION.LIST).reply(...ok({ result: [multipleCommentersItem] }));
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
+    await userEvent.click(canvas.getByRole("button", { name: "알림" }));
+    const item = await body.findByTestId("notification-item");
+    await expect(item).toHaveTextContent("최신댓글러님 외 2명이 여러 명이 댓글단 게시글에 댓글을 남겼습니다.");
   },
 };
 

@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 import { NotificationType } from '@notification/entity/notification.entity';
+import { toCommentPreview } from '@notification/util/commentPreview.util';
 
 type NotificationRawRow = {
   id: number;
@@ -12,24 +13,37 @@ type NotificationRawRow = {
   feedPath: string;
   actorUserName: string | null;
   actorProfileImage: string | null;
-  otherLikersCount: string | number;
+  otherActorsCount: string | number;
+  commentContent: string | null;
+  commentId: number | null;
 };
 
 export class NotificationItemResult {
   @ApiProperty({ example: 1, description: '알림 ID' })
   id: number;
 
-  @ApiProperty({ example: 'LIKE', enum: NotificationType, description: '알림 종류' })
+  @ApiProperty({
+    example: 'LIKE',
+    enum: NotificationType,
+    description: '알림 종류',
+  })
   type: NotificationType;
 
   @ApiProperty({ example: false, description: '읽음 여부' })
   isRead: boolean;
 
-  @ApiProperty({ example: '2026-07-26T00:00:00.000Z', description: '알림 갱신 시각(표시 기준 시각)' })
+  @ApiProperty({
+    example: '2026-07-26T00:00:00.000Z',
+    description: '알림 갱신 시각(표시 기준 시각)',
+  })
   updatedAt: Date;
 
   @ApiProperty({
-    example: { id: 1, title: 'example title', path: 'https://example.com/feed' },
+    example: {
+      id: 1,
+      title: 'example title',
+      path: 'https://example.com/feed',
+    },
     description: '알림 대상 게시글 정보',
   })
   feed: {
@@ -40,7 +54,8 @@ export class NotificationItemResult {
 
   @ApiProperty({
     example: { userName: 'liker', profileImage: null },
-    description: '알림을 발생시킨 유저 정보(현재 최신 좋아요 사용자에서 파생)',
+    description:
+      '알림을 발생시킨 유저 정보(타입별 최신 행위자에서 파생: LIKE는 좋아요, COMMENT는 댓글)',
   })
   actor: {
     userName: string | null;
@@ -49,9 +64,25 @@ export class NotificationItemResult {
 
   @ApiProperty({
     example: 2,
-    description: '표시된 actor를 제외하고 이 게시글에 좋아요를 누른 다른 사람 수(수신자 본인 제외)',
+    description:
+      '표시된 actor를 제외하고 이 게시글에 좋아요/댓글을 남긴 다른 사람 수(수신자 본인 제외)',
   })
   otherCount: number;
+
+  @ApiProperty({
+    example: '이 글 정말 잘 읽었습니다...',
+    nullable: true,
+    description:
+      'COMMENT 타입일 때 최신 댓글 내용 일부(40자 초과 시 말줄임). LIKE는 항상 null',
+  })
+  commentPreview: string | null;
+
+  @ApiProperty({
+    example: 42,
+    nullable: true,
+    description: 'COMMENT 타입일 때 최신 댓글의 ID(하이라이트/이동용). LIKE는 항상 null',
+  })
+  commentId: number | null;
 
   private constructor(partial: Partial<NotificationItemResult>) {
     Object.assign(this, partial);
@@ -72,7 +103,9 @@ export class NotificationItemResult {
         userName: row.actorUserName,
         profileImage: row.actorProfileImage,
       },
-      otherCount: Math.max(0, Number(row.otherLikersCount) - 1),
+      otherCount: Math.max(0, Number(row.otherActorsCount) - 1),
+      commentPreview: toCommentPreview(row.commentContent),
+      commentId: row.commentId ?? null,
     });
   }
 

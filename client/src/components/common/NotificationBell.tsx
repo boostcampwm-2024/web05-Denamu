@@ -20,20 +20,19 @@ import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/useAuthStore";
 
 const buildMessage = (item: NotificationItem) => {
-  switch (item.type) {
-    case "LIKE":
-    default: {
-      const actorSuffix = item.otherCount > 0 ? `님 외 ${item.otherCount}명이 ` : "님이 ";
-      return (
-        <>
-          <span className="font-semibold">{item.actor.userName ?? "알 수 없는 사용자"}</span>
-          {actorSuffix}
-          <span className="font-semibold">{item.feed.title}</span>에{" "}
-          <span className="font-semibold">좋아요를 표시했습니다</span>.
-        </>
-      );
-    }
-  }
+  const actorSuffix = item.otherCount > 0 ? `님 외 ${item.otherCount}명이 ` : "님이 ";
+  const [actionBold, actionRest] =
+    item.type === "COMMENT" ? ["댓글", "을 남겼습니다"] : ["좋아요", "를 표시했습니다"];
+
+  return (
+    <>
+      <span className="font-semibold">{item.actor.userName ?? "알 수 없는 사용자"}</span>
+      {actorSuffix}
+      <span className="font-semibold">{item.feed.title}</span>에{" "}
+      <span className="font-semibold">{actionBold}</span>
+      {actionRest}.
+    </>
+  );
 };
 
 export const NotificationBell = () => {
@@ -51,7 +50,10 @@ export const NotificationBell = () => {
   const handleItemClick = (item: NotificationItem) => {
     if (!item.isRead) markRead(item.id);
     setOpen(false);
-    navigate(`/${item.feed.id}`, { state: { backgroundLocation: location } });
+    const highlightCommentId = item.type === "COMMENT" ? item.commentId : null;
+    navigate(`/${item.feed.id}`, {
+      state: { backgroundLocation: location, highlightCommentId },
+    });
   };
 
   return (
@@ -97,6 +99,11 @@ export const NotificationBell = () => {
                 </Avatar>
                 <div className="min-w-0 flex-1">
                   <p className="line-clamp-2">{buildMessage(item)}</p>
+                  {item.type === "COMMENT" && item.commentPreview && (
+                    <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
+                      &ldquo;{item.commentPreview}&rdquo;
+                    </p>
+                  )}
                   <p className="mt-1 text-xs text-muted-foreground">{new Date(item.updatedAt).toLocaleString()}</p>
                 </div>
                 {!item.isRead && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />}
