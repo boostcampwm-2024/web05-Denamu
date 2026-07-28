@@ -35,7 +35,7 @@ describe(`${CommentService.name} Unit Test`, () => {
   >;
   let feedService: jest.Mocked<Pick<FeedService, 'getPublicFeed'>>;
   let userService: jest.Mocked<Pick<UserService, 'getUser'>>;
-  let manager: { save: jest.Mock; remove: jest.Mock };
+  let manager: { save: jest.Mock; remove: jest.Mock; count: jest.Mock };
   let dataSource: jest.Mocked<Pick<DataSource, 'transaction'>>;
   let eventEmitter: jest.Mocked<Pick<EventEmitter2, 'emit'>>;
 
@@ -56,7 +56,7 @@ describe(`${CommentService.name} Unit Test`, () => {
     };
     feedService = { getPublicFeed: jest.fn() };
     userService = { getUser: jest.fn() };
-    manager = { save: jest.fn(), remove: jest.fn() };
+    manager = { save: jest.fn(), remove: jest.fn(), count: jest.fn() };
     dataSource = {
       transaction: jest.fn((cb: any) => cb(manager)),
     } as any;
@@ -410,6 +410,59 @@ describe(`${CommentService.name} Unit Test`, () => {
         'comment.deleted',
         new CommentDeletedEvent(10, 42),
       );
+    });
+
+    it('소프트 삭제된 부모 댓글의 마지막 답글을 삭제하면 부모 댓글도 완전히 삭제한다.', async () => {
+      // given
+      const feed = { id: 10, commentCount: 3, blog: { userId: 888 } };
+      const parent = { id: 1, isDeleted: true, user: { id: 42 } };
+      const comment = {
+        id: 5,
+        parentId: 1,
+        user: { id: user.id },
+        parent,
+        feed,
+      } as Comment;
+      commentRepository.findOne.mockResolvedValue(comment);
+      manager.count.mockResolvedValue(0);
+
+      // when
+      await commentService.delete(user, dto);
+
+      // then
+      expect(manager.count).toHaveBeenCalledWith(Comment, {
+        where: { parentId: 1 },
+      });
+      expect(feed.commentCount).toBe(1);
+      expect(manager.remove).toHaveBeenCalledWith(comment);
+      expect(manager.remove).toHaveBeenCalledWith(parent);
+      expect(eventEmitter.emit).toHaveBeenCalledWith(
+        'comment.deleted',
+        new CommentDeletedEvent(10, 42),
+      );
+    });
+
+    it('소프트 삭제된 부모 댓글에 답글이 남아있으면 부모 댓글은 삭제하지 않는다.', async () => {
+      // given
+      const feed = { id: 10, commentCount: 3, blog: { userId: 888 } };
+      const parent = { id: 1, isDeleted: true, user: { id: 42 } };
+      const comment = {
+        id: 5,
+        parentId: 1,
+        user: { id: user.id },
+        parent,
+        feed,
+      } as Comment;
+      commentRepository.findOne.mockResolvedValue(comment);
+      manager.count.mockResolvedValue(1);
+
+      // when
+      await commentService.delete(user, dto);
+
+      // then
+      expect(feed.commentCount).toBe(2);
+      expect(manager.remove).toHaveBeenCalledWith(comment);
+      expect(manager.remove).not.toHaveBeenCalledWith(parent);
     });
 
     it('본인 댓글이 아니어도 RSS 소유자면 댓글 수를 감소시키고 댓글을 제거한다.', async () => {
