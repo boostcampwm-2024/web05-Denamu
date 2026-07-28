@@ -9,8 +9,13 @@ const config: Config.InitialOptions = {
   rootDir: '../../../../',
   testRegex: 'test/.*\\.e2e-spec\\.ts$',
   transform: {
+    'node_modules/(htmlparser2|entities|domelementtype|domhandler|domutils|dom-serializer)/.+\\.js$':
+      ['ts-jest', { tsconfig: { allowJs: true } }],
     '^.+\\.(t|j)s$': 'ts-jest',
   },
+  transformIgnorePatterns: [
+    '/node_modules/(?!htmlparser2/|entities/|domelementtype/|domhandler/|domutils/|dom-serializer/)',
+  ],
   coverageDirectory: './coverage/e2e',
   setupFilesAfterEnv: ['./test/config/e2e/env/jest.setup.ts'],
   globalSetup: './test/config/e2e/global/e2e-test-global-setup.ts',

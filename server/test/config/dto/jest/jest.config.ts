@@ -9,8 +9,13 @@ const config: Config.InitialOptions = {
   rootDir: '../../../../',
   testRegex: 'test/.*\\.dto.spec.ts$',
   transform: {
+    'node_modules/(htmlparser2|entities|domelementtype|domhandler|domutils|dom-serializer)/.+\\.js$':
+      ['ts-jest', { tsconfig: { allowJs: true } }],
     '^.+\\.(t|j)s$': 'ts-jest',
   },
+  transformIgnorePatterns: [
+    '/node_modules/(?!htmlparser2/|entities/|domelementtype/|domhandler/|domutils/|dom-serializer/)',
+  ],
   coverageDirectory: './coverage/dto',
   maxWorkers: '50%',
   testTimeout: 10000,
