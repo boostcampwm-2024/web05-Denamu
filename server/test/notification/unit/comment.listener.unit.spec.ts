@@ -167,6 +167,29 @@ describe(`${CommentListener.name} Unit Test`, () => {
       ).toHaveBeenCalledWith(5, 10);
     });
 
+    it('내 게시글의 내 댓글에 답글이 달리면 답글 알림만 생성하고 댓글 알림은 생성하지 않는다.', async () => {
+      // given
+      feedRepository.getBlogMetaByFeedId.mockResolvedValue({
+        id: 1,
+        userName: 'blog',
+        userId: 99,
+      });
+
+      // when
+      await commentListener.handleCommentCreated(
+        new CommentCreatedEvent(10, 2, 99),
+      );
+
+      // then
+      expect(notificationService.upsertReplyNotification).toHaveBeenCalledWith(
+        99,
+        10,
+      );
+      expect(
+        notificationService.upsertCommentNotification,
+      ).not.toHaveBeenCalled();
+    });
+
     it('답글 알림 생성 중 예외가 발생해도 던지지 않고 로깅한다.', async () => {
       // given
       feedRepository.getBlogMetaByFeedId.mockResolvedValue({

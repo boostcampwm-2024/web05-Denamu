@@ -24,18 +24,20 @@ export class CommentListener {
     commenterUserId,
     parentAuthorId,
   }: CommentCreatedEvent) {
-    try {
-      const blogMeta = await this.feedRepository.getBlogMetaByFeedId(feedId);
-      if (blogMeta?.userId && blogMeta.userId !== commenterUserId) {
-        await this.notificationService.upsertCommentNotification(
-          blogMeta.userId,
-          feedId,
+    if (parentAuthorId === null) {
+      try {
+        const blogMeta = await this.feedRepository.getBlogMetaByFeedId(feedId);
+        if (blogMeta?.userId && blogMeta.userId !== commenterUserId) {
+          await this.notificationService.upsertCommentNotification(
+            blogMeta.userId,
+            feedId,
+          );
+        }
+      } catch (error) {
+        this.logger.error(
+          `[CommentListener]: 댓글 알림 생성 중 오류 발생 (feedId: ${feedId}): ${error}`,
         );
       }
-    } catch (error) {
-      this.logger.error(
-        `[CommentListener]: 댓글 알림 생성 중 오류 발생 (feedId: ${feedId}): ${error}`,
-      );
     }
 
     if (parentAuthorId !== null && parentAuthorId !== commenterUserId) {
