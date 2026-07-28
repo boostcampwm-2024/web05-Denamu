@@ -9,6 +9,8 @@ export const mockLucideIcons = {
   Loader: () => <div data-testid="loader-icon">Mock Loader Icon</div>,
   ChevronLeft: () => <div data-testid="chevron-left-icon">Mock Chevron Left Icon</div>,
   ChevronRight: () => <div data-testid="chevron-right-icon">Mock Chevron Right Icon</div>,
+  ChevronDown: () => <div data-testid="chevron-down-icon">Mock Chevron Down Icon</div>,
+  ChevronUp: () => <div data-testid="chevron-up-icon">Mock Chevron Up Icon</div>,
   MoreHorizontal: () => <div data-testid="more-horizontal-icon">Mock More Horizontal Icon</div>,
   ArrowLeft: () => <div data-testid="arrow-left-icon">Mock Arrow Left Icon</div>,
   Rss: () => <div data-testid="rss-icon">Mock Rss Icon</div>,

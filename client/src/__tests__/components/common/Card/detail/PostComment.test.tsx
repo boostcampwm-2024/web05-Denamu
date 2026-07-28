@@ -114,9 +114,15 @@ describe("PostComment", () => {
     );
   });
 
-  it("대댓글(parentId)이 있으면 루트 댓글 아래에 함께 렌더링해야 한다", () => {
+  it("대댓글(parentId)이 있으면 기본적으로 숨겨지고 답글 개수가 표시되며, 클릭하면 펼쳐진다", () => {
     comments = [makeComment(1), makeComment(3, { parentId: 1, comment: "대댓글" })];
     render(<PostComment feedId={10} />);
+
+    expect(screen.queryByText("대댓글")).not.toBeInTheDocument();
+    const toggleBtn = screen.getByRole("button", { name: /답글 1개/ });
+    expect(toggleBtn).toBeInTheDocument();
+
+    fireEvent.click(toggleBtn);
 
     expect(screen.getByText("대댓글")).toBeInTheDocument();
   });
