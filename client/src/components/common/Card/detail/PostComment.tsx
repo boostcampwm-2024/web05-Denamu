@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 
+import type { EmojiClickData } from "emoji-picker-react";
 import { Flag, MoreVertical } from "lucide-react";
 
 import { AuthSignInForm } from "@/components/auth/AuthSignInForm";
 import CommentAction from "@/components/common/Card/detail/CommentAction";
+import EmojiPickerButton from "@/components/common/EmojiPickerButton";
 import { ReportDialog } from "@/components/common/ReportDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -79,6 +81,12 @@ export default function PostComment({
   const [reportCommentId, setReportCommentId] = useState<number | null>(null);
 
   const handleModify = (id: number | null) => setModifyId(id);
+
+  const handleContentEmojiClick = (emojiData: EmojiClickData) =>
+    setContent((prev) => prev + emojiData.emoji);
+
+  const handleReplyEmojiClick = (emojiData: EmojiClickData) =>
+    setReplyContent((prev) => prev + emojiData.emoji);
 
   const handleSubmit = () => {
     if (!isAuthenticated) {
@@ -195,7 +203,8 @@ export default function PostComment({
               ></textarea>
             </div>
           </div>
-          <div className="flex justify-end px-4 pb-4">
+          <div className="flex justify-end items-center gap-2 px-4 pb-4">
+            <EmojiPickerButton onEmojiClick={handleContentEmojiClick} />
             <button
               onClick={handleSubmit}
               disabled={isCreating}
@@ -279,7 +288,8 @@ export default function PostComment({
                   placeholder="답글을 입력하세요..."
                   className="w-full bg-gray-50 p-2 rounded-md h-16 outline-none ring-1 ring-gray-300 resize-none"
                 ></textarea>
-                <div className="flex justify-end gap-2 text-sm mt-1">
+                <div className="flex justify-end items-center gap-2 text-sm mt-1">
+                  <EmojiPickerButton onEmojiClick={handleReplyEmojiClick} />
                   <button
                     onClick={() => {
                       setReplyTo(null);
