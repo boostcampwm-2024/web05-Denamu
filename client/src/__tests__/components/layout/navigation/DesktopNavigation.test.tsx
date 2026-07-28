@@ -25,6 +25,10 @@ vi.mock("@/components/common/NotificationBell", () => ({
   NotificationBell: () => <div data-testid="notification-bell" />,
 }));
 
+vi.mock("@/components/common/NoticeBell", () => ({
+  NoticeBell: () => <div data-testid="notice-bell" />,
+}));
+
 vi.mock("@/components/layout/SideButton", () => ({ default: () => <div data-testid="side-button" /> }));
 
 vi.mock("@/components/search/SearchButton", () => ({
