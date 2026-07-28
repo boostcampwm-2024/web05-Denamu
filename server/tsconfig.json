@@ -28,6 +28,7 @@
       "@file/*": ["./src/file/*"],
       "@health/*": ["./src/health/*"],
       "@like/*": ["./src/like/*"],
+      "@notice/*": ["./src/notice/*"],
       "@notification/*": ["./src/notification/*"],
       "@report/*": ["./src/report/*"],
       "@rss/*": ["./src/rss/*"],
