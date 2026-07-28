@@ -19,37 +19,68 @@ export class CommentListener {
   ) {}
 
   @OnEvent('comment.created')
-  async handleCommentCreated({ feedId, commenterUserId }: CommentCreatedEvent) {
-    try {
-      const blogMeta = await this.feedRepository.getBlogMetaByFeedId(feedId);
-      if (!blogMeta?.userId) return;
-      if (blogMeta.userId === commenterUserId) return;
+  async handleCommentCreated({
+    feedId,
+    commenterUserId,
+    parentAuthorId,
+  }: CommentCreatedEvent) {
+    if (parentAuthorId === null) {
+      try {
+        const blogMeta = await this.feedRepository.getBlogMetaByFeedId(feedId);
+        if (blogMeta?.userId && blogMeta.userId !== commenterUserId) {
+          await this.notificationService.upsertCommentNotification(
+            blogMeta.userId,
+            feedId,
+          );
+        }
+      } catch (error) {
+        this.logger.error(
+          `[CommentListener]: 댓글 알림 생성 중 오류 발생 (feedId: ${feedId}): ${error}`,
+        );
+      }
+    }
 
-      await this.notificationService.upsertCommentNotification(
-        blogMeta.userId,
-        feedId,
-      );
-    } catch (error) {
-      this.logger.error(
-        `[CommentListener]: 댓글 알림 생성 중 오류 발생 (feedId: ${feedId}): ${error}`,
-      );
+    if (parentAuthorId !== null && parentAuthorId !== commenterUserId) {
+      try {
+        await this.notificationService.upsertReplyNotification(
+          parentAuthorId,
+          feedId,
+        );
+      } catch (error) {
+        this.logger.error(
+          `[CommentListener]: 답글 알림 생성 중 오류 발생 (feedId: ${feedId}): ${error}`,
+        );
+      }
     }
   }
 
   @OnEvent('comment.deleted')
-  async handleCommentDeleted({ feedId }: CommentDeletedEvent) {
+  async handleCommentDeleted({ feedId, parentAuthorId }: CommentDeletedEvent) {
     try {
       const blogMeta = await this.feedRepository.getBlogMetaByFeedId(feedId);
-      if (!blogMeta?.userId) return;
-
-      await this.notificationService.removeCommentNotificationIfEmpty(
-        feedId,
-        blogMeta.userId,
-      );
+      if (blogMeta?.userId) {
+        await this.notificationService.removeCommentNotificationIfEmpty(
+          feedId,
+          blogMeta.userId,
+        );
+      }
     } catch (error) {
       this.logger.error(
         `[CommentListener]: 댓글 알림 삭제 중 오류 발생 (feedId: ${feedId}): ${error}`,
       );
+    }
+
+    if (parentAuthorId !== null) {
+      try {
+        await this.notificationService.removeReplyNotificationIfEmpty(
+          feedId,
+          parentAuthorId,
+        );
+      } catch (error) {
+        this.logger.error(
+          `[CommentListener]: 답글 알림 삭제 중 오류 발생 (feedId: ${feedId}): ${error}`,
+        );
+      }
     }
   }
 }

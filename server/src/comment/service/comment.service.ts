@@ -66,7 +66,7 @@ export class CommentService {
       where: {
         id: commentId,
       },
-      relations: ['user', 'feed', 'feed.blog'],
+      relations: ['user', 'feed', 'feed.blog', 'parent', 'parent.user'],
     });
 
     if (!commentObj) {
@@ -117,7 +117,7 @@ export class CommentService {
   private async validateParentComment(parentId: number, feedId: number) {
     const parent = await this.commentRepository.findOne({
       where: { id: parentId },
-      relations: ['feed'],
+      relations: ['feed', 'user'],
     });
 
     if (!parent) {
@@ -131,6 +131,8 @@ export class CommentService {
     if (parent.parentId !== null) {
       throw new BadRequestException('답글에는 답글을 달 수 없습니다.');
     }
+
+    return parent;
   }
 
   async create(
@@ -138,11 +140,17 @@ export class CommentService {
     feedId: number,
     commentDto: CreateCommentRequestDto,
   ) {
+    let parentAuthorId: number | null = null;
+
     await this.dataSource.transaction(async (manager) => {
       const feed = await this.feedService.getPublicFeed(feedId);
 
       if (commentDto.parentId) {
-        await this.validateParentComment(commentDto.parentId, feedId);
+        const parent = await this.validateParentComment(
+          commentDto.parentId,
+          feedId,
+        );
+        parentAuthorId = parent.user.id;
       }
 
       feed.commentCount++;
@@ -157,7 +165,7 @@ export class CommentService {
 
     this.eventEmitter.emit(
       'comment.created',
-      new CommentCreatedEvent(feedId, userInformation.id),
+      new CommentCreatedEvent(feedId, userInformation.id, parentAuthorId),
     );
   }
 
@@ -166,6 +174,8 @@ export class CommentService {
       userInformation,
       commentDto.commentId,
     );
+
+    const parentAuthorId = comment.parent?.user.id ?? null;
 
     const replyCount =
       comment.parentId === null
@@ -189,14 +199,14 @@ export class CommentService {
 
     this.eventEmitter.emit(
       'comment.deleted',
-      new CommentDeletedEvent(comment.feed.id),
+      new CommentDeletedEvent(comment.feed.id, parentAuthorId),
     );
   }
 
   async deleteByAdmin(commentId: number) {
     const comment = await this.commentRepository.findOne({
       where: { id: commentId },
-      relations: ['feed'],
+      relations: ['feed', 'parent', 'parent.user'],
     });
 
     if (!comment) {
@@ -209,7 +219,7 @@ export class CommentService {
 
     this.eventEmitter.emit(
       'comment.deleted',
-      new CommentDeletedEvent(comment.feed.id),
+      new CommentDeletedEvent(comment.feed.id, comment.parent?.user.id ?? null),
     );
   }
 

@@ -204,7 +204,7 @@ describe(`${CommentService.name} Unit Test`, () => {
       });
       expect(eventEmitter.emit).toHaveBeenCalledWith(
         'comment.created',
-        new CommentCreatedEvent(10, user.id),
+        new CommentCreatedEvent(10, user.id, null),
       );
     });
 
@@ -230,6 +230,7 @@ describe(`${CommentService.name} Unit Test`, () => {
         id: 7,
         parentId: null,
         feed: { id: 10 },
+        user: { id: 42 },
       } as any);
 
       // when
@@ -245,7 +246,7 @@ describe(`${CommentService.name} Unit Test`, () => {
       });
       expect(eventEmitter.emit).toHaveBeenCalledWith(
         'comment.created',
-        new CommentCreatedEvent(10, user.id),
+        new CommentCreatedEvent(10, user.id, 42),
       );
     });
 
@@ -355,7 +356,7 @@ describe(`${CommentService.name} Unit Test`, () => {
       expect(manager.remove).toHaveBeenCalledWith(comment);
       expect(eventEmitter.emit).toHaveBeenCalledWith(
         'comment.deleted',
-        new CommentDeletedEvent(10),
+        new CommentDeletedEvent(10, null),
       );
     });
 
@@ -382,17 +383,18 @@ describe(`${CommentService.name} Unit Test`, () => {
       expect(manager.remove).not.toHaveBeenCalled();
       expect(eventEmitter.emit).toHaveBeenCalledWith(
         'comment.deleted',
-        new CommentDeletedEvent(10),
+        new CommentDeletedEvent(10, null),
       );
     });
 
-    it('답글(parentId 존재)은 replyCount 조회 없이 hard delete 한다.', async () => {
+    it('답글(parentId 존재)은 replyCount 조회 없이 hard delete 하고, 원본 댓글 작성자를 parentAuthorId로 전달한다.', async () => {
       // given
       const feed = { id: 10, commentCount: 3, blog: { userId: 888 } };
       const comment = {
         id: 5,
         parentId: 1,
         user: { id: user.id },
+        parent: { user: { id: 42 } },
         feed,
       } as Comment;
       commentRepository.findOne.mockResolvedValue(comment);
@@ -406,7 +408,7 @@ describe(`${CommentService.name} Unit Test`, () => {
       expect(manager.remove).toHaveBeenCalledWith(comment);
       expect(eventEmitter.emit).toHaveBeenCalledWith(
         'comment.deleted',
-        new CommentDeletedEvent(10),
+        new CommentDeletedEvent(10, 42),
       );
     });
 
@@ -425,7 +427,7 @@ describe(`${CommentService.name} Unit Test`, () => {
       expect(manager.remove).toHaveBeenCalledWith(comment);
       expect(eventEmitter.emit).toHaveBeenCalledWith(
         'comment.deleted',
-        new CommentDeletedEvent(10),
+        new CommentDeletedEvent(10, null),
       );
     });
   });
@@ -458,7 +460,7 @@ describe(`${CommentService.name} Unit Test`, () => {
       // then
       expect(commentRepository.findOne).toHaveBeenCalledWith({
         where: { id: 5 },
-        relations: ['feed'],
+        relations: ['feed', 'parent', 'parent.user'],
       });
       expect(comment.isDeleted).toBe(true);
       expect(comment.isAdminDeleted).toBe(true);
@@ -467,7 +469,28 @@ describe(`${CommentService.name} Unit Test`, () => {
       expect(dataSource.transaction).not.toHaveBeenCalled();
       expect(eventEmitter.emit).toHaveBeenCalledWith(
         'comment.deleted',
-        new CommentDeletedEvent(10),
+        new CommentDeletedEvent(10, null),
+      );
+    });
+
+    it('답글을 관리자가 삭제하면 원본 댓글 작성자를 parentAuthorId로 전달한다.', async () => {
+      // given
+      const comment = {
+        id: 6,
+        isDeleted: false,
+        isAdminDeleted: false,
+        feed: { id: 10 },
+        parent: { user: { id: 42 } },
+      } as Comment;
+      commentRepository.findOne.mockResolvedValue(comment);
+
+      // when
+      await commentService.deleteByAdmin(6);
+
+      // then
+      expect(eventEmitter.emit).toHaveBeenCalledWith(
+        'comment.deleted',
+        new CommentDeletedEvent(10, 42),
       );
     });
   });

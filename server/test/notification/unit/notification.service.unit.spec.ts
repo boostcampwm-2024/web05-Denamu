@@ -13,6 +13,9 @@ describe(`${NotificationService.name} Unit Test`, () => {
       | 'upsertComment'
       | 'deleteCommentNotification'
       | 'hasActiveOtherComment'
+      | 'upsertReply'
+      | 'deleteReplyNotification'
+      | 'hasActiveOtherReply'
       | 'upsertSubscribe'
       | 'deleteSubscribeNotification'
       | 'countUnread'
@@ -29,6 +32,9 @@ describe(`${NotificationService.name} Unit Test`, () => {
       upsertComment: jest.fn(),
       deleteCommentNotification: jest.fn(),
       hasActiveOtherComment: jest.fn(),
+      upsertReply: jest.fn(),
+      deleteReplyNotification: jest.fn(),
+      hasActiveOtherReply: jest.fn(),
       upsertSubscribe: jest.fn(),
       deleteSubscribeNotification: jest.fn(),
       countUnread: jest.fn(),
@@ -113,6 +119,48 @@ describe(`${NotificationService.name} Unit Test`, () => {
       expect(
         notificationRepository.deleteCommentNotification,
       ).toHaveBeenCalledWith(10);
+    });
+  });
+
+  describe('upsertReplyNotification', () => {
+    it('recipientId, feedId로 upsertReply를 호출한다.', async () => {
+      // when
+      await notificationService.upsertReplyNotification(1, 10);
+
+      // then
+      expect(notificationRepository.upsertReply).toHaveBeenCalledWith(1, 10);
+    });
+  });
+
+  describe('removeReplyNotificationIfEmpty', () => {
+    it('본인 댓글에 달린 활성 답글이 남아있으면 알림을 삭제하지 않는다.', async () => {
+      // given
+      notificationRepository.hasActiveOtherReply.mockResolvedValue(true);
+
+      // when
+      await notificationService.removeReplyNotificationIfEmpty(10, 1);
+
+      // then
+      expect(notificationRepository.hasActiveOtherReply).toHaveBeenCalledWith(
+        10,
+        1,
+      );
+      expect(
+        notificationRepository.deleteReplyNotification,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('본인 댓글에 달린 활성 답글이 없으면 해당 게시글·수신자의 답글 알림을 삭제한다.', async () => {
+      // given
+      notificationRepository.hasActiveOtherReply.mockResolvedValue(false);
+
+      // when
+      await notificationService.removeReplyNotificationIfEmpty(10, 1);
+
+      // then
+      expect(
+        notificationRepository.deleteReplyNotification,
+      ).toHaveBeenCalledWith(10, 1);
     });
   });
 
