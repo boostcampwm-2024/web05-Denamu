@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 import type { EmojiClickData } from "emoji-picker-react";
 import { Flag, MoreVertical } from "lucide-react";
+import { ChevronDown, ChevronUp, Flag, MoreVertical } from "lucide-react";
 
 import { AuthSignInForm } from "@/components/auth/AuthSignInForm";
 import CommentAction from "@/components/common/Card/detail/CommentAction";
@@ -79,6 +80,7 @@ export default function PostComment({
   const [replyTo, setReplyTo] = useState<number | null>(null);
   const [replyContent, setReplyContent] = useState("");
   const [reportCommentId, setReportCommentId] = useState<number | null>(null);
+  const [expandedReplyIds, setExpandedReplyIds] = useState<Set<number>>(new Set());
 
   const handleModify = (id: number | null) => setModifyId(id);
 
@@ -87,6 +89,18 @@ export default function PostComment({
 
   const handleReplyEmojiClick = (emojiData: EmojiClickData) =>
     setReplyContent((prev) => prev + emojiData.emoji);
+
+  const toggleReplies = (rootId: number) => {
+    setExpandedReplyIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(rootId)) {
+        next.delete(rootId);
+      } else {
+        next.add(rootId);
+      }
+      return next;
+    });
+  };
 
   const handleSubmit = () => {
     if (!isAuthenticated) {
@@ -105,6 +119,7 @@ export default function PostComment({
     }
     setReplyTo(rootId);
     setReplyContent(mention ? `@${mention} ` : "");
+    setExpandedReplyIds((prev) => new Set(prev).add(rootId));
   };
 
   const handleReplySubmit = (rootId: number) => {
@@ -172,6 +187,9 @@ export default function PostComment({
     const rootId = target.parentId ?? target.id;
     const rootIndex = roots.findIndex((root) => root.id === rootId);
     if (rootIndex >= INITIAL_VISIBLE) setShowAll(true);
+    if (target.parentId !== null) {
+      setExpandedReplyIds((prev) => new Set(prev).add(rootId));
+    }
   }, [highlightCommentId, comments]);
 
   const scrolledToRef = useRef<number | null>(null);
@@ -247,8 +265,23 @@ export default function PostComment({
               onReport={setReportCommentId}
             />
 
-            {/* 답글 목록 */}
+            {/* 답글 펼치기/접기 토글 */}
             {(repliesByParent[root.id] ?? []).length > 0 && (
+              <button
+                onClick={() => toggleReplies(root.id)}
+                className="mt-2 ml-11 flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600"
+              >
+                {expandedReplyIds.has(root.id) ? (
+                  <ChevronUp className="w-3.5 h-3.5" />
+                ) : (
+                  <ChevronDown className="w-3.5 h-3.5" />
+                )}
+                답글 {repliesByParent[root.id].length}개
+              </button>
+            )}
+
+            {/* 답글 목록 */}
+            {expandedReplyIds.has(root.id) && (repliesByParent[root.id] ?? []).length > 0 && (
               <ul className="mt-3 ml-11 space-y-3 border-l-2 border-gray-100 pl-4">
                 {repliesByParent[root.id].map((reply) => (
                   <li
