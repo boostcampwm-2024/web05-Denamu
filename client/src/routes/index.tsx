@@ -62,7 +62,7 @@ export const AppRouter = ({ location, state }: RouterProps) => {
           }
         />
         <Route
-          path="/notice"
+          path="/board"
           element={
             <Suspense fallback={<Loading />}>
               <BoardListPage />
@@ -70,7 +70,7 @@ export const AppRouter = ({ location, state }: RouterProps) => {
           }
         />
         <Route
-          path="/notice/:id"
+          path="/board/:id"
           element={
             <Suspense fallback={<Loading />}>
               <BoardDetailPage />
