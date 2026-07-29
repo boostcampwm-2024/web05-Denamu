@@ -2,7 +2,7 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 import { AdminRepository } from '@admin/repository/admin.repository';
 
-import { BoardStatus } from '@board/constant/board.constant';
+import { BoardCategory, BoardStatus } from '@board/constant/board.constant';
 import { CreateBoardRequestDto } from '@board/dto/request/createBoard.dto';
 import { GetAdminBoardsRequestDto } from '@board/dto/request/getAdminBoards.dto';
 import { GetBoardsRequestDto } from '@board/dto/request/getBoards.dto';
@@ -74,6 +74,7 @@ describe(`${BoardService.name} Unit Test`, () => {
         2,
         10,
         expect.any(Date),
+        BoardCategory.NOTICE,
       );
       expect(result.page).toBe(2);
       expect(result.limit).toBe(10);
@@ -112,6 +113,48 @@ describe(`${BoardService.name} Unit Test`, () => {
 
       // then
       expect(result.result[0]).not.toHaveProperty('content');
+    });
+
+    it('분류를 지정하지 않을 경우 NOTICE 분류를 리포지토리에 위임한다.', async () => {
+      // given
+      boardRepository.findPublicList.mockResolvedValue({
+        items: [],
+        totalCount: 0,
+      });
+
+      // when
+      await boardService.getPublicBoards(
+        new GetBoardsRequestDto({ page: 1, limit: 10 }),
+      );
+
+      // then
+      expect(boardRepository.findPublicList).toHaveBeenCalledWith(
+        1,
+        10,
+        expect.any(Date),
+        BoardCategory.NOTICE,
+      );
+    });
+
+    it('분류를 FAQ로 지정할 경우 FAQ 분류를 리포지토리에 위임한다.', async () => {
+      // given
+      boardRepository.findPublicList.mockResolvedValue({
+        items: [],
+        totalCount: 0,
+      });
+
+      // when
+      await boardService.getPublicBoards(
+        new GetBoardsRequestDto({ page: 1, limit: 10, category: BoardCategory.FAQ }),
+      );
+
+      // then
+      expect(boardRepository.findPublicList).toHaveBeenCalledWith(
+        1,
+        10,
+        expect.any(Date),
+        BoardCategory.FAQ,
+      );
     });
   });
 
@@ -180,6 +223,7 @@ describe(`${BoardService.name} Unit Test`, () => {
         1,
         10,
         BoardStatus.DRAFT,
+        undefined,
       );
       expect(result.totalCount).toBe(1);
       expect(result.hasMore).toBe(false);
@@ -202,6 +246,32 @@ describe(`${BoardService.name} Unit Test`, () => {
         1,
         10,
         undefined,
+        undefined,
+      );
+    });
+
+    it('분류 필터를 지정할 경우 해당 분류를 리포지토리에 위임한다.', async () => {
+      // given
+      boardRepository.findAdminList.mockResolvedValue({
+        items: [],
+        totalCount: 0,
+      });
+
+      // when
+      await boardService.getAdminBoards(
+        new GetAdminBoardsRequestDto({
+          page: 1,
+          limit: 10,
+          category: BoardCategory.FAQ,
+        }),
+      );
+
+      // then
+      expect(boardRepository.findAdminList).toHaveBeenCalledWith(
+        1,
+        10,
+        undefined,
+        BoardCategory.FAQ,
       );
     });
   });
@@ -291,6 +361,7 @@ describe(`${BoardService.name} Unit Test`, () => {
         title: '제목',
         content: '<p>본문</p>',
         status: BoardStatus.DRAFT,
+        category: BoardCategory.NOTICE,
         isPinned: false,
         startAt: null,
         endAt: null,

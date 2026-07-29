@@ -3,7 +3,7 @@ import { HttpStatus } from '@nestjs/common';
 import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 
-import { BoardStatus } from '@board/constant/board.constant';
+import { BoardCategory, BoardStatus } from '@board/constant/board.constant';
 import { Board } from '@board/entity/board.entity';
 import { BoardRepository } from '@board/repository/board.repository';
 
@@ -32,6 +32,7 @@ describe(`GET ${URL} E2E Test`, () => {
   let published: Board;
   let pinned: Board;
   let inWindow: Board;
+  let faq: Board;
 
   beforeAll(() => {
     agent = supertest(testApp.getHttpServer());
@@ -59,6 +60,9 @@ describe(`GET ${URL} E2E Test`, () => {
     );
     await boardRepository.save(
       BoardFixture.createBoardFixture({ endAt: new Date(now - DAY) }),
+    );
+    faq = await boardRepository.save(
+      BoardFixture.createBoardFixture({ category: BoardCategory.FAQ }),
     );
   });
 
@@ -110,7 +114,7 @@ describe(`GET ${URL} E2E Test`, () => {
     const { data } = response.body as BoardListResponseBody;
     expect(response.status).toBe(HttpStatus.OK);
     expect(Object.keys(data.result[0]).sort()).toStrictEqual(
-      ['createdAt', 'endAt', 'id', 'isPinned', 'startAt', 'status', 'title'].sort(),
+      ['category', 'createdAt', 'endAt', 'id', 'isPinned', 'startAt', 'status', 'title'].sort(),
     );
   });
 
@@ -156,5 +160,35 @@ describe(`GET ${URL} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.BAD_REQUEST);
     expect(data).toBeUndefined();
+  });
+
+  it('[200] 분류를 지정하지 않을 경우 FAQ를 제외한 일반 게시글만 조회를 성공한다.', async () => {
+    // Http when
+    const response = await agent.get(URL);
+
+    // Http then
+    const { data } = response.body as BoardListResponseBody;
+    expect(response.status).toBe(HttpStatus.OK);
+    expect(data.result.map((board) => board.id)).not.toContain(faq.id);
+  });
+
+  it('[200] category=FAQ로 조회할 경우 FAQ 게시글만 조회를 성공한다.', async () => {
+    // Http when
+    const response = await agent.get(URL).query({ category: BoardCategory.FAQ });
+
+    // Http then
+    const { data } = response.body as BoardListResponseBody;
+    expect(response.status).toBe(HttpStatus.OK);
+    expect(data.totalCount).toBe(1);
+    expect(data.result).toHaveLength(1);
+    expect(data.result[0].id).toBe(faq.id);
+  });
+
+  it('[400] category가 분류 목록에 없는 값일 경우 목록 조회를 실패한다.', async () => {
+    // Http when
+    const response = await agent.get(URL).query({ category: 'EVENT' });
+
+    // Http then
+    expect(response.status).toBe(HttpStatus.BAD_REQUEST);
   });
 });

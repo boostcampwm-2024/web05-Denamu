@@ -8,7 +8,7 @@ import { AdminRepository } from '@admin/repository/admin.repository';
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
 
-import { BoardStatus } from '@board/constant/board.constant';
+import { BoardCategory, BoardStatus } from '@board/constant/board.constant';
 import { Board } from '@board/entity/board.entity';
 import { BoardRepository } from '@board/repository/board.repository';
 
@@ -154,6 +154,37 @@ describe(`GET ${URL} E2E Test`, () => {
     const response = await agent
       .get(URL)
       .query({ status: 'DELETED' })
+      .set('Cookie', `sessionId=${sessionKey}`);
+
+    // Http then
+    expect(response.status).toBe(HttpStatus.BAD_REQUEST);
+  });
+
+  it('[200] category 필터를 입력할 경우 해당 분류의 게시글만 조회를 성공한다.', async () => {
+    // given
+    const faq = await boardRepository.save(
+      BoardFixture.createBoardFixture({ category: BoardCategory.FAQ }),
+    );
+
+    // Http when
+    const response = await agent
+      .get(URL)
+      .query({ category: BoardCategory.FAQ })
+      .set('Cookie', `sessionId=${sessionKey}`);
+
+    // Http then
+    const { data } = response.body as BoardListResponseBody;
+    expect(response.status).toBe(HttpStatus.OK);
+    expect(data.totalCount).toBe(1);
+    expect(data.result).toHaveLength(1);
+    expect(data.result[0].id).toBe(faq.id);
+  });
+
+  it('[400] category가 분류 목록에 없는 값일 경우 목록 조회를 실패한다.', async () => {
+    // Http when
+    const response = await agent
+      .get(URL)
+      .query({ category: 'EVENT' })
       .set('Cookie', `sessionId=${sessionKey}`);
 
     // Http then

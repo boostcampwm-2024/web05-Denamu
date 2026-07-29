@@ -1,6 +1,6 @@
 import { validate } from 'class-validator';
 
-import { BoardStatus } from '@board/constant/board.constant';
+import { BoardCategory, BoardStatus } from '@board/constant/board.constant';
 import { UpdateBoardRequestDto } from '@board/dto/request/updateBoard.dto';
 
 describe(`${UpdateBoardRequestDto.name} Test`, () => {
@@ -106,6 +106,31 @@ describe(`${UpdateBoardRequestDto.name} Test`, () => {
     it('공개 상태가 공개 상태 목록에 없는 값일 경우 유효성 검사에 실패한다.', async () => {
       // given
       dto.status = 'DELETED' as any;
+
+      // when
+      const errors = await validate(dto);
+
+      // then
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isEnum');
+    });
+  });
+
+  describe('category', () => {
+    it('분류가 FAQ일 경우 유효성 검사에 성공한다.', async () => {
+      // given
+      dto.category = BoardCategory.FAQ;
+
+      // when
+      const errors = await validate(dto);
+
+      // then
+      expect(errors).toHaveLength(0);
+    });
+
+    it('분류가 분류 목록에 없는 값일 경우 유효성 검사에 실패한다.', async () => {
+      // given
+      dto.category = 'EVENT' as any;
 
       // when
       const errors = await validate(dto);
