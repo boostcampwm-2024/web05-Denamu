@@ -8,9 +8,9 @@ CREATE TABLE `admin` (
   `email_notification` tinyint NOT NULL DEFAULT 1,
   `parent_admin_id` int DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `IDX_a026be7ca12f8999cbdf96dec2` (`name`),
-  UNIQUE KEY `IDX_de87485f6489f5d0995f584195` (`email`),
-    CONSTRAINT `FK_78ba73b3dd2c586476eccd1867f`
+  UNIQUE KEY `UQ_admin_name` (`name`),
+  UNIQUE KEY `UQ_admin_email` (`email`),
+    CONSTRAINT `FK_admin_parent_admin_id`
     FOREIGN KEY (`parent_admin_id`)
     REFERENCES `admin` (`id`)
     ON DELETE CASCADE
@@ -28,8 +28,8 @@ CREATE TABLE `rss` (
   `platform` varchar(255) NOT NULL DEFAULT 'etc',
   `image` text,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `IDX_21beac47feacb87e57c59d6958` (`name`),
-  UNIQUE KEY `IDX_af1d102908727aa95ef09e1606` (`rss_url`)
+  UNIQUE KEY `UQ_rss_name` (`name`),
+  UNIQUE KEY `UQ_rss_rss_url` (`rss_url`)
 );
 
 -- denamu.`user` definition
@@ -54,8 +54,8 @@ CREATE TABLE `user` (
   `notice_email_agreed` tinyint NOT NULL DEFAULT 0,
   `notice_email_agreed_at` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `IDX_d34106f8ec1ebaf66f4f8609dd` (`user_name`),
-  UNIQUE KEY `IDX_e12875dfb3b1d92d7d7c5377e2` (`email`)
+  UNIQUE KEY `UQ_user_user_name` (`user_name`),
+  UNIQUE KEY `UQ_user_email` (`email`)
 );
 
 -- denamu.rss_accept definition
@@ -71,11 +71,11 @@ CREATE TABLE `rss_accept` (
   `user_id` int DEFAULT NULL,
   `image` text,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `IDX_59f4be4de3817b3f975acff076` (`name`),
-  UNIQUE KEY `IDX_b3a5d4196368864d938dae4e9f` (`rss_url`),
-  KEY `FK_c6af67149ff8aa87d001091acbe` (`user_id`),
+  UNIQUE KEY `UQ_rss_accept_name` (`name`),
+  UNIQUE KEY `UQ_rss_accept_rss_url` (`rss_url`),
+  KEY `FK_rss_accept_user_id` (`user_id`),
   FULLTEXT KEY `FT_rss_accept_name` (`name`),
-  CONSTRAINT `FK_c6af67149ff8aa87d001091acbe` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+  CONSTRAINT `FK_rss_accept_user_id` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 -- denamu.rss_reject definition
@@ -107,11 +107,11 @@ CREATE TABLE `feed` (
   `like_count` int NOT NULL DEFAULT '0',
   `is_public` tinyint NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `IDX_cbdceca2d71f784a8bb160268e` (`path`),
-  KEY `IDX_fda780ffdcc013b739cdc6f31d` (`created_at`),
-  KEY `FK_7474d489d05b8051874b227f868` (`blog_id`),
-  FULLTEXT KEY `IDX_7d93e66e624232af470d2f7bb3` (`title`),
-  CONSTRAINT `FK_7474d489d05b8051874b227f868` FOREIGN KEY (`blog_id`) REFERENCES `rss_accept` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+  UNIQUE KEY `UQ_feed_path` (`path`),
+  KEY `IDX_feed_created_at` (`created_at`),
+  KEY `FK_feed_blog_id` (`blog_id`),
+  FULLTEXT KEY `FT_feed_title` (`title`),
+  CONSTRAINT `FK_feed_blog_id` FOREIGN KEY (`blog_id`) REFERENCES `rss_accept` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- denamu.activity definition
@@ -122,9 +122,9 @@ CREATE TABLE `activity` (
   `view_count` int NOT NULL,
   `user_id` int DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `IDX_78f3786d644ca9747fc82db9fb` (`user_id`,`activity_date`),
-  KEY `FK_10bf0c2dd4736190070e8475119` (`user_id`),
-  CONSTRAINT `FK_10bf0c2dd4736190070e8475119` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
+  UNIQUE KEY `UQ_activity_user_id_activity_date` (`user_id`,`activity_date`),
+  KEY `FK_activity_user_id` (`user_id`),
+  CONSTRAINT `FK_activity_user_id` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
 );
 
 -- denamu.category definition
@@ -134,7 +134,7 @@ CREATE TABLE `category` (
   `name` varchar(30) NOT NULL,
   `display_order` int NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `IDX_23c05c292c439d77b0de816b50` (`name`)
+  UNIQUE KEY `UQ_category_name` (`name`)
 );
 
 -- denamu.tag definition
@@ -144,8 +144,8 @@ CREATE TABLE `tag` (
   `name` varchar(50) NOT NULL,
   `category_id` int DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `IDX_6a9775008add570dc3e5a0bab7` (`name`),
-  CONSTRAINT `FK_3249fd70734f41f513a1d5d3ef7` FOREIGN KEY (`category_id`) REFERENCES `category` (`id`) ON DELETE SET NULL
+  UNIQUE KEY `UQ_tag_name` (`name`),
+  CONSTRAINT `FK_tag_category` FOREIGN KEY (`category_id`) REFERENCES `category` (`id`) ON DELETE SET NULL
 );
 
 -- denamu.tag_map definition
@@ -154,10 +154,10 @@ CREATE TABLE `tag_map` (
   `tag_id` int NOT NULL,
   `feed_id` int NOT NULL,
   PRIMARY KEY (`feed_id`,`tag_id`),
-  KEY `IDX_170d19639c49b5735ae8261ff0` (`feed_id`),
-  KEY `IDX_9a3ed1e034e7f378f89f590294` (`tag_id`),
-  CONSTRAINT `FK_170d19639c49b5735ae8261ff0b` FOREIGN KEY (`feed_id`) REFERENCES `feed` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `FK_9a3ed1e034e7f378f89f5902941` FOREIGN KEY (`tag_id`) REFERENCES `tag` (`id`)
+  KEY `FK_tag_map_feed_id` (`feed_id`),
+  KEY `FK_tag_map_tag_id` (`tag_id`),
+  CONSTRAINT `FK_tag_map_feed_id` FOREIGN KEY (`feed_id`) REFERENCES `feed` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_tag_map_tag_id` FOREIGN KEY (`tag_id`) REFERENCES `tag` (`id`)
 );
 
 -- denamu.comment definition
@@ -172,12 +172,12 @@ CREATE TABLE `comment` (
   `user_id` int NOT NULL,
   `parent_id` int DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `FK_df1fd1eaf7cc0224ab5e829bf64` (`feed_id`),
-  KEY `FK_bbfe153fa60aa06483ed35ff4a7` (`user_id`),
-  KEY `FK_8bd8d0985c0d077c8129fb4a209` (`parent_id`),
-  CONSTRAINT `FK_bbfe153fa60aa06483ed35ff4a7` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `FK_df1fd1eaf7cc0224ab5e829bf64` FOREIGN KEY (`feed_id`) REFERENCES `feed` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `FK_8bd8d0985c0d077c8129fb4a209` FOREIGN KEY (`parent_id`) REFERENCES `comment` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+  KEY `FK_comment_feed_id` (`feed_id`),
+  KEY `FK_comment_user_id` (`user_id`),
+  KEY `FK_comment_parent_id` (`parent_id`),
+  CONSTRAINT `FK_comment_user_id` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_comment_feed_id` FOREIGN KEY (`feed_id`) REFERENCES `feed` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_comment_parent_id` FOREIGN KEY (`parent_id`) REFERENCES `comment` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- denamu.likes definition
@@ -188,10 +188,10 @@ CREATE TABLE `likes` (
   `feed_id` int NOT NULL,
   `user_id` int NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `IDX_0be1d6ca115f56ed76c65e6bda` (`user_id`,`feed_id`),
-  KEY `FK_85b0dbd1e7836d0f8cdc38fe830` (`feed_id`),
-  CONSTRAINT `FK_3f519ed95f775c781a254089171` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `FK_85b0dbd1e7836d0f8cdc38fe830` FOREIGN KEY (`feed_id`) REFERENCES `feed` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+  UNIQUE KEY `UQ_likes_user_id_feed_id` (`user_id`,`feed_id`),
+  KEY `FK_likes_feed_id` (`feed_id`),
+  CONSTRAINT `FK_likes_user_id` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_likes_feed_id` FOREIGN KEY (`feed_id`) REFERENCES `feed` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- denamu.notification definition
@@ -206,14 +206,14 @@ CREATE TABLE `notification` (
   `feed_id` int NULL,
   `rss_accept_id` int NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `IDX_632ea8b2f172248eccfb067bfc` (`recipient_user_id`,`type`,`feed_id`),
-  UNIQUE KEY `IDX_f87770358a4e011a7ab7f560f9` (`recipient_user_id`,`type`,`rss_accept_id`),
-  KEY `IDX_e13cf12d6a05407dbac647761c` (`updated_at`),
-  KEY `FK_916163bd318675ea0c33d517f82` (`feed_id`),
-  KEY `FK_70ba9f1bd291e6ad2a9e5c166a3` (`rss_accept_id`),
-  CONSTRAINT `FK_7d7f411e854516f615ba846c6a4` FOREIGN KEY (`recipient_user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `FK_916163bd318675ea0c33d517f82` FOREIGN KEY (`feed_id`) REFERENCES `feed` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `FK_70ba9f1bd291e6ad2a9e5c166a3` FOREIGN KEY (`rss_accept_id`) REFERENCES `rss_accept` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+  UNIQUE KEY `UQ_notification_recipient_user_id_type_feed_id` (`recipient_user_id`,`type`,`feed_id`),
+  UNIQUE KEY `IDX_notification_recipient_type_rss_accept` (`recipient_user_id`,`type`,`rss_accept_id`),
+  KEY `IDX_notification_updated_at` (`updated_at`),
+  KEY `FK_notification_feed_id` (`feed_id`),
+  KEY `FK_notification_rss_accept_id` (`rss_accept_id`),
+  CONSTRAINT `FK_notification_recipient_user_id` FOREIGN KEY (`recipient_user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_notification_feed_id` FOREIGN KEY (`feed_id`) REFERENCES `feed` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_notification_rss_accept_id` FOREIGN KEY (`rss_accept_id`) REFERENCES `rss_accept` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- denamu.blocks definition
@@ -224,10 +224,10 @@ CREATE TABLE `blocks` (
   `blocker_id` int NOT NULL,
   `blocked_id` int NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `IDX_806f6a5d38d031cdd868fd5e37` (`blocker_id`,`blocked_id`),
-  KEY `FK_8aa6c887bed61ad10829450f2f0` (`blocked_id`),
-  CONSTRAINT `FK_74f530c6fbffc357047b263818d` FOREIGN KEY (`blocker_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `FK_8aa6c887bed61ad10829450f2f0` FOREIGN KEY (`blocked_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+  UNIQUE KEY `UQ_blocks_blocker_id_blocked_id` (`blocker_id`,`blocked_id`),
+  KEY `FK_blocks_blocked_id` (`blocked_id`),
+  CONSTRAINT `FK_blocks_blocker_id` FOREIGN KEY (`blocker_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_blocks_blocked_id` FOREIGN KEY (`blocked_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- denamu.rss_blocks definition
@@ -238,10 +238,10 @@ CREATE TABLE `rss_blocks` (
   `blocker_id` int NOT NULL,
   `blocked_rss_id` int NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `IDX_db6b27acdc83264d33a75a0a47` (`blocker_id`,`blocked_rss_id`),
-  KEY `FK_e73dfdcbc10b6c48b749886d9b5` (`blocked_rss_id`),
-  CONSTRAINT `FK_d7a0693b47b13a59bd72133c5ba` FOREIGN KEY (`blocker_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `FK_e73dfdcbc10b6c48b749886d9b5` FOREIGN KEY (`blocked_rss_id`) REFERENCES `rss_accept` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+  UNIQUE KEY `UQ_rss_blocks_blocker_id_blocked_rss_id` (`blocker_id`,`blocked_rss_id`),
+  KEY `FK_rss_blocks_blocked_rss_id` (`blocked_rss_id`),
+  CONSTRAINT `FK_rss_blocks_blocker_id` FOREIGN KEY (`blocker_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_rss_blocks_blocked_rss_id` FOREIGN KEY (`blocked_rss_id`) REFERENCES `rss_accept` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- denamu.subscription definition
@@ -252,10 +252,10 @@ CREATE TABLE `subscription` (
   `rss_accept_id` int NOT NULL,
   `user_id` int NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `IDX_be6abee15b8a92cc7fe2a25975` (`user_id`,`rss_accept_id`),
-  KEY `FK_f196cabdcb20cfbcf552ae61321` (`rss_accept_id`),
-  CONSTRAINT `FK_940d49a105d50bbd616be540013` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `FK_f196cabdcb20cfbcf552ae61321` FOREIGN KEY (`rss_accept_id`) REFERENCES `rss_accept` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+  UNIQUE KEY `UQ_subscription_user_rss` (`user_id`,`rss_accept_id`),
+  KEY `FK_subscription_rss` (`rss_accept_id`),
+  CONSTRAINT `FK_subscription_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_subscription_rss` FOREIGN KEY (`rss_accept_id`) REFERENCES `rss_accept` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- denamu.file definition
@@ -269,8 +269,8 @@ CREATE TABLE `file` (
   `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   `user_id` int DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `FK_516f1cf15166fd07b732b4b6ab0` (`user_id`),
-  CONSTRAINT `FK_516f1cf15166fd07b732b4b6ab0` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
+  KEY `FK_file_user_id` (`user_id`),
+  CONSTRAINT `FK_file_user_id` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
 );
 
 -- denamu.provider definition
@@ -287,8 +287,8 @@ CREATE TABLE `provider` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `UQ_provider_type_user_id` (`provider_type`,`provider_user_id`),
   UNIQUE KEY `UQ_user_provider_type` (`user_id`,`provider_type`),
-  KEY `FK_d3d18186b602240b93c9f1621ea` (`user_id`),
-  CONSTRAINT `FK_d3d18186b602240b93c9f1621ea` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+  KEY `FK_provider_user_id` (`user_id`),
+  CONSTRAINT `FK_provider_user_id` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- denamu.report definition
@@ -308,16 +308,16 @@ CREATE TABLE `report` (
   `reported_comment_id` int DEFAULT NULL,
   `reported_feed_id` int DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `IDX_610f01b4829736eaac7acb4efb` (`reporter_id`,`target_type`,`target_id`),
-  KEY `FK_798954c041abe4b92a8f47d6638` (`reported_user_id`),
-  KEY `FK_a3396a7c98378e18ae4cb18b3a3` (`reported_rss_id`),
-  KEY `FK_12f75e00919ec73fa05c3986773` (`reported_comment_id`),
-  KEY `FK_1466885a174468bc1a94203b785` (`reported_feed_id`),
-  CONSTRAINT `FK_d41df66b60944992386ed47cf2e` FOREIGN KEY (`reporter_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `FK_798954c041abe4b92a8f47d6638` FOREIGN KEY (`reported_user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `FK_a3396a7c98378e18ae4cb18b3a3` FOREIGN KEY (`reported_rss_id`) REFERENCES `rss_accept` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `FK_12f75e00919ec73fa05c3986773` FOREIGN KEY (`reported_comment_id`) REFERENCES `comment` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `FK_1466885a174468bc1a94203b785` FOREIGN KEY (`reported_feed_id`) REFERENCES `feed` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+  UNIQUE KEY `UQ_report_reporter_id_target_type_target_id` (`reporter_id`,`target_type`,`target_id`),
+  KEY `FK_report_reported_user_id` (`reported_user_id`),
+  KEY `FK_report_reported_rss_id` (`reported_rss_id`),
+  KEY `FK_report_reported_comment_id` (`reported_comment_id`),
+  KEY `FK_report_reported_feed_id` (`reported_feed_id`),
+  CONSTRAINT `FK_report_reporter_id` FOREIGN KEY (`reporter_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_report_reported_user_id` FOREIGN KEY (`reported_user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_report_reported_rss_id` FOREIGN KEY (`reported_rss_id`) REFERENCES `rss_accept` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_report_reported_comment_id` FOREIGN KEY (`reported_comment_id`) REFERENCES `comment` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_report_reported_feed_id` FOREIGN KEY (`reported_feed_id`) REFERENCES `feed` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- denamu.notice definition
