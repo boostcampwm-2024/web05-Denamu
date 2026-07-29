@@ -327,6 +327,7 @@ CREATE TABLE `board` (
   `title` varchar(255) NOT NULL,
   `content` longtext NOT NULL,
   `status` varchar(20) NOT NULL DEFAULT 'DRAFT',
+  `category` varchar(20) NOT NULL DEFAULT 'NOTICE',
   `is_pinned` tinyint NOT NULL DEFAULT 0,
   `start_at` datetime DEFAULT NULL,
   `end_at` datetime DEFAULT NULL,
