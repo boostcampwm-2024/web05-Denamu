@@ -6,7 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { NoticeModule } from '@notice/module/notice.module';
+import { BoardModule } from '@board/module/board.module';
 
 import { ActivityModule } from '@activity/module/activity.module';
 
@@ -97,7 +97,7 @@ const exists = !!chosen && fs.existsSync(chosen);
     StatisticModule,
     CommentModule,
     LikeModule,
-    NoticeModule,
+    BoardModule,
     NotificationModule,
     BlockModule,
     ReportModule,

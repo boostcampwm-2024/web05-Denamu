@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-import { useNotices } from "@/hooks/queries/useNotices";
+import { useBoards } from "@/hooks/queries/useBoards";
 
 const RECENT_LIMIT = 5;
 
@@ -16,12 +16,12 @@ export const NoticeBell = () => {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
-  const { data, isLoading } = useNotices({ page: 1, limit: RECENT_LIMIT }, open);
+  const { data, isLoading } = useBoards({ page: 1, limit: RECENT_LIMIT, category: "NOTICE" }, open);
   const notices = data?.result ?? [];
 
   const handleItemClick = (id: number) => {
     setOpen(false);
-    navigate(`/notice/${id}`);
+    navigate(`/board/${id}`);
   };
 
   return (
@@ -63,7 +63,7 @@ export const NoticeBell = () => {
         <button
           onClick={() => {
             setOpen(false);
-            navigate("/notice");
+            navigate("/board");
           }}
           className="block w-full border-t px-4 py-2.5 text-center text-sm font-medium text-primary hover:bg-accent"
         >

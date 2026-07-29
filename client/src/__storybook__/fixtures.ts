@@ -5,7 +5,7 @@ import type { DayInfo, WeekInfo } from "@/types/activity";
 import type { ChildAdmin } from "@/types/admin";
 import type { ChartPlatform, ChartType } from "@/types/chart";
 import type { AdminChatRoom, ChatType } from "@/types/chat";
-import type { NoticeDetail, NoticePage, NoticeSummary } from "@/types/notice";
+import type { BoardDetail, BoardPage, BoardSummary } from "@/types/board";
 import type { FeedDetail, FeedList } from "@/types/post";
 import type {
   BlockedRss,
@@ -432,12 +432,13 @@ export const makeRecentRssList = (count: number, publishedHoursAgo: (index: numb
     blogImage: null,
   }));
 
-const mockNoticeSummaries: NoticeSummary[] = [
+const mockBoardSummaries: BoardSummary[] = [
   {
     id: 3,
     title: "서비스 정기 점검 안내",
     isPinned: true,
     status: "PUBLISHED",
+    category: "NOTICE",
     startAt: null,
     endAt: null,
     createdAt: "2026-07-20T09:00:00.000Z",
@@ -447,6 +448,7 @@ const mockNoticeSummaries: NoticeSummary[] = [
     title: "여름 이벤트 안내",
     isPinned: false,
     status: "PUBLISHED",
+    category: "NOTICE",
     startAt: "2026-07-01T00:00:00.000Z",
     endAt: "2026-07-31T00:00:00.000Z",
     createdAt: "2026-06-25T09:00:00.000Z",
@@ -456,22 +458,23 @@ const mockNoticeSummaries: NoticeSummary[] = [
     title: "다음 업데이트 예고 (작성 중)",
     isPinned: false,
     status: "DRAFT",
+    category: "NOTICE",
     startAt: null,
     endAt: null,
     createdAt: "2026-06-20T09:00:00.000Z",
   },
 ];
 
-export const mockNoticesPage: NoticePage<NoticeSummary> = {
-  result: mockNoticeSummaries,
+export const mockBoardsPage: BoardPage<BoardSummary> = {
+  result: mockBoardSummaries,
   page: 1,
   limit: 10,
-  totalCount: mockNoticeSummaries.length,
+  totalCount: mockBoardSummaries.length,
   hasMore: false,
 };
 
-export const mockNoticeDetail: NoticeDetail = {
-  ...mockNoticeSummaries[0],
+export const mockBoardDetail: BoardDetail = {
+  ...mockBoardSummaries[0],
   content: "<p>정기 점검으로 인해 서비스 이용이 일시 중단됩니다.</p>",
   authorName: "테스트 계정",
   updatedAt: "2026-07-20T09:00:00.000Z",
