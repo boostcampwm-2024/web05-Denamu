@@ -12,7 +12,7 @@ import {
 
 import { sanitizeBoardContent } from '@common/util/sanitizeHtml';
 
-import { BoardStatus } from '@board/constant/board.constant';
+import { BoardCategory, BoardStatus } from '@board/constant/board.constant';
 
 export class CreateBoardRequestDto {
   @ApiProperty({
@@ -36,6 +36,15 @@ export class CreateBoardRequestDto {
   @IsOptional()
   @IsBoolean({ message: 'boolean 값을 입력해주세요.' })
   isPinned?: boolean;
+
+  @ApiPropertyOptional({
+    description: '분류 (미입력 시 일반 공지)',
+    enum: BoardCategory,
+    default: BoardCategory.NOTICE,
+  })
+  @IsOptional()
+  @IsEnum(BoardCategory, { message: '올바른 분류를 선택해주세요.' })
+  category?: BoardCategory;
 
   @ApiPropertyOptional({
     description: '공개 상태 (미입력 시 임시저장)',

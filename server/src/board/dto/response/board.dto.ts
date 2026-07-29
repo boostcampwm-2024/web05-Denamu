@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-import { BoardStatus } from '@board/constant/board.constant';
+import { BoardCategory, BoardStatus } from '@board/constant/board.constant';
 import { Board } from '@board/entity/board.entity';
 
 export class BoardSummaryDto {
@@ -15,6 +15,9 @@ export class BoardSummaryDto {
 
   @ApiProperty({ enum: BoardStatus, description: '공개 상태' })
   status: BoardStatus;
+
+  @ApiProperty({ enum: BoardCategory, description: '분류' })
+  category: BoardCategory;
 
   @ApiProperty({ example: null, description: '노출 시작 일시', nullable: true })
   startAt: Date | null;
@@ -35,6 +38,7 @@ export class BoardSummaryDto {
       title: board.title,
       isPinned: board.isPinned,
       status: board.status,
+      category: board.category,
       startAt: board.startAt,
       endAt: board.endAt,
       createdAt: board.createdAt,
@@ -74,6 +78,7 @@ export class BoardDetailDto extends BoardSummaryDto {
       title: board.title,
       isPinned: board.isPinned,
       status: board.status,
+      category: board.category,
       startAt: board.startAt,
       endAt: board.endAt,
       createdAt: board.createdAt,

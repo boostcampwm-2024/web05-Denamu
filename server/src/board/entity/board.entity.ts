@@ -11,7 +11,7 @@ import {
 
 import { Admin } from '@admin/entity/admin.entity';
 
-import { BoardStatus } from '@board/constant/board.constant';
+import { BoardCategory, BoardStatus } from '@board/constant/board.constant';
 
 @Entity({ name: 'board' })
 export class Board extends BaseEntity {
@@ -26,6 +26,9 @@ export class Board extends BaseEntity {
 
   @Column({ length: 20, nullable: false, default: BoardStatus.DRAFT })
   status: BoardStatus;
+
+  @Column({ length: 20, nullable: false, default: BoardCategory.NOTICE })
+  category: BoardCategory;
 
   @Column({ name: 'is_pinned', type: 'boolean', nullable: false, default: false })
   isPinned: boolean;

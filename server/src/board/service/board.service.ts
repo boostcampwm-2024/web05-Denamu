@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import { BoardStatus } from '@board/constant/board.constant';
+import { BoardCategory, BoardStatus } from '@board/constant/board.constant';
 import { CreateBoardRequestDto } from '@board/dto/request/createBoard.dto';
 import { GetAdminBoardsRequestDto } from '@board/dto/request/getAdminBoards.dto';
 import { GetBoardsRequestDto } from '@board/dto/request/getBoards.dto';
@@ -35,11 +35,12 @@ export class BoardService {
   }
 
   async getPublicBoards(queryDto: GetBoardsRequestDto) {
-    const { page, limit } = queryDto;
+    const { page, limit, category } = queryDto;
     const { items, totalCount } = await this.boardRepository.findPublicList(
       page,
       limit,
       new Date(),
+      category,
     );
     return BoardListResponseDto.of(items, page, limit, totalCount);
   }
@@ -53,11 +54,12 @@ export class BoardService {
   }
 
   async getAdminBoards(queryDto: GetAdminBoardsRequestDto) {
-    const { page, limit, status } = queryDto;
+    const { page, limit, status, category } = queryDto;
     const { items, totalCount } = await this.boardRepository.findAdminList(
       page,
       limit,
       status,
+      category,
     );
     return BoardListResponseDto.of(items, page, limit, totalCount);
   }
@@ -87,6 +89,7 @@ export class BoardService {
       title: dto.title,
       content: dto.content,
       status: dto.status ?? BoardStatus.DRAFT,
+      category: dto.category ?? BoardCategory.NOTICE,
       isPinned: dto.isPinned ?? false,
       startAt,
       endAt,
@@ -127,6 +130,7 @@ export class BoardService {
     if (dto.content !== undefined) board.content = dto.content;
     if (dto.isPinned !== undefined) board.isPinned = dto.isPinned;
     if (dto.status !== undefined) board.status = dto.status;
+    if (dto.category !== undefined) board.category = dto.category;
     board.startAt = startAt;
     board.endAt = endAt;
 

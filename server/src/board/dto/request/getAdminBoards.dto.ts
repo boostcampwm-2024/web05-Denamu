@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
-import { BoardStatus } from '@board/constant/board.constant';
+import { BoardCategory, BoardStatus } from '@board/constant/board.constant';
 import { Type } from 'class-transformer';
 import { IsEnum, IsInt, IsOptional, Min } from 'class-validator';
 
@@ -26,6 +26,14 @@ export class GetAdminBoardsRequestDto {
   @IsOptional()
   @IsEnum(BoardStatus, { message: '올바른 공개 상태를 입력해주세요.' })
   status?: BoardStatus;
+
+  @ApiPropertyOptional({
+    description: '조회할 분류 (미입력 시 전체 조회)',
+    enum: BoardCategory,
+  })
+  @IsOptional()
+  @IsEnum(BoardCategory, { message: '올바른 분류를 입력해주세요.' })
+  category?: BoardCategory;
 
   constructor(partial: Partial<GetAdminBoardsRequestDto>) {
     Object.assign(this, partial);
