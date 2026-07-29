@@ -11,7 +11,7 @@ const meta = {
   title: "pages/BoardDetailPage",
   component: BoardDetailPage,
   parameters: {
-    router: { path: "/notice/:id", initialEntries: [`/notice/${mockBoardDetail.id}`] },
+    router: { path: "/board/:id", initialEntries: [`/board/${mockBoardDetail.id}`] },
   },
 } satisfies Meta<typeof BoardDetailPage>;
 

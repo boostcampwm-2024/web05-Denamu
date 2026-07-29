@@ -43,7 +43,7 @@ export const AdminNavigationMenu = ({ handleTap }: { handleTap: (tabType: TabTyp
         </NavigationMenuItem>
         <NavigationMenuItem>
           <Button variant="ghost" className="w-full justify-start" onClick={() => handleTap("BOARD")}>
-            공지사항 관리
+            공지사항 · FAQ 관리
           </Button>
         </NavigationMenuItem>
       </NavigationMenuList>

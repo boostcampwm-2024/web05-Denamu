@@ -28,10 +28,11 @@ import { useCustomToast } from "@/hooks/common/useCustomToast";
 import { useCreateBoard, useAdminBoards, useDeleteBoard, useUpdateBoard } from "@/hooks/queries/useAdminBoards";
 
 import { adminBoard } from "@/api/services/admin/board";
-import { BoardStatus, BoardSummary } from "@/types/board";
+import { BoardCategory, BoardStatus, BoardSummary } from "@/types/board";
 import { useQueryClient } from "@tanstack/react-query";
 
 type StatusFilter = BoardStatus | "ALL";
+type CategoryFilter = BoardCategory | "ALL";
 
 const STATUS_FILTERS: { label: string; value: StatusFilter }[] = [
   { label: "전체", value: "ALL" },
@@ -42,6 +43,17 @@ const STATUS_FILTERS: { label: string; value: StatusFilter }[] = [
 const STATUS_LABELS: Record<BoardStatus, string> = {
   DRAFT: "임시저장",
   PUBLISHED: "발행됨",
+};
+
+const CATEGORY_FILTERS: { label: string; value: CategoryFilter }[] = [
+  { label: "전체", value: "ALL" },
+  { label: "공지사항", value: "NOTICE" },
+  { label: "FAQ", value: "FAQ" },
+];
+
+const CATEGORY_LABELS: Record<BoardCategory, string> = {
+  NOTICE: "공지사항",
+  FAQ: "FAQ",
 };
 
 const PAGE_SIZE = 10;
@@ -76,6 +88,7 @@ interface BoardFormState {
   content: string;
   isPinned: boolean;
   status: BoardStatus;
+  category: BoardCategory;
   startAt: string;
   endAt: string;
 }
@@ -86,6 +99,7 @@ const EMPTY_FORM: BoardFormState = {
   content: "",
   isPinned: false,
   status: "DRAFT",
+  category: "NOTICE",
   startAt: "",
   endAt: "",
 };
@@ -95,6 +109,7 @@ type ViewMode = "list" | "form";
 export default function AdminBoardTab() {
   const [mode, setMode] = useState<ViewMode>("list");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
+  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("ALL");
   const [page, setPage] = useState(1);
   const [form, setForm] = useState<BoardFormState>(EMPTY_FORM);
   const [loadingEditId, setLoadingEditId] = useState<number | null>(null);
@@ -105,6 +120,7 @@ export default function AdminBoardTab() {
     page,
     limit: PAGE_SIZE,
     status: statusFilter === "ALL" ? undefined : statusFilter,
+    category: categoryFilter === "ALL" ? undefined : categoryFilter,
   });
 
   const { mutate: createBoard, isPending: isCreating } = useCreateBoard();
@@ -115,7 +131,7 @@ export default function AdminBoardTab() {
   const totalPages = Math.max(1, Math.ceil((data?.totalCount ?? 0) / PAGE_SIZE));
 
   const openCreateForm = () => {
-    setForm(EMPTY_FORM);
+    setForm({ ...EMPTY_FORM, category: categoryFilter === "ALL" ? "NOTICE" : categoryFilter });
     setMode("form");
   };
 
@@ -132,12 +148,13 @@ export default function AdminBoardTab() {
         content: detail.content,
         isPinned: board.isPinned,
         status: board.status,
+        category: board.category,
         startAt: toDatetimeLocal(board.startAt),
         endAt: toDatetimeLocal(board.endAt),
       });
       setMode("form");
     } catch {
-      toast({ description: "공지사항을 불러오지 못했습니다.", variant: "destructive" });
+      toast({ description: "게시글을 불러오지 못했습니다.", variant: "destructive" });
     } finally {
       setLoadingEditId(null);
     }
@@ -145,7 +162,8 @@ export default function AdminBoardTab() {
 
   const handleSubmit = () => {
     const onSuccess = () => {
-      toast({ description: form.id ? "공지사항이 수정되었습니다." : "공지사항이 작성되었습니다." });
+      const label = CATEGORY_LABELS[form.category];
+      toast({ description: form.id ? `${label} 수정을 완료했습니다.` : `${label} 작성을 완료했습니다.` });
       setMode("list");
     };
     const onError = () => {
@@ -163,6 +181,7 @@ export default function AdminBoardTab() {
             content: form.content,
             isPinned: form.isPinned,
             status: form.status,
+            category: form.category,
             startAt: fromDatetimeLocal(form.startAt) ?? null,
             endAt: fromDatetimeLocal(form.endAt) ?? null,
           },
@@ -176,6 +195,7 @@ export default function AdminBoardTab() {
           content: form.content,
           isPinned: form.isPinned,
           status: form.status,
+          category: form.category,
           startAt: fromDatetimeLocal(form.startAt),
           endAt: fromDatetimeLocal(form.endAt),
         },
@@ -186,7 +206,7 @@ export default function AdminBoardTab() {
 
   const handleDelete = (id: number) => {
     deleteBoard(id, {
-      onSuccess: () => toast({ description: "공지사항이 삭제되었습니다." }),
+      onSuccess: () => toast({ description: "삭제를 완료했습니다." }),
       onError: () => toast({ description: "삭제 중 오류가 발생했습니다.", variant: "destructive" }),
     });
   };
@@ -204,7 +224,9 @@ export default function AdminBoardTab() {
             <ArrowLeft className="h-4 w-4" />
             목록으로
           </Button>
-          <h2 className="text-lg font-semibold">{form.id ? "공지사항 수정" : "공지사항 작성"}</h2>
+          <h2 className="text-lg font-semibold">
+            {CATEGORY_LABELS[form.category]} {form.id ? "수정" : "작성"}
+          </h2>
         </div>
 
         <div className="flex flex-col gap-4">
@@ -214,7 +236,7 @@ export default function AdminBoardTab() {
               id="board-title"
               value={form.title}
               onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
-              placeholder="공지사항 제목"
+              placeholder="제목을 입력하세요"
             />
           </div>
 
@@ -261,18 +283,33 @@ export default function AdminBoardTab() {
               <Label htmlFor="board-pinned">상단 고정</Label>
             </div>
 
-            <Select
-              value={form.status}
-              onValueChange={(value) => setForm((prev) => ({ ...prev, status: value as BoardStatus }))}
-            >
-              <SelectTrigger className="w-36">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="DRAFT">임시저장</SelectItem>
-                <SelectItem value="PUBLISHED">발행</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-2">
+              <Select
+                value={form.category}
+                onValueChange={(value) => setForm((prev) => ({ ...prev, category: value as BoardCategory }))}
+              >
+                <SelectTrigger className="w-36">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="NOTICE">공지사항</SelectItem>
+                  <SelectItem value="FAQ">FAQ</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={form.status}
+                onValueChange={(value) => setForm((prev) => ({ ...prev, status: value as BoardStatus }))}
+              >
+                <SelectTrigger className="w-36">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="DRAFT">임시저장</SelectItem>
+                  <SelectItem value="PUBLISHED">발행</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="flex justify-end gap-2 border-t pt-4">
@@ -291,33 +328,50 @@ export default function AdminBoardTab() {
   return (
     <section className="flex flex-col gap-4 min-h-[300px]">
       <div className="flex items-center justify-between">
-        <Tabs
-          value={statusFilter}
-          onValueChange={(value) => {
-            setStatusFilter(value as StatusFilter);
-            setPage(1);
-          }}
-        >
-          <TabsList>
-            {STATUS_FILTERS.map((filter) => (
-              <TabsTrigger key={filter.value} value={filter.value}>
-                {filter.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
+        <div className="flex items-center gap-2">
+          <Tabs
+            value={categoryFilter}
+            onValueChange={(value) => {
+              setCategoryFilter(value as CategoryFilter);
+              setPage(1);
+            }}
+          >
+            <TabsList>
+              {CATEGORY_FILTERS.map((filter) => (
+                <TabsTrigger key={filter.value} value={filter.value}>
+                  {filter.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+          <Tabs
+            value={statusFilter}
+            onValueChange={(value) => {
+              setStatusFilter(value as StatusFilter);
+              setPage(1);
+            }}
+          >
+            <TabsList>
+              {STATUS_FILTERS.map((filter) => (
+                <TabsTrigger key={filter.value} value={filter.value}>
+                  {filter.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+        </div>
         <Button size="sm" className="gap-1" onClick={openCreateForm}>
           <Plus className="h-4 w-4" />
-          공지사항 작성
+          {categoryFilter === "ALL" ? "공지사항" : CATEGORY_LABELS[categoryFilter]} 작성
         </Button>
       </div>
 
       {isLoading ? (
         <p className="py-12 text-center text-sm text-gray-400">불러오는 중...</p>
       ) : isError ? (
-        <p className="py-12 text-center text-sm text-red-500">공지사항 목록을 불러오지 못했습니다.</p>
+        <p className="py-12 text-center text-sm text-red-500">목록을 불러오지 못했습니다.</p>
       ) : boards.length === 0 ? (
-        <p className="py-12 text-center text-sm text-gray-400">등록된 공지사항이 없습니다.</p>
+        <p className="py-12 text-center text-sm text-gray-400">등록된 게시글이 없습니다.</p>
       ) : (
         <div className="flex flex-col gap-3">
           {boards.map((board) => (
@@ -366,6 +420,7 @@ const BoardCard = ({ board, isEditLoading, onEdit, onDelete }: BoardCardProps) =
             고정
           </Badge>
         )}
+        <Badge variant="outline">{CATEGORY_LABELS[board.category]}</Badge>
         <Badge variant={board.status === "PUBLISHED" ? "default" : "outline"}>{STATUS_LABELS[board.status]}</Badge>
         <span className="flex-1 truncate font-medium">{board.title}</span>
         <span className="shrink-0 text-xs text-gray-400">{new Date(board.createdAt).toLocaleString()}</span>
@@ -382,9 +437,9 @@ const BoardCard = ({ board, isEditLoading, onEdit, onDelete }: BoardCardProps) =
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>공지사항 삭제</AlertDialogTitle>
+              <AlertDialogTitle>{CATEGORY_LABELS[board.category]} 삭제</AlertDialogTitle>
               <AlertDialogDescription>
-                <span className="font-medium">{board.title}</span> 공지사항을 삭제하시겠습니까? 되돌릴 수 없습니다.
+                <span className="font-medium">{board.title}</span>을(를) 삭제하시겠습니까? 되돌릴 수 없습니다.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

@@ -11,7 +11,7 @@ const meta = {
   title: "pages/BoardListPage",
   component: BoardListPage,
   parameters: {
-    router: { initialEntries: ["/notice"] },
+    router: { initialEntries: ["/board"] },
   },
 } satisfies Meta<typeof BoardListPage>;
 
