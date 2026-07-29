@@ -1,10 +1,12 @@
 export type BoardStatus = "DRAFT" | "PUBLISHED";
+export type BoardCategory = "NOTICE" | "FAQ";
 
 export interface BoardSummary {
   id: number;
   title: string;
   isPinned: boolean;
   status: BoardStatus;
+  category: BoardCategory;
   startAt: string | null;
   endAt: string | null;
   createdAt: string;
@@ -29,6 +31,7 @@ export interface CreateBoardPayload {
   content: string;
   isPinned?: boolean;
   status?: BoardStatus;
+  category?: BoardCategory;
   startAt?: string;
   endAt?: string;
 }
@@ -38,6 +41,7 @@ export interface UpdateBoardPayload {
   content?: string;
   isPinned?: boolean;
   status?: BoardStatus;
+  category?: BoardCategory;
   startAt?: string | null;
   endAt?: string | null;
 }

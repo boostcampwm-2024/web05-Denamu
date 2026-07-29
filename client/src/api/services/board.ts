@@ -2,11 +2,12 @@ import { BOARD } from "@/constants/endpoints";
 
 import { axiosInstance } from "@/api/instance";
 import { ApiData } from "@/types/api";
-import { BoardDetail, BoardPage, BoardSummary } from "@/types/board";
+import { BoardCategory, BoardDetail, BoardPage, BoardSummary } from "@/types/board";
 
 export interface GetBoardsParams {
   page?: number;
   limit?: number;
+  category?: BoardCategory;
 }
 
 export const getBoards = async (params: GetBoardsParams): Promise<BoardPage<BoardSummary>> => {

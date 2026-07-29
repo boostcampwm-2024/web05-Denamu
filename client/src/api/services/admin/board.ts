@@ -3,6 +3,7 @@ import { BOARD } from "@/constants/endpoints";
 import { axiosInstance } from "@/api/instance";
 import { ApiData } from "@/types/api";
 import {
+  BoardCategory,
   CreateBoardPayload,
   BoardDetail,
   BoardPage,
@@ -15,6 +16,7 @@ export interface GetAdminBoardsParams {
   page?: number;
   limit?: number;
   status?: BoardStatus;
+  category?: BoardCategory;
 }
 
 export const adminBoard = {
