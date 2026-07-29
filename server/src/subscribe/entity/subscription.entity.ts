@@ -13,7 +13,7 @@ import { RssAccept } from '@rss/entity/rss.entity';
 import { User } from '@user/entity/user.entity';
 
 @Entity({ name: 'subscription' })
-@Unique(['user', 'rssAccept'])
+@Unique('UQ_subscription_user_rss', ['user', 'rssAccept'])
 export class Subscription extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
@@ -25,6 +25,7 @@ export class Subscription extends BaseEntity {
   })
   @JoinColumn({
     name: 'rss_accept_id',
+    foreignKeyConstraintName: 'FK_subscription_rss',
   })
   rssAccept: RssAccept;
 
@@ -35,6 +36,7 @@ export class Subscription extends BaseEntity {
   })
   @JoinColumn({
     name: 'user_id',
+    foreignKeyConstraintName: 'FK_subscription_user',
   })
   user: User;
 

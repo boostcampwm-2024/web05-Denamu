@@ -25,8 +25,16 @@ export enum NotificationType {
 }
 
 @Entity({ name: 'notification' })
-@Unique(['recipient', 'type', 'feed'])
-@Unique(['recipient', 'type', 'rssAccept'])
+@Unique('UQ_notification_recipient_user_id_type_feed_id', [
+  'recipient',
+  'type',
+  'feed',
+])
+@Unique('IDX_notification_recipient_type_rss_accept', [
+  'recipient',
+  'type',
+  'rssAccept',
+])
 export class Notification extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
@@ -36,7 +44,10 @@ export class Notification extends BaseEntity {
     onUpdate: 'CASCADE',
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'recipient_user_id' })
+  @JoinColumn({
+    name: 'recipient_user_id',
+    foreignKeyConstraintName: 'FK_notification_recipient_user_id',
+  })
   recipient: User;
 
   @Column({
@@ -51,7 +62,10 @@ export class Notification extends BaseEntity {
     onUpdate: 'CASCADE',
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'feed_id' })
+  @JoinColumn({
+    name: 'feed_id',
+    foreignKeyConstraintName: 'FK_notification_feed_id',
+  })
   feed: Feed | null;
 
   @ManyToOne(() => RssAccept, {
@@ -59,7 +73,10 @@ export class Notification extends BaseEntity {
     onUpdate: 'CASCADE',
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'rss_accept_id' })
+  @JoinColumn({
+    name: 'rss_accept_id',
+    foreignKeyConstraintName: 'FK_notification_rss_accept_id',
+  })
   rssAccept: RssAccept | null;
 
   @Column({ name: 'is_read', default: false })
@@ -68,7 +85,7 @@ export class Notification extends BaseEntity {
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @Index()
+  @Index('IDX_notification_updated_at')
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 }

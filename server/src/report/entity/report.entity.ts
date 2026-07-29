@@ -20,7 +20,11 @@ import { RssAccept } from '@rss/entity/rss.entity';
 import { User } from '@user/entity/user.entity';
 
 @Entity({ name: 'report' })
-@Unique(['reporter', 'targetType', 'targetId'])
+@Unique('UQ_report_reporter_id_target_type_target_id', [
+  'reporter',
+  'targetType',
+  'targetId',
+])
 export class Report extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
@@ -51,7 +55,10 @@ export class Report extends BaseEntity {
     onUpdate: 'CASCADE',
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'reporter_id' })
+  @JoinColumn({
+    name: 'reporter_id',
+    foreignKeyConstraintName: 'FK_report_reporter_id',
+  })
   reporter: User;
 
   @ManyToOne(() => User, (user) => user.id, {
@@ -59,7 +66,10 @@ export class Report extends BaseEntity {
     onUpdate: 'CASCADE',
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'reported_user_id' })
+  @JoinColumn({
+    name: 'reported_user_id',
+    foreignKeyConstraintName: 'FK_report_reported_user_id',
+  })
   reportedUser: User | null;
 
   @ManyToOne(() => RssAccept, (rssAccept) => rssAccept.id, {
@@ -67,7 +77,10 @@ export class Report extends BaseEntity {
     onUpdate: 'CASCADE',
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'reported_rss_id' })
+  @JoinColumn({
+    name: 'reported_rss_id',
+    foreignKeyConstraintName: 'FK_report_reported_rss_id',
+  })
   reportedRss: RssAccept | null;
 
   @ManyToOne(() => Comment, (comment) => comment.id, {
@@ -75,7 +88,10 @@ export class Report extends BaseEntity {
     onUpdate: 'CASCADE',
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'reported_comment_id' })
+  @JoinColumn({
+    name: 'reported_comment_id',
+    foreignKeyConstraintName: 'FK_report_reported_comment_id',
+  })
   reportedComment: Comment | null;
 
   @ManyToOne(() => Feed, (feed) => feed.id, {
@@ -83,6 +99,9 @@ export class Report extends BaseEntity {
     onUpdate: 'CASCADE',
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'reported_feed_id' })
+  @JoinColumn({
+    name: 'reported_feed_id',
+    foreignKeyConstraintName: 'FK_report_reported_feed_id',
+  })
   reportedFeed: Feed | null;
 }

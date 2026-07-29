@@ -9,6 +9,7 @@ import {
   ManyToMany,
   ManyToOne,
   PrimaryGeneratedColumn,
+  Unique,
   ViewColumn,
   ViewEntity,
 } from 'typeorm';
@@ -18,6 +19,7 @@ import { RssAccept } from '@rss/entity/rss.entity';
 import { Tag } from '@tag/entity/tag.entity';
 
 @Entity({ name: 'feed' })
+@Unique('UQ_feed_path', ['path'])
 export class Feed extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
@@ -27,10 +29,10 @@ export class Feed extends BaseEntity {
     type: 'datetime',
     nullable: false,
   })
-  @Index()
+  @Index('IDX_feed_created_at')
   createdAt: Date;
 
-  @Index({ fulltext: true, parser: 'ngram' })
+  @Index('FT_feed_title', { fulltext: true, parser: 'ngram' })
   @Column({ name: 'title', nullable: false })
   title: string;
 
@@ -40,7 +42,6 @@ export class Feed extends BaseEntity {
   @Column({
     length: 512,
     nullable: false,
-    unique: true,
   })
   path: string;
 
@@ -84,14 +85,23 @@ export class Feed extends BaseEntity {
   })
   @JoinColumn({
     name: 'blog_id',
+    foreignKeyConstraintName: 'FK_feed_blog_id',
   })
   blog: RssAccept;
 
   @ManyToMany(() => Tag, (tag) => tag.feeds, { cascade: true })
   @JoinTable({
     name: 'tag_map',
-    joinColumn: { name: 'feed_id', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'tag_id', referencedColumnName: 'id' },
+    joinColumn: {
+      name: 'feed_id',
+      referencedColumnName: 'id',
+      foreignKeyConstraintName: 'FK_tag_map_feed_id',
+    },
+    inverseJoinColumn: {
+      name: 'tag_id',
+      referencedColumnName: 'id',
+      foreignKeyConstraintName: 'FK_tag_map_tag_id',
+    },
   })
   tags: Tag[];
 }

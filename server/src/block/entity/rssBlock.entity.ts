@@ -13,7 +13,7 @@ import { RssAccept } from '@rss/entity/rss.entity';
 import { User } from '@user/entity/user.entity';
 
 @Entity({ name: 'rss_blocks' })
-@Unique(['blocker', 'blockedRss'])
+@Unique('UQ_rss_blocks_blocker_id_blocked_rss_id', ['blocker', 'blockedRss'])
 export class RssBlock extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
@@ -25,6 +25,7 @@ export class RssBlock extends BaseEntity {
   })
   @JoinColumn({
     name: 'blocker_id',
+    foreignKeyConstraintName: 'FK_rss_blocks_blocker_id',
   })
   blocker: User;
 
@@ -35,6 +36,7 @@ export class RssBlock extends BaseEntity {
   })
   @JoinColumn({
     name: 'blocked_rss_id',
+    foreignKeyConstraintName: 'FK_rss_blocks_blocked_rss_id',
   })
   blockedRss: RssAccept;
 

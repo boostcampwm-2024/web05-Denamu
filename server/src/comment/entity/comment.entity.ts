@@ -56,6 +56,7 @@ export class Comment extends BaseEntity {
   })
   @JoinColumn({
     name: 'parent_id',
+    foreignKeyConstraintName: 'FK_comment_parent_id',
   })
   parent: Comment | null;
 
@@ -66,6 +67,7 @@ export class Comment extends BaseEntity {
   })
   @JoinColumn({
     name: 'feed_id',
+    foreignKeyConstraintName: 'FK_comment_feed_id',
   })
   feed: Feed;
 
@@ -76,6 +78,7 @@ export class Comment extends BaseEntity {
   })
   @JoinColumn({
     name: 'user_id',
+    foreignKeyConstraintName: 'FK_comment_user_id',
   })
   user: User;
 }

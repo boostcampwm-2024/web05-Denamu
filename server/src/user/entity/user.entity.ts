@@ -5,6 +5,7 @@ import {
   Entity,
   OneToMany,
   PrimaryGeneratedColumn,
+  Unique,
   UpdateDateColumn,
 } from 'typeorm';
 
@@ -15,6 +16,8 @@ import { Provider } from '@user/entity/provider.entity';
 @Entity({
   name: 'user',
 })
+@Unique('UQ_user_email', ['email'])
+@Unique('UQ_user_user_name', ['userName'])
 export class User extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
@@ -23,7 +26,6 @@ export class User extends BaseEntity {
     name: 'email',
     length: 255,
     nullable: false,
-    unique: true,
   })
   email: string;
 
@@ -37,7 +39,6 @@ export class User extends BaseEntity {
     name: 'user_name',
     length: '60',
     nullable: false,
-    unique: true,
   })
   userName: string;
 

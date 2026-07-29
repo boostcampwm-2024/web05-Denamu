@@ -13,7 +13,7 @@ import { User } from '@user/entity/user.entity';
 @Entity({
   name: 'activity',
 })
-@Unique(['user', 'activityDate'])
+@Unique('UQ_activity_user_id_activity_date', ['user', 'activityDate'])
 export class Activity extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
@@ -42,6 +42,6 @@ export class Activity extends BaseEntity {
   viewCount: number;
 
   @ManyToOne(() => User, (user) => user.activities)
-  @JoinColumn({ name: 'user_id' })
+  @JoinColumn({ name: 'user_id', foreignKeyConstraintName: 'FK_activity_user_id' })
   user: User;
 }

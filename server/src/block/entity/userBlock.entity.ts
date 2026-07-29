@@ -11,7 +11,7 @@ import {
 import { User } from '@user/entity/user.entity';
 
 @Entity({ name: 'blocks' })
-@Unique(['blocker', 'blocked'])
+@Unique('UQ_blocks_blocker_id_blocked_id', ['blocker', 'blocked'])
 export class UserBlock extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
@@ -23,6 +23,7 @@ export class UserBlock extends BaseEntity {
   })
   @JoinColumn({
     name: 'blocker_id',
+    foreignKeyConstraintName: 'FK_blocks_blocker_id',
   })
   blocker: User;
 
@@ -33,6 +34,7 @@ export class UserBlock extends BaseEntity {
   })
   @JoinColumn({
     name: 'blocked_id',
+    foreignKeyConstraintName: 'FK_blocks_blocked_id',
   })
   blocked: User;
 
