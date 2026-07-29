@@ -36,6 +36,6 @@ export const NotFound: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(await canvas.findByText("존재하지 않거나 접근할 수 없는 공지사항입니다.")).toBeInTheDocument();
+    await expect(await canvas.findByText("존재하지 않거나 접근할 수 없습니다.")).toBeInTheDocument();
   },
 };
