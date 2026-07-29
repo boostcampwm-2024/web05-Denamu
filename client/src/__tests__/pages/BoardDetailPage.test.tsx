@@ -42,6 +42,7 @@ const makeDetail = (overrides: Partial<BoardDetail> = {}): BoardDetail => ({
   title: "정기 점검 안내",
   isPinned: true,
   status: "PUBLISHED",
+  category: "NOTICE",
   startAt: null,
   endAt: null,
   createdAt: "2026-07-20T09:00:00.000Z",
@@ -69,14 +70,14 @@ describe("BoardDetailPage", () => {
     boardState = { data: undefined, isLoading: false, isError: true };
     render(<BoardDetailPage />);
 
-    expect(screen.getByText("존재하지 않거나 접근할 수 없는 공지사항입니다.")).toBeInTheDocument();
+    expect(screen.getByText("존재하지 않거나 접근할 수 없습니다.")).toBeInTheDocument();
   });
 
   it("data가 없으면(404 등) 존재하지 않는다는 안내 문구를 표시한다", () => {
     boardState = { data: undefined, isLoading: false, isError: false };
     render(<BoardDetailPage />);
 
-    expect(screen.getByText("존재하지 않거나 접근할 수 없는 공지사항입니다.")).toBeInTheDocument();
+    expect(screen.getByText("존재하지 않거나 접근할 수 없습니다.")).toBeInTheDocument();
   });
 
   it("정상 데이터면 제목과 본문을 렌더링한다", () => {
@@ -88,11 +89,11 @@ describe("BoardDetailPage", () => {
     );
   });
 
-  it("목록으로 버튼 클릭 시 공지 목록 페이지로 이동한다", () => {
+  it("목록으로 버튼 클릭 시 게시판 목록 페이지로 이동한다", () => {
     render(<BoardDetailPage />);
 
     fireEvent.click(screen.getByRole("button", { name: /목록으로/ }));
 
-    expect(mockNavigate).toHaveBeenCalledWith("/notice");
+    expect(mockNavigate).toHaveBeenCalledWith("/board");
   });
 });

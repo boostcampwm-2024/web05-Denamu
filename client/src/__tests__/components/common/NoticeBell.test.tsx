@@ -35,6 +35,7 @@ const makeNotice = (overrides: Partial<BoardSummary> = {}): BoardSummary => ({
   title: "공지 제목",
   isPinned: false,
   status: "PUBLISHED",
+  category: "NOTICE",
   startAt: null,
   endAt: null,
   createdAt: "2026-07-20T09:00:00.000Z",
@@ -86,7 +87,7 @@ describe("NoticeBell", () => {
 
     fireEvent.click(screen.getByText("이벤트 안내"));
 
-    expect(mockNavigate).toHaveBeenCalledWith("/notice/42");
+    expect(mockNavigate).toHaveBeenCalledWith("/board/42");
   });
 
   it("전체보기 클릭 시 공지 목록 페이지로 이동한다", () => {
@@ -94,6 +95,6 @@ describe("NoticeBell", () => {
 
     fireEvent.click(screen.getByText("전체보기"));
 
-    expect(mockNavigate).toHaveBeenCalledWith("/notice");
+    expect(mockNavigate).toHaveBeenCalledWith("/board");
   });
 });

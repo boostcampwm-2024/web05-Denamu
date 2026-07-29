@@ -69,6 +69,7 @@ const makeBoard = (overrides: Partial<BoardSummary> = {}): BoardSummary => ({
   title: "공지 제목",
   isPinned: false,
   status: "PUBLISHED",
+  category: "NOTICE",
   startAt: null,
   endAt: null,
   createdAt: "2026-07-20T09:00:00.000Z",
@@ -112,13 +113,13 @@ describe("AdminBoardTab", () => {
     useAdminBoardsMock.mockReturnValue({ data: undefined, isLoading: false, isError: true });
     renderTab();
 
-    expect(screen.getByText("공지사항 목록을 불러오지 못했습니다.")).toBeInTheDocument();
+    expect(screen.getByText("목록을 불러오지 못했습니다.")).toBeInTheDocument();
   });
 
   it("목록이 비어 있으면 안내 문구를 표시한다", () => {
     renderTab();
 
-    expect(screen.getByText("등록된 공지사항이 없습니다.")).toBeInTheDocument();
+    expect(screen.getByText("등록된 게시글이 없습니다.")).toBeInTheDocument();
   });
 
   it("공지 목록을 고정/상태 배지와 함께 카드로 렌더링한다", () => {
@@ -145,11 +146,11 @@ describe("AdminBoardTab", () => {
     useAdminBoardsMock.mockReturnValue({ data: makePage([makeBoard()], 25), isLoading: false, isError: false });
     renderTab();
 
-    expect(useAdminBoardsMock).toHaveBeenLastCalledWith({ page: 1, limit: 10, status: undefined });
+    expect(useAdminBoardsMock).toHaveBeenLastCalledWith({ page: 1, limit: 10, status: undefined, category: undefined });
 
     fireEvent.click(screen.getByRole("button", { name: "다음" }));
 
-    expect(useAdminBoardsMock).toHaveBeenLastCalledWith({ page: 2, limit: 10, status: undefined });
+    expect(useAdminBoardsMock).toHaveBeenLastCalledWith({ page: 2, limit: 10, status: undefined, category: undefined });
   });
 
   it("상태 필터 탭 전환 시 해당 status로 조회한다", () => {
@@ -158,7 +159,16 @@ describe("AdminBoardTab", () => {
 
     fireEvent.mouseDown(screen.getByRole("tab", { name: "임시저장" }), { button: 0 });
 
-    expect(useAdminBoardsMock).toHaveBeenLastCalledWith({ page: 1, limit: 10, status: "DRAFT" });
+    expect(useAdminBoardsMock).toHaveBeenLastCalledWith({ page: 1, limit: 10, status: "DRAFT", category: undefined });
+  });
+
+  it("분류 필터 탭 전환 시 해당 category로 조회한다", () => {
+    useAdminBoardsMock.mockReturnValue({ data: makePage([makeBoard()]), isLoading: false, isError: false });
+    renderTab();
+
+    fireEvent.mouseDown(screen.getByRole("tab", { name: "FAQ" }), { button: 0 });
+
+    expect(useAdminBoardsMock).toHaveBeenLastCalledWith({ page: 1, limit: 10, status: undefined, category: "FAQ" });
   });
 
   it("작성 버튼 클릭 시 작성 폼으로 전환하고, 제목이 비어 있으면 제출 버튼이 비활성화된다", () => {
@@ -184,12 +194,13 @@ describe("AdminBoardTab", () => {
         content: "<p>내용</p>",
         isPinned: false,
         status: "DRAFT",
+        category: "NOTICE",
         startAt: undefined,
         endAt: undefined,
       },
       expect.any(Object)
     );
-    expect(toastMock).toHaveBeenCalledWith(expect.objectContaining({ description: "공지사항이 작성되었습니다." }));
+    expect(toastMock).toHaveBeenCalledWith(expect.objectContaining({ description: "공지사항 작성을 완료했습니다." }));
     expect(screen.queryByRole("heading", { name: "공지사항 작성" })).not.toBeInTheDocument();
   });
 
@@ -252,13 +263,14 @@ describe("AdminBoardTab", () => {
           content: "<p>기존 본문</p>",
           isPinned: false,
           status: "PUBLISHED",
+          category: "NOTICE",
           startAt: null,
           endAt: null,
         },
       },
       expect.any(Object)
     );
-    expect(toastMock).toHaveBeenCalledWith(expect.objectContaining({ description: "공지사항이 수정되었습니다." }));
+    expect(toastMock).toHaveBeenCalledWith(expect.objectContaining({ description: "공지사항 수정을 완료했습니다." }));
   });
 
   it("삭제 확인 시 deleteBoard를 호출하고 성공 toast를 띄운다", () => {
@@ -272,6 +284,6 @@ describe("AdminBoardTab", () => {
     fireEvent.click(screen.getByTestId("confirm-delete"));
 
     expect(deleteMutateMock).toHaveBeenCalledWith(11, expect.any(Object));
-    expect(toastMock).toHaveBeenCalledWith(expect.objectContaining({ description: "공지사항이 삭제되었습니다." }));
+    expect(toastMock).toHaveBeenCalledWith(expect.objectContaining({ description: "삭제를 완료했습니다." }));
   });
 });

@@ -18,7 +18,7 @@ let boardsState: {
 };
 
 const useBoardsMock = vi.fn<
-  (params: { page: number; limit: number }) => typeof boardsState
+  (params: { page: number; limit: number; category: string }) => typeof boardsState
 >(() => boardsState);
 
 vi.mock("lucide-react", () => lucideProxy());
@@ -36,7 +36,7 @@ vi.mock("@/components/layout/Layout", () => ({
 }));
 
 vi.mock("@/hooks/queries/useBoards", () => ({
-  useBoards: (params: { page: number; limit: number }) => useBoardsMock(params),
+  useBoards: (params: { page: number; limit: number; category: string }) => useBoardsMock(params),
 }));
 
 const makeBoard = (overrides: Partial<BoardSummary> = {}): BoardSummary => ({
@@ -44,6 +44,7 @@ const makeBoard = (overrides: Partial<BoardSummary> = {}): BoardSummary => ({
   title: "공지 제목",
   isPinned: false,
   status: "PUBLISHED",
+  category: "NOTICE",
   startAt: null,
   endAt: null,
   createdAt: "2026-07-20T09:00:00.000Z",
@@ -98,7 +99,22 @@ describe("BoardListPage", () => {
 
     fireEvent.click(screen.getByText("이벤트 안내"));
 
-    expect(mockNavigate).toHaveBeenCalledWith("/notice/7");
+    expect(mockNavigate).toHaveBeenCalledWith("/board/7");
+  });
+
+  it("기본 진입 시 NOTICE 분류로 조회한다", () => {
+    render(<BoardListPage />);
+
+    expect(useBoardsMock).toHaveBeenLastCalledWith({ page: 1, limit: 10, category: "NOTICE" });
+  });
+
+  it("FAQ 탭 클릭 시 FAQ 분류로 조회하고 안내 문구도 FAQ 기준으로 바뀐다", () => {
+    render(<BoardListPage />);
+
+    fireEvent.mouseDown(screen.getByRole("tab", { name: "FAQ" }), { button: 0 });
+
+    expect(useBoardsMock).toHaveBeenLastCalledWith({ page: 1, limit: 10, category: "FAQ" });
+    expect(screen.getByText("등록된 FAQ가 없습니다.")).toBeInTheDocument();
   });
 
   it("totalCount가 페이지 크기를 초과하면 페이지네이션을 표시하고, 다음 클릭 시 page 파라미터를 증가시킨다", () => {
@@ -106,11 +122,11 @@ describe("BoardListPage", () => {
     render(<BoardListPage />);
 
     expect(screen.getByText("1 / 3")).toBeInTheDocument();
-    expect(useBoardsMock).toHaveBeenLastCalledWith({ page: 1, limit: 10 });
+    expect(useBoardsMock).toHaveBeenLastCalledWith({ page: 1, limit: 10, category: "NOTICE" });
 
     fireEvent.click(screen.getByRole("button", { name: "다음" }));
 
-    expect(useBoardsMock).toHaveBeenLastCalledWith({ page: 2, limit: 10 });
+    expect(useBoardsMock).toHaveBeenLastCalledWith({ page: 2, limit: 10, category: "NOTICE" });
   });
 
   it("첫 페이지에서는 이전 버튼이 비활성화된다", () => {

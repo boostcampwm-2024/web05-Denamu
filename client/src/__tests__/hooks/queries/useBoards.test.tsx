@@ -55,6 +55,7 @@ describe("useBoard", () => {
       title: "공지",
       isPinned: false,
       status: "PUBLISHED",
+      category: "NOTICE",
       startAt: null,
       endAt: null,
       createdAt: "2026-07-20T09:00:00.000Z",
