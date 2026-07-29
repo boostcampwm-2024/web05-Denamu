@@ -5,11 +5,14 @@ import {
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
+  Unique,
 } from 'typeorm';
 
 @Entity({
   name: 'admin',
 })
+@Unique('UQ_admin_name', ['name'])
+@Unique('UQ_admin_email', ['email'])
 export class Admin extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
@@ -23,14 +26,12 @@ export class Admin extends BaseEntity {
   @Column({
     length: 255,
     nullable: false,
-    unique: true,
   })
   name: string;
 
   @Column({
     length: 255,
     nullable: false,
-    unique: true,
   })
   email: string;
 
@@ -53,6 +54,9 @@ export class Admin extends BaseEntity {
     onDelete: 'CASCADE',
     nullable: true,
   })
-  @JoinColumn({ name: 'parent_admin_id' })
+  @JoinColumn({
+    name: 'parent_admin_id',
+    foreignKeyConstraintName: 'FK_admin_parent_admin_id',
+  })
   parent: Admin | null;
 }

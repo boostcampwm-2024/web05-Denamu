@@ -13,7 +13,7 @@ import { Feed } from '@feed/entity/feed.entity';
 import { User } from '@user/entity/user.entity';
 
 @Entity({ name: 'likes' })
-@Unique(['user', 'feed'])
+@Unique('UQ_likes_user_id_feed_id', ['user', 'feed'])
 export class Like extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
@@ -25,6 +25,7 @@ export class Like extends BaseEntity {
   })
   @JoinColumn({
     name: 'feed_id',
+    foreignKeyConstraintName: 'FK_likes_feed_id',
   })
   feed: Feed;
 
@@ -35,6 +36,7 @@ export class Like extends BaseEntity {
   })
   @JoinColumn({
     name: 'user_id',
+    foreignKeyConstraintName: 'FK_likes_user_id',
   })
   user: User;
 

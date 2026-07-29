@@ -41,7 +41,10 @@ export class Notice extends BaseEntity {
     onUpdate: 'CASCADE',
     onDelete: 'SET NULL',
   })
-  @JoinColumn({ name: 'author_admin_id' })
+  @JoinColumn({
+    name: 'author_admin_id',
+    foreignKeyConstraintName: 'FK_notice_author_admin_id',
+  })
   author: Admin | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'datetime', nullable: false })

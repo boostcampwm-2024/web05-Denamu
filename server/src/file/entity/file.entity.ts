@@ -29,7 +29,10 @@ export class File {
   size: number;
 
   @ManyToOne(() => User)
-  @JoinColumn({ name: 'user_id' })
+  @JoinColumn({
+    name: 'user_id',
+    foreignKeyConstraintName: 'FK_file_user_id',
+  })
   user: User;
 
   @CreateDateColumn({
