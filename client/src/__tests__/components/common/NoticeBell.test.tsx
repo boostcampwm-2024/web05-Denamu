@@ -3,13 +3,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { lucideProxy } from "@/__tests__/__mocks__/external/lucide-proxy.tsx";
 import { NoticeBell } from "@/components/common/NoticeBell.tsx";
 
-import { NoticeSummary } from "@/types/notice";
+import { BoardSummary } from "@/types/board";
 import { render, screen } from "@testing-library/react";
 import { fireEvent } from "@testing-library/react";
 
 const mockNavigate = vi.fn();
 
-let noticesState: { data: { result: NoticeSummary[] } | undefined; isLoading: boolean };
+let noticesState: { data: { result: BoardSummary[] } | undefined; isLoading: boolean };
 
 vi.mock("lucide-react", () => lucideProxy());
 
@@ -17,8 +17,8 @@ vi.mock("react-router-dom", () => ({
   useNavigate: () => mockNavigate,
 }));
 
-vi.mock("@/hooks/queries/useNotices", () => ({
-  useNotices: () => noticesState,
+vi.mock("@/hooks/queries/useBoards", () => ({
+  useBoards: () => noticesState,
 }));
 
 vi.mock("@/components/ui/popover", () => {
@@ -30,7 +30,7 @@ vi.mock("@/components/ui/scroll-area", () => ({
   ScrollArea: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
-const makeNotice = (overrides: Partial<NoticeSummary> = {}): NoticeSummary => ({
+const makeNotice = (overrides: Partial<BoardSummary> = {}): BoardSummary => ({
   id: 1,
   title: "공지 제목",
   isPinned: false,

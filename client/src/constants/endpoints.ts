@@ -123,11 +123,11 @@ export const FILE = {
   UPLOAD: "/api/files",
 };
 
-export const NOTICE = {
-  LIST: "/api/notices",
-  DETAIL: (id: number) => `/api/notices/${id}`,
-  ADMIN_LIST: "/api/admins/notices",
-  ADMIN_DETAIL: (id: number) => `/api/admins/notices/${id}`,
+export const BOARD = {
+  LIST: "/api/boards",
+  DETAIL: (id: number) => `/api/boards/${id}`,
+  ADMIN_LIST: "/api/admins/boards",
+  ADMIN_DETAIL: (id: number) => `/api/admins/boards/${id}`,
 };
 
 export const NOTIFICATION = {

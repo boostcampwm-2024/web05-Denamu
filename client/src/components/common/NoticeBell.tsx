@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-import { useNotices } from "@/hooks/queries/useNotices";
+import { useBoards } from "@/hooks/queries/useBoards";
 
 const RECENT_LIMIT = 5;
 
@@ -16,7 +16,7 @@ export const NoticeBell = () => {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
-  const { data, isLoading } = useNotices({ page: 1, limit: RECENT_LIMIT }, open);
+  const { data, isLoading } = useBoards({ page: 1, limit: RECENT_LIMIT }, open);
   const notices = data?.result ?? [];
 
   const handleItemClick = (id: number) => {

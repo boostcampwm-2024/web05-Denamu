@@ -8,8 +8,8 @@ import Loading from "@/pages/Loading";
 const Home = lazy(() => import("@/pages/Home"));
 const Admin = lazy(() => import("@/pages/Admin"));
 const AboutService = lazy(() => import("@/pages/AboutService"));
-const NoticeListPage = lazy(() => import("@/pages/NoticeListPage"));
-const NoticeDetailPage = lazy(() => import("@/pages/NoticeDetailPage"));
+const BoardListPage = lazy(() => import("@/pages/BoardListPage"));
+const BoardDetailPage = lazy(() => import("@/pages/BoardDetailPage"));
 const PrivacyPolicy = lazy(() => import("@/pages/PrivacyPolicy"));
 const PostDetailPage = lazy(() => import("@/pages/PostDetailPage"));
 const Profile = lazy(() => import("@/pages/Profile"));
@@ -65,7 +65,7 @@ export const AppRouter = ({ location, state }: RouterProps) => {
           path="/notice"
           element={
             <Suspense fallback={<Loading />}>
-              <NoticeListPage />
+              <BoardListPage />
             </Suspense>
           }
         />
@@ -73,7 +73,7 @@ export const AppRouter = ({ location, state }: RouterProps) => {
           path="/notice/:id"
           element={
             <Suspense fallback={<Loading />}>
-              <NoticeDetailPage />
+              <BoardDetailPage />
             </Suspense>
           }
         />

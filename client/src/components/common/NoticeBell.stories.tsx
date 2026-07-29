@@ -1,9 +1,9 @@
 import { NoticeBell } from "@/components/common/NoticeBell";
 
-import { NOTICE } from "@/constants/endpoints";
+import { BOARD } from "@/constants/endpoints";
 
 import { mockApi, ok } from "@/__storybook__/mockApi";
-import { NoticeSummary } from "@/types/notice";
+import { BoardSummary } from "@/types/board";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, within } from "storybook/test";
 
@@ -15,7 +15,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const pinnedNotice: NoticeSummary = {
+const pinnedNotice: BoardSummary = {
   id: 3,
   title: "서비스 정기 점검 안내",
   isPinned: true,
@@ -25,7 +25,7 @@ const pinnedNotice: NoticeSummary = {
   createdAt: "2026-07-20T09:00:00.000Z",
 };
 
-const recentNotice: NoticeSummary = {
+const recentNotice: BoardSummary = {
   id: 2,
   title: "여름 이벤트 안내",
   isPinned: false,
@@ -38,7 +38,7 @@ const recentNotice: NoticeSummary = {
 export const Empty: Story = {
   name: "공지사항 없음",
   beforeEach: () => {
-    mockApi.onGet(NOTICE.LIST).reply(...ok({ result: [], page: 1, limit: 5, totalCount: 0, hasMore: false }));
+    mockApi.onGet(BOARD.LIST).reply(...ok({ result: [], page: 1, limit: 5, totalCount: 0, hasMore: false }));
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -51,7 +51,7 @@ export const Empty: Story = {
 export const WithData: Story = {
   name: "최근 공지 목록",
   beforeEach: () => {
-    mockApi.onGet(NOTICE.LIST).reply(
+    mockApi.onGet(BOARD.LIST).reply(
       ...ok({
         result: [pinnedNotice, recentNotice],
         page: 1,

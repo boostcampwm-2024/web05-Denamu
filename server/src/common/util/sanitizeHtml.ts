@@ -1,6 +1,6 @@
 import sanitizeHtml from 'sanitize-html';
 
-export const sanitizeNoticeContent = (dirty: string): string =>
+export const sanitizeBoardContent = (dirty: string): string =>
   sanitizeHtml(dirty, {
     allowedTags: [
       'p',
