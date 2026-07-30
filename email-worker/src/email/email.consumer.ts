@@ -125,6 +125,10 @@ export class EmailConsumer implements Lifecycle {
         await this.emailService.sendDeleteAccountMail(payload.data);
         break;
 
+      case EmailPayloadConstant.QNA_ANSWERED:
+        await this.emailService.sendQnaAnsweredMail(payload.data);
+        break;
+
       case EmailPayloadConstant.ADMIN_CERTIFICATION:
         await this.emailService.sendAdminCertificationMail(payload.data);
         break;
