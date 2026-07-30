@@ -275,7 +275,6 @@ export class QnaService {
           recipientName: recipientName ?? '',
           qnaId: qnaSnapshot.id,
           qnaTitle: qnaSnapshot.title,
-          isSecret: qnaSnapshot.isSecret,
         });
       }
     } catch (error) {

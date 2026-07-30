@@ -42,6 +42,13 @@ export interface AdminCertification {
   uuid: string;
 }
 
+export interface QnaAnswered {
+  email: string;
+  recipientName: string;
+  qnaId: number;
+  qnaTitle: string;
+}
+
 export const EmailPayloadConstant = {
   USER_CERTIFICATION: 'userCertification',
   RSS_REMOVAL: 'rssRemoval',
@@ -53,6 +60,7 @@ export const EmailPayloadConstant = {
   ADMIN_CERTIFICATION: 'adminCertification',
   ADMIN_ACCOUNT_DELETION: 'adminAccountDeletion',
   ADMIN_PASSWORD_RESET: 'adminPasswordReset',
+  QNA_ANSWERED: 'qnaAnswered',
 } as const;
 
 export type EmailPayload =
@@ -83,4 +91,5 @@ export type EmailPayload =
   | {
       type: typeof EmailPayloadConstant.ADMIN_PASSWORD_RESET;
       data: AdminCertification;
-    };
+    }
+  | { type: typeof EmailPayloadConstant.QNA_ANSWERED; data: QnaAnswered };
