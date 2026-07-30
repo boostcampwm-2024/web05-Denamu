@@ -8,15 +8,18 @@ import { NotifierRegistry } from '@common/notification/notifier-registry';
 
 import { QnaMessageType, QnaStatus } from '@qna/constant/qna.constant';
 import { CreateQnaRequestDto } from '@qna/dto/request/createQna.dto';
-import { QnaCreatedDto } from '@qna/dto/response/qna.dto';
+import { GetQnasRequestDto } from '@qna/dto/request/getQnas.dto';
+import { QnaCreatedDto, QnaListResponseDto } from '@qna/dto/response/qna.dto';
 import { Qna } from '@qna/entity/qna.entity';
 import { QnaMessage } from '@qna/entity/qnaMessage.entity';
+import { QnaRepository } from '@qna/repository/qna.repository';
 
 import { SALT_ROUNDS } from '@user/constant/user.constants';
 
 @Injectable()
 export class QnaService {
   constructor(
+    private readonly qnaRepository: QnaRepository,
     private readonly notifierRegistry: NotifierRegistry,
     private readonly dataSource: DataSource,
   ) {}
@@ -83,5 +86,14 @@ export class QnaService {
       false,
     );
     return QnaCreatedDto.of(qnaId);
+  }
+
+  async getPublicQnas(queryDto: GetQnasRequestDto) {
+    const { page, limit } = queryDto;
+    const { items, totalCount } = await this.qnaRepository.findPublicList(
+      page,
+      limit,
+    );
+    return QnaListResponseDto.of(items, page, limit, totalCount);
   }
 }
