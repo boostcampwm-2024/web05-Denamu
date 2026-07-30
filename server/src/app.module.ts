@@ -35,6 +35,8 @@ import { LikeModule } from '@like/module/like.module';
 
 import { NotificationModule } from '@notification/module/notification.module';
 
+import { QnaModule } from '@qna/module/qna.module';
+
 import { ReportModule } from '@report/module/report.module';
 
 import { RssModule } from '@rss/module/rss.module';
@@ -98,6 +100,7 @@ const exists = !!chosen && fs.existsSync(chosen);
     CommentModule,
     LikeModule,
     BoardModule,
+    QnaModule,
     NotificationModule,
     BlockModule,
     ReportModule,
