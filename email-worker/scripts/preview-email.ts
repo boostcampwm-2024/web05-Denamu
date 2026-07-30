@@ -6,6 +6,7 @@ import {
   createAdminVerificationMailContent,
   createDeleteAccountContent,
   createPasswordResetMailContent,
+  createQnaAnsweredContent,
   createRssCertificationContent,
   createRssRegistrationContent,
   createRssRegistrationRequestContent,
@@ -13,7 +14,7 @@ import {
   createVerificationMailContent,
 } from '@email/email.content';
 
-const SERVICE_ADDRESS = 'support@denamu.dev';
+const SERVICE_ADDRESS = 'boostcamp9web05@gmail.com';
 const SAMPLE_LINK = 'https://denamu.dev/verify?token=SAMPLE_TOKEN';
 const SAMPLE_RSS = {
   name: '데나무 기술 블로그',
@@ -89,6 +90,16 @@ const previews: [string, string, string][] = [
     'delete-account',
     '회원탈퇴',
     createDeleteAccountContent('김데나무', SAMPLE_LINK, SERVICE_ADDRESS),
+  ],
+  [
+    'qna-answered',
+    'Q&A 답변 완료',
+    createQnaAnsweredContent(
+      '김데나무',
+      '로그인이 안 돼요',
+      1,
+      SERVICE_ADDRESS,
+    ),
   ],
 ];
 
