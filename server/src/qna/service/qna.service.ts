@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 
 import * as bcrypt from 'bcrypt';
@@ -12,6 +13,7 @@ import { NotifierRegistry } from '@common/notification/notifier-registry';
 
 import {
   QNA_NOT_FOUND_MESSAGE,
+  QNA_VERIFY_FAIL_MESSAGE,
   QnaMessageType,
   QnaStatus,
 } from '@qna/constant/qna.constant';
@@ -119,6 +121,19 @@ export class QnaService {
     if (qna.isSecret) {
       return QnaLockedDto.of(qna);
     }
+    return QnaDetailDto.fromDetail(qna);
+  }
+
+  async verifyQna(id: number, password: string) {
+    const qna = await this.qnaRepository.findByIdWithMessages(id);
+    if (
+      !qna ||
+      !qna.password ||
+      !(await bcrypt.compare(password, qna.password))
+    ) {
+      throw new UnauthorizedException(QNA_VERIFY_FAIL_MESSAGE);
+    }
+
     return QnaDetailDto.fromDetail(qna);
   }
 }
