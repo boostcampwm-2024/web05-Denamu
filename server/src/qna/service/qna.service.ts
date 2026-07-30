@@ -20,6 +20,7 @@ import {
 } from '@qna/constant/qna.constant';
 import { CreateQnaRequestDto } from '@qna/dto/request/createQna.dto';
 import { CreateQnaMessageRequestDto } from '@qna/dto/request/createQnaMessage.dto';
+import { GetAdminQnasRequestDto } from '@qna/dto/request/getAdminQnas.dto';
 import { GetQnasRequestDto } from '@qna/dto/request/getQnas.dto';
 import {
   QnaCreatedDto,
@@ -195,5 +196,15 @@ export class QnaService {
     });
 
     this.notifyNewQna(notifyPayload, true);
+  }
+
+  async getAdminQnas(queryDto: GetAdminQnasRequestDto) {
+    const { page, limit, status } = queryDto;
+    const { items, totalCount } = await this.qnaRepository.findAdminList(
+      page,
+      limit,
+      status,
+    );
+    return QnaListResponseDto.of(items, page, limit, totalCount);
   }
 }
