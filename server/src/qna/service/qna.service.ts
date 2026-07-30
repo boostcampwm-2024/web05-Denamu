@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -18,6 +19,7 @@ import {
   QnaStatus,
 } from '@qna/constant/qna.constant';
 import { CreateQnaRequestDto } from '@qna/dto/request/createQna.dto';
+import { CreateQnaMessageRequestDto } from '@qna/dto/request/createQnaMessage.dto';
 import { GetQnasRequestDto } from '@qna/dto/request/getQnas.dto';
 import {
   QnaCreatedDto,
@@ -135,5 +137,63 @@ export class QnaService {
     }
 
     return QnaDetailDto.fromDetail(qna);
+  }
+
+  async createQnaMessage(
+    user: Payload | null,
+    id: number,
+    dto: CreateQnaMessageRequestDto,
+  ) {
+    let notifyPayload: { id: number; isSecret: boolean; content: string };
+
+    await this.dataSource.transaction(async (manager) => {
+      const qna = await manager.findOne(Qna, {
+        where: { id },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (!qna) {
+        throw new NotFoundException(QNA_NOT_FOUND_MESSAGE);
+      }
+      if (qna.status !== QnaStatus.ANSWERED) {
+        throw new BadRequestException(
+          '답변 완료 후에만 추가 질문이 가능합니다.',
+        );
+      }
+
+      if (qna.userId) {
+        if (!user || user.id !== qna.userId) {
+          throw new ForbiddenException(
+            '작성자만 추가 질문을 등록할 수 있습니다.',
+          );
+        }
+      } else {
+        if (
+          !dto.password ||
+          !qna.password ||
+          !(await bcrypt.compare(dto.password, qna.password))
+        ) {
+          throw new UnauthorizedException(QNA_VERIFY_FAIL_MESSAGE);
+        }
+      }
+
+      await manager.save(
+        manager.create(QnaMessage, {
+          qna,
+          type: QnaMessageType.QUESTION,
+          content: dto.content,
+        }),
+      );
+      qna.status = QnaStatus.PENDING;
+      await manager.save(qna);
+
+      notifyPayload = {
+        id: qna.id,
+        isSecret: qna.isSecret,
+        content: dto.content,
+      };
+    });
+
+    this.notifyNewQna(notifyPayload, true);
   }
 }

@@ -16,10 +16,12 @@ import { OptionalJwtGuard, Payload } from '@common/guard/jwt.guard';
 import { ApiResponse } from '@common/response/common.response';
 
 import { ApiCreateQna } from '@qna/api-docs/createQna.api-docs';
+import { ApiCreateQnaMessage } from '@qna/api-docs/createQnaMessage.api-docs';
 import { ApiGetQna } from '@qna/api-docs/getQna.api-docs';
 import { ApiGetQnas } from '@qna/api-docs/getQnas.api-docs';
 import { ApiVerifyQna } from '@qna/api-docs/verifyQna.api-docs';
 import { CreateQnaRequestDto } from '@qna/dto/request/createQna.dto';
+import { CreateQnaMessageRequestDto } from '@qna/dto/request/createQnaMessage.dto';
 import { GetQnaRequestDto } from '@qna/dto/request/getQna.dto';
 import { GetQnasRequestDto } from '@qna/dto/request/getQnas.dto';
 import { VerifyQnaRequestDto } from '@qna/dto/request/verifyQna.dto';
@@ -75,5 +77,18 @@ export class QnaController {
       '비밀번호 확인을 성공했습니다.',
       await this.qnaService.verifyQna(paramDto.id, bodyDto.password),
     );
+  }
+
+  @ApiCreateQnaMessage()
+  @Post('/:id/messages')
+  @HttpCode(HttpStatus.CREATED)
+  @UseGuards(OptionalJwtGuard)
+  async createQnaMessage(
+    @CurrentUser() user: Payload | null,
+    @Param() paramDto: GetQnaRequestDto,
+    @Body() bodyDto: CreateQnaMessageRequestDto,
+  ) {
+    await this.qnaService.createQnaMessage(user, paramDto.id, bodyDto);
+    return ApiResponse.responseWithNoContent('추가 질문 등록을 성공했습니다.');
   }
 }
