@@ -262,6 +262,28 @@ export function createPasswordResetMailContent(
   return mailLayout(body, serviceAddress);
 }
 
+export function createQnaAnsweredContent(
+  recipientName: string,
+  qnaTitle: string,
+  qnaId: number,
+  serviceAddress: string,
+) {
+  const qnaLink = `${PRODUCT_DOMAIN}/qna/${qnaId}`;
+
+  const body = `
+        ${heading('문의하신 Q&A에 답변이 등록되었습니다', '#007bff')}
+        ${infoBox(`
+          <p><strong>안녕하세요, ${recipientName}님!</strong></p>
+          <p>'${qnaTitle}' 문의에 대한 답변이 등록되었습니다.</p>
+        `)}
+        ${button(qnaLink, '답변 확인하러 가기', '#28af60')}
+        ${noticeBox(`
+          ${fallbackLink(qnaLink)}
+        `)}
+  `;
+  return mailLayout(body, serviceAddress);
+}
+
 export function createDeleteAccountContent(
   userName: string,
   verificationLink: string,
