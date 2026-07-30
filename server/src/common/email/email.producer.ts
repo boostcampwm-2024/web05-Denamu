@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 
-import { EmailPayload, EmailPayloadConstant } from '@common/email/email.type';
+import {
+  EmailPayload,
+  EmailPayloadConstant,
+  QnaAnswered,
+} from '@common/email/email.type';
 import { WinstonLoggerService } from '@common/logger/logger.service';
 import {
   RMQ_EXCHANGES,
@@ -32,6 +36,8 @@ export class EmailProducer {
       email = payload.data.rss.email;
     } else if (payload.type === EmailPayloadConstant.RSS_REGISTRATION_REQUEST) {
       email = payload.data.adminEmail;
+    } else if (payload.type === EmailPayloadConstant.QNA_ANSWERED) {
+      email = payload.data.email;
     } else {
       email = payload.data.email;
     }
@@ -181,5 +187,12 @@ export class EmailProducer {
       },
     };
     await this.produceMessage(payload);
+  }
+
+  async produceQnaAnswered(payload: QnaAnswered) {
+    await this.produceMessage({
+      type: EmailPayloadConstant.QNA_ANSWERED,
+      data: payload,
+    });
   }
 }
