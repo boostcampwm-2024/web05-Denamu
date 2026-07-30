@@ -12,42 +12,31 @@ export class QnaRepository extends Repository<Qna> {
   }
 
   async findPublicList(page: number, limit: number) {
-    const query = this.createQueryBuilder('qna')
-      .leftJoinAndSelect('qna.user', 'user')
-      .orderBy('qna.id', 'DESC')
-      .skip((page - 1) * limit)
-      .take(limit);
-
-    const [items, totalCount] = await query.getManyAndCount();
+    const [items, totalCount] = await this.findAndCount({
+      relations: { user: true },
+      order: { id: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
     return { items, totalCount };
   }
 
   async findAdminList(page: number, limit: number, status?: QnaStatus) {
-    const query = this.createQueryBuilder('qna').leftJoinAndSelect(
-      'qna.user',
-      'user',
-    );
-
-    if (status) {
-      query.andWhere('qna.status = :status', { status });
-    }
-
-    const [items, totalCount] = await query
-      .orderBy('qna.id', 'DESC')
-      .skip((page - 1) * limit)
-      .take(limit)
-      .getManyAndCount();
-
+    const [items, totalCount] = await this.findAndCount({
+      where: status ? { status } : {},
+      relations: { user: true },
+      order: { id: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
     return { items, totalCount };
   }
 
   async findByIdWithMessages(id: number): Promise<Qna | null> {
-    return this.createQueryBuilder('qna')
-      .leftJoinAndSelect('qna.user', 'user')
-      .leftJoinAndSelect('qna.messages', 'messages')
-      .leftJoinAndSelect('messages.admin', 'admin')
-      .where('qna.id = :id', { id })
-      .orderBy('messages.id', 'ASC')
-      .getOne();
+    return this.findOne({
+      where: { id },
+      relations: { user: true, messages: { admin: true } },
+      order: { messages: { id: 'ASC' } },
+    });
   }
 }
