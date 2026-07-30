@@ -9,7 +9,11 @@ import {
 import * as bcrypt from 'bcrypt';
 import { DataSource } from 'typeorm';
 
+import { AdminRepository } from '@admin/repository/admin.repository';
+
+import { EmailProducer } from '@common/email/email.producer';
 import { Payload } from '@common/guard/jwt.guard';
+import { WinstonLoggerService } from '@common/logger/logger.service';
 import { NotifierRegistry } from '@common/notification/notifier-registry';
 
 import {
@@ -19,6 +23,7 @@ import {
   QnaStatus,
 } from '@qna/constant/qna.constant';
 import { CreateQnaRequestDto } from '@qna/dto/request/createQna.dto';
+import { CreateQnaAnswerRequestDto } from '@qna/dto/request/createQnaAnswer.dto';
 import { CreateQnaMessageRequestDto } from '@qna/dto/request/createQnaMessage.dto';
 import { GetAdminQnasRequestDto } from '@qna/dto/request/getAdminQnas.dto';
 import { GetQnasRequestDto } from '@qna/dto/request/getQnas.dto';
@@ -33,12 +38,17 @@ import { QnaMessage } from '@qna/entity/qnaMessage.entity';
 import { QnaRepository } from '@qna/repository/qna.repository';
 
 import { SALT_ROUNDS } from '@user/constant/user.constants';
+import { UserRepository } from '@user/repository/user.repository';
 
 @Injectable()
 export class QnaService {
   constructor(
     private readonly qnaRepository: QnaRepository,
+    private readonly adminRepository: AdminRepository,
+    private readonly userRepository: UserRepository,
+    private readonly emailProducer: EmailProducer,
     private readonly notifierRegistry: NotifierRegistry,
+    private readonly logger: WinstonLoggerService,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -214,5 +224,64 @@ export class QnaService {
       throw new NotFoundException(QNA_NOT_FOUND_MESSAGE);
     }
     return QnaDetailDto.fromDetail(qna);
+  }
+
+  async createQnaAnswer(
+    adminEmail: string,
+    id: number,
+    dto: CreateQnaAnswerRequestDto,
+  ) {
+    const admin = await this.adminRepository.findOneBy({ email: adminEmail });
+
+    let qnaSnapshot: Qna;
+    await this.dataSource.transaction(async (manager) => {
+      const qna = await manager.findOne(Qna, {
+        where: { id },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (!qna) {
+        throw new NotFoundException(QNA_NOT_FOUND_MESSAGE);
+      }
+
+      await manager.save(
+        manager.create(QnaMessage, {
+          qna,
+          type: QnaMessageType.ANSWER,
+          content: dto.content,
+          admin,
+        }),
+      );
+      qna.status = QnaStatus.ANSWERED;
+      await manager.save(qna);
+
+      qnaSnapshot = qna;
+    });
+
+    try {
+      const author = qnaSnapshot.userId
+        ? await this.userRepository.findOneBy({ id: qnaSnapshot.userId })
+        : null;
+      const recipientEmail = qnaSnapshot.userId
+        ? author?.email
+        : qnaSnapshot.guestEmail;
+      const recipientName = qnaSnapshot.userId
+        ? author?.userName
+        : qnaSnapshot.guestName;
+
+      if (recipientEmail) {
+        await this.emailProducer.produceQnaAnswered({
+          email: recipientEmail,
+          recipientName: recipientName ?? '',
+          qnaId: qnaSnapshot.id,
+          qnaTitle: qnaSnapshot.title,
+          isSecret: qnaSnapshot.isSecret,
+        });
+      }
+    } catch (error) {
+      this.logger.error(
+        `Q&A 답변 완료 이메일 발행에 실패했습니다.: qnaId=${qnaSnapshot.id}, error=${error}`,
+      );
+    }
   }
 }
