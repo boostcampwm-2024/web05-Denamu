@@ -207,4 +207,12 @@ export class QnaService {
     );
     return QnaListResponseDto.of(items, page, limit, totalCount);
   }
+
+  async getAdminQna(id: number) {
+    const qna = await this.qnaRepository.findByIdWithMessages(id);
+    if (!qna) {
+      throw new NotFoundException(QNA_NOT_FOUND_MESSAGE);
+    }
+    return QnaDetailDto.fromDetail(qna);
+  }
 }
