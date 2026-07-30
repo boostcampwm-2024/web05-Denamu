@@ -42,3 +42,10 @@ export interface AdminCertification {
   name: string;
   uuid: string;
 }
+
+export interface QnaAnswered {
+  email: string;
+  recipientName: string;
+  qnaId: number;
+  qnaTitle: string;
+}

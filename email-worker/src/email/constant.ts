@@ -9,4 +9,5 @@ export const EmailPayloadConstant = {
   ADMIN_CERTIFICATION: 'adminCertification',
   ADMIN_ACCOUNT_DELETION: 'adminAccountDeletion',
   ADMIN_PASSWORD_RESET: 'adminPasswordReset',
+  QNA_ANSWERED: 'qnaAnswered',
 } as const;
