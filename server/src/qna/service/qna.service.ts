@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 import * as bcrypt from 'bcrypt';
 import { DataSource } from 'typeorm';
@@ -6,10 +10,19 @@ import { DataSource } from 'typeorm';
 import { Payload } from '@common/guard/jwt.guard';
 import { NotifierRegistry } from '@common/notification/notifier-registry';
 
-import { QnaMessageType, QnaStatus } from '@qna/constant/qna.constant';
+import {
+  QNA_NOT_FOUND_MESSAGE,
+  QnaMessageType,
+  QnaStatus,
+} from '@qna/constant/qna.constant';
 import { CreateQnaRequestDto } from '@qna/dto/request/createQna.dto';
 import { GetQnasRequestDto } from '@qna/dto/request/getQnas.dto';
-import { QnaCreatedDto, QnaListResponseDto } from '@qna/dto/response/qna.dto';
+import {
+  QnaCreatedDto,
+  QnaDetailDto,
+  QnaListResponseDto,
+  QnaLockedDto,
+} from '@qna/dto/response/qna.dto';
 import { Qna } from '@qna/entity/qna.entity';
 import { QnaMessage } from '@qna/entity/qnaMessage.entity';
 import { QnaRepository } from '@qna/repository/qna.repository';
@@ -95,5 +108,17 @@ export class QnaService {
       limit,
     );
     return QnaListResponseDto.of(items, page, limit, totalCount);
+  }
+
+  async getPublicQna(id: number) {
+    const qna = await this.qnaRepository.findByIdWithMessages(id);
+    if (!qna) {
+      throw new NotFoundException(QNA_NOT_FOUND_MESSAGE);
+    }
+
+    if (qna.isSecret) {
+      return QnaLockedDto.of(qna);
+    }
+    return QnaDetailDto.fromDetail(qna);
   }
 }

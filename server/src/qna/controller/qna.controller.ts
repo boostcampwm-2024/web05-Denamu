@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
   Query,
   UseGuards,
@@ -15,8 +16,10 @@ import { OptionalJwtGuard, Payload } from '@common/guard/jwt.guard';
 import { ApiResponse } from '@common/response/common.response';
 
 import { ApiCreateQna } from '@qna/api-docs/createQna.api-docs';
+import { ApiGetQna } from '@qna/api-docs/getQna.api-docs';
 import { ApiGetQnas } from '@qna/api-docs/getQnas.api-docs';
 import { CreateQnaRequestDto } from '@qna/dto/request/createQna.dto';
+import { GetQnaRequestDto } from '@qna/dto/request/getQna.dto';
 import { GetQnasRequestDto } from '@qna/dto/request/getQnas.dto';
 import { QnaService } from '@qna/service/qna.service';
 
@@ -46,6 +49,16 @@ export class QnaController {
     return ApiResponse.responseWithData(
       '문의 목록 조회를 성공했습니다.',
       await this.qnaService.getPublicQnas(queryDto),
+    );
+  }
+
+  @ApiGetQna()
+  @Get('/:id')
+  @HttpCode(HttpStatus.OK)
+  async getQna(@Param() paramDto: GetQnaRequestDto) {
+    return ApiResponse.responseWithData(
+      '문의 상세 조회를 성공했습니다.',
+      await this.qnaService.getPublicQna(paramDto.id),
     );
   }
 }
