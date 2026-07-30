@@ -23,6 +23,7 @@ module.exports = {
     '^@like/(.*)?$',
     '^@notice/(.*)?$',
     '^@notification/(.*)?$',
+    '^@qna/(.*)?$',
     '^@report/(.*)?$',
     '^@rss/(.*)?$',
     '^@statistic/(.*)?$',
