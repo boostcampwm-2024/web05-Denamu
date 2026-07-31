@@ -27,7 +27,7 @@ import { RssAcceptRepository } from '@rss/repository/rss.repository';
 
 import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
 
-import { REFRESH_TOKEN_TTL, SALT_ROUNDS } from '@user/constant/user.constants';
+import { REFRESH_TOKEN_TTL } from '@user/constant/user.constants';
 import { ChangePasswordRequestDto } from '@user/dto/request/changePassword.dto';
 import { LoginUserRequestDto } from '@user/dto/request/loginUser.dto';
 import { RegisterUserRequestDto } from '@user/dto/request/registerUser.dto';
@@ -44,6 +44,7 @@ import {
 } from '@user/dto/response/searchUser.dto';
 import { User } from '@user/entity/user.entity';
 import { UserRepository } from '@user/repository/user.repository';
+import { createHashedPassword } from '@user/util/createHashedPassword';
 
 @Injectable()
 export class UserService {
@@ -131,7 +132,7 @@ export class UserService {
     }
 
     const newUser = registerDto.toEntity();
-    newUser.password = await this.createHashedPassword(registerDto.password);
+    newUser.password = await createHashedPassword(registerDto.password);
 
     const userRegisterCode = uuid.v4();
     await this.redisService.set(
@@ -255,10 +256,6 @@ export class UserService {
     });
   }
 
-  private async createHashedPassword(password: string) {
-    return await bcrypt.hash(password, SALT_ROUNDS);
-  }
-
   async updateUserActivity(userId: number) {
     const user = await this.getUser(userId);
 
@@ -367,9 +364,7 @@ export class UserService {
       }
     }
 
-    user.password = await this.createHashedPassword(
-      changePasswordDto.newPassword,
-    );
+    user.password = await createHashedPassword(changePasswordDto.newPassword);
     await this.userRepository.save(user);
     await this.invalidateUserTokens(user.id);
   }
@@ -415,7 +410,7 @@ export class UserService {
       throw new NotFoundException('존재하지 않는 유저입니다.');
     }
 
-    user.password = await this.createHashedPassword(password);
+    user.password = await createHashedPassword(password);
 
     await this.redisService.del(
       `${REDIS_KEYS.USER_RESET_PASSWORD_KEY}:${uuid}`,

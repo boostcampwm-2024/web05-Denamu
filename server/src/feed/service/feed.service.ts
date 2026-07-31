@@ -8,21 +8,16 @@ import {
 import axios from 'axios';
 import { Request, Response } from 'express';
 
-import { cookieConfig } from '@common/cookie/cookie.config';
-import { REDIS_KEYS } from '@common/redis/redis.constant';
-import { RedisService } from '@common/redis/redis.service';
-
 import { RssBlockRepository } from '@block/repository/rssBlock.repository';
 
-import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
+import { REDIS_KEYS } from '@common/redis/redis.constant';
+import { RedisService } from '@common/redis/redis.service';
 
 import { AI_RETRY_LOCK_TTL_SECONDS } from '@feed/constant/feed.constant';
 import { ManageFeedRequestDto } from '@feed/dto/request/manageFeed.dto';
 import { ReadFeedPaginationRequestDto } from '@feed/dto/request/readFeedPagination.dto';
-import { ReadSubscriptionFeedResponseDto } from '@feed/dto/response/readSubscriptionFeed.dto';
 import { SearchFeedRequestDto } from '@feed/dto/request/searchFeed.dto';
 import { GetFeedDetailResponseDto } from '@feed/dto/response/getFeedDetail';
-import { ReadNoSummaryFeedResponseDto } from '@feed/dto/response/readNoSummaryFeed.dto';
 import {
   FeedPaginationResult,
   FeedResult,
@@ -33,6 +28,8 @@ import {
   FeedRecentRedis,
   ReadFeedRecentResponseDto,
 } from '@feed/dto/response/readFeedRecent.dto';
+import { ReadNoSummaryFeedResponseDto } from '@feed/dto/response/readNoSummaryFeed.dto';
+import { ReadSubscriptionFeedResponseDto } from '@feed/dto/response/readSubscriptionFeed.dto';
 import {
   SearchFeedResponseDto,
   SearchFeedResult,
@@ -42,6 +39,10 @@ import {
   FeedRepository,
   FeedViewRepository,
 } from '@feed/repository/feed.repository';
+import { existNextFeed, getLastIdFromFeedList } from '@feed/util/pagination';
+import { createCookie, getIp, isString } from '@feed/util/viewCookie';
+
+import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
 
 type AiSummaryRetryMessage = {
   feedId: number;
@@ -126,9 +127,9 @@ export class FeedService {
       blockerId,
     );
 
-    const hasMore = this.existNextFeed(feedList, feedPaginationQueryDto.limit);
+    const hasMore = existNextFeed(feedList, feedPaginationQueryDto.limit);
     if (hasMore) feedList.pop();
-    const lastId = this.getLastIdFromFeedList(feedList);
+    const lastId = getLastIdFromFeedList(feedList);
     const newCheckFeedList = await this.checkNewFeeds(feedList);
     const feedPagination = FeedResult.toResultDtoArray(newCheckFeedList);
     return ReadFeedPaginationResponseDto.toResponseDto(
@@ -136,14 +137,6 @@ export class FeedService {
       lastId,
       hasMore,
     );
-  }
-
-  private existNextFeed(feedList: FeedView[], limit: number) {
-    return feedList.length > limit;
-  }
-
-  private getLastIdFromFeedList(feedList: FeedView[]) {
-    return feedList.length ? feedList[feedList.length - 1].feedId : 0;
   }
 
   private async checkNewFeeds(feedList: FeedView[]) {
@@ -213,9 +206,9 @@ export class FeedService {
     await this.getFeed(feedId);
 
     const cookie = request.headers.cookie;
-    const ip = this.getIp(request);
+    const ip = getIp(request);
 
-    if (!ip || !this.isString(ip)) {
+    if (!ip || !isString(ip)) {
       return;
     }
 
@@ -232,11 +225,11 @@ export class FeedService {
     );
 
     if (hasIpFlag) {
-      this.createCookie(response, feedId);
+      createCookie(response, feedId);
       return;
     }
 
-    this.createCookie(response, feedId);
+    createCookie(response, feedId);
 
     await Promise.all([
       this.redisService.sadd(`feed:${feedId}:ip`, ip),
@@ -249,25 +242,6 @@ export class FeedService {
         feedId.toString(),
       ),
     ]);
-  }
-
-  private isString(ip: string | string[]): ip is string {
-    return !Array.isArray(ip);
-  }
-
-  private createCookie(response: Response, feedId: number) {
-    const cookieConfigWithExpiration = {
-      ...cookieConfig[process.env.NODE_ENV],
-      expires: this.getExpirationTime(),
-    };
-    response.cookie(`View_count_${feedId}`, feedId, cookieConfigWithExpiration);
-  }
-
-  private getExpirationTime() {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(0, 0, 0, 0);
-    return tomorrow;
   }
 
   async readRecentFeedList() {
@@ -300,17 +274,6 @@ export class FeedService {
       );
 
     return ReadFeedRecentResponseDto.toResponseDtoArray(recentFeedList);
-  }
-
-  private getIp(request: Request) {
-    const forwardedFor = request.headers['x-forwarded-for'];
-
-    if (typeof forwardedFor === 'string') {
-      const forwardedIps = forwardedFor.split(',');
-      return forwardedIps[0].trim();
-    }
-
-    return request.socket.remoteAddress;
   }
 
   async getFeedDetail(
@@ -376,7 +339,11 @@ export class FeedService {
     if (hasMore) feeds.pop();
     const lastId = feeds.length ? feeds[feeds.length - 1].id : 0;
 
-    return ReadSubscriptionFeedResponseDto.toResponseDto(feeds, lastId, hasMore);
+    return ReadSubscriptionFeedResponseDto.toResponseDto(
+      feeds,
+      lastId,
+      hasMore,
+    );
   }
 
   async deleteCheckFeed(feedDeleteCheckDto: ManageFeedRequestDto) {

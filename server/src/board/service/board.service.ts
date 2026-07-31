@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { BoardCategory, BoardStatus } from '@board/constant/board.constant';
 import { CreateBoardRequestDto } from '@board/dto/request/createBoard.dto';
@@ -14,6 +10,7 @@ import {
   BoardListResponseDto,
 } from '@board/dto/response/board.dto';
 import { BoardRepository } from '@board/repository/board.repository';
+import { validateWindow } from '@board/util/validateWindow';
 
 import { AdminRepository } from '@admin/repository/admin.repository';
 
@@ -25,14 +22,6 @@ export class BoardService {
     private readonly boardRepository: BoardRepository,
     private readonly adminRepository: AdminRepository,
   ) {}
-
-  private validateWindow(startAt: Date | null, endAt: Date | null) {
-    if (startAt && endAt && startAt.getTime() >= endAt.getTime()) {
-      throw new BadRequestException(
-        '노출 시작일은 종료일보다 이전이어야 합니다.',
-      );
-    }
-  }
 
   async getPublicBoards(queryDto: GetBoardsRequestDto) {
     const { page, limit, category } = queryDto;
@@ -81,7 +70,7 @@ export class BoardService {
   ): Promise<BoardDetailDto> {
     const startAt = dto.startAt ? new Date(dto.startAt) : null;
     const endAt = dto.endAt ? new Date(dto.endAt) : null;
-    this.validateWindow(startAt, endAt);
+    validateWindow(startAt, endAt);
 
     const author = await this.adminRepository.findOneBy({ email: authorEmail });
 
@@ -124,7 +113,7 @@ export class BoardService {
           ? new Date(dto.endAt)
           : null
         : board.endAt;
-    this.validateWindow(startAt, endAt);
+    validateWindow(startAt, endAt);
 
     if (dto.title !== undefined) board.title = dto.title;
     if (dto.content !== undefined) board.content = dto.content;

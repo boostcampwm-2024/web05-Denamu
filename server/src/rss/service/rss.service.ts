@@ -55,8 +55,9 @@ import {
   RssRejectRepository,
   RssRepository,
 } from '@rss/repository/rss.repository';
+import { assertUrlAccessible } from '@rss/util/assertUrlAccessible';
 import { blogUrlToRss } from '@rss/util/blogUrlToRss';
-import { extractChannelImage } from '@rss/util/extractChannelImage';
+import { fetchChannelImage } from '@rss/util/fetchChannelImage';
 
 import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
 
@@ -109,55 +110,15 @@ export class RssService {
     }
 
     await Promise.all([
-      this.assertUrlAccessible(blogUrl),
-      this.assertUrlAccessible(rssUrl),
+      assertUrlAccessible(blogUrl),
+      assertUrlAccessible(rssUrl),
     ]);
 
     const rssEntity = rssRegisterBodyDto.toEntity(rssUrl);
-    rssEntity.blogImage = await this.fetchChannelImage(rssUrl);
+    rssEntity.blogImage = await fetchChannelImage(rssUrl);
     await this.rssRepository.insert(rssEntity);
 
     await this.notifyRssRegistrationRequest(rssEntity);
-  }
-
-  private async assertUrlAccessible(url: string) {
-    try {
-      await axios.get(url, {
-        timeout: 5000,
-        maxRedirects: 5,
-        maxContentLength: 5 * 1024 * 1024,
-      });
-    } catch (error) {
-      const status = axios.isAxiosError(error)
-        ? error.response?.status
-        : undefined;
-
-      if (status === 404) {
-        throw new NotFoundException(
-          `${url}을(를) 찾을 수 없습니다. 올바른 블로그 주소를 입력해주세요.`,
-        );
-      }
-
-      throw new BadRequestException(
-        `${url}에 접속할 수 없습니다. 올바른 블로그 주소를 입력해주세요.`,
-      );
-    }
-  }
-
-  private async fetchChannelImage(rssUrl: string): Promise<string | null> {
-    try {
-      const { data } = await axios.get<string>(rssUrl, {
-        headers: {
-          Accept: 'application/rss+xml, application/xml, text/xml',
-        },
-        responseType: 'text',
-        timeout: 5000,
-        maxContentLength: 5 * 1024 * 1024,
-      });
-      return typeof data === 'string' ? extractChannelImage(data) : null;
-    } catch {
-      return null;
-    }
   }
 
   private async notifyRssRegistrationRequest(rss: Rss) {

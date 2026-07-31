@@ -28,7 +28,6 @@ import {
   OAuthPendingData,
   OAuthTokenResponse,
   OAuthType,
-  StateData,
   UserInfo,
 } from '@user/constant/oauth.constant';
 import { OAuthCallbackRequestDto } from '@user/dto/request/oAuthCallbackDto';
@@ -40,6 +39,7 @@ import { OAuthProvider } from '@user/provider/oauth-provider.interface';
 import { ProviderRepository } from '@user/repository/provider.repository';
 import { UserRepository } from '@user/repository/user.repository';
 import { UserService } from '@user/service/user.service';
+import { parseStateData } from '@user/util/parseStateData';
 
 @Injectable()
 export class OAuthService {
@@ -181,7 +181,7 @@ export class OAuthService {
     res: Response,
     req: Request,
   ) {
-    const stateData = this.parseStateData(callbackDto.state);
+    const stateData = parseStateData(callbackDto.state);
     const { provider: providerType, csrfToken: csrfTokenKey } = stateData;
     const cookieCsrfToken = req.cookies['oauth_csrf_token'];
 
@@ -531,14 +531,6 @@ export class OAuthService {
     };
 
     this.userService.issueRefreshToken(jwtPayload, res);
-  }
-
-  private parseStateData(stateString: string): StateData {
-    try {
-      return JSON.parse(Buffer.from(stateString, 'base64').toString());
-    } catch {
-      throw new BadRequestException('잘못된 state 형식입니다.');
-    }
   }
 
   private async findExistingProvider(
