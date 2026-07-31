@@ -118,7 +118,7 @@ export class RssService {
     rssEntity.blogImage = await fetchChannelImage(rssUrl);
     await this.rssRepository.insert(rssEntity);
 
-    await this.notifyRssRegistrationRequest(rssEntity);
+    void this.notifyRssRegistrationRequest(rssEntity);
   }
 
   private async notifyRssRegistrationRequest(rss: Rss) {
@@ -195,11 +195,19 @@ export class RssService {
       });
       return rejectRss;
     });
-    await this.emailProducer.produceRssRegistration(
-      rejectRss,
-      false,
-      rssRejectBodyDto.description,
-    );
+    void this.notifyRssRejected(rejectRss, rssRejectBodyDto.description);
+  }
+
+  private async notifyRssRejected(rss: Rss, description?: string) {
+    try {
+      await this.emailProducer.produceRssRegistration(rss, false, description);
+    } catch (error) {
+      this.logger.error(
+        `RSS 거절 메일 발송 실패 (rssId: ${rss.id}): ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
   }
 
   async readAcceptHistory() {
@@ -228,7 +236,19 @@ export class RssService {
     });
 
     await this.enqueueFullFeedCrawlMessage(rssAccept.id);
-    await this.emailProducer.produceRssRegistration(rssAccept, true);
+    void this.notifyRssAccepted(rssAccept);
+  }
+
+  private async notifyRssAccepted(rssAccept: RssAccept) {
+    try {
+      await this.emailProducer.produceRssRegistration(rssAccept, true);
+    } catch (error) {
+      this.logger.error(
+        `RSS 승인 메일 발송 실패 (rssId: ${rssAccept.id}): ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
   }
 
   private async enqueueFullFeedCrawlMessage(rssId: number) {
