@@ -169,4 +169,21 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(duplicateSession).toBeNull();
     expect(newSession).toBe(admin.email);
   });
+
+  it('[429] 60초 내 5회 초과 로그인 시도 시 요청을 차단한다.', async () => {
+    // given
+    const requestDto = new LoginAdminRequestDto({
+      email: admin.email,
+      password: 'testWrongAdminPassword!',
+    });
+
+    // Http when
+    for (let i = 0; i < 5; i++) {
+      await agent.post(URL).send(requestDto);
+    }
+    const response = await agent.post(URL).send(requestDto);
+
+    // Http then
+    expect(response.status).toBe(HttpStatus.TOO_MANY_REQUESTS);
+  });
 });
