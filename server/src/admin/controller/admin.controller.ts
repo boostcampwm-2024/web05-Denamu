@@ -40,6 +40,7 @@ import { UpdateAdminProfileRequestDto } from '@admin/dto/request/updateAdminProf
 import { AdminService } from '@admin/service/admin.service';
 
 import { CurrentAdmin } from '@common/decorator/current-admin.decorator';
+import { LoginThrottlerGuard } from '@common/guard/login-throttler.guard';
 import { AdminAuthGuard } from '@common/guard/session.guard';
 import { ApiResponse } from '@common/response/common.response';
 
@@ -51,6 +52,7 @@ export class AdminController {
   @ApiLoginAdmin()
   @Post('/login')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(LoginThrottlerGuard)
   async loginAdmin(
     @Body() loginAdminBodyDto: LoginAdminRequestDto,
     @Res({ passthrough: true }) response: Response,
