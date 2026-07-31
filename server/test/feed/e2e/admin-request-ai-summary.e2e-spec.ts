@@ -20,10 +20,10 @@ import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
 const URL = (feedId: number | string) =>
-  `/api/feeds/${feedId}/ai-summary-requests`;
+  `/api/admins/feeds/${feedId}/ai-summary-requests`;
 const IN_PROGRESS = '아직 AI가 요약을 진행중인 게시글 이에요! 💭';
 
-describe(`POST /api/feeds/{feedId}/ai-summary-requests E2E Test`, () => {
+describe(`POST /api/admins/feeds/{feedId}/ai-summary-requests E2E Test`, () => {
   let agent: TestAgent;
   let redisService: RedisService;
   let feedRepository: FeedRepository;

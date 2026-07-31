@@ -19,7 +19,7 @@ import { FeedFixture } from '@test/config/common/fixture/feed.fixture';
 import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = '/api/feeds/no-summary';
+const URL = '/api/admins/feeds/no-summary';
 const AI_SUMMARY_IN_PROGRESS_MESSAGE = '아직 AI가 요약을 진행중인 게시글 이에요! 💭';
 
 describe(`GET ${URL} E2E Test`, () => {
