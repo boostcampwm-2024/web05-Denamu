@@ -24,6 +24,7 @@ import { cookieConfig } from '@common/cookie/cookie.config';
 import { EmailProducer } from '@common/email/email.producer';
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
+import { createHashedPassword } from '@common/util/createHashedPassword';
 
 const ADMIN_REGISTER_TTL = 600;
 
@@ -123,10 +124,8 @@ export class AdminService {
       where: { email: creatorEmail },
     });
 
-    const saltRounds = 10;
-    registerAdminBodyDto.password = await bcrypt.hash(
+    registerAdminBodyDto.password = await createHashedPassword(
       registerAdminBodyDto.password,
-      saltRounds,
     );
 
     const admin = registerAdminBodyDto.toEntity();
@@ -316,8 +315,7 @@ export class AdminService {
       throw new NotFoundException('인증에 실패했습니다.');
     }
 
-    const saltRounds = 10;
-    admin.password = await bcrypt.hash(password, saltRounds);
+    admin.password = await createHashedPassword(password);
     await this.adminRepository.save(admin);
 
     await this.redisService.del(resetRequestKey);
@@ -402,8 +400,7 @@ export class AdminService {
 
     const passwordChanged = password !== undefined;
     if (passwordChanged) {
-      const saltRounds = 10;
-      admin.password = await bcrypt.hash(password, saltRounds);
+      admin.password = await createHashedPassword(password);
     }
 
     if (emailNotification !== undefined) {

@@ -15,6 +15,7 @@ import { EmailProducer } from '@common/email/email.producer';
 import { Payload } from '@common/guard/jwt.guard';
 import { WinstonLoggerService } from '@common/logger/logger.service';
 import { NotifierRegistry } from '@common/notification/notifier-registry';
+import { createHashedPassword } from '@common/util/createHashedPassword';
 
 import {
   QNA_NOT_FOUND_MESSAGE,
@@ -37,7 +38,6 @@ import { Qna } from '@qna/entity/qna.entity';
 import { QnaMessage } from '@qna/entity/qnaMessage.entity';
 import { QnaRepository } from '@qna/repository/qna.repository';
 
-import { SALT_ROUNDS } from '@user/constant/user.constants';
 import { UserRepository } from '@user/repository/user.repository';
 
 @Injectable()
@@ -84,7 +84,7 @@ export class QnaService {
     const shouldHashPassword = user ? dto.isSecret : true;
     const hashedPassword =
       shouldHashPassword && dto.password
-        ? await bcrypt.hash(dto.password, SALT_ROUNDS)
+        ? await createHashedPassword(dto.password)
         : null;
 
     let qnaId: number;
