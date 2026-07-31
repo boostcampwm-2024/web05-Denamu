@@ -32,7 +32,7 @@ export const NavigationButtons = ({ onAction }: NavigationButtonsProps) => {
       </Button>
 
       <Button onClick={handleBoardClick} variant="outline">
-        공지사항 · FAQ
+        공지사항 · Q&A
       </Button>
 
       {tap === "main" ? (

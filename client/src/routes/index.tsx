@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { Routes, Route, Location } from "react-router-dom";
+import { Routes, Route, Navigate, Location } from "react-router-dom";
 
 import PostDetail from "@/components/common/Card/PostDetail";
 
@@ -10,6 +10,7 @@ const Admin = lazy(() => import("@/pages/Admin"));
 const AboutService = lazy(() => import("@/pages/AboutService"));
 const BoardListPage = lazy(() => import("@/pages/BoardListPage"));
 const BoardDetailPage = lazy(() => import("@/pages/BoardDetailPage"));
+const QnaDetailPage = lazy(() => import("@/pages/QnaDetailPage"));
 const PrivacyPolicy = lazy(() => import("@/pages/PrivacyPolicy"));
 const PostDetailPage = lazy(() => import("@/pages/PostDetailPage"));
 const Profile = lazy(() => import("@/pages/Profile"));
@@ -74,6 +75,15 @@ export const AppRouter = ({ location, state }: RouterProps) => {
           element={
             <Suspense fallback={<Loading />}>
               <BoardDetailPage />
+            </Suspense>
+          }
+        />
+        <Route path="/qna" element={<Navigate to="/board" replace />} />
+        <Route
+          path="/qna/:id"
+          element={
+            <Suspense fallback={<Loading />}>
+              <QnaDetailPage />
             </Suspense>
           }
         />

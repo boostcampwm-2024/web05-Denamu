@@ -7,6 +7,7 @@ import logger from '@common/logger/logger';
 import { EmailMetrics } from '@common/metrics/email-metrics';
 import {
   AdminCertification,
+  QnaAnswered,
   Rss,
   RssCertification,
   RssRegistration,
@@ -20,6 +21,7 @@ import {
   createAdminVerificationMailContent,
   createDeleteAccountContent,
   createPasswordResetMailContent,
+  createQnaAnsweredContent,
   createRssCertificationContent,
   createRssRegistrationContent,
   createRssRegistrationRequestContent,
@@ -305,6 +307,28 @@ export class EmailService {
     const mailOptions = this.createDeleteAccountMail(user);
 
     await this.sendMail(mailOptions);
+  }
+
+  async sendQnaAnsweredMail(qnaAnswered: QnaAnswered): Promise<void> {
+    const mailOptions = this.createQnaAnsweredMail(qnaAnswered);
+
+    await this.sendMail(mailOptions);
+  }
+
+  private createQnaAnsweredMail(
+    qnaAnswered: QnaAnswered,
+  ): nodemailer.SendMailOptions {
+    return {
+      from: `Denamu<${this.emailUser}>`,
+      to: qnaAnswered.email,
+      subject: `[🎋 Denamu] 문의하신 Q&A에 답변이 등록되었습니다.`,
+      html: createQnaAnsweredContent(
+        qnaAnswered.recipientName,
+        qnaAnswered.qnaTitle,
+        qnaAnswered.qnaId,
+        this.emailUser,
+      ),
+    };
   }
 
   private createDeleteAccountMail(user: User): nodemailer.SendMailOptions {

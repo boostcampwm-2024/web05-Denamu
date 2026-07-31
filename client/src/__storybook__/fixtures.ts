@@ -6,6 +6,7 @@ import type { ChildAdmin } from "@/types/admin";
 import type { ChartPlatform, ChartType } from "@/types/chart";
 import type { AdminChatRoom, ChatType } from "@/types/chat";
 import type { BoardDetail, BoardPage, BoardSummary } from "@/types/board";
+import type { QnaPage, QnaSummary, QnaThread } from "@/types/qna";
 import type { FeedDetail, FeedList } from "@/types/post";
 import type {
   BlockedRss,
@@ -478,4 +479,62 @@ export const mockBoardDetail: BoardDetail = {
   content: "<p>정기 점검으로 인해 서비스 이용이 일시 중단됩니다.</p>",
   authorName: "테스트 계정",
   updatedAt: "2026-07-20T09:00:00.000Z",
+};
+
+const mockQnaSummaries: QnaSummary[] = [
+  {
+    id: 3,
+    title: "구독한 블로그 글이 늦게 반영돼요",
+    isSecret: false,
+    status: "ANSWERED",
+    authorLabel: "홍길동",
+    createdAt: "2026-07-20T09:00:00.000Z",
+  },
+  {
+    id: 2,
+    title: "비공개 문의입니다",
+    isSecret: true,
+    status: "PENDING",
+    authorLabel: "익명",
+    createdAt: "2026-07-19T09:00:00.000Z",
+  },
+  {
+    id: 1,
+    title: "RSS 등록은 어떻게 하나요?",
+    isSecret: false,
+    status: "PENDING",
+    authorLabel: "김개발",
+    createdAt: "2026-07-18T09:00:00.000Z",
+  },
+];
+
+export const mockQnaPage: QnaPage<QnaSummary> = {
+  result: mockQnaSummaries,
+  page: 1,
+  limit: 10,
+  totalCount: mockQnaSummaries.length,
+  hasMore: false,
+};
+
+export const mockQnaThread: QnaThread = {
+  id: mockQnaSummaries[0].id,
+  title: mockQnaSummaries[0].title,
+  isSecret: false,
+  status: "ANSWERED",
+  authorLabel: "홍길동",
+  createdAt: "2026-07-20T09:00:00.000Z",
+  messages: [
+    {
+      type: "QUESTION",
+      content: "구독한 블로그의 새 글이 목록에 늦게 반영되는 것 같습니다. 확인 부탁드립니다.",
+      adminName: null,
+      createdAt: "2026-07-20T09:00:00.000Z",
+    },
+    {
+      type: "ANSWER",
+      content: "크롤링 주기는 최대 10분입니다. 이후에도 반영이 안 되면 RSS 주소를 다시 확인해 주세요.",
+      adminName: "운영팀",
+      createdAt: "2026-07-20T10:00:00.000Z",
+    },
+  ],
 };

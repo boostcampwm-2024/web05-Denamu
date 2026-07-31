@@ -30,6 +30,7 @@
       "@health/*": ["./src/health/*"],
       "@like/*": ["./src/like/*"],
       "@notification/*": ["./src/notification/*"],
+      "@qna/*": ["./src/qna/*"],
       "@report/*": ["./src/report/*"],
       "@rss/*": ["./src/rss/*"],
       "@statistic/*": ["./src/statistic/*"],

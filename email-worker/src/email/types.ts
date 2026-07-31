@@ -1,5 +1,6 @@
 import {
   AdminCertification,
+  QnaAnswered,
   RssCertification,
   RssRegistration,
   RssRegistrationRequest,
@@ -37,7 +38,8 @@ export type EmailPayload =
   | {
       type: typeof EmailPayloadConstant.ADMIN_PASSWORD_RESET;
       data: AdminCertification;
-    };
+    }
+  | { type: typeof EmailPayloadConstant.QNA_ANSWERED; data: QnaAnswered };
 
 export type NodeMailerError = Error & {
   code?: string;

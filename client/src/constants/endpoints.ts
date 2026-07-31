@@ -130,6 +130,16 @@ export const BOARD = {
   ADMIN_DETAIL: (id: number) => `/api/admins/boards/${id}`,
 };
 
+export const QNA = {
+  LIST: "/api/qna",
+  DETAIL: (id: number) => `/api/qna/${id}`,
+  VERIFY: (id: number) => `/api/qna/${id}/verify`,
+  MESSAGES: (id: number) => `/api/qna/${id}/messages`,
+  ADMIN_LIST: "/api/admins/qna",
+  ADMIN_DETAIL: (id: number) => `/api/admins/qna/${id}`,
+  ADMIN_MESSAGES: (id: number) => `/api/admins/qna/${id}/messages`,
+};
+
 export const NOTIFICATION = {
   UNREAD_COUNT: "/api/notifications/unread-count",
   LIST: "/api/notifications",
