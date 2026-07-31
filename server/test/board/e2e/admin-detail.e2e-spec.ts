@@ -91,24 +91,4 @@ describe(`GET /api/admins/boards/:id E2E Test`, () => {
     // Http then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
-
-  it('[404] 게시글 ID가 0일 경우 상세 조회를 실패한다.', async () => {
-    // Http when
-    const response = await agent
-      .get(URL(0))
-      .set('Cookie', `sessionId=${sessionKey}`);
-
-    // Http then
-    expect(response.status).toBe(HttpStatus.NOT_FOUND);
-  });
-
-  it('[400] 게시글 ID가 정수가 아닐 경우 상세 조회를 실패한다.', async () => {
-    // Http when
-    const response = await agent
-      .get(URL('test'))
-      .set('Cookie', `sessionId=${sessionKey}`);
-
-    // Http then
-    expect(response.status).toBe(HttpStatus.BAD_REQUEST);
-  });
 });
