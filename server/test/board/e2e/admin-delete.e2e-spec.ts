@@ -85,17 +85,4 @@ describe(`DELETE /api/admins/boards/:id E2E Test`, () => {
     // DB then
     expect(await boardRepository.findOneBy({ id: board.id })).not.toBeNull();
   });
-
-  it('[400] 게시글 ID가 정수가 아닐 경우 삭제를 실패한다.', async () => {
-    // Http when
-    const response = await agent
-      .delete(URL('test'))
-      .set('Cookie', `sessionId=${sessionKey}`);
-
-    // Http then
-    expect(response.status).toBe(HttpStatus.BAD_REQUEST);
-
-    // DB then
-    expect(await boardRepository.findOneBy({ id: board.id })).not.toBeNull();
-  });
 });

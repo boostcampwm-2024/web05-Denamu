@@ -6,7 +6,6 @@ import {
   HttpCode,
   HttpStatus,
   Param,
-  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -48,10 +47,10 @@ export class AdminBoardController {
   @ApiGetAdminBoard()
   @Get('/:id')
   @HttpCode(HttpStatus.OK)
-  async getAdminBoard(@Param('id', ParseIntPipe) id: number) {
+  async getAdminBoard(@Param() paramDto: GetBoardRequestDto) {
     return ApiResponse.responseWithData(
       '게시글 상세 조회를 성공했습니다.',
-      await this.boardService.getAdminBoard(id),
+      await this.boardService.getAdminBoard(paramDto.id),
     );
   }
 
@@ -84,8 +83,8 @@ export class AdminBoardController {
   @ApiDeleteBoard()
   @Delete('/:id')
   @HttpCode(HttpStatus.OK)
-  async deleteBoard(@Param('id', ParseIntPipe) id: number) {
-    await this.boardService.deleteBoard(id);
+  async deleteBoard(@Param() paramDto: GetBoardRequestDto) {
+    await this.boardService.deleteBoard(paramDto.id);
     return ApiResponse.responseWithNoContent(
       '게시글이 성공적으로 삭제되었습니다.',
     );
