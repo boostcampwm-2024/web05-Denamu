@@ -54,6 +54,15 @@ export default function DesktopNavigation({ toggleModal }: { toggleModal: (modal
               </NavigationMenuLink>
             </NavigationMenuItem>
             <NavigationMenuItem>
+              <NavigationMenuLink
+                className={`${navigationMenuTriggerStyle()} hover:text-primary hover:bg-primary/10`}
+                onClick={() => navigate("/board")}
+                href="#"
+              >
+                공지사항 · Q&A
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+            <NavigationMenuItem>
               <NoticeBell />
             </NavigationMenuItem>
             <NavigationMenuItem>

@@ -69,6 +69,14 @@ describe("DesktopNavigation", () => {
     expect(mockNavigate).toHaveBeenCalledWith("/about");
   });
 
+  it("'공지사항 · Q&A' 클릭 시 /board로 이동해야 한다", () => {
+    render(<DesktopNavigation toggleModal={vi.fn()} />);
+
+    fireEvent.click(screen.getByText("공지사항 · Q&A"));
+
+    expect(mockNavigate).toHaveBeenCalledWith("/board");
+  });
+
   it("'블로그 등록' 클릭 시 toggleModal('rss')를 호출해야 한다", () => {
     const toggleModal = vi.fn();
     render(<DesktopNavigation toggleModal={toggleModal} />);
