@@ -6,7 +6,6 @@ import {
   HttpCode,
   HttpStatus,
   Param,
-  ParseIntPipe,
   Patch,
   Post,
   Req,
@@ -31,6 +30,7 @@ import { ApiResetPasswordAdmin } from '@admin/api-docs/resetPasswordAdmin.api-do
 import { ApiUpdateAdminProfile } from '@admin/api-docs/updateAdminProfile.api-docs';
 import { CertificateAdminRequestDto } from '@admin/dto/request/certificateAdmin.dto';
 import { ConfirmDeleteAdminParamRequestDto } from '@admin/dto/request/confirmDeleteAdminParam.dto';
+import { DeleteChildAdminParamRequestDto } from '@admin/dto/request/deleteChildAdminParam.dto';
 import { ForgotPasswordAdminRequestDto } from '@admin/dto/request/forgotPasswordAdmin.dto';
 import { LoginAdminRequestDto } from '@admin/dto/request/loginAdmin.dto';
 import { RegisterAdminRequestDto } from '@admin/dto/request/registerAdmin.dto';
@@ -120,9 +120,9 @@ export class AdminController {
   @HttpCode(HttpStatus.OK)
   async deleteChildAdmin(
     @CurrentAdmin() email: string,
-    @Param('id', ParseIntPipe) targetAdminId: number,
+    @Param() paramDto: DeleteChildAdminParamRequestDto,
   ) {
-    await this.adminService.deleteChildAdmin(email, targetAdminId);
+    await this.adminService.deleteChildAdmin(email, paramDto.id);
     return ApiResponse.responseWithNoContent(
       '관리자 계정이 성공적으로 삭제되었습니다.',
     );
