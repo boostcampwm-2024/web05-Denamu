@@ -17,10 +17,8 @@ import { ReadActivityQueryRequestDto } from '@activity/dto/request/readActivity.
 
 import { CurrentUser } from '@common/decorator';
 import { JwtGuard, OptionalJwtGuard, Payload } from '@common/guard/jwt.guard';
-import { AdminAuthGuard } from '@common/guard/session.guard';
 import { ApiResponse } from '@common/response/common.response';
 
-import { ApiAcceptRss } from '@rss/api-docs/acceptRss.api-docs';
 import { ApiCreateRss } from '@rss/api-docs/createRss.api-docs';
 import { ApiCreateRssCertification } from '@rss/api-docs/createRssCertification.api-docs';
 import { ApiDeleteCertificateRss } from '@rss/api-docs/deleteCertificateRss.api-docs';
@@ -33,10 +31,6 @@ import { ApiGetRssActivityYears } from '@rss/api-docs/getRssActivityYears.api-do
 import { ApiGetRssFeeds } from '@rss/api-docs/getRssFeeds.api-docs';
 import { ApiGetRssInfo } from '@rss/api-docs/getRssInfo.api-docs';
 import { ApiPreviewRssCertification } from '@rss/api-docs/previewRssCertification.api-docs';
-import { ApiReadAllRss } from '@rss/api-docs/readAllRss.api-docs';
-import { ApiReadRssAcceptHistory } from '@rss/api-docs/readRssAcceptHistory.api-docs';
-import { ApiReadRssRejectHistory } from '@rss/api-docs/readRssRejectHistory.api-docs';
-import { ApiRejectRss } from '@rss/api-docs/rejectRss.api-docs';
 import { ApiSearchRss } from '@rss/api-docs/searchRss.api-docs';
 import { ApiSetFeedVisibility } from '@rss/api-docs/setFeedVisibility.api-docs';
 import { ApiUpdateRssCertification } from '@rss/api-docs/updateRssCertification.api-docs';
@@ -49,10 +43,8 @@ import { GetOwnedRssFeedsRequestDto } from '@rss/dto/request/getOwnedRssFeeds.dt
 import { GetOwnedRssFeedsParamRequestDto } from '@rss/dto/request/getOwnedRssFeedsParam.dto';
 import { GetRssFeedsRequestDto } from '@rss/dto/request/getRssFeeds.dto';
 import { GetRssInfoParamRequestDto } from '@rss/dto/request/getRssInfoParam.dto';
-import { ManageRssRequestDto } from '@rss/dto/request/manageRss.dto';
 import { PreviewRssCertificationRequestDto } from '@rss/dto/request/previewRssCertification.dto';
 import { RegisterRssRequestDto } from '@rss/dto/request/registerRss.dto';
-import { RejectRssRequestDto } from '@rss/dto/request/rejectRss';
 import { SearchRssRequestDto } from '@rss/dto/request/searchRss.dto';
 import { SetFeedVisibilityRequestDto } from '@rss/dto/request/setFeedVisibility.dto';
 import { SetFeedVisibilityParamRequestDto } from '@rss/dto/request/setFeedVisibilityParam.dto';
@@ -72,60 +64,6 @@ export class RssController {
   async createRss(@Body() rssRegisterBodyDto: RegisterRssRequestDto) {
     await this.rssService.createRss(rssRegisterBodyDto);
     return ApiResponse.responseWithNoContent('신청이 완료되었습니다.');
-  }
-
-  @ApiReadAllRss()
-  @UseGuards(AdminAuthGuard)
-  @Get()
-  @HttpCode(HttpStatus.OK)
-  async readAllRss() {
-    return ApiResponse.responseWithData(
-      'Rss 조회 완료',
-      await this.rssService.readAllRss(),
-    );
-  }
-
-  @ApiAcceptRss()
-  @UseGuards(AdminAuthGuard)
-  @Post('accept/:id')
-  @HttpCode(HttpStatus.CREATED)
-  async acceptRss(@Param() rssAcceptParamDto: ManageRssRequestDto) {
-    await this.rssService.acceptRss(rssAcceptParamDto);
-    return ApiResponse.responseWithNoContent('승인이 완료되었습니다.');
-  }
-
-  @ApiRejectRss()
-  @UseGuards(AdminAuthGuard)
-  @Post('reject/:id')
-  @HttpCode(HttpStatus.CREATED)
-  async rejectRss(
-    @Body() rssRejectBodyDto: RejectRssRequestDto,
-    @Param() rssRejectParamDto: ManageRssRequestDto,
-  ) {
-    await this.rssService.rejectRss(rssRejectParamDto, rssRejectBodyDto);
-    return ApiResponse.responseWithNoContent('거절이 완료되었습니다.');
-  }
-
-  @ApiReadRssAcceptHistory()
-  @UseGuards(AdminAuthGuard)
-  @Get('history/accept')
-  @HttpCode(HttpStatus.OK)
-  async readAcceptHistory() {
-    return ApiResponse.responseWithData(
-      '승인 기록 조회가 완료되었습니다.',
-      await this.rssService.readAcceptHistory(),
-    );
-  }
-
-  @ApiReadRssRejectHistory()
-  @UseGuards(AdminAuthGuard)
-  @Get('history/reject')
-  @HttpCode(HttpStatus.OK)
-  async readRejectHistory() {
-    return ApiResponse.responseWithData(
-      'RSS 거절 기록을 조회하였습니다.',
-      await this.rssService.readRejectHistory(),
-    );
   }
 
   @ApiDeleteRss()
