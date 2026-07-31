@@ -32,6 +32,7 @@
     "local:migration:generate": "npm run typeorm -- migration:generate -d dataSource.ts"
   },
   "dependencies": {
+    "@nest-lab/throttler-storage-redis": "^1.2.0",
     "@nestjs/axios": "^4.0.1",
     "@nestjs/common": "^10.4.22",
     "@nestjs/config": "^3.3.0",
@@ -43,6 +44,7 @@
     "@nestjs/platform-socket.io": "^10.4.22",
     "@nestjs/schedule": "^4.1.1",
     "@nestjs/swagger": "^8.0.1",
+    "@nestjs/throttler": "^6.5.0",
     "@nestjs/typeorm": "^10.0.2",
     "@nestjs/websockets": "^10.4.22",
     "@willsoto/nestjs-prometheus": "^6.0.2",

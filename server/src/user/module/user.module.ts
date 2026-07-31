@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { JwtAuthModule } from '@common/auth/jwt.module';
+import { LoginThrottlerModule } from '@common/throttler/login-throttler.module';
 
 import { FeedRepository } from '@feed/repository/feed.repository';
 
@@ -21,7 +22,7 @@ import { OAuthService } from '@user/service/oAuth.service';
 import { UserService } from '@user/service/user.service';
 
 @Module({
-  imports: [JwtAuthModule, FileModule, RssModule],
+  imports: [JwtAuthModule, FileModule, RssModule, LoginThrottlerModule],
   controllers: [UserController, OAuthController],
   providers: [
     UserService,

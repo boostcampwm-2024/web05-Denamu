@@ -23,6 +23,7 @@ import {
   Payload,
   RefreshJwtGuard,
 } from '@common/guard/jwt.guard';
+import { LoginThrottlerGuard } from '@common/guard/login-throttler.guard';
 import { ApiResponse } from '@common/response/common.response';
 
 import { ApiCertificateUser } from '@user/api-docs/certificateUser.api-docs';
@@ -157,6 +158,7 @@ export class UserController {
   @ApiLoginUser()
   @Post('/login')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(LoginThrottlerGuard)
   async loginUser(
     @Body() loginDto: LoginUserRequestDto,
     @Res({ passthrough: true }) response: Response,
