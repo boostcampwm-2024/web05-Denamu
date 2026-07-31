@@ -17,6 +17,7 @@ import { EmailProducer } from '@common/email/email.producer';
 import { Payload } from '@common/guard/jwt.guard';
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
+import { createHashedPassword } from '@common/util/createHashedPassword';
 
 import { FeedRepository } from '@feed/repository/feed.repository';
 
@@ -44,7 +45,6 @@ import {
 } from '@user/dto/response/searchUser.dto';
 import { User } from '@user/entity/user.entity';
 import { UserRepository } from '@user/repository/user.repository';
-import { createHashedPassword } from '@user/util/createHashedPassword';
 
 @Injectable()
 export class UserService {

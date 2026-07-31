@@ -1,6 +1,6 @@
 import * as bcrypt from 'bcrypt';
 
-import { SALT_ROUNDS } from '@user/constant/user.constants';
+const SALT_ROUNDS = 10;
 
 export async function createHashedPassword(password: string) {
   return await bcrypt.hash(password, SALT_ROUNDS);

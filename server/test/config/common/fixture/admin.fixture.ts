@@ -1,9 +1,8 @@
-import * as bcrypt from 'bcrypt';
 import * as uuid from 'uuid';
 
 import { Admin } from '@admin/entity/admin.entity';
 
-import { SALT_ROUNDS } from '@user/constant/user.constants';
+import { createHashedPassword } from '@common/util/createHashedPassword';
 
 export const ADMIN_DEFAULT_PASSWORD = 'test1234!';
 
@@ -19,7 +18,7 @@ export class AdminFixture {
   static async createAdminCryptFixture(overwrites: Partial<Admin> = {}) {
     const admin = new Admin();
     Object.assign(admin, this.createGeneralAdmin(), overwrites);
-    admin.password = await bcrypt.hash(admin.password, SALT_ROUNDS);
+    admin.password = await createHashedPassword(admin.password);
     return admin;
   }
 
