@@ -8,27 +8,27 @@ import { AdminRepository } from '@admin/repository/admin.repository';
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
 
-import { RssReject } from '@rss/entity/rss.entity';
-import { RssRejectRepository } from '@rss/repository/rss.repository';
+import { RssAccept } from '@rss/entity/rss.entity';
+import { RssAcceptRepository } from '@rss/repository/rss.repository';
 
 import { AdminFixture } from '@test/config/common/fixture/admin.fixture';
-import { RssRejectFixture } from '@test/config/common/fixture/rss-reject.fixture';
+import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = '/api/rss/history/reject';
+const URL = '/api/admins/rss/acceptances';
 
 describe(`GET ${URL} E2E Test`, () => {
   let agent: TestAgent;
-  let rssRejectList: RssReject[];
-  let redisService: RedisService;
-  let rssRejectRepository: RssRejectRepository;
+  let rssAcceptList: RssAccept[];
+  let rssAcceptRepository: RssAcceptRepository;
   let adminRepository: AdminRepository;
+  let redisService: RedisService;
   const redisKeyMake = (data: string) => `${REDIS_KEYS.ADMIN_AUTH_KEY}:${data}`;
-  const sessionKey = 'admin-rss-history-reject';
+  const sessionKey = 'admin-rss-history-accept';
 
   beforeAll(() => {
     agent = supertest(testApp.getHttpServer());
-    rssRejectRepository = testApp.get(RssRejectRepository);
+    rssAcceptRepository = testApp.get(RssAcceptRepository);
     adminRepository = testApp.get(AdminRepository);
     redisService = testApp.get(RedisService);
   });
@@ -37,17 +37,17 @@ describe(`GET ${URL} E2E Test`, () => {
     const admin = await adminRepository.save(
       await AdminFixture.createAdminCryptFixture(),
     );
-    const rssRejects = Array.from({ length: 2 }).map(() =>
-      RssRejectFixture.createRssRejectFixture(),
+    const rssAccepts = Array.from({ length: 2 }).map(() =>
+      RssAcceptFixture.createRssAcceptFixture(),
     );
-    [rssRejectList] = await Promise.all([
-      rssRejectRepository.save(rssRejects),
+    [rssAcceptList] = await Promise.all([
+      rssAcceptRepository.save(rssAccepts),
       redisService.set(redisKeyMake(sessionKey), admin.email),
     ]);
-    rssRejectList.reverse();
+    rssAcceptList.reverse();
   });
 
-  it('[401] 관리자 로그인 쿠키가 없을 경우 RSS 거절 기록 조회를 실패한다.', async () => {
+  it('[401] 관리자 로그인 쿠키가 없을 경우 RSS 승인 기록 조회를 실패한다.', async () => {
     // Http when
     const response = await agent.get(URL);
 
@@ -57,7 +57,7 @@ describe(`GET ${URL} E2E Test`, () => {
     expect(data).toBeUndefined();
   });
 
-  it('[401] 관리자 로그인 쿠키가 만료됐을 경우 RSS 거절 기록 조회를 실패한다.', async () => {
+  it('[401] 관리자 로그인 쿠키가 만료됐을 경우 RSS 승인 기록 조회를 실패한다.', async () => {
     // Http when
     const response = await agent
       .get(URL)
@@ -69,7 +69,7 @@ describe(`GET ${URL} E2E Test`, () => {
     expect(data).toBeUndefined();
   });
 
-  it('[200] 관리자 로그인이 되어 있을 경우 RSS 거절 기록 조회를 성공한다.', async () => {
+  it('[200] 관리자 로그인이 되어있을 경우 RSS 승인 기록 조회를 성공한다.', async () => {
     // Http when
     const response = await agent
       .get(URL)
@@ -79,15 +79,14 @@ describe(`GET ${URL} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual(
-      rssRejectList.map((rssReject) => ({
-        blogImage: null,
-        blogPlatform: rssReject.blogPlatform,
-        description: rssReject.description,
-        email: rssReject.email,
-        id: rssReject.id,
-        name: rssReject.name,
-        rssUrl: rssReject.rssUrl,
-        userName: rssReject.userName,
+      rssAcceptList.map((rssAccept) => ({
+        blogPlatform: rssAccept.blogPlatform,
+        email: rssAccept.email,
+        id: rssAccept.id,
+        blogImage: rssAccept.blogImage ?? null,
+        name: rssAccept.name,
+        rssUrl: rssAccept.rssUrl,
+        userName: rssAccept.userName,
       })),
     );
   });

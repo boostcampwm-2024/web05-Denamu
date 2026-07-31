@@ -14,7 +14,7 @@ import { AdminFixture } from '@test/config/common/fixture/admin.fixture';
 import { RssFixture } from '@test/config/common/fixture/rss.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = '/api/rss';
+const URL = '/api/admins/rss';
 
 describe(`GET ${URL} E2E Test`, () => {
   let agent: TestAgent;

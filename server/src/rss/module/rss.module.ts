@@ -11,6 +11,7 @@ import { FeedRepository } from '@feed/repository/feed.repository';
 
 import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
 
+import { AdminRssController } from '@rss/controller/adminRss.controller';
 import { RssController } from '@rss/controller/rss.controller';
 import {
   RssAcceptRepository,
@@ -21,7 +22,7 @@ import { RssService } from '@rss/service/rss.service';
 
 @Module({
   imports: [AdminModule, NotifierModule, JwtAuthModule],
-  controllers: [RssController],
+  controllers: [RssController, AdminRssController],
   providers: [
     RssService,
     RssRepository,

@@ -17,9 +17,9 @@ import { AdminFixture } from '@test/config/common/fixture/admin.fixture';
 import { RssFixture } from '@test/config/common/fixture/rss.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = '/api/rss/reject';
+const URL = (id: number) => `/api/admins/rss/${id}/rejections`;
 
-describe(`POST ${URL}/{rssId} E2E Test`, () => {
+describe(`POST /api/admins/rss/{rssId}/rejections E2E Test`, () => {
   let agent: TestAgent;
   let rssRepository: RssRepository;
   let rssRejectRepository: RssRejectRepository;
@@ -49,7 +49,7 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
 
   it('[401] 관리자 로그인 쿠키가 없을 경우 RSS 거부를 실패한다.', async () => {
     // Http when
-    const response = await agent.post(`${URL}/${Number.MAX_SAFE_INTEGER}`);
+    const response = await agent.post(URL(Number.MAX_SAFE_INTEGER));
 
     // Http then
     const { data } = response.body;
@@ -73,7 +73,7 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
   it('[401] 관리자 로그인 쿠키가 만료됐을 경우 RSS 거부를 실패한다.', async () => {
     // Http when
     const response = await agent
-      .post(`${URL}/${Number.MAX_SAFE_INTEGER}`)
+      .post(URL(Number.MAX_SAFE_INTEGER))
       .set('Cookie', `sessionId=Wrong${sessionKey}`);
 
     // Http then
@@ -104,7 +104,7 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
 
     // Http when
     const response = await agent
-      .post(`${URL}/${Number.MAX_SAFE_INTEGER}`)
+      .post(URL(Number.MAX_SAFE_INTEGER))
       .set('Cookie', `sessionId=${sessionKey}`)
       .send(requestDTO);
 
@@ -136,7 +136,7 @@ describe(`POST ${URL}/{rssId} E2E Test`, () => {
 
     // Http when
     const response = await agent
-      .post(`${URL}/${rss.id}`)
+      .post(URL(rss.id))
       .set('Cookie', `sessionId=${sessionKey}`)
       .send(requestDto);
 

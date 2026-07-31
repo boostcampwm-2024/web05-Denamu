@@ -6,6 +6,7 @@ import { JwtAuthModule } from '@common/auth/jwt.module';
 
 import { RssBlockRepository } from '@block/repository/rssBlock.repository';
 
+import { AdminFeedController } from '@feed/controller/adminFeed.controller';
 import { FeedController } from '@feed/controller/feed.controller';
 import { FeedViewedListener } from '@feed/listener/feed-viewed.listener';
 import {
@@ -21,7 +22,7 @@ import { UserModule } from '@user/module/user.module';
 
 @Module({
   imports: [UserModule, ActivityModule, JwtAuthModule],
-  controllers: [FeedController],
+  controllers: [FeedController, AdminFeedController],
   providers: [
     FeedService,
     FeedRepository,
