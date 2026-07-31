@@ -12,6 +12,7 @@ import { RssBlockRepository } from '@block/repository/rssBlock.repository';
 
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
+import { getIp } from '@common/util/getIp';
 
 import { AI_RETRY_LOCK_TTL_SECONDS } from '@feed/constant/feed.constant';
 import { ManageFeedRequestDto } from '@feed/dto/request/manageFeed.dto';
@@ -40,7 +41,7 @@ import {
   FeedViewRepository,
 } from '@feed/repository/feed.repository';
 import { existNextFeed, getLastIdFromFeedList } from '@feed/util/pagination';
-import { createCookie, getIp, isString } from '@feed/util/viewCookie';
+import { createCookie, isString } from '@feed/util/viewCookie';
 
 import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
 

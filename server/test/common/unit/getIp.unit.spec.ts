@@ -1,4 +1,4 @@
-import { getIp } from '@feed/util/viewCookie';
+import { getIp } from '@common/util/getIp';
 
 const createRequest = (
   xff: string | string[] | undefined,
