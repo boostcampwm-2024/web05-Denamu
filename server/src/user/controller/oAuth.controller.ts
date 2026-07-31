@@ -7,7 +7,6 @@ import {
   HttpStatus,
   NotFoundException,
   Param,
-  ParseEnumPipe,
   Post,
   Query,
   Req,
@@ -30,11 +29,13 @@ import {
   ApiOAuthUnlink,
 } from '@user/api-docs/oAuthLink.api-docs';
 import { ApiOAuthRegistration } from '@user/api-docs/oAuthRegistration.api-docs';
-import { OAUTH_URL_PATH, OAuthType } from '@user/constant/oauth.constant';
+import { OAUTH_URL_PATH } from '@user/constant/oauth.constant';
 import { OAuthCallbackRequestDto } from '@user/dto/request/oAuthCallbackDto';
+import { OAuthE2eCallbackQueryRequestDto } from '@user/dto/request/oAuthE2eCallbackQuery.dto';
 import { OAuthLinkRequestDto } from '@user/dto/request/oAuthLink.dto';
 import { OAuthRegistrationRequestDto } from '@user/dto/request/oAuthRegistration.dto';
 import { OAuthTypeRequestDto } from '@user/dto/request/oAuthType.dto';
+import { OAuthUnlinkParamRequestDto } from '@user/dto/request/oAuthUnlinkParam.dto';
 import { OAuthService } from '@user/service/oAuth.service';
 
 @ApiTags('OAuth')
@@ -120,23 +121,23 @@ export class OAuthController {
   @HttpCode(HttpStatus.OK)
   async unlinkProvider(
     @CurrentUser() user: Payload,
-    @Param('provider', new ParseEnumPipe(OAuthType)) provider: OAuthType,
+    @Param() paramDto: OAuthUnlinkParamRequestDto,
   ) {
-    await this.oauthService.unlinkProvider(user.id, provider);
+    await this.oauthService.unlinkProvider(user.id, paramDto.provider);
     return ApiResponse.responseWithNoContent('OAuth 연결이 해제되었습니다.');
   }
 
   @Get('e2e/callback')
   @HttpCode(HttpStatus.FOUND)
   async e2eCallback(
-    @Query('provider') provider: OAuthType = OAuthType.Google,
+    @Query() queryDto: OAuthE2eCallbackQueryRequestDto,
     @Res() res: Response,
   ) {
     if (!['LOCAL', 'TEST'].includes(process.env.NODE_ENV ?? '')) {
       throw new NotFoundException();
     }
 
-    await this.oauthService.e2eCallback(provider, res);
+    await this.oauthService.e2eCallback(queryDto.provider, res);
     return res.redirect(`${OAUTH_URL_PATH.BASE_URL}/oauth-success`);
   }
 }
