@@ -10,8 +10,8 @@ const meta = {
   component: RssRequestCard,
   args: {
     request: mockAdminRssList[0],
-    onApprove: (request) => action("API")(`POST ${ADMIN.ACTION.ACCEPT}/${request.id}`),
-    onReject: (request) => action("API")(`POST ${ADMIN.ACTION.REJECT}/${request.id}`),
+    onApprove: (request) => action("API")(`POST ${ADMIN.ACTION.ACCEPT(request.id)}`),
+    onReject: (request) => action("API")(`POST ${ADMIN.ACTION.REJECT(request.id)}`),
   },
 } satisfies Meta<typeof RssRequestCard>;
 

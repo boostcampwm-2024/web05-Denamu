@@ -21,13 +21,17 @@ export const ADMIN = {
     DELETE: (roomId: string, messageId: string) => `/api/admins/chats/${roomId}/${messageId}`,
   },
   GET: {
-    RSS: "/api/rss",
-    ACCEPT: "/api/rss/history/accept",
-    REJECT: "/api/rss/history/reject",
+    RSS: "/api/admins/rss",
+    ACCEPT: "/api/admins/rss/acceptances",
+    REJECT: "/api/admins/rss/rejections",
   },
   ACTION: {
-    ACCEPT: "/api/rss/accept",
-    REJECT: "/api/rss/reject",
+    ACCEPT: (id: number) => `/api/admins/rss/${id}/acceptances`,
+    REJECT: (id: number) => `/api/admins/rss/${id}/rejections`,
+  },
+  FEED: {
+    NO_SUMMARY: "/api/admins/feeds/no-summary",
+    AI_SUMMARY: (id: number) => `/api/admins/feeds/${id}/ai-summary-requests`,
   },
 };
 
@@ -36,8 +40,6 @@ export const BLOG = {
   RECENT: "/api/feed/recent",
   Trend: "/api/feeds/trend/sse",
   LIKE: (id: number) => `/api/feeds/${id}/likes`,
-  AI_SUMMARY: (id: number) => `/api/feeds/${id}/ai-summary-requests`,
-  NO_SUMMARY: "/api/feeds/no-summary",
   COMMENT: {
     LIST: (feedId: number) => `/api/feeds/${feedId}/comments`,
     ITEM: (feedId: number, commentId: number) => `/api/feeds/${feedId}/comments/${commentId}`,

@@ -29,7 +29,7 @@ export const Default: Story = {
         {...args}
         rejectMessage={reason}
         handleReason={setReason}
-        onSubmit={() => action("API")(`POST ${ADMIN.ACTION.REJECT}/1`)}
+        onSubmit={() => action("API")(`POST ${ADMIN.ACTION.REJECT(1)}`)}
         onCancel={() => setReason("")}
       />
     );

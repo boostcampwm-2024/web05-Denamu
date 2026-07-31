@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, within } from "storybook/test";
 
 import AdminPostDetail from "@/components/admin/post/AdminPostDetail";
-import { BLOG } from "@/constants/endpoints";
+import { ADMIN, BLOG } from "@/constants/endpoints";
 import { mockFeedDetail } from "@/__storybook__/fixtures";
 import { mockApi, ok, fail } from "@/__storybook__/mockApi";
 
@@ -19,7 +19,7 @@ export const Default: Story = {
   beforeEach: () => {
     mockApi.onGet(`${BLOG.POST}/1`).reply(...ok(mockFeedDetail));
     mockApi.onGet(BLOG.COMMENT.LIST(1)).reply(...ok([]));
-    mockApi.onPost(BLOG.AI_SUMMARY(1)).reply(...ok(null));
+    mockApi.onPost(ADMIN.FEED.AI_SUMMARY(1)).reply(...ok(null));
     mockApi.onDelete(/\/api\/admins\/comments\/\d+/).reply(...ok(null));
   },
 };
@@ -29,7 +29,7 @@ export const RetrySummary: Story = {
   beforeEach: () => {
     mockApi.onGet(`${BLOG.POST}/1`).reply(...ok(mockFeedDetail));
     mockApi.onGet(BLOG.COMMENT.LIST(1)).reply(...ok([]));
-    mockApi.onPost(BLOG.AI_SUMMARY(1)).reply(...ok(null));
+    mockApi.onPost(ADMIN.FEED.AI_SUMMARY(1)).reply(...ok(null));
     mockApi.onDelete(/\/api\/admins\/comments\/\d+/).reply(...ok(null));
   },
   play: async ({ canvasElement }) => {
@@ -46,7 +46,7 @@ export const WithComments: Story = {
     mockApi.onGet(BLOG.COMMENT.LIST(1)).reply(...ok([
       { id: 1, comment: "좋은 글이네요!", date: "2026-06-25T09:00:00.000Z", parentId: null, isDeleted: false, user: { id: 99, userName: "독자", profileImage: null } },
     ]));
-    mockApi.onPost(BLOG.AI_SUMMARY(1)).reply(...ok(null));
+    mockApi.onPost(ADMIN.FEED.AI_SUMMARY(1)).reply(...ok(null));
     mockApi.onDelete(/\/api\/admins\/comments\/\d+/).reply(...ok(null));
   },
 };
