@@ -4,35 +4,26 @@ import { RssBlock } from '@block/entity/rssBlock.entity';
 
 export class GetBlockedRssResponseDto {
   @ApiProperty({
-    example: 1,
-    description: '차단된 RSS(rss_accept) ID',
+    example: {
+      id: 1,
+      name: 'seok3765.log',
+      blogPlatform: 'velog',
+      blogImage: null,
+    },
+    description: '차단된 RSS 정보',
   })
-  rssId: number;
-
-  @ApiProperty({
-    example: 'seok3765.log',
-    description: '차단된 RSS 블로그 이름',
-  })
-  name: string;
-
-  @ApiProperty({
-    example: 'velog',
-    description: '차단된 RSS 블로그 플랫폼 종류',
-  })
-  blogPlatform: string;
+  rss: {
+    id: number;
+    name: string;
+    blogPlatform: string;
+    blogImage: string | null;
+  };
 
   @ApiProperty({
     example: '2025-08-16T12:00:00.000Z',
     description: '차단 일시',
   })
   blockedAt: Date;
-
-  @ApiProperty({
-    example: 'https://example.com/profile.png',
-    description: 'RSS 채널 프로필 이미지 URL',
-    nullable: true,
-  })
-  blogImage: string | null;
 
   constructor(partial: Partial<GetBlockedRssResponseDto>) {
     Object.assign(this, partial);
@@ -42,11 +33,13 @@ export class GetBlockedRssResponseDto {
     return rssBlocks.map(
       (rssBlock) =>
         new GetBlockedRssResponseDto({
-          rssId: rssBlock.blockedRss.id,
-          name: rssBlock.blockedRss.name,
-          blogPlatform: rssBlock.blockedRss.blogPlatform,
+          rss: {
+            id: rssBlock.blockedRss.id,
+            name: rssBlock.blockedRss.name,
+            blogPlatform: rssBlock.blockedRss.blogPlatform,
+            blogImage: rssBlock.blockedRss.blogImage ?? null,
+          },
           blockedAt: rssBlock.createdAt,
-          blogImage: rssBlock.blockedRss.blogImage ?? null,
         }),
     );
   }

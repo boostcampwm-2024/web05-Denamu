@@ -92,22 +92,22 @@ describe(`GET ${BASE_URL} E2E Test`, () => {
     // Http then
     const { data } = response.body as {
       data: {
-        rssId: number;
-        name: string;
-        blogPlatform: string;
+        rss: { id: number; name: string; blogPlatform: string };
         blockedAt: string;
       }[];
     };
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toHaveLength(2);
-    expect(data.map((item) => item.rssId)).toStrictEqual([
+    expect(data.map((item) => item.rss.id)).toStrictEqual([
       targetRssB.id,
       targetRssA.id,
     ]);
     expect(data[0]).toMatchObject({
-      rssId: targetRssB.id,
-      name: targetRssB.name,
-      blogPlatform: targetRssB.blogPlatform,
+      rss: {
+        id: targetRssB.id,
+        name: targetRssB.name,
+        blogPlatform: targetRssB.blogPlatform,
+      },
     });
     expect(data[0].blockedAt).toBeDefined();
   });

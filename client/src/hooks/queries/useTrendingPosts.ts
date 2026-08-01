@@ -37,7 +37,7 @@ export const useTrendingPosts = () => {
     };
   }, [queryClient]);
 
-  const blockedRssNames = new Set(blockedRss.map((rss) => rss.name));
+  const blockedRssNames = new Set(blockedRss.map(({ rss }) => rss.name));
 
   return {
     ...query,

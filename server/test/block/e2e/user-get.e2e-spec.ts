@@ -92,22 +92,22 @@ describe(`GET ${BASE_URL} E2E Test`, () => {
     // Http then
     const { data } = response.body as {
       data: {
-        userId: number;
-        userName: string;
-        profileImage: string | null;
+        user: { id: number; userName: string; profileImage: string | null };
         blockedAt: string;
       }[];
     };
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toHaveLength(2);
-    expect(data.map((item) => item.userId)).toStrictEqual([
+    expect(data.map((item) => item.user.id)).toStrictEqual([
       targetB.id,
       targetA.id,
     ]);
     expect(data[0]).toMatchObject({
-      userId: targetB.id,
-      userName: targetB.userName,
-      profileImage: targetB.profileImage,
+      user: {
+        id: targetB.id,
+        userName: targetB.userName,
+        profileImage: targetB.profileImage,
+      },
     });
     expect(data[0].blockedAt).toBeDefined();
   });

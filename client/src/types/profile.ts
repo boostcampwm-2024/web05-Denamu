@@ -43,18 +43,22 @@ export interface UserProfile {
 }
 
 export interface BlockedUser {
-  userId: number;
-  userName: string;
-  profileImage: string | null;
+  user: {
+    id: number;
+    userName: string;
+    profileImage: string | null;
+  };
   blockedAt: string;
 }
 
 export interface BlockedRss {
-  rssId: number;
-  name: string;
-  blogPlatform: string;
+  rss: {
+    id: number;
+    name: string;
+    blogPlatform: string;
+    blogImage: string | null;
+  };
   blockedAt: string;
-  blogImage: string | null;
 }
 
 export interface ProfileActivity {

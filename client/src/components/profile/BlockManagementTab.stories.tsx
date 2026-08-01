@@ -51,12 +51,12 @@ export const RssTab: Story = {
   beforeEach: () => {
     mockApi.onGet(BLOCK.RSS_LIST).reply(...ok(mockBlockedRss));
     mockApi.onGet(BLOCK.LIST).reply(...ok([]));
-    mockApi.onDelete(`${BLOCK.RSS_LIST}/${mockBlockedRss[0].rssId}`).reply(...ok(null));
+    mockApi.onDelete(`${BLOCK.RSS_LIST}/${mockBlockedRss[0].rss.id}`).reply(...ok(null));
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(await canvas.findByRole("tab", { name: "RSS" }));
-    await expect(await canvas.findByText(mockBlockedRss[0].name)).toBeInTheDocument();
+    await expect(await canvas.findByText(mockBlockedRss[0].rss.name)).toBeInTheDocument();
     await userEvent.click(await canvas.findByRole("button", { name: "차단 해제" }));
     await waitFor(() => expect(mockApi.history.delete).toHaveLength(1));
   },
@@ -67,7 +67,7 @@ export const Unblock: Story = {
   beforeEach: () => {
     mockApi.onGet(BLOCK.RSS_LIST).reply(...ok([]));
     mockApi.onGet(BLOCK.LIST).reply(...ok(mockBlockedUsers));
-    mockApi.onDelete(BLOCK.MANAGE(mockBlockedUsers[0].userId)).reply(...ok(null));
+    mockApi.onDelete(BLOCK.MANAGE(mockBlockedUsers[0].user.id)).reply(...ok(null));
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

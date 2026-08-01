@@ -43,7 +43,7 @@ describe("useBlockedUsers", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("차단 목록을 조회한다", async () => {
-    const blockedUsers = [{ userId: 2, userName: "차단유저", profileImage: null, blockedAt: "2025-08-16" }];
+    const blockedUsers = [{ user: { id: 2, userName: "차단유저", profileImage: null }, blockedAt: "2025-08-16" }];
     mockedGetBlockedUsers.mockResolvedValue(blockedUsers);
     const { wrapper } = createWrapper();
 
@@ -121,7 +121,7 @@ describe("useBlockedRss", () => {
 
   it("RSS 차단 목록을 조회한다", async () => {
     const blockedRss = [
-      { rssId: 5, name: "차단블로그", blogPlatform: "velog", blockedAt: "2025-08-16", blogImage: null },
+      { rss: { id: 5, name: "차단블로그", blogPlatform: "velog", blogImage: null }, blockedAt: "2025-08-16" },
     ];
     mockedGetBlockedRss.mockResolvedValue(blockedRss);
     const { wrapper } = createWrapper();

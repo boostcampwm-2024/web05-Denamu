@@ -224,26 +224,32 @@ export const mockUserProfile: UserProfile = {
 
 export const mockBlockedUsers: BlockedUser[] = [
   {
-    userId: 2,
-    userName: "차단된개발자",
-    profileImage: "https://picsum.photos/seed/blocked1/80/80",
+    user: {
+      id: 2,
+      userName: "차단된개발자",
+      profileImage: "https://picsum.photos/seed/blocked1/80/80",
+    },
     blockedAt: "2026-06-20T09:00:00.000Z",
   },
   {
-    userId: 3,
-    userName: "스팸유저",
-    profileImage: null,
+    user: {
+      id: 3,
+      userName: "스팸유저",
+      profileImage: null,
+    },
     blockedAt: "2026-06-21T12:30:00.000Z",
   },
 ];
 
 export const mockBlockedRss: BlockedRss[] = [
   {
-    rssId: 5,
-    name: "차단된블로그",
-    blogPlatform: "velog",
+    rss: {
+      id: 5,
+      name: "차단된블로그",
+      blogPlatform: "velog",
+      blogImage: null,
+    },
     blockedAt: "2026-06-22T09:00:00.000Z",
-    blogImage: null,
   },
 ];
 

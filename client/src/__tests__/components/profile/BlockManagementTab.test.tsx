@@ -58,8 +58,8 @@ describe("BlockManagementTab", () => {
 
   it("차단한 사용자 목록을 렌더링해야 한다", () => {
     mockBlockedUsers = [
-      { userId: 2, userName: "차단유저A", profileImage: "img.png", blockedAt: "2025-08-16" },
-      { userId: 3, userName: "차단유저B", profileImage: null, blockedAt: "2025-08-17" },
+      { user: { id: 2, userName: "차단유저A", profileImage: "img.png" }, blockedAt: "2025-08-16" },
+      { user: { id: 3, userName: "차단유저B", profileImage: null }, blockedAt: "2025-08-17" },
     ];
 
     render(<BlockManagementTab />);
@@ -70,7 +70,7 @@ describe("BlockManagementTab", () => {
   });
 
   it("차단 해제 버튼 클릭 시 해당 userId로 mutation을 호출해야 한다", () => {
-    mockBlockedUsers = [{ userId: 2, userName: "차단유저A", profileImage: null, blockedAt: "2025-08-16" }];
+    mockBlockedUsers = [{ user: { id: 2, userName: "차단유저A", profileImage: null }, blockedAt: "2025-08-16" }];
 
     render(<BlockManagementTab />);
 
@@ -87,7 +87,7 @@ describe("BlockManagementTab", () => {
 
   it("차단한 RSS 목록을 렌더링하고 차단 해제 시 해당 rssId로 mutation을 호출해야 한다", () => {
     mockBlockedRss = [
-      { rssId: 5, name: "차단블로그", blogPlatform: "velog", blockedAt: "2025-08-16", blogImage: null },
+      { rss: { id: 5, name: "차단블로그", blogPlatform: "velog", blogImage: null }, blockedAt: "2025-08-16" },
     ];
 
     render(<BlockManagementTab />);
