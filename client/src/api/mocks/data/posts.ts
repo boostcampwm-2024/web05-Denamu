@@ -10,7 +10,7 @@ export const generateMockPost = (id: number): FeedList => ({
   path: "/",
   author: `작성자 ${(id % 5) + 1}`,
   thumbnail: `https://picsum.photos/640/480?random=${id}`,
-  blogPlatform: "etc",
+  blog: { platform: "etc" },
   likes: 0,
   comments: 0,
   tag: [],

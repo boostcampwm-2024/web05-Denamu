@@ -9,7 +9,7 @@ export const createMockPost = (override = {}) => ({
   tag: ["React", "Testing"],
   likes: 50,
   comments: 0,
-  blogPlatform: "etc",
+  blog: { platform: "etc" },
   summary: "# test",
   ...override,
 });

@@ -21,8 +21,8 @@ const MobileCardContent = ({ post }: PostCardContentProps) => {
     <CardContent className="p-0">
       <div className="flex items-center ml-4 mb-3 gap-3">
         <PostAvatar
-          blogPlatform={post.blogPlatform}
-          blogImage={post.blogImage}
+          blogPlatform={post.blog.platform}
+          blogImage={post.blog.image}
           className="h-8 w-8 ring-2 ring-background cursor-pointer"
           author={post.author}
         />
@@ -45,8 +45,8 @@ const DesktopCardContent = ({ post }: PostCardContentProps) => {
     <CardContent className="p-0">
       <div className="relative -mt-4 ml-4 mb-3">
         <PostAvatar
-          blogPlatform={post.blogPlatform}
-          blogImage={post.blogImage}
+          blogPlatform={post.blog.platform}
+          blogImage={post.blog.image}
           className="h-8 w-8 ring-2 ring-background cursor-pointer"
           author={post.author}
         />

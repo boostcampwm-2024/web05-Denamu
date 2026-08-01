@@ -11,14 +11,16 @@ export interface FeedBase {
   tag: string[];
   likes: number;
   comments: number;
-  blogPlatform: string;
-  blogImage?: string | null;
+  blog: {
+    platform: string;
+    image?: string | null;
+  };
   isNew?: boolean;
 }
 
 export type FeedList = FeedBase;
 
-export interface FeedDetail extends FeedBase {
+export interface FeedDetail extends Omit<FeedBase, "blog"> {
   summary: string;
   isOwner: boolean;
   blog: {

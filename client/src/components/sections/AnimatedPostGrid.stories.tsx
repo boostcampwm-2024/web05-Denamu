@@ -19,7 +19,7 @@ const meta = {
         tag: ["React", "TypeScript"],
         likes: 5,
         comments: 2,
-        blogPlatform: "tistory",
+        blog: { platform: "tistory" },
       },
     ] as FeedBase[],
   },

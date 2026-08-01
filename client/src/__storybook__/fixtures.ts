@@ -35,7 +35,7 @@ export const mockFeedList: FeedList = {
   tag: ["React", "Storybook", "TypeScript"],
   likes: 42,
   comments: 7,
-  blogPlatform: "tistory",
+  blog: { platform: "tistory" },
   isNew: true,
 };
 
@@ -419,7 +419,7 @@ export const mockFeedsList: FeedList[] = Array.from({ length: 8 }, (_, i) => ({
   tag: i % 2 === 0 ? ["React", "TypeScript"] : ["NestJS", "Node.js"],
   likes: (i + 1) * 5,
   comments: i + 1,
-  blogPlatform: i % 3 === 0 ? "tistory" : i % 3 === 1 ? "velog" : "medium",
+  blog: { platform: i % 3 === 0 ? "tistory" : i % 3 === 1 ? "velog" : "medium" },
   isNew: i < 2,
 }));
 

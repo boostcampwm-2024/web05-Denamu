@@ -9,8 +9,14 @@ export class SubscriptionFeedResult {
   @ApiProperty({ example: 'example author', description: '작성자(블로그명)' })
   author: string;
 
-  @ApiProperty({ example: 'example platform', description: '블로그 플랫폼' })
-  blogPlatform: string;
+  @ApiProperty({
+    example: { platform: 'example platform', image: 'https://example.com/profile.png' },
+    description: 'RSS 채널 정보',
+  })
+  blog: {
+    platform: string;
+    image: string | null;
+  };
 
   @ApiProperty({ example: 'example title', description: '게시글 제목' })
   title: string;
@@ -45,13 +51,6 @@ export class SubscriptionFeedResult {
   @ApiProperty({ example: 0, description: '댓글 수' })
   comments: number;
 
-  @ApiProperty({
-    example: 'https://example.com/profile.png',
-    description: 'RSS 채널 프로필 이미지 URL',
-    nullable: true,
-  })
-  blogImage: string | null;
-
   private constructor(partial: Partial<SubscriptionFeedResult>) {
     Object.assign(this, partial);
   }
@@ -60,7 +59,10 @@ export class SubscriptionFeedResult {
     return new SubscriptionFeedResult({
       id: feed.id,
       author: feed.blog.name,
-      blogPlatform: feed.blog.blogPlatform,
+      blog: {
+        platform: feed.blog.blogPlatform,
+        image: feed.blog.blogImage ?? null,
+      },
       title: feed.title,
       path: feed.path,
       createdAt: feed.createdAt,
@@ -70,7 +72,6 @@ export class SubscriptionFeedResult {
       tag: feed.tags ? feed.tags.map((tag) => tag.name) : [],
       likes: feed.likeCount,
       comments: feed.commentCount,
-      blogImage: feed.blog.blogImage ?? null,
     });
   }
 

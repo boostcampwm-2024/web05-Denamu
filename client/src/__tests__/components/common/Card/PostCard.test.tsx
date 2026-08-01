@@ -63,7 +63,7 @@ describe("PostCard", () => {
       path: "/test-post",
       author: "작성자",
       thumbnail: "",
-      blogPlatform: "etc",
+      blog: { platform: "etc" },
       tag: ["JavaScript", "React"],
       likes: 0,
       comments: 0,
