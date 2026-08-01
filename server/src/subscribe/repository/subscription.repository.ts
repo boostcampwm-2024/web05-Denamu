@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, LessThan, Repository } from 'typeorm';
 
 import { Subscription } from '@subscribe/entity/subscription.entity';
 
@@ -11,12 +11,13 @@ export class SubscriptionRepository extends Repository<Subscription> {
   }
 
   async getSubscribedBlogIds(userId: number): Promise<number[]> {
-    const rows = await this.createQueryBuilder('subscription')
-      .select('subscription.rss_accept_id', 'rssAcceptId')
-      .where('subscription.user_id = :userId', { userId })
-      .getRawMany();
+    const rows = await this.find({
+      where: { user: { id: userId } },
+      relations: { rssAccept: true },
+      select: { id: true, rssAccept: { id: true } },
+    });
 
-    return rows.map((row: { rssAcceptId: number }) => Number(row.rssAcceptId));
+    return rows.map((row) => row.rssAccept.id);
   }
 
   async countByBlogId(blogId: number): Promise<number> {
@@ -42,19 +43,15 @@ export class SubscriptionRepository extends Repository<Subscription> {
   }
 
   async getSubscribersByBlog(blogId: number, lastId: number, limit: number) {
-    const query = this.createQueryBuilder('subscription')
-      .innerJoin('subscription.user', 'user')
-      .select(['subscription.id'])
-      .addSelect(['user.id', 'user.userName', 'user.profileImage'])
-      .where('subscription.rss_accept_id = :blogId', { blogId });
-
-    if (lastId) {
-      query.andWhere('subscription.id < :lastId', { lastId });
-    }
-
-    return await query
-      .orderBy('subscription.id', 'DESC')
-      .take(limit + 1)
-      .getMany();
+    return this.find({
+      where: {
+        rssAccept: { id: blogId },
+        ...(lastId && { id: LessThan(lastId) }),
+      },
+      relations: { user: true },
+      select: { id: true, user: { id: true, userName: true, profileImage: true } },
+      order: { id: 'DESC' },
+      take: limit + 1,
+    });
   }
 }

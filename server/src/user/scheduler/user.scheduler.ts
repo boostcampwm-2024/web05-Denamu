@@ -38,12 +38,10 @@ export class UserScheduler {
       });
 
       if (usersToUpdate.length > 0) {
-        await this.userRepository
-          .createQueryBuilder()
-          .update()
-          .set({ currentStreak: 0 })
-          .whereInIds(usersToUpdate.map((user) => user.id))
-          .execute();
+        await this.userRepository.update(
+          usersToUpdate.map((user) => user.id),
+          { currentStreak: 0 },
+        );
 
         this.logger.log(
           `[UserScheduler]: ${usersToUpdate.length} 명의 streak 정보 업데이트 완료.`,

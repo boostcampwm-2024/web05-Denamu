@@ -57,20 +57,15 @@ export class BoardRepository extends Repository<Board> {
     status?: BoardStatus,
     category?: BoardCategory,
   ) {
-    const query = this.createQueryBuilder('board');
-    if (status) {
-      query.andWhere('board.status = :status', { status });
-    }
-    if (category) {
-      query.andWhere('board.category = :category', { category });
-    }
-
-    const [items, totalCount] = await query
-      .orderBy('board.isPinned', 'DESC')
-      .addOrderBy('board.id', 'DESC')
-      .skip((page - 1) * limit)
-      .take(limit)
-      .getManyAndCount();
+    const [items, totalCount] = await this.findAndCount({
+      where: {
+        ...(status && { status }),
+        ...(category && { category }),
+      },
+      order: { isPinned: 'DESC', id: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
 
     return { items, totalCount };
   }

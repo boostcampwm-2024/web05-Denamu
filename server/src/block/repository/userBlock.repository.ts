@@ -11,12 +11,15 @@ export class UserBlockRepository extends Repository<UserBlock> {
   }
 
   async getBlockedUsers(blockerId: number) {
-    return await this.createQueryBuilder('block')
-      .innerJoin('block.blocked', 'blocked')
-      .select(['block.id', 'block.createdAt'])
-      .addSelect(['blocked.id', 'blocked.userName', 'blocked.profileImage'])
-      .where('block.blocker_id = :blockerId', { blockerId })
-      .orderBy('block.id', 'DESC')
-      .getMany();
+    return this.find({
+      where: { blocker: { id: blockerId } },
+      relations: { blocked: true },
+      select: {
+        id: true,
+        createdAt: true,
+        blocked: { id: true, userName: true, profileImage: true },
+      },
+      order: { id: 'DESC' },
+    });
   }
 }
