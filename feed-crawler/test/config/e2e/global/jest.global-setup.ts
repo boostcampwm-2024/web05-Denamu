@@ -3,15 +3,19 @@ import 'tsconfig-paths/register';
 import { setupTestContainer } from '@test/setup/testContext.setup';
 import { MySqlContainer } from '@testcontainers/mysql';
 
-const globalAny: any = global;
+const globalAny = global as typeof global & { __MYSQL_CONTAINER__: unknown };
 
 export default async function globalSetup() {
   console.log('Starting global setup...');
+  const startTime = process.hrtime.bigint();
   process.env.FEED_CRAWLER_DISCORD_WEBHOOK_URL ??=
     'http://127.0.0.1:9/test-discord-webhook';
   await createMysqlContainer();
   await createDatabaseTable();
-  console.log('Global setup completed.');
+  const elapsedMs = Number(process.hrtime.bigint() - startTime) / 1_000_000;
+  console.log(
+    `Global setup completed. Elapsed time: ${elapsedMs.toFixed(2)} ms`,
+  );
 }
 
 const createMysqlContainer = async () => {
@@ -39,8 +43,11 @@ const createDatabaseTable = async () => {
       user_name varchar(50) NOT NULL,
       email varchar(255) NOT NULL,
       rss_url varchar(255) NOT NULL,
-      blog_platform varchar(255) NOT NULL DEFAULT 'etc',
+      platform varchar(255) NOT NULL DEFAULT 'etc',
+      image text,
       PRIMARY KEY (id),
+      UNIQUE KEY UK_rss_accept_name (name),
+      UNIQUE KEY UK_rss_accept_rss_url (rss_url),
       FULLTEXT KEY IDX_59f4be4de3817b3f975acff076 (name)
     ) ;
     `,

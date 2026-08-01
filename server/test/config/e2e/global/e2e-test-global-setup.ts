@@ -7,6 +7,18 @@ import {
   StartedRabbitMQContainer,
 } from '@testcontainers/rabbitmq';
 import { RedisContainer, StartedRedisContainer } from '@testcontainers/redis';
+import { register } from 'tsconfig-paths';
+import { DataSource } from 'typeorm';
+
+import tsconfig from '../../../../tsconfig.json';
+
+// globalSetup은 Jest의 moduleNameMapper(경로 alias 매핑)를 적용받지 않는 별도 컨텍스트라,
+// 아래 synchronizeTestDatabases가 typeorm entities glob으로 로드하는 파일들의
+// '@xxx/*' import를 직접 해석하도록 tsconfig paths를 등록해준다.
+register({
+  baseUrl: path.resolve(__dirname, '../../../../'),
+  paths: tsconfig.compilerOptions.paths,
+});
 
 const CPU_COUNT = os.cpus().length;
 const MAX_WORKERS = Math.max(1, Math.floor(CPU_COUNT * 0.5));
@@ -44,6 +56,7 @@ const createMysqlContainer = async () => {
   process.env.DB_TYPE = 'mysql';
 
   await createTestDatabases(mysqlContainer);
+  await synchronizeTestDatabases(mysqlContainer);
 };
 
 const createTestDatabases = async (container: StartedMySqlContainer) => {
@@ -68,6 +81,36 @@ const createTestDatabases = async (container: StartedMySqlContainer) => {
 
   await conn.query(`FLUSH PRIVILEGES`);
   await conn.end();
+};
+
+// 각 Jest 워커가 자체 DataSource로 synchronize를 실행하면(파일마다 재실행)
+// self-referencing FK(예: comment.parent_id) 등에서 TypeORM 스키마 diff가
+// 이미 존재하는 제약조건을 다시 생성하려다 충돌하는 문제가 있어,
+// 워커 프로세스가 뜨기 전 이 전역 setup(단일 프로세스)에서 워커별 DB마다 한 번만 스키마를 만든다.
+const synchronizeTestDatabases = async (container: StartedMySqlContainer) => {
+  console.log('Synchronizing test database schemas...');
+
+  await Promise.all(
+    Array.from({ length: MAX_WORKERS }, (_, index) => index + 1).map(
+      async (workerId) => {
+        const dataSource = new DataSource({
+          type: 'mysql',
+          host: container.getHost(),
+          port: container.getPort(),
+          username: container.getUsername(),
+          password: container.getUserPassword(),
+          database: `denamu_test_${workerId}`,
+          entities: [
+            `${path.resolve(__dirname, '../../../../src')}/**/*.entity.{js,ts}`,
+          ],
+        });
+
+        await dataSource.initialize();
+        await dataSource.synchronize();
+        await dataSource.destroy();
+      },
+    ),
+  );
 };
 
 const createRedisContainer = async () => {

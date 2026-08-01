@@ -16,6 +16,19 @@ export class GetCommentResponseDto {
   comment: string;
 
   @ApiProperty({
+    example: null,
+    description: '답글인 경우 부모 댓글 ID, 최상위 댓글은 null',
+    nullable: true,
+  })
+  parentId: number | null;
+
+  @ApiProperty({
+    example: false,
+    description: '삭제된 댓글 여부(답글이 달린 댓글은 삭제되어도 placeholder로 노출)',
+  })
+  isDeleted: boolean;
+
+  @ApiProperty({
     example: '2025-01-01T00:00:00.000Z',
     description: '댓글 작성 날짜',
   })
@@ -32,23 +45,31 @@ export class GetCommentResponseDto {
   user: {
     id: number;
     userName: string;
-    profileImage: string;
+    profileImage: string | null;
   };
 
-  private constructor(partial: Partial<GetCommentResponseDto>) {
+  constructor(partial: Partial<GetCommentResponseDto>) {
     Object.assign(this, partial);
   }
 
   static toResponseDto(comment: Comment) {
     return new GetCommentResponseDto({
       id: comment.id,
-      comment: comment.comment,
+      parentId: comment.parentId ?? null,
+      isDeleted: comment.isDeleted,
+      comment: comment.isAdminDeleted
+        ? '관리자에 의해 제거된 댓글입니다.'
+        : comment.isDeleted
+          ? '삭제된 댓글입니다.'
+          : comment.comment,
       date: comment.date,
-      user: {
-        id: comment.user.id,
-        userName: comment.user.userName,
-        profileImage: comment.user.profileImage,
-      },
+      user: comment.isDeleted
+        ? { id: 0, userName: '(알 수 없음)', profileImage: null }
+        : {
+            id: comment.user.id,
+            userName: comment.user.userName,
+            profileImage: comment.user.profileImage,
+          },
     });
   }
 

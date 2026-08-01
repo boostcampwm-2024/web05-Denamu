@@ -4,13 +4,20 @@ import {
   StartedRabbitMQContainer,
 } from '@testcontainers/rabbitmq';
 import { GenericContainer, StartedTestContainer } from 'testcontainers';
-const globalAny: any = global;
+
+interface TestGlobal {
+  __RABBITMQ_CONTAINER__?: StartedRabbitMQContainer;
+  __MAILPIT_CONTAINER__?: StartedTestContainer;
+}
+const globalAny = global as unknown as TestGlobal;
 
 export default async function globalSetup() {
   console.log('Starting global setup...');
+  const startTime = process.hrtime.bigint();
   await createRabbitMQContainer();
   await createMailpitContainer();
-  console.log('Global setup completed.');
+  const elapsedMs = Number(process.hrtime.bigint() - startTime) / 1_000_000;
+  console.log(`Global setup completed. Elapsed time: ${elapsedMs.toFixed(2)} ms`);
 }
 
 const createRabbitMQContainer = async () => {

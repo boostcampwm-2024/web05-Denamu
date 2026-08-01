@@ -2,12 +2,16 @@ import 'reflect-metadata';
 
 import {
   ATOM_10_SAMPLE,
+  ATOM_10_SINGLE_ENTRY,
   FIXED_DATE,
   INVALID_XML,
   MOCK_RSS_OBJ,
   RSS_20_SAMPLE,
+  RSS_20_SINGLE_ITEM,
 } from '@test/config/constant/parser-fixtures';
+import axios, { HttpStatusCode } from 'axios';
 
+import { FeedMetrics } from '@common/metrics/feed-metrics';
 import { Notifier } from '@common/notification/notifier.interface';
 import { FeedParserManager } from '@common/parser/feed-parser-manager';
 import { Atom10Parser } from '@common/parser/formats/atom10-parser';
@@ -20,35 +24,46 @@ describe('Parser 모듈 테스트', () => {
   let atom10Parser: Atom10Parser;
   let feedParserManager: FeedParserManager;
   let notifier: Notifier;
+  let mockAxiosGet: jest.SpyInstance;
+
+  const mockFeedMetrics = {
+    total: { inc: jest.fn() },
+    success: { inc: jest.fn() },
+    failure: { inc: jest.fn() },
+    fullCrawlQueueDepth: { set: jest.fn() },
+    fullCrawlPermanentFailure: { inc: jest.fn() },
+    start: jest.fn(),
+  } as unknown as FeedMetrics;
 
   beforeEach(() => {
     parserUtil = new ParserUtil();
-    rss20Parser = new Rss20Parser(parserUtil);
-    atom10Parser = new Atom10Parser(parserUtil);
+    notifier = { start: jest.fn(), publish: jest.fn() };
+    rss20Parser = new Rss20Parser(parserUtil, notifier);
+    atom10Parser = new Atom10Parser(parserUtil, notifier);
     feedParserManager = new FeedParserManager(
       rss20Parser,
       atom10Parser,
       notifier,
+      mockFeedMetrics,
     );
 
-    // URL 기반 조건부 fetch 모킹 (순서 의존성 제거)
-    global.fetch = jest.fn().mockImplementation((url: string) => {
-      // RSS/Atom 피드 URL
-      if (url.includes('/rss') || url.includes('denamu.site')) {
+    // URL 기반 조건부 axios 모킹 (순서 의존성 제거)
+    mockAxiosGet = jest
+      .spyOn(axios, 'get')
+      .mockImplementation((url: string) => {
+        // RSS/Atom 피드 URL
+        if (url.includes('/rss') || url.includes('denamu.dev')) {
+          return Promise.resolve({
+            data: RSS_20_SAMPLE,
+            status: HttpStatusCode.Ok,
+          });
+        }
+        // HTML 페이지 (og:image 추출용)
         return Promise.resolve({
-          ok: true,
-          text: () => Promise.resolve(RSS_20_SAMPLE),
+          data: '<html><head><meta property="og:image" content="https://example.com/image.jpg"></head></html>',
+          status: HttpStatusCode.Ok,
         });
-      }
-      // HTML 페이지 (og:image 추출용)
-      return Promise.resolve({
-        ok: true,
-        text: () =>
-          Promise.resolve(
-            '<html><head><meta property="og:image" content="https://example.com/image.jpg"></head></html>',
-          ),
       });
-    });
   });
 
   afterEach(() => {
@@ -77,19 +92,16 @@ describe('Parser 모듈 테스트', () => {
       describe('RSS 2.0 피드', () => {
         beforeEach(() => {
           // URL 기반 조건부 모킹으로 순서 의존성 제거
-          (global.fetch as jest.Mock).mockImplementation((url: string) => {
+          mockAxiosGet.mockImplementation((url: string) => {
             if (url.includes('/rss') || url.includes('denamu.dev')) {
               return Promise.resolve({
-                ok: true,
-                text: () => Promise.resolve(RSS_20_SAMPLE),
+                data: RSS_20_SAMPLE,
+                status: HttpStatusCode.Ok,
               });
             }
             return Promise.resolve({
-              ok: true,
-              text: () =>
-                Promise.resolve(
-                  '<html><head><meta property="og:image" content="https://example.com/image.jpg"></head></html>',
-                ),
+              data: '<html><head><meta property="og:image" content="https://example.com/image.jpg"></head></html>',
+              status: HttpStatusCode.Ok,
             });
           });
         });
@@ -102,7 +114,7 @@ describe('Parser 모듈 테스트', () => {
             startTime,
           );
 
-          expect(result[0]).toMatchObject({
+          expect(result.feeds[0]).toMatchObject({
             blogId: MOCK_RSS_OBJ.id,
             blogName: MOCK_RSS_OBJ.blogName,
             blogPlatform: MOCK_RSS_OBJ.blogPlatform,
@@ -119,19 +131,16 @@ describe('Parser 모듈 테스트', () => {
       describe('Atom 1.0 피드', () => {
         beforeEach(() => {
           // URL 기반 조건부 모킹으로 순서 의존성 제거
-          (global.fetch as jest.Mock).mockImplementation((url: string) => {
+          mockAxiosGet.mockImplementation((url: string) => {
             if (url.includes('/rss') || url.includes('denamu.dev')) {
               return Promise.resolve({
-                ok: true,
-                text: () => Promise.resolve(ATOM_10_SAMPLE),
+                data: ATOM_10_SAMPLE,
+                status: HttpStatusCode.Ok,
               });
             }
             return Promise.resolve({
-              ok: true,
-              text: () =>
-                Promise.resolve(
-                  '<html><head><meta property="og:image" content="https://example.com/image.jpg"></head></html>',
-                ),
+              data: '<html><head><meta property="og:image" content="https://example.com/image.jpg"></head></html>',
+              status: HttpStatusCode.Ok,
             });
           });
         });
@@ -144,7 +153,7 @@ describe('Parser 모듈 테스트', () => {
             startTime,
           );
 
-          expect(result[0]).toMatchObject({
+          expect(result.feeds[0]).toMatchObject({
             blogId: MOCK_RSS_OBJ.id,
             blogName: MOCK_RSS_OBJ.blogName,
             blogPlatform: MOCK_RSS_OBJ.blogPlatform,
@@ -202,6 +211,16 @@ describe('Parser 모듈 테스트', () => {
         expect(rawFeeds[0].link).toBe('https://rssfeed.com/post1');
         expect(rawFeeds[1].link).toBe('https://rssfeed.com/post2');
       });
+
+      it('item이 단일 객체일 때도 배열로 변환해야 한다', () => {
+        const rawFeeds = rss20Parser['extractRawFeeds'](RSS_20_SINGLE_ITEM);
+
+        expect(rawFeeds).toHaveLength(1);
+        expect(rawFeeds[0]).toMatchObject({
+          title: '유일한 글',
+          link: 'https://rssfeed.com/only',
+        });
+      });
     });
   });
 
@@ -242,6 +261,16 @@ describe('Parser 모듈 테스트', () => {
         expect(rawFeeds[0].link).toBe('https://atomfeed.com/entry1');
         expect(rawFeeds[1].link).toBe('https://atomfeed.com/entry2');
       });
+
+      it('entry가 단일 객체일 때도 배열로 변환해야 한다', () => {
+        const rawFeeds = atom10Parser['extractRawFeeds'](ATOM_10_SINGLE_ENTRY);
+
+        expect(rawFeeds).toHaveLength(1);
+        expect(rawFeeds[0]).toMatchObject({
+          title: '유일한 Atom 글',
+          link: 'https://atomfeed.com/only',
+        });
+      });
     });
 
     describe('extractLink', () => {
@@ -263,6 +292,56 @@ describe('Parser 모듈 테스트', () => {
         ];
         const result = atom10Parser['extractLink'](linkData);
         expect(result).toBe('https://example.com/alternate');
+      });
+    });
+  });
+
+  describe('BaseFeedParser', () => {
+    describe('parseAllFeeds (전체 크롤링)', () => {
+      it('시간 필터 없이 모든 피드를 변환해야 한다', async () => {
+        // Given - RSS_20_SAMPLE은 고정 날짜의 2개 피드를 포함
+        // When
+        const result = await rss20Parser.parseAllFeeds(
+          MOCK_RSS_OBJ,
+          RSS_20_SAMPLE,
+        );
+
+        // Then - parseFeed와 달리 시간 필터가 없으므로 모든 피드 반환
+        expect(result).toHaveLength(2);
+        expect(result[0]).toMatchObject({
+          blogId: MOCK_RSS_OBJ.id,
+          title: '첫 번째 글제목',
+          summary: expect.any(String),
+          deathCount: 0,
+        });
+      });
+    });
+
+    describe('convertToFeedDetails 실패 처리', () => {
+      it('일부 피드 변환이 실패하면 성공한 피드만 반환하고 알림을 발행해야 한다', async () => {
+        // Given - 첫 번째 피드의 썸네일 조회를 실패시켜 변환 실패 유도
+        jest
+          .spyOn(parserUtil, 'getThumbnailUrl')
+          .mockRejectedValueOnce(new Error('썸네일 GET 요청 실패'))
+          .mockResolvedValue('https://example.com/image.jpg');
+        const publishSpy = jest.spyOn(notifier, 'publish');
+
+        // When
+        const result = await rss20Parser.parseAllFeeds(
+          MOCK_RSS_OBJ,
+          RSS_20_SAMPLE,
+        );
+
+        // Then - 2개 중 1개만 성공
+        expect(result).toHaveLength(1);
+        expect(publishSpy).toHaveBeenCalledWith(
+          expect.any(String),
+          expect.objectContaining({
+            error: expect.any(Error),
+            blogUrl: MOCK_RSS_OBJ.rssUrl,
+            errorSource: '[Full FeedCrawling]',
+          }),
+        );
       });
     });
   });

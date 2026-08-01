@@ -4,9 +4,12 @@ import {
   FEED_AI_SUMMARY_IN_PROGRESS_MESSAGE,
   ONE_MINUTE,
   TIME_INTERVAL,
-} from '@common/constant';
+} from '@common/feed/feed.constant';
+import { FeedDetail, RssObj } from '@common/feed/feed.type';
+import logger from '@common/logger/logger';
+import { NOTIFICATION_EVENT } from '@common/notification/notification-event.constant';
+import { Notifier } from '@common/notification/notifier.interface';
 import { ParserUtil } from '@common/parser/utils/parser-util';
-import { FeedDetail, RssObj } from '@common/types';
 
 export interface RawFeed {
   title: string;
@@ -23,9 +26,11 @@ export abstract class BaseFeedParser {
     trimValues: true,
   });
   protected readonly parserUtil: ParserUtil;
+  protected readonly notifier: Notifier;
 
-  constructor(parserUtil: ParserUtil) {
+  constructor(parserUtil: ParserUtil, notifier: Notifier) {
     this.parserUtil = parserUtil;
+    this.notifier = notifier;
   }
 
   async parseFeed(
@@ -39,6 +44,8 @@ export abstract class BaseFeedParser {
     const detailedFeeds = await this.convertToFeedDetails(
       rssObj,
       timeMatchedFeeds,
+      NOTIFICATION_EVENT.FEED_CRAWLING_SCHEDULED,
+      '[Scheduled FeedCrawling]',
     );
 
     return detailedFeeds;
@@ -46,12 +53,18 @@ export abstract class BaseFeedParser {
 
   async parseAllFeeds(rssObj: RssObj, xmlData: string): Promise<FeedDetail[]> {
     const rawFeeds = this.extractRawFeeds(xmlData);
-    const detailedFeeds = await this.convertToFeedDetails(rssObj, rawFeeds);
+    const detailedFeeds = await this.convertToFeedDetails(
+      rssObj,
+      rawFeeds,
+      NOTIFICATION_EVENT.FEED_CRAWLING_FULL,
+      '[Full FeedCrawling]',
+    );
 
     return detailedFeeds;
   }
 
   abstract canParse(xmlData: string): boolean;
+  abstract extractChannelImage(xmlData: string): string | null;
   protected abstract extractRawFeeds(xmlData: string): RawFeed[];
 
   private filterByTime(rawFeeds: RawFeed[], startTime: Date): RawFeed[] {
@@ -66,8 +79,12 @@ export abstract class BaseFeedParser {
   private async convertToFeedDetails(
     rssObj: RssObj,
     rawFeeds: RawFeed[],
+    event:
+      | typeof NOTIFICATION_EVENT.FEED_CRAWLING_SCHEDULED
+      | typeof NOTIFICATION_EVENT.FEED_CRAWLING_FULL,
+    errorSource: string,
   ): Promise<FeedDetail[]> {
-    return Promise.all(
+    const results = await Promise.allSettled(
       rawFeeds.map(async (feed) => {
         const imageUrl = await this.parserUtil.getThumbnailUrl(feed.link);
         const date = new Date(feed.pubDate);
@@ -85,6 +102,7 @@ export abstract class BaseFeedParser {
           blogId: rssObj.id,
           blogName: rssObj.blogName,
           blogPlatform: rssObj.blogPlatform,
+          blogImage: rssObj.blogImage,
           pubDate: formattedDate,
           title: feed.title,
           link: decodeURIComponent(feed.link),
@@ -92,8 +110,45 @@ export abstract class BaseFeedParser {
           content: content,
           summary: FEED_AI_SUMMARY_IN_PROGRESS_MESSAGE,
           deathCount: 0,
-        } as FeedDetail;
+        };
       }),
     );
+
+    const succeeded: FeedDetail[] = [];
+    const failedReasons: unknown[] = [];
+    results.forEach((result, index) => {
+      if (result.status === 'fulfilled') {
+        succeeded.push(result.value);
+      } else {
+        failedReasons.push(result.reason);
+        logger.warn(
+          `[${rssObj.blogName}] 게시글 변환 실패 (${rawFeeds[index]?.link}): ${result.reason}`,
+        );
+      }
+    });
+
+    if (failedReasons.length > 0) {
+      const groupedByReason = new Map<string, number>();
+      failedReasons.forEach((reason) => {
+        const message =
+          reason instanceof Error
+            ? reason.message
+            : (JSON.stringify(reason) ?? 'unknown');
+        groupedByReason.set(message, (groupedByReason.get(message) ?? 0) + 1);
+      });
+      const reasonDetail = [...groupedByReason.entries()]
+        .map(([message, count]) => `- ${message} (${count}건)`)
+        .join('\n');
+
+      this.notifier.publish(event, {
+        error: new Error(
+          `${rssObj.blogName}: 게시글 ${failedReasons.length}/${rawFeeds.length}개 변환 실패\n${reasonDetail}`,
+        ),
+        blogUrl: rssObj.rssUrl,
+        errorSource,
+      });
+    }
+
+    return succeeded;
   }
 }

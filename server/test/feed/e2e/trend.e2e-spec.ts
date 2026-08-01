@@ -1,4 +1,5 @@
 import EventSource from 'eventsource';
+import { Server } from 'http';
 
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
@@ -12,7 +13,7 @@ import { FeedFixture } from '@test/config/common/fixture/feed.fixture';
 import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = '/api/feed/trend/sse';
+const URL = '/api/feeds/trend/sse';
 
 describe(`SSE ${URL} E2E Test`, () => {
   let serverUrl: string;
@@ -22,8 +23,16 @@ describe(`SSE ${URL} E2E Test`, () => {
   let rssAccept: RssAccept;
 
   beforeAll(async () => {
-    const httpServer = await testApp.listen(0);
-    const port = httpServer.address().port;
+    await testApp.listen(0);
+    const httpServer = testApp.getHttpServer() as Server;
+
+    const address = httpServer.address();
+
+    if (!address || typeof address === 'string') {
+      throw new Error('Invalid address');
+    }
+
+    const port = address.port;
     serverUrl = `http://localhost:${port}${URL}`;
     feedRepository = testApp.get(FeedRepository);
     rssAcceptRepository = testApp.get(RssAcceptRepository);
@@ -71,8 +80,11 @@ describe(`SSE ${URL} E2E Test`, () => {
     expect(data).toStrictEqual(
       feedList.map((feed) => ({
         id: feed.id,
-        author: feed.blog.name,
-        blogPlatform: feed.blog.blogPlatform,
+        blog: {
+          name: feed.blog.name,
+          platform: feed.blog.blogPlatform,
+          image: null,
+        },
         title: feed.title,
         path: feed.path,
         createdAt: feed.createdAt.toISOString(),

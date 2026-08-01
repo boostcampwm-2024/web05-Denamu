@@ -1,20 +1,25 @@
 import { inject, injectable } from 'tsyringe';
 
-import { redisConstant } from '@common/constant';
-import logger from '@common/logger';
-import { RedisConnection } from '@common/redis-access';
-import { FeedDetail } from '@common/types';
-
-import { DatabaseConnection } from '@app-types/database-connection';
-import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
+import { DatabaseConnection } from '@common/database/database-connection';
+import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
+import { FeedDetail } from '@common/feed/feed.type';
+import logger from '@common/logger/logger';
+import { DbMetrics } from '@common/metrics/db-metrics';
+import { RedisMetrics } from '@common/metrics/redis-metrics';
+import { RedisConnection } from '@common/redis/redis-access';
+import { redisConstant } from '@common/redis/redis.constant';
 
 @injectable()
 export class FeedRepository {
   constructor(
     @inject(DEPENDENCY_SYMBOLS.DatabaseConnection)
     private readonly dbConnection: DatabaseConnection,
-    @inject(DEPENDENCY_SYMBOLS.RedisConnection)
+    @inject(RedisConnection)
     private readonly redisConnection: RedisConnection,
+    @inject(DbMetrics)
+    private readonly dbMetrics: DbMetrics,
+    @inject(RedisMetrics)
+    private readonly redisMetrics: RedisMetrics,
   ) {}
 
   public async insertFeeds(resultData: FeedDetail[]) {
@@ -24,6 +29,7 @@ export class FeedRepository {
         `;
 
     const insertPromises = resultData.map(async (feed, index) => {
+      this.dbMetrics.total.inc({ operation: 'insert_feed' });
       try {
         const result = await this.dbConnection.executeQueryStrict(query, [
           feed.blogId,
@@ -33,12 +39,16 @@ export class FeedRepository {
           feed.imageUrl,
           feed.summary,
         ]);
+        this.dbMetrics.success.inc({ operation: 'insert_feed' });
         return { result, index, success: true };
       } catch (error) {
-        if (error.code === 'ER_DUP_ENTRY') {
+        const mysqlError = error as { code?: string };
+        if (mysqlError.code === 'ER_DUP_ENTRY') {
+          this.dbMetrics.duplicate.inc();
           logger.info(`중복 피드 스킵: ${feed.title} (${feed.link})`);
           return { result: null, index, success: false, duplicate: true };
         }
+        this.dbMetrics.failure.inc({ operation: 'insert_feed' });
         throw error;
       }
     });
@@ -49,7 +59,7 @@ export class FeedRepository {
       .filter((result) => result.success)
       .map((result) => ({
         ...resultData[result.index],
-        id: result.result.insertId,
+        id: (result.result as unknown as { insertId: number }).insertId,
       }));
 
     const duplicateCount = promiseResults.filter(
@@ -68,39 +78,40 @@ export class FeedRepository {
   }
 
   async deleteRecentFeed() {
+    this.redisMetrics.total.inc({ operation: 'delete_recent' });
     try {
-      const keysToDelete = [];
-      let cursor = '0';
-      do {
-        const [newCursor, keys] = await this.redisConnection.scan(
-          cursor,
-          redisConstant.FEED_RECENT_ALL_KEY,
-          100,
-        );
-        keysToDelete.push(...keys);
-        cursor = newCursor;
-      } while (cursor !== '0');
+      const trackedKeys = await this.redisConnection.smembers(
+        redisConstant.FEED_RECENT_INDEX_KEY,
+      );
 
-      if (keysToDelete.length > 0) {
-        await this.redisConnection.del(...keysToDelete);
+      if (trackedKeys.length > 0) {
+        await this.redisConnection.del(
+          ...trackedKeys,
+          redisConstant.FEED_RECENT_INDEX_KEY,
+        );
       }
+
+      this.redisMetrics.success.inc({ operation: 'delete_recent' });
       logger.info(`[Redis] 최근 게시글 캐시가 정상적으로 삭제되었습니다.`);
     } catch (error) {
+      this.redisMetrics.failure.inc({ operation: 'delete_recent' });
       logger.error(
         `[Redis] 최근 게시글 캐시를 삭제하는 도중 에러가 발생했습니다.
-        에러 메시지: ${error.message}
-        스택 트레이스: ${error.stack}`,
+        에러 메시지: ${error instanceof Error ? error.message : String(error)}
+        스택 트레이스: ${error instanceof Error ? error.stack : ''}`,
       );
     }
   }
 
   async setRecentFeedList(feedLists: FeedDetail[]) {
+    this.redisMetrics.total.inc({ operation: 'cache_feeds' });
     try {
       await this.redisConnection.executePipeline((pipeline) => {
         for (const feed of feedLists) {
           pipeline.hset(`feed:recent:${feed.id}`, {
             id: feed.id,
             blogPlatform: feed.blogPlatform,
+            blogImage: feed.blogImage ?? '',
             createdAt: feed.pubDate,
             viewCount: 0,
             blogName: feed.blogName,
@@ -111,26 +122,57 @@ export class FeedRepository {
             likes: 0,
             comments: 0,
           });
+          pipeline.sadd(
+            redisConstant.FEED_RECENT_INDEX_KEY,
+            `feed:recent:${feed.id}`,
+          );
         }
       });
+      this.redisMetrics.success.inc({ operation: 'cache_feeds' });
       logger.info(`[Redis] 최근 게시글 캐시가 정상적으로 저장되었습니다.`);
     } catch (error) {
+      this.redisMetrics.failure.inc({ operation: 'cache_feeds' });
       logger.error(
         `[Redis] 최근 게시글 캐시를 저장하는 도중 에러가 발생했습니다.
-        에러 메시지: ${error.message}
-        스택 트레이스: ${error.stack}`,
+        에러 메시지: ${error instanceof Error ? error.message : String(error)}
+        스택 트레이스: ${error instanceof Error ? error.stack : ''}`,
       );
+    }
+  }
+
+  public async selectFeedById(
+    feedId: number,
+  ): Promise<{ id: number; blogId: number; path: string } | null> {
+    const query = `SELECT id, blog_id as blogId, path FROM feed WHERE id = ?`;
+    this.dbMetrics.total.inc({ operation: 'select_feed_by_id' });
+    try {
+      const result = await this.dbConnection.executeQuery<{
+        id: number;
+        blogId: number;
+        path: string;
+      }>(query, [feedId]);
+      this.dbMetrics.success.inc({ operation: 'select_feed_by_id' });
+      return result && result.length > 0 ? result[0] : null;
+    } catch (error) {
+      this.dbMetrics.failure.inc({ operation: 'select_feed_by_id' });
+      throw error;
     }
   }
 
   public async updateSummary(feedId: number, summary: string) {
     const query = `
-              UPDATE feed 
+              UPDATE feed
               SET summary=?
               WHERE id=?
           `;
-
-    await this.dbConnection.executeQuery(query, [summary, feedId]);
+    this.dbMetrics.total.inc({ operation: 'update_summary' });
+    try {
+      await this.dbConnection.executeQuery(query, [summary, feedId]);
+      this.dbMetrics.success.inc({ operation: 'update_summary' });
+    } catch (error) {
+      this.dbMetrics.failure.inc({ operation: 'update_summary' });
+      throw error;
+    }
   }
 
   public async updateNullSummary(feedId: number) {
@@ -138,10 +180,18 @@ export class FeedRepository {
           UPDATE feed
           SET summary=NULL
           WHERE id=?`;
-    await this.dbConnection.executeQuery(query, [feedId]);
+    this.dbMetrics.total.inc({ operation: 'update_null_summary' });
+    try {
+      await this.dbConnection.executeQuery(query, [feedId]);
+      this.dbMetrics.success.inc({ operation: 'update_null_summary' });
+    } catch (error) {
+      this.dbMetrics.failure.inc({ operation: 'update_null_summary' });
+      throw error;
+    }
   }
 
   async saveAiQueue(feedLists: FeedDetail[]) {
+    this.redisMetrics.total.inc({ operation: 'enqueue_ai' });
     try {
       await this.redisConnection.executePipeline((pipeline) => {
         for (const feed of feedLists) {
@@ -155,13 +205,15 @@ export class FeedRepository {
           );
         }
       });
+      this.redisMetrics.success.inc({ operation: 'enqueue_ai' });
+      logger.info(`[Redis] AI Queue 데이터 삽입이 정상적으로 수행되었습니다.`);
     } catch (error) {
+      this.redisMetrics.failure.inc({ operation: 'enqueue_ai' });
       logger.error(
         `[Redis] AI Queue 데이터 삽입 중 에러가 발생했습니다.
-        에러 메시지: ${error.message}
-        스택 트레이스: ${error.stack}`,
+        에러 메시지: ${error instanceof Error ? error.message : String(error)}
+        스택 트레이스: ${error instanceof Error ? error.stack : ''}`,
       );
     }
-    logger.info(`[Redis] AI Queue 데이터 삽입이 정상적으로 수행되었습니다.`);
   }
 }

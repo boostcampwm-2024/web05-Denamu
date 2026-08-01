@@ -24,11 +24,41 @@ export class Comment extends BaseEntity {
   })
   comment: string;
 
+  @Column({
+    name: 'is_deleted',
+    type: 'boolean',
+    nullable: false,
+    default: false,
+  })
+  isDeleted: boolean;
+
+  @Column({
+    name: 'is_admin_deleted',
+    type: 'boolean',
+    nullable: false,
+    default: false,
+  })
+  isAdminDeleted: boolean;
+
   @CreateDateColumn({
     name: 'date',
     nullable: false,
   })
   date: Date;
+
+  @Column({ name: 'parent_id', type: 'int', nullable: true })
+  parentId: number | null;
+
+  @ManyToOne(() => Comment, (comment) => comment.id, {
+    nullable: true,
+    onUpdate: 'CASCADE',
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({
+    name: 'parent_id',
+    foreignKeyConstraintName: 'FK_comment_parent_id',
+  })
+  parent: Comment | null;
 
   @ManyToOne(() => Feed, (feed) => feed.id, {
     nullable: false,
@@ -37,6 +67,7 @@ export class Comment extends BaseEntity {
   })
   @JoinColumn({
     name: 'feed_id',
+    foreignKeyConstraintName: 'FK_comment_feed_id',
   })
   feed: Feed;
 
@@ -47,6 +78,7 @@ export class Comment extends BaseEntity {
   })
   @JoinColumn({
     name: 'user_id',
+    foreignKeyConstraintName: 'FK_comment_user_id',
   })
   user: User;
 }

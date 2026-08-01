@@ -15,7 +15,7 @@ import { UserFixture } from '@test/config/common/fixture/user.fixture';
 import { createAccessToken } from '@test/config/e2e/env/jest.setup';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = '/api/file';
+const URL = '/api/files';
 
 describe(`DELETE ${URL}/{fileId} E2E Test`, () => {
   let agent: TestAgent;
@@ -46,6 +46,32 @@ describe(`DELETE ${URL}/{fileId} E2E Test`, () => {
     // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedFile = await fileRepository.findOneBy({
+      id: file.id,
+    });
+
+    // DB, Redis then
+    expect(savedFile).not.toBeNull();
+  });
+
+  it('[403] 파일 소유자가 아닌 다른 사용자가 삭제 요청할 경우 파일 삭제를 실패한다.', async () => {
+    // given
+    const otherUser = await userRepository.save(
+      await UserFixture.createUserCryptFixture(),
+    );
+    const otherAccessToken = createAccessToken(otherUser);
+
+    // Http when
+    const response = await agent
+      .delete(`${URL}/${file.id}`)
+      .set('Authorization', `Bearer ${otherAccessToken}`);
+
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.FORBIDDEN);
     expect(data).toBeUndefined();
 
     // DB, Redis when

@@ -1,8 +1,8 @@
 import { setupTestContainer } from '@test/setup/testContext.setup';
 
-import { FeedCrawler } from '@src/feed-crawler';
+import { redisConstant } from '@common/redis/redis.constant';
 
-import { redisConstant } from '@common/constant';
+import { FeedCrawler } from '../../src/feed-crawler';
 
 describe('feed crawling e2e-test', () => {
   const testContext = setupTestContainer();
@@ -19,7 +19,7 @@ describe('feed crawling e2e-test', () => {
   it('RSS URL이 잘못된 경우 에러 로그를 남기고 계속 진행한다.', async () => {
     // given
     await testContext.dbConnection.executeQuery(
-      `INSERT INTO rss_accept (name, user_name, email, rss_url, blog_platform) 
+      `INSERT INTO rss_accept (name, user_name, email, rss_url, platform)
        VALUES (?, ?, ?, ?, ?)`,
       [
         'Wrong Test',
@@ -46,24 +46,28 @@ describe('feed crawling e2e-test', () => {
     // given
     jest
       .spyOn(feedCrawler['feedParserManager'], 'fetchAndParse')
-      .mockResolvedValue([
-        {
-          id: null,
-          blogId: 1,
-          blogName: 'test blog',
-          blogPlatform: 'etc',
-          title: 'Mock Title',
-          link: 'https://example.com/mock',
-          pubDate: new Date().toISOString().slice(0, 19).replace('T', ' '),
-          imageUrl: 'https://example.com/mock/thumbnail',
-          content: 'Mock Content',
-          summary: '요약 생성 중...',
-          deathCount: 0,
-        },
-      ]);
+      .mockResolvedValue({
+        feeds: [
+          {
+            id: null,
+            blogId: 1,
+            blogName: 'test blog',
+            blogPlatform: 'etc',
+            blogImage: null,
+            title: 'Mock Title',
+            link: 'https://example.com/mock',
+            pubDate: new Date().toISOString().slice(0, 19).replace('T', ' '),
+            imageUrl: 'https://example.com/mock/thumbnail',
+            content: 'Mock Content',
+            summary: '요약 생성 중...',
+            deathCount: 0,
+          },
+        ],
+        channelImage: null,
+      });
 
     await testContext.dbConnection.executeQuery(
-      `INSERT INTO rss_accept (name, user_name, email, rss_url, blog_platform) 
+      `INSERT INTO rss_accept (name, user_name, email, rss_url, platform)
        VALUES (?, ?, ?, ?, ?)`,
       ['test blog', 'tester', 'test@test.com', 'https://test.com/rss', 'etc'],
     );
@@ -77,17 +81,9 @@ describe('feed crawling e2e-test', () => {
       'SELECT * FROM feed',
       [],
     );
-    const recentFeedsKeys = [];
-    let cursor = '0';
-    do {
-      const [newCursor, keys] = await testContext.redisConnection.scan(
-        cursor,
-        redisConstant.FEED_RECENT_ALL_KEY,
-        100,
-      );
-      recentFeedsKeys.push(...keys);
-      cursor = newCursor;
-    } while (cursor !== '0');
+    const recentFeedsKeys = await testContext.redisConnection.smembers(
+      redisConstant.FEED_RECENT_INDEX_KEY,
+    );
 
     const aiQueue = await testContext.redisConnection.executePipeline(
       (pipeline) => {

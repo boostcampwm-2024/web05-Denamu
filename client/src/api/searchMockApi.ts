@@ -5,7 +5,7 @@ import { SearchResult } from "@/types/search";
 
 const mock = new MockAdapter(axios);
 
-const mockData: SearchResult[] = [
+const baseMockData = [
   {
     id: 1,
     blogName: "토스",
@@ -78,6 +78,16 @@ const mockData: SearchResult[] = [
   },
 ];
 
+const mockData: SearchResult[] = baseMockData.map(({ blogName, ...item }) => ({
+  ...item,
+  blog: { name: blogName, platform: "etc" },
+  thumbnail: "",
+  viewCount: 0,
+  tag: [],
+  likes: 0,
+  comments: 0,
+}));
+
 mock.onGet("/api/search").reply((config) => {
   const { find, type, limit = 4, page = 1 } = config.params;
 
@@ -85,9 +95,9 @@ mock.onGet("/api/search").reply((config) => {
     if (type === "title") {
       return item.title.includes(find);
     } else if (type === "blogName") {
-      return item.blogName.includes(find);
+      return item.blog.name.includes(find);
     } else {
-      return item.blogName.includes(find) || item.title.includes(find);
+      return item.blog.name.includes(find) || item.title.includes(find);
     }
   });
 

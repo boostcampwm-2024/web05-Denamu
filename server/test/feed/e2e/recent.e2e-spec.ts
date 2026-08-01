@@ -16,7 +16,7 @@ import { FeedFixture } from '@test/config/common/fixture/feed.fixture';
 import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = '/api/feed/recent';
+const URL = '/api/feeds/recent';
 
 describe(`GET ${URL} E2E Test`, () => {
   let agent: TestAgent;
@@ -76,8 +76,11 @@ describe(`GET ${URL} E2E Test`, () => {
         const feed = feedList[i];
         return {
           id: feed.id,
-          author: feed.blog.name,
-          blogPlatform: feed.blog.blogPlatform,
+          blog: {
+            name: feed.blog.name,
+            platform: feed.blog.blogPlatform,
+            image: null,
+          },
           title: feed.title,
           path: feed.path,
           tag: [],

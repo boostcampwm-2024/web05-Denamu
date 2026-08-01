@@ -25,6 +25,6 @@ describe("PostCardImage", () => {
     render(<PostCardImage alt="테스트 이미지" />);
 
     const container = screen.getByTestId("image-container");
-    expect(container).toHaveClass("h-[120px]", "rounded-t-xl");
+    expect(container).toHaveClass("h-full", "md:h-[120px]", "rounded", "md:rounded-t-xl");
   });
 });

@@ -26,10 +26,87 @@ export class RssAcceptRepository extends Repository<RssAccept> {
 
   countByBlogPlatform() {
     return this.createQueryBuilder()
-      .select('blog_platform', 'platform')
-      .addSelect('COUNT(blog_platform)', 'count')
-      .groupBy('blog_platform')
+      .select('platform', 'platform')
+      .addSelect('COUNT(platform)', 'count')
+      .groupBy('platform')
       .orderBy('count', 'DESC')
       .getRawMany();
+  }
+
+  searchRssList(
+    find: string,
+    limit: number,
+    offset: number,
+    blockerId?: number,
+  ) {
+    const query = this.createQueryBuilder('rss_accept')
+      .addSelect(
+        'MATCH(rss_accept.name) AGAINST (:find IN NATURAL LANGUAGE MODE)',
+        'relevance',
+      )
+      .where(
+        'MATCH(rss_accept.name) AGAINST (:find IN NATURAL LANGUAGE MODE)',
+        { find },
+      )
+      .orderBy('relevance', 'DESC')
+      .skip(offset)
+      .take(limit);
+
+    if (blockerId) {
+      query.andWhere(
+        'rss_accept.id NOT IN (SELECT rss_block.blocked_rss_id FROM rss_blocks rss_block WHERE rss_block.blocker_id = :blockerId)',
+        { blockerId },
+      );
+    }
+
+    return query.getManyAndCount();
+  }
+
+  findRecentlyPublished(limit: number, blockerId?: number) {
+    const query = this.createQueryBuilder('rss')
+      .innerJoin(
+        'feed',
+        'feed',
+        'feed.blog_id = rss.id AND feed.is_public = 1',
+      );
+
+    if (blockerId) {
+      query.where(
+        'rss.id NOT IN (SELECT rss_block.blocked_rss_id FROM rss_blocks rss_block WHERE rss_block.blocker_id = :blockerId)',
+        { blockerId },
+      );
+    }
+
+    return query
+      .select('rss.id', 'id')
+      .addSelect('rss.name', 'name')
+      .addSelect('rss.blogPlatform', 'blogPlatform')
+      .addSelect('rss.blogImage', 'blogImage')
+      .addSelect('MAX(feed.created_at)', 'lastPublishedAt')
+      .addSelect(
+        (qb) =>
+          qb
+            .subQuery()
+            .select('latest_feed.id')
+            .from('feed', 'latest_feed')
+            .where(
+              'latest_feed.blog_id = rss.id AND latest_feed.is_public = 1',
+            )
+            .orderBy('latest_feed.created_at', 'DESC')
+            .addOrderBy('latest_feed.id', 'DESC')
+            .limit(1),
+        'latestFeedId',
+      )
+      .groupBy('rss.id')
+      .orderBy('MAX(feed.created_at)', 'DESC')
+      .limit(limit)
+      .getRawMany<{
+        id: number;
+        name: string;
+        blogPlatform: string;
+        blogImage: string | null;
+        lastPublishedAt: Date;
+        latestFeedId: string;
+      }>();
   }
 }

@@ -1,11 +1,15 @@
 import { Module } from '@nestjs/common';
-import { ScheduleModule } from '@nestjs/schedule';
-
-import { AdminModule } from '@admin/module/admin.module';
 
 import { JwtAuthModule } from '@common/auth/jwt.module';
+import { LoginThrottlerModule } from '@common/throttler/login-throttler.module';
+
+import { FeedRepository } from '@feed/repository/feed.repository';
 
 import { FileModule } from '@file/module/file.module';
+
+import { RssModule } from '@rss/module/rss.module';
+
+import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
 
 import { OAuthController } from '@user/controller/oAuth.controller';
 import { UserController } from '@user/controller/user.controller';
@@ -18,13 +22,15 @@ import { OAuthService } from '@user/service/oAuth.service';
 import { UserService } from '@user/service/user.service';
 
 @Module({
-  imports: [JwtAuthModule, AdminModule, FileModule, ScheduleModule.forRoot()],
+  imports: [JwtAuthModule, FileModule, RssModule, LoginThrottlerModule],
   controllers: [UserController, OAuthController],
   providers: [
     UserService,
     OAuthService,
     UserRepository,
     ProviderRepository,
+    FeedRepository,
+    SubscriptionRepository,
     GoogleOAuthProvider,
     GithubOAuthProvider,
     UserScheduler,
@@ -40,6 +46,6 @@ import { UserService } from '@user/service/user.service';
       inject: [GoogleOAuthProvider, GithubOAuthProvider],
     },
   ],
-  exports: [UserRepository, UserService],
+  exports: [UserService],
 })
 export class UserModule {}

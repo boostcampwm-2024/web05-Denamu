@@ -1,0 +1,51 @@
+export interface Rss {
+  name: string;
+  userName: string;
+  email: string;
+  rssUrl: string;
+}
+
+export interface RssRegistration {
+  rss: Rss;
+  approveFlag: boolean;
+  description?: string;
+}
+
+export interface RssRegistrationRequest {
+  rss: Rss;
+  adminEmail: string;
+}
+
+export interface User {
+  email: string;
+  userName: string;
+  uuid: string;
+}
+
+export interface RssRemoval {
+  userName: string;
+  email: string;
+  rssUrl: string;
+  certificateCode: string;
+}
+
+export interface RssCertification {
+  userName: string;
+  email: string;
+  blogName: string;
+  certificateCode: string;
+  userEmail: string;
+}
+
+export interface AdminCertification {
+  email: string;
+  name: string;
+  uuid: string;
+}
+
+export interface QnaAnswered {
+  email: string;
+  recipientName: string;
+  qnaId: number;
+  qnaTitle: string;
+}

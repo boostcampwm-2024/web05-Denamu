@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
+import { ArrowLeft } from "lucide-react";
+
 import { AuthCard } from "@/components/auth/AuthCard.tsx";
 import { AuthSocialLoginButtons } from "@/components/auth/AuthSocialLoginButtons.tsx";
 import { Button } from "@/components/ui/button";
@@ -9,7 +11,12 @@ import { Input } from "@/components/ui/input";
 import { useSignIn } from "@/hooks/auth/useSignIn";
 import { useCustomToast } from "@/hooks/common/useCustomToast.ts";
 
-export const AuthSignInForm = () => {
+interface AuthSignInFormProps {
+  hideBackButton?: boolean;
+  onSuccess?: () => void;
+}
+
+export const AuthSignInForm = ({ hideBackButton = false, onSuccess }: AuthSignInFormProps = {}) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useCustomToast();
@@ -23,6 +30,11 @@ export const AuthSignInForm = () => {
           description: result.message,
         });
 
+        if (onSuccess) {
+          onSuccess();
+          return;
+        }
+
         const from = location.state?.from || "/";
         navigate(from === "/signup" ? "/" : from);
       } else {
@@ -33,7 +45,7 @@ export const AuthSignInForm = () => {
         });
       }
     }
-  }, [result, toast, navigate, location.state]);
+  }, [result, toast, navigate, location.state, onSuccess]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,6 +54,19 @@ export const AuthSignInForm = () => {
 
   return (
     <>
+      {!hideBackButton && (
+        <div className="px-6 pt-6 pb-2">
+          <button
+            type="button"
+            aria-label="Denamu 홈으로 돌아가기"
+            className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+            onClick={() => navigate("/")}
+          >
+            <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+            Denamu 홈으로 돌아가기
+          </button>
+        </div>
+      )}
       <AuthCard title="로그인" description="로그인을 해주세요">
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div className="space-y-2">
@@ -59,26 +84,31 @@ export const AuthSignInForm = () => {
               value={form.password}
               onChange={(e) => updateField("password", e.target.value)}
             />
+            <div className="flex justify-end">
+              <Button
+                type="button"
+                variant="link"
+                className="h-auto p-0 text-muted-foreground underline underline-offset-4"
+                onClick={() => navigate("/users/forgot-password")}
+              >
+                비밀번호를 잊으셨나요?
+              </Button>
+            </div>
           </div>
           <Button className="w-full" type="submit" disabled={isLoading}>
             {isLoading ? "로그인 중..." : "로그인"}
           </Button>
         </form>
         <AuthSocialLoginButtons />
-        <div className="mt-4 flex justify-between">
+        <div className="mt-4 flex items-center justify-center gap-1.5">
+          <p className="text-sm text-muted-foreground/60">계정이 없으신가요?</p>
           <Button
+            type="button"
             variant="link"
-            className="text-muted-foreground underline underline-offset-4 h-auto p-0"
+            className="h-auto p-0 text-sm font-medium text-foreground"
             onClick={() => navigate("/signup", { state: { from: location.pathname } })}
           >
-            계정이 없으신가요?
-          </Button>
-          <Button
-            variant="link"
-            className="text-muted-foreground underline underline-offset-4 h-auto p-0"
-            onClick={() => navigate("/")}
-          >
-            메인 페이지로 돌아가기
+            회원가입
           </Button>
         </div>
       </AuthCard>

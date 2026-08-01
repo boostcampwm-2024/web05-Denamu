@@ -1,15 +1,14 @@
-import { forwardRef, Module } from '@nestjs/common';
-import { EventEmitterModule } from '@nestjs/event-emitter';
-import { ScheduleModule } from '@nestjs/schedule';
+import { Module } from '@nestjs/common';
 
 import { ActivityModule } from '@activity/module/activity.module';
 
-import { CommentModule } from '@comment/module/comment.module';
-
 import { JwtAuthModule } from '@common/auth/jwt.module';
 
+import { RssBlockRepository } from '@block/repository/rssBlock.repository';
+
+import { AdminFeedController } from '@feed/controller/adminFeed.controller';
 import { FeedController } from '@feed/controller/feed.controller';
-import { ReadFeedInterceptor } from '@feed/interceptor/read-feed.interceptor';
+import { FeedViewedListener } from '@feed/listener/feed-viewed.listener';
 import {
   FeedRepository,
   FeedViewRepository,
@@ -17,30 +16,21 @@ import {
 import { FeedScheduler } from '@feed/scheduler/feed.scheduler';
 import { FeedService } from '@feed/service/feed.service';
 
-import { LikeModule } from '@like/module/like.module';
-
-import { RssModule } from '@rss/module/rss.module';
+import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
 
 import { UserModule } from '@user/module/user.module';
 
 @Module({
-  imports: [
-    ScheduleModule.forRoot(),
-    EventEmitterModule.forRoot(),
-    UserModule,
-    ActivityModule,
-    JwtAuthModule,
-    forwardRef(() => RssModule),
-    forwardRef(() => CommentModule),
-    forwardRef(() => LikeModule),
-  ],
-  controllers: [FeedController],
+  imports: [UserModule, ActivityModule, JwtAuthModule],
+  controllers: [FeedController, AdminFeedController],
   providers: [
     FeedService,
     FeedRepository,
     FeedViewRepository,
     FeedScheduler,
-    ReadFeedInterceptor,
+    FeedViewedListener,
+    SubscriptionRepository,
+    RssBlockRepository,
   ],
   exports: [FeedRepository, FeedService],
 })

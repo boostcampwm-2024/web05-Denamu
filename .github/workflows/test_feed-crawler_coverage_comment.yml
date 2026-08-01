@@ -1,0 +1,105 @@
+name: Feed Crawler Coverage Comment
+
+on:
+  workflow_run:
+    workflows: [Feed Crawler Coverage Test]
+    types: [completed]
+
+jobs:
+  comment:
+    name: Post Coverage Comment
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.event == 'pull_request'
+    permissions:
+      pull-requests: write
+      issues: write
+
+    steps:
+      - name: Download results
+        uses: actions/download-artifact@v8
+        with:
+          name: feed-crawler-coverage-results
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Post PR Comment
+        uses: actions/github-script@v9
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            const ws = process.env.GITHUB_WORKSPACE;
+            const prNumber = parseInt(fs.readFileSync(path.join(ws, 'pr_number.txt'), 'utf8').trim());
+            const summaryPath = path.join(ws, 'feed-crawler/coverage/integration/coverage-summary.json');
+            const conclusion = '${{ github.event.workflow_run.conclusion }}';
+            const marker = '<!-- feed-crawler-coverage -->';
+
+            let body = marker + '\n## 🧪 Feed Crawler Coverage Report\n\n';
+
+            if (!fs.existsSync(summaryPath)) {
+              body += conclusion === 'failure'
+                ? '❌ 테스트가 실패하여 커버리지 데이터를 수집할 수 없습니다.\n'
+                : '⚠️ 커버리지 데이터를 찾을 수 없습니다.\n';
+            } else {
+              const summary = JSON.parse(fs.readFileSync(summaryPath, 'utf8'));
+              const total = summary.total;
+
+              const fmt = (val) => `${val.pct.toFixed(1)}% (${val.covered}/${val.total})`;
+              const badge = (pct) => pct >= 90 ? '🟢' : pct >= 50 ? '🟠' : '🔴';
+
+              const { statements, branches, functions, lines } = total;
+
+              body += '| Category | Coverage |\n';
+              body += '| --- | --- |\n';
+              body += `| ${badge(statements.pct)} Statements | **${fmt(statements)}** |\n`;
+              body += `| ${badge(branches.pct)} Branches | **${fmt(branches)}** |\n`;
+              body += `| ${badge(functions.pct)} Functions | **${fmt(functions)}** |\n`;
+              body += `| ${badge(lines.pct)} Lines | **${fmt(lines)}** |\n\n`;
+
+              const files = Object.entries(summary).filter(([k]) => k !== 'total');
+              if (files.length > 0) {
+                body += '<details>\n<summary>📁 파일별 커버리지</summary>\n\n';
+                body += '| File | Stmt | Branch | Func | Lines |\n';
+                body += '| --- | --- | --- | --- | --- |\n';
+                for (const [file, data] of files) {
+                  const rel = file.replace(/.*\/src\//, 'src/');
+                  const sb = (p) => p >= 80 ? '🟢' : p >= 50 ? '🟠' : '🔴';
+                  body += `| \`${rel}\` | ${sb(data.statements.pct)}${data.statements.pct.toFixed(1)}% | ${sb(data.branches.pct)}${data.branches.pct.toFixed(1)}% | ${sb(data.functions.pct)}${data.functions.pct.toFixed(1)}% | ${sb(data.lines.pct)}${data.lines.pct.toFixed(1)}% |\n`;
+                }
+                body += '\n</details>\n\n';
+              }
+
+              if (conclusion === 'failure') {
+                body += '> ❌ 일부 테스트가 실패했습니다. 위 커버리지는 통과된 테스트 기준입니다.\n\n';
+              }
+            }
+
+            body += `> 🤖 Powered by [Jest](https://jestjs.io)`;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+            });
+
+            const existing = comments.find(
+              (c) => c.user.type === 'Bot' && c.body.includes(marker)
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body,
+              });
+            }

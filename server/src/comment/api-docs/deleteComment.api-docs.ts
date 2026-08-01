@@ -1,40 +1,24 @@
 import { applyDecorators } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiParam } from '@nestjs/swagger';
+
 import {
-  ApiBadRequestResponse,
-  ApiOkResponse,
-  ApiOperation,
-  ApiUnauthorizedResponse,
-} from '@nestjs/swagger';
+  ApiBadRequestDoc,
+  ApiForbiddenDoc,
+  ApiMessageResponse,
+  ApiNotFoundDoc,
+  ApiUnauthorizedDoc,
+} from '@common/swagger/swagger.helper';
 
 export function ApiDeleteComment() {
   return applyDecorators(
-    ApiOperation({
-      summary: '댓글 삭제 API',
-    }),
-    ApiOkResponse({
-      description: 'Ok',
-      schema: {
-        properties: {
-          message: {
-            type: 'string',
-          },
-        },
-      },
-      example: {
-        message: '댓글 삭제를 성공했습니다.',
-      },
-    }),
-    ApiBadRequestResponse({
-      description: 'Bad Request',
-      example: {
-        message: '오류 메세지',
-      },
-    }),
-    ApiUnauthorizedResponse({
-      description: 'Unauthorized',
-      example: {
-        message: '인증되지 않은 요청입니다.',
-      },
-    }),
+    ApiOperation({ summary: '댓글 삭제 API' }),
+    ApiBearerAuth(),
+    ApiParam({ name: 'feedId', type: Number, description: '게시글 ID', example: 1 }),
+    ApiParam({ name: 'commentId', type: Number, description: '댓글 ID', example: 1 }),
+    ApiMessageResponse('댓글 삭제 성공'),
+    ApiBadRequestDoc('요청 데이터 검증에 실패했습니다.'),
+    ApiUnauthorizedDoc('인증되지 않은 요청입니다.'),
+    ApiForbiddenDoc('본인이 작성한 댓글이 아닙니다.'),
+    ApiNotFoundDoc('존재하지 않는 댓글입니다.'),
   );
 }

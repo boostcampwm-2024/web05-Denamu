@@ -10,18 +10,6 @@ export class GetFeedDetailResponseDto {
   id: number;
 
   @ApiProperty({
-    example: 'example author',
-    description: '게시글 작성자 이름',
-  })
-  author: string;
-
-  @ApiProperty({
-    example: 'example platform',
-    description: '블로그 플랫폼',
-  })
-  blogPlatform: string;
-
-  @ApiProperty({
     example: 'example title',
     description: '게시글 제목',
   })
@@ -75,15 +63,57 @@ export class GetFeedDetailResponseDto {
   })
   tag: string[];
 
-  private constructor(partial: Partial<GetFeedDetailResponseDto>) {
+  @ApiProperty({
+    example: false,
+    description: '요청자가 해당 게시글의 RSS 소유자인지 여부',
+  })
+  isOwner: boolean;
+
+  @ApiProperty({
+    example: {
+      id: 1,
+      name: 'example author',
+      ownerName: '조민석',
+      isOwnerCertified: true,
+      platform: 'example platform',
+      image: 'https://example.com/profile.png',
+    },
+    description: '게시글이 크롤링된 RSS 채널 정보',
+  })
+  blog: {
+    id: number;
+    name: string;
+    ownerName: string | null;
+    isOwnerCertified: boolean;
+    platform: string;
+    image: string | null;
+  };
+
+  @ApiProperty({
+    example: false,
+    description: '요청자가 해당 RSS를 구독 중인지 여부',
+  })
+  isSubscribed: boolean;
+
+  @ApiProperty({
+    example: false,
+    description: '요청자가 해당 게시글의 RSS를 차단했는지 여부 (비로그인 시 false)',
+  })
+  isBlocked: boolean;
+
+  constructor(partial: Partial<GetFeedDetailResponseDto>) {
     Object.assign(this, partial);
   }
 
-  static toResponseDto(feed: FeedView) {
+  static toResponseDto(
+    feed: FeedView,
+    isOwner = false,
+    blogMeta: { id: number; userName: string; userId: number | null },
+    isSubscribed = false,
+    isBlocked = false,
+  ) {
     return new GetFeedDetailResponseDto({
       id: feed.feedId,
-      author: feed.blogName,
-      blogPlatform: feed.blogPlatform,
       title: feed.title,
       path: feed.path,
       createdAt: feed.createdAt,
@@ -93,6 +123,17 @@ export class GetFeedDetailResponseDto {
       likes: feed.likeCount,
       comments: feed.commentCount,
       tag: feed.tag ? feed.tag : [],
+      isOwner,
+      blog: {
+        id: blogMeta.id,
+        name: feed.blogName,
+        ownerName: blogMeta.userName,
+        isOwnerCertified: blogMeta.userId != null,
+        platform: feed.blogPlatform,
+        image: feed.blogImage ?? null,
+      },
+      isSubscribed,
+      isBlocked,
     });
   }
 }

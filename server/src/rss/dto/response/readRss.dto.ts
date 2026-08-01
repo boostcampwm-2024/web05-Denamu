@@ -33,7 +33,20 @@ export class ReadRssResponseDto {
   })
   rssUrl: string;
 
-  private constructor(partial: Partial<ReadRssResponseDto>) {
+  @ApiProperty({
+    example: 'velog',
+    description: 'RSS URL로부터 추정한 블로그 플랫폼 종류',
+  })
+  blogPlatform: string;
+
+  @ApiProperty({
+    example: 'https://example.com/profile.png',
+    description: 'RSS 채널 프로필 이미지 URL',
+    nullable: true,
+  })
+  blogImage: string | null;
+
+  constructor(partial: Partial<ReadRssResponseDto>) {
     Object.assign(this, partial);
   }
 
@@ -44,6 +57,8 @@ export class ReadRssResponseDto {
       userName: rss.userName,
       email: rss.email,
       rssUrl: rss.rssUrl,
+      blogPlatform: rss.blogPlatform,
+      blogImage: rss.blogImage ?? null,
     });
   }
 

@@ -1,6 +1,9 @@
-export function debounce(func: (...args: any[]) => void, delay: number) {
+export function debounce<Args extends unknown[]>(
+  func: (...args: Args) => void,
+  delay: number,
+) {
   let timer: ReturnType<typeof setTimeout>;
-  const debounced = (...args: any[]) => {
+  const debounced = (...args: Args) => {
     clearTimeout(timer);
     timer = setTimeout(() => func(...args), delay);
   };

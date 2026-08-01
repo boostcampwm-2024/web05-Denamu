@@ -1,32 +1,35 @@
 import { inject, injectable } from 'tsyringe';
 
-import { FeedCrawler } from '@src/feed-crawler';
-
-import { redisConstant } from '@common/constant';
-import logger from '@common/logger';
-import { RedisConnection } from '@common/redis-access';
-import { FullFeedCrawlMessage } from '@common/types';
+import { FullFeedCrawlMessage } from '@common/feed/feed.type';
+import logger from '@common/logger/logger';
+import { FeedMetrics } from '@common/metrics/feed-metrics';
+import { RedisConnection } from '@common/redis/redis-access';
+import { redisConstant } from '@common/redis/redis.constant';
 
 import { AbstractQueueWorker } from '@event_worker/abstract-queue-worker';
 
 import { RssRepository } from '@repository/rss.repository';
 
-import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
+import { FeedCrawler } from '../../feed-crawler';
 
 @injectable()
 export class FullFeedCrawlEventWorker extends AbstractQueueWorker<FullFeedCrawlMessage> {
   constructor(
-    @inject(DEPENDENCY_SYMBOLS.RedisConnection)
+    @inject(RedisConnection)
     redisConnection: RedisConnection,
-    @inject(DEPENDENCY_SYMBOLS.RssRepository)
+    @inject(RssRepository)
     private readonly rssRepository: RssRepository,
-    @inject(DEPENDENCY_SYMBOLS.FeedCrawler)
+    @inject(FeedCrawler)
     private readonly feedCrawler: FeedCrawler,
+    @inject(FeedMetrics)
+    private readonly feedMetrics: FeedMetrics,
   ) {
     super('[Full Feed Crawler]', redisConnection);
   }
 
   protected async processQueue(): Promise<void> {
+    const depth = await this.redisConnection.llen(this.getQueueKey());
+    this.feedMetrics.fullCrawlQueueDepth.set(depth);
     const rssIdMessage = await this.redisConnection.rpop(this.getQueueKey());
 
     if (!rssIdMessage) {
@@ -67,55 +70,20 @@ export class FullFeedCrawlEventWorker extends AbstractQueueWorker<FullFeedCrawlM
         `${this.nameTag} RSS ID ${rssId}에서 ${insertedFeeds.length}개의 피드를 처리했습니다.`,
       );
     } catch (error) {
-      await this.handleFailure(crawlMessage, error);
+      await this.handleFailure(crawlMessage, error as Error);
     }
   }
 
-  protected async handleFailure(
-    crawlMessage: FullFeedCrawlMessage,
-    error: Error,
-  ): Promise<void> {
-    const shouldRetry = this.isRetryableError(error);
-
-    logger.error(
-      `${this.nameTag} RSS ID ${crawlMessage.rssId} 처리 실패:
-      - 에러: ${error.name} - ${error.message}
-      - 재시도 가능: ${shouldRetry}
-      - 현재 deathCount: ${crawlMessage.deathCount}`,
-    );
-
-    if (shouldRetry && crawlMessage.deathCount < 3) {
-      crawlMessage.deathCount++;
-      await this.redisConnection.rpush(redisConstant.FULL_FEED_CRAWL_QUEUE, [
-        JSON.stringify(crawlMessage),
-      ]);
-      logger.warn(
-        `${this.nameTag} RSS ID ${crawlMessage.rssId} 재시도 예약 (${crawlMessage.deathCount}/3)`,
-      );
-    } else {
-      const reason = shouldRetry
-        ? `Death Count 3회 초과`
-        : `재시도 불가능한 에러 (${error.name})`;
-      logger.error(
-        `${this.nameTag} RSS ID ${crawlMessage.rssId} 영구 실패 - ${reason}`,
-      );
-    }
+  protected getRetryQueueKey(): string {
+    return redisConstant.FULL_FEED_CRAWL_QUEUE;
   }
 
-  private isRetryableError(error: Error): boolean {
-    const message = error.message.toLowerCase();
+  protected getItemLabel(crawlMessage: FullFeedCrawlMessage): string {
+    return `RSS ID ${crawlMessage.rssId}`;
+  }
 
-    // 재시도하면 안 되는 케이스 (영구적 에러)
-    if (message.includes('invalid') || message.includes('401')) return false;
-    if (message.includes('json') || message.includes('parse')) return false;
-    if (message.includes('찾을 수 없습니다')) return false; // RSS 없음
-
-    // 재시도해야 하는 케이스 (일시적 에러)
-    if (message.includes('rate limit') || message.includes('429')) return true;
-    if (message.includes('timeout') || message.includes('503')) return true;
-    if (message.includes('network') || message.includes('fetch')) return true;
-
-    // 기본값: 재시도
-    return true;
+  protected onPermanentFailure(): Promise<void> {
+    this.feedMetrics.fullCrawlPermanentFailure.inc();
+    return Promise.resolve();
   }
 }

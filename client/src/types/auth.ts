@@ -1,29 +1,53 @@
+import { ApiData, ApiMessage } from "@/types/api";
+
 export type AdminAuthRequest = {
-  loginId: string;
+  email: string;
   password: string;
 };
 
-export type AdminAuthResponse = {
-  message: string;
+export type AdminAuthResponse = ApiMessage;
+
+export type AdminProfileResponse = ApiData<{
+  email: string;
+  name: string;
+  emailNotification: boolean;
+  parent: { email: string; name: string } | null;
+}>;
+
+export type AdminUpdateRequest = {
+  name?: string;
+  password?: string;
+  emailNotification?: boolean;
+};
+
+export type AdminUpdateResponse = ApiMessage;
+
+export type AdminForgotPasswordRequest = {
+  email: string;
+};
+
+export type AdminResetPasswordRequest = {
+  token: string;
+  password: string;
 };
 
 export interface UserSignUpRequest {
   email: string;
   password: string;
   userName: string;
+  marketingEmailAgreed?: boolean;
+  inactivityEmailAgreed?: boolean;
+  noticeEmailAgreed?: boolean;
 }
 
-export interface UserSignUpResponse {
-  message: string;
-}
+export type UserSignUpResponse = ApiMessage;
 
 export interface UserSignInRequest {
   email: string;
   password: string;
 }
 
-export interface UserSignInResponse {
-  message: string;
+export interface UserSignInResponse extends ApiMessage {
   data?: {
     accessToken: string;
   };
@@ -33,6 +57,9 @@ export interface SignUpForm {
   email: string;
   password: string;
   userName: string;
+  marketingEmailAgreed: boolean;
+  inactivityEmailAgreed: boolean;
+  noticeEmailAgreed: boolean;
 }
 
 export interface SignUpResult {
@@ -51,4 +78,13 @@ export interface SignInResult {
   message: string;
   accessToken?: string;
   status?: number;
+}
+
+export interface ForgotPasswordResult {
+  success: boolean;
+  message: string;
+}
+export interface ResetPasswordResult {
+  success: boolean;
+  message: string;
 }

@@ -1,85 +1,64 @@
 import 'reflect-metadata';
 
-import '@src/env-load';
-
-import { container } from '@src/container';
-import logger from '@src/logger';
-import { Notifier } from '@src/notification/notifier.interface';
+import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
+import '@common/env/env-load';
+import { Lifecycle } from '@common/lifecycle/lifecycle.interface';
+import logger from '@common/logger/logger';
+import { EmailMetrics } from '@common/metrics/email-metrics';
 
 import { EmailConsumer } from '@email/email.consumer';
 
+import { Notifier } from '@notification/notifier.interface';
+
 import { RabbitMQManager } from '@rabbitmq/rabbitmq.manager';
 
-import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
+import { container } from './container';
 
-function initializeDependencies() {
-  return {
-    rabbitMQManager: container.resolve<RabbitMQManager>(
-      DEPENDENCY_SYMBOLS.RabbitMQManager,
-    ),
-    emailConsumer: container.resolve<EmailConsumer>(
-      DEPENDENCY_SYMBOLS.EmailConsumer,
-    ),
-    notifier: container.resolve<Notifier>(DEPENDENCY_SYMBOLS.Notifier),
-  };
+function resolveComponents(): Lifecycle[] {
+  return [
+    container.resolve(EmailMetrics),
+    container.resolve<Notifier>(DEPENDENCY_SYMBOLS.Notifier),
+    container.resolve(RabbitMQManager),
+    container.resolve(EmailConsumer),
+  ];
 }
 
 async function startEmailWorker() {
-  logger.info('[Email Worker Start]');
+  const components = resolveComponents();
 
-  const dependencies = initializeDependencies();
-  dependencies.notifier.initialize();
-  logger.info(`Notifier 초기화 완료`);
-  await initializeRabbitMQ(dependencies);
-
-  process.on('SIGINT', () => void handleShutdown(dependencies, 'SIGINT'));
-  process.on('SIGTERM', () => void handleShutdown(dependencies, 'SIGTERM'));
-}
-
-async function handleShutdown(
-  dependencies: ReturnType<typeof initializeDependencies>,
-  signal: string,
-) {
-  logger.info(`${signal} 신호 수신, email-worker 종료 중...`);
   try {
-    logger.info('새로운 메시지 수신 중지...');
-    await dependencies.emailConsumer.stopConsuming();
+    logger.info('[Email Worker Start]');
 
-    logger.info('진행 중인 이메일 전송 작업 완료 대기...');
-    await dependencies.emailConsumer.waitForPendingTasks();
+    for (const component of components) {
+      await component.start();
+    }
 
-    logger.info('Consumer 정리 중...');
-    await dependencies.emailConsumer.close();
-
-    logger.info('RabbitMQ 연결 종료 중...');
-    await dependencies.rabbitMQManager.disconnect();
-
-    logger.info('Email Worker 정상 종료');
-    process.exit(0);
+    process.on('SIGINT', () => void handleShutdown(components, 'SIGINT'));
+    process.on('SIGTERM', () => void handleShutdown(components, 'SIGTERM'));
   } catch (error) {
-    logger.error(`Email Worker 종료 중 에러 발생: ${error}`);
+    logger.error(
+      `Email Worker 시작 실패: ${error instanceof Error ? error.message : error}`,
+    );
     process.exit(1);
   }
 }
 
-async function initializeRabbitMQ(
-  dependencies: ReturnType<typeof initializeDependencies>,
-) {
+async function handleShutdown(components: Lifecycle[], signal: string) {
   try {
-    logger.info(`RabbitMQ 초기화 시작...`);
+    logger.info(`${signal} 신호 수신, email-worker 종료 중...`);
 
-    await dependencies.rabbitMQManager.connect();
-    logger.info(`RabbitMQ 초기화 완료`);
+    for (const component of [...components].reverse()) {
+      await component.stop?.();
+    }
 
-    await dependencies.emailConsumer.start();
-    logger.info(`RabbitMQ Email Consumer 시작 완료`);
+    logger.info('Email Worker 정상 종료');
+    process.exit(0);
   } catch (error) {
-    logger.error(`RabbitMQ 초기화 실패: ${error}`);
-    throw error;
+    logger.error(
+      `Email Worker 종료 중 에러 발생: ${error instanceof Error ? error.message : error}`,
+    );
+    process.exit(1);
   }
 }
 
-startEmailWorker().catch((error) => {
-  logger.error(`Email Consumer 시작 실패: ${error}`);
-  process.exit(1);
-});
+void startEmailWorker();

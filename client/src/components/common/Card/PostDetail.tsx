@@ -1,8 +1,9 @@
 import React, { useRef, useState, useCallback } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 import { X } from "lucide-react";
 
+import { BlockedFeedNotice } from "@/components/common/Card/detail/BlockedFeedNotice";
 import { FixedHeader } from "@/components/common/Card/detail/FixedHeader";
 import { PostContent } from "@/components/common/Card/detail/PostContent";
 import { PostHeader } from "@/components/common/Card/detail/PostHeader";
@@ -16,6 +17,9 @@ import { usePostDetail } from "@/hooks/queries/usePostDetail";
 export default function PostDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const highlightCommentId = (location.state as { highlightCommentId?: number | null } | null)
+    ?.highlightCommentId;
   const modalRef = useRef<HTMLDivElement>(null);
   const { data } = usePostDetail(Number(id));
   const scrollbarWidth = useScrollbarAdjustment();
@@ -49,6 +53,7 @@ export default function PostDetail() {
     <div
       ref={modalContainerRef}
       className="fixed inset-0 bg-black/50 flex justify-center items-start z-[999] overflow-y-auto py-10"
+      style={{ paddingRight: scrollbarWidth }}
       onClick={handleClickOutside}
     >
       <div ref={modalRef} className="bg-white rounded-md w-[90%] max-w-4xl h-auto relative">
@@ -62,10 +67,14 @@ export default function PostDetail() {
           </button>
         </div>
 
-        <div className="mt-5 flex flex-col gap-2 px-10 ">
-          <PostHeader data={data.data} />
-          <PostContent post={data.data} />
-        </div>
+        {data.data.isBlocked ? (
+          <BlockedFeedNotice />
+        ) : (
+          <div className="mt-5 flex flex-col gap-2 px-10 ">
+            <PostHeader data={data.data} />
+            <PostContent post={data.data} highlightCommentId={highlightCommentId} />
+          </div>
+        )}
       </div>
     </div>
   );

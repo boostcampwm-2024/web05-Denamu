@@ -79,9 +79,10 @@ services:
       rabbitmq:
         condition: service_healthy
     volumes:
-      - ../feed-crawler/logs:/var/web05-Denamu/email-worker/logs
+      - ../email-worker/logs:/var/web05-Denamu/email-worker/logs
     environment:
       NODE_ENV: 'LOCAL'
+      PRODUCT_DOMAIN: 'http://localhost'
       TZ: 'Asia/Seoul'
     stop_grace_period: 30s
     profiles:

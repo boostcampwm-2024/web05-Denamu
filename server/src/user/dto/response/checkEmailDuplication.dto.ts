@@ -7,7 +7,7 @@ export class CheckEmailDuplicationResponseDto {
   })
   exists: boolean;
 
-  private constructor(partial: Partial<CheckEmailDuplicationResponseDto>) {
+  constructor(partial: Partial<CheckEmailDuplicationResponseDto>) {
     Object.assign(this, partial);
   }
 

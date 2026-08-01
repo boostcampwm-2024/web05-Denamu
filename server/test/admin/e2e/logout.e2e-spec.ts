@@ -3,27 +3,36 @@ import { HttpStatus } from '@nestjs/common';
 import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 
+import { AdminRepository } from '@admin/repository/admin.repository';
+
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
 
+import { AdminFixture } from '@test/config/common/fixture/admin.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = '/api/admin/logout';
+const URL = '/api/admins/logout';
 
 describe(`POST ${URL} E2E Test`, () => {
   let agent: TestAgent;
   let redisService: RedisService;
+  let adminRepository: AdminRepository;
+  let adminEmail: string;
   const redisKeyMake = (data: string) => `${REDIS_KEYS.ADMIN_AUTH_KEY}:${data}`;
   const sessionKey = 'admin-logout-sessionKey';
-  const sessionId = 'test1234';
 
   beforeAll(() => {
     agent = supertest(testApp.getHttpServer());
     redisService = testApp.get(RedisService);
+    adminRepository = testApp.get(AdminRepository);
   });
 
   beforeEach(async () => {
-    await redisService.set(redisKeyMake(sessionKey), sessionId);
+    const admin = await adminRepository.save(
+      await AdminFixture.createAdminCryptFixture(),
+    );
+    adminEmail = admin.email;
+    await redisService.set(redisKeyMake(sessionKey), adminEmail);
   });
 
   it('[401] 관리자 로그인 쿠키가 없을 경우 로그아웃을 실패한다.', async () => {
@@ -39,7 +48,7 @@ describe(`POST ${URL} E2E Test`, () => {
     const savedSession = await redisService.get(redisKeyMake(sessionKey));
 
     // DB, Redis then
-    expect(savedSession).toBe(sessionId);
+    expect(savedSession).toBe(adminEmail);
   });
 
   it('[401] 관리자 로그인 쿠키가 만료됐을 경우 로그아웃을 실패한다.', async () => {
@@ -57,7 +66,7 @@ describe(`POST ${URL} E2E Test`, () => {
     const savedSession = await redisService.get(redisKeyMake(sessionKey));
 
     // DB, Redis then
-    expect(savedSession).toBe(sessionId);
+    expect(savedSession).toBe(adminEmail);
   });
 
   it('[200] 관리자 로그인이 되어 있을 경우 로그아웃을 성공한다.', async () => {

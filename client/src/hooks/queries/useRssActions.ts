@@ -6,9 +6,9 @@ import { useMutation, UseMutationResult } from "@tanstack/react-query";
 
 export const useAdminAccept = (
   onSuccess: (data: AdminResponse) => void,
-  onError: (error: AxiosError<unknown, any>) => void
-): UseMutationResult<AdminResponse, AxiosError<unknown, any>, AdminRequest, unknown> => {
-  return useMutation<AdminResponse, AxiosError<unknown, any>, AdminRequest>({
+  onError: (error: AxiosError<unknown>) => void
+): UseMutationResult<AdminResponse, AxiosError<unknown>, AdminRequest, unknown> => {
+  return useMutation<AdminResponse, AxiosError<unknown>, AdminRequest>({
     mutationFn: async (data) => {
       const response = await admin.acceptRss(data);
       return response;
@@ -20,9 +20,9 @@ export const useAdminAccept = (
 
 export const useAdminReject = (
   onSuccess: (data: AdminResponse) => void,
-  onError: (error: AxiosError<unknown, any>) => void
-): UseMutationResult<AdminResponse, AxiosError<unknown, any>, AdminRequest, unknown> => {
-  return useMutation<AdminResponse, AxiosError<unknown, any>, AdminRequest>({
+  onError: (error: AxiosError<unknown>) => void
+): UseMutationResult<AdminResponse, AxiosError<unknown>, AdminRequest, unknown> => {
+  return useMutation<AdminResponse, AxiosError<unknown>, AdminRequest>({
     mutationFn: async (data) => {
       const response = await admin.rejectRss(data);
       return response;

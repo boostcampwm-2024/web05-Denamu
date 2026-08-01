@@ -1,7 +1,7 @@
 import {
   Controller,
-  Delete,
   Get,
+  Head,
   HttpCode,
   HttpStatus,
   Param,
@@ -10,7 +10,7 @@ import {
   Req,
   Res,
   Sse,
-  UseInterceptors,
+  UseGuards,
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ApiTags } from '@nestjs/swagger';
@@ -18,12 +18,15 @@ import { ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { Observable } from 'rxjs';
 
+import { CurrentUser } from '@common/decorator/current-user.decorator';
+import { JwtGuard, OptionalJwtGuard, Payload } from '@common/guard/jwt.guard';
 import { ApiResponse } from '@common/response/common.response';
 
 import { ApiDeleteCheckFeed } from '@feed/api-docs/deleteCheckFeed.api-docs';
 import { ApiGetFeedDetail } from '@feed/api-docs/getFeedDetail.api-docs';
 import { ApiReadFeedPagination } from '@feed/api-docs/readFeedPagination.api-docs';
 import { ApiReadRecentFeedList } from '@feed/api-docs/readRecentFeedList.api-docs';
+import { ApiReadSubscriptionFeed } from '@feed/api-docs/readSubscriptionFeed.api-docs';
 import { ApiReadTrendFeedList } from '@feed/api-docs/readTrendFeedList.api-docs';
 import { ApiSearchFeedList } from '@feed/api-docs/searchFeedList.api-docs';
 import { ApiUpdateFeedViewCount } from '@feed/api-docs/updateFeedViewCount.api-docs';
@@ -31,11 +34,11 @@ import { ManageFeedRequestDto } from '@feed/dto/request/manageFeed.dto';
 import { ReadFeedPaginationRequestDto } from '@feed/dto/request/readFeedPagination.dto';
 import { SearchFeedRequestDto } from '@feed/dto/request/searchFeed.dto';
 import { FeedTrendResponseDto } from '@feed/dto/response/readFeedPagination.dto';
-import { ReadFeedInterceptor } from '@feed/interceptor/read-feed.interceptor';
+import { FeedViewedEvent } from '@feed/event/feed-viewed.event';
 import { FeedService } from '@feed/service/feed.service';
 
 @ApiTags('Feed')
-@Controller('feed')
+@Controller('feeds')
 export class FeedController {
   constructor(
     private readonly feedService: FeedService,
@@ -45,12 +48,17 @@ export class FeedController {
   @ApiReadFeedPagination()
   @Get()
   @HttpCode(HttpStatus.OK)
+  @UseGuards(OptionalJwtGuard)
   async readFeedPagination(
     @Query() feedPaginationQueryDto: ReadFeedPaginationRequestDto,
+    @CurrentUser() user: Payload | null,
   ) {
     return ApiResponse.responseWithData(
       '피드 조회 완료',
-      await this.feedService.readFeedPagination(feedPaginationQueryDto),
+      await this.feedService.readFeedPagination(
+        feedPaginationQueryDto,
+        user?.id,
+      ),
     );
   }
 
@@ -88,10 +96,14 @@ export class FeedController {
   @ApiSearchFeedList()
   @Get('search')
   @HttpCode(HttpStatus.OK)
-  async searchFeedList(@Query() searchFeedQueryDto: SearchFeedRequestDto) {
+  @UseGuards(OptionalJwtGuard)
+  async searchFeedList(
+    @Query() searchFeedQueryDto: SearchFeedRequestDto,
+    @CurrentUser() user: Payload | null,
+  ) {
     return ApiResponse.responseWithData(
       '검색 결과 조회 완료',
-      await this.feedService.searchFeedList(searchFeedQueryDto),
+      await this.feedService.searchFeedList(searchFeedQueryDto, user?.id),
     );
   }
 
@@ -123,24 +135,50 @@ export class FeedController {
     );
   }
 
-  @ApiGetFeedDetail()
-  @Get('/detail/:feedId')
+  @ApiReadSubscriptionFeed()
+  @Get('/subscriptions')
   @HttpCode(HttpStatus.OK)
-  @UseInterceptors(ReadFeedInterceptor)
-  async getFeedDetail(@Param() feedDetailRequestDto: ManageFeedRequestDto) {
+  @UseGuards(JwtGuard)
+  async readSubscriptionFeeds(
+    @CurrentUser() user: Payload,
+    @Query() feedPaginationQueryDto: ReadFeedPaginationRequestDto,
+  ) {
     return ApiResponse.responseWithData(
-      '요청이 성공적으로 처리되었습니다.',
-      await this.feedService.getFeedDetail(feedDetailRequestDto),
+      '구독 피드 조회 완료',
+      await this.feedService.readSubscriptionFeeds(
+        user.id,
+        feedPaginationQueryDto,
+      ),
     );
   }
 
   @ApiDeleteCheckFeed()
-  @Delete('/:feedId')
+  @Head(':feedId')
   @HttpCode(HttpStatus.OK)
   async deleteCheckFeed(@Param() feedDeleteCheckDto: ManageFeedRequestDto) {
     await this.feedService.deleteCheckFeed(feedDeleteCheckDto);
     return ApiResponse.responseWithNoContent(
       '게시글 삭제 확인 요청을 성공했습니다.',
+    );
+  }
+
+  @ApiGetFeedDetail()
+  @Get(':feedId')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(OptionalJwtGuard)
+  async getFeedDetail(
+    @Param() feedDetailRequestDto: ManageFeedRequestDto,
+    @CurrentUser() user: Payload | null,
+  ) {
+    if (user) {
+      this.eventService.emit(
+        'feed.viewed',
+        new FeedViewedEvent(feedDetailRequestDto.feedId, user.id),
+      );
+    }
+    return ApiResponse.responseWithData(
+      '요청이 성공적으로 처리되었습니다.',
+      await this.feedService.getFeedDetail(feedDetailRequestDto, user?.id),
     );
   }
 }

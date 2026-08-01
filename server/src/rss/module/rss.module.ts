@@ -1,7 +1,17 @@
 import { Module } from '@nestjs/common';
 
-import { EmailModule } from '@common/email/email.module';
+import { JwtAuthModule } from '@common/auth/jwt.module';
+import { NotifierModule } from '@common/notification/notifier.module';
 
+import { AdminModule } from '@admin/module/admin.module';
+
+import { RssBlockRepository } from '@block/repository/rssBlock.repository';
+
+import { FeedRepository } from '@feed/repository/feed.repository';
+
+import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
+
+import { AdminRssController } from '@rss/controller/adminRss.controller';
 import { RssController } from '@rss/controller/rss.controller';
 import {
   RssAcceptRepository,
@@ -11,13 +21,16 @@ import {
 import { RssService } from '@rss/service/rss.service';
 
 @Module({
-  imports: [EmailModule],
-  controllers: [RssController],
+  imports: [AdminModule, NotifierModule, JwtAuthModule],
+  controllers: [RssController, AdminRssController],
   providers: [
     RssService,
     RssRepository,
     RssAcceptRepository,
     RssRejectRepository,
+    FeedRepository,
+    SubscriptionRepository,
+    RssBlockRepository,
   ],
   exports: [RssAcceptRepository],
 })

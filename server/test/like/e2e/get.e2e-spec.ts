@@ -6,6 +6,7 @@ import TestAgent from 'supertest/lib/agent';
 import { Feed } from '@feed/entity/feed.entity';
 import { FeedRepository } from '@feed/repository/feed.repository';
 
+import { GetLikeResponseDto } from '@like/dto/response/getLike.dto';
 import { LikeRepository } from '@like/repository/like.repository';
 
 import { RssAccept } from '@rss/entity/rss.entity';
@@ -20,9 +21,9 @@ import { UserFixture } from '@test/config/common/fixture/user.fixture';
 import { createAccessToken } from '@test/config/e2e/env/jest.setup';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = '/api/like';
+const BASE_URL = '/api/feeds';
 
-describe(`GET ${URL}/{feedId} E2E Test`, () => {
+describe(`GET ${BASE_URL}/:feedId/likes E2E Test`, () => {
   let agent: TestAgent;
   let feed: Feed;
   let user: User;
@@ -53,7 +54,9 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
 
   it('[404] 게시글이 존재하지 않을 경우 좋아요 정보 제공을 실패한다.', async () => {
     // Http when
-    const response = await agent.get(`${URL}/${Number.MAX_SAFE_INTEGER}`);
+    const response = await agent.get(
+      `${BASE_URL}/${Number.MAX_SAFE_INTEGER}/likes`,
+    );
 
     // Http then
     const { data } = response.body;
@@ -61,9 +64,24 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
     expect(data).toBeUndefined();
   });
 
+  it('[404] 비공개 게시글의 좋아요 정보는 조회할 수 없다.', async () => {
+    // given
+    const privateFeed = await feedRepository.save(
+      FeedFixture.createFeedFixture(rssAccept, { isPublic: false }),
+    );
+
+    // Http when
+    const response = await agent.get(`${BASE_URL}/${privateFeed.id}/likes`);
+
+    // Http then
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    const { data }: { data: GetLikeResponseDto } = response.body;
+    expect(data).toBeUndefined();
+  });
+
   it('[200] 로그인하지 않은 상황에서 게시글에 대한 좋아요 조회 요청을 받을 경우 좋아요 정보 제공을 성공한다.', async () => {
     // Http when
-    const response = await agent.get(`${URL}/${feed.id}`);
+    const response = await agent.get(`${BASE_URL}/${feed.id}/likes`);
 
     // Http then
     const { data } = response.body;
@@ -79,7 +97,7 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
 
     // Http when
     const response = await agent
-      .get(`${URL}/${feed.id}`)
+      .get(`${BASE_URL}/${feed.id}/likes`)
       .set('Authorization', `Bearer ${accessToken}`);
 
     // Http then

@@ -3,6 +3,8 @@ import { HttpStatus } from '@nestjs/common';
 import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 
+import { RssBlockRepository } from '@block/repository/rssBlock.repository';
+
 import { ReadFeedPaginationRequestDto } from '@feed/dto/request/readFeedPagination.dto';
 import { Feed } from '@feed/entity/feed.entity';
 import { FeedRepository } from '@feed/repository/feed.repository';
@@ -10,11 +12,14 @@ import { FeedRepository } from '@feed/repository/feed.repository';
 import { RssAccept } from '@rss/entity/rss.entity';
 import { RssAcceptRepository } from '@rss/repository/rss.repository';
 
+import { UserRepository } from '@user/repository/user.repository';
+
 import { FeedFixture } from '@test/config/common/fixture/feed.fixture';
 import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture';
-import { testApp } from '@test/config/e2e/env/jest.setup';
+import { UserFixture } from '@test/config/common/fixture/user.fixture';
+import { createAccessToken, testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = '/api/feed';
+const URL = '/api/feeds';
 
 describe(`GET ${URL}?limit={}&lastId={} E2E Test`, () => {
   let agent: TestAgent;
@@ -60,8 +65,11 @@ describe(`GET ${URL}?limit={}&lastId={} E2E Test`, () => {
 
         return {
           id: feed.id,
-          author: feed.blog.name,
-          blogPlatform: feed.blog.blogPlatform,
+          blog: {
+            name: feed.blog.name,
+            platform: feed.blog.blogPlatform,
+            image: null,
+          },
           title: feed.title,
           path: feed.path,
           createdAt: feed.createdAt.toISOString(),
@@ -98,8 +106,11 @@ describe(`GET ${URL}?limit={}&lastId={} E2E Test`, () => {
 
         return {
           id: feed.id,
-          author: feed.blog.name,
-          blogPlatform: feed.blog.blogPlatform,
+          blog: {
+            name: feed.blog.name,
+            platform: feed.blog.blogPlatform,
+            image: null,
+          },
           title: feed.title,
           path: feed.path,
           createdAt: feed.createdAt.toISOString(),
@@ -139,8 +150,11 @@ describe(`GET ${URL}?limit={}&lastId={} E2E Test`, () => {
             ? null
             : {
                 id: feed.id,
-                author: feed.blog.name,
-                blogPlatform: feed.blog.blogPlatform,
+                blog: {
+                  name: feed.blog.name,
+                  platform: feed.blog.blogPlatform,
+                  image: null,
+                },
                 title: feed.title,
                 path: feed.path,
                 createdAt: feed.createdAt.toISOString(),
@@ -175,6 +189,76 @@ describe(`GET ${URL}?limit={}&lastId={} E2E Test`, () => {
       result: [],
       lastId: 0,
       hasMore: false,
+    });
+  });
+
+  describe('차단 RSS 필터', () => {
+    let userRepository: UserRepository;
+    let rssBlockRepository: RssBlockRepository;
+
+    beforeAll(() => {
+      userRepository = testApp.get(UserRepository);
+      rssBlockRepository = testApp.get(RssBlockRepository);
+    });
+
+    it('[200] 로그인한 사용자가 차단한 RSS의 게시글은 피드 목록에서 제외된다.', async () => {
+      // given - 차단된 RSS의 게시글 1개 추가
+      const blockedRss = await rssAcceptRepository.save(
+        RssAcceptFixture.createRssAcceptFixture(),
+      );
+      const blockedFeed = await feedRepository.save(
+        FeedFixture.createFeedFixture(blockedRss),
+      );
+      const viewer = await userRepository.save(
+        await UserFixture.createUserCryptFixture(),
+      );
+      await rssBlockRepository.save({
+        blocker: { id: viewer.id },
+        blockedRss: { id: blockedRss.id },
+      });
+      const accessToken = createAccessToken(viewer);
+
+      // Http when
+      const response = await agent
+        .get(URL)
+        .query({ limit: 20 })
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Http then
+      const { data } = response.body as {
+        data: { result: { id: number }[] };
+      };
+      expect(response.status).toBe(HttpStatus.OK);
+      const ids = data.result.map((feed) => feed.id);
+      expect(ids).not.toContain(blockedFeed.id);
+      expect(ids).toHaveLength(feedList.length);
+    });
+
+    it('[200] 비로그인 사용자에게는 차단 여부와 관계없이 모든 게시글이 제공된다.', async () => {
+      // given
+      const blockedRss = await rssAcceptRepository.save(
+        RssAcceptFixture.createRssAcceptFixture(),
+      );
+      const blockedFeed = await feedRepository.save(
+        FeedFixture.createFeedFixture(blockedRss),
+      );
+      const viewer = await userRepository.save(
+        await UserFixture.createUserCryptFixture(),
+      );
+      await rssBlockRepository.save({
+        blocker: { id: viewer.id },
+        blockedRss: { id: blockedRss.id },
+      });
+
+      // Http when
+      const response = await agent.get(URL).query({ limit: 20 });
+
+      // Http then
+      const { data } = response.body as {
+        data: { result: { id: number }[] };
+      };
+      expect(response.status).toBe(HttpStatus.OK);
+      expect(data.result.map((feed) => feed.id)).toContain(blockedFeed.id);
     });
   });
 });

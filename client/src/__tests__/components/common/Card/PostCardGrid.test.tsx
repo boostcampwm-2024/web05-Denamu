@@ -4,11 +4,12 @@ import { PostCardGrid } from "@/components/common/Card/PostCardGrid.tsx";
 
 import { createMockPosts } from "@/__tests__/mocks/data/posts.ts";
 import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 
 describe("PostCardGrid", () => {
   it("정상적인 개수의 PostCard가 렌더링 되어야 한다", () => {
     const mockPosts = createMockPosts(3);
-    render(<PostCardGrid posts={mockPosts} />);
+    render(<MemoryRouter><PostCardGrid posts={mockPosts} /></MemoryRouter>);
 
     const postTitles = screen.getAllByText("테스트 포스트");
     expect(postTitles).toHaveLength(3);
@@ -19,7 +20,7 @@ describe("PostCardGrid", () => {
 
   it("responsive grid class가 정상적으로 적용되어야 한다", () => {
     const mockPosts = createMockPosts(1);
-    const { container } = render(<PostCardGrid posts={mockPosts} />);
+    const { container } = render(<MemoryRouter><PostCardGrid posts={mockPosts} /></MemoryRouter>);
 
     const gridContainer = container.firstChild;
     expect(gridContainer).toHaveClass(
@@ -33,7 +34,7 @@ describe("PostCardGrid", () => {
   });
 
   it("빈 배열이 전달되면 empty grid가 렌더링 되어야 한다", () => {
-    render(<PostCardGrid posts={[]} />);
+    render(<MemoryRouter><PostCardGrid posts={[]} /></MemoryRouter>);
 
     const cards = screen.queryAllByRole("button");
     expect(cards).toHaveLength(0);

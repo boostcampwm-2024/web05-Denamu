@@ -4,27 +4,31 @@ const DEFAULT_VALUES = {
   email: "",
   userName: "",
   bloggerName: "",
-  rssUrl: "",
-  urlUsername: "",
+  blogUrl: "",
+  addressInput: "",
+  blogPlatform: "",
 };
 
 const DEFAULT_SUCCESS_VALUES = {
   email: "test@example.com",
   userName: "테스트",
   bloggerName: "블로그",
-  rssUrl: "https://test.com/rss",
-  urlUsername: "test",
+  blogUrl: "https://test.tistory.com",
+  addressInput: "test",
+  blogPlatform: "tistory",
 };
 
 const DEFAULT_FORM_STATE = {
-  platform: "tistory",
+  selectedPlatformValue: "",
+  addressTemplate: null,
   values: DEFAULT_VALUES,
   handlers: {
     handleEmail: vi.fn(),
     handleUserName: vi.fn(),
     handleBloggerName: vi.fn(),
-    handlePlatformChange: vi.fn(),
-    handleUsernameChange: vi.fn(),
+    handlePlatformSelection: vi.fn(),
+    handleAddressInputChange: vi.fn(),
+    handleRssDirectInput: vi.fn(),
   },
   formState: {
     isValid: true,
@@ -32,8 +36,18 @@ const DEFAULT_FORM_STATE = {
   },
 };
 
+export const PLATFORM_OPTIONS = [
+  { value: "tistory", label: "Tistory" },
+  { value: "velog", label: "Velog" },
+  { value: "medium", label: "Medium" },
+  { value: "github", label: "GitHub" },
+  { value: "naver", label: "Naver" },
+  { value: "etc", label: "기타" },
+];
+
 export const mockUseRssRegistrationForm = {
   useRssRegistrationForm: vi.fn().mockReturnValue(DEFAULT_FORM_STATE),
+  PLATFORM_OPTIONS,
 };
 
 export const createFormMock = ({ values = DEFAULT_VALUES, isValid = true, reset = vi.fn() } = {}) => {
@@ -61,8 +75,8 @@ export const createFailureFormMock = () => {
       email: "invalid-email", // 잘못된 이메일 형식
       userName: "asdf", // 빈 값
       bloggerName: "asdf", // 빈 값
-      rssUrl: "invalid-url", // 잘못된 URL 형식
-      urlUsername: "asdf",
+      blogUrl: "invalid-url", // 잘못된 URL 형식
+      addressInput: "asdf",
     },
     isValid: false,
   });

@@ -3,7 +3,6 @@ import clsx from "clsx";
 
 import { Avatar } from "@/components/ui/avatar";
 
-import { formatDate } from "@/utils/date";
 import { formatTime } from "@/utils/time";
 
 import { useChatStore } from "@/store/useChatStore";
@@ -21,9 +20,6 @@ export default function ChatItem({ chatItem, isSameUser }: ChatItemProps) {
   const resendMessage = useChatStore((state) => state.resendMessage);
   const deleteMessage = useChatStore((state) => state.deleteMessage);
 
-  if (chatItem.userName === "system")
-    return <div className="flex justify-center">{formatDate(chatItem.timestamp)}</div>;
-
   return (
     <div className="flex flex-col ">
       {!isSameUser ? (
@@ -34,7 +30,9 @@ export default function ChatItem({ chatItem, isSameUser }: ChatItemProps) {
             </Avatar>
           )}
           <span className="flex gap-2 items-center">
-            <span className="text-sm">{isUser ? "나" : chatItem.userName}</span>
+            <span className="text-sm">
+              {isUser ? (chatItem.userName ? `나 (${chatItem.userName})` : "나") : chatItem.userName}
+            </span>
             <span className="text-xs">{chatItem.isFailed ? "전송실패" : formatTime(chatItem.timestamp)}</span>
           </span>
         </span>

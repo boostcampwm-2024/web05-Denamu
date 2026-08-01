@@ -1,5 +1,6 @@
 import { HttpStatus } from '@nestjs/common';
 
+import * as uuid from 'uuid';
 import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 
@@ -20,7 +21,6 @@ import { LikeRepository } from '@like/repository/like.repository';
 import { RssAccept } from '@rss/entity/rss.entity';
 import { RssAcceptRepository } from '@rss/repository/rss.repository';
 
-import { ConfirmDeleteAccountDto } from '@user/dto/request/confirmDeleteAccount.dto';
 import { User } from '@user/entity/user.entity';
 import { UserRepository } from '@user/repository/user.repository';
 
@@ -29,15 +29,11 @@ import { FeedFixture } from '@test/config/common/fixture/feed.fixture';
 import { FileFixture } from '@test/config/common/fixture/file.fixture';
 import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture';
 import { UserFixture } from '@test/config/common/fixture/user.fixture';
-import {
-  createAccessToken,
-  createRefreshToken,
-} from '@test/config/e2e/env/jest.setup';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = '/api/user/delete-account/confirm';
+const makeURL = (token: string) => `/api/users/deletion-requests/${token}`;
 
-describe(`POST ${URL} E2E Test`, () => {
+describe(`DELETE /api/users/deletion-requests/:token E2E Test`, () => {
   let agent: TestAgent;
   let redisService: RedisService;
   let userRepository: UserRepository;
@@ -50,7 +46,7 @@ describe(`POST ${URL} E2E Test`, () => {
   let user: User;
   let rssAccept: RssAccept;
   let feed: Feed;
-  const userDeleteCode = 'user-delete-confirm';
+  const userDeleteCode = uuid.v4();
   const redisKeyMake = (data: string) =>
     `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${data}`;
 
@@ -78,18 +74,19 @@ describe(`POST ${URL} E2E Test`, () => {
       commentRepository.insert(CommentFixture.createCommentFixture(feed, user)),
       likeRepository.insert({ feed, user }),
       fileRepository.insert(FileFixture.createFileFixture(user)),
-      redisService.set(redisKeyMake(userDeleteCode), user.id),
+      redisService.set(
+        redisKeyMake(userDeleteCode),
+        JSON.stringify({ userId: user.id, deleteRss: true }),
+      ),
     ]);
   });
 
   it('[404] 회원 탈퇴 인증 코드가 만료되었거나 잘 못된 경우 회원 탈퇴를 실패한다.', async () => {
     // given
-    const requestDto = new ConfirmDeleteAccountDto({
-      token: `Wrong${userDeleteCode}`,
-    });
+    const nonExistentCode = uuid.v4();
 
     // Http when
-    const response = await agent.post(URL).send(requestDto);
+    const response = await agent.delete(makeURL(nonExistentCode));
 
     // Http then
     const { data } = response.body;
@@ -99,31 +96,27 @@ describe(`POST ${URL} E2E Test`, () => {
     // DB, Redis when
     const [savedUser, savedDeleteCode] = await Promise.all([
       userRepository.findOneBy({ id: user.id }),
-      redisService.get(redisKeyMake(userDeleteCode)),
+      redisService.get(redisKeyMake(nonExistentCode)),
     ]);
 
     // DB, Redis then
     expect(savedUser).not.toBeNull();
-    expect(savedDeleteCode).toBe(user.id.toString());
+    expect(savedDeleteCode).toBeNull();
   });
 
   it('[200] 회원 탈퇴 인증 코드가 있을 경우 회원 탈퇴를 성공한다.', async () => {
     // given
-    const requestDto = new ConfirmDeleteAccountDto({ token: userDeleteCode });
     const user = await userRepository.save(
       await UserFixture.createUserCryptFixture(),
     );
 
-    const accessToken = createAccessToken(user);
-    const refreshToken = createRefreshToken(user);
-
     await redisService.set(
       redisKeyMake(userDeleteCode),
-      `${user.id}:${accessToken}:${refreshToken}`,
+      JSON.stringify({ userId: user.id, deleteRss: true }),
     );
 
     // Http when
-    const response = await agent.post(URL).send(requestDto);
+    const response = await agent.delete(makeURL(userDeleteCode));
 
     // Http then
     const { data } = response.body;
@@ -138,24 +131,16 @@ describe(`POST ${URL} E2E Test`, () => {
       savedComments,
       savedActivities,
       savedFiles,
+      invalidatedUser,
     ] = await Promise.all([
       userRepository.findOneBy({ id: user.id }),
       redisService.get(redisKeyMake(userDeleteCode)),
       likeRepository.findBy({ user: { id: user.id } }),
-      commentRepository.findBy({
-        user: { id: user.id },
-      }),
-      activityRepository.findBy({
-        user: { id: user.id },
-      }),
+      commentRepository.findBy({ user: { id: user.id } }),
+      activityRepository.findBy({ user: { id: user.id } }),
       fileRepository.findBy({ user: { id: user.id } }),
+      redisService.get(`${REDIS_KEYS.USER_INVALIDATED_PREFIX}:${user.id}`),
     ]);
-    const blacklistedAccessToken = await redisService.get(
-      `${REDIS_KEYS.USER_BLACKLIST_JWT_PREFIX}:${accessToken}`,
-    );
-    const blacklistedRefreshToken = await redisService.get(
-      `${REDIS_KEYS.USER_BLACKLIST_JWT_PREFIX}:${refreshToken}`,
-    );
 
     // DB, Redis then
     expect(savedUser).toBeNull();
@@ -164,7 +149,77 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(savedComments.length).toBe(0);
     expect(savedActivities.length).toBe(0);
     expect(savedFiles.length).toBe(0);
-    expect(blacklistedAccessToken).toBe('1');
-    expect(blacklistedRefreshToken).toBe('1');
+    expect(Number(invalidatedUser)).toBeGreaterThan(0);
+  });
+
+  it('[200] deleteRss=true면 소유 RSS와 연관 데이터까지 함께 삭제한다.', async () => {
+    // given - 소유자가 연결된 RSS
+    const owner = await userRepository.save(
+      await UserFixture.createUserCryptFixture(),
+    );
+    const ownedRssAccept = await rssAcceptRepository.save(
+      RssAcceptFixture.createRssAcceptFixture({ userId: owner.id }),
+    );
+    const ownedFeed = await feedRepository.save(
+      FeedFixture.createFeedFixture(ownedRssAccept),
+    );
+    await redisService.set(
+      redisKeyMake(userDeleteCode),
+      JSON.stringify({ userId: owner.id, deleteRss: true }),
+    );
+
+    // Http when
+    const response = await agent.delete(makeURL(userDeleteCode));
+
+    // Http then
+    expect(response.status).toBe(HttpStatus.OK);
+
+    // DB when
+    const [savedUser, savedRssAccept, savedFeed] = await Promise.all([
+      userRepository.findOneBy({ id: owner.id }),
+      rssAcceptRepository.findOneBy({ id: ownedRssAccept.id }),
+      feedRepository.findOneBy({ id: ownedFeed.id }),
+    ]);
+
+    // DB then
+    expect(savedUser).toBeNull();
+    expect(savedRssAccept).toBeNull();
+    expect(savedFeed).toBeNull();
+  });
+
+  it('[200] deleteRss=false면 소유 RSS는 유지하고 연결만 해제(user_id NULL)한다.', async () => {
+    // given - 소유자가 연결된 RSS
+    const owner = await userRepository.save(
+      await UserFixture.createUserCryptFixture(),
+    );
+    const ownedRssAccept = await rssAcceptRepository.save(
+      RssAcceptFixture.createRssAcceptFixture({ userId: owner.id }),
+    );
+    const ownedFeed = await feedRepository.save(
+      FeedFixture.createFeedFixture(ownedRssAccept),
+    );
+    await redisService.set(
+      redisKeyMake(userDeleteCode),
+      JSON.stringify({ userId: owner.id, deleteRss: false }),
+    );
+
+    // Http when
+    const response = await agent.delete(makeURL(userDeleteCode));
+
+    // Http then
+    expect(response.status).toBe(HttpStatus.OK);
+
+    // DB when
+    const [savedUser, savedRssAccept, savedFeed] = await Promise.all([
+      userRepository.findOneBy({ id: owner.id }),
+      rssAcceptRepository.findOneBy({ id: ownedRssAccept.id }),
+      feedRepository.findOneBy({ id: ownedFeed.id }),
+    ]);
+
+    // DB then
+    expect(savedUser).toBeNull();
+    expect(savedRssAccept).not.toBeNull();
+    expect(savedRssAccept.userId).toBeNull();
+    expect(savedFeed).not.toBeNull();
   });
 });

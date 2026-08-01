@@ -17,20 +17,21 @@ export const mockFormInput = {
 };
 
 export const mockPlatformSelector = {
-  PlatformSelector: vi.fn().mockImplementation(({ platform, onPlatformChange }) => (
+  BlogPlatformSelector: vi.fn().mockImplementation(({ platforms, value, onChange }) => (
     <div>
-      <select value={platform} onChange={(e) => onPlatformChange(e.target.value)} aria-label="플랫폼 선택">
-        <option value="tistory">Tistory</option>
-        <option value="medium">Medium</option>
+      <select value={value} onChange={(e) => onChange(e.target.value)} aria-label="플랫폼 선택">
+        {platforms?.map((p: { value: string; label: string }) => (
+          <option key={p.value} value={p.value}>{p.label}</option>
+        ))}
       </select>
     </div>
   )),
 };
 
 export const mockRssUrlInput = {
-  RssUrlInput: vi.fn().mockImplementation(({ value, onChange }) => (
+  RssUrlInput: vi.fn().mockImplementation(({ value, onChange, label = "RSS URL" }) => (
     <div>
-      <input type="text" value={value} onChange={(e) => onChange(e.target.value)} aria-label="RSS URL" />
+      <input type="text" value={value} onChange={(e) => onChange(e.target.value)} aria-label={label} />
     </div>
   )),
 };

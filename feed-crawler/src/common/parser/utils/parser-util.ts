@@ -1,23 +1,26 @@
 import { injectable } from 'tsyringe';
 
+import axios from 'axios';
 import { unescape } from 'html-escaper';
 import { parse } from 'node-html-parser';
 
-import logger from '@common/logger';
+import logger from '@common/logger/logger';
 
 @injectable()
 export class ParserUtil {
   async getThumbnailUrl(feedUrl: string) {
-    const response = await fetch(feedUrl, {
+    const response = await axios.get<string>(feedUrl, {
       headers: {
         Accept: 'text/html',
       },
+      responseType: 'text',
+      validateStatus: () => true,
     });
-    if (!response.ok) {
-      throw new Error(`${feedUrl}에 GET 요청 실패`);
+    if (response.status < 200 || response.status >= 300) {
+      throw new Error(`썸네일 GET 요청 실패 (HTTP ${response.status})`);
     }
 
-    const htmlData = await response.text();
+    const htmlData = response.data;
     const htmlRootElement = parse(htmlData);
     const metaImage = htmlRootElement.querySelector(
       'meta[property="og:image"]',

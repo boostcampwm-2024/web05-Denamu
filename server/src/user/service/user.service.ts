@@ -10,21 +10,40 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import * as uuid from 'uuid';
 import { Response } from 'express';
+import { DataSource, IsNull } from 'typeorm';
 
 import { cookieConfig } from '@common/cookie/cookie.config';
 import { EmailProducer } from '@common/email/email.producer';
 import { Payload } from '@common/guard/jwt.guard';
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
+import { createHashedPassword } from '@common/util/createHashedPassword';
+
+import { FeedRepository } from '@feed/repository/feed.repository';
 
 import { FileService } from '@file/service/file.service';
 
-import { REFRESH_TOKEN_TTL, SALT_ROUNDS } from '@user/constant/user.constants';
+import { RssAccept } from '@rss/entity/rss.entity';
+import { RssAcceptRepository } from '@rss/repository/rss.repository';
+
+import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
+
+import { REFRESH_TOKEN_TTL } from '@user/constant/user.constants';
+import { ChangePasswordRequestDto } from '@user/dto/request/changePassword.dto';
 import { LoginUserRequestDto } from '@user/dto/request/loginUser.dto';
 import { RegisterUserRequestDto } from '@user/dto/request/registerUser.dto';
+import { SearchUserRequestDto } from '@user/dto/request/searchUser.dto';
 import { UpdateUserRequestDto } from '@user/dto/request/updateUser.dto';
 import { CheckEmailDuplicationResponseDto } from '@user/dto/response/checkEmailDuplication.dto';
+import { CheckUserNameDuplicationResponseDto } from '@user/dto/response/checkUserNameDuplication.dto';
 import { CreateAccessTokenResponseDto } from '@user/dto/response/createAccessToken.dto';
+import { GetUserProfileResponseDto } from '@user/dto/response/getUserProfile.dto';
+import { GetUserRssResponseDto } from '@user/dto/response/getUserRss.dto';
+import {
+  SearchUserResponseDto,
+  SearchUserResult,
+} from '@user/dto/response/searchUser.dto';
+import { User } from '@user/entity/user.entity';
 import { UserRepository } from '@user/repository/user.repository';
 
 @Injectable()
@@ -36,6 +55,10 @@ export class UserService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly fileService: FileService,
+    private readonly rssAcceptRepository: RssAcceptRepository,
+    private readonly feedRepository: FeedRepository,
+    private readonly subscriptionRepository: SubscriptionRepository,
+    private readonly dataSource: DataSource,
   ) {}
 
   async getUser(userId: number) {
@@ -46,6 +69,41 @@ export class UserService {
       throw new NotFoundException('존재하지 않는 유저입니다.');
     }
     return user;
+  }
+
+  async getUserProfile(userId: number, requester: Payload | null = null) {
+    const user = await this.getUser(userId);
+    const isOwner = requester?.id === userId;
+    const isBlocked =
+      requester && !isOwner
+        ? await this.userRepository.isUserBlocked(requester.id, userId)
+        : false;
+    return GetUserProfileResponseDto.toResponseDto(user, isBlocked, isOwner);
+  }
+
+  async searchUserList(
+    searchUserQueryDto: SearchUserRequestDto,
+    requester: Payload | null = null,
+  ) {
+    const { find, page, limit } = searchUserQueryDto;
+    const offset = (page - 1) * limit;
+
+    const [searchResult, totalCount] = await this.userRepository.searchUserList(
+      find,
+      limit,
+      offset,
+      requester?.id,
+    );
+
+    const users = SearchUserResult.toResultDtoArray(searchResult);
+    const totalPages = Math.ceil(totalCount / limit);
+
+    return SearchUserResponseDto.toResponseDto(
+      totalCount,
+      users,
+      totalPages,
+      limit,
+    );
   }
 
   async checkEmailDuplication(email: string) {
@@ -65,8 +123,16 @@ export class UserService {
       throw new ConflictException('이미 존재하는 이메일입니다.');
     }
 
+    const existingName = await this.userRepository.findOne({
+      where: { userName: registerDto.userName },
+    });
+
+    if (existingName) {
+      throw new ConflictException('이미 존재하는 닉네임입니다.');
+    }
+
     const newUser = registerDto.toEntity();
-    newUser.password = await this.createHashedPassword(registerDto.password);
+    newUser.password = await createHashedPassword(registerDto.password);
 
     const userRegisterCode = uuid.v4();
     await this.redisService.set(
@@ -90,7 +156,46 @@ export class UserService {
       throw new NotFoundException('인증에 실패했습니다.');
     }
     await this.redisService.del(`${REDIS_KEYS.USER_AUTH_KEY}:${uuid}`);
-    await this.userRepository.save(JSON.parse(user));
+
+    try {
+      const newUser = await this.userRepository.save(JSON.parse(user) as User);
+      await this.rssAcceptRepository.update(
+        { email: newUser.email, userId: IsNull() },
+        { userId: newUser.id },
+      );
+    } catch (error) {
+      if ((error as { code?: string })?.code === 'ER_DUP_ENTRY') {
+        throw new ConflictException('이미 존재하는 이메일 또는 닉네임입니다.');
+      }
+      throw error;
+    }
+  }
+
+  async getUserRss(userId: number, viewerId?: number) {
+    const rssList = await this.rssAcceptRepository.find({
+      where: { userId },
+      order: { id: 'DESC' },
+    });
+    const blogIds = rssList.map((rss) => rss.id);
+
+    const feedCountMap =
+      await this.feedRepository.countPublicFeedsByBlogIds(blogIds);
+    const subscriberCountMap =
+      await this.subscriptionRepository.countByBlogIds(blogIds);
+
+    const subscribedBlogIds = new Set<number>();
+    if (viewerId) {
+      const viewerBlogIds =
+        await this.subscriptionRepository.getSubscribedBlogIds(viewerId);
+      viewerBlogIds.forEach((id) => subscribedBlogIds.add(id));
+    }
+
+    return GetUserRssResponseDto.toResponseDtoArray(
+      rssList,
+      feedCountMap,
+      subscriberCountMap,
+      subscribedBlogIds,
+    );
   }
 
   async loginUser(loginDto: LoginUserRequestDto, response: Response) {
@@ -98,7 +203,11 @@ export class UserService {
       where: { email: loginDto.email },
     });
 
-    if (!user || !(await bcrypt.compare(loginDto.password, user.password))) {
+    if (
+      !user ||
+      !user.password ||
+      !(await bcrypt.compare(loginDto.password, user.password))
+    ) {
       throw new UnauthorizedException('아이디 혹은 비밀번호가 잘못되었습니다.');
     }
 
@@ -110,19 +219,23 @@ export class UserService {
     };
 
     const accessToken = this.createToken(payload, 'access');
-    const refreshToken = this.createToken(payload, 'refresh');
-
-    response.cookie('refresh_token', refreshToken, {
-      ...cookieConfig[process.env.NODE_ENV],
-      maxAge: REFRESH_TOKEN_TTL,
-    });
+    this.issueRefreshToken(payload, response);
 
     return CreateAccessTokenResponseDto.toResponseDto(accessToken);
   }
 
-  refreshAccessToken(userInformation: Payload) {
+  refreshAccessToken(userInformation: Payload, response: Response) {
+    this.issueRefreshToken(userInformation, response);
     const accessToken = this.createToken(userInformation, 'access');
     return CreateAccessTokenResponseDto.toResponseDto(accessToken);
+  }
+
+  issueRefreshToken(userInformation: Payload, response: Response) {
+    const refreshToken = this.createToken(userInformation, 'refresh');
+    response.cookie('refresh_token', refreshToken, {
+      ...cookieConfig[process.env.NODE_ENV],
+      maxAge: REFRESH_TOKEN_TTL,
+    });
   }
 
   createToken(userInformation: Payload, mode: 'refresh' | 'access') {
@@ -141,10 +254,6 @@ export class UserService {
         mode === 'access' ? 'JWT_ACCESS_SECRET' : 'JWT_REFRESH_SECRET',
       ),
     });
-  }
-
-  private async createHashedPassword(password: string) {
-    return await bcrypt.hash(password, SALT_ROUNDS);
   }
 
   async updateUserActivity(userId: number) {
@@ -184,7 +293,16 @@ export class UserService {
   ): Promise<void> {
     const user = await this.getUser(userId);
 
-    if (updateData.userName !== undefined) {
+    if (
+      updateData.userName !== undefined &&
+      updateData.userName !== user.userName
+    ) {
+      const existingName = await this.userRepository.findOne({
+        where: { userName: updateData.userName },
+      });
+      if (existingName) {
+        throw new ConflictException('이미 존재하는 닉네임입니다.');
+      }
       user.userName = updateData.userName;
     }
     if (
@@ -197,8 +315,58 @@ export class UserService {
     if (updateData.introduction !== undefined) {
       user.introduction = updateData.introduction;
     }
+    if (updateData.marketingEmailAgreed !== undefined) {
+      user.marketingEmailAgreed = updateData.marketingEmailAgreed;
+      user.marketingEmailAgreedAt = new Date();
+    }
+    if (updateData.inactivityEmailAgreed !== undefined) {
+      user.inactivityEmailAgreed = updateData.inactivityEmailAgreed;
+      user.inactivityEmailAgreedAt = new Date();
+    }
+    if (updateData.noticeEmailAgreed !== undefined) {
+      user.noticeEmailAgreed = updateData.noticeEmailAgreed;
+      user.noticeEmailAgreedAt = new Date();
+    }
 
+    try {
+      await this.userRepository.save(user);
+    } catch (error) {
+      if ((error as { code?: string })?.code === 'ER_DUP_ENTRY') {
+        throw new ConflictException('이미 존재하는 닉네임입니다.');
+      }
+      throw error;
+    }
+  }
+
+  async checkUserNameDuplication(userName: string) {
+    const user = await this.userRepository.findOne({
+      where: { userName },
+    });
+
+    return CheckUserNameDuplicationResponseDto.toResponseDto(!!user);
+  }
+
+  async changePassword(
+    userId: number,
+    changePasswordDto: ChangePasswordRequestDto,
+  ): Promise<void> {
+    const user = await this.getUser(userId);
+
+    if (user.password) {
+      const matched =
+        !!changePasswordDto.currentPassword &&
+        (await bcrypt.compare(
+          changePasswordDto.currentPassword,
+          user.password,
+        ));
+      if (!matched) {
+        throw new UnauthorizedException('현재 비밀번호가 일치하지 않습니다.');
+      }
+    }
+
+    user.password = await createHashedPassword(changePasswordDto.newPassword);
     await this.userRepository.save(user);
+    await this.invalidateUserTokens(user.id);
   }
 
   async forgotPassword(email: string) {
@@ -234,71 +402,81 @@ export class UserService {
     const user = await this.userRepository.findOne({
       where: { id: userId },
     });
-    user.password = await this.createHashedPassword(password);
+
+    if (!user) {
+      await this.redisService.del(
+        `${REDIS_KEYS.USER_RESET_PASSWORD_KEY}:${uuid}`,
+      );
+      throw new NotFoundException('존재하지 않는 유저입니다.');
+    }
+
+    user.password = await createHashedPassword(password);
 
     await this.redisService.del(
       `${REDIS_KEYS.USER_RESET_PASSWORD_KEY}:${uuid}`,
     );
     await this.userRepository.save(user);
+    await this.invalidateUserTokens(user.id);
   }
 
-  async requestDeleteAccount(
-    userId: number,
-    accessToken?: string,
-    refreshToken?: string,
-  ): Promise<void> {
+  private async invalidateUserTokens(userId: number) {
+    const ttlInSeconds = this.parseTimeToSeconds(
+      this.configService.get('JWT_REFRESH_TOKEN_EXPIRE'),
+    );
+    await this.redisService.setex(
+      `${REDIS_KEYS.USER_INVALIDATED_PREFIX}:${userId}`,
+      ttlInSeconds,
+      Math.floor(Date.now() / 1000).toString(),
+    );
+  }
+
+  async requestDeleteAccount(userId: number, deleteRss = true): Promise<void> {
     const user = await this.getUser(userId);
 
     const userDeleteCode = uuid.v4();
 
-    if (accessToken || refreshToken) {
-      await this.redisService.set(
-        `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${userDeleteCode}`,
-        `${user.id.toString()}:${accessToken || ''}:${refreshToken || ''}`,
-        'EX',
-        600,
-      );
-    }
+    await this.redisService.set(
+      `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${userDeleteCode}`,
+      JSON.stringify({ userId: user.id, deleteRss }),
+      'EX',
+      600,
+    );
     await this.emailProducer.produceAccountDeletion(user, userDeleteCode);
   }
 
   async confirmDeleteAccount(token: string): Promise<void> {
-    const redisKey = `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${token}`;
+    const deleteRequestKey = `${REDIS_KEYS.USER_DELETE_ACCOUNT_KEY}:${token}`;
 
-    const data = await this.redisService.get(redisKey);
+    const data = await this.redisService.get(deleteRequestKey);
 
     if (!data) {
       throw new NotFoundException('유효하지 않거나 만료된 토큰입니다.');
     }
 
-    const [userIdString, accessToken, refreshToken] = data.split(':');
-    const userId = parseInt(userIdString, 10);
-
+    const { userId, deleteRss } = JSON.parse(data) as {
+      userId: number;
+      deleteRss: boolean;
+    };
     const user = await this.getUser(userId);
 
     if (user.profileImage) {
       await this.fileService.deleteByPath(user.profileImage);
     }
 
-    if (accessToken) {
-      const accessTokenExpire = this.configService.get(
-        'JWT_ACCESS_TOKEN_EXPIRE',
-      );
-      const ttlInSeconds = this.parseTimeToSeconds(accessTokenExpire);
-      await this.addToJwtBlacklist(accessToken, ttlInSeconds);
-    }
+    // RSS 삭제(true)와 user 삭제는 반드시 순차 실행해야 한다.
+    // user를 먼저 지우면 FK ON DELETE SET NULL이 rss_accept.user_id를 NULL로 만들어
+    // 이후 user_id 기준 RSS 삭제가 0건이 된다. deleteRss=false면 SET NULL로 연결만 끊긴다.
+    await this.dataSource.transaction(async (manager) => {
+      if (deleteRss) {
+        await manager.delete(RssAccept, { userId });
+      }
+      await manager.remove(user);
+    });
 
-    if (refreshToken) {
-      const refreshTokenExpire = this.configService.get(
-        'JWT_REFRESH_TOKEN_EXPIRE',
-      );
-      const ttlInSeconds = this.parseTimeToSeconds(refreshTokenExpire);
-      await this.addToJwtBlacklist(refreshToken, ttlInSeconds);
-    }
-
-    await this.userRepository.remove(user);
-
-    await this.redisService.del(redisKey);
+    await Promise.all([
+      this.invalidateUserTokens(userId),
+      this.redisService.del(deleteRequestKey),
+    ]);
   }
 
   private parseTimeToSeconds(time: string): number {
@@ -324,13 +502,5 @@ export class UserService {
     };
 
     return value * multipliers[unit];
-  }
-
-  private async addToJwtBlacklist(
-    token: string,
-    ttl: number,
-  ): Promise<'OK' | null> {
-    const blacklistKey = `${REDIS_KEYS.USER_BLACKLIST_JWT_PREFIX}:${token}`;
-    return this.redisService.setex(blacklistKey, ttl, '1');
   }
 }

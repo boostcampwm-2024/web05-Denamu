@@ -5,10 +5,12 @@ import { Rss } from '@rss/entity/rss.entity';
 export class RssFixture {
   static createGeneralRss(): Partial<Rss> {
     return {
-      name: 'test',
+      name: `test${uuid.v4()}`,
       userName: 'test',
       email: `test${uuid.v4()}@test.com`,
       rssUrl: `https://test${uuid.v4()}.com/rss`,
+      blogUrl: `https://test${uuid.v4()}.com`,
+      blogPlatform: 'etc',
     };
   }
 

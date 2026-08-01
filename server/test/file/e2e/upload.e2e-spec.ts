@@ -16,7 +16,7 @@ import { UserFixture } from '@test/config/common/fixture/user.fixture';
 import { createAccessToken } from '@test/config/e2e/env/jest.setup';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = '/api/file';
+const URL = '/api/files';
 
 describe(`POST ${URL} E2E Test`, () => {
   let agent: TestAgent;
@@ -87,7 +87,7 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(savedFile).toBeNull();
   });
 
-  it('[400] 파일 타입이 일치하지 않을 경우 파일 업로드를 실패한다. ', async () => {
+  it('[400] 파일 타입이 일치하지 않을 경우 파일 업로드를 실패한다.', async () => {
     // given
     const requestDto = new UploadFileQueryRequestDto({
       uploadType: FileUploadType.PROFILE_IMAGE,
@@ -111,7 +111,7 @@ describe(`POST ${URL} E2E Test`, () => {
     // DB, Redis then
     expect(savedFile).toBeNull();
   });
-  it('[400] 파일 크기가 일치하지 않을 경우 파일 업로드를 실패한다. ', async () => {
+  it('[400] 파일 크기가 일치하지 않을 경우 파일 업로드를 실패한다.', async () => {
     // given
     const requestDto = new UploadFileQueryRequestDto({
       uploadType: FileUploadType.PROFILE_IMAGE,

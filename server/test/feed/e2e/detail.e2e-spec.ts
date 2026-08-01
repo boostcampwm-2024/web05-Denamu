@@ -3,8 +3,12 @@ import { HttpStatus } from '@nestjs/common';
 import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 
-import { ActivityRepository } from '@src/activity/repository/activity.repository';
-import { RedisService } from '@src/common/redis/redis.service';
+import { Activity } from '@activity/entity/activity.entity';
+import { ActivityRepository } from '@activity/repository/activity.repository';
+
+import { RedisService } from '@common/redis/redis.service';
+
+import { RssBlockRepository } from '@block/repository/rssBlock.repository';
 
 import { ManageFeedRequestDto } from '@feed/dto/request/manageFeed.dto';
 import { Feed } from '@feed/entity/feed.entity';
@@ -25,7 +29,7 @@ import { TagFixture } from '@test/config/common/fixture/tag.fixture';
 import { UserFixture } from '@test/config/common/fixture/user.fixture';
 import { createAccessToken, testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = '/api/feed/detail';
+const URL = '/api/feeds';
 
 describe(`GET ${URL}/{feedId} E2E Test`, () => {
   let agent: TestAgent;
@@ -85,8 +89,6 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual({
-      author: feedList[0].blog.name,
-      blogPlatform: 'etc',
       comments: feedList[0].commentCount,
       createdAt: feedList[0].createdAt.toISOString(),
       id: feedList[0].id,
@@ -97,6 +99,17 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
       thumbnail: feedList[0].thumbnail,
       title: feedList[0].title,
       viewCount: feedList[0].viewCount,
+      isOwner: false,
+      blog: {
+        id: feedList[0].blog.id,
+        name: feedList[0].blog.name,
+        ownerName: feedList[0].blog.userName,
+        isOwnerCertified: false,
+        platform: 'etc',
+        image: feedList[0].blog.blogImage ?? null,
+      },
+      isSubscribed: false,
+      isBlocked: false,
     });
   });
 
@@ -113,8 +126,6 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual({
-      author: feedList[1].blog.name,
-      blogPlatform: feedList[1].blog.blogPlatform,
       comments: feedList[1].commentCount,
       createdAt: feedList[1].createdAt.toISOString(),
       id: feedList[1].id,
@@ -125,65 +136,132 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
       thumbnail: feedList[1].thumbnail,
       title: feedList[1].title,
       viewCount: feedList[1].viewCount,
+      isOwner: false,
+      blog: {
+        id: feedList[1].blog.id,
+        name: feedList[1].blog.name,
+        ownerName: feedList[1].blog.userName,
+        isOwnerCertified: false,
+        platform: feedList[1].blog.blogPlatform,
+        image: feedList[1].blog.blogImage ?? null,
+      },
+      isSubscribed: false,
+      isBlocked: false,
     });
   });
 
-  it('[404] 원본 게시글이 삭제된 경우 피드를 삭제하고 NotFoundException을 반환한다.', async () => {
-    // given
-    const feedDetailRequestDto = new ManageFeedRequestDto({
-      feedId: feedList[0].id,
+  describe('isOwner 필드', () => {
+    let user: User;
+    let userRepository: UserRepository;
+
+    beforeAll(() => {
+      userRepository = testApp.get(UserRepository);
     });
 
-    // Mock fetch to return 404
-    global.fetch = jest.fn().mockResolvedValue({
-      status: HttpStatus.NOT_FOUND,
+    beforeEach(async () => {
+      user = await userRepository.save(
+        await UserFixture.createUserCryptFixture(),
+      );
     });
 
-    // when
-    const response = await agent.delete(
-      `/api/feed/${feedDetailRequestDto.feedId}`,
-    );
+    it('[200] RSS 소유자가 조회할 경우 isOwner=true로 응답한다.', async () => {
+      // given
+      rssAccept.userId = user.id;
+      await rssAcceptRepository.save(rssAccept);
+      const accessToken = createAccessToken(user);
 
-    // then
-    const { data } = response.body;
-    expect(response.status).toBe(HttpStatus.NOT_FOUND);
-    expect(data).toBeUndefined();
+      // Http when
+      const response = await agent
+        .get(`${URL}/${feedList[0].id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
 
-    // DB when - 피드가 삭제되었는지 확인
-    const deletedFeed = await feedRepository.findOneBy({
-      id: feedDetailRequestDto.feedId,
+      // Http then
+      const { data } = response.body as { data: { isOwner: boolean } };
+      expect(response.status).toBe(HttpStatus.OK);
+      expect(data.isOwner).toBe(true);
     });
 
-    // DB then
-    expect(deletedFeed).toBeNull();
+    it('[200] RSS 소유자가 아닌 사용자가 조회할 경우 isOwner=false로 응답한다.', async () => {
+      // given
+      const accessToken = createAccessToken(user);
+
+      // Http when
+      const response = await agent
+        .get(`${URL}/${feedList[0].id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Http then
+      const { data } = response.body as { data: { isOwner: boolean } };
+      expect(response.status).toBe(HttpStatus.OK);
+      expect(data.isOwner).toBe(false);
+    });
   });
 
-  it('[200] 원본 게시글이 존재하는 경우 정상 응답을 반환한다.', async () => {
-    // given
-    const feedDetailRequestDto = new ManageFeedRequestDto({
-      feedId: feedList[0].id,
+  describe('isBlocked 필드', () => {
+    let user: User;
+    let userRepository: UserRepository;
+    let rssBlockRepository: RssBlockRepository;
+
+    beforeAll(() => {
+      userRepository = testApp.get(UserRepository);
+      rssBlockRepository = testApp.get(RssBlockRepository);
     });
 
-    // Mock fetch to return 200
-    global.fetch = jest.fn().mockResolvedValue({
-      status: HttpStatus.OK,
+    beforeEach(async () => {
+      user = await userRepository.save(
+        await UserFixture.createUserCryptFixture(),
+      );
     });
 
-    // when
-    const response = await agent.delete(
-      `/api/feed/${feedDetailRequestDto.feedId}`,
-    );
+    it('[200] 차단한 RSS의 게시글을 조회할 경우 isBlocked=true로 응답한다.', async () => {
+      // given
+      await rssBlockRepository.save({
+        blocker: { id: user.id },
+        blockedRss: { id: rssAccept.id },
+      });
+      const accessToken = createAccessToken(user);
 
-    // then
-    expect(response.status).toBe(HttpStatus.OK);
+      // Http when
+      const response = await agent
+        .get(`${URL}/${feedList[0].id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
 
-    // DB when - 피드가 여전히 존재하는지 확인
-    const existingFeed = await feedRepository.findOneBy({
-      id: feedDetailRequestDto.feedId,
+      // Http then
+      const { data } = response.body as { data: { isBlocked: boolean } };
+      expect(response.status).toBe(HttpStatus.OK);
+      expect(data.isBlocked).toBe(true);
     });
 
-    // DB then
-    expect(existingFeed).not.toBeNull();
+    it('[200] 차단하지 않은 RSS의 게시글을 조회할 경우 isBlocked=false로 응답한다.', async () => {
+      // given
+      const accessToken = createAccessToken(user);
+
+      // Http when
+      const response = await agent
+        .get(`${URL}/${feedList[0].id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Http then
+      const { data } = response.body as { data: { isBlocked: boolean } };
+      expect(response.status).toBe(HttpStatus.OK);
+      expect(data.isBlocked).toBe(false);
+    });
+
+    it('[200] 비로그인으로 조회할 경우 isBlocked=false로 응답한다.', async () => {
+      // given
+      await rssBlockRepository.save({
+        blocker: { id: user.id },
+        blockedRss: { id: rssAccept.id },
+      });
+
+      // Http when
+      const response = await agent.get(`${URL}/${feedList[0].id}`);
+
+      // Http then
+      const { data } = response.body as { data: { isBlocked: boolean } };
+      expect(response.status).toBe(HttpStatus.OK);
+      expect(data.isBlocked).toBe(false);
+    });
   });
 
   describe('Read Feed Interceptor', () => {
@@ -241,14 +319,17 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
       // Http then
       expect(response.status).toBe(HttpStatus.OK);
 
-      // Interceptor 내부의 tap()은 fire-and-forget이므로 DB 업데이트 완료까지 폴링 대기 (최대 2초)
       const deadline = Date.now() + 2000;
       let updatedUser: User;
+      let activities: Activity[];
       do {
         await new Promise<void>((resolve) => setTimeout(resolve, 50));
-        updatedUser = await userRepository.findOneBy({ id: user.id });
+        [updatedUser, activities] = await Promise.all([
+          userRepository.findOneBy({ id: user.id }),
+          activityRepository.find({ where: { user: { id: user.id } } }),
+        ]);
       } while (
-        updatedUser.totalViews === user.totalViews &&
+        (updatedUser.totalViews === user.totalViews || activities.length === 0) &&
         Date.now() < deadline
       );
 
@@ -257,9 +338,6 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
         `feed:${feedDetailRequestDto.feedId}:userId`,
         user.id,
       );
-      const activities = await activityRepository.find({
-        where: { user: { id: user.id } },
-      });
       expect(updatedUser.totalViews).toBe(user.totalViews + 1);
       expect(hasUserFlag).toBe(1);
       expect(activities.length).toBeGreaterThan(0);

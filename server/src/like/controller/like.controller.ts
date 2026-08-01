@@ -1,5 +1,4 @@
 import {
-  Body,
   Controller,
   Delete,
   Get,
@@ -8,13 +7,11 @@ import {
   Param,
   Post,
   UseGuards,
-  UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
-import { InjectUserInterceptor } from '@common/auth/jwt.interceptor';
 import { CurrentUser } from '@common/decorator';
-import { JwtGuard, Payload } from '@common/guard/jwt.guard';
+import { JwtGuard, OptionalJwtGuard, Payload } from '@common/guard/jwt.guard';
 import { ApiResponse } from '@common/response/common.response';
 
 import { ApiCreateLike } from '@like/api-docs/createLike.api-docs';
@@ -24,14 +21,14 @@ import { ManageLikeRequestDto } from '@like/dto/request/manageLike.dto';
 import { LikeService } from '@like/service/like.service';
 
 @ApiTags('Like')
-@Controller('like')
+@Controller('feeds/:feedId/likes')
 export class LikeController {
   constructor(private readonly likeService: LikeService) {}
 
   @ApiGetLike()
-  @Get('/:feedId')
+  @Get()
   @HttpCode(HttpStatus.OK)
-  @UseInterceptors(InjectUserInterceptor)
+  @UseGuards(OptionalJwtGuard)
   async getLike(
     @CurrentUser() user: Payload | null,
     @Param() feedLikeDto: ManageLikeRequestDto,
@@ -48,14 +45,14 @@ export class LikeController {
   @HttpCode(HttpStatus.CREATED)
   async createLike(
     @CurrentUser() user: Payload,
-    @Body() feedLikeDto: ManageLikeRequestDto,
+    @Param() feedLikeDto: ManageLikeRequestDto,
   ) {
     await this.likeService.create(user, feedLikeDto);
     return ApiResponse.responseWithNoContent('좋아요 등록을 성공했습니다.');
   }
 
   @ApiDeleteLike()
-  @Delete('/:feedId')
+  @Delete()
   @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.OK)
   async deleteLike(

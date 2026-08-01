@@ -3,29 +3,49 @@ name: denamu-production
 include:
   - docker-compose.prod.infra.yml
 
+x-app-base: &app-base
+  image: ${GHCR_URL}/server:latest
+  env_file:
+    - /var/prod_config/server/.env.prod
+  networks:
+    - Denamu
+  depends_on:
+    mysql-db:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+    rabbitmq:
+      condition: service_healthy
+  volumes:
+    - /var/prod_data/server/logs:/app/logs
+    - /var/prod_data/objects:/app/objects
+  environment:
+    NODE_ENV: 'PROD'
+    TZ: 'Asia/Seoul'
+  stop_grace_period: 30s
+  healthcheck:
+    test:
+      [
+        'CMD-SHELL',
+        "node -e \"require('http').get('http://127.0.0.1:'+(process.env.SERVER_PORT||3000)+'/api/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))\"",
+      ]
+    interval: 10s
+    timeout: 5s
+    retries: 5
+    start_period: 20s
+
 services:
-  # WAS 서비스
-  app:
-    image: ${GHCR_URL}/server:latest
+  # WAS 서비스 (Blue)
+  app-blue:
+    <<: *app-base
     ports:
-      - '$SERVER_PORT:$SERVER_PORT'
-    env_file:
-      - /var/prod_config/server/.env.prod
-    networks:
-      - Denamu
-    depends_on:
-      mysql-db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-    volumes:
-      - /var/prod_data/server/logs:/app/logs
-      - /var/prod_data/objects:/app/objects
-    environment:
-      NODE_ENV: 'PROD'
-      TZ: 'Asia/Seoul'
+      - '$BLUE_PORT:$SERVER_PORT'
+
+  # WAS 서비스 (Green)
+  app-green:
+    <<: *app-base
+    ports:
+      - '$GREEN_PORT:$SERVER_PORT'
 
   # Feed Crawler 서비스
   feed-crawler:

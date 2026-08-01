@@ -1,32 +1,50 @@
 import { inject, injectable } from 'tsyringe';
 
+import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
+import { Notifier } from '@common/notification/notifier.interface';
 import { BaseFeedParser, RawFeed } from '@common/parser/base-feed-parser';
 import { ParserUtil } from '@common/parser/utils/parser-util';
 
-import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
-
 @injectable()
 export class Rss20Parser extends BaseFeedParser {
-  constructor(@inject(DEPENDENCY_SYMBOLS.ParserUtil) parserUtil: ParserUtil) {
-    super(parserUtil);
+  constructor(
+    @inject(ParserUtil) parserUtil: ParserUtil,
+    @inject(DEPENDENCY_SYMBOLS.Notifier) notifier: Notifier,
+  ) {
+    super(parserUtil, notifier);
   }
   canParse(xmlData: string): boolean {
     try {
-      const parsed = this.xmlParser.parse(xmlData);
+      const parsed = this.xmlParser.parse(xmlData) as { rss?: { channel?: { item?: unknown } } };
       return !!parsed.rss?.channel?.item;
     } catch {
       return false;
     }
   }
 
-  protected extractRawFeeds(xmlData: string): RawFeed[] {
-    const parsed = this.xmlParser.parse(xmlData);
+  extractChannelImage(xmlData: string): string | null {
+    try {
+      const parsed = this.xmlParser.parse(xmlData) as {
+        rss?: { channel?: { image?: { url?: unknown } } };
+      };
+      const url = parsed.rss?.channel?.image?.url;
+      return typeof url === 'string' && url.trim() ? url.trim() : null;
+    } catch {
+      return null;
+    }
+  }
 
-    if (!Array.isArray(parsed.rss.channel.item)) {
-      parsed.rss.channel.item = [parsed.rss.channel.item];
+  protected extractRawFeeds(xmlData: string): RawFeed[] {
+    type RssItem = { title: any; link: any; pubDate: any; description: any };
+    type Rss20Parsed = { rss: { channel: { item: RssItem | RssItem[] } } };
+    const parsed = this.xmlParser.parse(xmlData) as unknown as Rss20Parsed;
+
+    let items: RssItem[] = parsed.rss.channel.item as RssItem[];
+    if (!Array.isArray(items)) {
+      items = [parsed.rss.channel.item as RssItem];
     }
 
-    return parsed.rss.channel.item.map((feed: any) => ({
+    return items.map((feed) => ({
       title: this.parserUtil.customUnescape(feed.title),
       link: feed.link,
       pubDate: feed.pubDate,

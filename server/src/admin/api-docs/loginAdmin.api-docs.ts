@@ -1,40 +1,19 @@
 import { applyDecorators } from '@nestjs/common';
+import { ApiBody, ApiOperation } from '@nestjs/swagger';
+
 import {
-  ApiBadRequestResponse,
-  ApiOkResponse,
-  ApiOperation,
-  ApiUnauthorizedResponse,
-} from '@nestjs/swagger';
+  ApiBadRequestDoc,
+  ApiMessageResponse,
+  ApiUnauthorizedDoc,
+} from '@common/swagger/swagger.helper';
+import { LoginAdminRequestDto } from '@admin/dto/request/loginAdmin.dto';
 
 export function ApiLoginAdmin() {
   return applyDecorators(
-    ApiOperation({
-      summary: `관리자 로그인 API`,
-    }),
-    ApiOkResponse({
-      description: 'Ok',
-      schema: {
-        properties: {
-          message: {
-            type: 'string',
-          },
-        },
-      },
-      example: {
-        message: '로그인이 성공적으로 처리되었습니다.',
-      },
-    }),
-    ApiBadRequestResponse({
-      description: 'Bad Request',
-      example: {
-        message: '오류 메세지',
-      },
-    }),
-    ApiUnauthorizedResponse({
-      description: 'Unauthorized',
-      example: {
-        message: '아이디 혹은 비밀번호가 잘못되었습니다.',
-      },
-    }),
+    ApiOperation({ summary: '관리자 로그인 API' }),
+    ApiBody({ type: LoginAdminRequestDto }),
+    ApiMessageResponse('로그인 성공'),
+    ApiBadRequestDoc('요청 데이터 검증에 실패했습니다.'),
+    ApiUnauthorizedDoc('이메일 혹은 비밀번호가 잘못되었습니다.'),
   );
 }

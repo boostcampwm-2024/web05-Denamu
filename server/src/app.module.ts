@@ -1,14 +1,18 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import * as fs from 'fs';
 import * as path from 'path';
+import { BoardModule } from '@board/module/board.module';
 
 import { ActivityModule } from '@activity/module/activity.module';
 
 import { AdminModule } from '@admin/module/admin.module';
+
+import { BlockModule } from '@block/module/block.module';
 
 import { ChatModule } from '@chat/module/chat.module';
 
@@ -17,7 +21,6 @@ import { CommentModule } from '@comment/module/comment.module';
 import { loadDBSetting } from '@common/database/load.config';
 import { EmailModule } from '@common/email/email.module';
 import { WinstonLoggerModule } from '@common/logger/logger.module';
-import { MetricsInterceptor } from '@common/metrics/metrics.interceptor';
 import { MetricsModule } from '@common/metrics/metrics.module';
 import { RabbitMQModule } from '@common/rabbitmq/rabbitmq.module';
 import { RedisModule } from '@common/redis/redis.module';
@@ -26,11 +29,21 @@ import { FeedModule } from '@feed/module/feed.module';
 
 import { FileModule } from '@file/module/file.module';
 
+import { HealthController } from '@health/health.controller';
+
 import { LikeModule } from '@like/module/like.module';
+
+import { NotificationModule } from '@notification/module/notification.module';
+
+import { QnaModule } from '@qna/module/qna.module';
+
+import { ReportModule } from '@report/module/report.module';
 
 import { RssModule } from '@rss/module/rss.module';
 
 import { StatisticModule } from '@statistic/module/statistic.module';
+
+import { SubscribeModule } from '@subscribe/module/subscribe.module';
 
 import { TagModule } from '@tag/module/tag.module';
 
@@ -70,6 +83,8 @@ const exists = !!chosen && fs.existsSync(chosen);
       useFactory: (configService: ConfigService) =>
         loadDBSetting(configService),
     }),
+    ScheduleModule.forRoot(),
+    EventEmitterModule.forRoot(),
     WinstonLoggerModule,
     RedisModule,
     EmailModule,
@@ -84,15 +99,15 @@ const exists = !!chosen && fs.existsSync(chosen);
     StatisticModule,
     CommentModule,
     LikeModule,
+    BoardModule,
+    QnaModule,
+    NotificationModule,
+    BlockModule,
+    ReportModule,
+    SubscribeModule,
     FileModule,
     RabbitMQModule,
   ],
-  controllers: [],
-  providers: [
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: MetricsInterceptor,
-    },
-  ],
+  controllers: [HealthController],
 })
 export class AppModule {}

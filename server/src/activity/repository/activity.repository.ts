@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import { DataSource, Repository } from 'typeorm';
+import { Between, DataSource, Repository } from 'typeorm';
 
 import { Activity } from '@activity/entity/activity.entity';
 
@@ -21,19 +21,27 @@ export class ActivityRepository extends Repository<Activity> {
     );
   }
 
+  async findActivityYearsByUserId(userId: number): Promise<number[]> {
+    const rows = await this.createQueryBuilder('activity')
+      .select('DISTINCT YEAR(activity.activity_date)', 'year')
+      .where('activity.user_id = :userId', { userId })
+      .orderBy('year', 'DESC')
+      .getRawMany<{ year: number }>();
+
+    return rows.map((row) => Number(row.year));
+  }
+
   async findActivitiesByUserIdAndYear(
     userId: number,
     year: number,
   ): Promise<Activity[]> {
-    const startDate = `${year}-01-01`;
-    const endDate = `${year}-12-31`;
+    const startDate = new Date(year, 0, 1);
+    const endDate = new Date(year, 11, 31);
 
-    return this.createQueryBuilder('activity')
-      .leftJoinAndSelect('activity.user', 'user')
-      .where('user.id = :userId', { userId })
-      .andWhere('activity.activityDate >= :startDate', { startDate })
-      .andWhere('activity.activityDate <= :endDate', { endDate })
-      .orderBy('activity.activityDate', 'ASC')
-      .getMany();
+    return this.find({
+      where: { user: { id: userId }, activityDate: Between(startDate, endDate) },
+      relations: { user: true },
+      order: { activityDate: 'ASC' },
+    });
   }
 }

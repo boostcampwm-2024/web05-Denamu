@@ -1,9 +1,110 @@
 import { BLOG } from "@/constants/endpoints";
 
 import { axiosInstance } from "@/api/instance";
-import { RegisterRss, RegisterResponse } from "@/types/rss";
+import { ApiData, ApiMessage } from "@/types/api";
+import {
+  CreateRssCertificationResult,
+  CursorPage,
+  OwnedRssFeedItem,
+  ProfileActivity,
+  RssCertificationPreview,
+  RssFeedItem,
+  RssInfo,
+} from "@/types/profile";
+import { RecentRss, RegisterRss, RegisterResponse } from "@/types/rss";
 
 export const registerRss = async (data: RegisterRss): Promise<RegisterResponse> => {
   const response = await axiosInstance.post<RegisterResponse>(BLOG.RSS.REGISTRER_RSS, data);
+  return response.data;
+};
+
+export const getRecentRss = async (): Promise<RecentRss[]> => {
+  const response = await axiosInstance.get<ApiData<RecentRss[]>>(BLOG.RSS.RECENT);
+  return response.data.data;
+};
+
+export const getRssInfo = async (rssId: number): Promise<RssInfo> => {
+  const response = await axiosInstance.get<ApiData<RssInfo>>(BLOG.RSS.INFO(rssId));
+  return response.data.data;
+};
+
+export const getRssPageFeeds = async (
+  rssId: number,
+  lastId?: number,
+  limit = 10,
+  date?: string
+): Promise<CursorPage<RssFeedItem>> => {
+  const response = await axiosInstance.get<ApiData<CursorPage<RssFeedItem>>>(BLOG.RSS.FEEDS(rssId), {
+    params: { lastId, limit, date },
+  });
+  return response.data.data;
+};
+
+export const getRssActivities = async (rssId: number, year: number): Promise<ProfileActivity> => {
+  const response = await axiosInstance.get<ApiData<ProfileActivity>>(BLOG.RSS.ACTIVITIES(rssId), {
+    params: { year },
+  });
+  return response.data.data;
+};
+
+export const getRssActivityYears = async (rssId: number): Promise<number[]> => {
+  const response = await axiosInstance.get<ApiData<number[]>>(BLOG.RSS.ACTIVITY_YEARS(rssId));
+  return response.data.data;
+};
+
+export const previewRssCertification = async (blogName: string): Promise<RssCertificationPreview> => {
+  const response = await axiosInstance.get<ApiData<RssCertificationPreview>>(BLOG.RSS.CERTIFICATION_PREVIEW, {
+    params: { blogName },
+  });
+  return response.data.data;
+};
+
+export const createRssCertification = async (blogName: string): Promise<CreateRssCertificationResult> => {
+  const response = await axiosInstance.post<ApiData<CreateRssCertificationResult>>(BLOG.RSS.CERTIFICATION, {
+    blogName,
+  });
+  return response.data.data;
+};
+
+export const verifyRssCertification = async (code: string): Promise<ApiMessage> => {
+  const response = await axiosInstance.post<ApiMessage>(BLOG.RSS.CERTIFICATION_VERIFY, { code });
+  return response.data;
+};
+
+export const updateRssCertification = async (
+  id: number,
+  data: { name: string; userName: string }
+): Promise<ApiMessage> => {
+  const response = await axiosInstance.patch<ApiMessage>(BLOG.RSS.CERTIFICATION_BY_ID(id), data);
+  return response.data;
+};
+
+export const deleteRssCertification = async (id: number): Promise<ApiMessage> => {
+  const response = await axiosInstance.delete<ApiMessage>(BLOG.RSS.CERTIFICATION_BY_ID(id));
+  return response.data;
+};
+
+export const getOwnedRssFeeds = async (
+  rssId: number,
+  lastId?: number,
+  limit = 10
+): Promise<CursorPage<OwnedRssFeedItem>> => {
+  const response = await axiosInstance.get<ApiData<CursorPage<OwnedRssFeedItem>>>(BLOG.RSS.OWNED_FEEDS(rssId), {
+    params: { lastId, limit },
+  });
+  return response.data.data;
+};
+
+export const setFeedVisibility = async (
+  rssId: number,
+  feedId: number,
+  isPublic: boolean
+): Promise<ApiMessage> => {
+  const response = await axiosInstance.patch<ApiMessage>(BLOG.RSS.FEED_VISIBILITY(rssId, feedId), { isPublic });
+  return response.data;
+};
+
+export const removeRss = async (code: string): Promise<ApiMessage> => {
+  const response = await axiosInstance.delete<ApiMessage>(BLOG.RSS.REMOVE_CONFIRM(code));
   return response.data;
 };

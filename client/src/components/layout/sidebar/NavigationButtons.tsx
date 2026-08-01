@@ -16,6 +16,10 @@ export const NavigationButtons = ({ onAction }: NavigationButtonsProps) => {
     navigate("/about");
   };
 
+  const handleBoardClick = () => {
+    navigate("/board");
+  };
+
   const handleTapChange = (newTap: "main" | "chart") => {
     setTap(newTap);
     onAction();
@@ -25,6 +29,10 @@ export const NavigationButtons = ({ onAction }: NavigationButtonsProps) => {
     <>
       <Button onClick={handleAboutClick} variant="outline">
         서비스 소개
+      </Button>
+
+      <Button onClick={handleBoardClick} variant="outline">
+        공지사항 · Q&A
       </Button>
 
       {tap === "main" ? (

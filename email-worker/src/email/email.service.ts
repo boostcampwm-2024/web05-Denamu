@@ -1,20 +1,34 @@
-import { injectable } from 'tsyringe';
+import { inject, injectable } from 'tsyringe';
 
 import * as nodemailer from 'nodemailer';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
 
-import logger from '@src/logger';
+import logger from '@common/logger/logger';
+import { EmailMetrics } from '@common/metrics/email-metrics';
+import {
+  AdminCertification,
+  QnaAnswered,
+  Rss,
+  RssCertification,
+  RssRegistration,
+  RssRegistrationRequest,
+  RssRemoval,
+  User,
+} from '@common/types';
 
 import {
+  createAdminDeleteAccountContent,
+  createAdminVerificationMailContent,
   createDeleteAccountContent,
   createPasswordResetMailContent,
+  createQnaAnsweredContent,
+  createRssCertificationContent,
   createRssRegistrationContent,
+  createRssRegistrationRequestContent,
   createRssRemoveCertificateContent,
   createVerificationMailContent,
   PRODUCT_DOMAIN,
 } from '@email/email.content';
-
-import { Rss, RssRegistration, RssRemoval, User } from '@app-types/types';
 
 @injectable()
 export class EmailService {
@@ -24,7 +38,7 @@ export class EmailService {
   >;
   private emailUser: string;
 
-  constructor() {
+  constructor(@inject(EmailMetrics) private readonly metrics: EmailMetrics) {
     this.emailUser = process.env.EMAIL_USER;
     const emailPassword = process.env.EMAIL_PASSWORD;
     if (!this.emailUser) {
@@ -48,17 +62,88 @@ export class EmailService {
   private async sendMail(
     mailOptions: nodemailer.SendMailOptions,
   ): Promise<void> {
+    this.metrics.total.inc();
     try {
       await this.transporter.sendMail(mailOptions);
+      this.metrics.success.inc();
       logger.info(`${mailOptions.to as string} 이메일 전송 성공`);
     } catch (error) {
       logger.error(
         `${mailOptions.to as string} 이메일 전송 실패 - 오류 메시지: ${
-          error.message
-        }, 스택 트레이스: ${error.stack}`,
+          error instanceof Error ? error.message : String(error)
+        }, 스택 트레이스: ${error instanceof Error ? error.stack : ''}`,
       );
       throw error;
     }
+  }
+
+  async sendAdminCertificationMail(admin: AdminCertification): Promise<void> {
+    const mailOptions = this.createAdminCertificationMail(admin);
+
+    await this.sendMail(mailOptions);
+  }
+
+  private createAdminCertificationMail(
+    admin: AdminCertification,
+  ): nodemailer.SendMailOptions {
+    const redirectUrl = `${PRODUCT_DOMAIN}/admins/email-verifications?token=${admin.uuid}`;
+
+    return {
+      from: `Denamu<${this.emailUser}>`,
+      to: admin.email,
+      subject: `[🎋 Denamu] 관리자 계정 인증 메일`,
+      html: createAdminVerificationMailContent(
+        admin.name,
+        redirectUrl,
+        this.emailUser,
+      ),
+    };
+  }
+
+  async sendAdminDeleteAccountMail(admin: AdminCertification): Promise<void> {
+    const mailOptions = this.createAdminDeleteAccountMail(admin);
+
+    await this.sendMail(mailOptions);
+  }
+
+  private createAdminDeleteAccountMail(
+    admin: AdminCertification,
+  ): nodemailer.SendMailOptions {
+    const redirectUrl = `${PRODUCT_DOMAIN}/admins/deletion-requests/confirm?token=${admin.uuid}`;
+
+    return {
+      from: `Denamu<${this.emailUser}>`,
+      to: admin.email,
+      subject: `[🎋 Denamu] 관리자 회원탈퇴 확인 메일`,
+      html: createAdminDeleteAccountContent(
+        admin.name,
+        redirectUrl,
+        this.emailUser,
+      ),
+    };
+  }
+
+  async sendAdminPasswordResetEmail(admin: AdminCertification): Promise<void> {
+    const mailOptions = this.createAdminPasswordResetMail(admin);
+
+    await this.sendMail(mailOptions);
+  }
+
+  private createAdminPasswordResetMail(
+    admin: AdminCertification,
+  ): nodemailer.SendMailOptions {
+    const redirectUrl = `${PRODUCT_DOMAIN}/admins/password-resets/confirm?token=${admin.uuid}`;
+
+    return {
+      from: `Denamu<${this.emailUser}>`,
+      to: admin.email,
+      subject: `[🎋 Denamu] 관리자 비밀번호 재설정`,
+      html: createPasswordResetMailContent(
+        admin.name,
+        redirectUrl,
+        this.emailUser,
+      ),
+    };
   }
 
   async sendRssMail(rssRegistrationReuslt: RssRegistration): Promise<void> {
@@ -71,6 +156,29 @@ export class EmailService {
     await this.sendMail(mailOptions);
   }
 
+  async sendRssRegistrationRequestMail(
+    rssRegistrationRequest: RssRegistrationRequest,
+  ): Promise<void> {
+    const mailOptions = this.createRssRegistrationRequestMail(
+      rssRegistrationRequest.rss,
+      rssRegistrationRequest.adminEmail,
+    );
+
+    await this.sendMail(mailOptions);
+  }
+
+  private createRssRegistrationRequestMail(
+    rss: Rss,
+    adminEmail: string,
+  ): nodemailer.SendMailOptions {
+    return {
+      from: `Denamu<${this.emailUser}>`,
+      to: adminEmail,
+      subject: `[🎋 Denamu] 새로운 RSS 등록 신청이 접수되었습니다.`,
+      html: createRssRegistrationRequestContent(rss, this.emailUser),
+    };
+  }
+
   async sendUserCertificationMail(user: User): Promise<void> {
     const mailOptions = this.createCertificationMail(user);
 
@@ -78,7 +186,7 @@ export class EmailService {
   }
 
   private createCertificationMail(user: User): nodemailer.SendMailOptions {
-    const redirectUrl = `${PRODUCT_DOMAIN}/user/certificate?token=${user.uuid}`;
+    const redirectUrl = `${PRODUCT_DOMAIN}/users/email-verifications?token=${user.uuid}`;
 
     return {
       from: `Denamu<${this.emailUser}>`,
@@ -127,15 +235,50 @@ export class EmailService {
     rssUrl: string,
     certificateCode: string,
   ) {
+    const removalLink = `${PRODUCT_DOMAIN}/rss/removals/confirm?code=${certificateCode}`;
+
     return {
       from: `Denamu<${this.emailUser}>`,
       to: `${userName}<${email}>`,
       subject: `[🎋 Denamu] RSS 삭제 신청 인증 메일입니다.`,
       html: createRssRemoveCertificateContent(
         userName,
-        certificateCode,
         this.emailUser,
         rssUrl,
+        removalLink,
+      ),
+    };
+  }
+
+  async sendRssCertificationMail(rssCertification: RssCertification) {
+    const mailOption = this.createRssCertificationMail(
+      rssCertification.userName,
+      rssCertification.email,
+      rssCertification.blogName,
+      rssCertification.certificateCode,
+      rssCertification.userEmail,
+    );
+    await this.sendMail(mailOption);
+  }
+
+  private createRssCertificationMail(
+    userName: string,
+    email: string,
+    blogName: string,
+    certificateCode: string,
+    userEmail: string,
+  ) {
+    const certificationLink = `${PRODUCT_DOMAIN}/rss/certifications/confirm?code=${certificateCode}`;
+    return {
+      from: `Denamu<${this.emailUser}>`,
+      to: `${userName}<${email}>`,
+      subject: `[🎋 Denamu] RSS 소유 인증 메일입니다.`,
+      html: createRssCertificationContent(
+        userName,
+        this.emailUser,
+        blogName,
+        userEmail,
+        certificationLink,
       ),
     };
   }
@@ -147,7 +290,7 @@ export class EmailService {
   }
 
   private createPasswordResetEmail(user: User): nodemailer.SendMailOptions {
-    const redirectUrl = `${PRODUCT_DOMAIN}/user/password?token=${user.uuid}`;
+    const redirectUrl = `${PRODUCT_DOMAIN}/users/password-resets/confirm?token=${user.uuid}`;
     return {
       from: `Denamu<${this.emailUser}>`,
       to: user.email,
@@ -166,8 +309,30 @@ export class EmailService {
     await this.sendMail(mailOptions);
   }
 
+  async sendQnaAnsweredMail(qnaAnswered: QnaAnswered): Promise<void> {
+    const mailOptions = this.createQnaAnsweredMail(qnaAnswered);
+
+    await this.sendMail(mailOptions);
+  }
+
+  private createQnaAnsweredMail(
+    qnaAnswered: QnaAnswered,
+  ): nodemailer.SendMailOptions {
+    return {
+      from: `Denamu<${this.emailUser}>`,
+      to: qnaAnswered.email,
+      subject: `[🎋 Denamu] 문의하신 Q&A에 답변이 등록되었습니다.`,
+      html: createQnaAnsweredContent(
+        qnaAnswered.recipientName,
+        qnaAnswered.qnaTitle,
+        qnaAnswered.qnaId,
+        this.emailUser,
+      ),
+    };
+  }
+
   private createDeleteAccountMail(user: User): nodemailer.SendMailOptions {
-    const redirectUrl = `${PRODUCT_DOMAIN}/user/delete-account?token=${user.uuid}`;
+    const redirectUrl = `${PRODUCT_DOMAIN}/users/deletion-requests/confirm?token=${user.uuid}`;
 
     return {
       from: `Denamu<${this.emailUser}>`,

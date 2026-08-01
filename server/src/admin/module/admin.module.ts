@@ -4,8 +4,10 @@ import { AdminController } from '@admin/controller/admin.controller';
 import { AdminRepository } from '@admin/repository/admin.repository';
 import { AdminService } from '@admin/service/admin.service';
 
+import { LoginThrottlerModule } from '@common/throttler/login-throttler.module';
+
 @Module({
-  imports: [],
+  imports: [LoginThrottlerModule],
   controllers: [AdminController],
   providers: [AdminService, AdminRepository],
   exports: [AdminRepository],

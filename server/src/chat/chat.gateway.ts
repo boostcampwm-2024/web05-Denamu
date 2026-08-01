@@ -1,5 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UseFilters, ValidationPipe } from '@nestjs/common';
 import {
+  ConnectedSocket,
+  MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
   SubscribeMessage,
@@ -7,23 +9,27 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 
-import { InjectMetric } from '@willsoto/nestjs-prometheus';
-import { Counter, Gauge } from 'prom-client';
 import { Server, Socket } from 'socket.io';
 
 import type {
   BroadcastPayload,
   RedisMessagePayload,
-} from '@chat/constant/chat.constant';
-import { ChatScheduler } from '@chat/scheduler/chat.scheduler';
+} from '@chat/constant/type';
+import { ChatWsExceptionFilter } from '@chat/filter/ws.exception.filter';
+import { AnonymousRoomManager } from '@chat/room/anonymous-room.manager';
 import { ChatService } from '@chat/service/chat.service';
 
+import { WinstonLoggerService } from '@common/logger/logger.service';
+import { getWsIp } from '@common/util/getWsIp';
+
+import { SendMessageDto } from './dto/sendMessage.dto';
+
+@UseFilters(new ChatWsExceptionFilter())
 @Injectable()
 @WebSocketGateway({
   cors: {
     origin: '*', // TODO: 연동 할때 보고 확인 후 설정 해보기
   },
-  path: '/chat',
 })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
@@ -31,76 +37,134 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   constructor(
     private readonly chatService: ChatService,
-    @InjectMetric('anonymous_chat_user_count')
-    private readonly chatUserMetricCount: Gauge,
-    @InjectMetric('anonymous_chat_message_count')
-    private readonly chatMetricCount: Counter,
+    private readonly anonymousRoomManager: AnonymousRoomManager,
+    private readonly logger: WinstonLoggerService,
   ) {}
 
-  async handleConnection(client: Socket) {
-    const userCount = this.server.engine.clientsCount;
-    if (this.chatService.isMaxClientExceeded(userCount)) {
-      client.emit('maximum_exceeded', {
-        message: '채팅 서버의 한계에 도달했습니다. 잠시후 재시도 해주세요.',
-      });
-      client.disconnect(true);
-      return;
-    }
-
-    const chatHistory = await this.chatService.getChatHistory();
-
-    client.emit('chatHistory', chatHistory);
-
-    this.chatUserMetricCount.inc({ room: 'anonymous' });
-    this.server.emit('updateUserCount', { userCount });
+  private getClientRoomId(client: Socket): string | undefined {
+    return (client.data as { roomId?: string }).roomId;
   }
 
-  handleDisconnect() {
-    this.chatUserMetricCount.dec({ room: 'anonymous' });
-    this.server.emit('updateUserCount', {
-      userCount: this.server.engine.clientsCount,
-    });
+  private getClientIp(client: Socket): string | undefined {
+    return (client.data as { ip?: string }).ip;
+  }
+
+  async handleConnection(@ConnectedSocket() client: Socket) {
+    (client.data as { ip?: string }).ip = getWsIp(client);
+
+    const requestedRoom = client.handshake.query.room as string | undefined;
+    let roomId: string;
+    let roomName: string;
+
+    if (!requestedRoom || requestedRoom.startsWith('anonymous')) {
+      const assignment = this.anonymousRoomManager.assignRoom(
+        this.server,
+        requestedRoom,
+      );
+      if (!assignment) {
+        client.emit('maximum_exceeded', {
+          message: '채팅 서버의 한계에 도달했습니다. 잠시후 재시도 해주세요.',
+        });
+        client.disconnect(true);
+        return;
+      }
+      roomId = assignment.roomId;
+      roomName = assignment.roomName;
+    } else {
+      roomId = requestedRoom;
+      roomName = requestedRoom;
+    }
+
+    (client.data as { roomId?: string }).roomId = roomId;
+    await client.join(roomId);
+
+    client.emit('assignRoom', { roomId, roomName });
+
+    const chatHistory = await this.chatService.getChatHistory(roomId);
+    client.emit('chatHistory', chatHistory);
+
+    const roomSize = this.server.sockets.adapter.rooms.get(roomId)?.size ?? 0;
+    this.server.to(roomId).emit('updateUserCount', { userCount: roomSize });
+
+    this.anonymousRoomManager.trackUserConnected(roomId);
+  }
+
+  handleDisconnect(@ConnectedSocket() client: Socket) {
+    const roomId = this.getClientRoomId(client);
+    if (!roomId) return;
+
+    const roomSize = this.server.sockets.adapter.rooms.get(roomId)?.size ?? 0;
+    this.server.to(roomId).emit('updateUserCount', { userCount: roomSize });
+
+    this.anonymousRoomManager.trackUserDisconnected(roomId);
   }
 
   @SubscribeMessage('register')
-  async handleRegister(client: Socket, payload: { userId: string | null }) {
-    const result = await this.chatService.getOrCreateUserName(
+  async handleRegister(
+    @ConnectedSocket() client: Socket,
+    @MessageBody()
+    payload: { userId: string | null },
+  ) {
+    const requestedRoom = client.handshake.query.room as string | undefined;
+    if (
+      requestedRoom &&
+      !this.anonymousRoomManager.isAnonymousRoom(requestedRoom)
+    )
+      return;
+
+    const result = await this.anonymousRoomManager.getOrCreateUserName(
       payload?.userId ?? null,
     );
     if (result.isNew) {
       client.emit('assignUserId', { userId: result.userId });
     }
+    client.emit('assignUserName', { userName: result.userName });
   }
 
   @SubscribeMessage('message')
   async handleMessage(
-    client: Socket,
-    payload: { messageId: string; userId: string; message: string },
+    @ConnectedSocket() client: Socket,
+    @MessageBody(new ValidationPipe({ transform: true }))
+    payload: SendMessageDto,
   ) {
-    const { userName } = await this.chatService.getOrCreateUserName(
+    const roomId = this.getClientRoomId(client);
+    if (!roomId) return;
+
+    const { userName } = await this.anonymousRoomManager.getOrCreateUserName(
       payload.userId,
     );
 
     const redisPayload: RedisMessagePayload = {
+      messageId: payload.messageId,
       userId: payload.userId,
       userName,
       message: payload.message,
-      timestamp: new Date(),
+      timestamp: new Date().toISOString(),
+      room: roomId,
     };
 
-    const broadcastPayload: BroadcastPayload = {
-      ...redisPayload,
-      messageId: payload.messageId,
-    };
+    this.anonymousRoomManager.trackMessageSent(roomId);
 
-    const midnightMessage = await this.chatService.publishDateMessageOnce();
-    if (midnightMessage) {
-      this.server.emit('message', midnightMessage);
-    }
-
-    this.chatMetricCount.inc({ room: 'anonymous' });
+    this.logger.log(
+      JSON.stringify({
+        ip: this.getClientIp(client),
+        room: roomId,
+        userId: payload.userId,
+        userName,
+        messageId: payload.messageId,
+        message: payload.message,
+      }),
+    );
 
     await this.chatService.saveMessageToRedis(redisPayload);
-    this.server.emit('message', broadcastPayload);
+    this.server.to(roomId).emit('message', redisPayload);
+  }
+
+  getRoomClientCount(roomId: string): number {
+    return this.anonymousRoomManager.getRoomClientCount(this.server, roomId);
+  }
+
+  broadcastDeletedMessage(roomId: string, payload: BroadcastPayload) {
+    this.server.to(roomId).emit('messageDeleted', payload);
   }
 }

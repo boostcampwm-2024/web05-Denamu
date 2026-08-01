@@ -21,11 +21,10 @@
     "noFallthroughCasesInSwitch": true,
 
     /* Folder Link */
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src"],
+  "include": ["src", ".storybook"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

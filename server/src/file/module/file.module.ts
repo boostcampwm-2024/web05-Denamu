@@ -5,7 +5,6 @@ import { FileRepository } from '@file/repository/file.repository';
 import { FileService } from '@file/service/file.service';
 
 @Module({
-  imports: [],
   controllers: [FileController],
   providers: [FileService, FileRepository],
   exports: [FileService],

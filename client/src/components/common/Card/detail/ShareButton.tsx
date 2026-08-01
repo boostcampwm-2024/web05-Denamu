@@ -9,18 +9,33 @@ import { useCustomToast } from "@/hooks/common/useCustomToast";
 import { TOAST_MESSAGES } from "@/constants/messages.ts";
 
 import { useMediaStore } from "@/store/useMediaStore";
-import { Post } from "@/types/post";
+import { FeedDetail } from "@/types/post";
+
+type KakaoSDK = {
+  init: (appKey: string) => void;
+  cleanup?: () => void;
+  Share: {
+    sendDefault: (settings: {
+      objectType: "feed";
+      content: {
+        title: string;
+        imageUrl: string;
+        link: { webUrl: string };
+      };
+    }) => void;
+  };
+};
 
 declare global {
   interface Window {
-    Kakao: any;
+    Kakao: KakaoSDK;
   }
 }
 type ButtonType = {
   handleCopy: () => void;
   shareKakao: () => void;
 };
-export default function ShareButton({ post }: { post: Post }) {
+export default function ShareButton({ post }: { post: FeedDetail }) {
   const postUrl = `https://denamu.dev/${post.id}`;
   const { toast } = useCustomToast();
   const isMobile = useMediaStore((state) => state.isMobile);

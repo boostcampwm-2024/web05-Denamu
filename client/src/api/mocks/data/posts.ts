@@ -1,17 +1,17 @@
-import { Post } from "@/types/post";
+import { FeedList } from "@/types/post";
 
 const PAGE_SIZE = 12;
 
-export const generateMockPost = (id: number): Post => ({
+export const generateMockPost = (id: number): FeedList => ({
   id: id,
   createdAt: new Date(Date.now() - id * 86400000).toISOString(),
   title: `블로그 포스트 #${id}`,
   viewCount: 0,
   path: "/",
-  author: `작성자 ${(id % 5) + 1}`,
   thumbnail: `https://picsum.photos/640/480?random=${id}`,
-  blogPlatform: "etc",
-  summary: "",
+  blog: { name: `작성자 ${(id % 5) + 1}`, platform: "etc" },
+  likes: 0,
+  comments: 0,
   tag: [],
 });
 

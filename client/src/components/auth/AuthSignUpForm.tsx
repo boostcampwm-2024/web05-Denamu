@@ -2,8 +2,11 @@ import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import { AuthCard } from "@/components/auth/AuthCard.tsx";
+import { MarketingConsentNotice } from "@/components/common/MarketingConsentNotice.tsx";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 
 import { useSignUp } from "@/hooks/auth/useSignUp";
 import { useCustomToast } from "@/hooks/common/useCustomToast.ts";
@@ -13,7 +16,7 @@ export const AuthSignUpForm = () => {
   const location = useLocation();
   const { toast } = useCustomToast();
 
-  const { form, updateField, isLoading, result, submitForm } = useSignUp();
+  const { form, updateField, updateAgreement, isLoading, result, submitForm } = useSignUp();
 
   useEffect(() => {
     if (result) {
@@ -65,6 +68,41 @@ export const AuthSignUpForm = () => {
               onChange={(e) => updateField("userName", e.target.value)}
             />
           </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <Label htmlFor="marketingEmailAgreed" className="text-sm font-normal text-muted-foreground">
+                마케팅 활용 및 광고성 정보 수신 동의
+              </Label>
+              <Switch
+                id="marketingEmailAgreed"
+                checked={form.marketingEmailAgreed}
+                onCheckedChange={(checked) => updateAgreement("marketingEmailAgreed", checked)}
+              />
+            </div>
+            <MarketingConsentNotice />
+            <div className="flex items-center justify-between gap-2">
+              <Label htmlFor="inactivityEmailAgreed" className="text-sm font-normal text-muted-foreground">
+                미접속 알림 이메일 수신 동의
+              </Label>
+              <Switch
+                id="inactivityEmailAgreed"
+                checked={form.inactivityEmailAgreed}
+                onCheckedChange={(checked) => updateAgreement("inactivityEmailAgreed", checked)}
+              />
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <Label htmlFor="noticeEmailAgreed" className="text-sm font-normal text-muted-foreground">
+                공지사항 이메일 수신 동의
+              </Label>
+              <Switch
+                id="noticeEmailAgreed"
+                checked={form.noticeEmailAgreed}
+                onCheckedChange={(checked) => updateAgreement("noticeEmailAgreed", checked)}
+              />
+            </div>
+          </div>
+
           <Button className="w-full" type="submit" disabled={isLoading}>
             {isLoading ? "처리 중..." : "회원가입"}
           </Button>

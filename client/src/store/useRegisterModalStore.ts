@@ -2,25 +2,25 @@ import { create } from "zustand";
 
 interface RegisterModalState {
   //Form Value
-  rssUrl: string;
+  blogUrl: string;
   bloggerName: string;
   userName: string;
   email: string;
 
   //Vaildation state
-  rssUrlValid: boolean;
+  blogUrlValid: boolean;
   bloggerNameValid: boolean;
   userNameValid: boolean;
   emailValid: boolean;
 
   //Setting Form Value
-  setRssUrl: (url: string) => void;
+  setBlogUrl: (url: string) => void;
   setBloggerName: (name: string) => void;
   setUserName: (name: string) => void;
   setEmail: (email: string) => void;
 
   //Setting Vaildation State
-  setRssUrlValid: (valid: boolean) => void;
+  setBlogUrlValid: (valid: boolean) => void;
   setBloggerNameValid: (valid: boolean) => void;
   setUserNameValid: (valid: boolean) => void;
   setEmailValid: (valid: boolean) => void;
@@ -40,25 +40,25 @@ interface RegisterModalState {
 
 export const useRegisterModalStore = create<RegisterModalState>((set, get) => ({
   // Initial Form Values
-  rssUrl: "",
+  blogUrl: "",
   bloggerName: "",
   userName: "",
   email: "",
 
   // Initial Validation States
-  rssUrlValid: false,
+  blogUrlValid: false,
   bloggerNameValid: false,
   userNameValid: false,
   emailValid: false,
 
   // Setters Form Values
-  setRssUrl: (url) => set({ rssUrl: url }),
+  setBlogUrl: (url) => set({ blogUrl: url }),
   setBloggerName: (name) => set({ bloggerName: name }),
   setUserName: (name) => set({ userName: name }),
   setEmail: (email) => set({ email }),
 
   // Setters Validation States
-  setRssUrlValid: (valid) => set({ rssUrlValid: valid }),
+  setBlogUrlValid: (valid) => set({ blogUrlValid: valid }),
   setBloggerNameValid: (valid) => set({ bloggerNameValid: valid }),
   setUserNameValid: (valid) => set({ userNameValid: valid }),
   setEmailValid: (valid) => set({ emailValid: valid }),
@@ -66,11 +66,11 @@ export const useRegisterModalStore = create<RegisterModalState>((set, get) => ({
   // Reset
   resetInputs: () =>
     set({
-      rssUrl: "",
+      blogUrl: "",
       bloggerName: "",
       userName: "",
       email: "",
-      rssUrlValid: false,
+      blogUrlValid: false,
       bloggerNameValid: false,
       userNameValid: false,
       emailValid: false,
@@ -79,7 +79,7 @@ export const useRegisterModalStore = create<RegisterModalState>((set, get) => ({
   // Check Form Vaildation
   isFormValid: () => {
     const state = get();
-    return state.rssUrlValid && state.bloggerNameValid && state.userNameValid && state.emailValid;
+    return state.blogUrlValid && state.bloggerNameValid && state.userNameValid && state.emailValid;
   },
 
   // Handle input change with validation

@@ -1,6 +1,7 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-import { IsInt, IsNotEmpty, IsString, Min } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator';
 
 export class CreateCommentRequestDto {
   @ApiProperty({
@@ -13,15 +14,15 @@ export class CreateCommentRequestDto {
   @IsNotEmpty({ message: '댓글 내용을 입력하세요.' })
   comment: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: 1,
-    description: '게시글 번호를 입력해주세요.',
+    description: '답글인 경우 부모 댓글 ID를 입력해주세요.',
   })
-  @IsInt({
-    message: '숫자로 입력해주세요.',
-  })
-  @Min(1, { message: '게시글 ID는 1 이상이어야 합니다.' })
-  feedId: number;
+  @IsOptional()
+  @IsInt({ message: '부모 댓글 ID는 숫자로 입력해주세요.' })
+  @Min(1, { message: '부모 댓글 ID는 1 이상이어야 합니다.' })
+  @Type(() => Number)
+  parentId?: number;
 
   constructor(partial: Partial<CreateCommentRequestDto>) {
     Object.assign(this, partial);

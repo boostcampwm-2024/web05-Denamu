@@ -1,7 +1,9 @@
-import { NotificationEventPayloadMap } from '@src/notification/notification-event.constant';
+import { Lifecycle } from '@common/lifecycle/lifecycle.interface';
 
-export interface Notifier {
-  initialize(): void;
+import { NotificationEventPayloadMap } from '@notification/notification-event.constant';
+
+export interface Notifier extends Lifecycle {
+  start(): void;
   publish<K extends keyof NotificationEventPayloadMap>(
     eventName: K,
     payload: NotificationEventPayloadMap[K],

@@ -4,12 +4,11 @@ export const createMockPost = (override = {}) => ({
   title: "테스트 포스트",
   viewCount: 100,
   path: "/test-post",
-  author: "작성자",
   thumbnail: "test-thumbnail.jpg",
-  authorImageUrl: "author-image.jpg",
   tag: ["React", "Testing"],
   likes: 50,
-  blogPlatform: "etc",
+  comments: 0,
+  blog: { name: "작성자", platform: "etc" },
   summary: "# test",
   ...override,
 });
@@ -21,9 +20,7 @@ export const createMockPosts = (count: number) => {
 export const createMinimalPost = () =>
   createMockPost({
     thumbnail: undefined,
-    authorImageUrl: undefined,
     tags: undefined,
-    likes: undefined,
   });
 
 export const createLongTitlePost = () =>
@@ -33,6 +30,5 @@ export const createLongTitlePost = () =>
 
 export const createNoAuthorPost = () =>
   createMockPost({
-    author: "",
-    authorImageUrl: undefined,
+    blog: { name: "", platform: "etc" },
   });

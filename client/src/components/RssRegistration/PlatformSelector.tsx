@@ -33,11 +33,6 @@ export const BlogPlatformSelector = ({ platforms, value, onChange }: BlogPlatfor
           ))}
         </SelectContent>
       </Select>
-      {!value && (
-        <p className="text-xs text-muted-foreground mt-1">
-          블로그 주소 아래 표시된 플랫폼 배지를 클릭하시면 자동으로 선택됩니다.
-        </p>
-      )}
     </div>
   );
 };

@@ -10,7 +10,7 @@ import { UserFixture } from '@test/config/common/fixture/user.fixture';
 import { createRefreshToken } from '@test/config/e2e/env/jest.setup';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = '/api/user/refresh-token';
+const URL = '/api/users/tokens';
 
 describe(`POST ${URL} E2E Test`, () => {
   let agent: TestAgent;
@@ -52,5 +52,16 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(data).toStrictEqual({
       accessToken: expect.any(String),
     });
+  });
+
+  it('[200] 토큰 재발급 시 Refresh Token 쿠키를 재설정해 세션을 슬라이딩한다.', async () => {
+    // Http when
+    const response = await agent
+      .post(URL)
+      .set('Cookie', `refresh_token=${refreshToken}`);
+
+    // Http then
+    expect(response.status).toBe(HttpStatus.OK);
+    expect(response.headers['set-cookie'][0]).toContain('refresh_token=');
   });
 });

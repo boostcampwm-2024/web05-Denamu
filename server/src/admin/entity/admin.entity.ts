@@ -1,22 +1,62 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  Unique,
+} from 'typeorm';
 
 @Entity({
   name: 'admin',
 })
+@Unique('UQ_admin_name', ['name'])
+@Unique('UQ_admin_email', ['email'])
 export class Admin extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
-
-  @Column({
-    name: 'login_id',
-    length: 255,
-    nullable: false,
-  })
-  loginId: string;
 
   @Column({
     length: 60,
     nullable: false,
   })
   password: string;
+
+  @Column({
+    length: 255,
+    nullable: false,
+  })
+  name: string;
+
+  @Column({
+    length: 255,
+    nullable: false,
+  })
+  email: string;
+
+  @Column({
+    name: 'email_notification',
+    type: 'boolean',
+    nullable: false,
+    default: true,
+  })
+  emailNotification: boolean;
+
+  @Column({
+    name: 'parent_admin_id',
+    type: 'int',
+    nullable: true,
+  })
+  parentAdminId: number | null;
+
+  @ManyToOne(() => Admin, {
+    onDelete: 'CASCADE',
+    nullable: true,
+  })
+  @JoinColumn({
+    name: 'parent_admin_id',
+    foreignKeyConstraintName: 'FK_admin_parent_admin_id',
+  })
+  parent: Admin | null;
 }

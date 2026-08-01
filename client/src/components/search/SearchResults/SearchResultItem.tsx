@@ -4,7 +4,7 @@ import { CommandItem } from "@/components/ui/command";
 import { useSearchStore } from "@/store/useSearchStore";
 import { SearchResult } from "@/types/search";
 
-export default function SearchResultItem({ id, title, blogName }: SearchResult) {
+export default function SearchResultItem({ id, title, blog }: SearchResult) {
   const { searchParam } = useSearchStore();
   return (
     <CommandItem className="flex flex-col items-start">
@@ -14,7 +14,7 @@ export default function SearchResultItem({ id, title, blogName }: SearchResult) 
         </p>
       </a>
       <p className="text-sm text-gray-500">
-        <SearchHighlight text={blogName} highlight={searchParam} />
+        <SearchHighlight text={blog.name} highlight={searchParam} />
       </p>
     </CommandItem>
   );

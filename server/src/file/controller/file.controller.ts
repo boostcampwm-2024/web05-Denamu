@@ -28,7 +28,7 @@ import { UploadFileQueryRequestDto } from '@file/dto/request/uploadFile.dto';
 import { FileService } from '@file/service/file.service';
 
 @ApiTags('File')
-@Controller('file')
+@Controller('files')
 @UseGuards(JwtGuard)
 export class FileController {
   constructor(private readonly fileService: FileService) {}
@@ -62,12 +62,14 @@ export class FileController {
     );
   }
 
-  // TODO: 권한검사 추가
   @Delete(':id')
   @ApiDeleteFile()
   @HttpCode(HttpStatus.OK)
-  async deleteFile(@Param() fileDeleteRequestDto: DeleteFileParamRequestDto) {
-    await this.fileService.deleteFile(fileDeleteRequestDto.id);
+  async deleteFile(
+    @Param() fileDeleteRequestDto: DeleteFileParamRequestDto,
+    @CurrentUser() user: Payload,
+  ) {
+    await this.fileService.deleteFile(fileDeleteRequestDto.id, user.id);
     return ApiResponse.responseWithNoContent(
       '파일이 성공적으로 삭제되었습니다.',
     );

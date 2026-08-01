@@ -1,44 +1,26 @@
 import { applyDecorators } from '@nestjs/common';
-import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
+import {
+  ApiExtraModels,
+  ApiOkResponse,
+  ApiOperation,
+  getSchemaPath,
+} from '@nestjs/swagger';
+
+import { FeedTrendResponseDto } from '@feed/dto/response/readFeedPagination.dto';
 
 export function ApiReadTrendFeedList() {
   return applyDecorators(
-    ApiOperation({
-      summary: '트렌드 게시글 조회 SSE',
-    }),
+    ApiOperation({ summary: '트렌드 게시글 조회 SSE' }),
+    ApiExtraModels(FeedTrendResponseDto),
     ApiOkResponse({
-      description: 'Ok',
+      description: 'SSE Stream',
       schema: {
+        type: 'object',
         properties: {
-          message: {
-            type: 'string',
-          },
+          message: { type: 'string' },
           data: {
             type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                id: { type: 'number' },
-                author: { type: 'string' },
-                blogPlatform: { type: 'string' },
-                title: { type: 'string' },
-                path: { type: 'string' },
-                createdAt: {
-                  type: 'string',
-                  format: 'date-time',
-                },
-                thumbnail: { type: 'string' },
-                viewCount: { type: 'number' },
-                tag: {
-                  type: 'array',
-                  items: {
-                    type: 'string',
-                  },
-                },
-                likes: { type: 'number' },
-                comments: { type: 'number' },
-              },
-            },
+            items: { $ref: getSchemaPath(FeedTrendResponseDto) },
           },
         },
       },
@@ -50,11 +32,10 @@ export function ApiReadTrendFeedList() {
             data: [
               {
                 id: 1,
-                author: '블로그 이름',
-                blogPlatform: '블로그 서비스 플랫폼',
+                blog: { name: '블로그 이름', platform: '블로그 서비스 플랫폼', image: null },
                 title: '피드 제목',
                 path: 'https://test1.com/1',
-                createdAt: '2024-11-24T01:00:00.000Z',
+                createdAt: new Date('2024-11-24T01:00:00.000Z'),
                 thumbnail: 'https://test1.com/test.png',
                 viewCount: 0,
                 tag: ['tag1', 'tag2'],
@@ -63,18 +44,17 @@ export function ApiReadTrendFeedList() {
               },
               {
                 id: 2,
-                author: '블로그 이름',
-                blogPlatform: '블로그 서비스 플랫폼',
+                blog: { name: '블로그 이름', platform: '블로그 서비스 플랫폼', image: null },
                 title: '피드 제목',
                 path: 'https://test2.com/1',
-                createdAt: '2024-11-24T02:00:00.000Z',
+                createdAt: new Date('2024-11-24T02:00:00.000Z'),
                 thumbnail: 'https://test2.com/test.png',
                 viewCount: 0,
                 tag: ['tag1', 'tag2'],
                 likes: 0,
                 comments: 0,
               },
-            ],
+            ] satisfies FeedTrendResponseDto[],
           },
         },
         continue: {
@@ -84,11 +64,10 @@ export function ApiReadTrendFeedList() {
             data: [
               {
                 id: 3,
-                author: '블로그 이름',
-                blogPlatform: '블로그 서비스 플랫폼',
+                blog: { name: '블로그 이름', platform: '블로그 서비스 플랫폼', image: null },
                 title: '피드 제목',
                 path: 'https://test3.com/1',
-                createdAt: '2024-11-24T03:00:00.000Z',
+                createdAt: new Date('2024-11-24T03:00:00.000Z'),
                 thumbnail: 'https://test3.com/test.png',
                 viewCount: 0,
                 tag: ['tag1', 'tag2'],
@@ -97,18 +76,17 @@ export function ApiReadTrendFeedList() {
               },
               {
                 id: 4,
-                author: '블로그 이름',
-                blogPlatform: '블로그 서비스 플랫폼',
+                blog: { name: '블로그 이름', platform: '블로그 서비스 플랫폼', image: null },
                 title: '피드 제목',
                 path: 'https://test4.com/1',
-                createdAt: '2024-11-24T04:00:00.000Z',
+                createdAt: new Date('2024-11-24T04:00:00.000Z'),
                 thumbnail: 'https://test4.com/test.png',
                 viewCount: 0,
                 tag: ['tag1', 'tag2'],
                 likes: 0,
                 comments: 0,
               },
-            ],
+            ] satisfies FeedTrendResponseDto[],
           },
         },
       },

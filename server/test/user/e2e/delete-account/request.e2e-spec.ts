@@ -14,7 +14,7 @@ import { UserFixture } from '@test/config/common/fixture/user.fixture';
 import { createAccessToken } from '@test/config/e2e/env/jest.setup';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = '/api/user/delete-account/request';
+const URL = '/api/users/deletion-requests';
 
 describe(`POST ${URL} E2E Test`, () => {
   let agent: TestAgent;
@@ -75,8 +75,31 @@ describe(`POST ${URL} E2E Test`, () => {
     );
 
     // DB, Redis then
-    const [userId, savedAccessToken] = savedDeleteCode.split(':');
-    expect(userId).toBe(user.id.toString());
-    expect(savedAccessToken).toBe(accessToken);
+    expect(savedDeleteCode).toBe(
+      JSON.stringify({ userId: user.id, deleteRss: true }),
+    );
+  });
+
+  it('[200] deleteRss=false로 신청할 경우 해당 값이 저장된다.', async () => {
+    // Http when
+    const response = await agent
+      .post(URL)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ deleteRss: false });
+
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.OK);
+    expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedDeleteCode = await redisService.get(
+      redisKeyMake(userDeleteCode),
+    );
+
+    // DB, Redis then
+    expect(savedDeleteCode).toBe(
+      JSON.stringify({ userId: user.id, deleteRss: false }),
+    );
   });
 });

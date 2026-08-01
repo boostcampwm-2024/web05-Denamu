@@ -1,26 +1,20 @@
-import logger from '@common/logger';
-import { RedisConnection } from '@common/redis-access';
+import logger from '@common/logger/logger';
+import { RedisConnection } from '@common/redis/redis-access';
 
 import { AbstractQueueWorker } from '@event_worker/abstract-queue-worker';
 
-// logger 모킹
-jest.mock('@common/logger', () => ({
-  default: {
-    info: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn(),
-    debug: jest.fn(),
-  },
-  __esModule: true,
-}));
-
-const mockLogger = logger as jest.Mocked<typeof logger>;
+const mockLogger = {
+  info: jest.fn(),
+  error: jest.fn(),
+  warn: jest.fn(),
+  debug: jest.fn(),
+};
 
 // 테스트용 구체 클래스
 interface TestQueueItem {
   id: number;
   data: string;
-  retryCount: number;
+  deathCount: number;
 }
 
 class TestQueueWorker extends AbstractQueueWorker<TestQueueItem> {
@@ -33,8 +27,8 @@ class TestQueueWorker extends AbstractQueueWorker<TestQueueItem> {
     this.processQueueCalled = true;
     // 테스트를 위한 간단한 구현
     const mockItems: TestQueueItem[] = [
-      { id: 1, data: 'test1', retryCount: 0 },
-      { id: 2, data: 'test2', retryCount: 1 },
+      { id: 1, data: 'test1', deathCount: 0 },
+      { id: 2, data: 'test2', deathCount: 1 },
     ];
 
     for (const item of mockItems) {
@@ -44,6 +38,14 @@ class TestQueueWorker extends AbstractQueueWorker<TestQueueItem> {
 
   protected getQueueKey(): string {
     return 'test:queue';
+  }
+
+  protected getRetryQueueKey(): string {
+    return 'test:queue';
+  }
+
+  protected getItemLabel(item: TestQueueItem): string {
+    return `id ${item.id}`;
   }
 
   protected parseQueueMessage(message: string): TestQueueItem {
@@ -61,11 +63,13 @@ class TestQueueWorker extends AbstractQueueWorker<TestQueueItem> {
     }
   }
 
-  protected async handleFailure(
-    item: TestQueueItem,
-    error: Error,
-  ): Promise<void> {
+  protected handleFailure(item: TestQueueItem, error: Error): Promise<void> {
     this.failedItems.push({ item, error });
+    return Promise.resolve();
+  }
+
+  protected onPermanentFailure(): Promise<void> {
+    return Promise.resolve();
   }
 }
 
@@ -74,6 +78,15 @@ describe('AbstractQueueWorker', () => {
   let mockRedisConnection: jest.Mocked<RedisConnection>;
 
   beforeEach(() => {
+    mockLogger.info = jest.fn();
+    mockLogger.error = jest.fn();
+    mockLogger.warn = jest.fn();
+    mockLogger.debug = jest.fn();
+    jest.spyOn(logger, 'info').mockImplementation(mockLogger.info);
+    jest.spyOn(logger, 'error').mockImplementation(mockLogger.error);
+    jest.spyOn(logger, 'warn').mockImplementation(mockLogger.warn);
+    jest.spyOn(logger, 'debug').mockImplementation(mockLogger.debug);
+
     mockRedisConnection = {
       executePipeline: jest.fn(),
       hset: jest.fn(),
@@ -105,7 +118,7 @@ describe('AbstractQueueWorker', () => {
       expect(testWorker.processedItems[0]).toEqual({
         id: 1,
         data: 'test1',
-        retryCount: 0,
+        deathCount: 0,
       });
       expect(testWorker.failedItems).toHaveLength(1);
       expect(testWorker.failedItems[0].item.id).toBe(2);
@@ -115,7 +128,7 @@ describe('AbstractQueueWorker', () => {
       // Given
       const errorWorker =
         new (class extends AbstractQueueWorker<TestQueueItem> {
-          protected async processQueue(): Promise<void> {
+          protected processQueue(): Promise<void> {
             throw new Error('Queue processing failed');
           }
 
@@ -123,19 +136,28 @@ describe('AbstractQueueWorker', () => {
             return 'error:queue';
           }
 
+          protected getRetryQueueKey(): string {
+            return 'error:queue';
+          }
+
+          protected getItemLabel(item: TestQueueItem): string {
+            return `id ${item.id}`;
+          }
+
           protected parseQueueMessage(message: string): TestQueueItem {
             return JSON.parse(message);
           }
 
-          protected async processItem(item: TestQueueItem): Promise<void> {
-            // 아무것도 하지 않음
+          protected processItem(): Promise<void> {
+            return Promise.resolve();
           }
 
-          protected async handleFailure(
-            item: TestQueueItem,
-            error: Error,
-          ): Promise<void> {
-            // 아무것도 하지 않음
+          protected handleFailure(): Promise<void> {
+            return Promise.resolve();
+          }
+
+          protected onPermanentFailure(): Promise<void> {
+            return Promise.resolve();
           }
         })('[ERROR WORKER]', mockRedisConnection);
 
@@ -176,7 +198,7 @@ describe('AbstractQueueWorker', () => {
         // Then
         expect(handleFailureSpy).toHaveBeenCalledTimes(1);
         expect(handleFailureSpy).toHaveBeenCalledWith(
-          { id: 2, data: 'test2', retryCount: 1 },
+          { id: 2, data: 'test2', deathCount: 1 },
           expect.any(Error),
         );
       });

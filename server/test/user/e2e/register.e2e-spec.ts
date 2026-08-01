@@ -9,12 +9,13 @@ import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
 
 import { RegisterUserRequestDto } from '@user/dto/request/registerUser.dto';
+import { User } from '@user/entity/user.entity';
 import { UserRepository } from '@user/repository/user.repository';
 
 import { UserFixture } from '@test/config/common/fixture/user.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = '/api/user/register';
+const URL = '/api/users/registrations';
 
 describe(`POST ${URL} E2E Test`, () => {
   let agent: TestAgent;
@@ -59,6 +60,28 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(savedRegisterCode).toBeNull();
   });
 
+  it('[409] 이미 사용 중인 닉네임을 입력할 경우 회원가입을 실패한다.', async () => {
+    // given
+    const user = await userRepository.save(UserFixture.createUserFixture());
+    const requestDto = new RegisterUserRequestDto({
+      email: `unique-${user.email}`,
+      password: 'test1234!',
+      userName: user.userName,
+    });
+
+    // Http when
+    const response = await agent.post(URL).send(requestDto);
+
+    // Http then
+    expect(response.status).toBe(HttpStatus.CONFLICT);
+
+    // Redis then
+    const savedRegisterCode = await redisService.get(
+      redisKeyMake(userRegisterCode),
+    );
+    expect(savedRegisterCode).toBeNull();
+  });
+
   it('[201] 중복되는 회원이 없을 경우 회원가입을 성공한다.', async () => {
     // given
     const requestDto = new RegisterUserRequestDto({
@@ -78,7 +101,7 @@ describe(`POST ${URL} E2E Test`, () => {
     // DB, Redis when
     const savedRegisterCode = JSON.parse(
       await redisService.get(redisKeyMake(userRegisterCode)),
-    );
+    ) as User;
 
     // DB, Redis then
     expect(
@@ -88,5 +111,31 @@ describe(`POST ${URL} E2E Test`, () => {
       email: requestDto.email,
       userName: requestDto.userName,
     });
+  });
+
+  it('[201] 이메일 수신 동의 값을 함께 보내면 임시 저장 데이터에 반영된다.', async () => {
+    // given
+    const requestDto = new RegisterUserRequestDto({
+      email: 'agree-test@test.com',
+      password: 'test1234!',
+      userName: 'agree-test',
+      marketingEmailAgreed: true,
+      inactivityEmailAgreed: false,
+      noticeEmailAgreed: false,
+    });
+
+    // Http when
+    const response = await agent.post(URL).send(requestDto);
+
+    // Http then
+    expect(response.status).toBe(HttpStatus.CREATED);
+
+    // Redis then
+    const savedRegisterCode = JSON.parse(
+      await redisService.get(redisKeyMake(userRegisterCode)),
+    ) as User;
+    expect(savedRegisterCode.marketingEmailAgreed).toBe(true);
+    expect(savedRegisterCode.inactivityEmailAgreed).toBe(false);
+    expect(savedRegisterCode.noticeEmailAgreed).toBe(false);
   });
 });

@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 
 import { User, LogOut } from "lucide-react";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -13,27 +13,22 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { useCustomToast } from "@/hooks/common/useCustomToast";
-
-import { TOAST_MESSAGES } from "@/constants/messages";
+import { useUserProfile } from "@/hooks/queries/useProfile";
 
 import { useAuthStore } from "@/store/useAuthStore";
 
 export const UserProfileMenu = () => {
   const { isAuthenticated, userInfo, logout } = useAuthStore();
   const navigate = useNavigate();
-  const { toast } = useCustomToast();
+  const { data: profile } = useUserProfile(userInfo.id ?? 0);
 
-  const handleLogout = () => {
-    logout();
-    toast({
-      title: "로그아웃 성공",
-      description: "성공적으로 로그아웃되었습니다.",
-    });
+  const handleLogout = async () => {
+    await logout();
+    window.location.reload();
   };
 
   const handleProfileClick = () => {
-    toast(TOAST_MESSAGES.SERVICE_NOT_PREPARED);
+    navigate("/profile");
   };
 
   if (!isAuthenticated) {
@@ -51,6 +46,7 @@ export const UserProfileMenu = () => {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full mx-2">
           <Avatar className="h-8 w-8">
+            {profile?.profileImage && <AvatarImage src={profile.profileImage} alt={userInfo.userName ?? ""} />}
             <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>
         </Button>

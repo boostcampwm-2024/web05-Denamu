@@ -11,7 +11,7 @@ interface FixedHeaderProps {
 export const FixedHeader = React.memo(({ title, onClose, scrollbarWidth }: FixedHeaderProps) => (
   <div
     className="fixed top-0 left-1/2 w-[90%] max-w-4xl bg-gray-200 border-b flex justify-between items-center z-20"
-    style={{ transform: `translateX(calc(-50% - ${scrollbarWidth / 2}px))` }}
+    style={{ transform: `translateX(calc(-50% - ${scrollbarWidth}px))` }}
   >
     <h2 className="text-lg font-semibold truncate p-4">{title}</h2>
     <button onClick={onClose} className="p-4 hover:bg-gray-100 transition-colors" aria-label="Close modal">

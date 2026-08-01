@@ -2,9 +2,18 @@
 
 CREATE TABLE `admin` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `login_id` varchar(255) NOT NULL,
+  `email` varchar(255) NOT NULL,
   `password` varchar(60) NOT NULL,
-  PRIMARY KEY (`id`)
+  `name` varchar(255) NOT NULL,
+  `email_notification` tinyint NOT NULL DEFAULT 1,
+  `parent_admin_id` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UQ_admin_name` (`name`),
+  UNIQUE KEY `UQ_admin_email` (`email`),
+    CONSTRAINT `FK_admin_parent_admin_id`
+    FOREIGN KEY (`parent_admin_id`)
+    REFERENCES `admin` (`id`)
+    ON DELETE CASCADE
 );
 
 -- denamu.rss definition
@@ -15,52 +24,12 @@ CREATE TABLE `rss` (
   `user_name` varchar(50) NOT NULL,
   `email` varchar(255) NOT NULL,
   `rss_url` varchar(255) NOT NULL,
-  PRIMARY KEY (`id`)
-);
-
--- denamu.rss_accept definition
-
-CREATE TABLE `rss_accept` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(255) NOT NULL,
-  `user_name` varchar(50) NOT NULL,
-  `email` varchar(255) NOT NULL,
-  `rss_url` varchar(255) NOT NULL,
-  `blog_platform` varchar(255) NOT NULL DEFAULT 'etc',
+  `blog_url` varchar(255) NOT NULL DEFAULT '',
+  `platform` varchar(255) NOT NULL DEFAULT 'etc',
+  `image` text,
   PRIMARY KEY (`id`),
-  FULLTEXT KEY (`name`)
-);
-
--- denamu.rss_reject definition
-
-CREATE TABLE `rss_reject` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(255) NOT NULL,
-  `user_name` varchar(50) NOT NULL,
-  `email` varchar(255) NOT NULL,
-  `rss_url` varchar(255) NOT NULL,
-  `description` varchar(512) NOT NULL,
-  PRIMARY KEY (`id`)
-);
-
--- denamu.feed definition
-
-CREATE TABLE `feed` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `created_at` datetime NOT NULL,
-  `title` varchar(255) NOT NULL,
-  `view_count` int NOT NULL DEFAULT '0',
-  `path` varchar(512) NOT NULL,
-  `thumbnail` varchar(255) DEFAULT NULL,
-  `blog_id` int NOT NULL,
-  `summary` text,
-  `like_count` int NOT NULL DEFAULT '0',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `IDX_cbdceca2d71f784a8bb160268e` (`path`),
-  KEY `IDX_fda780ffdcc013b739cdc6f31d` (`created_at`),
-  KEY `FK_7474d489d05b8051874b227f868` (`blog_id`),
-  FULLTEXT KEY `IDX_7d93e66e624232af470d2f7bb3` (`title`) /*!50100 WITH PARSER `ngram` */ ,
-  CONSTRAINT `FK_7474d489d05b8051874b227f868` FOREIGN KEY (`blog_id`) REFERENCES `rss_accept` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+  UNIQUE KEY `UQ_rss_name` (`name`),
+  UNIQUE KEY `UQ_rss_rss_url` (`rss_url`)
 );
 
 -- denamu.`user` definition
@@ -78,7 +47,71 @@ CREATE TABLE `user` (
   `currentStreak` int NOT NULL DEFAULT '0',
   `lastActiveDate` date DEFAULT NULL,
   `maxStreak` int NOT NULL DEFAULT '0',
+  `marketing_email_agreed` tinyint NOT NULL DEFAULT 0,
+  `marketing_email_agreed_at` datetime DEFAULT NULL,
+  `inactivity_email_agreed` tinyint NOT NULL DEFAULT 0,
+  `inactivity_email_agreed_at` datetime DEFAULT NULL,
+  `notice_email_agreed` tinyint NOT NULL DEFAULT 0,
+  `notice_email_agreed_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UQ_user_user_name` (`user_name`),
+  UNIQUE KEY `UQ_user_email` (`email`)
+);
+
+-- denamu.rss_accept definition
+
+CREATE TABLE `rss_accept` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `user_name` varchar(50) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `rss_url` varchar(255) NOT NULL,
+  `blog_url` varchar(255) NOT NULL DEFAULT '',
+  `platform` varchar(255) NOT NULL DEFAULT 'etc',
+  `user_id` int DEFAULT NULL,
+  `image` text,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UQ_rss_accept_name` (`name`),
+  UNIQUE KEY `UQ_rss_accept_rss_url` (`rss_url`),
+  KEY `FK_rss_accept_user_id` (`user_id`),
+  FULLTEXT KEY `FT_rss_accept_name` (`name`),
+  CONSTRAINT `FK_rss_accept_user_id` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+);
+
+-- denamu.rss_reject definition
+
+CREATE TABLE `rss_reject` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `user_name` varchar(50) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `rss_url` varchar(255) NOT NULL,
+  `blog_url` varchar(255) NOT NULL DEFAULT '',
+  `platform` varchar(255) NOT NULL DEFAULT 'etc',
+  `description` varchar(512) NOT NULL,
+  `image` text,
   PRIMARY KEY (`id`)
+);
+
+-- denamu.feed definition
+
+CREATE TABLE `feed` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `created_at` datetime NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `view_count` int NOT NULL DEFAULT '0',
+  `path` varchar(512) NOT NULL,
+  `thumbnail` text,
+  `blog_id` int NOT NULL,
+  `summary` text,
+  `like_count` int NOT NULL DEFAULT '0',
+  `is_public` tinyint NOT NULL DEFAULT '1',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UQ_feed_path` (`path`),
+  KEY `IDX_feed_created_at` (`created_at`),
+  KEY `FK_feed_blog_id` (`blog_id`),
+  FULLTEXT KEY `FT_feed_title` (`title`),
+  CONSTRAINT `FK_feed_blog_id` FOREIGN KEY (`blog_id`) REFERENCES `rss_accept` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- denamu.activity definition
@@ -89,17 +122,30 @@ CREATE TABLE `activity` (
   `view_count` int NOT NULL,
   `user_id` int DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `IDX_78f3786d644ca9747fc82db9fb` (`user_id`,`activity_date`),
-  KEY `FK_10bf0c2dd4736190070e8475119` (`user_id`),
-  CONSTRAINT `FK_10bf0c2dd4736190070e8475119` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
+  UNIQUE KEY `UQ_activity_user_id_activity_date` (`user_id`,`activity_date`),
+  KEY `FK_activity_user_id` (`user_id`),
+  CONSTRAINT `FK_activity_user_id` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
+);
+
+-- denamu.category definition
+
+CREATE TABLE `category` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(30) NOT NULL,
+  `display_order` int NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UQ_category_name` (`name`)
 );
 
 -- denamu.tag definition
 
 CREATE TABLE `tag` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(50) NOT NULL UNIQUE,
-  PRIMARY KEY (`id`)
+  `name` varchar(50) NOT NULL,
+  `category_id` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UQ_tag_name` (`name`),
+  CONSTRAINT `FK_tag_category` FOREIGN KEY (`category_id`) REFERENCES `category` (`id`) ON DELETE SET NULL
 );
 
 -- denamu.tag_map definition
@@ -107,8 +153,11 @@ CREATE TABLE `tag` (
 CREATE TABLE `tag_map` (
   `tag_id` int NOT NULL,
   `feed_id` int NOT NULL,
-  CONSTRAINT `FK_170d19639c49b5735ae8261ff0b` FOREIGN KEY (`tag_id`) REFERENCES `tag` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `FK_9a3ed1e034e7f378f89f5902941` FOREIGN KEY (`feed_id`) REFERENCES `feed` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+  PRIMARY KEY (`feed_id`,`tag_id`),
+  KEY `FK_tag_map_feed_id` (`feed_id`),
+  KEY `FK_tag_map_tag_id` (`tag_id`),
+  CONSTRAINT `FK_tag_map_feed_id` FOREIGN KEY (`feed_id`) REFERENCES `feed` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_tag_map_tag_id` FOREIGN KEY (`tag_id`) REFERENCES `tag` (`id`)
 );
 
 -- denamu.comment definition
@@ -116,14 +165,19 @@ CREATE TABLE `tag_map` (
 CREATE TABLE `comment` (
   `id` int NOT NULL AUTO_INCREMENT,
   `comment` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `date` datetime NOT NULL,
+  `is_deleted` tinyint NOT NULL DEFAULT '0',
+  `is_admin_deleted` tinyint NOT NULL DEFAULT '0',
+  `date` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   `feed_id` int NOT NULL,
   `user_id` int NOT NULL,
+  `parent_id` int DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `FK_df1fd1eaf7cc0224ab5e829bf64` (`feed_id`),
-  KEY `FK_bbfe153fa60aa06483ed35ff4a7` (`user_id`),
-  CONSTRAINT `FK_bbfe153fa60aa06483ed35ff4a7` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `FK_df1fd1eaf7cc0224ab5e829bf64` FOREIGN KEY (`feed_id`) REFERENCES `feed` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+  KEY `FK_comment_feed_id` (`feed_id`),
+  KEY `FK_comment_user_id` (`user_id`),
+  KEY `FK_comment_parent_id` (`parent_id`),
+  CONSTRAINT `FK_comment_user_id` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_comment_feed_id` FOREIGN KEY (`feed_id`) REFERENCES `feed` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_comment_parent_id` FOREIGN KEY (`parent_id`) REFERENCES `comment` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- denamu.likes definition
@@ -134,10 +188,89 @@ CREATE TABLE `likes` (
   `feed_id` int NOT NULL,
   `user_id` int NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `IDX_0be1d6ca115f56ed76c65e6bda` (`user_id`,`feed_id`),
-  KEY `FK_85b0dbd1e7836d0f8cdc38fe830` (`feed_id`),
-  CONSTRAINT `FK_3f519ed95f775c781a254089171` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `FK_85b0dbd1e7836d0f8cdc38fe830` FOREIGN KEY (`feed_id`) REFERENCES `feed` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+  UNIQUE KEY `UQ_likes_user_id_feed_id` (`user_id`,`feed_id`),
+  KEY `FK_likes_feed_id` (`feed_id`),
+  CONSTRAINT `FK_likes_user_id` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_likes_feed_id` FOREIGN KEY (`feed_id`) REFERENCES `feed` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- denamu.notification definition
+
+CREATE TABLE `notification` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `type` varchar(20) NOT NULL,
+  `is_read` tinyint NOT NULL DEFAULT '0',
+  `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `updated_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  `recipient_user_id` int NOT NULL,
+  `feed_id` int NULL,
+  `rss_accept_id` int NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UQ_notification_recipient_user_id_type_feed_id` (`recipient_user_id`,`type`,`feed_id`),
+  UNIQUE KEY `IDX_notification_recipient_type_rss_accept` (`recipient_user_id`,`type`,`rss_accept_id`),
+  KEY `IDX_notification_updated_at` (`updated_at`),
+  KEY `FK_notification_feed_id` (`feed_id`),
+  KEY `FK_notification_rss_accept_id` (`rss_accept_id`),
+  CONSTRAINT `FK_notification_recipient_user_id` FOREIGN KEY (`recipient_user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_notification_feed_id` FOREIGN KEY (`feed_id`) REFERENCES `feed` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_notification_rss_accept_id` FOREIGN KEY (`rss_accept_id`) REFERENCES `rss_accept` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- denamu.blocks definition
+
+CREATE TABLE `blocks` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `blocker_id` int NOT NULL,
+  `blocked_id` int NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UQ_blocks_blocker_id_blocked_id` (`blocker_id`,`blocked_id`),
+  KEY `FK_blocks_blocked_id` (`blocked_id`),
+  CONSTRAINT `FK_blocks_blocker_id` FOREIGN KEY (`blocker_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_blocks_blocked_id` FOREIGN KEY (`blocked_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- denamu.rss_blocks definition
+
+CREATE TABLE `rss_blocks` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `blocker_id` int NOT NULL,
+  `blocked_rss_id` int NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UQ_rss_blocks_blocker_id_blocked_rss_id` (`blocker_id`,`blocked_rss_id`),
+  KEY `FK_rss_blocks_blocked_rss_id` (`blocked_rss_id`),
+  CONSTRAINT `FK_rss_blocks_blocker_id` FOREIGN KEY (`blocker_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_rss_blocks_blocked_rss_id` FOREIGN KEY (`blocked_rss_id`) REFERENCES `rss_accept` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- denamu.subscription definition
+
+CREATE TABLE `subscription` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `subscribed_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `rss_accept_id` int NOT NULL,
+  `user_id` int NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UQ_subscription_user_rss` (`user_id`,`rss_accept_id`),
+  KEY `FK_subscription_rss` (`rss_accept_id`),
+  CONSTRAINT `FK_subscription_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_subscription_rss` FOREIGN KEY (`rss_accept_id`) REFERENCES `rss_accept` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- denamu.file definition
+
+CREATE TABLE `file` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `original_name` varchar(255) NOT NULL,
+  `mimetype` varchar(255) NOT NULL,
+  `path` varchar(255) NOT NULL,
+  `size` int NOT NULL,
+  `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `user_id` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `FK_file_user_id` (`user_id`),
+  CONSTRAINT `FK_file_user_id` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
 );
 
 -- denamu.provider definition
@@ -146,39 +279,123 @@ CREATE TABLE `provider` (
   `id` int NOT NULL AUTO_INCREMENT,
   `provider_type` varchar(255) NOT NULL,
   `provider_user_id` varchar(255) NOT NULL,
-  `refresh_token` varchar(255) NOT NULL,
+  `provider_user_name` varchar(255) DEFAULT NULL,
+  `refresh_token` varchar(255) DEFAULT NULL,
   `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   `updated_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
   `user_id` int NOT NULL,
   PRIMARY KEY (`id`),
-  KEY `FK_d3d18186b602240b93c9f1621ea` (`user_id`),
-  CONSTRAINT `FK_d3d18186b602240b93c9f1621ea` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+  UNIQUE KEY `UQ_provider_type_user_id` (`provider_type`,`provider_user_id`),
+  UNIQUE KEY `UQ_user_provider_type` (`user_id`,`provider_type`),
+  KEY `FK_provider_user_id` (`user_id`),
+  CONSTRAINT `FK_provider_user_id` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
--- denamu.rss_remove definition
+-- denamu.report definition
 
-CREATE TABLE `rss_remove` (
+CREATE TABLE `report` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `request_date` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-  `reason` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `blog_id` int NOT NULL,
+  `target_type` varchar(20) NOT NULL,
+  `target_id` int NOT NULL,
+  `reason` varchar(20) NOT NULL,
+  `detail` text,
+  `status` varchar(20) NOT NULL DEFAULT 'PENDING',
+  `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `reviewed_at` datetime DEFAULT NULL,
+  `reporter_id` int NOT NULL,
+  `reported_user_id` int DEFAULT NULL,
+  `reported_rss_id` int DEFAULT NULL,
+  `reported_comment_id` int DEFAULT NULL,
+  `reported_feed_id` int DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `REL_69e45fd3ff04dac43a89e1951e` (`blog_id`),
-  CONSTRAINT `FK_69e45fd3ff04dac43a89e1951e4` FOREIGN KEY (`blog_id`) REFERENCES `rss_accept` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+  UNIQUE KEY `UQ_report_reporter_id_target_type_target_id` (`reporter_id`,`target_type`,`target_id`),
+  KEY `FK_report_reported_user_id` (`reported_user_id`),
+  KEY `FK_report_reported_rss_id` (`reported_rss_id`),
+  KEY `FK_report_reported_comment_id` (`reported_comment_id`),
+  KEY `FK_report_reported_feed_id` (`reported_feed_id`),
+  CONSTRAINT `FK_report_reporter_id` FOREIGN KEY (`reporter_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_report_reported_user_id` FOREIGN KEY (`reported_user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_report_reported_rss_id` FOREIGN KEY (`reported_rss_id`) REFERENCES `rss_accept` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_report_reported_comment_id` FOREIGN KEY (`reported_comment_id`) REFERENCES `comment` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_report_reported_feed_id` FOREIGN KEY (`reported_feed_id`) REFERENCES `feed` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- denamu.board definition
+
+CREATE TABLE `board` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `title` varchar(255) NOT NULL,
+  `content` longtext NOT NULL,
+  `status` varchar(20) NOT NULL DEFAULT 'DRAFT',
+  `category` varchar(20) NOT NULL DEFAULT 'NOTICE',
+  `is_pinned` tinyint NOT NULL DEFAULT 0,
+  `start_at` datetime DEFAULT NULL,
+  `end_at` datetime DEFAULT NULL,
+  `author_admin_id` int DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `FK_board_author_admin_id` (`author_admin_id`),
+  CONSTRAINT `FK_board_author_admin_id` FOREIGN KEY (`author_admin_id`) REFERENCES `admin` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+);
+
+-- denamu.qna definition
+
+CREATE TABLE `qna` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `title` varchar(255) NOT NULL,
+  `is_secret` tinyint NOT NULL DEFAULT 0,
+  `password` varchar(60) DEFAULT NULL,
+  `guest_name` varchar(60) DEFAULT NULL,
+  `guest_email` varchar(255) DEFAULT NULL,
+  `user_id` int DEFAULT NULL,
+  `status` varchar(20) NOT NULL DEFAULT 'PENDING',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `FK_qna_user_id` (`user_id`),
+  CONSTRAINT `FK_qna_user_id` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+);
+
+-- denamu.qna_message definition
+
+CREATE TABLE `qna_message` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `qna_id` int NOT NULL,
+  `type` varchar(10) NOT NULL,
+  `content` longtext NOT NULL,
+  `admin_id` int DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `FK_qna_message_qna_id` (`qna_id`),
+  KEY `FK_qna_message_admin_id` (`admin_id`),
+  CONSTRAINT `FK_qna_message_qna_id` FOREIGN KEY (`qna_id`) REFERENCES `qna` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_qna_message_admin_id` FOREIGN KEY (`admin_id`) REFERENCES `admin` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 -- denamu.admin insert data
+-- id: test1234@denamu.dev, password: test1234!
+-- id: test5678@denamu.dev, password: test1234!
+INSERT INTO admin (email,password, name, parent_admin_id) VALUES
+	('test1234@denamu.dev','$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정', NULL),
+	('test5678@denamu.dev','$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정의 자식', 1);
 
-INSERT INTO admin (login_id, password) VALUES
-	('test1234','$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.');
+-- denamu.user insert data
+-- id: test@test.com, password: test1234!
+-- id: test2@test.com, password: test1234!
+-- id: test3@test.com, password: test1234!
+INSERT INTO user (email, password, user_name, profile_image, introduction) VALUES
+	('test@test.com', '$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정', 'https://tistory1.daumcdn.net/tistory/8709220/attach/22a2a2633a304b0c9fce20b4aa07ebcc', '안녕하세요 테스트입니다.'),
+	('test2@test.com', '$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정2', 'https://velog.velcdn.com/images/seok3765/profile/bfb84abe-3508-462a-9d07-e8e73c8da67c/image.png', '안녕하세요 테스트2입니다.'),
+	('test3@test.com', '$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정3', NULL, '안녕하세요 테스트3입니다.');
 
 -- denamu.rss_accept insert data
 
-INSERT INTO rss_accept (name,user_name,email,rss_url,blog_platform) VALUES
-	 ('seok3765.log','조민석','seok3765@naver.com','https://v2.velog.io/rss/@seok3765','velog'),
-	 ('나무보다 숲을','채준혁','cjh4302@gmail.com','https://laurent.tistory.com/rss','tistory'),
-	 ('월성참치','정명기','jmk101711@naver.com','https://tunaspace.tistory.com/rss','tistory'),
-	 ('해야지 뭐','안성윤','asn6878@gmail.com','https://asn6878.tistory.com/rss','tistory');
+INSERT INTO rss_accept (name,user_name,email,rss_url,platform, user_id) VALUES
+	 ('seok3765.log','조민석','seok3765@naver.com','https://v2.velog.io/rss/@seok3765','velog', 1),
+	 ('나무보다 숲을','채준혁','cjh4302@gmail.com','https://laurent.tistory.com/rss','tistory', NULL),
+	 ('월성참치','정명기','jmk101711@naver.com','https://tunaspace.tistory.com/rss','tistory', NULL),
+	 ('해야지 뭐','안성윤','asn6878@gmail.com','https://asn6878.tistory.com/rss','tistory', NULL);
 
 -- denamu.rss_reject insert data
 
@@ -308,7 +525,7 @@ Jest 설정 파일 커스터마이징
 
 🤔 흥미로운 점: GitHub Actions에서 실행 시간이 sqlite + 병렬 실행보다 약 2배 느려졌지만, 실제 프로덕션 환경과 동일한 테스트가 가능해졌습니다!
 테스트 안정성과 신뢰도를 높이고 싶은 NestJS 개발자라면 꼭 도입해볼 만한 구성입니다! 🚀',1),
-	 ('2025-01-18 07:12:05','자바 vs 노드 당신의 선택은?!',4,'https://asn6878.tistory.com/15','https://img1.daumcdn.net/thumb/R800x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FdofQSP%2FbtsLKJyhso1%2FREdhKR9vDlzDYREytkK0v1%2Fimg.png',4,'**Node.js와 Spring 프레임워크 비교 분석: 개발자의 선택은? 🤔**
+	 ('2025-01-18 07:12:05.575811','자바 vs 노드 당신의 선택은?!',4,'https://asn6878.tistory.com/15','https://img1.daumcdn.net/thumb/R800x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FdofQSP%2FbtsLKJyhso1%2FREdhKR9vDlzDYREytkK0v1%2Fimg.png',4,'**Node.js와 Spring 프레임워크 비교 분석: 개발자의 선택은? 🤔**
 현재 TypeScript와 NestJS로 프로젝트를 진행 중인 개발자가 Java/Spring과 Node.js 생태계의 차이점을 깊이 있게 분석했습니다.
 채용 시장 현황 📊
 
@@ -331,34 +548,37 @@ TypeScript 등으로 단점 극복 노력
 
 결국 상황에 맞는 도구를 선택하는 문제 해결력이 중요하다는 개발자의 통찰력 있는 회고입니다! 💡',1);
 
--- denamu.user insert data
-
-INSERT INTO user (email, password, user_name, profile_image, introduction) VALUES
-	('test@test.com', '$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정', NULL, '안녕하세요 테스트입니다.');
-
 -- denamu.tag insert data
 
-INSERT INTO tag (name) VALUES
-	('Backend'),
-	('Spring'),
-	('Frontend'),
-	('회고'),
-	('Java'),
-	('MySQL'),
-	('Network'),
-	('DB'),
-	('OS'),
-	('JavaScript'),
-	('Docker'),
-	('Infra'),
-	('React'),
-	('Algorithm'),
-	('TypeScript'),
-	('Nest.JS'),
-	('Next.JS'),
-	('PostgreSQL'),
-	('Express.JS'),
-	('Browser');
+INSERT INTO category (name, display_order) VALUES
+	('Frontend', 1),
+	('Backend', 2),
+	('ETC', 3),
+	('DB', 4),
+	('Infra', 5),
+	('CS', 6);
+
+INSERT INTO tag (name, category_id) VALUES
+	('Backend', 2),
+	('Spring', 2),
+	('Frontend', 1),
+	('회고', 3),
+	('Java', 2),
+	('MySQL', 4),
+	('Network', 6),
+	('DB', 4),
+	('OS', 6),
+	('JavaScript', 1),
+	('Docker', 5),
+	('Infra', 5),
+	('React', 1),
+	('Algorithm', 6),
+	('TypeScript', 1),
+	('Nest.JS', 2),
+	('Next.JS', 1),
+	('PostgreSQL', 4),
+	('Express.JS', 2),
+	('Browser', 1);
 
 -- denamu.tag_map insert data
 
@@ -378,21 +598,69 @@ INSERT INTO tag_map (feed_id, tag_id) VALUES
 -- denamu.comment insert data
 
 INSERT INTO comment(comment, date, feed_id, user_id) VALUES
-	('유익한 글 감사합니다~','2025-05-01 02:24:02',94,1),
-	('글이 정말 유익해요~','2025-05-01 02:26:05',95,1);
+	('유익한 글 감사합니다~','2025-05-01 02:24:02.575811',94,1),
+	('글이 정말 유익해요~','2025-05-01 02:26:05.575811',95,1);
 
 -- denamu.activity insert data
 
 INSERT INTO activity (activity_date, view_count, user_id) VALUES
-	('2025-07-01 11:48:00', 1, 1);
+	('2025-07-01 11:48:00.575811', 1, 1);
 
 -- denamu.like insert data
 
 INSERT INTO likes(feed_id, user_id, like_date) VALUES
-	(94,1,'2025-06-13 17:47:05'),
-	(95,1,'2025-06-13 17:47:07');
+	(94,1,'2025-06-13 17:47:05.575811'),
+	(95,1,'2025-06-13 17:47:07.575811');
 
--- denamu.rss_remove insert data
+-- denamu.subscription insert data
 
-INSERT INTO rss_remove(request_date, reason, blog_id) VALUES
-	('2025-07-01 11:48:00', 'example reason', 1);
+INSERT INTO subscription(user_id, rss_accept_id, subscribed_at) VALUES
+	(2, 1, '2025-06-14 10:00:00.000000'),
+	(2, 2, '2025-06-14 10:01:00.000000'),
+	(2, 3, '2025-06-14 10:02:00.000000'),
+	(1, 2, '2025-06-14 10:03:00.000000');
+
+-- denamu.rss insert data
+
+INSERT INTO rss (name, user_name, email, rss_url, blog_url, platform) VALUES
+	('대기중인 블로그', '김대기', 'test3@test.com', 'https://pending-blog.tistory.com/rss', 'https://pending-blog.tistory.com', 'tistory');
+
+-- denamu.notification insert data
+
+INSERT INTO notification (type, is_read, recipient_user_id, feed_id, rss_accept_id) VALUES
+	('LIKE', 0, 1, 94, NULL),
+	('SUBSCRIBE', 1, 2, NULL, 1);
+
+-- denamu.blocks insert data
+
+INSERT INTO blocks (blocker_id, blocked_id) VALUES
+	(3, 2);
+
+-- denamu.rss_blocks insert data
+
+INSERT INTO rss_blocks (blocker_id, blocked_rss_id) VALUES
+	(3, 4);
+
+-- denamu.report insert data
+
+INSERT INTO report (target_type, target_id, reason, detail, status, reporter_id, reported_feed_id) VALUES
+	('FEED', 94, 'SPAM', '광고성 게시글입니다.', 'PENDING', 3, 94);
+
+-- denamu.board insert data
+
+INSERT INTO board (title, content, status, category, is_pinned, author_admin_id) VALUES
+	('서비스 점검 안내', '<p>2026-08-05 새벽 점검이 진행됩니다.</p>', 'PUBLISHED', 'NOTICE', 1, 1),
+	('자주 묻는 질문', '<p><strong>Q. RSS 등록은 어떻게 하나요?</strong></p><p>마이페이지에서 RSS 주소를 등록하면 검수 후 반영됩니다.</p>', 'PUBLISHED', 'FAQ', 0, 1);
+
+-- denamu.qna insert data
+
+INSERT INTO qna (title, is_secret, password, guest_name, guest_email, user_id, status) VALUES
+	('RSS 등록 문의드립니다', 0, NULL, '홍길동', 'guest@test.com', NULL, 'PENDING'),
+	('탈퇴 절차가 궁금합니다', 0, NULL, NULL, NULL, 2, 'ANSWERED');
+
+-- denamu.qna_message insert data
+
+INSERT INTO qna_message (qna_id, type, content, admin_id) VALUES
+	(1, 'QUESTION', 'RSS 등록은 어떻게 진행하나요?', NULL),
+	(2, 'QUESTION', '탈퇴 절차를 알려주세요.', NULL),
+	(2, 'ANSWER', '마이페이지 > 회원 탈퇴에서 진행 가능합니다.', 1);

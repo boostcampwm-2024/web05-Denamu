@@ -3,36 +3,68 @@ import { ApiProperty } from '@nestjs/swagger';
 import { FeedView } from '@feed/entity/feed.entity';
 
 export class FeedResult {
-  private constructor(
-    private id: number,
-    private author: string,
-    private blogPlatform: string,
-    private title: string,
-    private path: string,
-    private createdAt: Date,
-    private thumbnail: string,
-    private viewCount: number,
-    private isNew: boolean,
-    private tag: string[],
-    private likes: number,
-    private comments: number,
-  ) {}
+  @ApiProperty({ example: 1, description: '게시글 ID' })
+  id: number;
+
+  @ApiProperty({
+    example: { name: 'example author', platform: 'example platform', image: 'https://example.com/profile.png' },
+    description: 'RSS 채널 정보',
+  })
+  blog: {
+    name: string;
+    platform: string;
+    image: string | null;
+  };
+
+  @ApiProperty({ example: 'example title', description: '게시글 제목' })
+  title: string;
+
+  @ApiProperty({ example: 'https://example.com/feed', description: '게시글 URL' })
+  path: string;
+
+  @ApiProperty({ example: '2025-01-01T01:00:00.000Z', description: '게시글 작성 일자' })
+  createdAt: Date;
+
+  @ApiProperty({ example: 'https://example.com/thumbnail', description: '썸네일 URL' })
+  thumbnail: string;
+
+  @ApiProperty({ example: 0, description: '조회수' })
+  viewCount: number;
+
+  @ApiProperty({ example: false, description: '새 게시글 여부' })
+  isNew: boolean;
+
+  @ApiProperty({ example: ['tag1', 'tag2'], description: '태그 목록' })
+  tag: string[];
+
+  @ApiProperty({ example: 0, description: '좋아요 수' })
+  likes: number;
+
+  @ApiProperty({ example: 0, description: '댓글 수' })
+  comments: number;
+
+  private constructor(partial: Partial<FeedResult>) {
+    Object.assign(this, partial);
+  }
 
   static toResultDto(feed: FeedPaginationResult) {
-    return new FeedResult(
-      feed.feedId,
-      feed.blogName,
-      feed.blogPlatform,
-      feed.title,
-      feed.path,
-      feed.createdAt,
-      feed.thumbnail,
-      feed.viewCount,
-      feed.isNew,
-      feed.tag ? feed.tag : [],
-      feed.likeCount,
-      feed.commentCount,
-    );
+    return new FeedResult({
+      id: feed.feedId,
+      blog: {
+        name: feed.blogName,
+        platform: feed.blogPlatform,
+        image: feed.blogImage ?? null,
+      },
+      title: feed.title,
+      path: feed.path,
+      createdAt: feed.createdAt,
+      thumbnail: feed.thumbnail,
+      viewCount: feed.viewCount,
+      isNew: feed.isNew,
+      tag: feed.tag ? feed.tag : [],
+      likes: feed.likeCount,
+      comments: feed.commentCount,
+    });
   }
 
   public static toResultDtoArray(feedList: FeedPaginationResult[]) {
@@ -41,24 +73,7 @@ export class FeedResult {
 }
 
 export class ReadFeedPaginationResponseDto {
-  @ApiProperty({
-    example: [
-      {
-        id: 1,
-        author: 'example author',
-        blogPlatform: 'example platform',
-        title: 'example title',
-        path: 'https://example.com/feed',
-        createdAt: '2025-01-01T01:00:00.000Z',
-        thumbnail: 'https://example.com/thumbnail',
-        viewCount: 0,
-        isNew: false,
-        tag: ['example1', 'example2'],
-        likes: 0,
-      },
-    ],
-    description: '페이지네이션 결과 피드',
-  })
+  @ApiProperty({ type: [FeedResult], description: '페이지네이션 결과 피드' })
   result: FeedResult[];
 
   @ApiProperty({
@@ -100,16 +115,18 @@ export class FeedTrendResponseDto {
   id: number;
 
   @ApiProperty({
-    example: 'example author',
-    description: '작성자',
+    example: {
+      name: 'example author',
+      platform: 'example blog platform',
+      image: 'https://example.com/profile.png',
+    },
+    description: 'RSS 채널 정보',
   })
-  author: string;
-
-  @ApiProperty({
-    example: 'example blog platform',
-    description: '블로그 플랫폼',
-  })
-  blogPlatform: string;
+  blog: {
+    name: string;
+    platform: string;
+    image: string | null;
+  };
 
   @ApiProperty({
     example: 'example title',
@@ -166,8 +183,11 @@ export class FeedTrendResponseDto {
   private static toResponseDto(feed: FeedView) {
     return new FeedTrendResponseDto({
       id: feed.feedId,
-      author: feed.blogName,
-      blogPlatform: feed.blogPlatform,
+      blog: {
+        name: feed.blogName,
+        platform: feed.blogPlatform,
+        image: feed.blogImage ?? null,
+      },
       title: feed.title,
       path: feed.path,
       createdAt: feed.createdAt,

@@ -5,10 +5,10 @@ import EmptyPost from "@/components/common/EmptyPost";
 
 import { usePositionTracking } from "@/hooks/common/usePositionTracking.ts";
 
-import { Post } from "@/types/post";
+import { FeedList } from "@/types/post";
 
 interface AnimatedPostGridProps {
-  posts: Post[];
+  posts: FeedList[];
 }
 
 const AnimatedPostGrid = ({ posts = [] }: AnimatedPostGridProps) => {

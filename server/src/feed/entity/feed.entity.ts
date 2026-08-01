@@ -9,6 +9,7 @@ import {
   ManyToMany,
   ManyToOne,
   PrimaryGeneratedColumn,
+  Unique,
   ViewColumn,
   ViewEntity,
 } from 'typeorm';
@@ -18,6 +19,7 @@ import { RssAccept } from '@rss/entity/rss.entity';
 import { Tag } from '@tag/entity/tag.entity';
 
 @Entity({ name: 'feed' })
+@Unique('UQ_feed_path', ['path'])
 export class Feed extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
@@ -27,10 +29,10 @@ export class Feed extends BaseEntity {
     type: 'datetime',
     nullable: false,
   })
-  @Index()
+  @Index('IDX_feed_created_at')
   createdAt: Date;
 
-  @Index({ fulltext: true, parser: 'ngram' })
+  @Index('FT_feed_title', { fulltext: true, parser: 'ngram' })
   @Column({ name: 'title', nullable: false })
   title: string;
 
@@ -40,12 +42,11 @@ export class Feed extends BaseEntity {
   @Column({
     length: 512,
     nullable: false,
-    unique: true,
   })
   path: string;
 
   @Column({
-    length: 255,
+    type: 'text',
     nullable: true,
   })
   thumbnail: string;
@@ -70,6 +71,13 @@ export class Feed extends BaseEntity {
   })
   commentCount: number;
 
+  @Column({
+    name: 'is_public',
+    nullable: false,
+    default: true,
+  })
+  isPublic: boolean;
+
   @ManyToOne(() => RssAccept, (rssAccept) => rssAccept.feeds, {
     nullable: false,
     onUpdate: 'CASCADE',
@@ -77,14 +85,23 @@ export class Feed extends BaseEntity {
   })
   @JoinColumn({
     name: 'blog_id',
+    foreignKeyConstraintName: 'FK_feed_blog_id',
   })
   blog: RssAccept;
 
   @ManyToMany(() => Tag, (tag) => tag.feeds, { cascade: true })
   @JoinTable({
     name: 'tag_map',
-    joinColumn: { name: 'feed_id', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'tag_id', referencedColumnName: 'id' },
+    joinColumn: {
+      name: 'feed_id',
+      referencedColumnName: 'id',
+      foreignKeyConstraintName: 'FK_tag_map_feed_id',
+    },
+    inverseJoinColumn: {
+      name: 'tag_id',
+      referencedColumnName: 'id',
+      foreignKeyConstraintName: 'FK_tag_map_tag_id',
+    },
   })
   tags: Tag[];
 }
@@ -105,7 +122,8 @@ export class Feed extends BaseEntity {
       .addSelect('f.like_count', 'like_count')
       .addSelect('f.comment_count', 'comment_count')
       .addSelect('r.name', 'blog_name')
-      .addSelect('r.blog_platform', 'blog_platform')
+      .addSelect('r.platform', 'blog_platform')
+      .addSelect('r.image', 'blog_image')
       .addSelect(
         `(
           SELECT JSON_ARRAYAGG(t.name)
@@ -117,6 +135,7 @@ export class Feed extends BaseEntity {
       )
       .from(Feed, 'f')
       .innerJoin(RssAccept, 'r', 'r.id = f.blog_id')
+      .where('f.is_public = 1')
       .groupBy('f.id'),
   name: 'feed_view',
 })
@@ -165,6 +184,11 @@ export class FeedView {
     name: 'blog_platform',
   })
   blogPlatform: string;
+
+  @ViewColumn({
+    name: 'blog_image',
+  })
+  blogImage: string | null;
 
   @ViewColumn({
     name: 'summary',

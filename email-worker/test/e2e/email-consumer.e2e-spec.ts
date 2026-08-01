@@ -1,10 +1,23 @@
 import 'reflect-metadata';
-import { EmailConsumer } from '@email/email.consumer';
-import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
-import { EmailPayloadConstant } from '@src/types/types';
-import { RMQ_EXCHANGES, RMQ_ROUTING_KEYS } from '@rabbitmq/rabbitmq.constant';
+
+import axios from 'axios';
+
 import { setupTestContainer } from '@test/config/e2e/common/testContext.setup';
+import { StartedTestContainer } from 'testcontainers';
+
+import { EmailPayloadConstant } from '@email/constant';
+import { EmailConsumer } from '@email/email.consumer';
+
+import { RMQ_EXCHANGES, RMQ_ROUTING_KEYS } from '@rabbitmq/rabbitmq.constant';
 import { RabbitMQManager } from '@rabbitmq/rabbitmq.manager';
+import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
+
+interface MailpitResponse {
+  messages: Array<{ To: Array<{ Address: string }>; Subject: string }>;
+}
+interface MailpitGlobal {
+  __MAILPIT_CONTAINER__: StartedTestContainer;
+}
 
 describe(`Email Normal Scenario E2E Test`, () => {
   let emailConsumer: EmailConsumer;
@@ -12,7 +25,7 @@ describe(`Email Normal Scenario E2E Test`, () => {
   let rabbitmqManager: RabbitMQManager;
   const testContext = setupTestContainer();
 
-  beforeAll(async () => {
+  beforeAll(() => {
     emailConsumer = testContext.emailConsumer;
     rabbitmqService = testContext.rabbitmqService;
     rabbitmqManager = testContext.rabbitmqManager;
@@ -53,16 +66,15 @@ describe(`Email Normal Scenario E2E Test`, () => {
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
     //then
-    const mailpitContainer = global.__MAILPIT_CONTAINER__;
+    const mailpitContainer = (global as unknown as MailpitGlobal)
+      .__MAILPIT_CONTAINER__;
     const webPort = mailpitContainer.getMappedPort(8025);
     const baseUrl = `http://${mailpitContainer.getHost()}:${webPort}`;
 
-    const response = await fetch(`${baseUrl}/api/v1/messages`);
-    const data = await response.json();
+    const response = await axios.get<MailpitResponse>(`${baseUrl}/api/v1/messages`);
+    const data = response.data;
 
-    await fetch(`${baseUrl}/api/v1/messages`, {
-      method: 'DELETE',
-    });
+    await axios.delete(`${baseUrl}/api/v1/messages`);
 
     expect(data.messages).toHaveLength(1);
     expect(data.messages[0].To[0].Address).toBe('test@test.com');
@@ -92,16 +104,15 @@ describe(`Email Normal Scenario E2E Test`, () => {
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
     //then
-    const mailpitContainer = global.__MAILPIT_CONTAINER__;
+    const mailpitContainer = (global as unknown as MailpitGlobal)
+      .__MAILPIT_CONTAINER__;
     const webPort = mailpitContainer.getMappedPort(8025);
     const baseUrl = `http://${mailpitContainer.getHost()}:${webPort}`;
 
-    const response = await fetch(`${baseUrl}/api/v1/messages`);
-    const data = await response.json();
+    const response = await axios.get<MailpitResponse>(`${baseUrl}/api/v1/messages`);
+    const data = response.data;
 
-    await fetch(`${baseUrl}/api/v1/messages`, {
-      method: 'DELETE',
-    });
+    await axios.delete(`${baseUrl}/api/v1/messages`);
 
     expect(data.messages).toHaveLength(1);
     expect(data.messages[0].To[0].Address).toBe('test@test.com');
@@ -134,16 +145,15 @@ describe(`Email Normal Scenario E2E Test`, () => {
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
     //then
-    const mailpitContainer = global.__MAILPIT_CONTAINER__;
+    const mailpitContainer = (global as unknown as MailpitGlobal)
+      .__MAILPIT_CONTAINER__;
     const webPort = mailpitContainer.getMappedPort(8025);
     const baseUrl = `http://${mailpitContainer.getHost()}:${webPort}`;
 
-    const response = await fetch(`${baseUrl}/api/v1/messages`);
-    const data = await response.json();
+    const response = await axios.get<MailpitResponse>(`${baseUrl}/api/v1/messages`);
+    const data = response.data;
 
-    await fetch(`${baseUrl}/api/v1/messages`, {
-      method: 'DELETE',
-    });
+    await axios.delete(`${baseUrl}/api/v1/messages`);
 
     expect(data.messages).toHaveLength(1);
     expect(data.messages[0].To[0].Address).toBe('test@test.com');
@@ -177,16 +187,15 @@ describe(`Email Normal Scenario E2E Test`, () => {
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
     //then
-    const mailpitContainer = global.__MAILPIT_CONTAINER__;
+    const mailpitContainer = (global as unknown as MailpitGlobal)
+      .__MAILPIT_CONTAINER__;
     const webPort = mailpitContainer.getMappedPort(8025);
     const baseUrl = `http://${mailpitContainer.getHost()}:${webPort}`;
 
-    const response = await fetch(`${baseUrl}/api/v1/messages`);
-    const data = await response.json();
+    const response = await axios.get<MailpitResponse>(`${baseUrl}/api/v1/messages`);
+    const data = response.data;
 
-    await fetch(`${baseUrl}/api/v1/messages`, {
-      method: 'DELETE',
-    });
+    await axios.delete(`${baseUrl}/api/v1/messages`);
 
     expect(data.messages).toHaveLength(1);
     expect(data.messages[0].To[0].Address).toBe('test@test.com');
@@ -214,16 +223,15 @@ describe(`Email Normal Scenario E2E Test`, () => {
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
     //then
-    const mailpitContainer = global.__MAILPIT_CONTAINER__;
+    const mailpitContainer = (global as unknown as MailpitGlobal)
+      .__MAILPIT_CONTAINER__;
     const webPort = mailpitContainer.getMappedPort(8025);
     const baseUrl = `http://${mailpitContainer.getHost()}:${webPort}`;
 
-    const response = await fetch(`${baseUrl}/api/v1/messages`);
-    const data = await response.json();
+    const response = await axios.get<MailpitResponse>(`${baseUrl}/api/v1/messages`);
+    const data = response.data;
 
-    await fetch(`${baseUrl}/api/v1/messages`, {
-      method: 'DELETE',
-    });
+    await axios.delete(`${baseUrl}/api/v1/messages`);
 
     expect(data.messages).toHaveLength(1);
     expect(data.messages[0].To[0].Address).toBe('test@test.com');
@@ -251,19 +259,168 @@ describe(`Email Normal Scenario E2E Test`, () => {
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
     //then
-    const mailpitContainer = global.__MAILPIT_CONTAINER__;
+    const mailpitContainer = (global as unknown as MailpitGlobal)
+      .__MAILPIT_CONTAINER__;
     const webPort = mailpitContainer.getMappedPort(8025);
     const baseUrl = `http://${mailpitContainer.getHost()}:${webPort}`;
 
-    const response = await fetch(`${baseUrl}/api/v1/messages`);
-    const data = await response.json();
+    const response = await axios.get<MailpitResponse>(`${baseUrl}/api/v1/messages`);
+    const data = response.data;
 
-    await fetch(`${baseUrl}/api/v1/messages`, {
-      method: 'DELETE',
-    });
+    await axios.delete(`${baseUrl}/api/v1/messages`);
 
     expect(data.messages).toHaveLength(1);
     expect(data.messages[0].To[0].Address).toBe('test@test.com');
     expect(data.messages[0].Subject).toContain('회원탈퇴');
+  });
+
+  it('RSS 소유 인증 메시지가 있다면 인증 이메일을 보낸다.', async () => {
+    //given
+    const payload = {
+      type: EmailPayloadConstant.RSS_CERTIFICATION,
+      data: {
+        userName: 'tester',
+        email: 'test@test.com',
+        blogName: 'test blog',
+        certificateCode: 'cert-code',
+        userEmail: 'requester@test.com',
+      },
+    };
+    await rabbitmqService.sendMessage(
+      RMQ_EXCHANGES.EMAIL,
+      RMQ_ROUTING_KEYS.EMAIL_SEND,
+      JSON.stringify(payload),
+    );
+
+    //when
+    await emailConsumer.start();
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
+    //then
+    const mailpitContainer = (global as unknown as MailpitGlobal)
+      .__MAILPIT_CONTAINER__;
+    const webPort = mailpitContainer.getMappedPort(8025);
+    const baseUrl = `http://${mailpitContainer.getHost()}:${webPort}`;
+
+    const response = await axios.get<MailpitResponse>(`${baseUrl}/api/v1/messages`);
+    const data = response.data;
+
+    await axios.delete(`${baseUrl}/api/v1/messages`);
+
+    expect(data.messages).toHaveLength(1);
+    expect(data.messages[0].To[0].Address).toBe('test@test.com');
+    expect(data.messages[0].Subject).toContain('RSS 소유 인증');
+  });
+
+  it('RSS 등록 신청 메시지가 있다면 관리자에게 신청 접수 이메일을 보낸다.', async () => {
+    //given
+    const payload = {
+      type: EmailPayloadConstant.RSS_REGISTRATION_REQUEST,
+      data: {
+        rss: {
+          name: 'test blog',
+          userName: 'tester',
+          email: 'test@test.com',
+          rssUrl: 'test@blog.com',
+        },
+        adminEmail: 'admin@test.com',
+      },
+    };
+    await rabbitmqService.sendMessage(
+      RMQ_EXCHANGES.EMAIL,
+      RMQ_ROUTING_KEYS.EMAIL_SEND,
+      JSON.stringify(payload),
+    );
+
+    //when
+    await emailConsumer.start();
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
+    //then
+    const mailpitContainer = (global as unknown as MailpitGlobal)
+      .__MAILPIT_CONTAINER__;
+    const webPort = mailpitContainer.getMappedPort(8025);
+    const baseUrl = `http://${mailpitContainer.getHost()}:${webPort}`;
+
+    const response = await axios.get<MailpitResponse>(`${baseUrl}/api/v1/messages`);
+    const data = response.data;
+
+    await axios.delete(`${baseUrl}/api/v1/messages`);
+
+    expect(data.messages).toHaveLength(1);
+    expect(data.messages[0].To[0].Address).toBe('admin@test.com');
+    expect(data.messages[0].Subject).toContain('RSS 등록 신청');
+  });
+
+  it('관리자 계정 인증 메시지가 있다면 인증 이메일을 보낸다.', async () => {
+    //given
+    const payload = {
+      type: EmailPayloadConstant.ADMIN_CERTIFICATION,
+      data: {
+        email: 'admin@test.com',
+        name: 'admin',
+        uuid: 'admin-uuid',
+      },
+    };
+    await rabbitmqService.sendMessage(
+      RMQ_EXCHANGES.EMAIL,
+      RMQ_ROUTING_KEYS.EMAIL_SEND,
+      JSON.stringify(payload),
+    );
+
+    //when
+    await emailConsumer.start();
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
+    //then
+    const mailpitContainer = (global as unknown as MailpitGlobal)
+      .__MAILPIT_CONTAINER__;
+    const webPort = mailpitContainer.getMappedPort(8025);
+    const baseUrl = `http://${mailpitContainer.getHost()}:${webPort}`;
+
+    const response = await axios.get<MailpitResponse>(`${baseUrl}/api/v1/messages`);
+    const data = response.data;
+
+    await axios.delete(`${baseUrl}/api/v1/messages`);
+
+    expect(data.messages).toHaveLength(1);
+    expect(data.messages[0].To[0].Address).toBe('admin@test.com');
+    expect(data.messages[0].Subject).toContain('관리자 계정 인증');
+  });
+
+  it('관리자 회원탈퇴 메시지가 있다면 확인 이메일을 보낸다.', async () => {
+    //given
+    const payload = {
+      type: EmailPayloadConstant.ADMIN_ACCOUNT_DELETION,
+      data: {
+        email: 'admin@test.com',
+        name: 'admin',
+        uuid: 'admin-uuid',
+      },
+    };
+    await rabbitmqService.sendMessage(
+      RMQ_EXCHANGES.EMAIL,
+      RMQ_ROUTING_KEYS.EMAIL_SEND,
+      JSON.stringify(payload),
+    );
+
+    //when
+    await emailConsumer.start();
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
+    //then
+    const mailpitContainer = (global as unknown as MailpitGlobal)
+      .__MAILPIT_CONTAINER__;
+    const webPort = mailpitContainer.getMappedPort(8025);
+    const baseUrl = `http://${mailpitContainer.getHost()}:${webPort}`;
+
+    const response = await axios.get<MailpitResponse>(`${baseUrl}/api/v1/messages`);
+    const data = response.data;
+
+    await axios.delete(`${baseUrl}/api/v1/messages`);
+
+    expect(data.messages).toHaveLength(1);
+    expect(data.messages[0].To[0].Address).toBe('admin@test.com');
+    expect(data.messages[0].Subject).toContain('관리자 회원탈퇴');
   });
 });

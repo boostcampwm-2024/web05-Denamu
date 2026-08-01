@@ -7,7 +7,7 @@ export class GetLikeResponseDto {
   })
   isLike: boolean;
 
-  private constructor(isLike: boolean) {
+  constructor(isLike: boolean) {
     this.isLike = isLike;
   }
 

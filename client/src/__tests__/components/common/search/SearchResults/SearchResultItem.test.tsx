@@ -20,28 +20,33 @@ describe("SearchResultItem", () => {
     id: 1,
     createdAt: "2024-01-01",
     title: "테스트 제목입니다",
-    blogName: "테스트 블로그",
+    blog: { name: "테스트 블로그", platform: "etc" },
     path: "/test-path",
+    thumbnail: "",
+    viewCount: 0,
+    tag: [],
+    likes: 0,
+    comments: 0,
   };
 
   it("검색 결과의 제목과 블로그명이 렌더링되어야 한다", () => {
     render(<SearchResultItem {...mockResult} />);
 
     expect(screen.getByText(mockResult.title)).toBeInTheDocument();
-    expect(screen.getByText(mockResult.blogName)).toBeInTheDocument();
+    expect(screen.getByText(mockResult.blog.name)).toBeInTheDocument();
   });
 
   it("결과를 클릭하면 올바른 경로로 이동할 수 있어야 한다", () => {
     render(<SearchResultItem {...mockResult} />);
 
     const link = screen.getByRole("link");
-    expect(link).toHaveAttribute("href", mockResult.path);
+    expect(link).toHaveAttribute("href", String(mockResult.id));
   });
 
   it("블로그명은 회색으로 표시되어야 한다", () => {
     render(<SearchResultItem {...mockResult} />);
 
-    const blogName = screen.getByText(mockResult.blogName);
+    const blogName = screen.getByText(mockResult.blog.name);
     expect(blogName.closest("p")).toHaveClass("text-gray-500");
   });
 

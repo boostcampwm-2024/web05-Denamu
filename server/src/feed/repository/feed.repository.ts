@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import { Brackets, DataSource, Repository } from 'typeorm';
+import { Brackets, DataSource, In, IsNull, LessThan, Raw, Repository } from 'typeorm';
 
 import { ReadFeedPaginationRequestDto } from '@feed/dto/request/readFeedPagination.dto';
 import { SearchType } from '@feed/dto/request/searchFeed.dto';
@@ -17,15 +17,24 @@ export class FeedRepository extends Repository<Feed> {
     limit: number,
     type: SearchType,
     offset: number,
+    blockerId?: number,
   ) {
     const queryBuilder = this.createQueryBuilder('feed')
       .innerJoinAndSelect('feed.blog', 'rss_accept')
       .addSelect(this.getMatchAgainstExpression(type, 'find'), 'relevance')
       .where(this.getWhereCondition(type), { find })
+      .andWhere('feed.is_public = 1')
       .orderBy('relevance', 'DESC')
       .addOrderBy('feed.createdAt', 'DESC')
       .skip(offset)
       .take(limit);
+
+    if (blockerId) {
+      queryBuilder.andWhere(
+        'feed.blog_id NOT IN (SELECT rss_block.blocked_rss_id FROM rss_blocks rss_block WHERE rss_block.blocker_id = :blockerId)',
+        { blockerId },
+      );
+    }
 
     return queryBuilder.getManyAndCount();
   }
@@ -52,9 +61,164 @@ export class FeedRepository extends Repository<Feed> {
     }
   }
 
+  async getFeedsByBlog(
+    blogId: number,
+    lastId: number,
+    limit: number,
+    onlyPublic: boolean,
+    date?: string,
+  ) {
+    return this.find({
+      where: {
+        blog: { id: blogId },
+        ...(onlyPublic && { isPublic: true }),
+        ...(lastId && { id: LessThan(lastId) }),
+        // 잔디 집계(DATE_FORMAT 기준)와 동일한 날짜 범위. 인덱스 활용을 위해 범위 조건 사용.
+        ...(date && {
+          createdAt: Raw(
+            (alias) => `${alias} >= :date AND ${alias} < DATE_ADD(:date, INTERVAL 1 DAY)`,
+            { date },
+          ),
+        }),
+      },
+      select: [
+        'id',
+        'title',
+        'path',
+        'thumbnail',
+        'createdAt',
+        'commentCount',
+        'likeCount',
+        'isPublic',
+      ],
+      order: { id: 'DESC' },
+      take: limit + 1,
+    });
+  }
+
+  async getLatestPublicFeedDate(blogId: number): Promise<Date | null> {
+    const row = await this.createQueryBuilder('feed')
+      .select('MAX(feed.created_at)', 'latest')
+      .where('feed.blog_id = :blogId', { blogId })
+      .andWhere('feed.is_public = 1')
+      .getRawOne<{ latest: Date | null }>();
+
+    return row?.latest ?? null;
+  }
+
+  async findPublishActivityByBlogAndYear(
+    blogId: number,
+    year: number,
+  ): Promise<Array<{ date: string; count: number }>> {
+    const rows = await this.createQueryBuilder('feed')
+      .select("DATE_FORMAT(feed.created_at, '%Y-%m-%d')", 'date')
+      .addSelect('COUNT(*)', 'count')
+      .where('feed.blog_id = :blogId', { blogId })
+      .andWhere('feed.is_public = 1')
+      .andWhere('YEAR(feed.created_at) = :year', { year })
+      .groupBy('date')
+      .orderBy('date', 'ASC')
+      .getRawMany<{ date: string; count: number }>();
+
+    return rows.map((row) => ({ date: row.date, count: Number(row.count) }));
+  }
+
+  async findPublishYearsByBlogId(blogId: number): Promise<number[]> {
+    const rows = await this.createQueryBuilder('feed')
+      .select('DISTINCT YEAR(feed.created_at)', 'year')
+      .where('feed.blog_id = :blogId', { blogId })
+      .andWhere('feed.is_public = 1')
+      .orderBy('year', 'DESC')
+      .getRawMany<{ year: number }>();
+
+    return rows.map((row) => Number(row.year));
+  }
+
+  async countPublicFeedsByBlogIds(
+    blogIds: number[],
+  ): Promise<Map<number, number>> {
+    if (!blogIds.length) return new Map();
+
+    const rows = await this.createQueryBuilder('feed')
+      .select('feed.blog_id', 'blogId')
+      .addSelect('COUNT(*)', 'count')
+      .where('feed.blog_id IN (:...blogIds)', { blogIds })
+      .andWhere('feed.is_public = 1')
+      .groupBy('feed.blog_id')
+      .getRawMany();
+
+    return new Map(
+      rows.map((row: { blogId: number; count: number }) => [
+        Number(row.blogId),
+        Number(row.count),
+      ]),
+    );
+  }
+
+  async setVisibilityForBlog(
+    feedId: number,
+    blogId: number,
+    isPublic: boolean,
+  ) {
+    const result = await this.update({ id: feedId, blog: { id: blogId } }, { isPublic });
+
+    return result.affected ?? 0;
+  }
+
+  async isOwnedByUser(feedId: number, userId: number): Promise<boolean> {
+    return this.exists({ where: { id: feedId, blog: { userId } } });
+  }
+
+  async getBlogMetaByFeedId(
+    feedId: number,
+  ): Promise<{ id: number; userName: string; userId: number | null } | null> {
+    const feed = await this.findOne({
+      where: { id: feedId },
+      relations: { blog: true },
+      select: { id: true, blog: { id: true, userName: true, userId: true } },
+    });
+
+    if (!feed?.blog) return null;
+
+    return {
+      id: feed.blog.id,
+      userName: feed.blog.userName,
+      userId: feed.blog.userId,
+    };
+  }
+
+  async getSubscriptionFeeds(blogIds: number[], lastId: number, limit: number) {
+    if (!blogIds.length) return [];
+
+    return this.find({
+      where: {
+        blog: { id: In(blogIds) },
+        isPublic: true,
+        ...(lastId && { id: LessThan(lastId) }),
+      },
+      relations: { blog: true, tags: true },
+      order: { id: 'DESC' },
+      take: limit + 1,
+    });
+  }
+
+  async findFeedsWithoutSummary() {
+    return this.find({
+      where: [
+        { isPublic: true, summary: IsNull() },
+        { isPublic: true, summary: '' },
+      ],
+      select: ['id', 'title', 'likeCount', 'commentCount'],
+      order: { id: 'DESC' },
+    });
+  }
+
   async findAllStatisticsOrderByViewCount(limit: number) {
     return this.find({
       select: ['id', 'title', 'viewCount'],
+      where: {
+        isPublic: true,
+      },
       order: {
         viewCount: 'DESC',
       },
@@ -71,6 +235,7 @@ export class FeedViewRepository extends Repository<FeedView> {
 
   async findFeedPagination(
     feedPaginationQueryDto: ReadFeedPaginationRequestDto,
+    blockerId?: number,
   ) {
     const { lastId, limit, tags } = feedPaginationQueryDto;
 
@@ -103,6 +268,13 @@ export class FeedViewRepository extends Repository<FeedView> {
           }),
         );
       }
+    }
+
+    if (blockerId) {
+      query.andWhere(
+        'id NOT IN (SELECT f.id FROM feed f INNER JOIN rss_blocks rss_block ON rss_block.blocked_rss_id = f.blog_id WHERE rss_block.blocker_id = :blockerId)',
+        { blockerId },
+      );
     }
 
     query.orderBy('order_id', 'DESC').take(limit + 1);

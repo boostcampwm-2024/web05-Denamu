@@ -1,14 +1,13 @@
 import { usePostViewIncrement } from "@/hooks/queries/usePostViewIncrement";
 
-// import { pipe } from "@/utils/pipe";
-import { Post } from "@/types/post";
+import { FeedBase } from "@/types/post";
 
 interface PostWithState {
-  post: Post;
+  post: FeedBase;
   isWindowOpened?: boolean;
 }
 
-export const usePostCardActions = (post: Post) => {
+export const usePostCardActions = (post: FeedBase) => {
   const { mutate } = usePostViewIncrement(post.id);
 
   const openPost = ({ post }: Pick<PostWithState, "post">): PostWithState => {

@@ -1,11 +1,25 @@
 import { Channel } from 'amqplib';
+import axios from 'axios';
+import { StartedTestContainer } from 'testcontainers';
+
+import { EmailPayload } from '@email/types';
+
 import {
   RMQ_EXCHANGES,
   RMQ_QUEUES,
   RMQ_ROUTING_KEYS,
 } from '@rabbitmq/rabbitmq.constant';
 import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
-import { EmailPayload } from '@src/types/types';
+
+interface RabbitMQRawMessage {
+  payload: string;
+  properties?: { headers?: Record<string, unknown> };
+  redelivered: boolean;
+}
+
+interface MailpitContainerGlobal {
+  __MAILPIT_CONTAINER__?: StartedTestContainer;
+}
 
 /**
  * RabbitMQ Management API를 통해 조회한 메시지 형식
@@ -34,34 +48,37 @@ export async function getMessagesFromQueue(
 
   const url = `http://${host}:${managementPort}/api/queues/%2f/${encodeURIComponent(queueName)}/get`;
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization:
-        'Basic ' + Buffer.from(`${user}:${pass}`).toString('base64'),
-    },
-    body: JSON.stringify({
+  const response = await axios.post<RabbitMQRawMessage[]>(
+    url,
+    {
       count,
       ackmode: 'ack_requeue_true', // 메시지를 다시 큐에 넣음 (소비하지 않음)
       encoding: 'auto',
-    }),
-  });
+    },
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization:
+          'Basic ' + Buffer.from(`${user}:${pass}`).toString('base64'),
+      },
+      validateStatus: () => true,
+    },
+  );
 
-  if (!response.ok) {
-    if (response.status === 404) {
-      return []; // 큐가 존재하지 않으면 빈 배열 반환
-    }
+  if (response.status === 404) {
+    return [];
+  }
+  if (response.status < 200 || response.status >= 300) {
     throw new Error(
       `Failed to get messages from queue: ${response.statusText}`,
     );
   }
 
-  const messages = await response.json();
+  const messages = response.data;
 
-  return messages.map((msg: any) => ({
-    content: JSON.parse(msg.payload),
-    headers: msg.properties?.headers || {},
+  return messages.map((msg) => ({
+    content: JSON.parse(msg.payload) as EmailPayload,
+    headers: msg.properties?.headers ?? {},
     redelivered: msg.redelivered,
   }));
 }
@@ -159,24 +176,28 @@ export async function purgeAllEmailQueues(channel: Channel): Promise<void> {
  * Mailpit의 모든 이메일을 삭제합니다.
  */
 export async function clearMailpit(): Promise<void> {
-  const mailpitContainer = (global as any).__MAILPIT_CONTAINER__;
+  const mailpitContainer = (global as unknown as MailpitContainerGlobal)
+    .__MAILPIT_CONTAINER__;
   if (!mailpitContainer) return;
 
   const webPort = mailpitContainer.getMappedPort(8025);
   const baseUrl = `http://${mailpitContainer.getHost()}:${webPort}`;
-  await fetch(`${baseUrl}/api/v1/messages`, { method: 'DELETE' });
+  await axios.delete(`${baseUrl}/api/v1/messages`);
 }
 
 /**
  * Mailpit에서 이메일 목록을 조회합니다.
  */
 export async function getMailpitMessages(): Promise<any[]> {
-  const mailpitContainer = (global as any).__MAILPIT_CONTAINER__;
+  const mailpitContainer = (global as unknown as MailpitContainerGlobal)
+    .__MAILPIT_CONTAINER__;
   if (!mailpitContainer) return [];
 
   const webPort = mailpitContainer.getMappedPort(8025);
   const baseUrl = `http://${mailpitContainer.getHost()}:${webPort}`;
-  const response = await fetch(`${baseUrl}/api/v1/messages`);
-  const data = await response.json();
-  return data.messages || [];
+  const response = await axios.get<{ messages?: unknown[] }>(
+    `${baseUrl}/api/v1/messages`,
+  );
+  const data = response.data;
+  return data.messages ?? [];
 }

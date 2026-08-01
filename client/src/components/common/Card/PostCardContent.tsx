@@ -5,10 +5,10 @@ import { CardContent } from "@/components/ui/card";
 import { formatDate } from "@/utils/date";
 
 import { useMediaStore } from "@/store/useMediaStore";
-import { Post } from "@/types/post";
+import { FeedList } from "@/types/post";
 
 interface PostCardContentProps {
-  post: Post;
+  post: FeedList;
 }
 
 export const PostCardContent = ({ post }: PostCardContentProps) => {
@@ -21,11 +21,12 @@ const MobileCardContent = ({ post }: PostCardContentProps) => {
     <CardContent className="p-0">
       <div className="flex items-center ml-4 mb-3 gap-3">
         <PostAvatar
-          blogPlatform={post.blogPlatform}
+          blogPlatform={post.blog.platform}
+          blogImage={post.blog.image}
           className="h-8 w-8 ring-2 ring-background cursor-pointer"
-          author={post.author}
+          author={post.blog.name}
         />
-        <p className="font-bold text-sm">{post.author}</p>
+        <p className="font-bold text-sm">{post.blog.name}</p>
       </div>
       <div className="px-4 pb-4">
         <p className="h-[48px] font-bold text-md group-hover:text-primary transition-colors line-clamp-2">
@@ -44,13 +45,14 @@ const DesktopCardContent = ({ post }: PostCardContentProps) => {
     <CardContent className="p-0">
       <div className="relative -mt-4 ml-4 mb-3">
         <PostAvatar
-          blogPlatform={post.blogPlatform}
+          blogPlatform={post.blog.platform}
+          blogImage={post.blog.image}
           className="h-8 w-8 ring-2 ring-background cursor-pointer"
-          author={post.author}
+          author={post.blog.name}
         />
       </div>
       <div className="px-4 pb-4">
-        <p className="font-bold text-xs text-gray-400 pb-1 line-clamp-1">{post.author}</p>
+        <p className="font-bold text-xs text-gray-400 pb-1 line-clamp-1">{post.blog.name}</p>
         <p className="h-[40px] font-bold text-sm group-hover:text-primary transition-colors line-clamp-2">
           {post.title}
         </p>

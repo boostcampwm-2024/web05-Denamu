@@ -3,7 +3,6 @@ import { HttpStatus } from '@nestjs/common';
 import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 
-import { UpdateCommentRequestDto } from '@comment/dto/request/updateComment.dto';
 import { Comment } from '@comment/entity/comment.entity';
 import { CommentRepository } from '@comment/repository/comment.repository';
 
@@ -23,9 +22,9 @@ import { UserFixture } from '@test/config/common/fixture/user.fixture';
 import { createAccessToken } from '@test/config/e2e/env/jest.setup';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = '/api/comment';
+const BASE_URL = '/api/feeds';
 
-describe(`PATCH ${URL} E2E Test`, () => {
+describe(`PATCH ${BASE_URL}/:feedId/comments/:commentId E2E Test`, () => {
   let agent: TestAgent;
   let comment: Comment;
   let userRepository: UserRepository;
@@ -34,7 +33,7 @@ describe(`PATCH ${URL} E2E Test`, () => {
   let feedRepository: FeedRepository;
   let rssAccept: RssAccept;
   let feed: Feed;
-  let user: User;
+  let user: User, user2: User;
   let accessToken: string;
 
   beforeAll(() => {
@@ -49,7 +48,8 @@ describe(`PATCH ${URL} E2E Test`, () => {
     rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
-    [user, feed] = await Promise.all([
+    [user, user2, feed] = await Promise.all([
+      userRepository.save(await UserFixture.createUserCryptFixture()),
       userRepository.save(await UserFixture.createUserCryptFixture()),
       feedRepository.save(FeedFixture.createFeedFixture(rssAccept)),
     ]);
@@ -60,14 +60,10 @@ describe(`PATCH ${URL} E2E Test`, () => {
   });
 
   it('[401] 로그인이 되어있지 않을 경우 댓글 수정을 실패한다.', async () => {
-    // given
-    const requestDto = new UpdateCommentRequestDto({
-      commentId: comment.id,
-      newComment: 'newComment',
-    });
-
     // Http when
-    const response = await agent.patch(URL).send(requestDto);
+    const response = await agent
+      .patch(`${BASE_URL}/${feed.id}/comments/${comment.id}`)
+      .send({ newComment: 'newComment' });
 
     // Http then
     const { data } = response.body;
@@ -84,17 +80,11 @@ describe(`PATCH ${URL} E2E Test`, () => {
   });
 
   it('[404] 댓글이 존재하지 않을 경우 댓글 수정을 실패한다.', async () => {
-    // given
-    const requestDto = new UpdateCommentRequestDto({
-      commentId: Number.MAX_SAFE_INTEGER,
-      newComment: 'newComment',
-    });
-
     // Http when
     const response = await agent
-      .patch(URL)
+      .patch(`${BASE_URL}/${feed.id}/comments/${Number.MAX_SAFE_INTEGER}`)
       .set('Authorization', `Bearer ${accessToken}`)
-      .send(requestDto);
+      .send({ newComment: 'newComment' });
 
     // Http then
     const { data } = response.body;
@@ -110,23 +100,19 @@ describe(`PATCH ${URL} E2E Test`, () => {
     expect(savedComment.comment).toBe(comment.comment);
   });
 
-  it('[401] 본인이 작성한 댓글이 아닐 경우 댓글 수정을 실패한다.', async () => {
+  it('[403] 본인이 작성한 댓글이 아닐 경우 댓글 수정을 실패한다.', async () => {
     // given
-    const requestDto = new UpdateCommentRequestDto({
-      commentId: comment.id,
-      newComment: 'newComment',
-    });
-    accessToken = createAccessToken({ id: Number.MAX_SAFE_INTEGER });
+    accessToken = createAccessToken({ id: user2.id });
 
     // Http when
     const response = await agent
-      .patch(URL)
+      .patch(`${BASE_URL}/${feed.id}/comments/${comment.id}`)
       .set('Authorization', `Bearer ${accessToken}`)
-      .send(requestDto);
+      .send({ newComment: 'newComment' });
 
     // Http then
     const { data } = response.body;
-    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(response.status).toBe(HttpStatus.FORBIDDEN);
     expect(data).toBeUndefined();
 
     // DB, Redis when
@@ -139,17 +125,11 @@ describe(`PATCH ${URL} E2E Test`, () => {
   });
 
   it('[200] 본인이 작성한 댓글일 경우 댓글 수정을 성공한다.', async () => {
-    // given
-    const requestDto = new UpdateCommentRequestDto({
-      commentId: comment.id,
-      newComment: 'newComment',
-    });
-
     // Http when
     const response = await agent
-      .patch(URL)
+      .patch(`${BASE_URL}/${feed.id}/comments/${comment.id}`)
       .set('Authorization', `Bearer ${accessToken}`)
-      .send(requestDto);
+      .send({ newComment: 'newComment' });
 
     // Http then
     const { data } = response.body;
@@ -162,6 +142,6 @@ describe(`PATCH ${URL} E2E Test`, () => {
     });
 
     // DB, Redis then
-    expect(savedComment.comment).toBe(requestDto.newComment);
+    expect(savedComment.comment).toBe('newComment');
   });
 });

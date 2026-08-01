@@ -3,13 +3,14 @@ import { injectable } from 'tsyringe';
 import axios from 'axios';
 import { EventEmitter } from 'node:events';
 
-import logger from '@src/logger';
+import logger from '@common/logger/logger';
+
 import {
   EmailDlqPayload,
   NOTIFICATION_EVENT,
   NotificationEventPayloadMap,
-} from '@src/notification/notification-event.constant';
-import { Notifier } from '@src/notification/notifier.interface';
+} from '@notification/notification-event.constant';
+import { Notifier } from '@notification/notifier.interface';
 
 @injectable()
 export class DiscordNotifier implements Notifier {
@@ -27,11 +28,11 @@ export class DiscordNotifier implements Notifier {
     this.eventEmitter = new EventEmitter();
   }
 
-  initialize() {
+  start() {
     if (!this.initialized) {
       this.eventEmitter.on(
         NOTIFICATION_EVENT.EMAIL_DLQ,
-        this.sendEmailDlqAlert,
+        (payload: EmailDlqPayload) => void this.sendEmailDlqAlert(payload),
       );
       this.initialized = true;
     }
@@ -44,10 +45,13 @@ export class DiscordNotifier implements Notifier {
       await axios.post(this.webhookUrl, {
         content: `${dlqMessage} DLQ 메시지 발행 - 오류 메시지: \`\`\`${error.message}\`\`\``,
       });
-    } catch (e) {
-      logger.error('Discord 알림 전송 실패:', e);
+      logger.info(`알림 소요 시간: ${Date.now() - discordStartTime}`);
+    } catch (error) {
+      logger.error(
+        'Discord 알림 전송 실패:',
+        error instanceof Error ? error.message : String(error),
+      );
     }
-    logger.info(`알림 소요 시간: ${Date.now() - discordStartTime}`);
   };
 
   publish<K extends keyof NotificationEventPayloadMap>(

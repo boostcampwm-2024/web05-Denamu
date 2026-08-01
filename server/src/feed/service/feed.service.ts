@@ -1,11 +1,20 @@
-import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
+import axios from 'axios';
 import { Request, Response } from 'express';
 
-import { cookieConfig } from '@common/cookie/cookie.config';
+import { RssBlockRepository } from '@block/repository/rssBlock.repository';
+
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
+import { getIp } from '@common/util/getIp';
 
+import { AI_RETRY_LOCK_TTL_SECONDS } from '@feed/constant/feed.constant';
 import { ManageFeedRequestDto } from '@feed/dto/request/manageFeed.dto';
 import { ReadFeedPaginationRequestDto } from '@feed/dto/request/readFeedPagination.dto';
 import { SearchFeedRequestDto } from '@feed/dto/request/searchFeed.dto';
@@ -20,6 +29,8 @@ import {
   FeedRecentRedis,
   ReadFeedRecentResponseDto,
 } from '@feed/dto/response/readFeedRecent.dto';
+import { ReadNoSummaryFeedResponseDto } from '@feed/dto/response/readNoSummaryFeed.dto';
+import { ReadSubscriptionFeedResponseDto } from '@feed/dto/response/readSubscriptionFeed.dto';
 import {
   SearchFeedResponseDto,
   SearchFeedResult,
@@ -29,6 +40,15 @@ import {
   FeedRepository,
   FeedViewRepository,
 } from '@feed/repository/feed.repository';
+import { existNextFeed, getLastIdFromFeedList } from '@feed/util/pagination';
+import { createCookie, isString } from '@feed/util/viewCookie';
+
+import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
+
+type AiSummaryRetryMessage = {
+  feedId: number;
+  deathCount: number;
+};
 
 @Injectable()
 export class FeedService {
@@ -36,6 +56,8 @@ export class FeedService {
     private readonly feedRepository: FeedRepository,
     private readonly feedViewRepository: FeedViewRepository,
     private readonly redisService: RedisService,
+    private readonly subscriptionRepository: SubscriptionRepository,
+    private readonly rssBlockRepository: RssBlockRepository,
   ) {}
 
   async getFeed(feedId: number) {
@@ -45,6 +67,47 @@ export class FeedService {
     }
 
     return feed;
+  }
+
+  async getPublicFeed(feedId: number) {
+    const feed = await this.getFeed(feedId);
+    if (!feed.isPublic) {
+      throw new NotFoundException('존재하지 않는 게시글입니다.');
+    }
+
+    return feed;
+  }
+
+  async readFeedsWithoutSummary() {
+    const feeds = await this.feedRepository.findFeedsWithoutSummary();
+    return ReadNoSummaryFeedResponseDto.toResponseDtoArray(feeds);
+  }
+
+  async requestAiSummary(feedId: number) {
+    await this.getFeed(feedId);
+
+    const lockKey = `${REDIS_KEYS.FEED_AI_RETRY_LOCK}:${feedId}`;
+    const acquired = await this.redisService.set(
+      lockKey,
+      '1',
+      'NX',
+      'EX',
+      AI_RETRY_LOCK_TTL_SECONDS,
+    );
+    if (!acquired) {
+      throw new ConflictException(
+        '현재 이 게시글은 AI 큐에 포함되어 요약을 진행중입니다.',
+      );
+    }
+
+    const message: AiSummaryRetryMessage = {
+      feedId,
+      deathCount: 0,
+    };
+    await this.redisService.rpush(
+      REDIS_KEYS.FEED_AI_RETRY_QUEUE,
+      JSON.stringify(message),
+    );
   }
 
   async getFeedByView(feedId: number) {
@@ -58,14 +121,16 @@ export class FeedService {
 
   async readFeedPagination(
     feedPaginationQueryDto: ReadFeedPaginationRequestDto,
+    blockerId?: number,
   ) {
     const feedList = await this.feedViewRepository.findFeedPagination(
       feedPaginationQueryDto,
+      blockerId,
     );
 
-    const hasMore = this.existNextFeed(feedList, feedPaginationQueryDto.limit);
+    const hasMore = existNextFeed(feedList, feedPaginationQueryDto.limit);
     if (hasMore) feedList.pop();
-    const lastId = this.getLastIdFromFeedList(feedList);
+    const lastId = getLastIdFromFeedList(feedList);
     const newCheckFeedList = await this.checkNewFeeds(feedList);
     const feedPagination = FeedResult.toResultDtoArray(newCheckFeedList);
     return ReadFeedPaginationResponseDto.toResponseDto(
@@ -73,14 +138,6 @@ export class FeedService {
       lastId,
       hasMore,
     );
-  }
-
-  private existNextFeed(feedList: FeedView[], limit: number) {
-    return feedList.length > limit;
-  }
-
-  private getLastIdFromFeedList(feedList: FeedView[]) {
-    return feedList.length ? feedList[feedList.length - 1].feedId : 0;
   }
 
   private async checkNewFeeds(feedList: FeedView[]) {
@@ -115,7 +172,10 @@ export class FeedService {
     );
   }
 
-  async searchFeedList(searchFeedQueryDto: SearchFeedRequestDto) {
+  async searchFeedList(
+    searchFeedQueryDto: SearchFeedRequestDto,
+    blockerId?: number,
+  ) {
     const { find, page, limit, type } = searchFeedQueryDto;
     const offset = (page - 1) * limit;
 
@@ -124,6 +184,7 @@ export class FeedService {
       limit,
       type,
       offset,
+      blockerId,
     );
 
     const feeds = SearchFeedResult.toResultDtoArray(searchResult);
@@ -146,9 +207,9 @@ export class FeedService {
     await this.getFeed(feedId);
 
     const cookie = request.headers.cookie;
-    const ip = this.getIp(request);
+    const ip = getIp(request);
 
-    if (!ip || !this.isString(ip)) {
+    if (!ip || !isString(ip)) {
       return;
     }
 
@@ -159,14 +220,17 @@ export class FeedService {
       return;
     }
 
-    const hasIpFlag = await this.redisService.sismember(`feed:${feedId}:ip`, ip);
+    const hasIpFlag = await this.redisService.sismember(
+      `feed:${feedId}:ip`,
+      ip,
+    );
 
     if (hasIpFlag) {
-      this.createCookie(response, feedId);
+      createCookie(response, feedId);
       return;
     }
 
-    this.createCookie(response, feedId);
+    createCookie(response, feedId);
 
     await Promise.all([
       this.redisService.sadd(`feed:${feedId}:ip`, ip),
@@ -179,25 +243,6 @@ export class FeedService {
         feedId.toString(),
       ),
     ]);
-  }
-
-  private isString(ip: string | string[]): ip is string {
-    return !Array.isArray(ip);
-  }
-
-  private createCookie(response: Response, feedId: number) {
-    const cookieConfigWithExpiration = {
-      ...cookieConfig[process.env.NODE_ENV],
-      expires: this.getExpirationTime(),
-    };
-    response.cookie(`View_count_${feedId}`, feedId, cookieConfigWithExpiration);
-  }
-
-  private getExpirationTime() {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(0, 0, 0, 0);
-    return tomorrow;
   }
 
   async readRecentFeedList() {
@@ -215,44 +260,98 @@ export class FeedService {
       }
     });
 
-    let recentFeedList: FeedRecentRedis[] = recentFeeds.map(
-      ([, feed]: [any, FeedRecentRedis]) => {
-        const redisTagList = feed.tagList as string;
-        feed.tagList = redisTagList ? redisTagList.split(',') : [];
-        return { ...feed, isNew: true };
-      },
-    );
-
-    recentFeedList = recentFeedList.sort((currentFeed, nextFeed) => {
-      const dateCurrent = new Date(currentFeed.createdAt);
-      const dateNext = new Date(nextFeed.createdAt);
-      return dateNext.getTime() - dateCurrent.getTime();
-    });
+    const recentFeedList = recentFeeds
+      .filter(([err]) => !err)
+      .map(([, feed]) => feed as FeedRecentRedis)
+      .map((feed) => ({
+        ...feed,
+        tagList:
+          typeof feed.tagList === 'string' ? feed.tagList.split(',') : [],
+        isNew: true,
+      }))
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
 
     return ReadFeedRecentResponseDto.toResponseDtoArray(recentFeedList);
   }
 
-  private getIp(request: Request) {
-    const forwardedFor = request.headers['x-forwarded-for'];
+  async getFeedDetail(
+    feedDetailRequestDto: ManageFeedRequestDto,
+    userId?: number,
+  ) {
+    const feed = await this.getFeedByView(feedDetailRequestDto.feedId);
+    const blogMeta = await this.feedRepository.getBlogMetaByFeedId(
+      feedDetailRequestDto.feedId,
+    );
+    const isOwner = userId
+      ? await this.feedRepository.isOwnedByUser(
+          feedDetailRequestDto.feedId,
+          userId,
+        )
+      : false;
 
-    if (typeof forwardedFor === 'string') {
-      const forwardedIps = forwardedFor.split(',');
-      return forwardedIps[0].trim();
+    let isSubscribed = false;
+    if (userId) {
+      const subscription = await this.subscriptionRepository.findOneBy({
+        user: { id: userId },
+        rssAccept: { id: blogMeta.id },
+      });
+      isSubscribed = !!subscription;
     }
 
-    return request.socket.remoteAddress;
+    let isBlocked = false;
+    if (userId) {
+      isBlocked = await this.rssBlockRepository.existsByBlockerAndRss(
+        userId,
+        blogMeta.id,
+      );
+    }
+
+    return GetFeedDetailResponseDto.toResponseDto(
+      feed,
+      isOwner,
+      blogMeta,
+      isSubscribed,
+      isBlocked,
+    );
   }
 
-  async getFeedDetail(feedDetailRequestDto: ManageFeedRequestDto) {
-    const feed = await this.getFeedByView(feedDetailRequestDto.feedId);
-    return GetFeedDetailResponseDto.toResponseDto(feed);
+  async readSubscriptionFeeds(
+    userId: number,
+    feedPaginationQueryDto: ReadFeedPaginationRequestDto,
+  ) {
+    const limit = feedPaginationQueryDto.limit ?? 12;
+    const [blogIds, blockedRssIds] = await Promise.all([
+      this.subscriptionRepository.getSubscribedBlogIds(userId),
+      this.rssBlockRepository.getBlockedRssIds(userId),
+    ]);
+    const visibleBlogIds = blogIds.filter(
+      (blogId) => !blockedRssIds.includes(blogId),
+    );
+    const feeds = await this.feedRepository.getSubscriptionFeeds(
+      visibleBlogIds,
+      feedPaginationQueryDto.lastId ?? 0,
+      limit,
+    );
+
+    const hasMore = feeds.length > limit;
+    if (hasMore) feeds.pop();
+    const lastId = feeds.length ? feeds[feeds.length - 1].id : 0;
+
+    return ReadSubscriptionFeedResponseDto.toResponseDto(
+      feeds,
+      lastId,
+      hasMore,
+    );
   }
 
   async deleteCheckFeed(feedDeleteCheckDto: ManageFeedRequestDto) {
     const feed = await this.getFeed(feedDeleteCheckDto.feedId);
-    const response = await fetch(feed.path);
+    const response = await axios.get(feed.path, { validateStatus: () => true });
 
-    if (response.status === (HttpStatus.NOT_FOUND as number)) {
+    if (response.status === Number(HttpStatus.NOT_FOUND)) {
       await this.feedRepository.delete({ id: feedDeleteCheckDto.feedId });
       throw new NotFoundException('원본 게시글이 삭제되었습니다.');
     }

@@ -1,8 +1,8 @@
 import { useState } from "react";
 
 import { FormInput } from "@/components/RssRegistration/FormInput";
-import { PlatformBadge } from "@/components/RssRegistration/PlatformBadge";
 import { BlogPlatformSelector } from "@/components/RssRegistration/PlatformSelector";
+import { RssUrlInput } from "@/components/RssRegistration/RssUrlInput";
 import Alert from "@/components/common/Alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,8 +23,9 @@ import { RegisterRss } from "@/types/rss.ts";
 
 export function RssRegistrationModal({ onClose, rssOpen }: { onClose: () => void; rssOpen: boolean }) {
   const [alertOpen, setAlertOpen] = useState<AlertType>({ title: "", content: "", isOpen: false });
+  const [etcBlogUrl, setEtcBlogUrl] = useState("");
 
-  const { values, handlers, formState, blogPlatform, selectedPlatformValue } = useRssRegistrationForm();
+  const { values, handlers, formState, addressTemplate, selectedPlatformValue } = useRssRegistrationForm();
   const { mutate } = useRegisterRss(
     () => {
       setAlertOpen({
@@ -33,7 +34,15 @@ export function RssRegistrationModal({ onClose, rssOpen }: { onClose: () => void
         isOpen: true,
       });
     },
-    () => {
+    (error) => {
+      if (error?.response?.status === 404) {
+        setAlertOpen({
+          title: "블로그 주소를 확인해주세요!",
+          content: "입력하신 블로그 주소에서 페이지를 찾을 수 없어요. 올바른 블로그 주소를 입력해주세요.",
+          isOpen: true,
+        });
+        return;
+      }
       setAlertOpen({
         title: "RSS 요청 실패!",
         content: "입력한 정보를 확인하거나 다시 시도해주세요. 문제가 계속되면 관리자에게 문의하세요!",
@@ -45,16 +54,17 @@ export function RssRegistrationModal({ onClose, rssOpen }: { onClose: () => void
   const handleAlertClose = () => {
     setAlertOpen({ title: "", content: "", isOpen: false });
     formState.reset();
+    setEtcBlogUrl("");
     onClose();
   };
 
   const handleRegister = () => {
     const data: RegisterRss = {
-      rssUrl: values.rssUrl,
-      blog: values.bloggerName,
+      blogUrl: values.blogUrl,
+      blogName: values.bloggerName,
       name: values.userName,
       email: values.email,
-      blogType: values.platformValue,
+      blogPlatform: values.blogPlatform,
     };
     mutate(data);
   };
@@ -72,38 +82,45 @@ export function RssRegistrationModal({ onClose, rssOpen }: { onClose: () => void
 
         <div className="space-y-6">
           <div className="space-y-2">
-            <FormInput
-              id="blogUrl"
-              type="text"
-              label="블로그 주소"
-              onChange={handlers.handleBlogUrlChange}
-              placeholder="https://myblog.tistory.com"
-              value={values.blogUrl}
-            />
-          </div>
-          <div className="space-y-2">
             <BlogPlatformSelector
               platforms={PLATFORM_OPTIONS}
               value={selectedPlatformValue}
               onChange={handlers.handlePlatformSelection}
             />
-            {values.blogUrl && blogPlatform && (
-              <PlatformBadge platform={blogPlatform} onClick={handlers.handleBadgeClick} />
-            )}
-            {selectedPlatformValue === "other" && (
-              <div className="mt-4">
+          </div>
+          {addressTemplate && (
+            <RssUrlInput
+              label="블로그 주소"
+              prefix={addressTemplate.prefix}
+              suffix={addressTemplate.suffix}
+              placeholder={addressTemplate.placeholder}
+              onChange={handlers.handleAddressInputChange}
+              value={values.addressInput}
+            />
+          )}
+          {selectedPlatformValue === "etc" && (
+            <div className="space-y-4">
+              <FormInput
+                id="blogUrl"
+                type="text"
+                label="블로그 주소"
+                onChange={setEtcBlogUrl}
+                placeholder="https://myblog.com"
+                value={etcBlogUrl}
+              />
+              <div className="space-y-1">
                 <FormInput
                   id="rssUrl"
                   type="text"
                   label="RSS URL"
                   onChange={handlers.handleRssDirectInput}
                   placeholder="https://myblog.com/rss"
-                  value={values.rssUrl}
+                  value={values.blogUrl}
                 />
                 <p className="text-xs text-muted-foreground mt-1">기타 플랫폼은 RSS URL을 직접 입력해주세요.</p>
               </div>
-            )}
-          </div>
+            </div>
+          )}
           <div className="space-y-4">
             <FormInput
               id="blog"

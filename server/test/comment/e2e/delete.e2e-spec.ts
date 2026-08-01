@@ -3,7 +3,6 @@ import { HttpStatus } from '@nestjs/common';
 import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 
-import { DeleteCommentRequestDto } from '@comment/dto/request/deleteComment.dto';
 import { Comment } from '@comment/entity/comment.entity';
 import { CommentRepository } from '@comment/repository/comment.repository';
 
@@ -23,12 +22,12 @@ import { UserFixture } from '@test/config/common/fixture/user.fixture';
 import { createAccessToken } from '@test/config/e2e/env/jest.setup';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = '/api/comment';
+const BASE_URL = '/api/feeds';
 
-describe(`DELETE ${URL} E2E Test`, () => {
+describe(`DELETE ${BASE_URL}/:feedId/comments/:commentId E2E Test`, () => {
   let agent: TestAgent;
   let comment: Comment;
-  let user: User;
+  let user: User, user2: User;
   let rssAccept: RssAccept;
   let feed: Feed;
   let commentRepository: CommentRepository;
@@ -49,7 +48,8 @@ describe(`DELETE ${URL} E2E Test`, () => {
     rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
-    [user, feed] = await Promise.all([
+    [user, user2, feed] = await Promise.all([
+      userRepository.save(await UserFixture.createUserCryptFixture()),
       userRepository.save(await UserFixture.createUserCryptFixture()),
       feedRepository.save(FeedFixture.createFeedFixture(rssAccept)),
     ]);
@@ -60,13 +60,10 @@ describe(`DELETE ${URL} E2E Test`, () => {
   });
 
   it('[401] 로그인이 되어 있지 않을 경우 댓글 삭제를 실패한다.', async () => {
-    // given
-    const requestDto = new DeleteCommentRequestDto({
-      commentId: comment.id,
-    });
-
     // Http when
-    const response = await agent.delete(URL).send(requestDto);
+    const response = await agent.delete(
+      `${BASE_URL}/${feed.id}/comments/${comment.id}`,
+    );
 
     // Http then
     const { data } = response.body;
@@ -75,7 +72,7 @@ describe(`DELETE ${URL} E2E Test`, () => {
 
     // DB, Redis when
     const savedComment = await commentRepository.findOneBy({
-      id: requestDto.commentId,
+      id: comment.id,
     });
 
     // DB, Redis then
@@ -83,69 +80,50 @@ describe(`DELETE ${URL} E2E Test`, () => {
   });
 
   it('[404] 삭제하고자 하는 댓글이 존재하지 않을 경우 댓글 삭제를 실패한다.', async () => {
-    // given
-    const requestDto = new DeleteCommentRequestDto({
-      commentId: Number.MAX_SAFE_INTEGER,
-    });
-
     // Http when
     const response = await agent
-      .delete(URL)
-      .set('Authorization', `Bearer ${accessToken}`)
-      .send(requestDto);
+      .delete(`${BASE_URL}/${feed.id}/comments/${Number.MAX_SAFE_INTEGER}`)
+      .set('Authorization', `Bearer ${accessToken}`);
 
     // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
     expect(data).toBeUndefined();
-
-    // DB, Redis when
-    const savedComment = await commentRepository.findOneBy({
-      id: requestDto.commentId,
-    });
-
-    // DB, Redis then
-    expect(savedComment).toBeNull();
   });
 
-  it('[401] 본인이 작성한 댓글이 아닐 경우 댓글 삭제를 실패한다.', async () => {
+  it('[403] 본인이 작성한 댓글이 아닐 경우 댓글 삭제를 실패한다.', async () => {
     // given
-    accessToken = createAccessToken({ id: Number.MAX_SAFE_INTEGER });
-    const requestDto = new DeleteCommentRequestDto({
-      commentId: comment.id,
-    });
+    accessToken = createAccessToken({ id: user2.id });
 
     // Http when
     const response = await agent
-      .delete(URL)
-      .set('Authorization', `Bearer ${accessToken}`)
-      .send(requestDto);
+      .delete(`${BASE_URL}/${feed.id}/comments/${comment.id}`)
+      .set('Authorization', `Bearer ${accessToken}`);
 
     // Http then
     const { data } = response.body;
-    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    expect(response.status).toBe(HttpStatus.FORBIDDEN);
     expect(data).toBeUndefined();
 
     // DB, Redis when
     const savedComment = await commentRepository.findOneBy({
-      id: requestDto.commentId,
+      id: comment.id,
     });
 
     // DB, Redis then
     expect(savedComment).not.toBeNull();
   });
 
-  it('[200] 본인이 작성한 댓글일 경우 댓글 삭제를 성공한다.', async () => {
-    // given
-    const requestDto = new DeleteCommentRequestDto({
-      commentId: comment.id,
-    });
+  it('[200] 본인 댓글이 아니어도 게시글의 RSS 소유자일 경우 댓글 삭제를 성공한다.', async () => {
+    // given - user2가 RSS 소유자, 댓글 작성자는 user
+    rssAccept.userId = user2.id;
+    await rssAcceptRepository.save(rssAccept);
+    accessToken = createAccessToken({ id: user2.id });
 
     // Http when
     const response = await agent
-      .delete(URL)
-      .set('Authorization', `Bearer ${accessToken}`)
-      .send(requestDto);
+      .delete(`${BASE_URL}/${feed.id}/comments/${comment.id}`)
+      .set('Authorization', `Bearer ${accessToken}`);
 
     // Http then
     const { data } = response.body;
@@ -154,10 +132,83 @@ describe(`DELETE ${URL} E2E Test`, () => {
 
     // DB, Redis when
     const savedComment = await commentRepository.findOneBy({
-      id: requestDto.commentId,
+      id: comment.id,
     });
 
     // DB, Redis then
     expect(savedComment).toBeNull();
+  });
+
+  it('[200] 본인이 작성한 댓글일 경우 댓글 삭제를 성공한다.', async () => {
+    // Http when
+    const response = await agent
+      .delete(`${BASE_URL}/${feed.id}/comments/${comment.id}`)
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.OK);
+    expect(data).toBeUndefined();
+
+    // DB, Redis when
+    const savedComment = await commentRepository.findOneBy({
+      id: comment.id,
+    });
+
+    // DB, Redis then
+    expect(savedComment).toBeNull();
+  });
+
+  it('[200] 답글이 달린 최상위 댓글은 soft delete(placeholder)로 남고 답글/commentCount는 유지된다.', async () => {
+    // given - comment(root)에 답글을 단다
+    const reply = await commentRepository.save(
+      CommentFixture.createCommentFixture(feed, user, { parentId: comment.id }),
+    );
+    const before = await feedRepository.findOneBy({ id: feed.id });
+
+    // Http when
+    const response = await agent
+      .delete(`${BASE_URL}/${feed.id}/comments/${comment.id}`)
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    // Http then
+    expect(response.status).toBe(HttpStatus.OK);
+
+    // DB then - root는 row 유지 + isDeleted, 답글 유지, commentCount 불변
+    const softDeleted = await commentRepository.findOneBy({ id: comment.id });
+    expect(softDeleted).not.toBeNull();
+    expect(softDeleted.isDeleted).toBe(true);
+
+    const survivingReply = await commentRepository.findOneBy({ id: reply.id });
+    expect(survivingReply).not.toBeNull();
+
+    const after = await feedRepository.findOneBy({ id: feed.id });
+    expect(after.commentCount).toBe(before.commentCount);
+  });
+
+  it('[200] 답글 삭제 시 hard delete 되고 commentCount가 감소한다.', async () => {
+    // given - comment(root)에 답글을 단다
+    const reply = await commentRepository.save(
+      CommentFixture.createCommentFixture(feed, user, { parentId: comment.id }),
+    );
+    const before = await feedRepository.findOneBy({ id: feed.id });
+
+    // Http when
+    const response = await agent
+      .delete(`${BASE_URL}/${feed.id}/comments/${reply.id}`)
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    // Http then
+    expect(response.status).toBe(HttpStatus.OK);
+
+    // DB then - 답글 row 제거, root 유지, commentCount -1
+    const deletedReply = await commentRepository.findOneBy({ id: reply.id });
+    expect(deletedReply).toBeNull();
+
+    const survivingRoot = await commentRepository.findOneBy({ id: comment.id });
+    expect(survivingRoot).not.toBeNull();
+
+    const after = await feedRepository.findOneBy({ id: feed.id });
+    expect(after.commentCount).toBe(before.commentCount - 1);
   });
 });

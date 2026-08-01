@@ -1,40 +1,21 @@
 import { applyDecorators } from '@nestjs/common';
+import { ApiBody, ApiOperation } from '@nestjs/swagger';
+
 import {
-  ApiBadRequestResponse,
-  ApiConflictResponse,
-  ApiCreatedResponse,
-  ApiOperation,
-} from '@nestjs/swagger';
+  ApiBadRequestDoc,
+  ApiConflictDoc,
+  ApiCreatedDoc,
+  ApiNotFoundDoc,
+} from '@common/swagger/swagger.helper';
+import { RegisterRssRequestDto } from '@rss/dto/request/registerRss.dto';
 
 export function ApiCreateRss() {
   return applyDecorators(
-    ApiOperation({
-      summary: 'RSS 등록 API',
-    }),
-    ApiCreatedResponse({
-      description: 'Created',
-      schema: {
-        properties: {
-          message: {
-            type: 'string',
-          },
-        },
-      },
-      example: {
-        message: '신청이 완료되었습니다.',
-      },
-    }),
-    ApiBadRequestResponse({
-      description: 'Bad Request',
-      example: {
-        message: '오류 메세지',
-      },
-    }),
-    ApiConflictResponse({
-      description: 'Conflict',
-      example: {
-        message: '이미 등록된 RSS URL입니다.',
-      },
-    }),
+    ApiOperation({ summary: 'RSS 등록 API' }),
+    ApiBody({ type: RegisterRssRequestDto }),
+    ApiCreatedDoc('RSS 등록 신청 완료'),
+    ApiBadRequestDoc('요청 데이터 검증에 실패했거나 blogUrl/rssUrl에 접근할 수 없습니다.'),
+    ApiConflictDoc('이미 등록된 RSS URL입니다.'),
+    ApiNotFoundDoc('blogUrl 또는 rssUrl에서 페이지를 찾을 수 없습니다(404).'),
   );
 }

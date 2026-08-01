@@ -1,5 +1,7 @@
 import { useNavigate } from "react-router-dom";
 
+import { NoticeBell } from "@/components/common/NoticeBell";
+import { NotificationBell } from "@/components/common/NotificationBell";
 import { UserProfileMenu } from "@/components/common/UserProfileMenu";
 import SideButton from "@/components/layout/SideButton";
 import SearchButton from "@/components/search/SearchButton";
@@ -50,6 +52,21 @@ export default function DesktopNavigation({ toggleModal }: { toggleModal: (modal
               >
                 서비스 소개
               </NavigationMenuLink>
+            </NavigationMenuItem>
+            <NavigationMenuItem>
+              <NavigationMenuLink
+                className={`${navigationMenuTriggerStyle()} hover:text-primary hover:bg-primary/10`}
+                onClick={() => navigate("/board")}
+                href="#"
+              >
+                공지사항 · Q&A
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+            <NavigationMenuItem>
+              <NoticeBell />
+            </NavigationMenuItem>
+            <NavigationMenuItem>
+              <NotificationBell />
             </NavigationMenuItem>
             <NavigationMenuItem>
               <UserProfileMenu />

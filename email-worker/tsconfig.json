@@ -17,15 +17,15 @@
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
-    "baseUrl": ".",
     "paths": {
-      "@src/*": ["src/*"],
-      "@email/*": ["src/email/*"],
-      "@rabbitmq/*": ["src/rabbitmq/*"],
-      "@app-types/*": ["src/types/*"],
-      "@test/*":["test/*"]
+      "@common/*": ["./src/common/*"],
+      "@email/*": ["./src/email/*"],
+      "@notification/*": ["./src/notification/*"],
+      "@rabbitmq/*": ["./src/rabbitmq/*"],
+      "@test/*": ["./test/*"]
     },
     "resolveJsonModule": true,
+    "types": ["node", "jest"],
     "esModuleInterop": true
   }
 }

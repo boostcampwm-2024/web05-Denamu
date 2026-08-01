@@ -3,11 +3,16 @@ import {
   Column,
   Entity,
   Index,
+  JoinColumn,
+  ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
+  Unique,
 } from 'typeorm';
 
 import { Feed } from '@feed/entity/feed.entity';
+
+import { User } from '@user/entity/user.entity';
 
 export class RssInformation extends BaseEntity {
   @PrimaryGeneratedColumn()
@@ -38,12 +43,37 @@ export class RssInformation extends BaseEntity {
     nullable: false,
   })
   rssUrl: string;
+
+  @Column({
+    name: 'blog_url',
+    length: 255,
+    nullable: false,
+  })
+  blogUrl: string;
+
+  @Column({
+    name: 'platform',
+    length: 255,
+    nullable: false,
+  })
+  blogPlatform: string;
 }
 
 @Entity({
   name: 'rss',
 })
-export class Rss extends RssInformation {}
+@Unique('UQ_rss_name', ['name'])
+@Unique('UQ_rss_rss_url', ['rssUrl'])
+export class Rss extends RssInformation {
+  @Column({ name: 'name', nullable: false })
+  name: string;
+
+  @Column({ name: 'rss_url', length: 255, nullable: false })
+  rssUrl: string;
+
+  @Column({ name: 'image', type: 'text', nullable: true })
+  blogImage: string | null;
+}
 
 @Entity({
   name: 'rss_reject',
@@ -54,29 +84,56 @@ export class RssReject extends RssInformation {
     nullable: false,
   })
   description: string;
+
+  @Column({ name: 'image', type: 'text', nullable: true })
+  blogImage: string | null;
 }
 
 @Entity({
   name: 'rss_accept',
 })
+@Unique('UQ_rss_accept_name', ['name'])
+@Unique('UQ_rss_accept_rss_url', ['rssUrl'])
 export class RssAccept extends RssInformation {
   @OneToMany(() => Feed, (feed) => feed.blog)
   feeds: Feed[];
 
-  @Index({ fulltext: true, parser: 'ngram' })
+  @Index('FT_rss_accept_name', { fulltext: true, parser: 'ngram' })
   @Column({ name: 'name', nullable: false })
   name: string;
 
-  @Column({ name: 'blog_platform', default: 'etc', nullable: false })
+  @Column({ name: 'rss_url', length: 255, nullable: false })
+  rssUrl: string;
+
+  @Column({ name: 'platform', default: 'etc', nullable: false })
   blogPlatform: string;
 
-  static fromRss(rss: Rss, blogPlatform: string) {
+  @Column({ name: 'user_id', type: 'int', nullable: true })
+  userId: number | null;
+
+  @ManyToOne(() => User, {
+    nullable: true,
+    onUpdate: 'CASCADE',
+    onDelete: 'SET NULL',
+  })
+  @JoinColumn({
+    name: 'user_id',
+    foreignKeyConstraintName: 'FK_rss_accept_user_id',
+  })
+  user: User | null;
+
+  @Column({ name: 'image', type: 'text', nullable: true })
+  blogImage: string | null;
+
+  static fromRss(rss: Rss) {
     const blog = new RssAccept();
     blog.name = rss.name;
     blog.userName = rss.userName;
     blog.email = rss.email;
     blog.rssUrl = rss.rssUrl;
-    blog.blogPlatform = blogPlatform;
+    blog.blogUrl = rss.blogUrl;
+    blog.blogPlatform = rss.blogPlatform;
+    blog.blogImage = rss.blogImage;
     blog.feeds = [];
 
     return blog;

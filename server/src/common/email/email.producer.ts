@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 
-import { EmailPayload, EmailPayloadConstant } from '@common/email/email.type';
+import {
+  EmailPayload,
+  EmailPayloadConstant,
+  QnaAnswered,
+} from '@common/email/email.type';
 import { WinstonLoggerService } from '@common/logger/logger.service';
 import {
   RMQ_EXCHANGES,
@@ -27,10 +31,16 @@ export class EmailProducer {
       stringifiedMessage,
     );
 
-    const email =
-      payload.type === EmailPayloadConstant.RSS_REGISTRATION
-        ? payload.data.rss.email
-        : payload.data.email;
+    let email: string;
+    if (payload.type === EmailPayloadConstant.RSS_REGISTRATION) {
+      email = payload.data.rss.email;
+    } else if (payload.type === EmailPayloadConstant.RSS_REGISTRATION_REQUEST) {
+      email = payload.data.adminEmail;
+    } else if (payload.type === EmailPayloadConstant.QNA_ANSWERED) {
+      email = payload.data.email;
+    } else {
+      email = payload.data.email;
+    }
     this.logger.log(
       `이메일 메시지가 발행되었습니다.: type=${payload.type}, email=${email}`,
     );
@@ -49,6 +59,45 @@ export class EmailProducer {
     await this.produceMessage(payload);
   }
 
+  async produceAdminCertification(email: string, name: string, uuid: string) {
+    const payload = {
+      type: EmailPayloadConstant.ADMIN_CERTIFICATION,
+      data: {
+        email,
+        name,
+        uuid,
+      },
+    };
+
+    await this.produceMessage(payload);
+  }
+
+  async produceAdminAccountDeletion(email: string, name: string, uuid: string) {
+    const payload = {
+      type: EmailPayloadConstant.ADMIN_ACCOUNT_DELETION,
+      data: {
+        email,
+        name,
+        uuid,
+      },
+    };
+
+    await this.produceMessage(payload);
+  }
+
+  async produceAdminPasswordReset(email: string, name: string, uuid: string) {
+    const payload = {
+      type: EmailPayloadConstant.ADMIN_PASSWORD_RESET,
+      data: {
+        email,
+        name,
+        uuid,
+      },
+    };
+
+    await this.produceMessage(payload);
+  }
+
   async produceRssRegistration(
     rss: Rss,
     approveFlag: boolean,
@@ -60,6 +109,18 @@ export class EmailProducer {
         rss: rss,
         approveFlag: approveFlag,
         description: description ?? null,
+      },
+    };
+
+    await this.produceMessage(payload);
+  }
+
+  async produceRssRegistrationRequest(rss: Rss, adminEmail: string) {
+    const payload = {
+      type: EmailPayloadConstant.RSS_REGISTRATION_REQUEST,
+      data: {
+        rss,
+        adminEmail,
       },
     };
 
@@ -106,5 +167,32 @@ export class EmailProducer {
       },
     };
     await this.produceMessage(payload);
+  }
+
+  async produceRssCertification(
+    userName: string,
+    blogName: string,
+    certificateCode: string,
+    rssAcceptEmail: string,
+    userEmail: string,
+  ) {
+    const payload = {
+      type: EmailPayloadConstant.RSS_CERTIFICATION,
+      data: {
+        userName,
+        email: rssAcceptEmail,
+        blogName,
+        certificateCode,
+        userEmail,
+      },
+    };
+    await this.produceMessage(payload);
+  }
+
+  async produceQnaAnswered(payload: QnaAnswered) {
+    await this.produceMessage({
+      type: EmailPayloadConstant.QNA_ANSWERED,
+      data: payload,
+    });
   }
 }

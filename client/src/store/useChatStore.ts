@@ -13,27 +13,31 @@ type State = {
   userCount: number;
   isLoading: boolean;
   isConnected: boolean;
+  currentRoomId: string;
+  currentRoomName: string;
+  currentUserName: string;
 };
 type Action = {
-  connect: () => void;
+  connect: (room?: string) => void;
   disconnect: () => void;
   getHistory: () => void;
   sendMessage: (message: SendChatType) => void;
   resendMessage: (data: ChatType) => void;
   deleteMessage: (messageId: string) => void;
   chatLength: () => number;
+  switchRoom: (roomId: string) => void;
 };
 
 export const useChatStore = create<State & Action>((set, get) => {
-  const initializeSocket = () => {
+  const initializeSocket = (room: string = 'anonymous') => {
     if (socket) return socket;
     socket = io(CHAT_SERVER_URL, {
-      path: "/chat",
       transports: ["websocket"],
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
       autoConnect: false,
+      query: { room },
     });
 
     socket.on("message", (data) => {
@@ -53,13 +57,33 @@ export const useChatStore = create<State & Action>((set, get) => {
       });
     });
 
+    socket.on("messageDeleted", (data) => {
+      set((state) => ({
+        chatHistory: state.chatHistory.map((msg) =>
+          msg.messageId === data.messageId
+            ? { ...msg, message: data.message, userName: data.userName }
+            : msg
+        ),
+      }));
+    });
+
     socket.on('assignUserId', ({ userId }: { userId: string }) => {
       localStorage.setItem('userID', userId);
+    });
+
+    socket.on('assignRoom', ({ roomId, roomName }: { roomId: string; roomName: string }) => {
+      set({ currentRoomId: roomId, currentRoomName: roomName });
+    });
+
+    socket.on('assignUserName', ({ userName }: { userName: string }) => {
+      localStorage.setItem('userName', userName);
+      set({ currentUserName: userName });
     });
 
     socket.on("updateUserCount", (data) => {
       set({ userCount: data.userCount });
     });
+
     socket.on("connect", () => {
       useChatStore.setState({ isConnected: true });
     });
@@ -76,8 +100,12 @@ export const useChatStore = create<State & Action>((set, get) => {
     userCount: 0,
     isLoading: true,
     isConnected: false,
-    connect: () => {
-      const s = initializeSocket();
+    currentRoomId: '',
+    currentRoomName: '',
+    currentUserName: localStorage.getItem('userName') ?? '',
+
+    connect: (room?: string) => {
+      const s = initializeSocket(room ?? 'anonymous');
       if (!s.connected) {
         s.connect();
       }
@@ -90,19 +118,26 @@ export const useChatStore = create<State & Action>((set, get) => {
       socket?.disconnect();
     },
 
+    switchRoom: (roomId: string) => {
+      socket?.disconnect();
+      socket = null;
+      set({ chatHistory: [], currentRoomId: '', currentRoomName: '', isLoading: true, isConnected: false });
+
+      const s = initializeSocket(roomId);
+      s.connect();
+      s.on('connect', () => {
+        s.emit('register', { userId: localStorage.getItem('userID') });
+      });
+      s.on("chatHistory", (data) => {
+        set((state) => {
+          const failedMessages = state.chatHistory.filter((chat) => chat.isFailed || !chat.isSend);
+          return { chatHistory: [...data, ...failedMessages], isLoading: false };
+        });
+      });
+    },
+
     getHistory: () => {
       const s = initializeSocket();
-
-      const requestHistory = () => {
-        s.emit("getHistory");
-        s.off("connect", requestHistory);
-      };
-      if (s.connected) {
-        requestHistory();
-      } else {
-        s.on("connect", requestHistory);
-        s.connect();
-      }
 
       s.on("chatHistory", (data) => {
         useChatStore.setState((state) => {
@@ -123,8 +158,7 @@ export const useChatStore = create<State & Action>((set, get) => {
           ...state.chatHistory,
           {
             timestamp: '전송중',
-            userName: '나',
-            isMidNight: false,
+            userName: state.currentUserName,
             message: message.message,
             messageId: message.messageId,
             userId: localStorage.getItem("userID"),
@@ -171,6 +205,7 @@ export const useChatStore = create<State & Action>((set, get) => {
         alert("지금은 연결이 끊겨 재전송할 수 없습니다.");
       }
     },
+
     deleteMessage: (messageId: string) => {
       if (pendingTimeouts[messageId]) {
         clearTimeout(pendingTimeouts[messageId]);
@@ -181,6 +216,7 @@ export const useChatStore = create<State & Action>((set, get) => {
       }));
       alert("메시지가 삭제되었습니다");
     },
+
     chatLength: () => get().chatHistory.length,
   };
 });

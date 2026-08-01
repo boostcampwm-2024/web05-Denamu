@@ -1,26 +1,17 @@
 import { applyDecorators } from '@nestjs/common';
+import { ApiOperation } from '@nestjs/swagger';
+
 import {
-  ApiNotFoundResponse,
-  ApiOkResponse,
-  ApiOperation,
-} from '@nestjs/swagger';
+  ApiBadRequestDoc,
+  ApiMessageResponse,
+  ApiNotFoundDoc,
+} from '@common/swagger/swagger.helper';
 
 export function ApiDeleteCheckFeed() {
   return applyDecorators(
-    ApiOperation({
-      summary: '게시글 삭제 확인 API',
-    }),
-    ApiOkResponse({
-      description: '게시글이 존재할 경우 200 OK',
-      example: {
-        message: '게시글 삭제 확인 요청을 성공했습니다.',
-      },
-    }),
-    ApiNotFoundResponse({
-      description: '게시글이 삭제된 경우 404 Not Found',
-      example: {
-        message: '원본 게시글이 삭제되었습니다.',
-      },
-    }),
+    ApiOperation({ summary: '게시글 삭제 확인 API' }),
+    ApiMessageResponse('게시글 삭제 확인 완료'),
+    ApiBadRequestDoc('요청 데이터 검증에 실패했습니다.'),
+    ApiNotFoundDoc('게시글이 삭제된 경우 404 Not Found'),
   );
 }

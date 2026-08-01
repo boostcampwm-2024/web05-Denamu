@@ -2,18 +2,20 @@ import React from "react";
 import Markdown from "react-markdown";
 
 import LikeButton from "@/components/common/Card/detail/LikeButton";
+import PostComment from "@/components/common/Card/detail/PostComment";
 import ShareButton from "@/components/common/Card/detail/ShareButton";
 
 import { usePostCardActions } from "@/hooks/common/usePostCardActions";
 
 import { useMediaStore } from "@/store/useMediaStore";
-import { Post } from "@/types/post";
+import { FeedDetail } from "@/types/post";
 
 interface PostContentProps {
-  post: Post;
+  post: FeedDetail;
+  highlightCommentId?: number | null;
 }
 
-export const PostContent = React.memo(({ post }: PostContentProps) => {
+export const PostContent = React.memo(({ post, highlightCommentId }: PostContentProps) => {
   const summary = post.summary;
   const markdownString = (summary ?? "").replace(/\\n/g, "\n").replace(/\\r/g, "\r");
   const isMobile = useMediaStore((state) => state.isMobile);
@@ -29,8 +31,8 @@ export const PostContent = React.memo(({ post }: PostContentProps) => {
           <span className="text-lg font-semibold">{post.title}</span>
           <span className="text-sm text-gray-400 hover:underline flex gap-2 truncate">
             <img
-              src={`https://denamu.dev/files/${post.blogPlatform}-icon.svg`}
-              alt={post.author}
+              src={`https://denamu.dev/files/${post.blog.platform}-icon.svg`}
+              alt={post.blog.name}
               className="h-5 w-5 rounded-none"
             />
             {post.path}
@@ -51,10 +53,11 @@ export const PostContent = React.memo(({ post }: PostContentProps) => {
           <p className="text-gray-400">💡 인공지능이 요약한 내용입니다. 오류가 포함될 수 있으니 참고 바랍니다.</p>
         )}
       </div>
-      <div className="flex gap-3">
-        <LikeButton />
+      <div className="flex gap-3 border-b pb-5">
+        <LikeButton post={post} />
         <ShareButton post={post} />
       </div>
+      <PostComment feedId={post.id} isFeedOwner={post.isOwner} highlightCommentId={highlightCommentId} />
     </div>
   );
 });

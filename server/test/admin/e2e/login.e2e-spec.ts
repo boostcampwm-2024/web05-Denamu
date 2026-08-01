@@ -17,7 +17,7 @@ import {
 } from '@test/config/common/fixture/admin.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = '/api/admin/login';
+const URL = '/api/admins/login';
 
 describe(`POST ${URL} E2E Test`, () => {
   let agent: TestAgent;
@@ -40,10 +40,10 @@ describe(`POST ${URL} E2E Test`, () => {
     );
   });
 
-  it('[401] 등록되지 않은 ID로 로그인할 경우 로그인을 실패한다.', async () => {
+  it('[401] 등록되지 않은 이메일로 로그인할 경우 로그인을 실패한다.', async () => {
     // given
     const requestDto = new LoginAdminRequestDto({
-      loginId: 'testWrongAdminId',
+      email: 'wrong-admin@test.com',
       password: ADMIN_DEFAULT_PASSWORD,
     });
 
@@ -65,7 +65,7 @@ describe(`POST ${URL} E2E Test`, () => {
   it('[401] 비밀번호가 다를 경우 로그인을 실패한다.', async () => {
     // given
     const requestDto = new LoginAdminRequestDto({
-      loginId: admin.loginId,
+      email: admin.email,
       password: 'testWrongAdminPassword!',
     });
 
@@ -87,7 +87,7 @@ describe(`POST ${URL} E2E Test`, () => {
   it('[200] 존재하는 사용자의 정보로 로그인할 경우 로그인을 성공한다.', async () => {
     // given
     const requestDto = new LoginAdminRequestDto({
-      loginId: admin.loginId,
+      email: admin.email,
       password: ADMIN_DEFAULT_PASSWORD,
     });
 
@@ -104,22 +104,22 @@ describe(`POST ${URL} E2E Test`, () => {
     const savedSession = await redisService.get(redisKeyMake(sessionKey));
 
     // DB, Redis then
-    expect(savedSession).toBe(admin.loginId);
+    expect(savedSession).toBe(admin.email);
   });
 
   it('[200] 기존 쿠키가 있을 때 로그인하면 기존 세션을 삭제하고 새 세션을 생성한다.', async () => {
     // given
     const oldSessionKey = 'old-session-key';
-    await redisService.set(redisKeyMake(oldSessionKey), admin.loginId);
+    await redisService.set(redisKeyMake(oldSessionKey), admin.email);
     const requestDto = new LoginAdminRequestDto({
-      loginId: admin.loginId,
+      email: admin.email,
       password: ADMIN_DEFAULT_PASSWORD,
     });
 
     // Http when
     const response = await agent
       .post(URL)
-      .set('Cookie', `admin-session-id=${oldSessionKey}`)
+      .set('Cookie', `sessionId=${oldSessionKey}`)
       .send(requestDto);
 
     // Http then
@@ -135,15 +135,19 @@ describe(`POST ${URL} E2E Test`, () => {
 
     // DB, Redis then
     expect(oldSession).toBeNull(); // 기존 세션 삭제됨
-    expect(newSession).toBe(admin.loginId); // 새 세션 생성됨
+    expect(newSession).toBe(admin.email); // 새 세션 생성됨
   });
 
   it('[200] 다른 세션에서 같은 계정으로 로그인되어 있을 때 기존 세션을 삭제한다.', async () => {
     // given
     const duplicateSessionKey = 'duplicate-session-key';
-    await redisService.set(redisKeyMake(duplicateSessionKey), admin.loginId);
+    await redisService.set(redisKeyMake(duplicateSessionKey), admin.email);
+    await redisService.set(
+      `${REDIS_KEYS.ADMIN_SESSION_BY_EMAIL}:${admin.email}`,
+      duplicateSessionKey,
+    );
     const requestDto = new LoginAdminRequestDto({
-      loginId: admin.loginId,
+      email: admin.email,
       password: ADMIN_DEFAULT_PASSWORD,
     });
 
@@ -163,6 +167,23 @@ describe(`POST ${URL} E2E Test`, () => {
 
     // DB, Redis then
     expect(duplicateSession).toBeNull();
-    expect(newSession).toBe(admin.loginId);
+    expect(newSession).toBe(admin.email);
+  });
+
+  it('[429] 60초 내 5회 초과 로그인 시도 시 요청을 차단한다.', async () => {
+    // given
+    const requestDto = new LoginAdminRequestDto({
+      email: admin.email,
+      password: 'testWrongAdminPassword!',
+    });
+
+    // Http when
+    for (let i = 0; i < 5; i++) {
+      await agent.post(URL).send(requestDto);
+    }
+    const response = await agent.post(URL).send(requestDto);
+
+    // Http then
+    expect(response.status).toBe(HttpStatus.TOO_MANY_REQUESTS);
   });
 });

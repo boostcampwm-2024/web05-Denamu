@@ -3,5 +3,6 @@
 !.env.local
 /dist
 /logs
-/test/coverage
+/coverage
+/preview
 .env

@@ -1,63 +1,20 @@
 import { applyDecorators } from '@nestjs/common';
+import { ApiBody, ApiOperation } from '@nestjs/swagger';
+
 import {
-  ApiBadRequestResponse,
-  ApiOkResponse,
-  ApiOperation,
-  ApiUnauthorizedResponse,
-} from '@nestjs/swagger';
+  ApiBadRequestDoc,
+  ApiDataResponse,
+  ApiUnauthorizedDoc,
+} from '@common/swagger/swagger.helper';
+import { LoginUserRequestDto } from '@user/dto/request/loginUser.dto';
+import { CreateAccessTokenResponseDto } from '@user/dto/response/createAccessToken.dto';
 
 export function ApiLoginUser() {
   return applyDecorators(
-    ApiOperation({
-      summary: '회원 로그인 API',
-    }),
-    ApiOkResponse({
-      description: 'Ok',
-      schema: {
-        properties: {
-          message: {
-            type: 'string',
-          },
-          data: {
-            type: 'object',
-            properties: {
-              accessToken: { type: 'string' },
-            },
-          },
-        },
-      },
-      example: {
-        message: '로그인을 성공했습니다.',
-        data: {
-          accessToken: 'exampleJWT',
-        },
-      },
-    }),
-    ApiBadRequestResponse({
-      description: 'Bad Request',
-      example: {
-        message: '오류 메세지',
-      },
-      schema: {
-        properties: {
-          message: {
-            type: 'string',
-          },
-        },
-      },
-    }),
-    ApiUnauthorizedResponse({
-      description: 'Unauthorized',
-      schema: {
-        properties: {
-          message: {
-            type: 'string',
-          },
-        },
-      },
-      example: {
-        message: '아이디 혹은 비밀번호가 잘못되었습니다.',
-      },
-    }),
+    ApiOperation({ summary: '회원 로그인 API' }),
+    ApiBody({ type: LoginUserRequestDto }),
+    ApiDataResponse(CreateAccessTokenResponseDto, false, '로그인 성공'),
+    ApiBadRequestDoc('요청 데이터 검증에 실패했습니다.'),
+    ApiUnauthorizedDoc('아이디 혹은 비밀번호가 잘못되었습니다.'),
   );
 }

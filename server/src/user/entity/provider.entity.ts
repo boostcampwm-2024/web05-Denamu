@@ -3,6 +3,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -14,6 +15,10 @@ import { User } from '@user/entity/user.entity';
 @Entity({
   name: 'provider',
 })
+@Index('UQ_provider_type_user_id', ['providerType', 'providerUserId'], {
+  unique: true,
+})
+@Index('UQ_user_provider_type', ['user', 'providerType'], { unique: true })
 export class Provider extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
@@ -27,6 +32,12 @@ export class Provider extends BaseEntity {
     name: 'provider_user_id',
   })
   providerUserId: string;
+
+  @Column({
+    name: 'provider_user_name',
+    nullable: true,
+  })
+  providerUserName: string | null;
 
   @Column({
     name: 'refresh_token',
@@ -49,6 +60,9 @@ export class Provider extends BaseEntity {
     onUpdate: 'CASCADE',
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'user_id' })
+  @JoinColumn({
+    name: 'user_id',
+    foreignKeyConstraintName: 'FK_provider_user_id',
+  })
   user: User;
 }

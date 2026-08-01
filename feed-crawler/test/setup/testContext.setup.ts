@@ -3,16 +3,20 @@ import 'reflect-metadata';
 import { container } from 'tsyringe';
 import { DependencyContainer } from 'tsyringe';
 
-import { FeedCrawler } from '@src/feed-crawler';
-
-import { MySQLConnection } from '@common/mysql-access';
+import { DatabaseConnection } from '@common/database/database-connection';
+import { MySQLConnection } from '@common/database/mysql-access';
+import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
+import { AiMetrics } from '@common/metrics/ai-metrics';
+import { DbMetrics } from '@common/metrics/db-metrics';
+import { FeedMetrics } from '@common/metrics/feed-metrics';
+import { RedisMetrics } from '@common/metrics/redis-metrics';
 import { DiscordNotifier } from '@common/notification/discord.notifier';
 import { Notifier } from '@common/notification/notifier.interface';
 import { FeedParserManager } from '@common/parser/feed-parser-manager';
 import { Atom10Parser } from '@common/parser/formats/atom10-parser';
 import { Rss20Parser } from '@common/parser/formats/rss20-parser';
 import { ParserUtil } from '@common/parser/utils/parser-util';
-import { RedisConnection } from '@common/redis-access';
+import { RedisConnection } from '@common/redis/redis-access';
 
 import { ClaudeEventWorker } from '@event_worker/workers/claude-event-worker';
 
@@ -20,8 +24,7 @@ import { FeedRepository } from '@repository/feed.repository';
 import { RssRepository } from '@repository/rss.repository';
 import { TagMapRepository } from '@repository/tag-map.repository';
 
-import { DatabaseConnection } from '@app-types/database-connection';
-import { DEPENDENCY_SYMBOLS } from '@app-types/dependency-symbols';
+import { FeedCrawler } from '../../src/feed-crawler';
 
 export interface TestContext {
   container: DependencyContainer;
@@ -52,56 +55,20 @@ export function setupTestContainer(): TestContext {
       MySQLConnection,
     );
 
-    testContainer.registerSingleton<RedisConnection>(
-      DEPENDENCY_SYMBOLS.RedisConnection,
-      RedisConnection,
-    );
-
-    testContainer.registerSingleton<RssRepository>(
-      DEPENDENCY_SYMBOLS.RssRepository,
-      RssRepository,
-    );
-
-    testContainer.registerSingleton<FeedRepository>(
-      DEPENDENCY_SYMBOLS.FeedRepository,
-      FeedRepository,
-    );
-
-    testContainer.registerSingleton<ClaudeEventWorker>(
-      DEPENDENCY_SYMBOLS.ClaudeEventWorker,
-      ClaudeEventWorker,
-    );
-
-    testContainer.registerSingleton<TagMapRepository>(
-      DEPENDENCY_SYMBOLS.TagMapRepository,
-      TagMapRepository,
-    );
-
-    testContainer.registerSingleton<ParserUtil>(
-      DEPENDENCY_SYMBOLS.ParserUtil,
-      ParserUtil,
-    );
-
-    testContainer.registerSingleton<Rss20Parser>(
-      DEPENDENCY_SYMBOLS.Rss20Parser,
-      Rss20Parser,
-    );
-
-    testContainer.registerSingleton<Atom10Parser>(
-      DEPENDENCY_SYMBOLS.Atom10Parser,
-      Atom10Parser,
-    );
-
-    testContainer.registerSingleton<FeedParserManager>(
-      DEPENDENCY_SYMBOLS.FeedParserManager,
-      FeedParserManager,
-    );
-
-    testContainer.registerSingleton<FeedCrawler>(
-      DEPENDENCY_SYMBOLS.FeedCrawler,
-      FeedCrawler,
-    );
-
+    testContainer.registerSingleton(DbMetrics);
+    testContainer.registerSingleton(RedisMetrics);
+    testContainer.registerSingleton(AiMetrics);
+    testContainer.registerSingleton(FeedMetrics);
+    testContainer.registerSingleton(RedisConnection);
+    testContainer.registerSingleton(RssRepository);
+    testContainer.registerSingleton(FeedRepository);
+    testContainer.registerSingleton(ClaudeEventWorker);
+    testContainer.registerSingleton(TagMapRepository);
+    testContainer.registerSingleton(ParserUtil);
+    testContainer.registerSingleton(Rss20Parser);
+    testContainer.registerSingleton(Atom10Parser);
+    testContainer.registerSingleton(FeedParserManager);
+    testContainer.registerSingleton(FeedCrawler);
     testContainer.registerSingleton<Notifier>(
       DEPENDENCY_SYMBOLS.Notifier,
       DiscordNotifier,
@@ -109,39 +76,19 @@ export function setupTestContainer(): TestContext {
 
     global.testContext = {
       container: testContainer,
-      tagMapRepository: testContainer.resolve<TagMapRepository>(
-        DEPENDENCY_SYMBOLS.TagMapRepository,
-      ),
-      claudeEventWorker: testContainer.resolve<ClaudeEventWorker>(
-        DEPENDENCY_SYMBOLS.ClaudeEventWorker,
-      ),
-      rssRepository: testContainer.resolve<RssRepository>(
-        DEPENDENCY_SYMBOLS.RssRepository,
-      ),
-      feedRepository: testContainer.resolve<FeedRepository>(
-        DEPENDENCY_SYMBOLS.FeedRepository,
-      ),
+      tagMapRepository: testContainer.resolve(TagMapRepository),
+      claudeEventWorker: testContainer.resolve(ClaudeEventWorker),
+      rssRepository: testContainer.resolve(RssRepository),
+      feedRepository: testContainer.resolve(FeedRepository),
       dbConnection: testContainer.resolve<DatabaseConnection>(
         DEPENDENCY_SYMBOLS.DatabaseConnection,
       ),
-      redisConnection: testContainer.resolve<RedisConnection>(
-        DEPENDENCY_SYMBOLS.RedisConnection,
-      ),
-      parserUtil: testContainer.resolve<ParserUtil>(
-        DEPENDENCY_SYMBOLS.ParserUtil,
-      ),
-      feedParserManager: testContainer.resolve<FeedParserManager>(
-        DEPENDENCY_SYMBOLS.FeedParserManager,
-      ),
-      rss20Parser: testContainer.resolve<Rss20Parser>(
-        DEPENDENCY_SYMBOLS.Rss20Parser,
-      ),
-      atom10Parser: testContainer.resolve<Atom10Parser>(
-        DEPENDENCY_SYMBOLS.Atom10Parser,
-      ),
-      feedCrawler: testContainer.resolve<FeedCrawler>(
-        DEPENDENCY_SYMBOLS.FeedCrawler,
-      ),
+      redisConnection: testContainer.resolve(RedisConnection),
+      parserUtil: testContainer.resolve(ParserUtil),
+      feedParserManager: testContainer.resolve(FeedParserManager),
+      rss20Parser: testContainer.resolve(Rss20Parser),
+      atom10Parser: testContainer.resolve(Atom10Parser),
+      feedCrawler: testContainer.resolve(FeedCrawler),
       notifier: testContainer.resolve<Notifier>(DEPENDENCY_SYMBOLS.Notifier),
     };
   }

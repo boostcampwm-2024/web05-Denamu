@@ -15,10 +15,10 @@ export function Chat() {
   const visible = useVisible();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   useEffect(() => {
-    if (userCount >= 500) {
+    if (userCount >= 50) {
       setIsFull(true);
     }
-    connect();
+    connect('anonymous');
     getHistory();
     return () => {
       disconnect();
@@ -34,7 +34,7 @@ export function Chat() {
         3 * 60 * 1000
       );
     } else {
-      connect();
+      connect('anonymous');
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
         timeoutRef.current = null;

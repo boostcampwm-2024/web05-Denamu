@@ -7,7 +7,7 @@ export class CreateAccessTokenResponseDto {
   })
   accessToken: string;
 
-  private constructor(partial: Partial<CreateAccessTokenResponseDto>) {
+  constructor(partial: Partial<CreateAccessTokenResponseDto>) {
     Object.assign(this, partial);
   }
 

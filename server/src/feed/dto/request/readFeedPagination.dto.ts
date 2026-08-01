@@ -1,9 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 import { Type } from 'class-transformer';
-import { IsIn, IsInt, IsOptional, Min } from 'class-validator';
-
-import { ALLOWED_TAGS, AllowedTag } from '@feed/constant/tagType.constants';
+import { IsInt, IsOptional, IsString, Min } from 'class-validator';
 
 export class ReadFeedPaginationRequestDto {
   @ApiPropertyOptional({
@@ -38,12 +36,12 @@ export class ReadFeedPaginationRequestDto {
     required: false,
   })
   @IsOptional()
-  @IsIn(ALLOWED_TAGS, {
+  @IsString({
     each: true,
-    message: `tag 값은 ${ALLOWED_TAGS.join(', ')} 목록에 포함 되어야 합니다.`,
+    message: 'tag 값은 문자열이어야 합니다.',
   })
   @Type(() => Array)
-  tags?: AllowedTag[];
+  tags?: string[];
 
   constructor(partial: Partial<ReadFeedPaginationRequestDto>) {
     Object.assign(this, partial);

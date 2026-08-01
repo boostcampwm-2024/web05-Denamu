@@ -39,7 +39,20 @@ export class ReadRssRejectHistoryResponseDto {
   })
   description: string;
 
-  private constructor(partial: Partial<ReadRssRejectHistoryResponseDto>) {
+  @ApiProperty({
+    example: 'velog',
+    description: 'RSS URL로부터 추정한 블로그 플랫폼 종류',
+  })
+  blogPlatform: string;
+
+  @ApiProperty({
+    example: 'https://blog-platform.com/blog-profile-image.png',
+    description: 'RSS 피드에서 추출한 블로그 프로필 이미지 URL (미설정 시 null)',
+    nullable: true,
+  })
+  blogImage: string | null;
+
+  constructor(partial: Partial<ReadRssRejectHistoryResponseDto>) {
     Object.assign(this, partial);
   }
 
@@ -51,6 +64,8 @@ export class ReadRssRejectHistoryResponseDto {
       email: rssReject.email,
       rssUrl: rssReject.rssUrl,
       description: rssReject.description,
+      blogPlatform: rssReject.blogPlatform,
+      blogImage: rssReject.blogImage ?? null,
     });
   }
 

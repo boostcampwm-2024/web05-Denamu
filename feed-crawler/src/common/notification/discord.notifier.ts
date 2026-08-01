@@ -3,7 +3,7 @@ import { injectable } from 'tsyringe';
 import axios from 'axios';
 import { EventEmitter } from 'node:events';
 
-import logger from '@common/logger';
+import logger from '@common/logger/logger';
 import {
   aiSummaryPayload,
   fullFeedCrawlingPayload,
@@ -29,19 +29,19 @@ export class DiscordNotifier implements Notifier {
     this.eventEmitter = new EventEmitter();
   }
 
-  initialize() {
+  start() {
     if (!this.initialized) {
       this.eventEmitter.on(
         NOTIFICATION_EVENT.FEED_CRAWLING_SCHEDULED,
-        this.sendScheduledFeedCrawlingAlert,
+        (payload) => void this.sendScheduledFeedCrawlingAlert(payload),
       );
       this.eventEmitter.on(
         NOTIFICATION_EVENT.FEED_CRAWLING_FULL,
-        this.sendFullFeedCrawlingAlert,
+        (payload) => void this.sendFullFeedCrawlingAlert(payload),
       );
       this.eventEmitter.on(
         NOTIFICATION_EVENT.AI_SUMMARY,
-        this.sendAiSummaryAlert,
+        (payload) => void this.sendAiSummaryAlert(payload),
       );
       this.initialized = true;
     }
@@ -54,7 +54,7 @@ export class DiscordNotifier implements Notifier {
     const discordStartTime = Date.now();
     try {
       await axios.post(this.webhookUrl, {
-        content: `${errorSource} ${blogUrl}의 scheduled feed crawling 에러 발생 - 오류 메시지: \`\`\`${error.message}\`\`\``,
+        content: `${errorSource} ${blogUrl} 의 scheduled feed crawling 에러 발생 - 오류 메시지: \`\`\`${error.message}\`\`\``,
       });
     } catch (e) {
       logger.error('Discord 알림 전송 실패:', e);

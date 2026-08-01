@@ -14,7 +14,7 @@ import { ActivityFixture } from '@test/config/common/fixture/activity.fixture';
 import { UserFixture } from '@test/config/common/fixture/user.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
 
-const URL = '/api/activity';
+const URL = '/api/activities';
 
 describe(`GET ${URL}/{userId} E2E Test`, () => {
   let user: User;
@@ -72,9 +72,6 @@ describe(`GET ${URL}/{userId} E2E Test`, () => {
         date: activity.activityDate.toISOString().split('T')[0],
         viewCount: activity.viewCount,
       })),
-      maxStreak: user.maxStreak,
-      currentStreak: user.currentStreak,
-      totalViews: user.totalViews,
     });
   });
 
@@ -92,9 +89,6 @@ describe(`GET ${URL}/{userId} E2E Test`, () => {
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual({
       dailyActivities: [],
-      maxStreak: user.maxStreak,
-      currentStreak: user.currentStreak,
-      totalViews: user.totalViews,
     });
   });
 });

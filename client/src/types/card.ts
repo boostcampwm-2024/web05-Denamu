@@ -1,6 +1,6 @@
-import { Post } from "@/types/post";
+import { FeedList } from "@/types/post";
 
 export interface PostCardProps {
-  post: Post;
+  post: FeedList;
   className?: string;
 }
