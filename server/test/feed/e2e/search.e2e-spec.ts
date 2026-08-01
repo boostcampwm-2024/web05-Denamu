@@ -67,15 +67,17 @@ describe(`GET ${URL}?type={}&find={} E2E Test`, () => {
         const feed = feedList[i];
         return {
           id: feed.id,
-          blogName: feed.blog.name,
+          blog: {
+            name: feed.blog.name,
+            platform: feed.blog.blogPlatform,
+            image: feed.blog.blogImage ?? null,
+          },
           title: feed.title,
           likes: feed.likeCount,
           comments: feed.commentCount,
           path: feed.path,
           createdAt: feed.createdAt.toISOString(),
           author: feed.blog.name,
-          blogPlatform: feed.blog.blogPlatform,
-          blogImage: feed.blog.blogImage ?? null,
           thumbnail: feed.thumbnail,
           viewCount: feed.viewCount,
           tag: [],

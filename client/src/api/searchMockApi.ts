@@ -78,10 +78,10 @@ const baseMockData = [
   },
 ];
 
-const mockData: SearchResult[] = baseMockData.map((item) => ({
+const mockData: SearchResult[] = baseMockData.map(({ blogName, ...item }) => ({
   ...item,
-  author: item.blogName,
-  blogPlatform: "etc",
+  author: blogName,
+  blog: { name: blogName, platform: "etc" },
   thumbnail: "",
   viewCount: 0,
   tag: [],
@@ -96,9 +96,9 @@ mock.onGet("/api/search").reply((config) => {
     if (type === "title") {
       return item.title.includes(find);
     } else if (type === "blogName") {
-      return item.blogName.includes(find);
+      return item.blog.name.includes(find);
     } else {
-      return item.blogName.includes(find) || item.title.includes(find);
+      return item.blog.name.includes(find) || item.title.includes(find);
     }
   });
 
