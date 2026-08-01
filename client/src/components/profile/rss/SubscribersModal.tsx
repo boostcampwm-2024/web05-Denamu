@@ -42,18 +42,18 @@ export const SubscribersModal = ({ rssId, rssName, open, onClose }: SubscribersM
           <ul className="space-y-2">
             {subscribers.map((subscriber) => (
               <li key={subscriber.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50">
-                {subscriber.profileImage ? (
+                {subscriber.user.profileImage ? (
                   <img
-                    src={subscriber.profileImage}
-                    alt={subscriber.userName}
+                    src={subscriber.user.profileImage}
+                    alt={subscriber.user.userName}
                     className="object-cover w-9 h-9 rounded-full"
                   />
                 ) : (
                   <div className="flex items-center justify-center text-sm font-semibold text-gray-500 rounded-full w-9 h-9 bg-gray-200">
-                    {subscriber.userName.charAt(0)}
+                    {subscriber.user.userName.charAt(0)}
                   </div>
                 )}
-                <span className="font-medium truncate">{subscriber.userName}</span>
+                <span className="font-medium truncate">{subscriber.user.userName}</span>
               </li>
             ))}
           </ul>

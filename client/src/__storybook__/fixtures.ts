@@ -30,12 +30,11 @@ export const mockFeedList: FeedList = {
   title: "Storybook으로 컴포넌트 문서화하기",
   viewCount: 1234,
   path: "https://example.com/post/1",
-  author: "데나무",
   thumbnail: "https://picsum.photos/seed/denamu/400/240",
   tag: ["React", "Storybook", "TypeScript"],
   likes: 42,
   comments: 7,
-  blogPlatform: "tistory",
+  blog: { name: "데나무", platform: "tistory" },
   isNew: true,
 };
 
@@ -43,9 +42,14 @@ export const mockFeedDetail: FeedDetail = {
   ...mockFeedList,
   summary: "이 글은 Storybook을 활용해 프론트엔드 컴포넌트를 문서화하고 테스트하는 방법을 다룹니다.",
   isOwner: false,
-  blogId: 1,
-  ownerName: "조민석",
-  isOwnerCertified: true,
+  blog: {
+    id: 1,
+    name: "데나무",
+    ownerName: "조민석",
+    isOwnerCertified: true,
+    platform: "tistory",
+    image: null,
+  },
   isSubscribed: false,
   isBlocked: false,
 };
@@ -116,11 +120,9 @@ export const mockChatItem: ChatType = {
 export const mockSearchResult: SearchResult = {
   id: 1,
   title: "Storybook으로 컴포넌트 문서화하기",
-  blogName: "데나무 블로그",
+  blog: { name: "데나무 블로그", platform: "tistory" },
   path: "https://example.com/post/1",
   createdAt: "2026-06-20T09:00:00.000Z",
-  author: "조민석",
-  blogPlatform: "tistory",
   thumbnail: "https://picsum.photos/seed/search/400/240",
   viewCount: 1234,
   tag: ["React", "Storybook"],
@@ -220,26 +222,32 @@ export const mockUserProfile: UserProfile = {
 
 export const mockBlockedUsers: BlockedUser[] = [
   {
-    userId: 2,
-    userName: "차단된개발자",
-    profileImage: "https://picsum.photos/seed/blocked1/80/80",
+    user: {
+      id: 2,
+      userName: "차단된개발자",
+      profileImage: "https://picsum.photos/seed/blocked1/80/80",
+    },
     blockedAt: "2026-06-20T09:00:00.000Z",
   },
   {
-    userId: 3,
-    userName: "스팸유저",
-    profileImage: null,
+    user: {
+      id: 3,
+      userName: "스팸유저",
+      profileImage: null,
+    },
     blockedAt: "2026-06-21T12:30:00.000Z",
   },
 ];
 
 export const mockBlockedRss: BlockedRss[] = [
   {
-    rssId: 5,
-    name: "차단된블로그",
-    blogPlatform: "velog",
+    rss: {
+      id: 5,
+      name: "차단된블로그",
+      blogPlatform: "velog",
+      blogImage: null,
+    },
     blockedAt: "2026-06-22T09:00:00.000Z",
-    blogImage: null,
   },
 ];
 
@@ -405,12 +413,14 @@ export const mockFeedsList: FeedList[] = Array.from({ length: 8 }, (_, i) => ({
   title: `블로그 포스트 #${i + 1} - Storybook 데모`,
   viewCount: (i + 1) * 100,
   path: `https://example.com/post/${i + 1}`,
-  author: `작성자 ${(i % 4) + 1}`,
   thumbnail: `https://picsum.photos/seed/feed${i}/400/240`,
   tag: i % 2 === 0 ? ["React", "TypeScript"] : ["NestJS", "Node.js"],
   likes: (i + 1) * 5,
   comments: i + 1,
-  blogPlatform: i % 3 === 0 ? "tistory" : i % 3 === 1 ? "velog" : "medium",
+  blog: {
+    name: `작성자 ${(i % 4) + 1}`,
+    platform: i % 3 === 0 ? "tistory" : i % 3 === 1 ? "velog" : "medium",
+  },
   isNew: i < 2,
 }));
 

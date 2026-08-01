@@ -38,7 +38,7 @@ const createWrapper = () => {
   return { queryClient, wrapper };
 };
 
-const makePost = (id: number, author: string) => ({ id, author, title: `post ${id}` });
+const makePost = (id: number, author: string) => ({ id, blog: { name: author }, title: `post ${id}` });
 
 describe("useTrendingPosts", () => {
   beforeEach(() => {
@@ -69,7 +69,9 @@ describe("useTrendingPosts", () => {
 
   it("로그인 상태면 차단한 RSS의 포스트를 필터링한다", async () => {
     useAuthStore.setState({ isAuthenticated: true });
-    blockedRssState = [{ rssId: 5, name: "블로그B", blogPlatform: "velog", blockedAt: "2025-08-16", blogImage: null }];
+    blockedRssState = [
+      { rss: { id: 5, name: "블로그B", blogPlatform: "velog", blogImage: null }, blockedAt: "2025-08-16" },
+    ];
     const { wrapper } = createWrapper();
     const { result } = renderHook(() => useTrendingPosts(), { wrapper });
 
@@ -81,7 +83,7 @@ describe("useTrendingPosts", () => {
     });
 
     await waitFor(() => expect(result.current.posts).toHaveLength(1));
-    expect(result.current.posts[0].author).toBe("블로그A");
+    expect(result.current.posts[0].blog.name).toBe("블로그A");
   });
 
   it("unmount 시 EventSource 연결을 닫는다", () => {

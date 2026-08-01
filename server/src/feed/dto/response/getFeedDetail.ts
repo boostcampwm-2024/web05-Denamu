@@ -10,18 +10,6 @@ export class GetFeedDetailResponseDto {
   id: number;
 
   @ApiProperty({
-    example: 'example author',
-    description: '게시글 작성자 이름',
-  })
-  author: string;
-
-  @ApiProperty({
-    example: 'example platform',
-    description: '블로그 플랫폼',
-  })
-  blogPlatform: string;
-
-  @ApiProperty({
     example: 'example title',
     description: '게시글 제목',
   })
@@ -82,24 +70,24 @@ export class GetFeedDetailResponseDto {
   isOwner: boolean;
 
   @ApiProperty({
-    example: 1,
-    description: '게시글이 속한 RSS(rss_accept) ID. 구독 버튼의 대상',
-    nullable: true,
+    example: {
+      id: 1,
+      name: 'example author',
+      ownerName: '조민석',
+      isOwnerCertified: true,
+      platform: 'example platform',
+      image: 'https://example.com/profile.png',
+    },
+    description: '게시글이 크롤링된 RSS 채널 정보',
   })
-  blogId: number | null;
-
-  @ApiProperty({
-    example: '조민석',
-    description: 'RSS 블로그에 등록된 신청자(소유자) 이름',
-    nullable: true,
-  })
-  ownerName: string | null;
-
-  @ApiProperty({
-    example: true,
-    description: '해당 RSS의 소유자가 인증되었는지 여부',
-  })
-  isOwnerCertified: boolean;
+  blog: {
+    id: number;
+    name: string;
+    ownerName: string | null;
+    isOwnerCertified: boolean;
+    platform: string;
+    image: string | null;
+  };
 
   @ApiProperty({
     example: false,
@@ -113,13 +101,6 @@ export class GetFeedDetailResponseDto {
   })
   isBlocked: boolean;
 
-  @ApiProperty({
-    example: 'https://example.com/profile.png',
-    description: 'RSS 채널 프로필 이미지 URL',
-    nullable: true,
-  })
-  blogImage: string | null;
-
   constructor(partial: Partial<GetFeedDetailResponseDto>) {
     Object.assign(this, partial);
   }
@@ -127,14 +108,12 @@ export class GetFeedDetailResponseDto {
   static toResponseDto(
     feed: FeedView,
     isOwner = false,
-    blogMeta: { id: number; userName: string; userId: number | null } | null = null,
+    blogMeta: { id: number; userName: string; userId: number | null },
     isSubscribed = false,
     isBlocked = false,
   ) {
     return new GetFeedDetailResponseDto({
       id: feed.feedId,
-      author: feed.blogName,
-      blogPlatform: feed.blogPlatform,
       title: feed.title,
       path: feed.path,
       createdAt: feed.createdAt,
@@ -145,12 +124,16 @@ export class GetFeedDetailResponseDto {
       comments: feed.commentCount,
       tag: feed.tag ? feed.tag : [],
       isOwner,
-      blogId: blogMeta?.id ?? null,
-      ownerName: blogMeta?.userName ?? null,
-      isOwnerCertified: blogMeta?.userId != null,
+      blog: {
+        id: blogMeta.id,
+        name: feed.blogName,
+        ownerName: blogMeta.userName,
+        isOwnerCertified: blogMeta.userId != null,
+        platform: feed.blogPlatform,
+        image: feed.blogImage ?? null,
+      },
       isSubscribed,
       isBlocked,
-      blogImage: feed.blogImage ?? null,
     });
   }
 }

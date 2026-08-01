@@ -64,8 +64,8 @@ describe("SubscribersModal", () => {
       pages: [
         {
           result: [
-            { id: 1, userId: 11, userName: "김구독", profileImage: "https://img.test/a.png" },
-            { id: 2, userId: 12, userName: "이구독", profileImage: null },
+            { id: 1, user: { id: 11, userName: "김구독", profileImage: "https://img.test/a.png" } },
+            { id: 2, user: { id: 12, userName: "이구독", profileImage: null } },
           ],
         },
       ],

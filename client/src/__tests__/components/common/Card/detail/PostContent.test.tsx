@@ -27,7 +27,7 @@ const post = {
   id: 1,
   title: "본문 제목",
   path: "/post-path",
-  blogPlatform: "velog",
+  blog: { platform: "velog" },
   thumbnail: "thumb.jpg",
   summary: "요약 내용",
   isOwner: false,

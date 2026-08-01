@@ -3,11 +3,12 @@ import { ApiData } from "@/types/api";
 export interface SearchResult {
   id: number;
   title: string;
-  blogName: string;
+  blog: {
+    name: string;
+    platform: string;
+  };
   path: string;
   createdAt: string;
-  author: string;
-  blogPlatform: string;
   thumbnail: string;
   viewCount: number;
   tag: string[];

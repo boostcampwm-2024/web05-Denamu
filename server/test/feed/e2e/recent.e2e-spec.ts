@@ -76,9 +76,11 @@ describe(`GET ${URL} E2E Test`, () => {
         const feed = feedList[i];
         return {
           id: feed.id,
-          author: feed.blog.name,
-          blogPlatform: feed.blog.blogPlatform,
-          blogImage: null,
+          blog: {
+            name: feed.blog.name,
+            platform: feed.blog.blogPlatform,
+            image: null,
+          },
           title: feed.title,
           path: feed.path,
           tag: [],

@@ -8,16 +8,14 @@ export class ReadFeedRecentResponseDto {
   id: number;
 
   @ApiProperty({
-    example: 'example author',
-    description: '작성자',
+    example: { name: 'example author', platform: 'example', image: 'https://example.com/profile.png' },
+    description: 'RSS 채널 정보',
   })
-  author: string;
-
-  @ApiProperty({
-    example: 'example',
-    description: '블로그 플랫폼',
-  })
-  blogPlatform: string;
+  blog: {
+    name: string;
+    platform: string;
+    image: string | null;
+  };
 
   @ApiProperty({
     example: 'example',
@@ -73,13 +71,6 @@ export class ReadFeedRecentResponseDto {
   })
   tag: string[] | string;
 
-  @ApiProperty({
-    example: 'https://example.com/profile.png',
-    description: 'RSS 채널 프로필 이미지 URL',
-    nullable: true,
-  })
-  blogImage: string | null;
-
   constructor(partial: Partial<ReadFeedRecentResponseDto>) {
     Object.assign(this, partial);
   }
@@ -87,8 +78,11 @@ export class ReadFeedRecentResponseDto {
   static toResponseDto(feed: FeedRecentRedis) {
     return new ReadFeedRecentResponseDto({
       id: parseInt(feed.id),
-      author: feed.blogName,
-      blogPlatform: feed.blogPlatform,
+      blog: {
+        name: feed.blogName,
+        platform: feed.blogPlatform,
+        image: feed.blogImage || null,
+      },
       title: feed.title,
       path: feed.path,
       createdAt: new Date(feed.createdAt),
@@ -98,7 +92,6 @@ export class ReadFeedRecentResponseDto {
       likes: parseInt(feed.likes),
       comments: parseInt(feed.comments),
       tag: feed.tagList,
-      blogImage: feed.blogImage || null,
     });
   }
 

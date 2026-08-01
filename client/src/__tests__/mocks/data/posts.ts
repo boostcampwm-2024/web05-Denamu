@@ -4,12 +4,11 @@ export const createMockPost = (override = {}) => ({
   title: "테스트 포스트",
   viewCount: 100,
   path: "/test-post",
-  author: "작성자",
   thumbnail: "test-thumbnail.jpg",
   tag: ["React", "Testing"],
   likes: 50,
   comments: 0,
-  blogPlatform: "etc",
+  blog: { name: "작성자", platform: "etc" },
   summary: "# test",
   ...override,
 });
@@ -31,5 +30,5 @@ export const createLongTitlePost = () =>
 
 export const createNoAuthorPost = () =>
   createMockPost({
-    author: "",
+    blog: { name: "", platform: "etc" },
   });

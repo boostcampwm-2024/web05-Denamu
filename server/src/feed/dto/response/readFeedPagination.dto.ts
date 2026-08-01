@@ -6,11 +6,15 @@ export class FeedResult {
   @ApiProperty({ example: 1, description: '게시글 ID' })
   id: number;
 
-  @ApiProperty({ example: 'example author', description: '작성자' })
-  author: string;
-
-  @ApiProperty({ example: 'example platform', description: '블로그 플랫폼' })
-  blogPlatform: string;
+  @ApiProperty({
+    example: { name: 'example author', platform: 'example platform', image: 'https://example.com/profile.png' },
+    description: 'RSS 채널 정보',
+  })
+  blog: {
+    name: string;
+    platform: string;
+    image: string | null;
+  };
 
   @ApiProperty({ example: 'example title', description: '게시글 제목' })
   title: string;
@@ -39,13 +43,6 @@ export class FeedResult {
   @ApiProperty({ example: 0, description: '댓글 수' })
   comments: number;
 
-  @ApiProperty({
-    example: 'https://example.com/profile.png',
-    description: 'RSS 채널 프로필 이미지 URL',
-    nullable: true,
-  })
-  blogImage: string | null;
-
   private constructor(partial: Partial<FeedResult>) {
     Object.assign(this, partial);
   }
@@ -53,8 +50,11 @@ export class FeedResult {
   static toResultDto(feed: FeedPaginationResult) {
     return new FeedResult({
       id: feed.feedId,
-      author: feed.blogName,
-      blogPlatform: feed.blogPlatform,
+      blog: {
+        name: feed.blogName,
+        platform: feed.blogPlatform,
+        image: feed.blogImage ?? null,
+      },
       title: feed.title,
       path: feed.path,
       createdAt: feed.createdAt,
@@ -64,7 +64,6 @@ export class FeedResult {
       tag: feed.tag ? feed.tag : [],
       likes: feed.likeCount,
       comments: feed.commentCount,
-      blogImage: feed.blogImage ?? null,
     });
   }
 
@@ -116,16 +115,18 @@ export class FeedTrendResponseDto {
   id: number;
 
   @ApiProperty({
-    example: 'example author',
-    description: '작성자',
+    example: {
+      name: 'example author',
+      platform: 'example blog platform',
+      image: 'https://example.com/profile.png',
+    },
+    description: 'RSS 채널 정보',
   })
-  author: string;
-
-  @ApiProperty({
-    example: 'example blog platform',
-    description: '블로그 플랫폼',
-  })
-  blogPlatform: string;
+  blog: {
+    name: string;
+    platform: string;
+    image: string | null;
+  };
 
   @ApiProperty({
     example: 'example title',
@@ -175,13 +176,6 @@ export class FeedTrendResponseDto {
   })
   tag: string[];
 
-  @ApiProperty({
-    example: 'https://example.com/profile.png',
-    description: 'RSS 채널 프로필 이미지 URL',
-    nullable: true,
-  })
-  blogImage: string | null;
-
   private constructor(partial: Partial<FeedTrendResponseDto>) {
     Object.assign(this, partial);
   }
@@ -189,8 +183,11 @@ export class FeedTrendResponseDto {
   private static toResponseDto(feed: FeedView) {
     return new FeedTrendResponseDto({
       id: feed.feedId,
-      author: feed.blogName,
-      blogPlatform: feed.blogPlatform,
+      blog: {
+        name: feed.blogName,
+        platform: feed.blogPlatform,
+        image: feed.blogImage ?? null,
+      },
       title: feed.title,
       path: feed.path,
       createdAt: feed.createdAt,
@@ -199,7 +196,6 @@ export class FeedTrendResponseDto {
       likes: feed.likeCount,
       comments: feed.commentCount,
       tag: feed.tag ? feed.tag : [],
-      blogImage: feed.blogImage ?? null,
     });
   }
 

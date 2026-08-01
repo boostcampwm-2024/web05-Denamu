@@ -46,15 +46,15 @@ export const PostHeader = React.memo(({ data }: PostHeaderProps) => {
   const profileContent = (
     <>
       <PostAvatar
-        blogPlatform={data.blogPlatform}
-        blogImage={data.blogImage}
+        blogPlatform={data.blog.platform}
+        blogImage={data.blog.image}
         className="h-8 w-8"
-        author={data.author}
+        author={data.blog.name}
       />
       <span className="flex flex-col min-w-0">
         <span className="flex items-center gap-1.5">
-          <span className="font-medium truncate">{data.author}</span>
-          {data.isOwnerCertified && (
+          <span className="font-medium truncate">{data.blog.name}</span>
+          {data.blog.isOwnerCertified && (
             <span className="flex items-center gap-0.5 text-xs text-blue-500" title="RSS 소유 인증 블로그">
               <CheckCircle2 className="w-4 h-4" />
               인증
@@ -62,9 +62,9 @@ export const PostHeader = React.memo(({ data }: PostHeaderProps) => {
           )}
         </span>
         <span className="flex gap-2 text-sm text-gray-400">
-          {data.ownerName && (
+          {data.blog.ownerName && (
             <>
-              <span>{data.ownerName}</span>
+              <span>{data.blog.ownerName}</span>
               <span>·</span>
             </>
           )}
@@ -100,20 +100,16 @@ export const PostHeader = React.memo(({ data }: PostHeaderProps) => {
         )}
       </div>
       <span className="flex gap-2 items-center">
-        {data.blogId != null ? (
-          <Link
-            to={`/rss/${data.blogId}`}
-            className="flex gap-2 items-center min-w-0 transition-opacity hover:opacity-80"
-          >
-            {profileContent}
-          </Link>
-        ) : (
-          profileContent
-        )}
-        {data.blogId != null && !data.isOwner && (
+        <Link
+          to={`/rss/${data.blog.id}`}
+          className="flex gap-2 items-center min-w-0 transition-opacity hover:opacity-80"
+        >
+          {profileContent}
+        </Link>
+        {!data.isOwner && (
           <span className="ml-auto flex-shrink-0">
             <SubscribeButton
-              rssId={data.blogId}
+              rssId={data.blog.id}
               isSubscribed={data.isSubscribed}
               invalidateKeys={[["getDetail", data.id]]}
             />

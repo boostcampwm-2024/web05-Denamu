@@ -80,10 +80,10 @@ describe("SearchResultList", () => {
   });
 
   it("검색 결과가 있을 때는 결과 목록과 페이지네이션을 표시해야 한다", () => {
-    const cardFields = { author: "", blogPlatform: "etc", thumbnail: "", viewCount: 0, tag: [], likes: 0, comments: 0 };
+    const cardFields = { thumbnail: "", viewCount: 0, tag: [], likes: 0, comments: 0 };
     const mockResults = [
-      { id: 1, title: "제목1", blogName: "블로그1", path: "/1", createdAt: "2024-01-01", ...cardFields },
-      { id: 2, title: "제목2", blogName: "블로그2", path: "/2", createdAt: "2024-01-01", ...cardFields },
+      { id: 1, title: "제목1", blog: { name: "블로그1", platform: "etc" }, path: "/1", createdAt: "2024-01-01", ...cardFields },
+      { id: 2, title: "제목2", blog: { name: "블로그2", platform: "etc" }, path: "/2", createdAt: "2024-01-01", ...cardFields },
     ];
 
     vi.mocked(useSearchStore).mockReturnValue({

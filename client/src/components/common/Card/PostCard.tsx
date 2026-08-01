@@ -17,8 +17,8 @@ const trackPostDetailOpen = (post: FeedList) => {
   trackEvent("post_detail_open", {
     post_id: post.id,
     post_title: post.title,
-    platform: post.blogPlatform,
-    author: post.author,
+    platform: post.blog.platform,
+    author: post.blog.name,
   });
 };
 

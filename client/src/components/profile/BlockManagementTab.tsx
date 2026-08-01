@@ -60,11 +60,11 @@ export const BlockManagementTab = () => {
               <p className="text-sm text-gray-400">차단한 사용자가 없습니다.</p>
             ) : (
               <ul className="space-y-3">
-                {blockedUsers.map((user) => {
+                {blockedUsers.map(({ user }) => {
                   const initials = user.userName ? user.userName.substring(0, 2).toUpperCase() : "사용자";
                   return (
                     <li
-                      key={user.userId}
+                      key={user.id}
                       className="flex items-center justify-between gap-3 p-4 border border-gray-100 rounded-lg"
                     >
                       <div className="flex items-center min-w-0 gap-3">
@@ -79,7 +79,7 @@ export const BlockManagementTab = () => {
                           variant="outline"
                           size="sm"
                           disabled={isPending}
-                          onClick={() => handleUnblock(user.userId, user.userName)}
+                          onClick={() => handleUnblock(user.id, user.userName)}
                         >
                           차단 해제
                         </Button>
@@ -98,12 +98,12 @@ export const BlockManagementTab = () => {
               <p className="text-sm text-gray-400">차단한 RSS가 없습니다.</p>
             ) : (
               <ul className="space-y-3">
-                {blockedRss.map((rss) => (
+                {blockedRss.map(({ rss }) => (
                   <li
-                    key={rss.rssId}
+                    key={rss.id}
                     className="flex items-center justify-between gap-3 p-4 border border-gray-100 rounded-lg"
                   >
-                    <Link to={`/rss/${rss.rssId}`} className="flex items-center min-w-0 gap-3">
+                    <Link to={`/rss/${rss.id}`} className="flex items-center min-w-0 gap-3">
                       <PlatformIcon
                         platform={rss.blogPlatform}
                         image={rss.blogImage}
@@ -116,7 +116,7 @@ export const BlockManagementTab = () => {
                         variant="outline"
                         size="sm"
                         disabled={isRssUnblockPending}
-                        onClick={() => handleRssUnblock(rss.rssId, rss.name)}
+                        onClick={() => handleRssUnblock(rss.id, rss.name)}
                       >
                         차단 해제
                       </Button>

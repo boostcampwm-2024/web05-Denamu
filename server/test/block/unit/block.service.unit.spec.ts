@@ -169,9 +169,11 @@ describe(`${BlockService.name} Unit Test`, () => {
         GetBlockedUsersResponseDto.toResponseDtoArray(blocks),
       );
       expect(result[0]).toMatchObject({
-        userId: 2,
-        userName: '차단된유저',
-        profileImage: null,
+        user: {
+          id: 2,
+          userName: '차단된유저',
+          profileImage: null,
+        },
       });
     });
   });
@@ -290,9 +292,11 @@ describe(`${BlockService.name} Unit Test`, () => {
         GetBlockedRssResponseDto.toResponseDtoArray(rssBlocks),
       );
       expect(result[0]).toMatchObject({
-        rssId: 5,
-        name: '차단된블로그',
-        blogPlatform: 'velog',
+        rss: {
+          id: 5,
+          name: '차단된블로그',
+          blogPlatform: 'velog',
+        },
       });
     });
   });

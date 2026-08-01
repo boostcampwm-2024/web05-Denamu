@@ -37,10 +37,10 @@ export const useTrendingPosts = () => {
     };
   }, [queryClient]);
 
-  const blockedRssNames = new Set(blockedRss.map((rss) => rss.name));
+  const blockedRssNames = new Set(blockedRss.map(({ rss }) => rss.name));
 
   return {
     ...query,
-    posts: (query.data?.data || []).filter((post) => !blockedRssNames.has(post.author)),
+    posts: (query.data?.data || []).filter((post) => !blockedRssNames.has(post.blog.name)),
   };
 };

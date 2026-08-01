@@ -6,24 +6,31 @@ export interface FeedBase {
   title: string;
   viewCount: number;
   path: string;
-  author: string;
   thumbnail: string;
   tag: string[];
   likes: number;
   comments: number;
-  blogPlatform: string;
-  blogImage?: string | null;
+  blog: {
+    name: string;
+    platform: string;
+    image?: string | null;
+  };
   isNew?: boolean;
 }
 
 export type FeedList = FeedBase;
 
-export interface FeedDetail extends FeedBase {
+export interface FeedDetail extends Omit<FeedBase, "blog"> {
   summary: string;
   isOwner: boolean;
-  blogId: number | null;
-  ownerName: string | null;
-  isOwnerCertified: boolean;
+  blog: {
+    id: number;
+    name: string;
+    ownerName: string | null;
+    isOwnerCertified: boolean;
+    platform: string;
+    image: string | null;
+  };
   isSubscribed: boolean;
   isBlocked: boolean;
 }

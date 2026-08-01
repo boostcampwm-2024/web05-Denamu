@@ -9,7 +9,9 @@ const batchRequest = vi.fn();
 const mockToast = vi.fn();
 let noSummaryFeeds: Array<{ id: number; title: string; likes: number; comments: number }>;
 let infiniteItems: Array<{ id: number; title: string; thumbnail: string }>;
-let searchData: { data: { result: Array<{ id: number; title: string }>; totalCount: number } };
+let searchData: {
+  data: { result: Array<{ id: number; title: string; blog: { platform: string } }>; totalCount: number };
+};
 
 vi.mock("lucide-react", () => lucideProxy());
 
@@ -85,7 +87,7 @@ describe("AdminPostTab", () => {
   });
 
   it("검색 결과가 있으면 결과 카드를 렌더링해야 한다", () => {
-    searchData = { data: { result: [{ id: 5, title: "검색된 글" }], totalCount: 1 } };
+    searchData = { data: { result: [{ id: 5, title: "검색된 글", blog: { platform: "etc" } }], totalCount: 1 } };
     render(<AdminPostTab />);
 
     const searchInputs = screen.getAllByPlaceholderText("제목으로 게시글 검색");

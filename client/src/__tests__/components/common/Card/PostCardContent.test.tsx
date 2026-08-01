@@ -12,7 +12,7 @@ vi.mock("@/store/useMediaStore", () => ({
   useMediaStore: (selector: (s: { isMobile: boolean }) => unknown) => selector({ isMobile: isMobileMock() }),
 }));
 
-const post = createMockPost({ title: "제목입니다", author: "작성자명", tag: ["React"] }) as FeedList;
+const post = createMockPost({ title: "제목입니다", blog: { name: "작성자명", platform: "etc" }, tag: ["React"] }) as FeedList;
 
 describe("PostCardContent", () => {
   beforeEach(() => {

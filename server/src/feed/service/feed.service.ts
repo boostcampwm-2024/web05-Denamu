@@ -293,7 +293,7 @@ export class FeedService {
       : false;
 
     let isSubscribed = false;
-    if (userId && blogMeta) {
+    if (userId) {
       const subscription = await this.subscriptionRepository.findOneBy({
         user: { id: userId },
         rssAccept: { id: blogMeta.id },
@@ -302,7 +302,7 @@ export class FeedService {
     }
 
     let isBlocked = false;
-    if (userId && blogMeta) {
+    if (userId) {
       isBlocked = await this.rssBlockRepository.existsByBlockerAndRss(
         userId,
         blogMeta.id,

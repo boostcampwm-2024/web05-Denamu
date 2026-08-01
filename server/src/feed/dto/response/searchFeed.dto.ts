@@ -6,8 +6,19 @@ export class SearchFeedResult {
   @ApiProperty({ example: 1, description: '게시글 ID' })
   id: number;
 
-  @ApiProperty({ example: 'example blog name', description: '블로그 이름' })
-  blogName: string;
+  @ApiProperty({
+    example: {
+      name: 'example blog name',
+      platform: 'example platform',
+      image: 'https://example.com/profile.png',
+    },
+    description: 'RSS 채널 정보',
+  })
+  blog: {
+    name: string;
+    platform: string;
+    image: string | null;
+  };
 
   @ApiProperty({ example: 'example title', description: '게시글 제목' })
   title: string;
@@ -17,12 +28,6 @@ export class SearchFeedResult {
 
   @ApiProperty({ example: '2025-01-01T01:00:00.000Z', description: '게시글 작성 일자' })
   createdAt: Date;
-
-  @ApiProperty({ example: 'example author', description: '작성자' })
-  author: string;
-
-  @ApiProperty({ example: 'example platform', description: '블로그 플랫폼' })
-  blogPlatform: string;
 
   @ApiProperty({ example: 'https://example.com/thumbnail', description: '썸네일 URL' })
   thumbnail: string;
@@ -39,13 +44,6 @@ export class SearchFeedResult {
   @ApiProperty({ example: 0, description: '댓글 수' })
   comments: number;
 
-  @ApiProperty({
-    example: 'https://example.com/profile.png',
-    description: 'RSS 채널 프로필 이미지 URL',
-    nullable: true,
-  })
-  blogImage: string | null;
-
   private constructor(partial: Partial<SearchFeedResult>) {
     Object.assign(this, partial);
   }
@@ -53,18 +51,19 @@ export class SearchFeedResult {
   static toResultDto(feed: Feed) {
     return new SearchFeedResult({
       id: feed.id,
-      blogName: feed.blog.name,
+      blog: {
+        name: feed.blog.name,
+        platform: feed.blog.blogPlatform,
+        image: feed.blog.blogImage ?? null,
+      },
       title: feed.title,
       path: feed.path,
       createdAt: feed.createdAt,
-      author: feed.blog.name,
-      blogPlatform: feed.blog.blogPlatform,
       thumbnail: feed.thumbnail,
       viewCount: feed.viewCount,
       tag: [],
       likes: feed.likeCount,
       comments: feed.commentCount,
-      blogImage: feed.blog.blogImage ?? null,
     });
   }
 

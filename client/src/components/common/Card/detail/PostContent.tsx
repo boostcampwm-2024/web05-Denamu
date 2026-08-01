@@ -31,8 +31,8 @@ export const PostContent = React.memo(({ post, highlightCommentId }: PostContent
           <span className="text-lg font-semibold">{post.title}</span>
           <span className="text-sm text-gray-400 hover:underline flex gap-2 truncate">
             <img
-              src={`https://denamu.dev/files/${post.blogPlatform}-icon.svg`}
-              alt={post.author}
+              src={`https://denamu.dev/files/${post.blog.platform}-icon.svg`}
+              alt={post.blog.name}
               className="h-5 w-5 rounded-none"
             />
             {post.path}
