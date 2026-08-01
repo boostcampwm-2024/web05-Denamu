@@ -382,10 +382,12 @@ INSERT INTO admin (email,password, name, parent_admin_id) VALUES
 
 -- denamu.user insert data
 -- id: test@test.com, password: test1234!
--- id: example@example.com, password: test1234!
+-- id: test2@test.com, password: test1234!
+-- id: test3@test.com, password: test1234!
 INSERT INTO user (email, password, user_name, profile_image, introduction) VALUES
-	('test@test.com', '$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정', NULL, '안녕하세요 테스트입니다.'),
-	('example@example.com', '$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '예제 계정', NULL, '안녕하세요 예제입니다.');
+	('test@test.com', '$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정', 'https://tistory1.daumcdn.net/tistory/8709220/attach/22a2a2633a304b0c9fce20b4aa07ebcc', '안녕하세요 테스트입니다.'),
+	('test2@test.com', '$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정2', 'https://velog.velcdn.com/images/seok3765/profile/bfb84abe-3508-462a-9d07-e8e73c8da67c/image.png', '안녕하세요 테스트2입니다.'),
+	('test3@test.com', '$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정3', NULL, '안녕하세요 테스트3입니다.');
 
 -- denamu.rss_accept insert data
 
@@ -617,3 +619,48 @@ INSERT INTO subscription(user_id, rss_accept_id, subscribed_at) VALUES
 	(2, 2, '2025-06-14 10:01:00.000000'),
 	(2, 3, '2025-06-14 10:02:00.000000'),
 	(1, 2, '2025-06-14 10:03:00.000000');
+
+-- denamu.rss insert data
+
+INSERT INTO rss (name, user_name, email, rss_url, blog_url, platform) VALUES
+	('대기중인 블로그', '김대기', 'test3@test.com', 'https://pending-blog.tistory.com/rss', 'https://pending-blog.tistory.com', 'tistory');
+
+-- denamu.notification insert data
+
+INSERT INTO notification (type, is_read, recipient_user_id, feed_id, rss_accept_id) VALUES
+	('LIKE', 0, 1, 94, NULL),
+	('SUBSCRIBE', 1, 2, NULL, 1);
+
+-- denamu.blocks insert data
+
+INSERT INTO blocks (blocker_id, blocked_id) VALUES
+	(3, 2);
+
+-- denamu.rss_blocks insert data
+
+INSERT INTO rss_blocks (blocker_id, blocked_rss_id) VALUES
+	(3, 4);
+
+-- denamu.report insert data
+
+INSERT INTO report (target_type, target_id, reason, detail, status, reporter_id, reported_feed_id) VALUES
+	('FEED', 94, 'SPAM', '광고성 게시글입니다.', 'PENDING', 3, 94);
+
+-- denamu.board insert data
+
+INSERT INTO board (title, content, status, category, is_pinned, author_admin_id) VALUES
+	('서비스 점검 안내', '<p>2026-08-05 새벽 점검이 진행됩니다.</p>', 'PUBLISHED', 'NOTICE', 1, 1),
+	('자주 묻는 질문', '<p><strong>Q. RSS 등록은 어떻게 하나요?</strong></p><p>마이페이지에서 RSS 주소를 등록하면 검수 후 반영됩니다.</p>', 'PUBLISHED', 'FAQ', 0, 1);
+
+-- denamu.qna insert data
+
+INSERT INTO qna (title, is_secret, password, guest_name, guest_email, user_id, status) VALUES
+	('RSS 등록 문의드립니다', 0, NULL, '홍길동', 'guest@test.com', NULL, 'PENDING'),
+	('탈퇴 절차가 궁금합니다', 0, NULL, NULL, NULL, 2, 'ANSWERED');
+
+-- denamu.qna_message insert data
+
+INSERT INTO qna_message (qna_id, type, content, admin_id) VALUES
+	(1, 'QUESTION', 'RSS 등록은 어떻게 진행하나요?', NULL),
+	(2, 'QUESTION', '탈퇴 절차를 알려주세요.', NULL),
+	(2, 'ANSWER', '마이페이지 > 회원 탈퇴에서 진행 가능합니다.', 1);
