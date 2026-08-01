@@ -19,6 +19,9 @@ import { ChatWsExceptionFilter } from '@chat/filter/ws.exception.filter';
 import { AnonymousRoomManager } from '@chat/room/anonymous-room.manager';
 import { ChatService } from '@chat/service/chat.service';
 
+import { WinstonLoggerService } from '@common/logger/logger.service';
+import { getWsIp } from '@common/util/getWsIp';
+
 import { SendMessageDto } from './dto/sendMessage.dto';
 
 @UseFilters(new ChatWsExceptionFilter())
@@ -35,13 +38,20 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     private readonly chatService: ChatService,
     private readonly anonymousRoomManager: AnonymousRoomManager,
+    private readonly logger: WinstonLoggerService,
   ) {}
 
   private getClientRoomId(client: Socket): string | undefined {
     return (client.data as { roomId?: string }).roomId;
   }
 
+  private getClientIp(client: Socket): string | undefined {
+    return (client.data as { ip?: string }).ip;
+  }
+
   async handleConnection(@ConnectedSocket() client: Socket) {
+    (client.data as { ip?: string }).ip = getWsIp(client);
+
     const requestedRoom = client.handshake.query.room as string | undefined;
     let roomId: string;
     let roomName: string;
@@ -73,8 +83,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const chatHistory = await this.chatService.getChatHistory(roomId);
     client.emit('chatHistory', chatHistory);
 
-    const roomSize =
-      this.server.sockets.adapter.rooms.get(roomId)?.size ?? 0;
+    const roomSize = this.server.sockets.adapter.rooms.get(roomId)?.size ?? 0;
     this.server.to(roomId).emit('updateUserCount', { userCount: roomSize });
 
     this.anonymousRoomManager.trackUserConnected(roomId);
@@ -84,8 +93,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const roomId = this.getClientRoomId(client);
     if (!roomId) return;
 
-    const roomSize =
-      this.server.sockets.adapter.rooms.get(roomId)?.size ?? 0;
+    const roomSize = this.server.sockets.adapter.rooms.get(roomId)?.size ?? 0;
     this.server.to(roomId).emit('updateUserCount', { userCount: roomSize });
 
     this.anonymousRoomManager.trackUserDisconnected(roomId);
@@ -98,7 +106,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     payload: { userId: string | null },
   ) {
     const requestedRoom = client.handshake.query.room as string | undefined;
-    if (requestedRoom && !this.anonymousRoomManager.isAnonymousRoom(requestedRoom)) return;
+    if (
+      requestedRoom &&
+      !this.anonymousRoomManager.isAnonymousRoom(requestedRoom)
+    )
+      return;
 
     const result = await this.anonymousRoomManager.getOrCreateUserName(
       payload?.userId ?? null,
@@ -132,6 +144,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     };
 
     this.anonymousRoomManager.trackMessageSent(roomId);
+
+    this.logger.log(
+      JSON.stringify({
+        ip: this.getClientIp(client),
+        room: roomId,
+        userId: payload.userId,
+        userName,
+        messageId: payload.messageId,
+        message: payload.message,
+      }),
+    );
 
     await this.chatService.saveMessageToRedis(redisPayload);
     this.server.to(roomId).emit('message', redisPayload);
