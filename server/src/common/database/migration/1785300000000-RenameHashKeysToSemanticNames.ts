@@ -77,7 +77,7 @@ export class RenameHashKeysToSemanticNames1785300000000
       'ALTER TABLE `category` RENAME INDEX `name` TO `UQ_category_name`;',
     );
     await queryRunner.query(
-      'ALTER TABLE `tag` RENAME INDEX `name` TO `UQ_tag_name`;',
+      'ALTER TABLE `tag` RENAME INDEX `IDX_6a9775008add570dc3e5a0bab7` TO `UQ_tag_name`;',
     );
 
     // comment
@@ -500,7 +500,7 @@ export class RenameHashKeysToSemanticNames1785300000000
 
     // category / tag
     await queryRunner.query(
-      'ALTER TABLE `tag` RENAME INDEX `UQ_tag_name` TO `name`;',
+      'ALTER TABLE `tag` RENAME INDEX `UQ_tag_name` TO `IDX_6a9775008add570dc3e5a0bab7`;',
     );
     await queryRunner.query(
       'ALTER TABLE `category` RENAME INDEX `UQ_category_name` TO `name`;',
