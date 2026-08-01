@@ -89,7 +89,6 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual({
-      author: feedList[0].blog.name,
       comments: feedList[0].commentCount,
       createdAt: feedList[0].createdAt.toISOString(),
       id: feedList[0].id,
@@ -103,6 +102,7 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
       isOwner: false,
       blog: {
         id: feedList[0].blog.id,
+        name: feedList[0].blog.name,
         ownerName: feedList[0].blog.userName,
         isOwnerCertified: false,
         platform: 'etc',
@@ -126,7 +126,6 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual({
-      author: feedList[1].blog.name,
       comments: feedList[1].commentCount,
       createdAt: feedList[1].createdAt.toISOString(),
       id: feedList[1].id,
@@ -140,6 +139,7 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
       isOwner: false,
       blog: {
         id: feedList[1].blog.id,
+        name: feedList[1].blog.name,
         ownerName: feedList[1].blog.userName,
         isOwnerCertified: false,
         platform: feedList[1].blog.blogPlatform,

@@ -6,12 +6,12 @@ export interface FeedBase {
   title: string;
   viewCount: number;
   path: string;
-  author: string;
   thumbnail: string;
   tag: string[];
   likes: number;
   comments: number;
   blog: {
+    name: string;
     platform: string;
     image?: string | null;
   };
@@ -25,6 +25,7 @@ export interface FeedDetail extends Omit<FeedBase, "blog"> {
   isOwner: boolean;
   blog: {
     id: number;
+    name: string;
     ownerName: string | null;
     isOwnerCertified: boolean;
     platform: string;

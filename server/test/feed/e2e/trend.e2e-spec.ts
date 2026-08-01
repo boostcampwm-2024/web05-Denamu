@@ -80,8 +80,8 @@ describe(`SSE ${URL} E2E Test`, () => {
     expect(data).toStrictEqual(
       feedList.map((feed) => ({
         id: feed.id,
-        author: feed.blog.name,
         blog: {
+          name: feed.blog.name,
           platform: feed.blog.blogPlatform,
           image: null,
         },

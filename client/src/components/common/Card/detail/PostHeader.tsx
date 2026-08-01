@@ -49,11 +49,11 @@ export const PostHeader = React.memo(({ data }: PostHeaderProps) => {
         blogPlatform={data.blog.platform}
         blogImage={data.blog.image}
         className="h-8 w-8"
-        author={data.author}
+        author={data.blog.name}
       />
       <span className="flex flex-col min-w-0">
         <span className="flex items-center gap-1.5">
-          <span className="font-medium truncate">{data.author}</span>
+          <span className="font-medium truncate">{data.blog.name}</span>
           {data.blog.isOwnerCertified && (
             <span className="flex items-center gap-0.5 text-xs text-blue-500" title="RSS 소유 인증 블로그">
               <CheckCircle2 className="w-4 h-4" />

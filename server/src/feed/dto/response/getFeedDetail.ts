@@ -10,12 +10,6 @@ export class GetFeedDetailResponseDto {
   id: number;
 
   @ApiProperty({
-    example: 'example author',
-    description: '게시글 작성자 이름',
-  })
-  author: string;
-
-  @ApiProperty({
     example: 'example title',
     description: '게시글 제목',
   })
@@ -78,6 +72,7 @@ export class GetFeedDetailResponseDto {
   @ApiProperty({
     example: {
       id: 1,
+      name: 'example author',
       ownerName: '조민석',
       isOwnerCertified: true,
       platform: 'example platform',
@@ -87,6 +82,7 @@ export class GetFeedDetailResponseDto {
   })
   blog: {
     id: number;
+    name: string;
     ownerName: string | null;
     isOwnerCertified: boolean;
     platform: string;
@@ -118,7 +114,6 @@ export class GetFeedDetailResponseDto {
   ) {
     return new GetFeedDetailResponseDto({
       id: feed.feedId,
-      author: feed.blogName,
       title: feed.title,
       path: feed.path,
       createdAt: feed.createdAt,
@@ -131,6 +126,7 @@ export class GetFeedDetailResponseDto {
       isOwner,
       blog: {
         id: blogMeta.id,
+        name: feed.blogName,
         ownerName: blogMeta.userName,
         isOwnerCertified: blogMeta.userId != null,
         platform: feed.blogPlatform,

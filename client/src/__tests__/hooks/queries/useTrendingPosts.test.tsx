@@ -38,7 +38,7 @@ const createWrapper = () => {
   return { queryClient, wrapper };
 };
 
-const makePost = (id: number, author: string) => ({ id, author, title: `post ${id}` });
+const makePost = (id: number, author: string) => ({ id, blog: { name: author }, title: `post ${id}` });
 
 describe("useTrendingPosts", () => {
   beforeEach(() => {
@@ -83,7 +83,7 @@ describe("useTrendingPosts", () => {
     });
 
     await waitFor(() => expect(result.current.posts).toHaveLength(1));
-    expect(result.current.posts[0].author).toBe("블로그A");
+    expect(result.current.posts[0].blog.name).toBe("블로그A");
   });
 
   it("unmount 시 EventSource 연결을 닫는다", () => {

@@ -18,8 +18,7 @@ vi.mock("@/hooks/queries/useReport", () => ({
 const data = {
   id: 1,
   title: "상세 제목",
-  author: "작성자",
-  blog: { id: 42, ownerName: null, isOwnerCertified: false, platform: "velog", image: null },
+  blog: { id: 42, name: "작성자", ownerName: null, isOwnerCertified: false, platform: "velog", image: null },
   createdAt: "2024-03-26T00:00:00Z",
   viewCount: 123,
   tag: ["React", "Test"],

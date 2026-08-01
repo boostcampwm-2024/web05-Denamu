@@ -65,8 +65,8 @@ describe(`GET ${URL}?limit={}&lastId={} E2E Test`, () => {
 
         return {
           id: feed.id,
-          author: feed.blog.name,
           blog: {
+            name: feed.blog.name,
             platform: feed.blog.blogPlatform,
             image: null,
           },
@@ -106,8 +106,8 @@ describe(`GET ${URL}?limit={}&lastId={} E2E Test`, () => {
 
         return {
           id: feed.id,
-          author: feed.blog.name,
           blog: {
+            name: feed.blog.name,
             platform: feed.blog.blogPlatform,
             image: null,
           },
@@ -150,8 +150,8 @@ describe(`GET ${URL}?limit={}&lastId={} E2E Test`, () => {
             ? null
             : {
                 id: feed.id,
-                author: feed.blog.name,
                 blog: {
+                  name: feed.blog.name,
                   platform: feed.blog.blogPlatform,
                   image: null,
                 },

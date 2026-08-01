@@ -8,16 +8,11 @@ export class ReadFeedRecentResponseDto {
   id: number;
 
   @ApiProperty({
-    example: 'example author',
-    description: '작성자',
-  })
-  author: string;
-
-  @ApiProperty({
-    example: { platform: 'example', image: 'https://example.com/profile.png' },
+    example: { name: 'example author', platform: 'example', image: 'https://example.com/profile.png' },
     description: 'RSS 채널 정보',
   })
   blog: {
+    name: string;
     platform: string;
     image: string | null;
   };
@@ -83,8 +78,8 @@ export class ReadFeedRecentResponseDto {
   static toResponseDto(feed: FeedRecentRedis) {
     return new ReadFeedRecentResponseDto({
       id: parseInt(feed.id),
-      author: feed.blogName,
       blog: {
+        name: feed.blogName,
         platform: feed.blogPlatform,
         image: feed.blogImage || null,
       },

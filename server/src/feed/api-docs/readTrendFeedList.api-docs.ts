@@ -32,8 +32,7 @@ export function ApiReadTrendFeedList() {
             data: [
               {
                 id: 1,
-                author: '블로그 이름',
-                blog: { platform: '블로그 서비스 플랫폼', image: null },
+                blog: { name: '블로그 이름', platform: '블로그 서비스 플랫폼', image: null },
                 title: '피드 제목',
                 path: 'https://test1.com/1',
                 createdAt: new Date('2024-11-24T01:00:00.000Z'),
@@ -45,8 +44,7 @@ export function ApiReadTrendFeedList() {
               },
               {
                 id: 2,
-                author: '블로그 이름',
-                blog: { platform: '블로그 서비스 플랫폼', image: null },
+                blog: { name: '블로그 이름', platform: '블로그 서비스 플랫폼', image: null },
                 title: '피드 제목',
                 path: 'https://test2.com/1',
                 createdAt: new Date('2024-11-24T02:00:00.000Z'),
@@ -66,8 +64,7 @@ export function ApiReadTrendFeedList() {
             data: [
               {
                 id: 3,
-                author: '블로그 이름',
-                blog: { platform: '블로그 서비스 플랫폼', image: null },
+                blog: { name: '블로그 이름', platform: '블로그 서비스 플랫폼', image: null },
                 title: '피드 제목',
                 path: 'https://test3.com/1',
                 createdAt: new Date('2024-11-24T03:00:00.000Z'),
@@ -79,8 +76,7 @@ export function ApiReadTrendFeedList() {
               },
               {
                 id: 4,
-                author: '블로그 이름',
-                blog: { platform: '블로그 서비스 플랫폼', image: null },
+                blog: { name: '블로그 이름', platform: '블로그 서비스 플랫폼', image: null },
                 title: '피드 제목',
                 path: 'https://test4.com/1',
                 createdAt: new Date('2024-11-24T04:00:00.000Z'),

@@ -22,7 +22,6 @@ describe("SearchResultItem", () => {
     title: "테스트 제목입니다",
     blog: { name: "테스트 블로그", platform: "etc" },
     path: "/test-path",
-    author: "테스트 블로그",
     thumbnail: "",
     viewCount: 0,
     tag: [],

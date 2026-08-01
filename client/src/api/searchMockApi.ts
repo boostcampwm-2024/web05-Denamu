@@ -80,7 +80,6 @@ const baseMockData = [
 
 const mockData: SearchResult[] = baseMockData.map(({ blogName, ...item }) => ({
   ...item,
-  author: blogName,
   blog: { name: blogName, platform: "etc" },
   thumbnail: "",
   viewCount: 0,

@@ -41,6 +41,6 @@ export const useTrendingPosts = () => {
 
   return {
     ...query,
-    posts: (query.data?.data || []).filter((post) => !blockedRssNames.has(post.author)),
+    posts: (query.data?.data || []).filter((post) => !blockedRssNames.has(post.blog.name)),
   };
 };

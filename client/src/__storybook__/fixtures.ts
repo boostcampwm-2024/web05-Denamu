@@ -30,12 +30,11 @@ export const mockFeedList: FeedList = {
   title: "Storybook으로 컴포넌트 문서화하기",
   viewCount: 1234,
   path: "https://example.com/post/1",
-  author: "데나무",
   thumbnail: "https://picsum.photos/seed/denamu/400/240",
   tag: ["React", "Storybook", "TypeScript"],
   likes: 42,
   comments: 7,
-  blog: { platform: "tistory" },
+  blog: { name: "데나무", platform: "tistory" },
   isNew: true,
 };
 
@@ -45,6 +44,7 @@ export const mockFeedDetail: FeedDetail = {
   isOwner: false,
   blog: {
     id: 1,
+    name: "데나무",
     ownerName: "조민석",
     isOwnerCertified: true,
     platform: "tistory",
@@ -123,7 +123,6 @@ export const mockSearchResult: SearchResult = {
   blog: { name: "데나무 블로그", platform: "tistory" },
   path: "https://example.com/post/1",
   createdAt: "2026-06-20T09:00:00.000Z",
-  author: "조민석",
   thumbnail: "https://picsum.photos/seed/search/400/240",
   viewCount: 1234,
   tag: ["React", "Storybook"],
@@ -414,12 +413,14 @@ export const mockFeedsList: FeedList[] = Array.from({ length: 8 }, (_, i) => ({
   title: `블로그 포스트 #${i + 1} - Storybook 데모`,
   viewCount: (i + 1) * 100,
   path: `https://example.com/post/${i + 1}`,
-  author: `작성자 ${(i % 4) + 1}`,
   thumbnail: `https://picsum.photos/seed/feed${i}/400/240`,
   tag: i % 2 === 0 ? ["React", "TypeScript"] : ["NestJS", "Node.js"],
   likes: (i + 1) * 5,
   comments: i + 1,
-  blog: { platform: i % 3 === 0 ? "tistory" : i % 3 === 1 ? "velog" : "medium" },
+  blog: {
+    name: `작성자 ${(i % 4) + 1}`,
+    platform: i % 3 === 0 ? "tistory" : i % 3 === 1 ? "velog" : "medium",
+  },
   isNew: i < 2,
 }));
 

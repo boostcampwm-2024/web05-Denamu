@@ -18,7 +18,7 @@ const trackPostDetailOpen = (post: FeedList) => {
     post_id: post.id,
     post_title: post.title,
     platform: post.blog.platform,
-    author: post.author,
+    author: post.blog.name,
   });
 };
 

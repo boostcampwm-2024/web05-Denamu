@@ -6,14 +6,12 @@ export class FeedResult {
   @ApiProperty({ example: 1, description: '게시글 ID' })
   id: number;
 
-  @ApiProperty({ example: 'example author', description: '작성자' })
-  author: string;
-
   @ApiProperty({
-    example: { platform: 'example platform', image: 'https://example.com/profile.png' },
+    example: { name: 'example author', platform: 'example platform', image: 'https://example.com/profile.png' },
     description: 'RSS 채널 정보',
   })
   blog: {
+    name: string;
     platform: string;
     image: string | null;
   };
@@ -52,8 +50,8 @@ export class FeedResult {
   static toResultDto(feed: FeedPaginationResult) {
     return new FeedResult({
       id: feed.feedId,
-      author: feed.blogName,
       blog: {
+        name: feed.blogName,
         platform: feed.blogPlatform,
         image: feed.blogImage ?? null,
       },
@@ -117,16 +115,15 @@ export class FeedTrendResponseDto {
   id: number;
 
   @ApiProperty({
-    example: 'example author',
-    description: '작성자',
-  })
-  author: string;
-
-  @ApiProperty({
-    example: { platform: 'example blog platform', image: 'https://example.com/profile.png' },
+    example: {
+      name: 'example author',
+      platform: 'example blog platform',
+      image: 'https://example.com/profile.png',
+    },
     description: 'RSS 채널 정보',
   })
   blog: {
+    name: string;
     platform: string;
     image: string | null;
   };
@@ -186,8 +183,8 @@ export class FeedTrendResponseDto {
   private static toResponseDto(feed: FeedView) {
     return new FeedTrendResponseDto({
       id: feed.feedId,
-      author: feed.blogName,
       blog: {
+        name: feed.blogName,
         platform: feed.blogPlatform,
         image: feed.blogImage ?? null,
       },

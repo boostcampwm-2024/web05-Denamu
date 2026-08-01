@@ -9,7 +9,6 @@ export interface SearchResult {
   };
   path: string;
   createdAt: string;
-  author: string;
   thumbnail: string;
   viewCount: number;
   tag: string[];

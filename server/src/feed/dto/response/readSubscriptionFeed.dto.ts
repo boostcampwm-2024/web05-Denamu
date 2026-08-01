@@ -6,14 +6,12 @@ export class SubscriptionFeedResult {
   @ApiProperty({ example: 1, description: '게시글 ID' })
   id: number;
 
-  @ApiProperty({ example: 'example author', description: '작성자(블로그명)' })
-  author: string;
-
   @ApiProperty({
-    example: { platform: 'example platform', image: 'https://example.com/profile.png' },
+    example: { name: 'example author', platform: 'example platform', image: 'https://example.com/profile.png' },
     description: 'RSS 채널 정보',
   })
   blog: {
+    name: string;
     platform: string;
     image: string | null;
   };
@@ -58,8 +56,8 @@ export class SubscriptionFeedResult {
   static toResultDto(feed: Feed) {
     return new SubscriptionFeedResult({
       id: feed.id,
-      author: feed.blog.name,
       blog: {
+        name: feed.blog.name,
         platform: feed.blog.blogPlatform,
         image: feed.blog.blogImage ?? null,
       },

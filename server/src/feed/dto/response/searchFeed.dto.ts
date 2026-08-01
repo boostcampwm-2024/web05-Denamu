@@ -29,9 +29,6 @@ export class SearchFeedResult {
   @ApiProperty({ example: '2025-01-01T01:00:00.000Z', description: '게시글 작성 일자' })
   createdAt: Date;
 
-  @ApiProperty({ example: 'example author', description: '작성자' })
-  author: string;
-
   @ApiProperty({ example: 'https://example.com/thumbnail', description: '썸네일 URL' })
   thumbnail: string;
 
@@ -62,7 +59,6 @@ export class SearchFeedResult {
       title: feed.title,
       path: feed.path,
       createdAt: feed.createdAt,
-      author: feed.blog.name,
       thumbnail: feed.thumbnail,
       viewCount: feed.viewCount,
       tag: [],
