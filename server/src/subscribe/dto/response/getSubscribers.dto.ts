@@ -10,23 +10,14 @@ export class SubscriberResult {
   id: number;
 
   @ApiProperty({
-    example: 2,
-    description: '구독자 사용자 ID',
+    example: { id: 2, userName: '조민석', profileImage: null },
+    description: '구독자 정보',
   })
-  userId: number;
-
-  @ApiProperty({
-    example: '조민석',
-    description: '구독자 닉네임',
-  })
-  userName: string;
-
-  @ApiProperty({
-    example: 'https://example.com/profile.png',
-    description: '구독자 프로필 이미지 URL',
-    nullable: true,
-  })
-  profileImage: string | null;
+  user: {
+    id: number;
+    userName: string;
+    profileImage: string | null;
+  };
 
   private constructor(partial: Partial<SubscriberResult>) {
     Object.assign(this, partial);
@@ -35,9 +26,11 @@ export class SubscriberResult {
   static toResultDto(subscription: Subscription) {
     return new SubscriberResult({
       id: subscription.id,
-      userId: subscription.user.id,
-      userName: subscription.user.userName,
-      profileImage: subscription.user.profileImage ?? null,
+      user: {
+        id: subscription.user.id,
+        userName: subscription.user.userName,
+        profileImage: subscription.user.profileImage ?? null,
+      },
     });
   }
 

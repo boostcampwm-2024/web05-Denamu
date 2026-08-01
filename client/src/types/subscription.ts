@@ -10,7 +10,9 @@ export interface SubscribedRss {
 
 export interface Subscriber {
   id: number;
-  userId: number;
-  userName: string;
-  profileImage: string | null;
+  user: {
+    id: number;
+    userName: string;
+    profileImage: string | null;
+  };
 }
