@@ -28,7 +28,7 @@ const toFeedCard = (result: SearchResult): FeedList => ({
   path: result.path,
   createdAt: result.createdAt,
   author: result.author,
-  blogPlatform: result.blogPlatform,
+  blog: { platform: result.blog.platform },
   thumbnail: result.thumbnail,
   viewCount: result.viewCount,
   tag: result.tag,
