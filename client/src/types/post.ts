@@ -21,9 +21,13 @@ export type FeedList = FeedBase;
 export interface FeedDetail extends FeedBase {
   summary: string;
   isOwner: boolean;
-  blogId: number | null;
-  ownerName: string | null;
-  isOwnerCertified: boolean;
+  blog: {
+    id: number;
+    ownerName: string | null;
+    isOwnerCertified: boolean;
+    platform: string;
+    image: string | null;
+  };
   isSubscribed: boolean;
   isBlocked: boolean;
 }

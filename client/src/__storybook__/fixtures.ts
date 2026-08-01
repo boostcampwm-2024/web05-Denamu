@@ -43,9 +43,13 @@ export const mockFeedDetail: FeedDetail = {
   ...mockFeedList,
   summary: "이 글은 Storybook을 활용해 프론트엔드 컴포넌트를 문서화하고 테스트하는 방법을 다룹니다.",
   isOwner: false,
-  blogId: 1,
-  ownerName: "조민석",
-  isOwnerCertified: true,
+  blog: {
+    id: 1,
+    ownerName: "조민석",
+    isOwnerCertified: true,
+    platform: "tistory",
+    image: null,
+  },
   isSubscribed: false,
   isBlocked: false,
 };

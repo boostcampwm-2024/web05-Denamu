@@ -417,10 +417,13 @@ describe(`${FeedService.name} Unit Test`, () => {
   });
 
   describe('getFeedDetail', () => {
+    const blogMeta = { id: 1, userName: '조민석', userId: 5 };
+
     it('피드 뷰를 조회하고 상세 응답으로 변환한다.', async () => {
       // given
       const feed = { feedId: 10, title: 'detail', tag: ['a'] } as any;
       feedViewRepository.findOneBy.mockResolvedValue(feed);
+      feedRepository.getBlogMetaByFeedId.mockResolvedValue(blogMeta);
 
       // when
       const result = await feedService.getFeedDetail({
@@ -430,7 +433,9 @@ describe(`${FeedService.name} Unit Test`, () => {
       // then
       expect(feedViewRepository.findOneBy).toHaveBeenCalledWith({ feedId: 10 });
       expect(feedRepository.isOwnedByUser).not.toHaveBeenCalled();
-      expect(result).toEqual(GetFeedDetailResponseDto.toResponseDto(feed));
+      expect(result).toEqual(
+        GetFeedDetailResponseDto.toResponseDto(feed, false, blogMeta),
+      );
     });
 
     it('RSS 소유자가 조회하면 isOwner=true로 응답한다.', async () => {
@@ -438,6 +443,7 @@ describe(`${FeedService.name} Unit Test`, () => {
       const feed = { feedId: 10, title: 'detail', tag: ['a'] } as any;
       feedViewRepository.findOneBy.mockResolvedValue(feed);
       feedRepository.isOwnedByUser.mockResolvedValue(true);
+      feedRepository.getBlogMetaByFeedId.mockResolvedValue(blogMeta);
 
       // when
       const result = await feedService.getFeedDetail({ feedId: 10 }, 7);
@@ -445,7 +451,7 @@ describe(`${FeedService.name} Unit Test`, () => {
       // then
       expect(feedRepository.isOwnedByUser).toHaveBeenCalledWith(10, 7);
       expect(result).toEqual(
-        GetFeedDetailResponseDto.toResponseDto(feed, true),
+        GetFeedDetailResponseDto.toResponseDto(feed, true, blogMeta),
       );
     });
 
@@ -454,6 +460,7 @@ describe(`${FeedService.name} Unit Test`, () => {
       const feed = { feedId: 10, title: 'detail', tag: ['a'] } as any;
       feedViewRepository.findOneBy.mockResolvedValue(feed);
       feedRepository.isOwnedByUser.mockResolvedValue(false);
+      feedRepository.getBlogMetaByFeedId.mockResolvedValue(blogMeta);
 
       // when
       const result = await feedService.getFeedDetail({ feedId: 10 }, 7);
@@ -461,7 +468,7 @@ describe(`${FeedService.name} Unit Test`, () => {
       // then
       expect(feedRepository.isOwnedByUser).toHaveBeenCalledWith(10, 7);
       expect(result).toEqual(
-        GetFeedDetailResponseDto.toResponseDto(feed, false),
+        GetFeedDetailResponseDto.toResponseDto(feed, false, blogMeta),
       );
     });
   });
