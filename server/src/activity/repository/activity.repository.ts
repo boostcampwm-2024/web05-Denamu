@@ -35,8 +35,8 @@ export class ActivityRepository extends Repository<Activity> {
     userId: number,
     year: number,
   ): Promise<Activity[]> {
-    const startDate = new Date(`${year}-01-01`);
-    const endDate = new Date(`${year}-12-31`);
+    const startDate = new Date(year, 0, 1);
+    const endDate = new Date(year, 11, 31);
 
     return this.find({
       where: { user: { id: userId }, activityDate: Between(startDate, endDate) },
