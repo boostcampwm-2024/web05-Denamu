@@ -5,7 +5,7 @@ export class RenameRssAcceptNameFulltext1780482000000
 {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      'ALTER TABLE `rss_accept` DROP INDEX `name`;',
+      'ALTER TABLE `rss_accept` DROP INDEX `IDX_59f4be4de3817b3f975acff076`;',
     );
     await queryRunner.query(
       'ALTER TABLE `rss_accept` ADD FULLTEXT INDEX `FT_rss_accept_name` (`name`) WITH PARSER ngram;',
@@ -17,7 +17,7 @@ export class RenameRssAcceptNameFulltext1780482000000
       'ALTER TABLE `rss_accept` DROP INDEX `FT_rss_accept_name`;',
     );
     await queryRunner.query(
-      'ALTER TABLE `rss_accept` ADD FULLTEXT INDEX `name` (`name`);',
+      'ALTER TABLE `rss_accept` ADD FULLTEXT INDEX `IDX_59f4be4de3817b3f975acff076` (`name`);',
     );
   }
 }

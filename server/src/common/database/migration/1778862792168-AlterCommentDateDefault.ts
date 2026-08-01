@@ -1,6 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AlterCommentDateDefault1760000000001
+export class AlterCommentDateDefault1778862792168
   implements MigrationInterface
 {
   public async up(queryRunner: QueryRunner): Promise<void> {
