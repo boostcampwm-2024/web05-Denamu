@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import { DataSource, LessThan, Repository } from 'typeorm';
+import { DataSource, LessThan, MoreThanOrEqual, Repository } from 'typeorm';
 
 import { Feed } from '@feed/entity/feed.entity';
 
@@ -186,20 +186,20 @@ export class NotificationRepository extends Repository<Notification> {
   }
 
   async countUnread(recipientId: number) {
-    return this.createQueryBuilder('n')
-      .where('n.recipient_user_id = :recipientId', { recipientId })
-      .andWhere('n.is_read = 0')
-      .andWhere('n.updated_at >= :cutoff', { cutoff: getNotificationCutoffDate() })
-      .getCount();
+    return this.count({
+      where: {
+        recipient: { id: recipientId } as User,
+        isRead: false,
+        updatedAt: MoreThanOrEqual(getNotificationCutoffDate()),
+      },
+    });
   }
 
   async markRead(id: number, recipientId: number) {
-    const result = await this.createQueryBuilder()
-      .update(Notification)
-      .set({ isRead: true })
-      .where('id = :id', { id })
-      .andWhere('recipient_user_id = :recipientId', { recipientId })
-      .execute();
+    const result = await this.update(
+      { id, recipient: { id: recipientId } as User },
+      { isRead: true },
+    );
 
     return (result.affected ?? 0) > 0;
   }

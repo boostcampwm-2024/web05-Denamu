@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import { Brackets, DataSource, Repository } from 'typeorm';
+import { Brackets, DataSource, In, IsNull, LessThan, Raw, Repository } from 'typeorm';
 
 import { ReadFeedPaginationRequestDto } from '@feed/dto/request/readFeedPagination.dto';
 import { SearchType } from '@feed/dto/request/searchFeed.dto';
@@ -68,39 +68,32 @@ export class FeedRepository extends Repository<Feed> {
     onlyPublic: boolean,
     date?: string,
   ) {
-    const query = this.createQueryBuilder('feed')
-      .select([
-        'feed.id',
-        'feed.title',
-        'feed.path',
-        'feed.thumbnail',
-        'feed.createdAt',
-        'feed.commentCount',
-        'feed.likeCount',
-        'feed.isPublic',
-      ])
-      .where('feed.blog_id = :blogId', { blogId });
-
-    if (onlyPublic) {
-      query.andWhere('feed.is_public = 1');
-    }
-
-    if (lastId) {
-      query.andWhere('feed.id < :lastId', { lastId });
-    }
-
-    // 잔디 집계(DATE_FORMAT 기준)와 동일한 날짜 범위. 인덱스 활용을 위해 범위 조건 사용.
-    if (date) {
-      query.andWhere(
-        'feed.created_at >= :date AND feed.created_at < DATE_ADD(:date, INTERVAL 1 DAY)',
-        { date },
-      );
-    }
-
-    return await query
-      .orderBy('feed.id', 'DESC')
-      .take(limit + 1)
-      .getMany();
+    return this.find({
+      where: {
+        blog: { id: blogId },
+        ...(onlyPublic && { isPublic: true }),
+        ...(lastId && { id: LessThan(lastId) }),
+        // 잔디 집계(DATE_FORMAT 기준)와 동일한 날짜 범위. 인덱스 활용을 위해 범위 조건 사용.
+        ...(date && {
+          createdAt: Raw(
+            (alias) => `${alias} >= :date AND ${alias} < DATE_ADD(:date, INTERVAL 1 DAY)`,
+            { date },
+          ),
+        }),
+      },
+      select: [
+        'id',
+        'title',
+        'path',
+        'thumbnail',
+        'createdAt',
+        'commentCount',
+        'likeCount',
+        'isPublic',
+      ],
+      order: { id: 'DESC' },
+      take: limit + 1,
+    });
   }
 
   async getLatestPublicFeedDate(blogId: number): Promise<Date | null> {
@@ -167,33 +160,23 @@ export class FeedRepository extends Repository<Feed> {
     blogId: number,
     isPublic: boolean,
   ) {
-    const result = await this.createQueryBuilder()
-      .update(Feed)
-      .set({ isPublic })
-      .where('id = :feedId AND blog_id = :blogId', { feedId, blogId })
-      .execute();
+    const result = await this.update({ id: feedId, blog: { id: blogId } }, { isPublic });
 
     return result.affected ?? 0;
   }
 
   async isOwnedByUser(feedId: number, userId: number): Promise<boolean> {
-    const count = await this.createQueryBuilder('feed')
-      .innerJoin('feed.blog', 'blog')
-      .where('feed.id = :feedId', { feedId })
-      .andWhere('blog.user_id = :userId', { userId })
-      .getCount();
-
-    return count > 0;
+    return this.exists({ where: { id: feedId, blog: { userId } } });
   }
 
   async getBlogMetaByFeedId(
     feedId: number,
   ): Promise<{ id: number; userName: string; userId: number | null } | null> {
-    const feed = await this.createQueryBuilder('feed')
-      .innerJoin('feed.blog', 'blog')
-      .select(['feed.id', 'blog.id', 'blog.userName', 'blog.userId'])
-      .where('feed.id = :feedId', { feedId })
-      .getOne();
+    const feed = await this.findOne({
+      where: { id: feedId },
+      relations: { blog: true },
+      select: { id: true, blog: { id: true, userName: true, userId: true } },
+    });
 
     if (!feed?.blog) return null;
 
@@ -207,29 +190,27 @@ export class FeedRepository extends Repository<Feed> {
   async getSubscriptionFeeds(blogIds: number[], lastId: number, limit: number) {
     if (!blogIds.length) return [];
 
-    const query = this.createQueryBuilder('feed')
-      .innerJoinAndSelect('feed.blog', 'blog')
-      .leftJoinAndSelect('feed.tags', 'tag')
-      .where('feed.blog_id IN (:...blogIds)', { blogIds })
-      .andWhere('feed.is_public = 1');
-
-    if (lastId) {
-      query.andWhere('feed.id < :lastId', { lastId });
-    }
-
-    return await query
-      .orderBy('feed.id', 'DESC')
-      .take(limit + 1)
-      .getMany();
+    return this.find({
+      where: {
+        blog: { id: In(blogIds) },
+        isPublic: true,
+        ...(lastId && { id: LessThan(lastId) }),
+      },
+      relations: { blog: true, tags: true },
+      order: { id: 'DESC' },
+      take: limit + 1,
+    });
   }
 
   async findFeedsWithoutSummary() {
-    return this.createQueryBuilder('feed')
-      .select(['feed.id', 'feed.title', 'feed.likeCount', 'feed.commentCount'])
-      .where('feed.is_public = 1')
-      .andWhere("(feed.summary IS NULL OR feed.summary = '')")
-      .orderBy('feed.id', 'DESC')
-      .getMany();
+    return this.find({
+      where: [
+        { isPublic: true, summary: IsNull() },
+        { isPublic: true, summary: '' },
+      ],
+      select: ['id', 'title', 'likeCount', 'commentCount'],
+      order: { id: 'DESC' },
+    });
   }
 
   async findAllStatisticsOrderByViewCount(limit: number) {
