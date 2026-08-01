@@ -20,7 +20,7 @@ export function loadDBSetting(configService: ConfigService) {
     password: configService.get<string>('DB_PASSWORD'),
     entities: [`${__dirname}/../../**/*.entity.{js,ts}`],
 
-    synchronize: isDev || isTest,
+    synchronize: isDev,
     migrations: [`${__dirname}/migration/*.{js,ts}`],
     migrationsRun: !(isDev || isTest),
     logging: isDev,
