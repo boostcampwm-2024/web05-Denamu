@@ -90,8 +90,6 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual({
       author: feedList[0].blog.name,
-      blogPlatform: 'etc',
-      blogImage: feedList[0].blog.blogImage ?? null,
       comments: feedList[0].commentCount,
       createdAt: feedList[0].createdAt.toISOString(),
       id: feedList[0].id,
@@ -103,9 +101,13 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
       title: feedList[0].title,
       viewCount: feedList[0].viewCount,
       isOwner: false,
-      blogId: feedList[0].blog.id,
-      ownerName: feedList[0].blog.userName,
-      isOwnerCertified: false,
+      blog: {
+        id: feedList[0].blog.id,
+        ownerName: feedList[0].blog.userName,
+        isOwnerCertified: false,
+        platform: 'etc',
+        image: feedList[0].blog.blogImage ?? null,
+      },
       isSubscribed: false,
       isBlocked: false,
     });
@@ -125,8 +127,6 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
     expect(response.status).toBe(HttpStatus.OK);
     expect(data).toStrictEqual({
       author: feedList[1].blog.name,
-      blogPlatform: feedList[1].blog.blogPlatform,
-      blogImage: feedList[1].blog.blogImage ?? null,
       comments: feedList[1].commentCount,
       createdAt: feedList[1].createdAt.toISOString(),
       id: feedList[1].id,
@@ -138,9 +138,13 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
       title: feedList[1].title,
       viewCount: feedList[1].viewCount,
       isOwner: false,
-      blogId: feedList[1].blog.id,
-      ownerName: feedList[1].blog.userName,
-      isOwnerCertified: false,
+      blog: {
+        id: feedList[1].blog.id,
+        ownerName: feedList[1].blog.userName,
+        isOwnerCertified: false,
+        platform: feedList[1].blog.blogPlatform,
+        image: feedList[1].blog.blogImage ?? null,
+      },
       isSubscribed: false,
       isBlocked: false,
     });
