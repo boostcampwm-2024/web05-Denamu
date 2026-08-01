@@ -28,7 +28,7 @@ const URL = '/api/feeds/subscriptions';
 
 type SubscriptionFeedBody = {
   data: {
-    result: { id: number; author: string; tag: string[] }[];
+    result: { id: number; blog: { name: string }; tag: string[] }[];
     hasMore: boolean;
     lastId: number;
   };
@@ -116,9 +116,9 @@ describe(`GET ${URL} E2E Test`, () => {
     expect(response.status).toBe(HttpStatus.OK);
     const { result } = (response.body as SubscriptionFeedBody).data;
     expect(result).toHaveLength(2);
-    expect(result.every((feed) => feed.author === subscribedBlog.name)).toBe(
-      true,
-    );
+    expect(
+      result.every((feed) => feed.blog.name === subscribedBlog.name),
+    ).toBe(true);
     const taggedResult = result.find((feed) => feed.tag.length > 0);
     expect(taggedResult.tag).toContain(tag.name);
   });
@@ -186,6 +186,6 @@ describe(`GET ${URL} E2E Test`, () => {
     expect(response.status).toBe(HttpStatus.OK);
     const { result } = (response.body as SubscriptionFeedBody).data;
     expect(result).toHaveLength(1);
-    expect(result[0].author).toBe(subscribedBlog.name);
+    expect(result[0].blog.name).toBe(subscribedBlog.name);
   });
 });
