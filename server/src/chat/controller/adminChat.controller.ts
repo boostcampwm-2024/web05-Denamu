@@ -20,6 +20,7 @@ import {
   AdminChatMessageParamDto,
   AdminChatRoomParamDto,
 } from '@chat/dto/request/adminChatParam.dto';
+import { AdminChatMessageDto } from '@chat/dto/response/adminChat.dto';
 import { AnonymousRoomManager } from '@chat/room/anonymous-room.manager';
 import { ChatService } from '@chat/service/chat.service';
 
@@ -56,7 +57,10 @@ export class AdminChatController {
   @HttpCode(HttpStatus.OK)
   async getMessages(@Param() paramDto: AdminChatRoomParamDto) {
     const messages = await this.chatService.getChatHistory(paramDto.roomId);
-    return ApiResponse.responseWithData('채팅 메시지 조회를 성공했습니다.', messages);
+    return ApiResponse.responseWithData(
+      '채팅 메시지 조회를 성공했습니다.',
+      AdminChatMessageDto.toResponseDtoArray(messages),
+    );
   }
 
   @ApiDeleteChatByAdmin()
