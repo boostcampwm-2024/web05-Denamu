@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import {
   EmailPayload,
   EmailPayloadConstant,
+  NoticePublished,
   QnaAnswered,
 } from '@common/email/email.type';
 import { WinstonLoggerService } from '@common/logger/logger.service';
@@ -192,6 +193,13 @@ export class EmailProducer {
   async produceQnaAnswered(payload: QnaAnswered) {
     await this.produceMessage({
       type: EmailPayloadConstant.QNA_ANSWERED,
+      data: payload,
+    });
+  }
+
+  async produceNoticePublished(payload: NoticePublished) {
+    await this.produceMessage({
+      type: EmailPayloadConstant.NOTICE_PUBLISHED,
       data: payload,
     });
   }

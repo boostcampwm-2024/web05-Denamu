@@ -9,10 +9,16 @@ import {
   BoardDetailDto,
   BoardListResponseDto,
 } from '@board/dto/response/board.dto';
+import { Board } from '@board/entity/board.entity';
 import { BoardRepository } from '@board/repository/board.repository';
 import { validateWindow } from '@board/util/validateWindow';
 
 import { AdminRepository } from '@admin/repository/admin.repository';
+
+import { EmailProducer } from '@common/email/email.producer';
+import { WinstonLoggerService } from '@common/logger/logger.service';
+
+import { UserRepository } from '@user/repository/user.repository';
 
 const NOT_FOUND_MESSAGE = '존재하지 않는 게시글입니다.';
 
@@ -21,6 +27,9 @@ export class BoardService {
   constructor(
     private readonly boardRepository: BoardRepository,
     private readonly adminRepository: AdminRepository,
+    private readonly userRepository: UserRepository,
+    private readonly emailProducer: EmailProducer,
+    private readonly logger: WinstonLoggerService,
   ) {}
 
   async getPublicBoards(queryDto: GetBoardsRequestDto) {
@@ -85,7 +94,51 @@ export class BoardService {
       author,
     });
     await this.boardRepository.save(board);
+
+    if (this.isNoticeVisibleNow(board)) {
+      await this.notifyNoticePublished(board);
+    }
+
     return BoardDetailDto.fromDetail(board);
+  }
+
+  private isNoticeVisibleNow(board: Board): boolean {
+    const now = new Date();
+    return (
+      board.category === BoardCategory.NOTICE &&
+      board.status === BoardStatus.PUBLISHED &&
+      (!board.startAt || board.startAt <= now) &&
+      (!board.endAt || board.endAt >= now)
+    );
+  }
+
+  private async notifyNoticePublished(board: Board): Promise<void> {
+    try {
+      const recipients = await this.userRepository.findNoticeAgreedUsers();
+      const results = await Promise.allSettled(
+        recipients.map((recipient) =>
+          this.emailProducer.produceNoticePublished({
+            email: recipient.email,
+            userName: recipient.userName,
+            boardId: board.id,
+            title: board.title,
+          }),
+        ),
+      );
+
+      const failedCount = results.filter(
+        (result) => result.status === 'rejected',
+      ).length;
+      if (failedCount > 0) {
+        this.logger.error(
+          `공지사항 이메일 발행 중 일부가 실패했습니다.: boardId=${board.id}, failed=${failedCount}/${recipients.length}`,
+        );
+      }
+    } catch (error) {
+      this.logger.error(
+        `공지사항 이메일 발행에 실패했습니다.: boardId=${board.id}, error=${error}`,
+      );
+    }
   }
 
   async updateBoard(
