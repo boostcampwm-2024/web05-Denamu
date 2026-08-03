@@ -28,7 +28,7 @@ export default function BoardDetailPage() {
         <title>{board ? `${board.title} - ${categoryLabel}` : "공지사항 · FAQ"} - 데나무</title>
       </Helmet>
 
-      <div className="mx-auto max-w-3xl px-4 py-10">
+      <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
         <Button
           variant="ghost"
           size="sm"
@@ -46,7 +46,10 @@ export default function BoardDetailPage() {
         ) : (
           <article className="mt-4">
             <h1 className="text-2xl font-bold">{board.title}</h1>
-            <p className="mt-2 text-sm text-gray-400">{new Date(board.createdAt).toLocaleString()}</p>
+            <p className="mt-2 text-sm text-gray-400">
+              {board.authorName && <span>{board.authorName} · </span>}
+              {new Date(board.createdAt).toLocaleString()}
+            </p>
             <div className="mt-6 border-t pt-6">
               <BoardContent content={board.content} />
             </div>

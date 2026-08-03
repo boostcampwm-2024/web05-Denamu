@@ -89,6 +89,19 @@ describe("BoardDetailPage", () => {
     );
   });
 
+  it("authorName이 있으면 작성자명을 표시한다", () => {
+    render(<BoardDetailPage />);
+
+    expect(screen.getByText(/관리자/)).toBeInTheDocument();
+  });
+
+  it("authorName이 없으면 작성자명을 표시하지 않는다", () => {
+    boardState = { data: makeDetail({ authorName: null }), isLoading: false, isError: false };
+    render(<BoardDetailPage />);
+
+    expect(screen.queryByText(/관리자/)).not.toBeInTheDocument();
+  });
+
   it("목록으로 버튼 클릭 시 게시판 목록 페이지로 이동한다", () => {
     render(<BoardDetailPage />);
 

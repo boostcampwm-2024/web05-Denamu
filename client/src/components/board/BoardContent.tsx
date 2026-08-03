@@ -5,5 +5,10 @@ interface BoardContentProps {
 }
 
 export const BoardContent = ({ content }: BoardContentProps) => {
-  return <div className="prose max-w-full" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }} />;
+  return (
+    <div
+      className="prose max-w-full prose-p:my-2 prose-a:text-primary prose-a:no-underline hover:prose-a:underline [&_p:empty]:min-h-[1.75em]"
+      dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }}
+    />
+  );
 };
