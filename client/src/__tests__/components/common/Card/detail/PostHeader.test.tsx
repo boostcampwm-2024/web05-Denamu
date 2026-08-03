@@ -2,9 +2,10 @@ import { MemoryRouter } from "react-router-dom";
 
 import { describe, expect, it, vi } from "vitest";
 
+import { lucideProxy } from "@/__tests__/__mocks__/external/lucide-proxy.tsx";
+
 import { PostHeader } from "@/components/common/Card/detail/PostHeader.tsx";
 
-import { lucideProxy } from "@/__tests__/__mocks__/external/lucide-proxy.tsx";
 import { FeedDetail } from "@/types/post.ts";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";

@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { lucideProxy } from "@/__tests__/__mocks__/external/lucide-proxy.tsx";
+
 import { ProfileHeader } from "@/components/profile/ProfileHeader.tsx";
 
-import { lucideProxy } from "@/__tests__/__mocks__/external/lucide-proxy.tsx";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 

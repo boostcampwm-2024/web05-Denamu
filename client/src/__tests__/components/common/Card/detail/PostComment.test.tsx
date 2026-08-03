@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { lucideProxy } from "@/__tests__/__mocks__/external/lucide-proxy.tsx";
+
 import PostComment from "@/components/common/Card/detail/PostComment.tsx";
 
-import { lucideProxy } from "@/__tests__/__mocks__/external/lucide-proxy.tsx";
 import { FeedCommentType } from "@/types/post.ts";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
