@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { lucideProxy } from "@/__tests__/__mocks__/external/lucide-proxy.tsx";
 import { ProfileHeader } from "@/components/profile/ProfileHeader.tsx";
 
+import { lucideProxy } from "@/__tests__/__mocks__/external/lucide-proxy.tsx";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
@@ -11,6 +11,9 @@ const mockBlockUser = vi.fn().mockResolvedValue(undefined);
 const mockBlockRss = vi.fn().mockResolvedValue(undefined);
 type RssRow = { id: number; name: string; blogPlatform: string };
 const mockCertifiedRss = vi.fn<() => { data: RssRow[] }>(() => ({ data: [] }));
+const mockReportUser = vi.fn((_vars: unknown, options?: { onSuccess?: () => void; onError?: () => void }) =>
+  options?.onSuccess?.()
+);
 
 vi.mock("lucide-react", () => lucideProxy());
 vi.mock("@/hooks/common/useCustomToast.ts", () => ({ useCustomToast: () => ({ toast: mockToast }) }));
@@ -20,8 +23,31 @@ vi.mock("@/hooks/queries/useBlock.ts", () => ({
 }));
 vi.mock("@/hooks/queries/useProfile.ts", () => ({ useCertifiedRss: () => mockCertifiedRss() }));
 vi.mock("@/hooks/queries/useReport", () => ({
-  useReportUser: () => ({ mutate: vi.fn(), isPending: false }),
+  useReportUser: () => ({ mutate: mockReportUser, isPending: false }),
 }));
+vi.mock("@/components/ui/select", () => {
+  const pass = ({ children }: { children: React.ReactNode }) => <>{children}</>;
+  return {
+    Select: ({ children, onValueChange }: { children: React.ReactNode; onValueChange: (value: string) => void }) => (
+      <div
+        onClick={(event) => {
+          const value = (event.target as HTMLElement).getAttribute("data-value");
+          if (value) onValueChange(value);
+        }}
+      >
+        {children}
+      </div>
+    ),
+    SelectContent: pass,
+    SelectItem: ({ children, value }: { children: React.ReactNode; value: string }) => (
+      <div role="option" data-value={value}>
+        {children}
+      </div>
+    ),
+    SelectTrigger: pass,
+    SelectValue: () => null,
+  };
+});
 
 describe("ProfileHeader", () => {
   beforeEach(() => {
@@ -148,5 +174,37 @@ describe("ProfileHeader", () => {
 
     await waitFor(() => expect(mockBlockUser).toHaveBeenCalledWith(2));
     expect(mockBlockRss).not.toHaveBeenCalled();
+  });
+
+  const openReportModal = async () => {
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "더보기" }));
+    await user.click(await screen.findByText("신고하기"));
+    return user;
+  };
+
+  it("신고 모달의 함께 차단하기 스위치를 켜지 않으면 신고만 접수해야 한다", async () => {
+    render(<ProfileHeader name="민석" email="" profileImage={null} introduction={null} blockableUserId={2} />);
+
+    const user = await openReportModal();
+    await user.click(screen.getByText("스팸/광고"));
+    await user.click(screen.getByRole("button", { name: "신고하기" }));
+
+    expect(mockReportUser).toHaveBeenCalledWith(
+      { userId: 2, payload: { reason: "SPAM", detail: undefined } },
+      expect.anything()
+    );
+    expect(mockBlockUser).not.toHaveBeenCalled();
+  });
+
+  it("신고 모달의 함께 차단하기 스위치를 켜면 신고 접수 후 유저를 차단해야 한다", async () => {
+    render(<ProfileHeader name="민석" email="" profileImage={null} introduction={null} blockableUserId={2} />);
+
+    const user = await openReportModal();
+    await user.click(screen.getByText("스팸/광고"));
+    await user.click(screen.getByRole("switch"));
+    await user.click(screen.getByRole("button", { name: "신고하기" }));
+
+    await waitFor(() => expect(mockBlockUser).toHaveBeenCalledWith(2));
   });
 });

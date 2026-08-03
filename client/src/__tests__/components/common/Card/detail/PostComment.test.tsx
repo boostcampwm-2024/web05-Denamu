@@ -2,12 +2,18 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import PostComment from "@/components/common/Card/detail/PostComment.tsx";
 
+import { lucideProxy } from "@/__tests__/__mocks__/external/lucide-proxy.tsx";
 import { FeedCommentType } from "@/types/post.ts";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 
 const createComment = vi.fn();
 const updateComment = vi.fn();
 const deleteComment = vi.fn();
+const mockBlockUser = vi.fn().mockResolvedValue(undefined);
+const mockReportComment = vi.fn((_vars: unknown, options?: { onSuccess?: () => void; onError?: () => void }) =>
+  options?.onSuccess?.()
+);
 let isAuthenticated: boolean;
 let comments: FeedCommentType[];
 
@@ -26,11 +32,38 @@ vi.mock("@/hooks/queries/useComments", () => ({
 
 vi.mock("@/hooks/queries/useProfile", () => ({ useUserProfile: () => ({ data: undefined }) }));
 vi.mock("@/hooks/queries/useReport", () => ({
-  useReportComment: () => ({ mutate: vi.fn(), isPending: false }),
+  useReportComment: () => ({ mutate: mockReportComment, isPending: false }),
+}));
+vi.mock("@/hooks/queries/useBlock", () => ({
+  useBlockUser: () => ({ mutateAsync: mockBlockUser }),
 }));
 vi.mock("@/hooks/common/useNavigateToProfile", () => ({ useNavigateToProfile: () => vi.fn() }));
 vi.mock("@/utils/timeago", () => ({ timeAgo: () => "방금 전" }));
 vi.mock("@/components/auth/AuthSignInForm", () => ({ AuthSignInForm: () => <div data-testid="signin-form" /> }));
+vi.mock("lucide-react", () => lucideProxy());
+vi.mock("@/components/ui/select", () => {
+  const pass = ({ children }: { children: React.ReactNode }) => <>{children}</>;
+  return {
+    Select: ({ children, onValueChange }: { children: React.ReactNode; onValueChange: (value: string) => void }) => (
+      <div
+        onClick={(event) => {
+          const value = (event.target as HTMLElement).getAttribute("data-value");
+          if (value) onValueChange(value);
+        }}
+      >
+        {children}
+      </div>
+    ),
+    SelectContent: pass,
+    SelectItem: ({ children, value }: { children: React.ReactNode; value: string }) => (
+      <div role="option" data-value={value}>
+        {children}
+      </div>
+    ),
+    SelectTrigger: pass,
+    SelectValue: () => null,
+  };
+});
 
 const makeComment = (id: number, override: Partial<FeedCommentType> = {}): FeedCommentType =>
   ({
@@ -94,10 +127,7 @@ describe("PostComment", () => {
     fireEvent.change(editArea, { target: { value: "수정된 댓글" } });
     fireEvent.click(screen.getByRole("button", { name: "댓글 수정" }));
 
-    expect(updateComment).toHaveBeenCalledWith(
-      { commentId: 1, newComment: "수정된 댓글" },
-      expect.any(Object)
-    );
+    expect(updateComment).toHaveBeenCalledWith({ commentId: 1, newComment: "수정된 댓글" }, expect.any(Object));
   });
 
   it("답글 버튼 클릭 후 답글 작성 시 parentId와 함께 createComment를 호출해야 한다", () => {
@@ -108,10 +138,7 @@ describe("PostComment", () => {
     fireEvent.change(screen.getByPlaceholderText("답글을 입력하세요..."), { target: { value: "답글 내용" } });
     fireEvent.click(screen.getByRole("button", { name: "답글 등록" }));
 
-    expect(createComment).toHaveBeenCalledWith(
-      { comment: "답글 내용", parentId: 1 },
-      expect.any(Object)
-    );
+    expect(createComment).toHaveBeenCalledWith({ comment: "답글 내용", parentId: 1 }, expect.any(Object));
   });
 
   it("대댓글(parentId)이 있으면 기본적으로 숨겨지고 답글 개수가 표시되며, 클릭하면 펼쳐진다", () => {
@@ -190,5 +217,39 @@ describe("PostComment", () => {
 
     expect(screen.queryByRole("button", { name: "댓글 더보기" })).not.toBeInTheDocument();
     expect(document.getElementById("comment-5")).not.toBeNull();
+  });
+
+  const openReportModal = async () => {
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "댓글 옵션" }));
+    await user.click(await screen.findByText("신고하기"));
+    return user;
+  };
+
+  it("함께 차단하기 스위치를 켜지 않으면 댓글만 신고해야 한다", async () => {
+    comments = [makeComment(1, { user: { id: 2, userName: "타인", profileImage: null } })];
+    render(<PostComment feedId={10} />);
+
+    const user = await openReportModal();
+    await user.click(screen.getByText("스팸/광고"));
+    await user.click(screen.getByRole("button", { name: "신고하기" }));
+
+    expect(mockReportComment).toHaveBeenCalledWith(
+      { commentId: 1, payload: { reason: "SPAM", detail: undefined } },
+      expect.anything()
+    );
+    expect(mockBlockUser).not.toHaveBeenCalled();
+  });
+
+  it("함께 차단하기 스위치를 켜면 댓글 신고 후 작성자를 차단해야 한다", async () => {
+    comments = [makeComment(1, { user: { id: 2, userName: "타인", profileImage: null } })];
+    render(<PostComment feedId={10} />);
+
+    const user = await openReportModal();
+    await user.click(screen.getByText("스팸/광고"));
+    await user.click(screen.getByRole("switch"));
+    await user.click(screen.getByRole("button", { name: "신고하기" }));
+
+    await waitFor(() => expect(mockBlockUser).toHaveBeenCalledWith(2));
   });
 });
