@@ -57,6 +57,16 @@ export const useChatStore = create<State & Action>((set, get) => {
       });
     });
 
+    socket.on("chatHistory", (data: ChatType[]) => {
+      set((state) => {
+        const failedMessages = state.chatHistory.filter((chat) => chat.isFailed || !chat.isSend);
+        return {
+          chatHistory: [...data.map((chat) => ({ ...chat, isSend: true })), ...failedMessages],
+          isLoading: false,
+        };
+      });
+    });
+
     socket.on("messageDeleted", (data) => {
       set((state) => ({
         chatHistory: state.chatHistory.map((msg) =>
@@ -86,6 +96,7 @@ export const useChatStore = create<State & Action>((set, get) => {
 
     socket.on("connect", () => {
       useChatStore.setState({ isConnected: true });
+      socket?.emit("register", { userId: localStorage.getItem("userID") });
     });
 
     socket.on("disconnect", () => {
@@ -109,9 +120,6 @@ export const useChatStore = create<State & Action>((set, get) => {
       if (!s.connected) {
         s.connect();
       }
-      s.on('connect', () => {
-        s.emit('register', { userId: localStorage.getItem('userID') });
-      });
     },
 
     disconnect: () => {
@@ -125,29 +133,10 @@ export const useChatStore = create<State & Action>((set, get) => {
 
       const s = initializeSocket(roomId);
       s.connect();
-      s.on('connect', () => {
-        s.emit('register', { userId: localStorage.getItem('userID') });
-      });
-      s.on("chatHistory", (data) => {
-        set((state) => {
-          const failedMessages = state.chatHistory.filter((chat) => chat.isFailed || !chat.isSend);
-          return { chatHistory: [...data, ...failedMessages], isLoading: false };
-        });
-      });
     },
 
     getHistory: () => {
-      const s = initializeSocket();
-
-      s.on("chatHistory", (data) => {
-        useChatStore.setState((state) => {
-          const failedMessages = state.chatHistory.filter((chat) => chat.isFailed || !chat.isSend);
-          return {
-            chatHistory: [...data, ...failedMessages],
-            isLoading: false,
-          };
-        });
-      });
+      initializeSocket();
     },
 
     sendMessage: (message: SendChatType) => {
