@@ -18,6 +18,7 @@ import {
 
 import { useCustomToast } from "@/hooks/common/useCustomToast";
 import { useNavigateToProfile } from "@/hooks/common/useNavigateToProfile";
+import { useBlockUser } from "@/hooks/queries/useBlock";
 import {
   useComments,
   useCreateComment,
@@ -53,7 +54,7 @@ interface CommentItemProps {
   onUpdate: (commentId: number, newComment: string) => void;
   onDelete: (commentId: number) => void;
   onReply: (rootId: number, mention?: string) => void;
-  onReport: (commentId: number) => void;
+  onReport: (commentId: number, authorId: number) => void;
 }
 
 const INITIAL_VISIBLE = 3;
@@ -75,6 +76,7 @@ export default function PostComment({
   const { mutate: deleteCommentAdmin } = useAdminDeleteComment(feedId);
   const deleteComment = isAdmin ? deleteCommentAdmin : deleteCommentUser;
   const { mutate: reportComment, isPending: isReportPending } = useReportComment();
+  const { mutateAsync: blockUser } = useBlockUser();
   const { toast } = useCustomToast();
 
   const [content, setContent] = useState("");
@@ -83,7 +85,7 @@ export default function PostComment({
   const [loginOpen, setLoginOpen] = useState(false);
   const [replyTo, setReplyTo] = useState<number | null>(null);
   const [replyContent, setReplyContent] = useState("");
-  const [reportCommentId, setReportCommentId] = useState<number | null>(null);
+  const [reportTarget, setReportTarget] = useState<{ commentId: number; authorId: number } | null>(null);
   const [expandedReplyIds, setExpandedReplyIds] = useState<Set<number>>(new Set());
 
   const handleModify = (id: number | null) => setModifyId(id);
@@ -144,14 +146,27 @@ export default function PostComment({
     updateComment({ commentId, newComment: trimmed }, { onSuccess: () => setModifyId(null) });
   };
 
-  const handleReportSubmit = (payload: CreateReportPayload) => {
-    if (reportCommentId === null) return;
+  const handleReportSubmit = (payload: CreateReportPayload, blockToo: boolean) => {
+    if (!reportTarget) return;
+    const { commentId, authorId } = reportTarget;
     reportComment(
-      { commentId: reportCommentId, payload },
+      { commentId, payload },
       {
-        onSuccess: () => {
-          setReportCommentId(null);
-          toast({ title: "신고 접수 완료", description: "신고가 접수되었습니다." });
+        onSuccess: async () => {
+          setReportTarget(null);
+          if (!blockToo) {
+            toast({ title: "신고 접수 완료", description: "신고가 접수되었습니다." });
+            return;
+          }
+          try {
+            await blockUser(authorId);
+            toast({ title: "신고 접수 완료", description: "신고가 접수되었고, 작성자를 차단했습니다." });
+          } catch {
+            toast({
+              title: "신고 접수 완료",
+              description: "신고는 접수되었지만 차단에 실패했습니다. 잠시 후 다시 시도해주세요.",
+            });
+          }
         },
         onError: () => {
           toast({ title: "신고 실패", description: "잠시 후 다시 시도해주세요." });
@@ -263,7 +278,7 @@ export default function PostComment({
               onUpdate={handleUpdate}
               onDelete={deleteComment}
               onReply={handleReplyOpen}
-              onReport={setReportCommentId}
+              onReport={(commentId, authorId) => setReportTarget({ commentId, authorId })}
             />
 
             {/* 답글 펼치기/접기 토글 */}
@@ -304,7 +319,7 @@ export default function PostComment({
                       onUpdate={handleUpdate}
                       onDelete={deleteComment}
                       onReply={() => handleReplyOpen(root.id, reply.user.userName)}
-                      onReport={setReportCommentId}
+                      onReport={(commentId, authorId) => setReportTarget({ commentId, authorId })}
                     />
                   </li>
                 ))}
@@ -367,10 +382,11 @@ export default function PostComment({
       </div>
 
       <ReportDialog
-        open={reportCommentId !== null}
-        onOpenChange={(open) => !open && setReportCommentId(null)}
+        open={reportTarget !== null}
+        onOpenChange={(open) => !open && setReportTarget(null)}
         title="댓글 신고"
         isPending={isReportPending}
+        withBlockOption
         onSubmit={handleReportSubmit}
       />
     </div>
@@ -442,7 +458,7 @@ const CommentItem = ({
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="z-[1000]" onClick={(event) => event.stopPropagation()}>
-                      <DropdownMenuItem onClick={() => onReport(comment.id)}>
+                      <DropdownMenuItem onClick={() => onReport(comment.id, comment.user.id)}>
                         <Flag className="w-4 h-4 mr-2" />
                         신고하기
                       </DropdownMenuItem>
