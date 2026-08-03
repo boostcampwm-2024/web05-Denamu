@@ -7,6 +7,7 @@ import logger from '@common/logger/logger';
 import { EmailMetrics } from '@common/metrics/email-metrics';
 import {
   AdminCertification,
+  NoticePublished,
   QnaAnswered,
   Rss,
   RssCertification,
@@ -20,6 +21,7 @@ import {
   createAdminDeleteAccountContent,
   createAdminVerificationMailContent,
   createDeleteAccountContent,
+  createNoticePublishedContent,
   createPasswordResetMailContent,
   createQnaAnsweredContent,
   createRssCertificationContent,
@@ -326,6 +328,28 @@ export class EmailService {
         qnaAnswered.recipientName,
         qnaAnswered.qnaTitle,
         qnaAnswered.qnaId,
+        this.emailUser,
+      ),
+    };
+  }
+
+  async sendNoticePublishedMail(notice: NoticePublished): Promise<void> {
+    const mailOptions = this.createNoticePublishedMail(notice);
+
+    await this.sendMail(mailOptions);
+  }
+
+  private createNoticePublishedMail(
+    notice: NoticePublished,
+  ): nodemailer.SendMailOptions {
+    return {
+      from: `Denamu<${this.emailUser}>`,
+      to: `${notice.userName}<${notice.email}>`,
+      subject: `[🎋 Denamu] 새로운 공지사항이 등록되었습니다.`,
+      html: createNoticePublishedContent(
+        notice.userName,
+        notice.title,
+        notice.boardId,
         this.emailUser,
       ),
     };

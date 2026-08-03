@@ -129,6 +129,10 @@ export class EmailConsumer implements Lifecycle {
         await this.emailService.sendQnaAnsweredMail(payload.data);
         break;
 
+      case EmailPayloadConstant.NOTICE_PUBLISHED:
+        await this.emailService.sendNoticePublishedMail(payload.data);
+        break;
+
       case EmailPayloadConstant.ADMIN_CERTIFICATION:
         await this.emailService.sendAdminCertificationMail(payload.data);
         break;
