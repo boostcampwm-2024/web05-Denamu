@@ -28,7 +28,7 @@ export default function BoardDetailPage() {
         <title>{board ? `${board.title} - ${categoryLabel}` : "공지사항 · FAQ"} - 데나무</title>
       </Helmet>
 
-      <div className="mx-auto max-w-3xl px-4 py-10">
+      <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
         <Button
           variant="ghost"
           size="sm"
