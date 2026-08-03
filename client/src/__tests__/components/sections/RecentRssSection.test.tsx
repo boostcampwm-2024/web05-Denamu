@@ -145,7 +145,7 @@ describe("RecentRssSection", () => {
 
     expect(screen.getByText("tistory")).toHaveStyle({ backgroundColor: "#EB531F" });
     expect(screen.getByText("velog")).toHaveStyle({ backgroundColor: "#20C997" });
-    expect(screen.getByText("github")).toHaveStyle({ backgroundColor: "#000000" });
+    expect(screen.getByText("github")).toHaveStyle({ backgroundColor: "#7F00AF" });
     expect(screen.getByText("etc")).toHaveStyle({ backgroundColor: "#6B7280" });
   });
 
