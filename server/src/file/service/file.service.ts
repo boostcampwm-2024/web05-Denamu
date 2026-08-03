@@ -67,6 +67,12 @@ export class FileService {
     return filePath.replace(this.basePath, '/objects');
   }
 
+  private resolveInternalPath(accessUrl: string): string {
+    return accessUrl.startsWith('/objects')
+      ? accessUrl.replace('/objects', this.basePath)
+      : accessUrl;
+  }
+
   async findById(id: number): Promise<File> {
     const file = await this.fileRepository.findOne({
       where: { id },
@@ -99,19 +105,21 @@ export class FileService {
     return this.findById(id);
   }
 
-  async deleteByPath(path: string): Promise<void> {
-    const file = await this.fileRepository.findOne({ where: { path } });
-    if (file) {
-      try {
-        await access(file.path);
-        await unlink(file.path);
-      } catch {
-        this.logger.warn(`파일 삭제 실패: ${file.path}`, 'FileService');
-      }
-
-      await this.fileRepository.delete(file.id);
-    } else {
-      throw new NotFoundException('파일을 찾을 수 없습니다.');
+  async deleteByPath(accessUrl: string): Promise<void> {
+    const file = await this.fileRepository.findOne({
+      where: { path: this.resolveInternalPath(accessUrl) },
+    });
+    if (!file) {
+      return;
     }
+
+    try {
+      await access(file.path);
+      await unlink(file.path);
+    } catch {
+      this.logger.warn(`파일 삭제 실패: ${file.path}`, 'FileService');
+    }
+
+    await this.fileRepository.delete(file.id);
   }
 }

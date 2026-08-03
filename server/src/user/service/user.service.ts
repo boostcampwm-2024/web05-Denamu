@@ -309,7 +309,9 @@ export class UserService {
       updateData.profileImage !== undefined &&
       user.profileImage !== updateData.profileImage
     ) {
-      await this.fileService.deleteByPath(user.profileImage);
+      if (user.profileImage) {
+        await this.fileService.deleteByPath(user.profileImage);
+      }
       user.profileImage = updateData.profileImage;
     }
     if (updateData.introduction !== undefined) {
