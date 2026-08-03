@@ -3,7 +3,7 @@ name: Nginx Configuration Deployment
 on:
   push:
     branches: [main]
-    paths: ["nginx.conf", ".github/workflows/deploy_nginx.yml"]
+    paths: ["nginx.conf", "static/**", ".github/workflows/deploy_nginx.yml"]
   workflow_dispatch:
 
 env:
@@ -26,6 +26,12 @@ jobs:
             echo "ℹ️  $ACTIVE_FILE 없음 → blue(${BLUE_PORT}) 로 시드 (upstream include 검증 통과용)"
             echo "server 127.0.0.1:${BLUE_PORT};" | sudo tee "$ACTIVE_FILE"
           fi
+
+      - name: static 파일 동기화
+        run: |
+          sudo mkdir -p /var/prod_data/static
+          sudo rsync -av --delete ./static/ /var/prod_data/static/
+          sudo chown -R www-data:www-data /var/prod_data/static
 
       - name: nginx 설정 검사 및 reload
         run: |
