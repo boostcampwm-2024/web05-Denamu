@@ -1,7 +1,5 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 
-import { AdminRepository } from '@admin/repository/admin.repository';
-
 import { BoardCategory, BoardStatus } from '@board/constant/board.constant';
 import { CreateBoardRequestDto } from '@board/dto/request/createBoard.dto';
 import { GetAdminBoardsRequestDto } from '@board/dto/request/getAdminBoards.dto';
@@ -10,6 +8,13 @@ import { UpdateBoardRequestDto } from '@board/dto/request/updateBoard.dto';
 import { Board } from '@board/entity/board.entity';
 import { BoardRepository } from '@board/repository/board.repository';
 import { BoardService } from '@board/service/board.service';
+
+import { AdminRepository } from '@admin/repository/admin.repository';
+
+import { EmailProducer } from '@common/email/email.producer';
+import { WinstonLoggerService } from '@common/logger/logger.service';
+
+import { UserRepository } from '@user/repository/user.repository';
 
 import { BoardFixture } from '@test/config/common/fixture/board.fixture';
 
@@ -26,6 +31,11 @@ describe(`${BoardService.name} Unit Test`, () => {
     jest.Mock
   >;
   let adminRepository: Record<'findOneBy', jest.Mock>;
+  let userRepository: jest.Mocked<
+    Pick<UserRepository, 'findNoticeAgreedUsers'>
+  >;
+  let emailProducer: jest.Mocked<Pick<EmailProducer, 'produceNoticePublished'>>;
+  let logger: jest.Mocked<Pick<WinstonLoggerService, 'error'>>;
 
   const createBoard = (overwrites: Partial<Board> = {}): Board =>
     BoardFixture.createBoardFixture({
@@ -48,10 +58,20 @@ describe(`${BoardService.name} Unit Test`, () => {
     adminRepository = {
       findOneBy: jest.fn(),
     };
+    userRepository = {
+      findNoticeAgreedUsers: jest.fn().mockResolvedValue([]),
+    };
+    emailProducer = {
+      produceNoticePublished: jest.fn(),
+    };
+    logger = { error: jest.fn() };
 
     boardService = new BoardService(
       boardRepository as unknown as BoardRepository,
       adminRepository as unknown as AdminRepository,
+      userRepository as unknown as UserRepository,
+      emailProducer as unknown as EmailProducer,
+      logger as unknown as WinstonLoggerService,
     );
   });
 
@@ -145,7 +165,11 @@ describe(`${BoardService.name} Unit Test`, () => {
 
       // when
       await boardService.getPublicBoards(
-        new GetBoardsRequestDto({ page: 1, limit: 10, category: BoardCategory.FAQ }),
+        new GetBoardsRequestDto({
+          page: 1,
+          limit: 10,
+          category: BoardCategory.FAQ,
+        }),
       );
 
       // then
@@ -319,9 +343,9 @@ describe(`${BoardService.name} Unit Test`, () => {
       });
 
       // when & then
-      await expect(boardService.createBoard('admin@test.com', dto)).rejects.toThrow(
-        BadRequestException,
-      );
+      await expect(
+        boardService.createBoard('admin@test.com', dto),
+      ).rejects.toThrow(BadRequestException);
       expect(boardRepository.save).not.toHaveBeenCalled();
     });
 
@@ -335,9 +359,9 @@ describe(`${BoardService.name} Unit Test`, () => {
       });
 
       // when & then
-      await expect(boardService.createBoard('admin@test.com', dto)).rejects.toThrow(
-        BadRequestException,
-      );
+      await expect(
+        boardService.createBoard('admin@test.com', dto),
+      ).rejects.toThrow(BadRequestException);
       expect(boardRepository.save).not.toHaveBeenCalled();
     });
 
@@ -400,6 +424,108 @@ describe(`${BoardService.name} Unit Test`, () => {
       );
       expect(result.authorName).toBeNull();
     });
+
+    it('공지사항이 공개 상태로 즉시 노출될 경우 알림 수신에 동의한 사용자에게 이메일을 발행한다.', async () => {
+      // given
+      adminRepository.findOneBy.mockResolvedValue(null);
+      boardRepository.save.mockImplementation((entity: Board) => {
+        entity.id = 1;
+        return entity;
+      });
+      userRepository.findNoticeAgreedUsers.mockResolvedValue([
+        { email: 'a@test.com', userName: 'a' },
+        { email: 'b@test.com', userName: 'b' },
+      ]);
+      const dto = new CreateBoardRequestDto({
+        title: '점검 안내',
+        content: '<p>본문</p>',
+        category: BoardCategory.NOTICE,
+        status: BoardStatus.PUBLISHED,
+      });
+
+      // when
+      await boardService.createBoard('admin@test.com', dto);
+
+      // then
+      expect(userRepository.findNoticeAgreedUsers).toHaveBeenCalled();
+      expect(emailProducer.produceNoticePublished).toHaveBeenCalledTimes(2);
+      expect(emailProducer.produceNoticePublished).toHaveBeenCalledWith({
+        email: 'a@test.com',
+        userName: 'a',
+        boardId: 1,
+        title: '점검 안내',
+      });
+    });
+
+    it('임시저장 상태일 경우 이메일을 발행하지 않는다.', async () => {
+      // given
+      adminRepository.findOneBy.mockResolvedValue(null);
+      const dto = new CreateBoardRequestDto({
+        title: '점검 안내',
+        content: '<p>본문</p>',
+      });
+
+      // when
+      await boardService.createBoard('admin@test.com', dto);
+
+      // then
+      expect(userRepository.findNoticeAgreedUsers).not.toHaveBeenCalled();
+      expect(emailProducer.produceNoticePublished).not.toHaveBeenCalled();
+    });
+
+    it('FAQ 분류일 경우 이메일을 발행하지 않는다.', async () => {
+      // given
+      adminRepository.findOneBy.mockResolvedValue(null);
+      const dto = new CreateBoardRequestDto({
+        title: '질문',
+        content: '<p>본문</p>',
+        category: BoardCategory.FAQ,
+        status: BoardStatus.PUBLISHED,
+      });
+
+      // when
+      await boardService.createBoard('admin@test.com', dto);
+
+      // then
+      expect(emailProducer.produceNoticePublished).not.toHaveBeenCalled();
+    });
+
+    it('노출 시작일이 미래일 경우 이메일을 발행하지 않는다.', async () => {
+      // given
+      adminRepository.findOneBy.mockResolvedValue(null);
+      const dto = new CreateBoardRequestDto({
+        title: '점검 안내',
+        content: '<p>본문</p>',
+        status: BoardStatus.PUBLISHED,
+        startAt: '2099-01-01T00:00:00.000Z',
+      });
+
+      // when
+      await boardService.createBoard('admin@test.com', dto);
+
+      // then
+      expect(emailProducer.produceNoticePublished).not.toHaveBeenCalled();
+    });
+
+    it('이메일 발행에 실패해도 게시글 작성 자체는 성공한다.', async () => {
+      // given
+      adminRepository.findOneBy.mockResolvedValue(null);
+      userRepository.findNoticeAgreedUsers.mockRejectedValue(
+        new Error('DB 오류'),
+      );
+      const dto = new CreateBoardRequestDto({
+        title: '점검 안내',
+        content: '<p>본문</p>',
+        status: BoardStatus.PUBLISHED,
+      });
+
+      // when
+      const result = await boardService.createBoard('admin@test.com', dto);
+
+      // then
+      expect(result.title).toBe('점검 안내');
+      expect(logger.error).toHaveBeenCalled();
+    });
   });
 
   describe('updateBoard', () => {
@@ -409,7 +535,10 @@ describe(`${BoardService.name} Unit Test`, () => {
 
       // when & then
       await expect(
-        boardService.updateBoard(1, new UpdateBoardRequestDto({ title: '수정' })),
+        boardService.updateBoard(
+          1,
+          new UpdateBoardRequestDto({ title: '수정' }),
+        ),
       ).rejects.toThrow(NotFoundException);
       expect(boardRepository.save).not.toHaveBeenCalled();
     });

@@ -49,3 +49,10 @@ export interface QnaAnswered {
   qnaId: number;
   qnaTitle: string;
 }
+
+export interface NoticePublished {
+  email: string;
+  userName: string;
+  boardId: number;
+  title: string;
+}

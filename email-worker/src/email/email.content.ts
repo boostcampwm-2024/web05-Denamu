@@ -284,6 +284,28 @@ export function createQnaAnsweredContent(
   return mailLayout(body, serviceAddress);
 }
 
+export function createNoticePublishedContent(
+  userName: string,
+  title: string,
+  boardId: number,
+  serviceAddress: string,
+) {
+  const noticeLink = `${PRODUCT_DOMAIN}/board/${boardId}`;
+
+  const body = `
+        ${heading('새로운 공지사항이 등록되었습니다', '#007bff')}
+        ${infoBox(`
+          <p><strong>안녕하세요, ${userName}님!</strong></p>
+          <p>'${title}' 공지사항이 등록되었습니다.</p>
+        `)}
+        ${button(noticeLink, '공지사항 확인하러 가기')}
+        ${noticeBox(`
+          ${fallbackLink(noticeLink)}
+        `)}
+  `;
+  return mailLayout(body, serviceAddress);
+}
+
 export function createDeleteAccountContent(
   userName: string,
   verificationLink: string,

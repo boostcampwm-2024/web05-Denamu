@@ -49,6 +49,13 @@ export interface QnaAnswered {
   qnaTitle: string;
 }
 
+export interface NoticePublished {
+  email: string;
+  userName: string;
+  boardId: number;
+  title: string;
+}
+
 export const EmailPayloadConstant = {
   USER_CERTIFICATION: 'userCertification',
   RSS_REMOVAL: 'rssRemoval',
@@ -61,6 +68,7 @@ export const EmailPayloadConstant = {
   ADMIN_ACCOUNT_DELETION: 'adminAccountDeletion',
   ADMIN_PASSWORD_RESET: 'adminPasswordReset',
   QNA_ANSWERED: 'qnaAnswered',
+  NOTICE_PUBLISHED: 'noticePublished',
 } as const;
 
 export type EmailPayload =
@@ -92,4 +100,8 @@ export type EmailPayload =
       type: typeof EmailPayloadConstant.ADMIN_PASSWORD_RESET;
       data: AdminCertification;
     }
-  | { type: typeof EmailPayloadConstant.QNA_ANSWERED; data: QnaAnswered };
+  | { type: typeof EmailPayloadConstant.QNA_ANSWERED; data: QnaAnswered }
+  | {
+      type: typeof EmailPayloadConstant.NOTICE_PUBLISHED;
+      data: NoticePublished;
+    };

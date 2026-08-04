@@ -7,10 +7,12 @@ import { BoardService } from '@board/service/board.service';
 
 import { AdminModule } from '@admin/module/admin.module';
 
+import { UserRepository } from '@user/repository/user.repository';
+
 @Module({
   imports: [AdminModule],
   controllers: [BoardController, AdminBoardController],
-  providers: [BoardService, BoardRepository],
+  providers: [BoardService, BoardRepository, UserRepository],
   exports: [],
 })
 export class BoardModule {}
