@@ -1,0 +1,4 @@
+export const SERVER_NOTIFIER = 'SERVER_NOTIFIER';
+export const RSS_NOTIFIER = 'RSS_NOTIFIER';
+export const REPORT_NOTIFIER = 'REPORT_NOTIFIER';
+export const QNA_NOTIFIER = 'QNA_NOTIFIER';

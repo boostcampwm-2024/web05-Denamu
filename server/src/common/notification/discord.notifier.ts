@@ -1,16 +1,9 @@
-import { Injectable } from '@nestjs/common';
-
 import axios from 'axios';
 
 import { Notifier } from '@common/notification/notifier.interface';
 
-@Injectable()
 export class DiscordNotifier implements Notifier {
-  private readonly webhookUrl: string;
-
-  constructor() {
-    this.webhookUrl = process.env.SERVER_DISCORD_WEBHOOK_URL ?? '';
-  }
+  constructor(private readonly webhookUrl: string) {}
 
   async sendAlert(message: string): Promise<void> {
     if (!this.webhookUrl) return;

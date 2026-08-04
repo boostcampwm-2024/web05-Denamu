@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
 
-import { JwtAuthModule } from '@common/auth/jwt.module';
-
 import { CommentRepository } from '@comment/repository/comment.repository';
+
+import { JwtAuthModule } from '@common/auth/jwt.module';
+import { NotifierModule } from '@common/notification/notifier.module';
 
 import { FeedModule } from '@feed/module/feed.module';
 
@@ -16,9 +17,14 @@ import { RssAcceptRepository } from '@rss/repository/rss.repository';
 import { UserModule } from '@user/module/user.module';
 
 @Module({
-  imports: [JwtAuthModule, UserModule, FeedModule],
+  imports: [JwtAuthModule, UserModule, FeedModule, NotifierModule],
   controllers: [ReportController, AdminReportController],
-  providers: [ReportService, ReportRepository, RssAcceptRepository, CommentRepository],
+  providers: [
+    ReportService,
+    ReportRepository,
+    RssAcceptRepository,
+    CommentRepository,
+  ],
   exports: [],
 })
 export class ReportModule {}

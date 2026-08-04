@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ForbiddenException,
+  Inject,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -15,6 +16,7 @@ import { EmailProducer } from '@common/email/email.producer';
 import { Payload } from '@common/guard/jwt.guard';
 import { WinstonLoggerService } from '@common/logger/logger.service';
 import { NotifierRegistry } from '@common/notification/notifier-registry';
+import { QNA_NOTIFIER } from '@common/notification/notifier.constant';
 import { createHashedPassword } from '@common/util/createHashedPassword';
 
 import {
@@ -47,7 +49,7 @@ export class QnaService {
     private readonly adminRepository: AdminRepository,
     private readonly userRepository: UserRepository,
     private readonly emailProducer: EmailProducer,
-    private readonly notifierRegistry: NotifierRegistry,
+    @Inject(QNA_NOTIFIER) private readonly notifierRegistry: NotifierRegistry,
     private readonly logger: WinstonLoggerService,
     private readonly dataSource: DataSource,
   ) {}
