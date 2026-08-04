@@ -7,9 +7,15 @@ import PostAvatar from "@/components/common/Card/PostAvatar";
 import { SimpleTagList } from "@/components/common/Card/PostTag";
 import { SubscribeButton } from "@/components/common/Card/detail/SubscribeButton";
 import { ReportDialog } from "@/components/common/ReportDialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 import { useCustomToast } from "@/hooks/common/useCustomToast";
+import { useBlockRss } from "@/hooks/queries/useBlock";
 import { useReportFeed } from "@/hooks/queries/useReport";
 
 import { detailFormatDate } from "@/utils/date";
@@ -26,15 +32,28 @@ export const PostHeader = React.memo(({ data }: PostHeaderProps) => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const { toast } = useCustomToast();
   const { mutate: reportFeed, isPending: isReportPending } = useReportFeed();
+  const { mutateAsync: blockRss } = useBlockRss();
   const [showReportDialog, setShowReportDialog] = useState(false);
 
-  const handleReport = (payload: CreateReportPayload) => {
+  const handleReport = (payload: CreateReportPayload, blockToo: boolean) => {
     reportFeed(
       { feedId: data.id, payload },
       {
-        onSuccess: () => {
+        onSuccess: async () => {
           setShowReportDialog(false);
-          toast({ title: "신고 접수 완료", description: "신고가 접수되었습니다." });
+          if (!blockToo) {
+            toast({ title: "신고 접수 완료", description: "신고가 접수되었습니다." });
+            return;
+          }
+          try {
+            await blockRss(data.blog.id);
+            toast({ title: "신고 접수 완료", description: "신고가 접수되었고, 이 블로그를 차단했습니다." });
+          } catch {
+            toast({
+              title: "신고 접수 완료",
+              description: "신고는 접수되었지만 차단에 실패했습니다. 잠시 후 다시 시도해주세요.",
+            });
+          }
         },
         onError: () => {
           toast({ title: "신고 실패", description: "잠시 후 다시 시도해주세요." });
@@ -125,6 +144,9 @@ export const PostHeader = React.memo(({ data }: PostHeaderProps) => {
         onOpenChange={setShowReportDialog}
         title="게시글 신고"
         isPending={isReportPending}
+        withBlockOption
+        blockLabel="이 블로그도 함께 차단하기"
+        blockDescription="차단하면 이 블로그의 게시글이 더 이상 노출되지 않습니다."
         onSubmit={handleReport}
       />
     </div>

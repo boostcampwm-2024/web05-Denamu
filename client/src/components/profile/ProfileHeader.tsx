@@ -94,14 +94,26 @@ export const ProfileHeader = ({ name, email, profileImage, introduction, blockab
     }
   };
 
-  const handleReport = (payload: CreateReportPayload) => {
+  const handleReport = (payload: CreateReportPayload, blockToo: boolean) => {
     if (!blockableUserId) return;
     reportUser(
       { userId: blockableUserId, payload },
       {
-        onSuccess: () => {
+        onSuccess: async () => {
           setShowReportDialog(false);
-          toast({ title: "신고 접수 완료", description: "신고가 접수되었습니다." });
+          if (!blockToo) {
+            toast({ title: "신고 접수 완료", description: "신고가 접수되었습니다." });
+            return;
+          }
+          try {
+            await blockUser(blockableUserId);
+            toast({ title: "신고 접수 완료", description: `신고가 접수되었고, ${name}님을 차단했습니다.` });
+          } catch {
+            toast({
+              title: "신고 접수 완료",
+              description: "신고는 접수되었지만 차단에 실패했습니다. 잠시 후 다시 시도해주세요.",
+            });
+          }
         },
         onError: () => {
           toast({ title: "신고 실패", description: "잠시 후 다시 시도해주세요." });
@@ -222,6 +234,7 @@ export const ProfileHeader = ({ name, email, profileImage, introduction, blockab
         onOpenChange={setShowReportDialog}
         title={`${name} 유저 신고`}
         isPending={isReportPending}
+        withBlockOption
         onSubmit={handleReport}
       />
     </Card>

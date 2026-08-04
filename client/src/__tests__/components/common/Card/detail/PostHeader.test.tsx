@@ -2,18 +2,56 @@ import { MemoryRouter } from "react-router-dom";
 
 import { describe, expect, it, vi } from "vitest";
 
+import { lucideProxy } from "@/__tests__/__mocks__/external/lucide-proxy.tsx";
+
 import { PostHeader } from "@/components/common/Card/detail/PostHeader.tsx";
 
 import { FeedDetail } from "@/types/post.ts";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+
+const mockBlockRss = vi.fn().mockResolvedValue(undefined);
+const mockReportFeed = vi.fn((_vars: unknown, options?: { onSuccess?: () => void; onError?: () => void }) =>
+  options?.onSuccess?.()
+);
 
 vi.mock("@/components/common/Card/detail/SubscribeButton", () => ({
   SubscribeButton: () => <button>구독</button>,
 }));
 
 vi.mock("@/hooks/queries/useReport", () => ({
-  useReportFeed: () => ({ mutate: vi.fn(), isPending: false }),
+  useReportFeed: () => ({ mutate: mockReportFeed, isPending: false }),
 }));
+vi.mock("@/hooks/queries/useBlock", () => ({
+  useBlockRss: () => ({ mutateAsync: mockBlockRss }),
+}));
+vi.mock("@/store/useAuthStore", () => ({
+  useAuthStore: (selector: (s: { isAuthenticated: boolean }) => unknown) => selector({ isAuthenticated: true }),
+}));
+vi.mock("lucide-react", () => lucideProxy());
+vi.mock("@/components/ui/select", () => {
+  const pass = ({ children }: { children: React.ReactNode }) => <>{children}</>;
+  return {
+    Select: ({ children, onValueChange }: { children: React.ReactNode; onValueChange: (value: string) => void }) => (
+      <div
+        onClick={(event) => {
+          const value = (event.target as HTMLElement).getAttribute("data-value");
+          if (value) onValueChange(value);
+        }}
+      >
+        {children}
+      </div>
+    ),
+    SelectContent: pass,
+    SelectItem: ({ children, value }: { children: React.ReactNode; value: string }) => (
+      <div role="option" data-value={value}>
+        {children}
+      </div>
+    ),
+    SelectTrigger: pass,
+    SelectValue: () => null,
+  };
+});
 
 const data = {
   id: 1,
@@ -62,5 +100,38 @@ describe("PostHeader", () => {
     const link = screen.getByRole("link");
     expect(link).toHaveAttribute("href", "/rss/42");
     expect(link).toHaveTextContent("작성자");
+  });
+
+  const openReportModal = async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <PostHeader data={data} />
+      </MemoryRouter>
+    );
+    await user.click(screen.getByRole("button", { name: "더보기" }));
+    await user.click(await screen.findByText("신고하기"));
+    return user;
+  };
+
+  it("함께 차단하기 스위치를 켜지 않으면 게시글만 신고해야 한다", async () => {
+    const user = await openReportModal();
+    await user.click(screen.getByText("스팸/광고"));
+    await user.click(screen.getByRole("button", { name: "신고하기" }));
+
+    expect(mockReportFeed).toHaveBeenCalledWith(
+      { feedId: 1, payload: { reason: "SPAM", detail: undefined } },
+      expect.anything()
+    );
+    expect(mockBlockRss).not.toHaveBeenCalled();
+  });
+
+  it("함께 차단하기 스위치를 켜면 게시글 신고 후 블로그(RSS)를 차단해야 한다", async () => {
+    const user = await openReportModal();
+    await user.click(screen.getByText("스팸/광고"));
+    await user.click(screen.getByRole("switch"));
+    await user.click(screen.getByRole("button", { name: "신고하기" }));
+
+    await waitFor(() => expect(mockBlockRss).toHaveBeenCalledWith(42));
   });
 });
