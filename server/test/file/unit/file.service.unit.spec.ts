@@ -150,14 +150,16 @@ describe(`${FileService.name} Unit Test`, () => {
   });
 
   describe('deleteByPath', () => {
-    it('경로에 해당하는 파일이 없으면 NotFoundException을 던진다.', async () => {
+    it('경로에 해당하는 파일이 없으면 아무 동작도 하지 않는다.', async () => {
       // given
       fileRepository.findOne.mockResolvedValue(null);
 
-      // when & then
-      await expect(fileService.deleteByPath('/app/objects/x.png')).rejects.toThrow(
-        NotFoundException,
-      );
+      // when
+      await fileService.deleteByPath('/app/objects/x.png');
+
+      // then
+      expect(mockedFs.unlink).not.toHaveBeenCalled();
+      expect(fileRepository.delete).not.toHaveBeenCalled();
     });
 
     it('파일을 찾으면 물리 파일과 레코드를 삭제한다.', async () => {
