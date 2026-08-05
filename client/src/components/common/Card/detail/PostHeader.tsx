@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 
 import { CheckCircle2, Flag, MoreVertical } from "lucide-react";
 
+import { BlockConfirmDialog } from "@/components/common/BlockConfirmDialog";
 import PostAvatar from "@/components/common/Card/PostAvatar";
 import { SimpleTagList } from "@/components/common/Card/PostTag";
 import { SubscribeButton } from "@/components/common/Card/detail/SubscribeButton";
@@ -15,7 +16,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { useCustomToast } from "@/hooks/common/useCustomToast";
-import { useBlockRss } from "@/hooks/queries/useBlock";
+import { useBlockRss, useBlockUser } from "@/hooks/queries/useBlock";
+import { useCertifiedRss } from "@/hooks/queries/useProfile";
 import { useReportFeed } from "@/hooks/queries/useReport";
 
 import { detailFormatDate } from "@/utils/date";
@@ -34,27 +36,40 @@ export const PostHeader = React.memo(({ data }: PostHeaderProps) => {
   const { toast } = useCustomToast();
   const { mutate: reportFeed, isPending: isReportPending } = useReportFeed();
   const { mutateAsync: blockRss } = useBlockRss();
+  const { mutateAsync: blockUser } = useBlockUser();
   const [showReportDialog, setShowReportDialog] = useState(false);
+  const [showBlockConfirm, setShowBlockConfirm] = useState(false);
 
-  const handleReport = (payload: CreateReportPayload, blockToo: boolean) => {
+  const { data: ownerOwnedRss = [] } = useCertifiedRss(data.blog.owner?.id ?? 0);
+  const otherOwnedRss = ownerOwnedRss.filter((rss) => rss.id !== data.blog.id);
+
+  const handleBlock = async (block: { blockOwner: boolean; rssIds: number[] }) => {
+    try {
+      const rssTasks = [data.blog.id, ...block.rssIds].map((rssId) => blockRss(rssId));
+      const ownerTasks = block.blockOwner && data.blog.owner ? [blockUser(data.blog.owner.id)] : [];
+      const results = await Promise.allSettled([...rssTasks, ...ownerTasks]);
+      const failedCount = results.filter((result) => result.status === "rejected").length;
+      if (failedCount > 0) {
+        toast({
+          title: "차단 완료",
+          description: `차단 대상 ${failedCount}건은 차단하지 못했습니다.`,
+        });
+      } else {
+        toast({ title: "차단 완료", description: "선택한 대상을 차단했습니다." });
+      }
+    } catch {
+      toast({ title: "차단 실패", description: "잠시 후 다시 시도해주세요." });
+    }
+  };
+
+  const handleReport = (payload: CreateReportPayload) => {
     reportFeed(
       { feedId: data.id, payload },
       {
-        onSuccess: async () => {
+        onSuccess: () => {
           setShowReportDialog(false);
-          if (!blockToo) {
-            toast({ title: "신고 접수 완료", description: "신고가 접수되었습니다." });
-            return;
-          }
-          try {
-            await blockRss(data.blog.id);
-            toast({ title: "신고 접수 완료", description: "신고가 접수되었고, 이 블로그를 차단했습니다." });
-          } catch {
-            toast({
-              title: "신고 접수 완료",
-              description: "신고는 접수되었지만 차단에 실패했습니다. 잠시 후 다시 시도해주세요.",
-            });
-          }
+          toast({ title: "신고 접수 완료", description: "신고가 접수되었습니다." });
+          setShowBlockConfirm(true);
         },
         onError: (error) => {
           toast({ title: "신고 실패", description: getReportErrorMessage(error, "게시글을 찾을 수 없습니다.") });
@@ -74,7 +89,7 @@ export const PostHeader = React.memo(({ data }: PostHeaderProps) => {
       <span className="flex flex-col min-w-0">
         <span className="flex items-center gap-1.5">
           <span className="font-medium truncate">{data.blog.name}</span>
-          {data.blog.isOwnerCertified && (
+          {data.blog.owner && (
             <span className="flex items-center gap-0.5 text-xs text-blue-500" title="RSS 소유 인증 블로그">
               <CheckCircle2 className="w-4 h-4" />
               인증
@@ -82,9 +97,9 @@ export const PostHeader = React.memo(({ data }: PostHeaderProps) => {
           )}
         </span>
         <span className="flex gap-2 text-sm text-gray-400">
-          {data.blog.ownerName && (
+          {data.blog.userName && (
             <>
-              <span>{data.blog.ownerName}</span>
+              <span>{data.blog.userName}</span>
               <span>·</span>
             </>
           )}
@@ -145,10 +160,17 @@ export const PostHeader = React.memo(({ data }: PostHeaderProps) => {
         onOpenChange={setShowReportDialog}
         title="게시글 신고"
         isPending={isReportPending}
-        withBlockOption
-        blockLabel="이 블로그도 함께 차단하기"
-        blockDescription="차단하면 이 블로그의 게시글이 더 이상 노출되지 않습니다."
         onSubmit={handleReport}
+      />
+
+      <BlockConfirmDialog
+        open={showBlockConfirm}
+        onOpenChange={setShowBlockConfirm}
+        title="이 블로그를 차단하시겠습니까?"
+        description="차단하면 이 블로그의 게시글이 더 이상 노출되지 않습니다."
+        owner={data.blog.owner ?? undefined}
+        ownedRss={otherOwnedRss}
+        onConfirm={handleBlock}
       />
     </div>
   );

@@ -34,32 +34,42 @@ const selectReason = async (user: ReturnType<typeof userEvent.setup>) => {
 };
 
 describe("ReportDialog", () => {
-  it("withBlockOption이 없으면 차단 스위치를 표시하지 않아야 한다", () => {
+  it("사유를 선택하지 않으면 신고하기 버튼이 비활성화되어야 한다", () => {
     render(<ReportDialog open title="유저 신고" onSubmit={vi.fn()} onOpenChange={vi.fn()} />);
 
-    expect(screen.queryByText("이 유저도 함께 차단하기")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "신고하기" })).toBeDisabled();
   });
 
-  it("withBlockOption이 있으면 차단 스위치를 표시하고 기본값은 꺼짐이어야 한다", async () => {
+  it("사유를 선택하고 제출하면 onSubmit에 payload를 전달해야 한다", async () => {
     const handleSubmit = vi.fn();
     const user = userEvent.setup();
-    render(<ReportDialog open withBlockOption title="유저 신고" onSubmit={handleSubmit} onOpenChange={vi.fn()} />);
+    render(<ReportDialog open title="유저 신고" onSubmit={handleSubmit} onOpenChange={vi.fn()} />);
 
     await selectReason(user);
     await user.click(screen.getByRole("button", { name: "신고하기" }));
 
-    expect(handleSubmit).toHaveBeenCalledWith({ reason: "SPAM", detail: undefined }, false);
+    expect(handleSubmit).toHaveBeenCalledWith({ reason: "SPAM", detail: undefined });
   });
 
-  it("차단 스위치를 켜면 onSubmit에 blockToo=true를 전달해야 한다", async () => {
+  it("상세 내용을 입력하면 onSubmit에 detail을 포함해 전달해야 한다", async () => {
     const handleSubmit = vi.fn();
     const user = userEvent.setup();
-    render(<ReportDialog open withBlockOption title="유저 신고" onSubmit={handleSubmit} onOpenChange={vi.fn()} />);
+    render(<ReportDialog open title="유저 신고" onSubmit={handleSubmit} onOpenChange={vi.fn()} />);
 
     await selectReason(user);
-    await user.click(screen.getByRole("switch"));
+    await user.type(screen.getByPlaceholderText("신고 사유에 대해 자세히 설명해주세요."), "반복 광고");
     await user.click(screen.getByRole("button", { name: "신고하기" }));
 
-    expect(handleSubmit).toHaveBeenCalledWith({ reason: "SPAM", detail: undefined }, true);
+    expect(handleSubmit).toHaveBeenCalledWith({ reason: "SPAM", detail: "반복 광고" });
+  });
+
+  it("취소를 누르면 onOpenChange(false)를 호출해야 한다", async () => {
+    const handleOpenChange = vi.fn();
+    const user = userEvent.setup();
+    render(<ReportDialog open title="유저 신고" onSubmit={vi.fn()} onOpenChange={handleOpenChange} />);
+
+    await user.click(screen.getByRole("button", { name: "취소" }));
+
+    expect(handleOpenChange).toHaveBeenCalledWith(false);
   });
 });

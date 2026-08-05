@@ -106,7 +106,7 @@ describe("ProfileHeader", () => {
 
     await openBlockModal();
 
-    expect(await screen.findByText("함께 차단할 RSS")).toBeInTheDocument();
+    expect(await screen.findByText("해당 유저가 소유중인 RSS 차단")).toBeInTheDocument();
     expect(screen.getByText("seok.log")).toBeInTheDocument();
     expect(screen.getByRole("switch", { name: "seok.log 차단" })).toBeInTheDocument();
   });
@@ -185,7 +185,7 @@ describe("ProfileHeader", () => {
     return user;
   };
 
-  it("신고 모달의 함께 차단하기 스위치를 켜지 않으면 신고만 접수해야 한다", async () => {
+  it("신고 접수 후에는 유저를 자동으로 차단하지 않고 차단 확인 모달을 띄운다", async () => {
     render(<ProfileHeader name="민석" email="" profileImage={null} introduction={null} blockableUserId={2} />);
 
     const user = await openReportModal();
@@ -197,17 +197,46 @@ describe("ProfileHeader", () => {
       expect.anything()
     );
     expect(mockBlockUser).not.toHaveBeenCalled();
+    expect(await screen.findByText("민석 유저를 차단하시겠습니까?")).toBeInTheDocument();
   });
 
-  it("신고 모달의 함께 차단하기 스위치를 켜면 신고 접수 후 유저를 차단해야 한다", async () => {
+  it("신고 후 뜬 차단 모달을 취소하면 유저를 차단하지 않아야 한다", async () => {
     render(<ProfileHeader name="민석" email="" profileImage={null} introduction={null} blockableUserId={2} />);
 
     const user = await openReportModal();
     await user.click(screen.getByText("스팸/광고"));
-    await user.click(screen.getByRole("switch"));
     await user.click(screen.getByRole("button", { name: "신고하기" }));
+    await user.click(await screen.findByRole("button", { name: "취소" }));
+
+    expect(mockBlockUser).not.toHaveBeenCalled();
+  });
+
+  it("신고 후 뜬 차단 모달에서 차단을 확정하면 유저를 차단해야 한다", async () => {
+    render(<ProfileHeader name="민석" email="" profileImage={null} introduction={null} blockableUserId={2} />);
+
+    const user = await openReportModal();
+    await user.click(screen.getByText("스팸/광고"));
+    await user.click(screen.getByRole("button", { name: "신고하기" }));
+    await user.click(await screen.findByRole("button", { name: "차단" }));
 
     await waitFor(() => expect(mockBlockUser).toHaveBeenCalledWith(2));
+    expect(mockBlockRss).not.toHaveBeenCalled();
+  });
+
+  it("신고 후 뜬 차단 모달에서 소유 RSS 목록을 선택해 함께 차단할 수 있어야 한다", async () => {
+    mockCertifiedRss.mockReturnValue({
+      data: [{ id: 10, name: "seok.log", blogPlatform: "velog" }],
+    });
+    render(<ProfileHeader name="민석" email="" profileImage={null} introduction={null} blockableUserId={2} />);
+
+    const user = await openReportModal();
+    await user.click(screen.getByText("스팸/광고"));
+    await user.click(screen.getByRole("button", { name: "신고하기" }));
+    await user.click(await screen.findByRole("switch", { name: "seok.log 차단" }));
+    await user.click(screen.getByRole("button", { name: "차단" }));
+
+    await waitFor(() => expect(mockBlockUser).toHaveBeenCalledWith(2));
+    expect(mockBlockRss).toHaveBeenCalledWith(10);
   });
 
   it("이미 신고한 유저를 다시 신고하면 중복 신고 안내 토스트를 보여준다", async () => {

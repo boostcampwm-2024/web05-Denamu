@@ -10,6 +10,8 @@ const createComment = vi.fn();
 const updateComment = vi.fn();
 const deleteComment = vi.fn();
 const mockBlockUser = vi.fn().mockResolvedValue(undefined);
+const mockBlockRss = vi.fn().mockResolvedValue(undefined);
+const mockCertifiedRss = vi.fn(() => ({ data: [] as { id: number; name: string; blogPlatform: string }[] }));
 const mockToast = vi.fn();
 const mockReportComment = vi.fn(
   (_vars: unknown, options?: { onSuccess?: () => void; onError?: (error: unknown) => void }) => options?.onSuccess?.()
@@ -30,12 +32,16 @@ vi.mock("@/hooks/queries/useComments", () => ({
   useAdminDeleteComment: () => ({ mutate: vi.fn() }),
 }));
 
-vi.mock("@/hooks/queries/useProfile", () => ({ useUserProfile: () => ({ data: undefined }) }));
+vi.mock("@/hooks/queries/useProfile", () => ({
+  useUserProfile: () => ({ data: undefined }),
+  useCertifiedRss: () => mockCertifiedRss(),
+}));
 vi.mock("@/hooks/queries/useReport", () => ({
   useReportComment: () => ({ mutate: mockReportComment, isPending: false }),
 }));
 vi.mock("@/hooks/queries/useBlock", () => ({
   useBlockUser: () => ({ mutateAsync: mockBlockUser }),
+  useBlockRss: () => ({ mutateAsync: mockBlockRss }),
 }));
 vi.mock("@/hooks/common/useCustomToast", () => ({ useCustomToast: () => ({ toast: mockToast }) }));
 vi.mock("@/hooks/common/useNavigateToProfile", () => ({ useNavigateToProfile: () => vi.fn() }));
@@ -85,6 +91,7 @@ describe("PostComment", () => {
     vi.clearAllMocks();
     isAuthenticated = true;
     comments = [makeComment(1), makeComment(2)];
+    mockCertifiedRss.mockReturnValue({ data: [] });
   });
 
   it("댓글 개수와 목록, 작성시간을 렌더링해야 한다", () => {
@@ -230,7 +237,7 @@ describe("PostComment", () => {
     return user;
   };
 
-  it("함께 차단하기 스위치를 켜지 않으면 댓글만 신고해야 한다", async () => {
+  it("신고 접수 후에는 작성자를 자동으로 차단하지 않고 차단 확인 모달을 띄운다", async () => {
     comments = [makeComment(1, { user: { id: 2, userName: "타인", profileImage: null } })];
     render(<PostComment feedId={10} />);
 
@@ -243,18 +250,35 @@ describe("PostComment", () => {
       expect.anything()
     );
     expect(mockBlockUser).not.toHaveBeenCalled();
+    expect(await screen.findByText("작성자를 차단하시겠습니까?")).toBeInTheDocument();
   });
 
-  it("함께 차단하기 스위치를 켜면 댓글 신고 후 작성자를 차단해야 한다", async () => {
+  it("신고 후 뜬 차단 모달에서 확정하면 작성자를 차단해야 한다", async () => {
     comments = [makeComment(1, { user: { id: 2, userName: "타인", profileImage: null } })];
     render(<PostComment feedId={10} />);
 
     const user = await openReportModal();
     await user.click(screen.getByText("스팸/광고"));
-    await user.click(screen.getByRole("switch"));
     await user.click(screen.getByRole("button", { name: "신고하기" }));
+    await user.click(await screen.findByRole("button", { name: "차단" }));
 
     await waitFor(() => expect(mockBlockUser).toHaveBeenCalledWith(2));
+    expect(mockBlockRss).not.toHaveBeenCalled();
+  });
+
+  it("작성자가 인증한 RSS가 있으면 신고 후 뜬 차단 모달에서 선택해 차단할 수 있어야 한다", async () => {
+    mockCertifiedRss.mockReturnValue({ data: [{ id: 55, name: "author.log", blogPlatform: "velog" }] });
+    comments = [makeComment(1, { user: { id: 2, userName: "타인", profileImage: null } })];
+    render(<PostComment feedId={10} />);
+
+    const user = await openReportModal();
+    await user.click(screen.getByText("스팸/광고"));
+    await user.click(screen.getByRole("button", { name: "신고하기" }));
+    await user.click(await screen.findByRole("switch", { name: "author.log 차단" }));
+    await user.click(screen.getByRole("button", { name: "차단" }));
+
+    await waitFor(() => expect(mockBlockUser).toHaveBeenCalledWith(2));
+    expect(mockBlockRss).toHaveBeenCalledWith(55);
   });
 
   it("이미 신고한 댓글을 다시 신고하면 중복 신고 안내 토스트를 보여준다", async () => {

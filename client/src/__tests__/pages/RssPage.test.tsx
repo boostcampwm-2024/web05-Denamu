@@ -60,6 +60,8 @@ vi.mock("@/components/profile/header/ui/ActivityGraph/ActivityGraph.tsx", () => 
 }));
 
 const blockRssMock = vi.hoisted(() => vi.fn());
+const blockRssAsyncMock = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
+const blockUserAsyncMock = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
 const unblockRssMock = vi.hoisted(() => vi.fn());
 const mockToast = vi.hoisted(() => vi.fn());
 const reportRssMock = vi.hoisted(() =>
@@ -69,11 +71,15 @@ const reportRssMock = vi.hoisted(() =>
 );
 
 vi.mock("@/hooks/queries/useBlock.ts", () => ({
-  useBlockRss: () => ({ mutate: blockRssMock, isPending: false }),
+  useBlockRss: () => ({ mutate: blockRssMock, mutateAsync: blockRssAsyncMock, isPending: false }),
+  useBlockUser: () => ({ mutateAsync: blockUserAsyncMock }),
   useUnblockRss: () => ({ mutate: unblockRssMock, isPending: false }),
 }));
 
 vi.mock("@/hooks/common/useCustomToast.ts", () => ({ useCustomToast: () => ({ toast: mockToast }) }));
+
+const mockCertifiedRss = vi.hoisted(() => vi.fn(() => ({ data: [] })));
+vi.mock("@/hooks/queries/useProfile.ts", () => ({ useCertifiedRss: () => mockCertifiedRss() }));
 
 vi.mock("@/hooks/queries/useReport", () => ({
   useReportRss: () => ({ mutate: reportRssMock, isPending: false }),
@@ -150,6 +156,9 @@ describe("RssPage", () => {
     useAuthStore.setState({ isAuthenticated: false });
     mockToast.mockClear();
     reportRssMock.mockClear();
+    blockRssAsyncMock.mockClear();
+    blockUserAsyncMock.mockClear();
+    mockCertifiedRss.mockReturnValue({ data: [] });
   });
 
   it("소유자 없는 RSS는 인증 배지와 소유자 카드를 노출하지 않는다", () => {
@@ -327,5 +336,56 @@ describe("RssPage", () => {
       title: "신고 실패",
       description: "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
     });
+  });
+
+  it("신고 접수 후에는 RSS를 자동으로 차단하지 않고 차단 확인 모달을 띄운다", async () => {
+    useAuthStore.setState({ isAuthenticated: true });
+
+    const user = userEvent.setup();
+    render(<RssPage />);
+
+    await user.click(screen.getByRole("button", { name: "더보기" }));
+    await user.click(await screen.findByText("신고하기"));
+    await user.click(screen.getByText("스팸/광고"));
+    await user.click(screen.getByRole("button", { name: "신고하기" }));
+
+    expect(blockRssAsyncMock).not.toHaveBeenCalled();
+    expect(await screen.findByText("데나무 블로그 RSS를 차단하시겠습니까?")).toBeInTheDocument();
+  });
+
+  it("신고 후 뜬 차단 모달에서 확정하면 이 RSS와 함께 소유자 유저도 선택해 차단할 수 있어야 한다", async () => {
+    useAuthStore.setState({ isAuthenticated: true });
+    rssInfoState = {
+      data: { ...baseRss, owner: { id: 99, userName: "김개발", profileImage: null } },
+      isLoading: false,
+      isError: false,
+    };
+
+    const user = userEvent.setup();
+    render(<RssPage />);
+
+    await user.click(screen.getByRole("button", { name: "더보기" }));
+    await user.click(await screen.findByText("신고하기"));
+    await user.click(screen.getByText("스팸/광고"));
+    await user.click(screen.getByRole("button", { name: "신고하기" }));
+    await user.click(await screen.findByRole("switch", { name: "김개발 유저도 차단" }));
+    await user.click(screen.getByRole("button", { name: "차단" }));
+
+    expect(blockRssAsyncMock).toHaveBeenCalledWith(5);
+    expect(blockUserAsyncMock).toHaveBeenCalledWith(99);
+  });
+
+  it("차단하기 메뉴에서 바로 차단 모달을 띄워 RSS를 차단할 수 있어야 한다", async () => {
+    useAuthStore.setState({ isAuthenticated: true });
+
+    const user = userEvent.setup();
+    render(<RssPage />);
+
+    await user.click(screen.getByRole("button", { name: "더보기" }));
+    await user.click(await screen.findByText("차단하기"));
+    await user.click(await screen.findByRole("button", { name: "차단" }));
+
+    expect(blockRssAsyncMock).toHaveBeenCalledWith(5);
+    expect(reportRssMock).not.toHaveBeenCalled();
   });
 });

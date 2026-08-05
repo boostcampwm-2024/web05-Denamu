@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 
 import { Footer } from "@/components/about/Footer";
+import { BlockConfirmDialog } from "@/components/common/BlockConfirmDialog";
 import { SubscribeButton } from "@/components/common/Card/detail/SubscribeButton.tsx";
 import { ReportDialog } from "@/components/common/ReportDialog";
 import Layout from "@/components/layout/Layout";
@@ -24,16 +25,6 @@ import { PlatformIcon } from "@/components/profile/rss/PlatformIcon.tsx";
 import { RssEditModal } from "@/components/profile/rss/RssEditModal.tsx";
 import { RssFeedCard } from "@/components/profile/rss/RssFeedCard.tsx";
 import { RssFeedRow } from "@/components/profile/rss/RssFeedRow.tsx";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog.tsx";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
@@ -47,7 +38,8 @@ import {
 import NotFound from "@/pages/NotFound";
 
 import { useCustomToast } from "@/hooks/common/useCustomToast.ts";
-import { useBlockRss, useUnblockRss } from "@/hooks/queries/useBlock.ts";
+import { useBlockRss, useBlockUser, useUnblockRss } from "@/hooks/queries/useBlock.ts";
+import { useCertifiedRss } from "@/hooks/queries/useProfile.ts";
 import { useReportRss } from "@/hooks/queries/useReport";
 import { useOwnedRssFeeds, useSetFeedVisibility } from "@/hooks/queries/useRssCertification.ts";
 import { useRssActivities, useRssActivityYears, useRssInfo, useRssPageFeeds } from "@/hooks/queries/useRssPage.ts";
@@ -282,10 +274,12 @@ export default function RssPage() {
 
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const { toast } = useCustomToast();
-  const { mutate: blockRss } = useBlockRss();
+  const { mutateAsync: blockRssAsync } = useBlockRss();
+  const { mutateAsync: blockUserAsync } = useBlockUser();
   const { mutate: reportRss, isPending: isReportPending } = useReportRss();
 
   const { data: rss, isLoading, isError } = useRssInfo(numericId);
+  const { data: ownerOwnedRss = [] } = useCertifiedRss(rss?.owner?.id ?? 0);
   const {
     data: feedData,
     isLoading: feedsLoading,
@@ -325,20 +319,28 @@ export default function RssPage() {
   }
 
   const feeds = feedData?.pages.flatMap((page) => page.result) ?? [];
+  const otherOwnedRss = ownerOwnedRss.filter((ownedRss) => ownedRss.id !== rss.id);
 
   const extractErrorMessage = (error: unknown, fallback: string) =>
     (axios.isAxiosError(error) && (error.response?.data as { message?: string })?.message) || fallback;
 
-  const handleBlock = () => {
-    blockRss(rss.id, {
-      onSuccess: () => {
+  const handleBlock = async (block: { blockOwner: boolean; rssIds: number[] }) => {
+    try {
+      const rssTasks = [rss.id, ...block.rssIds].map((rssId) => blockRssAsync(rssId));
+      const ownerTasks = block.blockOwner && rss.owner ? [blockUserAsync(rss.owner.id)] : [];
+      const results = await Promise.allSettled([...rssTasks, ...ownerTasks]);
+      const failedCount = results.filter((result) => result.status === "rejected").length;
+      if (failedCount > 0) {
+        toast({
+          title: "차단 완료",
+          description: `${rss.name} RSS를 차단했습니다. 차단 대상 ${failedCount}건은 차단하지 못했습니다.`,
+        });
+      } else {
         toast({ title: "차단 완료", description: `${rss.name} RSS를 차단했습니다.` });
-      },
-      onError: (error) => {
-        toast({ title: "차단 실패", description: extractErrorMessage(error, "잠시 후 다시 시도해주세요.") });
-      },
-    });
-    setShowBlockConfirm(false);
+      }
+    } catch (error) {
+      toast({ title: "차단 실패", description: extractErrorMessage(error, "잠시 후 다시 시도해주세요.") });
+    }
   };
 
   const handleReport = (payload: CreateReportPayload) => {
@@ -348,6 +350,7 @@ export default function RssPage() {
         onSuccess: () => {
           setShowReportDialog(false);
           toast({ title: "신고 접수 완료", description: "신고가 접수되었습니다." });
+          setShowBlockConfirm(true);
         },
         onError: (error) => {
           toast({ title: "신고 실패", description: getReportErrorMessage(error, "RSS를 찾을 수 없습니다.") });
@@ -441,20 +444,15 @@ export default function RssPage() {
           </Card>
         </div>
 
-        <AlertDialog open={showBlockConfirm} onOpenChange={setShowBlockConfirm}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>{rss.name} RSS를 차단하시겠습니까?</AlertDialogTitle>
-              <AlertDialogDescription>게시글 및 RSS 프로필 페이지 조회가 제한됩니다.</AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>취소</AlertDialogCancel>
-              <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={handleBlock}>
-                차단
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <BlockConfirmDialog
+          open={showBlockConfirm}
+          onOpenChange={setShowBlockConfirm}
+          title={`${rss.name} RSS를 차단하시겠습니까?`}
+          description="게시글 및 RSS 프로필 페이지 조회가 제한됩니다."
+          owner={rss.owner ? { id: rss.owner.id, userName: rss.owner.userName } : undefined}
+          ownedRss={otherOwnedRss}
+          onConfirm={handleBlock}
+        />
 
         <ReportDialog
           open={showReportDialog}

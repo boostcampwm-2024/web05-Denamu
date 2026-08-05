@@ -4,6 +4,7 @@ import type { EmojiClickData } from "emoji-picker-react";
 import { ChevronDown, ChevronUp, Flag, MoreVertical } from "lucide-react";
 
 import { AuthSignInForm } from "@/components/auth/AuthSignInForm";
+import { BlockConfirmDialog } from "@/components/common/BlockConfirmDialog";
 import CommentAction from "@/components/common/Card/detail/CommentAction";
 import EmojiPickerButton from "@/components/common/EmojiPickerButton";
 import { ReportDialog } from "@/components/common/ReportDialog";
@@ -18,7 +19,7 @@ import {
 
 import { useCustomToast } from "@/hooks/common/useCustomToast";
 import { useNavigateToProfile } from "@/hooks/common/useNavigateToProfile";
-import { useBlockUser } from "@/hooks/queries/useBlock";
+import { useBlockRss, useBlockUser } from "@/hooks/queries/useBlock";
 import {
   useComments,
   useCreateComment,
@@ -26,7 +27,7 @@ import {
   useDeleteComment,
   useAdminDeleteComment,
 } from "@/hooks/queries/useComments";
-import { useUserProfile } from "@/hooks/queries/useProfile";
+import { useCertifiedRss, useUserProfile } from "@/hooks/queries/useProfile";
 import { useReportComment } from "@/hooks/queries/useReport";
 
 import { getReportErrorMessage } from "@/utils/reportError";
@@ -78,6 +79,7 @@ export default function PostComment({
   const deleteComment = isAdmin ? deleteCommentAdmin : deleteCommentUser;
   const { mutate: reportComment, isPending: isReportPending } = useReportComment();
   const { mutateAsync: blockUser } = useBlockUser();
+  const { mutateAsync: blockRss } = useBlockRss();
   const { toast } = useCustomToast();
 
   const [content, setContent] = useState("");
@@ -87,6 +89,8 @@ export default function PostComment({
   const [replyTo, setReplyTo] = useState<number | null>(null);
   const [replyContent, setReplyContent] = useState("");
   const [reportTarget, setReportTarget] = useState<{ commentId: number; authorId: number } | null>(null);
+  const [blockAuthorId, setBlockAuthorId] = useState<number | null>(null);
+  const { data: blockTargetOwnedRss = [] } = useCertifiedRss(blockAuthorId ?? 0);
   const [expandedReplyIds, setExpandedReplyIds] = useState<Set<number>>(new Set());
 
   const handleModify = (id: number | null) => setModifyId(id);
@@ -147,33 +151,41 @@ export default function PostComment({
     updateComment({ commentId, newComment: trimmed }, { onSuccess: () => setModifyId(null) });
   };
 
-  const handleReportSubmit = (payload: CreateReportPayload, blockToo: boolean) => {
+  const handleReportSubmit = (payload: CreateReportPayload) => {
     if (!reportTarget) return;
     const { commentId, authorId } = reportTarget;
     reportComment(
       { commentId, payload },
       {
-        onSuccess: async () => {
+        onSuccess: () => {
           setReportTarget(null);
-          if (!blockToo) {
-            toast({ title: "신고 접수 완료", description: "신고가 접수되었습니다." });
-            return;
-          }
-          try {
-            await blockUser(authorId);
-            toast({ title: "신고 접수 완료", description: "신고가 접수되었고, 작성자를 차단했습니다." });
-          } catch {
-            toast({
-              title: "신고 접수 완료",
-              description: "신고는 접수되었지만 차단에 실패했습니다. 잠시 후 다시 시도해주세요.",
-            });
-          }
+          toast({ title: "신고 접수 완료", description: "신고가 접수되었습니다." });
+          setBlockAuthorId(authorId);
         },
         onError: (error) => {
           toast({ title: "신고 실패", description: getReportErrorMessage(error, "댓글을 찾을 수 없습니다.") });
         },
       }
     );
+  };
+
+  const handleBlock = async (block: { rssIds: number[] }) => {
+    if (!blockAuthorId) return;
+    try {
+      await blockUser(blockAuthorId);
+      const results = await Promise.allSettled(block.rssIds.map((rssId) => blockRss(rssId)));
+      const failedRssCount = results.filter((result) => result.status === "rejected").length;
+      if (failedRssCount > 0) {
+        toast({
+          title: "차단 완료",
+          description: `작성자를 차단했습니다. RSS ${failedRssCount}건은 차단하지 못했습니다.`,
+        });
+      } else {
+        toast({ title: "차단 완료", description: "작성자를 차단했습니다." });
+      }
+    } catch {
+      toast({ title: "차단 실패", description: "잠시 후 다시 시도해주세요." });
+    }
   };
 
   const canEditComment = (comment: FeedCommentType) => !isAdmin && !comment.isDeleted && comment.user.id === userId;
@@ -387,8 +399,16 @@ export default function PostComment({
         onOpenChange={(open) => !open && setReportTarget(null)}
         title="댓글 신고"
         isPending={isReportPending}
-        withBlockOption
         onSubmit={handleReportSubmit}
+      />
+
+      <BlockConfirmDialog
+        open={blockAuthorId !== null}
+        onOpenChange={(open) => !open && setBlockAuthorId(null)}
+        title="작성자를 차단하시겠습니까?"
+        description="차단하면 댓글, 프로필 페이지 열람이 제한됩니다."
+        ownedRss={blockTargetOwnedRss}
+        onConfirm={handleBlock}
       />
     </div>
   );

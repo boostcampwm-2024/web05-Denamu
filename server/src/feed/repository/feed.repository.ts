@@ -1,6 +1,14 @@
 import { Injectable } from '@nestjs/common';
 
-import { Brackets, DataSource, In, IsNull, LessThan, Raw, Repository } from 'typeorm';
+import {
+  Brackets,
+  DataSource,
+  In,
+  IsNull,
+  LessThan,
+  Raw,
+  Repository,
+} from 'typeorm';
 
 import { ReadFeedPaginationRequestDto } from '@feed/dto/request/readFeedPagination.dto';
 import { SearchType } from '@feed/dto/request/searchFeed.dto';
@@ -76,7 +84,8 @@ export class FeedRepository extends Repository<Feed> {
         // 잔디 집계(DATE_FORMAT 기준)와 동일한 날짜 범위. 인덱스 활용을 위해 범위 조건 사용.
         ...(date && {
           createdAt: Raw(
-            (alias) => `${alias} >= :date AND ${alias} < DATE_ADD(:date, INTERVAL 1 DAY)`,
+            (alias) =>
+              `${alias} >= :date AND ${alias} < DATE_ADD(:date, INTERVAL 1 DAY)`,
             { date },
           ),
         }),
@@ -160,7 +169,10 @@ export class FeedRepository extends Repository<Feed> {
     blogId: number,
     isPublic: boolean,
   ) {
-    const result = await this.update({ id: feedId, blog: { id: blogId } }, { isPublic });
+    const result = await this.update(
+      { id: feedId, blog: { id: blogId } },
+      { isPublic },
+    );
 
     return result.affected ?? 0;
   }
@@ -169,13 +181,22 @@ export class FeedRepository extends Repository<Feed> {
     return this.exists({ where: { id: feedId, blog: { userId } } });
   }
 
-  async getBlogMetaByFeedId(
-    feedId: number,
-  ): Promise<{ id: number; userName: string; userId: number | null } | null> {
+  async getBlogMetaByFeedId(feedId: number): Promise<{
+    id: number;
+    userName: string;
+    owner: { id: number; userName: string; profileImage: string | null } | null;
+  } | null> {
     const feed = await this.findOne({
       where: { id: feedId },
-      relations: { blog: true },
-      select: { id: true, blog: { id: true, userName: true, userId: true } },
+      relations: { blog: { user: true } },
+      select: {
+        id: true,
+        blog: {
+          id: true,
+          userName: true,
+          user: { id: true, userName: true, profileImage: true },
+        },
+      },
     });
 
     if (!feed?.blog) return null;
@@ -183,7 +204,13 @@ export class FeedRepository extends Repository<Feed> {
     return {
       id: feed.blog.id,
       userName: feed.blog.userName,
-      userId: feed.blog.userId,
+      owner: feed.blog.user
+        ? {
+            id: feed.blog.user.id,
+            userName: feed.blog.user.userName,
+            profileImage: feed.blog.user.profileImage ?? null,
+          }
+        : null,
     };
   }
 

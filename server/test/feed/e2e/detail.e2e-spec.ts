@@ -6,9 +6,9 @@ import TestAgent from 'supertest/lib/agent';
 import { Activity } from '@activity/entity/activity.entity';
 import { ActivityRepository } from '@activity/repository/activity.repository';
 
-import { RedisService } from '@common/redis/redis.service';
-
 import { RssBlockRepository } from '@block/repository/rssBlock.repository';
+
+import { RedisService } from '@common/redis/redis.service';
 
 import { ManageFeedRequestDto } from '@feed/dto/request/manageFeed.dto';
 import { Feed } from '@feed/entity/feed.entity';
@@ -103,8 +103,8 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
       blog: {
         id: feedList[0].blog.id,
         name: feedList[0].blog.name,
-        ownerName: feedList[0].blog.userName,
-        isOwnerCertified: false,
+        userName: feedList[0].blog.userName,
+        owner: null,
         platform: 'etc',
         image: feedList[0].blog.blogImage ?? null,
       },
@@ -140,8 +140,8 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
       blog: {
         id: feedList[1].blog.id,
         name: feedList[1].blog.name,
-        ownerName: feedList[1].blog.userName,
-        isOwnerCertified: false,
+        userName: feedList[1].blog.userName,
+        owner: null,
         platform: feedList[1].blog.blogPlatform,
         image: feedList[1].blog.blogImage ?? null,
       },
@@ -329,7 +329,8 @@ describe(`GET ${URL}/{feedId} E2E Test`, () => {
           activityRepository.find({ where: { user: { id: user.id } } }),
         ]);
       } while (
-        (updatedUser.totalViews === user.totalViews || activities.length === 0) &&
+        (updatedUser.totalViews === user.totalViews ||
+          activities.length === 0) &&
         Date.now() < deadline
       );
 
