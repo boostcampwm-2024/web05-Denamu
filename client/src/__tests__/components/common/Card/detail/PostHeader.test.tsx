@@ -67,9 +67,8 @@ const data = {
   blog: {
     id: 42,
     name: "작성자",
-    ownerId: null,
-    ownerName: null,
-    isOwnerCertified: false,
+    userName: "",
+    owner: null,
     platform: "velog",
     image: null,
   },
@@ -161,7 +160,7 @@ describe("PostHeader", () => {
     mockCertifiedRss.mockReturnValue({ data: [{ id: 77, name: "other.log", blogPlatform: "velog" }] });
     const ownedData = {
       ...data,
-      blog: { ...data.blog, ownerId: 7, ownerName: "김개발", isOwnerCertified: true },
+      blog: { ...data.blog, owner: { id: 7, userName: "김개발", profileImage: null } },
     } as unknown as FeedDetail;
 
     const user = userEvent.setup();

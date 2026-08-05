@@ -45,9 +45,8 @@ export const mockFeedDetail: FeedDetail = {
   blog: {
     id: 1,
     name: "데나무",
-    ownerId: 1,
-    ownerName: "조민석",
-    isOwnerCertified: true,
+    userName: "조민석",
+    owner: { id: 1, userName: "조민석", profileImage: null },
     platform: "tistory",
     image: null,
   },

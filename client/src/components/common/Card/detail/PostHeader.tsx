@@ -40,13 +40,13 @@ export const PostHeader = React.memo(({ data }: PostHeaderProps) => {
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [showBlockConfirm, setShowBlockConfirm] = useState(false);
 
-  const { data: ownerOwnedRss = [] } = useCertifiedRss(data.blog.ownerId ?? 0);
+  const { data: ownerOwnedRss = [] } = useCertifiedRss(data.blog.owner?.id ?? 0);
   const otherOwnedRss = ownerOwnedRss.filter((rss) => rss.id !== data.blog.id);
 
   const handleBlock = async (block: { blockOwner: boolean; rssIds: number[] }) => {
     try {
       const rssTasks = [data.blog.id, ...block.rssIds].map((rssId) => blockRss(rssId));
-      const ownerTasks = block.blockOwner && data.blog.ownerId ? [blockUser(data.blog.ownerId)] : [];
+      const ownerTasks = block.blockOwner && data.blog.owner ? [blockUser(data.blog.owner.id)] : [];
       const results = await Promise.allSettled([...rssTasks, ...ownerTasks]);
       const failedCount = results.filter((result) => result.status === "rejected").length;
       if (failedCount > 0) {
@@ -89,7 +89,7 @@ export const PostHeader = React.memo(({ data }: PostHeaderProps) => {
       <span className="flex flex-col min-w-0">
         <span className="flex items-center gap-1.5">
           <span className="font-medium truncate">{data.blog.name}</span>
-          {data.blog.isOwnerCertified && (
+          {data.blog.owner && (
             <span className="flex items-center gap-0.5 text-xs text-blue-500" title="RSS 소유 인증 블로그">
               <CheckCircle2 className="w-4 h-4" />
               인증
@@ -97,9 +97,9 @@ export const PostHeader = React.memo(({ data }: PostHeaderProps) => {
           )}
         </span>
         <span className="flex gap-2 text-sm text-gray-400">
-          {data.blog.ownerName && (
+          {data.blog.userName && (
             <>
-              <span>{data.blog.ownerName}</span>
+              <span>{data.blog.userName}</span>
               <span>·</span>
             </>
           )}
@@ -168,7 +168,7 @@ export const PostHeader = React.memo(({ data }: PostHeaderProps) => {
         onOpenChange={setShowBlockConfirm}
         title="이 블로그를 차단하시겠습니까?"
         description="차단하면 이 블로그의 게시글이 더 이상 노출되지 않습니다."
-        owner={data.blog.ownerId ? { id: data.blog.ownerId, userName: data.blog.ownerName ?? "작성자" } : undefined}
+        owner={data.blog.owner ?? undefined}
         ownedRss={otherOwnedRss}
         onConfirm={handleBlock}
       />
