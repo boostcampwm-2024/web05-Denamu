@@ -19,6 +19,7 @@ export function renderDefaultOgHtml(): string {
     image: DEFAULT_OG_IMAGE,
     url: SITE_URL,
     type: 'website',
+    twitterCard: 'summary',
   });
 }
 
@@ -34,6 +35,7 @@ export function renderFeedOgHtml(feed: {
     image: feed.thumbnail ?? DEFAULT_OG_IMAGE,
     url: `${SITE_URL}/${feed.feedId}`,
     type: 'article',
+    twitterCard: 'summary_large_image',
   });
 }
 
@@ -49,6 +51,7 @@ export function renderProfileOgHtml(profile: {
     image: profile.profileImage ?? DEFAULT_OG_IMAGE,
     url: `${SITE_URL}/profile/${profile.userId}`,
     type: 'profile',
+    twitterCard: 'summary',
   });
 }
 
@@ -63,6 +66,7 @@ export function renderRssOgHtml(rss: {
     image: rss.blogImage ?? DEFAULT_OG_IMAGE,
     url: `${SITE_URL}/rss/${rss.rssId}`,
     type: 'website',
+    twitterCard: 'summary',
   });
 }
 
@@ -72,6 +76,7 @@ function renderOgHtml(params: {
   image: string;
   url: string;
   type: string;
+  twitterCard: 'summary' | 'summary_large_image';
 }): string {
   const title = escapeHtml(params.title);
   const description = escapeHtml(params.description);
@@ -89,7 +94,7 @@ function renderOgHtml(params: {
 <meta property="og:image" content="${image}" />
 <meta property="og:url" content="${url}" />
 <meta property="og:type" content="${type}" />
-<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:card" content="${params.twitterCard}" />
 <link rel="canonical" href="${url}" />
 </head>
 <body></body>
