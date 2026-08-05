@@ -3,8 +3,10 @@ import {
   Controller,
   Delete,
   Get,
+  Header,
   HttpCode,
   HttpStatus,
+  NotFoundException,
   Param,
   Patch,
   Post,
@@ -12,7 +14,7 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiExcludeEndpoint, ApiTags } from '@nestjs/swagger';
 
 import { Response } from 'express';
 
@@ -25,6 +27,10 @@ import {
 } from '@common/guard/jwt.guard';
 import { LoginThrottlerGuard } from '@common/guard/login-throttler.guard';
 import { ApiResponse } from '@common/response/common.response';
+import {
+  renderDefaultOgHtml,
+  renderProfileOgHtml,
+} from '@common/util/renderOgHtml';
 
 import { ApiCertificateUser } from '@user/api-docs/certificateUser.api-docs';
 import { ApiChangePassword } from '@user/api-docs/changePassword.api-docs';
@@ -271,5 +277,26 @@ export class UserController {
     return ApiResponse.responseWithNoContent(
       '비밀번호가 성공적으로 수정되었습니다.',
     );
+  }
+
+  @ApiExcludeEndpoint()
+  @Get('/:id/profile/og')
+  @HttpCode(HttpStatus.OK)
+  @Header('Content-Type', 'text/html; charset=utf-8')
+  async getUserProfileOg(@Param() paramDto: GetUserProfileParamRequestDto) {
+    try {
+      const profile = await this.userService.getUserProfile(paramDto.id);
+      return renderProfileOgHtml({
+        userId: paramDto.id,
+        userName: profile.userName,
+        introduction: profile.introduction,
+        profileImage: profile.profileImage,
+      });
+    } catch (err) {
+      if (err instanceof NotFoundException) {
+        return renderDefaultOgHtml();
+      }
+      throw err;
+    }
   }
 }

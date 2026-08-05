@@ -1,4 +1,5 @@
 import React, { useRef, useState, useCallback } from "react";
+import { Helmet } from "react-helmet";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 import { X } from "lucide-react";
@@ -56,6 +57,9 @@ export default function PostDetail() {
       style={{ paddingRight: scrollbarWidth }}
       onClick={handleClickOutside}
     >
+      <Helmet>
+        <title>{data.data.title} - 데나무</title>
+      </Helmet>
       <div ref={modalRef} className="bg-white rounded-md w-[90%] max-w-4xl h-auto relative">
         {!isHeaderVisible && (
           <FixedHeader title={data.data.title} onClose={closeDetail} scrollbarWidth={scrollbarWidth} />
