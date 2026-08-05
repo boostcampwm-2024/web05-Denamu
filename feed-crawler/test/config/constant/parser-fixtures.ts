@@ -89,6 +89,23 @@ export const ATOM_10_SINGLE_ENTRY = `<?xml version="1.0" encoding="UTF-8"?>
   </entry>
 </feed>`;
 
+// entity 참조가 많은 대용량 피드 (tistory/wordpress처럼 본문 전체가 escape된 HTML인 경우 재현)
+// fast-xml-parser 기본 상한(maxTotalExpansions/maxEntityCount: 1000)을 넘는 1500개 entity 참조 포함
+const ENTITY_HEAVY_DESCRIPTION = '&amp;&lt;'.repeat(750);
+export const RSS_20_ENTITY_HEAVY = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>대용량 블로그</title>
+    <link>https://rssfeed.com</link>
+    <item>
+      <title>entity가 많은 글</title>
+      <description>${ENTITY_HEAVY_DESCRIPTION}</description>
+      <link>https://rssfeed.com/entity-heavy</link>
+      <pubDate>${FIXED_DATE_UTC}</pubDate>
+    </item>
+  </channel>
+</rss>`;
+
 // 잘못된 형식의 XML 데이터
 export const INVALID_XML = `<?xml version="1.0"?>
 <invalid>
