@@ -73,6 +73,7 @@ export class GetFeedDetailResponseDto {
     example: {
       id: 1,
       name: 'example author',
+      ownerId: 1,
       ownerName: '조민석',
       isOwnerCertified: true,
       platform: 'example platform',
@@ -83,6 +84,7 @@ export class GetFeedDetailResponseDto {
   blog: {
     id: number;
     name: string;
+    ownerId: number | null;
     ownerName: string | null;
     isOwnerCertified: boolean;
     platform: string;
@@ -97,7 +99,8 @@ export class GetFeedDetailResponseDto {
 
   @ApiProperty({
     example: false,
-    description: '요청자가 해당 게시글의 RSS를 차단했는지 여부 (비로그인 시 false)',
+    description:
+      '요청자가 해당 게시글의 RSS를 차단했는지 여부 (비로그인 시 false)',
   })
   isBlocked: boolean;
 
@@ -127,6 +130,7 @@ export class GetFeedDetailResponseDto {
       blog: {
         id: blogMeta.id,
         name: feed.blogName,
+        ownerId: blogMeta.userId ?? null,
         ownerName: blogMeta.userName,
         isOwnerCertified: blogMeta.userId != null,
         platform: feed.blogPlatform,
