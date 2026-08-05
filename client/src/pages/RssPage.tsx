@@ -282,7 +282,7 @@ export default function RssPage() {
 
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const { toast } = useCustomToast();
-  const { mutate: blockRss } = useBlockRss();
+  const { mutate: blockRss, mutateAsync: blockRssAsync } = useBlockRss();
   const { mutate: reportRss, isPending: isReportPending } = useReportRss();
 
   const { data: rss, isLoading, isError } = useRssInfo(numericId);
@@ -341,13 +341,25 @@ export default function RssPage() {
     setShowBlockConfirm(false);
   };
 
-  const handleReport = (payload: CreateReportPayload) => {
+  const handleReport = (payload: CreateReportPayload, blockToo: boolean) => {
     reportRss(
       { rssId: rss.id, payload },
       {
-        onSuccess: () => {
+        onSuccess: async () => {
           setShowReportDialog(false);
-          toast({ title: "신고 접수 완료", description: "신고가 접수되었습니다." });
+          if (!blockToo) {
+            toast({ title: "신고 접수 완료", description: "신고가 접수되었습니다." });
+            return;
+          }
+          try {
+            await blockRssAsync(rss.id);
+            toast({ title: "신고 접수 완료", description: "신고가 접수되었고, 이 RSS를 차단했습니다." });
+          } catch {
+            toast({
+              title: "신고 접수 완료",
+              description: "신고는 접수되었지만 차단에 실패했습니다. 잠시 후 다시 시도해주세요.",
+            });
+          }
         },
         onError: (error) => {
           toast({ title: "신고 실패", description: getReportErrorMessage(error, "RSS를 찾을 수 없습니다.") });
@@ -461,6 +473,9 @@ export default function RssPage() {
           onOpenChange={setShowReportDialog}
           title={`${rss.name} RSS 신고`}
           isPending={isReportPending}
+          withBlockOption
+          blockLabel="이 RSS도 함께 차단하기"
+          blockDescription="차단하면 이 RSS의 게시글이 더 이상 노출되지 않습니다."
           onSubmit={handleReport}
         />
       </Layout>
