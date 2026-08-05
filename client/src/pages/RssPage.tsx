@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
+import axios from "axios";
 import {
   Ban,
   CalendarClock,
@@ -52,6 +53,7 @@ import { useOwnedRssFeeds, useSetFeedVisibility } from "@/hooks/queries/useRssCe
 import { useRssActivities, useRssActivityYears, useRssInfo, useRssPageFeeds } from "@/hooks/queries/useRssPage.ts";
 
 import { formatDate } from "@/utils/date.ts";
+import { getReportErrorMessage } from "@/utils/reportError";
 
 import { useAuthStore } from "@/store/useAuthStore";
 import { RssInfo } from "@/types/profile.ts";
@@ -324,13 +326,16 @@ export default function RssPage() {
 
   const feeds = feedData?.pages.flatMap((page) => page.result) ?? [];
 
+  const extractErrorMessage = (error: unknown, fallback: string) =>
+    (axios.isAxiosError(error) && (error.response?.data as { message?: string })?.message) || fallback;
+
   const handleBlock = () => {
     blockRss(rss.id, {
       onSuccess: () => {
         toast({ title: "차단 완료", description: `${rss.name} RSS를 차단했습니다.` });
       },
-      onError: () => {
-        toast({ title: "차단 실패", description: "잠시 후 다시 시도해주세요." });
+      onError: (error) => {
+        toast({ title: "차단 실패", description: extractErrorMessage(error, "잠시 후 다시 시도해주세요.") });
       },
     });
     setShowBlockConfirm(false);
@@ -344,8 +349,8 @@ export default function RssPage() {
           setShowReportDialog(false);
           toast({ title: "신고 접수 완료", description: "신고가 접수되었습니다." });
         },
-        onError: () => {
-          toast({ title: "신고 실패", description: "잠시 후 다시 시도해주세요." });
+        onError: (error) => {
+          toast({ title: "신고 실패", description: getReportErrorMessage(error, "RSS를 찾을 수 없습니다.") });
         },
       }
     );

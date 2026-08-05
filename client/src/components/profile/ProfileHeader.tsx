@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import axios from "axios";
 import { MoreVertical, Ban, FileText, Flag, Users } from "lucide-react";
 
 import { ReportDialog } from "@/components/common/ReportDialog";
@@ -29,6 +30,8 @@ import { useCustomToast } from "@/hooks/common/useCustomToast.ts";
 import { useBlockRss, useBlockUser } from "@/hooks/queries/useBlock.ts";
 import { useCertifiedRss } from "@/hooks/queries/useProfile.ts";
 import { useReportUser } from "@/hooks/queries/useReport";
+
+import { getReportErrorMessage } from "@/utils/reportError";
 
 import { CreateReportPayload } from "@/types/report";
 
@@ -69,6 +72,9 @@ export const ProfileHeader = ({ name, email, profileImage, introduction, blockab
     setSelectedRssIds(allSelected ? new Set() : new Set(ownedRss.map((rss) => rss.id)));
   };
 
+  const extractErrorMessage = (error: unknown, fallback: string) =>
+    (axios.isAxiosError(error) && (error.response?.data as { message?: string })?.message) || fallback;
+
   const handleBlock = async () => {
     if (!blockableUserId) return;
     const rssIdsToBlock = [...selectedRssIds];
@@ -87,8 +93,8 @@ export const ProfileHeader = ({ name, email, profileImage, introduction, blockab
       } else {
         toast({ title: "차단 완료", description: `${name}님을 차단했습니다.` });
       }
-    } catch {
-      toast({ title: "차단 실패", description: "잠시 후 다시 시도해주세요." });
+    } catch (error) {
+      toast({ title: "차단 실패", description: extractErrorMessage(error, "잠시 후 다시 시도해주세요.") });
     } finally {
       setSelectedRssIds(new Set());
     }
@@ -115,8 +121,8 @@ export const ProfileHeader = ({ name, email, profileImage, introduction, blockab
             });
           }
         },
-        onError: () => {
-          toast({ title: "신고 실패", description: "잠시 후 다시 시도해주세요." });
+        onError: (error) => {
+          toast({ title: "신고 실패", description: getReportErrorMessage(error, "유저를 찾을 수 없습니다.") });
         },
       }
     );

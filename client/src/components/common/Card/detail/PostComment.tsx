@@ -29,6 +29,7 @@ import {
 import { useUserProfile } from "@/hooks/queries/useProfile";
 import { useReportComment } from "@/hooks/queries/useReport";
 
+import { getReportErrorMessage } from "@/utils/reportError";
 import { timeAgo } from "@/utils/timeago";
 
 import { useAuthStore } from "@/store/useAuthStore";
@@ -168,8 +169,8 @@ export default function PostComment({
             });
           }
         },
-        onError: () => {
-          toast({ title: "신고 실패", description: "잠시 후 다시 시도해주세요." });
+        onError: (error) => {
+          toast({ title: "신고 실패", description: getReportErrorMessage(error, "댓글을 찾을 수 없습니다.") });
         },
       }
     );

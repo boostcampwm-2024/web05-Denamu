@@ -19,6 +19,7 @@ import { useBlockRss } from "@/hooks/queries/useBlock";
 import { useReportFeed } from "@/hooks/queries/useReport";
 
 import { detailFormatDate } from "@/utils/date";
+import { getReportErrorMessage } from "@/utils/reportError";
 
 import { useAuthStore } from "@/store/useAuthStore";
 import { FeedDetail } from "@/types/post";
@@ -55,8 +56,8 @@ export const PostHeader = React.memo(({ data }: PostHeaderProps) => {
             });
           }
         },
-        onError: () => {
-          toast({ title: "신고 실패", description: "잠시 후 다시 시도해주세요." });
+        onError: (error) => {
+          toast({ title: "신고 실패", description: getReportErrorMessage(error, "게시글을 찾을 수 없습니다.") });
         },
       }
     );
