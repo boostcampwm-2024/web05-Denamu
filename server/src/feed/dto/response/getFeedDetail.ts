@@ -2,6 +2,8 @@ import { ApiProperty } from '@nestjs/swagger';
 
 import { FeedView } from '@feed/entity/feed.entity';
 
+import { RssOwnerDto } from '@rss/dto/response/getRssInfo.dto';
+
 export class GetFeedDetailResponseDto {
   @ApiProperty({
     example: 1,
@@ -73,9 +75,8 @@ export class GetFeedDetailResponseDto {
     example: {
       id: 1,
       name: 'example author',
-      ownerId: 1,
-      ownerName: '조민석',
-      isOwnerCertified: true,
+      userName: '조민석',
+      owner: { id: 1, userName: '조민석', profileImage: null },
       platform: 'example platform',
       image: 'https://example.com/profile.png',
     },
@@ -84,9 +85,8 @@ export class GetFeedDetailResponseDto {
   blog: {
     id: number;
     name: string;
-    ownerId: number | null;
-    ownerName: string | null;
-    isOwnerCertified: boolean;
+    userName: string;
+    owner: RssOwnerDto | null;
     platform: string;
     image: string | null;
   };
@@ -111,7 +111,15 @@ export class GetFeedDetailResponseDto {
   static toResponseDto(
     feed: FeedView,
     isOwner = false,
-    blogMeta: { id: number; userName: string; userId: number | null },
+    blogMeta: {
+      id: number;
+      userName: string;
+      owner: {
+        id: number;
+        userName: string;
+        profileImage: string | null;
+      } | null;
+    },
     isSubscribed = false,
     isBlocked = false,
   ) {
@@ -130,9 +138,8 @@ export class GetFeedDetailResponseDto {
       blog: {
         id: blogMeta.id,
         name: feed.blogName,
-        ownerId: blogMeta.userId ?? null,
-        ownerName: blogMeta.userName,
-        isOwnerCertified: blogMeta.userId != null,
+        userName: blogMeta.userName,
+        owner: blogMeta.owner,
         platform: feed.blogPlatform,
         image: feed.blogImage ?? null,
       },

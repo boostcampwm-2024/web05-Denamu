@@ -27,9 +27,9 @@ export class CommentListener {
     if (parentAuthorId === null) {
       try {
         const blogMeta = await this.feedRepository.getBlogMetaByFeedId(feedId);
-        if (blogMeta?.userId && blogMeta.userId !== commenterUserId) {
+        if (blogMeta?.owner && blogMeta.owner.id !== commenterUserId) {
           await this.notificationService.upsertCommentNotification(
-            blogMeta.userId,
+            blogMeta.owner.id,
             feedId,
           );
         }
@@ -58,10 +58,10 @@ export class CommentListener {
   async handleCommentDeleted({ feedId, parentAuthorId }: CommentDeletedEvent) {
     try {
       const blogMeta = await this.feedRepository.getBlogMetaByFeedId(feedId);
-      if (blogMeta?.userId) {
+      if (blogMeta?.owner) {
         await this.notificationService.removeCommentNotificationIfEmpty(
           feedId,
-          blogMeta.userId,
+          blogMeta.owner.id,
         );
       }
     } catch (error) {
