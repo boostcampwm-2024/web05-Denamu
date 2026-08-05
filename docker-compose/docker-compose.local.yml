@@ -18,6 +18,7 @@ services:
       - app
     volumes:
       - ../nginx/logs:/var/log/nginx
+      - ../objects:/var/web05-Denamu/objects
     environment:
       TZ: 'Asia/Seoul'
 
@@ -40,6 +41,7 @@ services:
         condition: service_healthy
     volumes:
       - ../server/logs:/var/web05-Denamu/server/logs
+      - ../objects:/app/objects
     environment:
       NODE_ENV: 'LOCAL'
       TZ: 'Asia/Seoul'
