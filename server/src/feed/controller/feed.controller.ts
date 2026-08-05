@@ -2,8 +2,10 @@ import {
   Controller,
   Get,
   Head,
+  Header,
   HttpCode,
   HttpStatus,
+  NotFoundException,
   Param,
   Post,
   Query,
@@ -13,7 +15,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiExcludeEndpoint, ApiTags } from '@nestjs/swagger';
 
 import { Request, Response } from 'express';
 import { Observable } from 'rxjs';
@@ -21,6 +23,10 @@ import { Observable } from 'rxjs';
 import { CurrentUser } from '@common/decorator/current-user.decorator';
 import { JwtGuard, OptionalJwtGuard, Payload } from '@common/guard/jwt.guard';
 import { ApiResponse } from '@common/response/common.response';
+import {
+  renderDefaultOgHtml,
+  renderFeedOgHtml,
+} from '@common/util/renderOgHtml';
 
 import { ApiDeleteCheckFeed } from '@feed/api-docs/deleteCheckFeed.api-docs';
 import { ApiGetFeedDetail } from '@feed/api-docs/getFeedDetail.api-docs';
@@ -180,5 +186,29 @@ export class FeedController {
       '요청이 성공적으로 처리되었습니다.',
       await this.feedService.getFeedDetail(feedDetailRequestDto, user?.id),
     );
+  }
+
+  @ApiExcludeEndpoint()
+  @Get(':feedId/og')
+  @HttpCode(HttpStatus.OK)
+  @Header('Content-Type', 'text/html; charset=utf-8')
+  async getFeedOg(@Param() feedDetailRequestDto: ManageFeedRequestDto) {
+    try {
+      const feed = await this.feedService.getFeedDetail(
+        feedDetailRequestDto,
+        undefined,
+      );
+      return renderFeedOgHtml({
+        feedId: feed.id,
+        title: feed.title,
+        summary: feed.summary,
+        thumbnail: feed.thumbnail,
+      });
+    } catch (err) {
+      if (err instanceof NotFoundException) {
+        return renderDefaultOgHtml();
+      }
+      throw err;
+    }
   }
 }
