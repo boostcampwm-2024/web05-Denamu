@@ -24,6 +24,11 @@ export abstract class BaseFeedParser {
     attributeNamePrefix: '@_',
     parseAttributeValue: true,
     trimValues: true,
+    processEntities: {
+      maxEntityCount: 200000,
+      maxTotalExpansions: 200000,
+      maxExpandedLength: 5_000_000,
+    },
   });
   protected readonly parserUtil: ParserUtil;
   protected readonly notifier: Notifier;
