@@ -1,5 +1,6 @@
 export enum FileUploadType {
   PROFILE_IMAGE = 'PROFILE_IMAGE',
+  BOARD_IMAGE = 'BOARD_IMAGE',
   // 추후 추가될 타입들 명시
 }
 

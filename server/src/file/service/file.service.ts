@@ -30,16 +30,7 @@ export class FileService {
     uploadType: FileUploadType,
     userId: number,
   ) {
-    const today = this.getDateString();
-    const targetDir = path.join(this.basePath, uploadType, today);
-
-    await this.ensureDirectory(targetDir);
-
-    const ext = path.extname(file.originalname);
-    const fileName = `${uuid.v4()}${ext}`;
-    const filePath = path.join(targetDir, fileName);
-
-    await fs.writeFile(filePath, file.buffer);
+    const filePath = await this.writeToDisk(file, uploadType);
 
     const { originalname, mimetype, size } = file;
     const savedFile = await this.fileRepository.save({
@@ -52,6 +43,32 @@ export class FileService {
     const accessUrl = this.generateAccessUrl(filePath);
 
     return UploadFileResponseDto.toResponseDto(savedFile, accessUrl);
+  }
+
+  async saveWithoutOwner(
+    file: Express.Multer.File,
+    uploadType: FileUploadType,
+  ): Promise<string> {
+    const filePath = await this.writeToDisk(file, uploadType);
+    return this.generateAccessUrl(filePath);
+  }
+
+  private async writeToDisk(
+    file: Express.Multer.File,
+    uploadType: FileUploadType,
+  ): Promise<string> {
+    const today = this.getDateString();
+    const targetDir = path.join(this.basePath, uploadType, today);
+
+    await this.ensureDirectory(targetDir);
+
+    const ext = path.extname(file.originalname);
+    const fileName = `${uuid.v4()}${ext}`;
+    const filePath = path.join(targetDir, fileName);
+
+    await fs.writeFile(filePath, file.buffer);
+
+    return filePath;
   }
 
   private async ensureDirectory(dir: string) {
@@ -103,6 +120,16 @@ export class FileService {
 
   async getFileInfo(id: number): Promise<File> {
     return this.findById(id);
+  }
+
+  async deleteUntracked(accessUrl: string): Promise<void> {
+    const filePath = this.resolveInternalPath(accessUrl);
+    try {
+      await access(filePath);
+      await unlink(filePath);
+    } catch {
+      this.logger.warn(`파일 삭제 실패: ${filePath}`, 'FileService');
+    }
   }
 
   async deleteByPath(accessUrl: string): Promise<void> {
