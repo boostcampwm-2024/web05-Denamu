@@ -3,10 +3,9 @@ import { FileText, Sparkles } from "lucide-react";
 import type { FeatureItem } from "@/types/about";
 import type { DayInfo, WeekInfo } from "@/types/activity";
 import type { ChildAdmin } from "@/types/admin";
+import type { BoardDetail, BoardPage, BoardSummary } from "@/types/board";
 import type { ChartPlatform, ChartType } from "@/types/chart";
 import type { AdminChatRoom, ChatType } from "@/types/chat";
-import type { BoardDetail, BoardPage, BoardSummary } from "@/types/board";
-import type { QnaPage, QnaSummary, QnaThread } from "@/types/qna";
 import type { FeedDetail, FeedList } from "@/types/post";
 import type {
   BlockedRss,
@@ -19,6 +18,7 @@ import type {
   User,
   UserProfile,
 } from "@/types/profile";
+import type { QnaPage, QnaSummary, QnaThread } from "@/types/qna";
 import type { ReportItem } from "@/types/report";
 import type { AdminRssData, RecentRss } from "@/types/rss";
 import type { RssSearchResult, SearchResult, UserSearchResult } from "@/types/search";
@@ -45,6 +45,7 @@ export const mockFeedDetail: FeedDetail = {
   blog: {
     id: 1,
     name: "데나무",
+    ownerId: 1,
     ownerName: "조민석",
     isOwnerCertified: true,
     platform: "tistory",

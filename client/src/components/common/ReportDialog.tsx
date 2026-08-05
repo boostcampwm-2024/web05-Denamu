@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 
 import { REPORT_REASON_LABELS } from "@/constants/report";
@@ -23,40 +22,26 @@ interface ReportDialogProps {
   onOpenChange: (open: boolean) => void;
   title: string;
   isPending?: boolean;
-  withBlockOption?: boolean;
-  blockLabel?: string;
-  blockDescription?: string;
-  onSubmit: (payload: CreateReportPayload, blockToo: boolean) => void;
+  onSubmit: (payload: CreateReportPayload) => void;
 }
 
 const REPORT_REASON_OPTIONS = Object.entries(REPORT_REASON_LABELS) as [ReportReason, string][];
 
-export function ReportDialog({
-  open,
-  onOpenChange,
-  title,
-  isPending = false,
-  withBlockOption = false,
-  blockLabel = "이 유저도 함께 차단하기",
-  blockDescription = "차단하면 댓글, 프로필 페이지 열람이 제한됩니다.",
-  onSubmit,
-}: ReportDialogProps) {
+export function ReportDialog({ open, onOpenChange, title, isPending = false, onSubmit }: ReportDialogProps) {
   const [reason, setReason] = useState<ReportReason | "">("");
   const [detail, setDetail] = useState("");
-  const [blockToo, setBlockToo] = useState(false);
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
       setReason("");
       setDetail("");
-      setBlockToo(false);
     }
     onOpenChange(nextOpen);
   };
 
   const handleSubmit = () => {
     if (!reason || isPending) return;
-    onSubmit({ reason, detail: detail.trim() || undefined }, blockToo);
+    onSubmit({ reason, detail: detail.trim() || undefined });
   };
 
   return (
@@ -97,16 +82,6 @@ export function ReportDialog({
               />
               <span className="self-end text-xs text-muted-foreground">{detail.length}/500</span>
             </div>
-
-            {withBlockOption && (
-              <div className="flex items-center justify-between gap-3 p-3 border border-gray-100 rounded-lg">
-                <div className="flex flex-col gap-0.5">
-                  <Label htmlFor="report-block-too">{blockLabel}</Label>
-                  <span className="text-xs text-muted-foreground">{blockDescription}</span>
-                </div>
-                <Switch id="report-block-too" checked={blockToo} onCheckedChange={setBlockToo} />
-              </div>
-            )}
           </div>
 
           <DialogFooter>

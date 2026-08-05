@@ -26,6 +26,7 @@ export interface FeedDetail extends Omit<FeedBase, "blog"> {
   blog: {
     id: number;
     name: string;
+    ownerId: number | null;
     ownerName: string | null;
     isOwnerCertified: boolean;
     platform: string;
