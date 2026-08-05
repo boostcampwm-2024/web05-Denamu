@@ -1,7 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { lucideProxy } from "@/__tests__/__mocks__/external/lucide-proxy.tsx";
-
 import PostComment from "@/components/common/Card/detail/PostComment.tsx";
 
 import { FeedCommentType } from "@/types/post.ts";
@@ -12,8 +10,9 @@ const createComment = vi.fn();
 const updateComment = vi.fn();
 const deleteComment = vi.fn();
 const mockBlockUser = vi.fn().mockResolvedValue(undefined);
-const mockReportComment = vi.fn((_vars: unknown, options?: { onSuccess?: () => void; onError?: () => void }) =>
-  options?.onSuccess?.()
+const mockToast = vi.fn();
+const mockReportComment = vi.fn(
+  (_vars: unknown, options?: { onSuccess?: () => void; onError?: (error: unknown) => void }) => options?.onSuccess?.()
 );
 let isAuthenticated: boolean;
 let comments: FeedCommentType[];
@@ -38,10 +37,14 @@ vi.mock("@/hooks/queries/useReport", () => ({
 vi.mock("@/hooks/queries/useBlock", () => ({
   useBlockUser: () => ({ mutateAsync: mockBlockUser }),
 }));
+vi.mock("@/hooks/common/useCustomToast", () => ({ useCustomToast: () => ({ toast: mockToast }) }));
 vi.mock("@/hooks/common/useNavigateToProfile", () => ({ useNavigateToProfile: () => vi.fn() }));
 vi.mock("@/utils/timeago", () => ({ timeAgo: () => "방금 전" }));
 vi.mock("@/components/auth/AuthSignInForm", () => ({ AuthSignInForm: () => <div data-testid="signin-form" /> }));
-vi.mock("lucide-react", () => lucideProxy());
+vi.mock("lucide-react", async () => {
+  const { lucideProxy } = await import("@/__tests__/__mocks__/external/lucide-proxy.tsx");
+  return lucideProxy();
+});
 vi.mock("@/components/ui/select", () => {
   const pass = ({ children }: { children: React.ReactNode }) => <>{children}</>;
   return {
@@ -252,5 +255,56 @@ describe("PostComment", () => {
     await user.click(screen.getByRole("button", { name: "신고하기" }));
 
     await waitFor(() => expect(mockBlockUser).toHaveBeenCalledWith(2));
+  });
+
+  it("이미 신고한 댓글을 다시 신고하면 중복 신고 안내 토스트를 보여준다", async () => {
+    comments = [makeComment(1, { user: { id: 2, userName: "타인", profileImage: null } })];
+    mockReportComment.mockImplementationOnce((_vars, options) =>
+      options?.onError?.({
+        isAxiosError: true,
+        response: { status: 409, data: { message: "이미 신고한 대상입니다." } },
+      })
+    );
+    render(<PostComment feedId={10} />);
+
+    const user = await openReportModal();
+    await user.click(screen.getByText("스팸/광고"));
+    await user.click(screen.getByRole("button", { name: "신고하기" }));
+
+    expect(mockToast).toHaveBeenCalledWith({ title: "신고 실패", description: "이미 신청된 신고입니다." });
+  });
+
+  it("존재하지 않는 댓글을 신고하면 찾을 수 없다는 토스트를 보여준다", async () => {
+    comments = [makeComment(1, { user: { id: 2, userName: "타인", profileImage: null } })];
+    mockReportComment.mockImplementationOnce((_vars, options) =>
+      options?.onError?.({
+        isAxiosError: true,
+        response: { status: 404, data: { message: "존재하지 않는 댓글입니다." } },
+      })
+    );
+    render(<PostComment feedId={10} />);
+
+    const user = await openReportModal();
+    await user.click(screen.getByText("스팸/광고"));
+    await user.click(screen.getByRole("button", { name: "신고하기" }));
+
+    expect(mockToast).toHaveBeenCalledWith({ title: "신고 실패", description: "댓글을 찾을 수 없습니다." });
+  });
+
+  it("그 외 오류로 신고에 실패하면 서버 오류 토스트를 보여준다", async () => {
+    comments = [makeComment(1, { user: { id: 2, userName: "타인", profileImage: null } })];
+    mockReportComment.mockImplementationOnce((_vars, options) =>
+      options?.onError?.({ isAxiosError: true, response: { status: 500, data: { message: "Internal Server Error" } } })
+    );
+    render(<PostComment feedId={10} />);
+
+    const user = await openReportModal();
+    await user.click(screen.getByText("스팸/광고"));
+    await user.click(screen.getByRole("button", { name: "신고하기" }));
+
+    expect(mockToast).toHaveBeenCalledWith({
+      title: "신고 실패",
+      description: "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+    });
   });
 });

@@ -1,7 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { lucideProxy } from "@/__tests__/__mocks__/external/lucide-proxy.tsx";
-
 import { ProfileHeader } from "@/components/profile/ProfileHeader.tsx";
 
 import { render, screen, waitFor } from "@testing-library/react";
@@ -12,11 +10,14 @@ const mockBlockUser = vi.fn().mockResolvedValue(undefined);
 const mockBlockRss = vi.fn().mockResolvedValue(undefined);
 type RssRow = { id: number; name: string; blogPlatform: string };
 const mockCertifiedRss = vi.fn<() => { data: RssRow[] }>(() => ({ data: [] }));
-const mockReportUser = vi.fn((_vars: unknown, options?: { onSuccess?: () => void; onError?: () => void }) =>
-  options?.onSuccess?.()
+const mockReportUser = vi.fn(
+  (_vars: unknown, options?: { onSuccess?: () => void; onError?: (error: unknown) => void }) => options?.onSuccess?.()
 );
 
-vi.mock("lucide-react", () => lucideProxy());
+vi.mock("lucide-react", async () => {
+  const { lucideProxy } = await import("@/__tests__/__mocks__/external/lucide-proxy.tsx");
+  return lucideProxy();
+});
 vi.mock("@/hooks/common/useCustomToast.ts", () => ({ useCustomToast: () => ({ toast: mockToast }) }));
 vi.mock("@/hooks/queries/useBlock.ts", () => ({
   useBlockUser: () => ({ mutateAsync: mockBlockUser }),
@@ -207,5 +208,53 @@ describe("ProfileHeader", () => {
     await user.click(screen.getByRole("button", { name: "신고하기" }));
 
     await waitFor(() => expect(mockBlockUser).toHaveBeenCalledWith(2));
+  });
+
+  it("이미 신고한 유저를 다시 신고하면 중복 신고 안내 토스트를 보여준다", async () => {
+    mockReportUser.mockImplementationOnce((_vars, options) =>
+      options?.onError?.({
+        isAxiosError: true,
+        response: { status: 409, data: { message: "이미 신고한 대상입니다." } },
+      })
+    );
+    render(<ProfileHeader name="민석" email="" profileImage={null} introduction={null} blockableUserId={2} />);
+
+    const user = await openReportModal();
+    await user.click(screen.getByText("스팸/광고"));
+    await user.click(screen.getByRole("button", { name: "신고하기" }));
+
+    expect(mockToast).toHaveBeenCalledWith({ title: "신고 실패", description: "이미 신청된 신고입니다." });
+  });
+
+  it("존재하지 않는 유저를 신고하면 찾을 수 없다는 토스트를 보여준다", async () => {
+    mockReportUser.mockImplementationOnce((_vars, options) =>
+      options?.onError?.({
+        isAxiosError: true,
+        response: { status: 404, data: { message: "존재하지 않는 유저입니다." } },
+      })
+    );
+    render(<ProfileHeader name="민석" email="" profileImage={null} introduction={null} blockableUserId={2} />);
+
+    const user = await openReportModal();
+    await user.click(screen.getByText("스팸/광고"));
+    await user.click(screen.getByRole("button", { name: "신고하기" }));
+
+    expect(mockToast).toHaveBeenCalledWith({ title: "신고 실패", description: "유저를 찾을 수 없습니다." });
+  });
+
+  it("그 외 오류로 신고에 실패하면 서버 오류 토스트를 보여준다", async () => {
+    mockReportUser.mockImplementationOnce((_vars, options) =>
+      options?.onError?.({ isAxiosError: true, response: { status: 500, data: { message: "Internal Server Error" } } })
+    );
+    render(<ProfileHeader name="민석" email="" profileImage={null} introduction={null} blockableUserId={2} />);
+
+    const user = await openReportModal();
+    await user.click(screen.getByText("스팸/광고"));
+    await user.click(screen.getByRole("button", { name: "신고하기" }));
+
+    expect(mockToast).toHaveBeenCalledWith({
+      title: "신고 실패",
+      description: "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+    });
   });
 });
