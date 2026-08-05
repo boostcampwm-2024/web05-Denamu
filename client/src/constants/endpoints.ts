@@ -130,6 +130,7 @@ export const BOARD = {
   DETAIL: (id: number) => `/api/boards/${id}`,
   ADMIN_LIST: "/api/admins/boards",
   ADMIN_DETAIL: (id: number) => `/api/admins/boards/${id}`,
+  ADMIN_UPLOAD_IMAGE: "/api/admins/boards/images",
 };
 
 export const QNA = {

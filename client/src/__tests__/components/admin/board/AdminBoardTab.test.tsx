@@ -1,9 +1,9 @@
+import { forwardRef, useImperativeHandle } from "react";
 import type { ReactNode } from "react";
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { lucideProxy } from "@/__tests__/__mocks__/external/lucide-proxy.tsx";
-
 import AdminBoardTab from "@/components/admin/board/AdminBoardTab.tsx";
 
 import { BoardDetail, BoardPage, BoardSummary } from "@/types/board";
@@ -16,6 +16,16 @@ const updateMutateMock = vi.hoisted(() => vi.fn());
 const deleteMutateMock = vi.hoisted(() => vi.fn());
 const toastMock = vi.hoisted(() => vi.fn());
 const getDetailMock = vi.hoisted(() => vi.fn());
+const uploadImageMock = vi.hoisted(() => vi.fn());
+
+// react-quill-new mock의 fake 에디터: toolbar/uploader 핸들러 등록 여부를 테스트에서 검증하기 위한 스파이 모음.
+const toolbarAddHandlerMock = vi.hoisted(() => vi.fn());
+const editorInsertEmbedMock = vi.hoisted(() => vi.fn());
+const editorSetSelectionMock = vi.hoisted(() => vi.fn());
+const editorGetSelectionMock = vi.hoisted(() => vi.fn(() => ({ index: 5 })));
+const uploaderModule = vi.hoisted(
+  () => ({ options: {} }) as { options: { handler?: (range: { index: number; length: number }, files: File[]) => void } }
+);
 
 vi.mock("lucide-react", () => lucideProxy());
 
@@ -31,12 +41,22 @@ vi.mock("@/hooks/queries/useAdminBoards", () => ({
 }));
 
 vi.mock("@/api/services/admin/board", () => ({
-  adminBoard: { getDetail: getDetailMock },
+  adminBoard: { getDetail: getDetailMock, uploadImage: uploadImageMock },
 }));
 
 vi.mock("react-quill-new", () => ({
-  default: ({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-    <textarea aria-label="본문" value={value} onChange={(e) => onChange(e.target.value)} />
+  default: forwardRef<{ getEditor: () => unknown }, { value: string; onChange: (v: string) => void }>(
+    ({ value, onChange }, ref) => {
+      useImperativeHandle(ref, () => ({
+        getEditor: () => ({
+          getModule: (name: string) => (name === "toolbar" ? { addHandler: toolbarAddHandlerMock } : uploaderModule),
+          insertEmbed: editorInsertEmbedMock,
+          setSelection: editorSetSelectionMock,
+          getSelection: editorGetSelectionMock,
+        }),
+      }));
+      return <textarea aria-label="본문" value={value} onChange={(e) => onChange(e.target.value)} />;
+    }
   ),
 }));
 
@@ -100,6 +120,7 @@ describe("AdminBoardTab", () => {
     createMutateMock.mockImplementation((_payload, opts) => opts?.onSuccess?.());
     updateMutateMock.mockImplementation((_vars, opts) => opts?.onSuccess?.());
     deleteMutateMock.mockImplementation((_id, opts) => opts?.onSuccess?.());
+    uploaderModule.options.handler = undefined;
   });
 
   it("로딩 중이면 로딩 문구를 표시한다", () => {
@@ -285,5 +306,72 @@ describe("AdminBoardTab", () => {
 
     expect(deleteMutateMock).toHaveBeenCalledWith(11, expect.any(Object));
     expect(toastMock).toHaveBeenCalledWith(expect.objectContaining({ description: "삭제를 완료했습니다." }));
+  });
+
+  it("에디터 이미지 툴바 버튼으로 파일 선택 시 업로드 후 커서 위치에 이미지를 삽입한다", async () => {
+    uploadImageMock.mockResolvedValue("https://cdn.example.com/board/a.png");
+    renderTab();
+    fireEvent.click(screen.getByRole("button", { name: "공지사항 작성" }));
+
+    await waitFor(() => expect(toolbarAddHandlerMock).toHaveBeenCalledWith("image", expect.any(Function)));
+    const imageButtonHandler = toolbarAddHandlerMock.mock.calls[0][1] as () => void;
+
+    const createElementSpy = vi.spyOn(document, "createElement");
+    imageButtonHandler();
+    const input = createElementSpy.mock.results.at(-1)?.value as HTMLInputElement;
+    createElementSpy.mockRestore();
+
+    const file = new File(["binary"], "photo.png", { type: "image/png" });
+    Object.defineProperty(input, "files", { value: [file] });
+    input.dispatchEvent(new Event("change"));
+
+    await waitFor(() => expect(uploadImageMock).toHaveBeenCalledWith(file));
+    expect(editorInsertEmbedMock).toHaveBeenCalledWith(5, "image", "https://cdn.example.com/board/a.png", "user");
+    expect(editorSetSelectionMock).toHaveBeenCalledWith(6, 0, "user");
+  });
+
+  it("이미지 업로드 실패 시 오류 toast를 띄우고 삽입하지 않는다", async () => {
+    uploadImageMock.mockRejectedValue(new Error("network error"));
+    renderTab();
+    fireEvent.click(screen.getByRole("button", { name: "공지사항 작성" }));
+
+    await waitFor(() => expect(toolbarAddHandlerMock).toHaveBeenCalledWith("image", expect.any(Function)));
+    const imageButtonHandler = toolbarAddHandlerMock.mock.calls[0][1] as () => void;
+
+    const createElementSpy = vi.spyOn(document, "createElement");
+    imageButtonHandler();
+    const input = createElementSpy.mock.results.at(-1)?.value as HTMLInputElement;
+    createElementSpy.mockRestore();
+
+    const file = new File(["binary"], "photo.png", { type: "image/png" });
+    Object.defineProperty(input, "files", { value: [file] });
+    input.dispatchEvent(new Event("change"));
+
+    await waitFor(() =>
+      expect(toastMock).toHaveBeenCalledWith(
+        expect.objectContaining({ description: "이미지 업로드에 실패했습니다.", variant: "destructive" })
+      )
+    );
+    expect(editorInsertEmbedMock).not.toHaveBeenCalled();
+  });
+
+  it("붙여넣기/드래그로 여러 이미지를 넣으면 각각 업로드 후 같은 위치에 삽입한다", async () => {
+    uploadImageMock.mockResolvedValueOnce("https://cdn.example.com/board/1.png");
+    uploadImageMock.mockResolvedValueOnce("https://cdn.example.com/board/2.png");
+    renderTab();
+    fireEvent.click(screen.getByRole("button", { name: "공지사항 작성" }));
+
+    await waitFor(() => expect(uploaderModule.options.handler).toBeTypeOf("function"));
+
+    const file1 = new File(["a"], "a.png", { type: "image/png" });
+    const file2 = new File(["b"], "b.png", { type: "image/png" });
+    uploaderModule.options.handler?.({ index: 2, length: 0 }, [file1, file2]);
+
+    await waitFor(() => {
+      expect(uploadImageMock).toHaveBeenCalledWith(file1);
+      expect(uploadImageMock).toHaveBeenCalledWith(file2);
+    });
+    expect(editorInsertEmbedMock).toHaveBeenCalledWith(2, "image", "https://cdn.example.com/board/1.png", "user");
+    expect(editorInsertEmbedMock).toHaveBeenCalledWith(2, "image", "https://cdn.example.com/board/2.png", "user");
   });
 });

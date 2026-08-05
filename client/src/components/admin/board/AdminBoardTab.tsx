@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 
@@ -115,6 +115,7 @@ export default function AdminBoardTab() {
   const [loadingEditId, setLoadingEditId] = useState<number | null>(null);
   const { toast } = useCustomToast();
   const queryClient = useQueryClient();
+  const quillRef = useRef<ReactQuill>(null);
 
   const { data, isLoading, isError } = useAdminBoards({
     page,
@@ -159,6 +160,42 @@ export default function AdminBoardTab() {
       setLoadingEditId(null);
     }
   };
+
+  useEffect(() => {
+    if (mode !== "form") return;
+    const editor = quillRef.current?.getEditor();
+    if (!editor) return;
+
+    const insertUploadedImage = async (file: File, index: number) => {
+      try {
+        const url = await adminBoard.uploadImage(file);
+        editor.insertEmbed(index, "image", url, "user");
+        editor.setSelection(index + 1, 0, "user");
+      } catch {
+        toast({ description: "이미지 업로드에 실패했습니다.", variant: "destructive" });
+      }
+    };
+
+    const toolbar = editor.getModule("toolbar") as { addHandler: (name: string, handler: () => void) => void };
+    toolbar.addHandler("image", () => {
+      const input = document.createElement("input");
+      input.setAttribute("type", "file");
+      input.setAttribute("accept", "image/png,image/jpeg,image/webp,image/gif");
+      input.onchange = () => {
+        const file = input.files?.[0];
+        if (!file) return;
+        void insertUploadedImage(file, editor.getSelection(true).index);
+      };
+      input.click();
+    });
+
+    const uploader = editor.getModule("uploader") as {
+      options: { handler: (range: { index: number; length: number }, files: File[]) => void };
+    };
+    uploader.options.handler = (range, files) => {
+      files.forEach((file) => void insertUploadedImage(file, range.index));
+    };
+  }, [mode, toast]);
 
   const handleSubmit = () => {
     const onSuccess = () => {
@@ -244,6 +281,7 @@ export default function AdminBoardTab() {
             <Label>본문</Label>
             <div className="[&_.ql-container]:min-h-[480px] [&_.ql-editor]:min-h-[480px] [&_.ql-editor]:text-base">
               <ReactQuill
+                ref={quillRef}
                 theme="snow"
                 value={form.content}
                 onChange={(content) => setForm((prev) => ({ ...prev, content }))}
