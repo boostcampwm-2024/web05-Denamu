@@ -24,6 +24,9 @@ export class Board extends BaseEntity {
   @Column({ type: 'longtext', nullable: false })
   content: string;
 
+  @Column({ type: 'longtext', nullable: true })
+  question: string | null;
+
   @Column({ length: 20, nullable: false, default: BoardStatus.DRAFT })
   status: BoardStatus;
 
