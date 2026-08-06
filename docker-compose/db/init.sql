@@ -53,6 +53,7 @@ CREATE TABLE `user` (
   `inactivity_email_agreed_at` datetime DEFAULT NULL,
   `notice_email_agreed` tinyint NOT NULL DEFAULT 0,
   `notice_email_agreed_at` datetime DEFAULT NULL,
+  `profile_image_change_count` int NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   UNIQUE KEY `UQ_user_user_name` (`user_name`),
   UNIQUE KEY `UQ_user_email` (`email`)

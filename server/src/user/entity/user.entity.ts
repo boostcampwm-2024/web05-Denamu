@@ -124,6 +124,14 @@ export class User extends BaseEntity {
   })
   noticeEmailAgreedAt: Date | null;
 
+  @Column({
+    name: 'profile_image_change_count',
+    type: 'int',
+    nullable: false,
+    default: 0,
+  })
+  profileImageChangeCount: number;
+
   @OneToMany(() => Activity, (activity) => activity.user)
   activities: Activity[];
 
