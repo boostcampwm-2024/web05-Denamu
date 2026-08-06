@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -10,7 +11,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import * as uuid from 'uuid';
 import { Response } from 'express';
-import { DataSource, IsNull } from 'typeorm';
+import { DataSource, IsNull, LessThan } from 'typeorm';
 
 import { cookieConfig } from '@common/cookie/cookie.config';
 import { EmailProducer } from '@common/email/email.producer';
@@ -28,7 +29,10 @@ import { RssAcceptRepository } from '@rss/repository/rss.repository';
 
 import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
 
-import { REFRESH_TOKEN_TTL } from '@user/constant/user.constants';
+import {
+  PROFILE_IMAGE_DAILY_LIMIT,
+  REFRESH_TOKEN_TTL,
+} from '@user/constant/user.constants';
 import { ChangePasswordRequestDto } from '@user/dto/request/changePassword.dto';
 import { LoginUserRequestDto } from '@user/dto/request/loginUser.dto';
 import { RegisterUserRequestDto } from '@user/dto/request/registerUser.dto';
@@ -309,6 +313,7 @@ export class UserService {
       updateData.profileImage !== undefined &&
       user.profileImage !== updateData.profileImage
     ) {
+      await this.consumeProfileImageChangeQuota(userId);
       if (user.profileImage) {
         await this.fileService.deleteByPath(user.profileImage);
       }
@@ -337,6 +342,22 @@ export class UserService {
         throw new ConflictException('이미 존재하는 닉네임입니다.');
       }
       throw error;
+    }
+  }
+
+  private async consumeProfileImageChangeQuota(userId: number): Promise<void> {
+    const result = await this.userRepository.update(
+      {
+        id: userId,
+        profileImageChangeCount: LessThan(PROFILE_IMAGE_DAILY_LIMIT),
+      },
+      { profileImageChangeCount: () => 'profile_image_change_count + 1' },
+    );
+
+    if (result.affected === 0) {
+      throw new BadRequestException(
+        `프로필 이미지는 하루 최대 ${PROFILE_IMAGE_DAILY_LIMIT}회까지 변경할 수 있습니다.`,
+      );
     }
   }
 
