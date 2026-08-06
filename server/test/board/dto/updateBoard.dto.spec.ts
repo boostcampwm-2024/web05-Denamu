@@ -88,6 +88,28 @@ describe(`${UpdateBoardRequestDto.name} Test`, () => {
     });
   });
 
+  describe('question', () => {
+    it('질문이 문자열이 아닌 객체일 경우 유효성 검사에 실패한다.', async () => {
+      // given
+      dto.question = { text: 'test' } as any;
+
+      // when
+      const errors = await validate(dto);
+
+      // then
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isString');
+    });
+
+    it('질문이 입력되지 않을 경우 유효성 검사에 성공한다.', async () => {
+      // when
+      const errors = await validate(dto);
+
+      // then
+      expect(errors).toHaveLength(0);
+    });
+  });
+
   describe('isPinned', () => {
     it('상단 고정 여부가 boolean이 아닌 문자열일 경우 유효성 검사에 실패한다.', async () => {
       // given
