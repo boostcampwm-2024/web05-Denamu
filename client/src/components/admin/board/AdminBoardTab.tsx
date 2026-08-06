@@ -1,8 +1,7 @@
-import { useEffect, useRef, useState } from "react";
-import ReactQuill from "react-quill-new";
-import "react-quill-new/dist/quill.snow.css";
+import { useRef, useState } from "react";
 
 import { ArrowLeft, Loader2, Pencil, Pin, Plus, Trash2 } from "lucide-react";
+import type { Editor as TinyMCEEditor } from "tinymce";
 
 import {
   AlertDialog,
@@ -18,6 +17,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -29,7 +29,10 @@ import { useCreateBoard, useAdminBoards, useDeleteBoard, useUpdateBoard } from "
 
 import { adminBoard } from "@/api/services/admin/board";
 import { BoardCategory, BoardStatus, BoardSummary } from "@/types/board";
+import { html } from "@codemirror/lang-html";
 import { useQueryClient } from "@tanstack/react-query";
+import { Editor } from "@tinymce/tinymce-react";
+import CodeMirror from "@uiw/react-codemirror";
 
 type StatusFilter = BoardStatus | "ALL";
 type CategoryFilter = BoardCategory | "ALL";
@@ -58,16 +61,17 @@ const CATEGORY_LABELS: Record<BoardCategory, string> = {
 
 const PAGE_SIZE = 10;
 
-// Quill 인스턴스가 modules 객체 identity 변경마다 재생성되는 것을 막기 위해 모듈 스코프 상수로 분리.
-const QUILL_MODULES = {
-  toolbar: [
-    [{ header: [1, 2, 3, false] }],
-    ["bold", "italic", "underline", "strike"],
-    [{ color: [] }, { background: [] }],
-    [{ list: "ordered" }, { list: "bullet" }],
-    ["link", "image"],
-    ["clean"],
-  ],
+const EDITOR_INIT = {
+  min_height: 480,
+  menubar: false,
+  branding: false,
+  plugins: "link image lists",
+  toolbar:
+    "blocks | bold italic underline strikethrough | forecolor backcolor | bullist numlist | link image | removeformat | code",
+  block_formats: "본문=p; 제목1=h1; 제목2=h2; 제목3=h3",
+  file_picker_types: "image",
+  automatic_uploads: true,
+  paste_data_images: true,
 };
 
 const toDatetimeLocal = (iso: string | null): string => {
@@ -115,7 +119,6 @@ export default function AdminBoardTab() {
   const [loadingEditId, setLoadingEditId] = useState<number | null>(null);
   const { toast } = useCustomToast();
   const queryClient = useQueryClient();
-  const quillRef = useRef<ReactQuill>(null);
 
   const { data, isLoading, isError } = useAdminBoards({
     page,
@@ -161,41 +164,39 @@ export default function AdminBoardTab() {
     }
   };
 
-  useEffect(() => {
-    if (mode !== "form") return;
-    const editor = quillRef.current?.getEditor();
-    if (!editor) return;
+  const handleImageUpload = async (blobInfo: { blob: () => Blob; filename: () => string }): Promise<string> => {
+    const file = new File([blobInfo.blob()], blobInfo.filename(), { type: blobInfo.blob().type });
+    try {
+      return await adminBoard.uploadImage(file);
+    } catch {
+      toast({ description: "이미지 업로드에 실패했습니다.", variant: "destructive" });
+      throw new Error("이미지 업로드 실패");
+    }
+  };
 
-    const insertUploadedImage = async (file: File, index: number) => {
-      try {
-        const url = await adminBoard.uploadImage(file);
-        editor.insertEmbed(index, "image", url, "user");
-        editor.setSelection(index + 1, 0, "user");
-      } catch {
-        toast({ description: "이미지 업로드에 실패했습니다.", variant: "destructive" });
-      }
+  const handleFilePick = (callback: (url: string, meta?: Record<string, string>) => void) => {
+    const input = document.createElement("input");
+    input.setAttribute("type", "file");
+    input.setAttribute("accept", "image/png,image/jpeg,image/webp,image/gif");
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      adminBoard
+        .uploadImage(file)
+        .then((url) => callback(url, { alt: file.name }))
+        .catch(() => toast({ description: "이미지 업로드에 실패했습니다.", variant: "destructive" }));
     };
+    input.click();
+  };
 
-    const toolbar = editor.getModule("toolbar") as { addHandler: (name: string, handler: () => void) => void };
-    toolbar.addHandler("image", () => {
-      const input = document.createElement("input");
-      input.setAttribute("type", "file");
-      input.setAttribute("accept", "image/png,image/jpeg,image/webp,image/gif");
-      input.onchange = () => {
-        const file = input.files?.[0];
-        if (!file) return;
-        void insertUploadedImage(file, editor.getSelection(true).index);
-      };
-      input.click();
-    });
+  const editorRef = useRef<TinyMCEEditor | null>(null);
+  const [isSourceOpen, setIsSourceOpen] = useState(false);
+  const [sourceDraft, setSourceDraft] = useState("");
 
-    const uploader = editor.getModule("uploader") as {
-      options: { handler: (range: { index: number; length: number }, files: File[]) => void };
-    };
-    uploader.options.handler = (range, files) => {
-      files.forEach((file) => void insertUploadedImage(file, range.index));
-    };
-  }, [mode, toast]);
+  const applySourceDraft = () => {
+    editorRef.current?.setContent(sourceDraft);
+    setIsSourceOpen(false);
+  };
 
   const handleSubmit = () => {
     const onSuccess = () => {
@@ -279,16 +280,44 @@ export default function AdminBoardTab() {
 
           <div className="flex flex-col gap-2">
             <Label>본문</Label>
-            <div className="[&_.ql-container]:min-h-[480px] [&_.ql-editor]:min-h-[480px] [&_.ql-editor]:text-base">
-              <ReactQuill
-                ref={quillRef}
-                theme="snow"
-                value={form.content}
-                onChange={(content) => setForm((prev) => ({ ...prev, content }))}
-                modules={QUILL_MODULES}
-              />
-            </div>
+            <Editor
+              tinymceScriptSrc="/tinymce/tinymce.min.js"
+              licenseKey="gpl"
+              value={form.content}
+              onEditorChange={(content) => setForm((prev) => ({ ...prev, content }))}
+              init={{
+                ...EDITOR_INIT,
+                images_upload_handler: handleImageUpload,
+                file_picker_callback: handleFilePick,
+                setup: (editor: TinyMCEEditor) => {
+                  editorRef.current = editor;
+                  editor.ui.registry.addButton("code", {
+                    icon: "sourcecode",
+                    tooltip: "HTML 소스 편집",
+                    onAction: () => {
+                      setSourceDraft(editor.getContent({ format: "html" }));
+                      setIsSourceOpen(true);
+                    },
+                  });
+                },
+              }}
+            />
           </div>
+
+          <Dialog open={isSourceOpen} onOpenChange={setIsSourceOpen}>
+            <DialogContent className="max-w-3xl">
+              <DialogHeader>
+                <DialogTitle>HTML 소스 편집</DialogTitle>
+              </DialogHeader>
+              <CodeMirror value={sourceDraft} height="480px" extensions={[html()]} onChange={setSourceDraft} />
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsSourceOpen(false)}>
+                  취소
+                </Button>
+                <Button onClick={applySourceDraft}>적용</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
