@@ -2,7 +2,7 @@ import BoardDetailPage from "@/pages/BoardDetailPage";
 
 import { BOARD } from "@/constants/endpoints";
 
-import { mockBoardDetail } from "@/__storybook__/fixtures";
+import { mockBoardDetail, mockFaqBoardDetail } from "@/__storybook__/fixtures";
 import { fail, mockApi, ok } from "@/__storybook__/mockApi";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, within } from "storybook/test";
@@ -26,6 +26,22 @@ export const Success: Story = {
     const canvas = within(canvasElement);
     await expect(await canvas.findByText(mockBoardDetail.title)).toBeInTheDocument();
     await expect(canvas.getByText("정기 점검으로 인해 서비스 이용이 일시 중단됩니다.")).toBeInTheDocument();
+  },
+};
+
+export const Faq: Story = {
+  name: "FAQ 조회 (질문/답변)",
+  parameters: {
+    router: { path: "/board/:id", initialEntries: [`/board/${mockFaqBoardDetail.id}`] },
+  },
+  beforeEach: () => {
+    mockApi.onGet(BOARD.DETAIL(mockFaqBoardDetail.id)).reply(...ok(mockFaqBoardDetail));
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByText(mockFaqBoardDetail.title)).toBeInTheDocument();
+    await expect(canvas.getByText("Q")).toBeInTheDocument();
+    await expect(canvas.getByText("A")).toBeInTheDocument();
   },
 };
 

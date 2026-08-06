@@ -2,7 +2,7 @@ import AdminBoardTab from "@/components/admin/board/AdminBoardTab";
 
 import { BOARD } from "@/constants/endpoints";
 
-import { mockBoardsPage } from "@/__storybook__/fixtures";
+import { mockBoardsPage, mockFaqBoardDetail, mockFaqBoardsPage } from "@/__storybook__/fixtures";
 import { fail, mockApi, ok } from "@/__storybook__/mockApi";
 import { BoardStatus } from "@/types/board";
 import type { Meta, StoryObj } from "@storybook/react-vite";
@@ -49,6 +49,22 @@ export const Error: Story = {
   name: "오류",
   beforeEach: () => {
     mockApi.onGet(BOARD.ADMIN_LIST).reply(...fail());
+  },
+};
+
+export const FaqEditForm: Story = {
+  name: "FAQ 수정 폼 (질문/답변 라벨)",
+  beforeEach: () => {
+    mockApi.onGet(BOARD.ADMIN_LIST).reply(...ok(mockFaqBoardsPage));
+    mockApi.onGet(BOARD.ADMIN_DETAIL(mockFaqBoardDetail.id)).reply(...ok(mockFaqBoardDetail));
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.click(await canvas.findByRole("button", { name: "수정" }));
+
+    await expect(await canvas.findByText("질문")).toBeInTheDocument();
+    await expect(canvas.getByText("답변")).toBeInTheDocument();
   },
 };
 
