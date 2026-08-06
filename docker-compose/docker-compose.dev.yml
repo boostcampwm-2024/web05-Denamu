@@ -73,6 +73,7 @@ services:
     volumes:
       - ../server:/var/web05-Denamu/server
       - /var/web05-Denamu/server/node_modules
+      - ../objects:/app/objects
     environment:
       NODE_ENV: 'DEV'
       TZ: 'Asia/Seoul'

@@ -36,6 +36,14 @@ export const adminBoard = {
     const response = await axiosInstance.patch<ApiData<BoardDetail>>(BOARD.ADMIN_DETAIL(id), payload);
     return response.data.data;
   },
+  uploadImage: async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const response = await axiosInstance.post<ApiData<{ url: string }>>(BOARD.ADMIN_UPLOAD_IMAGE, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data.data.url;
+  },
   remove: async (id: number): Promise<void> => {
     await axiosInstance.delete(BOARD.ADMIN_DETAIL(id));
   },

@@ -11,12 +11,15 @@ import {
 } from '@board/dto/response/board.dto';
 import { Board } from '@board/entity/board.entity';
 import { BoardRepository } from '@board/repository/board.repository';
+import { extractBoardImageUrls } from '@board/util/extractBoardImageUrls';
 import { validateWindow } from '@board/util/validateWindow';
 
 import { AdminRepository } from '@admin/repository/admin.repository';
 
 import { EmailProducer } from '@common/email/email.producer';
 import { WinstonLoggerService } from '@common/logger/logger.service';
+
+import { FileService } from '@file/service/file.service';
 
 import { UserRepository } from '@user/repository/user.repository';
 
@@ -29,6 +32,7 @@ export class BoardService {
     private readonly adminRepository: AdminRepository,
     private readonly userRepository: UserRepository,
     private readonly emailProducer: EmailProducer,
+    private readonly fileService: FileService,
     private readonly logger: WinstonLoggerService,
   ) {}
 
@@ -168,6 +172,8 @@ export class BoardService {
         : board.endAt;
     validateWindow(startAt, endAt);
 
+    const previousContent = board.content;
+
     if (dto.title !== undefined) board.title = dto.title;
     if (dto.content !== undefined) board.content = dto.content;
     if (dto.isPinned !== undefined) board.isPinned = dto.isPinned;
@@ -177,13 +183,30 @@ export class BoardService {
     board.endAt = endAt;
 
     await this.boardRepository.save(board);
+
+    if (dto.content !== undefined) {
+      const removedUrls = extractBoardImageUrls(previousContent).filter(
+        (url) => !extractBoardImageUrls(dto.content).includes(url),
+      );
+      await this.deleteBoardImages(removedUrls);
+    }
+
     return BoardDetailDto.toResponseDto(board);
   }
 
   async deleteBoard(id: number): Promise<void> {
-    const result = await this.boardRepository.delete(id);
-    if (!result.affected) {
+    const board = await this.boardRepository.findOneBy({ id });
+    if (!board) {
       throw new NotFoundException(NOT_FOUND_MESSAGE);
     }
+
+    await this.boardRepository.delete(id);
+    await this.deleteBoardImages(extractBoardImageUrls(board.content));
+  }
+
+  private async deleteBoardImages(urls: string[]): Promise<void> {
+    await Promise.allSettled(
+      urls.map((url) => this.fileService.deleteUntracked(url)),
+    );
   }
 }

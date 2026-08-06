@@ -14,6 +14,8 @@ import { AdminRepository } from '@admin/repository/admin.repository';
 import { EmailProducer } from '@common/email/email.producer';
 import { WinstonLoggerService } from '@common/logger/logger.service';
 
+import { FileService } from '@file/service/file.service';
+
 import { UserRepository } from '@user/repository/user.repository';
 
 import { BoardFixture } from '@test/config/common/fixture/board.fixture';
@@ -25,6 +27,7 @@ describe(`${BoardService.name} Unit Test`, () => {
     | 'findPublicById'
     | 'findAdminList'
     | 'findOne'
+    | 'findOneBy'
     | 'create'
     | 'save'
     | 'delete',
@@ -35,6 +38,7 @@ describe(`${BoardService.name} Unit Test`, () => {
     Pick<UserRepository, 'findNoticeAgreedUsers'>
   >;
   let emailProducer: jest.Mocked<Pick<EmailProducer, 'produceNoticePublished'>>;
+  let fileService: jest.Mocked<Pick<FileService, 'deleteUntracked'>>;
   let logger: jest.Mocked<Pick<WinstonLoggerService, 'error'>>;
 
   const createBoard = (overwrites: Partial<Board> = {}): Board =>
@@ -51,6 +55,7 @@ describe(`${BoardService.name} Unit Test`, () => {
       findPublicById: jest.fn(),
       findAdminList: jest.fn(),
       findOne: jest.fn(),
+      findOneBy: jest.fn(),
       create: jest.fn((entityLike) => entityLike),
       save: jest.fn((entity) => entity),
       delete: jest.fn(),
@@ -64,6 +69,9 @@ describe(`${BoardService.name} Unit Test`, () => {
     emailProducer = {
       produceNoticePublished: jest.fn(),
     };
+    fileService = {
+      deleteUntracked: jest.fn().mockResolvedValue(undefined),
+    };
     logger = { error: jest.fn() };
 
     boardService = new BoardService(
@@ -71,6 +79,7 @@ describe(`${BoardService.name} Unit Test`, () => {
       adminRepository as unknown as AdminRepository,
       userRepository as unknown as UserRepository,
       emailProducer as unknown as EmailProducer,
+      fileService as unknown as FileService,
       logger as unknown as WinstonLoggerService,
     );
   });
@@ -630,28 +639,77 @@ describe(`${BoardService.name} Unit Test`, () => {
       expect(result.isPinned).toBe(true);
       expect(boardRepository.save).toHaveBeenCalled();
     });
+
+    it('본문에서 제거된 이미지 파일을 삭제한다.', async () => {
+      // given
+      boardRepository.findOne.mockResolvedValue(
+        createBoard({
+          content:
+            '<p>본문</p><img src="/objects/BOARD_IMAGE/2026-08-06/old.jpg">',
+        }),
+      );
+
+      // when
+      await boardService.updateBoard(
+        1,
+        new UpdateBoardRequestDto({
+          content:
+            '<p>본문</p><img src="/objects/BOARD_IMAGE/2026-08-06/new.jpg">',
+        }),
+      );
+
+      // then
+      expect(fileService.deleteUntracked).toHaveBeenCalledWith(
+        '/objects/BOARD_IMAGE/2026-08-06/old.jpg',
+      );
+      expect(fileService.deleteUntracked).not.toHaveBeenCalledWith(
+        '/objects/BOARD_IMAGE/2026-08-06/new.jpg',
+      );
+    });
   });
 
   describe('deleteBoard', () => {
-    it('삭제된 행이 없을 경우 NotFoundException을 던진다.', async () => {
+    it('게시글이 존재하지 않을 경우 NotFoundException을 던진다.', async () => {
       // given
-      boardRepository.delete.mockResolvedValue({ affected: 0 });
+      boardRepository.findOneBy.mockResolvedValue(null);
 
       // when & then
       await expect(boardService.deleteBoard(1)).rejects.toThrow(
         NotFoundException,
       );
+      expect(boardRepository.delete).not.toHaveBeenCalled();
     });
 
     it('게시글 삭제에 성공한다.', async () => {
       // given
-      boardRepository.delete.mockResolvedValue({ affected: 1 });
+      boardRepository.findOneBy.mockResolvedValue(
+        createBoard({ content: '<p>본문</p>' }),
+      );
 
       // when
       await boardService.deleteBoard(1);
 
       // then
       expect(boardRepository.delete).toHaveBeenCalledWith(1);
+      expect(fileService.deleteUntracked).not.toHaveBeenCalled();
+    });
+
+    it('본문에 포함된 이미지 파일도 함께 삭제한다.', async () => {
+      // given
+      boardRepository.findOneBy.mockResolvedValue(
+        createBoard({
+          content:
+            '<p>본문</p><img src="/objects/BOARD_IMAGE/2026-08-06/a.jpg">',
+        }),
+      );
+
+      // when
+      await boardService.deleteBoard(1);
+
+      // then
+      expect(fileService.deleteUntracked).toHaveBeenCalledWith(
+        '/objects/BOARD_IMAGE/2026-08-06/a.jpg',
+      );
     });
   });
 });
