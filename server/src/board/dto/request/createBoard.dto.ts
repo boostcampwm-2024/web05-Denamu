@@ -5,9 +5,11 @@ import {
   IsBoolean,
   IsEnum,
   IsISO8601,
+  IsNotEmpty,
   IsOptional,
   IsString,
   MaxLength,
+  ValidateIf,
 } from 'class-validator';
 
 import { sanitizeBoardContent } from '@common/util/sanitizeHtml';
@@ -31,6 +33,16 @@ export class CreateBoardRequestDto {
   @IsString({ message: '문자열로 입력해주세요.' })
   @Transform(({ value }) => sanitizeBoardContent(value))
   content: string;
+
+  @ApiPropertyOptional({
+    description: '질문 (FAQ 전용, 에디터에서 작성된 HTML)',
+    example: '<p>환불은 언제까지 가능한가요?</p>',
+  })
+  @ValidateIf((dto: CreateBoardRequestDto) => dto.category === BoardCategory.FAQ)
+  @IsString({ message: '문자열로 입력해주세요.' })
+  @IsNotEmpty({ message: 'FAQ는 질문을 입력해주세요.' })
+  @Transform(({ value }) => (value === undefined ? value : sanitizeBoardContent(value)))
+  question?: string;
 
   @ApiPropertyOptional({ description: '상단 고정 여부', default: false })
   @IsOptional()

@@ -34,6 +34,15 @@ export class UpdateBoardRequestDto {
   @Transform(({ value }) => (value === undefined ? value : sanitizeBoardContent(value)))
   content?: string;
 
+  @ApiPropertyOptional({
+    description: '질문 (FAQ 전용, 에디터에서 작성된 HTML)',
+    example: '<p>환불은 언제까지 가능한가요?</p>',
+  })
+  @IsOptional()
+  @IsString({ message: '문자열로 입력해주세요.' })
+  @Transform(({ value }) => (value === undefined ? value : sanitizeBoardContent(value)))
+  question?: string;
+
   @ApiPropertyOptional({ description: '상단 고정 여부' })
   @IsOptional()
   @IsBoolean({ message: 'boolean 값을 입력해주세요.' })
