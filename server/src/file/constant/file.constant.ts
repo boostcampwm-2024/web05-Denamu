@@ -9,3 +9,5 @@ export const FILE_SIZE_LIMITS = {
   IMAGE: 5 * 1024 * 1024,
   DEFAULT: 10 * 1024 * 1024,
 };
+
+export const IMAGE_WEBP_QUALITY = 80;

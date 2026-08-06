@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -8,10 +9,14 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as uuid from 'uuid';
 import { access, unlink } from 'fs/promises';
+import sharp from 'sharp';
 
 import { WinstonLoggerService } from '@common/logger/logger.service';
 
-import { FileUploadType } from '@file/constant/file.constant';
+import {
+  FileUploadType,
+  IMAGE_WEBP_QUALITY,
+} from '@file/constant/file.constant';
 import { UploadFileResponseDto } from '@file/dto/response/uploadFile.dto';
 import { File } from '@file/entity/file.entity';
 import { FileRepository } from '@file/repository/file.repository';
@@ -30,11 +35,13 @@ export class FileService {
     uploadType: FileUploadType,
     userId: number,
   ) {
-    const filePath = await this.writeToDisk(file, uploadType);
+    const { filePath, mimetype, size } = await this.writeToDisk(
+      file,
+      uploadType,
+    );
 
-    const { originalname, mimetype, size } = file;
     const savedFile = await this.fileRepository.save({
-      originalName: originalname,
+      originalName: file.originalname,
       mimetype,
       size,
       path: filePath,
@@ -49,26 +56,42 @@ export class FileService {
     file: Express.Multer.File,
     uploadType: FileUploadType,
   ): Promise<string> {
-    const filePath = await this.writeToDisk(file, uploadType);
+    const { filePath } = await this.writeToDisk(file, uploadType);
     return this.generateAccessUrl(filePath);
   }
 
   private async writeToDisk(
     file: Express.Multer.File,
     uploadType: FileUploadType,
-  ): Promise<string> {
+  ) {
     const today = this.getDateString();
     const targetDir = path.join(this.basePath, uploadType, today);
 
     await this.ensureDirectory(targetDir);
 
-    const ext = path.extname(file.originalname);
+    const webpBuffer = await this.convertToWebp(file.buffer);
+    const useWebp = webpBuffer.length < file.buffer.length;
+
+    const buffer = useWebp ? webpBuffer : file.buffer;
+    const ext = useWebp ? '.webp' : path.extname(file.originalname);
+    const mimetype = useWebp ? 'image/webp' : file.mimetype;
+
     const fileName = `${uuid.v4()}${ext}`;
     const filePath = path.join(targetDir, fileName);
 
-    await fs.writeFile(filePath, file.buffer);
+    await fs.writeFile(filePath, buffer);
 
-    return filePath;
+    return { filePath, mimetype, size: buffer.length };
+  }
+
+  private async convertToWebp(buffer: Buffer): Promise<Buffer> {
+    try {
+      return await sharp(buffer, { animated: true })
+        .webp({ quality: IMAGE_WEBP_QUALITY })
+        .toBuffer();
+    } catch {
+      throw new BadRequestException('올바르지 않은 이미지 파일입니다.');
+    }
   }
 
   private async ensureDirectory(dir: string) {
