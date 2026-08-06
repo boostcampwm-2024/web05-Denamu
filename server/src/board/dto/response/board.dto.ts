@@ -32,7 +32,7 @@ export class BoardSummaryDto {
     Object.assign(this, partial);
   }
 
-  static fromSummary(board: Board): BoardSummaryDto {
+  static toResultDto(board: Board): BoardSummaryDto {
     return new BoardSummaryDto({
       id: board.id,
       title: board.title,
@@ -45,8 +45,8 @@ export class BoardSummaryDto {
     });
   }
 
-  static fromSummaryArray(boards: Board[]): BoardSummaryDto[] {
-    return boards.map((board) => this.fromSummary(board));
+  static toResultDtoArray(boards: Board[]): BoardSummaryDto[] {
+    return boards.map((board) => this.toResultDto(board));
   }
 }
 
@@ -72,7 +72,7 @@ export class BoardDetailDto extends BoardSummaryDto {
     Object.assign(this, partial);
   }
 
-  static fromDetail(board: Board): BoardDetailDto {
+  static toResponseDto(board: Board): BoardDetailDto {
     return new BoardDetailDto({
       id: board.id,
       title: board.title,
@@ -109,14 +109,14 @@ export class BoardListResponseDto {
     Object.assign(this, partial);
   }
 
-  static of(
+  static toResponseDto(
     boards: Board[],
     page: number,
     limit: number,
     totalCount: number,
   ): BoardListResponseDto {
     return new BoardListResponseDto({
-      result: BoardSummaryDto.fromSummaryArray(boards),
+      result: BoardSummaryDto.toResultDtoArray(boards),
       page,
       limit,
       totalCount,

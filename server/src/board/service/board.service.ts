@@ -40,7 +40,7 @@ export class BoardService {
       new Date(),
       category,
     );
-    return BoardListResponseDto.of(items, page, limit, totalCount);
+    return BoardListResponseDto.toResponseDto(items, page, limit, totalCount);
   }
 
   async getPublicBoard(id: number): Promise<BoardDetailDto> {
@@ -48,7 +48,7 @@ export class BoardService {
     if (!board) {
       throw new NotFoundException(NOT_FOUND_MESSAGE);
     }
-    return BoardDetailDto.fromDetail(board);
+    return BoardDetailDto.toResponseDto(board);
   }
 
   async getAdminBoards(queryDto: GetAdminBoardsRequestDto) {
@@ -59,7 +59,7 @@ export class BoardService {
       status,
       category,
     );
-    return BoardListResponseDto.of(items, page, limit, totalCount);
+    return BoardListResponseDto.toResponseDto(items, page, limit, totalCount);
   }
 
   async getAdminBoard(id: number): Promise<BoardDetailDto> {
@@ -70,7 +70,7 @@ export class BoardService {
     if (!board) {
       throw new NotFoundException(NOT_FOUND_MESSAGE);
     }
-    return BoardDetailDto.fromDetail(board);
+    return BoardDetailDto.toResponseDto(board);
   }
 
   async createBoard(
@@ -99,7 +99,7 @@ export class BoardService {
       await this.notifyNoticePublished(board);
     }
 
-    return BoardDetailDto.fromDetail(board);
+    return BoardDetailDto.toResponseDto(board);
   }
 
   private isNoticeVisibleNow(board: Board): boolean {
@@ -177,7 +177,7 @@ export class BoardService {
     board.endAt = endAt;
 
     await this.boardRepository.save(board);
-    return BoardDetailDto.fromDetail(board);
+    return BoardDetailDto.toResponseDto(board);
   }
 
   async deleteBoard(id: number): Promise<void> {

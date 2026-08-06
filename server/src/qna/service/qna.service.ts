@@ -115,7 +115,7 @@ export class QnaService {
       { id: qnaId, isSecret: dto.isSecret, content: dto.content },
       false,
     );
-    return QnaCreatedDto.of(qnaId);
+    return QnaCreatedDto.toResponseDto(qnaId);
   }
 
   async getPublicQnas(queryDto: GetQnasRequestDto) {
@@ -124,7 +124,7 @@ export class QnaService {
       page,
       limit,
     );
-    return QnaListResponseDto.of(items, page, limit, totalCount);
+    return QnaListResponseDto.toResponseDto(items, page, limit, totalCount);
   }
 
   async getPublicQna(id: number) {
@@ -134,9 +134,9 @@ export class QnaService {
     }
 
     if (qna.isSecret) {
-      return QnaLockedDto.of(qna);
+      return QnaLockedDto.toResponseDto(qna);
     }
-    return QnaDetailDto.fromDetail(qna);
+    return QnaDetailDto.toResponseDto(qna);
   }
 
   async verifyQna(id: number, password: string) {
@@ -149,7 +149,7 @@ export class QnaService {
       throw new UnauthorizedException(QNA_VERIFY_FAIL_MESSAGE);
     }
 
-    return QnaDetailDto.fromDetail(qna);
+    return QnaDetailDto.toResponseDto(qna);
   }
 
   async createQnaMessage(
@@ -217,7 +217,7 @@ export class QnaService {
       limit,
       status,
     );
-    return QnaListResponseDto.of(items, page, limit, totalCount);
+    return QnaListResponseDto.toResponseDto(items, page, limit, totalCount);
   }
 
   async getAdminQna(id: number) {
@@ -225,7 +225,7 @@ export class QnaService {
     if (!qna) {
       throw new NotFoundException(QNA_NOT_FOUND_MESSAGE);
     }
-    return QnaDetailDto.fromDetail(qna);
+    return QnaDetailDto.toResponseDto(qna);
   }
 
   async createQnaAnswer(
