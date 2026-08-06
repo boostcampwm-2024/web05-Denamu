@@ -1,6 +1,11 @@
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 
 import * as fs from 'fs/promises';
+import sharp from 'sharp';
 
 import { WinstonLoggerService } from '@common/logger/logger.service';
 
@@ -11,8 +16,10 @@ import { FileService } from '@file/service/file.service';
 import { FileFixture } from '@test/config/common/fixture/file.fixture';
 
 jest.mock('fs/promises');
+jest.mock('sharp');
 
 const mockedFs = fs as jest.Mocked<typeof fs>;
+const mockedSharp = sharp as jest.MockedFunction<typeof sharp>;
 
 describe(`${FileService.name} Unit Test`, () => {
   let fileService: FileService;
@@ -33,14 +40,20 @@ describe(`${FileService.name} Unit Test`, () => {
   });
 
   describe('handleUpload', () => {
-    it('디렉터리를 생성하고 파일을 쓴 뒤 메타데이터를 저장한다.', async () => {
+    it('webp 변환 결과가 원본보다 작으면 webp로 재인코딩한 파일을 쓴 뒤 메타데이터를 저장한다.', async () => {
       // given
       const multerFile = {
         originalname: 'avatar.png',
         mimetype: 'image/png',
         size: 2048,
-        buffer: Buffer.from('data'),
+        buffer: Buffer.from('original-png-data-longer-than-webp'),
       } as Express.Multer.File;
+      const webpBuffer = Buffer.from('webp');
+      mockedSharp.mockReturnValue({
+        webp: jest.fn().mockReturnValue({
+          toBuffer: jest.fn().mockResolvedValue(webpBuffer),
+        }),
+      } as any);
       const savedFile = FileFixture.createFileFixture({
         id: 1,
         user: { id: 7 } as any,
@@ -55,24 +68,89 @@ describe(`${FileService.name} Unit Test`, () => {
       );
 
       // then
+      expect(mockedSharp).toHaveBeenCalledWith(multerFile.buffer, {
+        animated: true,
+      });
       expect(mockedFs.mkdir).toHaveBeenCalledWith(expect.any(String), {
         recursive: true,
       });
       expect(mockedFs.writeFile).toHaveBeenCalledWith(
-        expect.any(String),
-        multerFile.buffer,
+        expect.stringMatching(/\.webp$/),
+        webpBuffer,
       );
       expect(fileRepository.save).toHaveBeenCalledWith(
         expect.objectContaining({
           originalName: 'avatar.png',
-          mimetype: 'image/png',
-          size: 2048,
+          mimetype: 'image/webp',
+          size: webpBuffer.length,
           user: { id: 7 },
         }),
       );
       expect(result.id).toBe(savedFile.id);
       expect(result.userId).toBe(7);
       expect(typeof result.url).toBe('string');
+    });
+
+    it('이미지 변환에 실패하면 BadRequestException을 던진다.', async () => {
+      // given
+      const multerFile = {
+        originalname: 'broken.png',
+        mimetype: 'image/png',
+        size: 10,
+        buffer: Buffer.from('broken'),
+      } as Express.Multer.File;
+      mockedSharp.mockReturnValue({
+        webp: jest.fn().mockReturnValue({
+          toBuffer: jest.fn().mockRejectedValue(new Error('invalid image')),
+        }),
+      } as any);
+
+      // when & then
+      await expect(
+        fileService.handleUpload(multerFile, FileUploadType.PROFILE_IMAGE, 7),
+      ).rejects.toThrow(BadRequestException);
+      expect(fileRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('webp 변환 결과가 원본보다 크거나 같으면 원본을 그대로 저장한다.', async () => {
+      // given
+      const multerFile = {
+        originalname: 'tiny.gif',
+        mimetype: 'image/gif',
+        size: 4,
+        buffer: Buffer.from('data'),
+      } as Express.Multer.File;
+      const largerWebpBuffer = Buffer.from('webp-is-bigger-than-original');
+      mockedSharp.mockReturnValue({
+        webp: jest.fn().mockReturnValue({
+          toBuffer: jest.fn().mockResolvedValue(largerWebpBuffer),
+        }),
+      } as any);
+      const savedFile = FileFixture.createFileFixture({
+        id: 2,
+        user: { id: 7 } as any,
+      });
+      fileRepository.save.mockResolvedValue(savedFile);
+
+      // when
+      await fileService.handleUpload(
+        multerFile,
+        FileUploadType.PROFILE_IMAGE,
+        7,
+      );
+
+      // then
+      expect(mockedFs.writeFile).toHaveBeenCalledWith(
+        expect.stringMatching(/\.gif$/),
+        multerFile.buffer,
+      );
+      expect(fileRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          originalName: 'tiny.gif',
+          mimetype: 'image/gif',
+          size: multerFile.buffer.length,
+        }),
+      );
     });
   });
 
