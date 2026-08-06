@@ -1,3 +1,4 @@
+import { PlatformIcon } from "@/components/profile/rss/PlatformIcon";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -22,13 +23,23 @@ export const BlogPlatformSelector = ({ platforms, value, onChange }: BlogPlatfor
       <Select value={value} onValueChange={onChange}>
         <SelectTrigger className="w-full">
           <SelectValue placeholder="플랫폼을 선택하세요">
-            {selectedPlatform?.label || "플랫폼을 선택하세요"}
+            {selectedPlatform ? (
+              <span className="flex items-center gap-2">
+                <PlatformIcon platform={selectedPlatform.value} className="w-4 h-4" />
+                {selectedPlatform.label}
+              </span>
+            ) : (
+              "플랫폼을 선택하세요"
+            )}
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
           {platforms.map((platform) => (
-            <SelectItem key={platform.value} value={platform.value}>
-              {platform.label}
+            <SelectItem key={platform.value} value={platform.value} className="py-2.5 pl-5 pr-1 text-base">
+              <span className="flex items-center gap-3">
+                <PlatformIcon platform={platform.value} className="w-5 h-5" />
+                {platform.label}
+              </span>
             </SelectItem>
           ))}
         </SelectContent>
