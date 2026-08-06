@@ -14,6 +14,7 @@ export interface BoardSummary {
 
 export interface BoardDetail extends BoardSummary {
   content: string;
+  question: string | null;
   authorName: string | null;
   updatedAt: string;
 }
@@ -29,6 +30,7 @@ export interface BoardPage<T> {
 export interface CreateBoardPayload {
   title: string;
   content: string;
+  question?: string;
   isPinned?: boolean;
   status?: BoardStatus;
   category?: BoardCategory;
@@ -39,6 +41,7 @@ export interface CreateBoardPayload {
 export interface UpdateBoardPayload {
   title?: string;
   content?: string;
+  question?: string;
   isPinned?: boolean;
   status?: BoardStatus;
   category?: BoardCategory;

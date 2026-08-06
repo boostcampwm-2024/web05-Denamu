@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 
-import { ArrowLeft, Loader2, Pencil, Pin, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, HelpCircle, Loader2, MessageCircle, Pencil, Pin, Plus, Trash2 } from "lucide-react";
 import type { Editor as TinyMCEEditor } from "tinymce";
 
 import {
@@ -90,6 +90,7 @@ interface BoardFormState {
   id: number | null;
   title: string;
   content: string;
+  question: string;
   isPinned: boolean;
   status: BoardStatus;
   category: BoardCategory;
@@ -101,6 +102,7 @@ const EMPTY_FORM: BoardFormState = {
   id: null,
   title: "",
   content: "",
+  question: "",
   isPinned: false,
   status: "DRAFT",
   category: "NOTICE",
@@ -150,6 +152,7 @@ export default function AdminBoardTab() {
         id: board.id,
         title: board.title,
         content: detail.content,
+        question: detail.question ?? "",
         isPinned: board.isPinned,
         status: board.status,
         category: board.category,
@@ -198,6 +201,15 @@ export default function AdminBoardTab() {
     setIsSourceOpen(false);
   };
 
+  const questionEditorRef = useRef<TinyMCEEditor | null>(null);
+  const [isQuestionSourceOpen, setIsQuestionSourceOpen] = useState(false);
+  const [questionSourceDraft, setQuestionSourceDraft] = useState("");
+
+  const applyQuestionSourceDraft = () => {
+    questionEditorRef.current?.setContent(questionSourceDraft);
+    setIsQuestionSourceOpen(false);
+  };
+
   const handleSubmit = () => {
     const onSuccess = () => {
       const label = CATEGORY_LABELS[form.category];
@@ -217,6 +229,7 @@ export default function AdminBoardTab() {
           payload: {
             title: form.title,
             content: form.content,
+            question: form.category === "FAQ" ? form.question : undefined,
             isPinned: form.isPinned,
             status: form.status,
             category: form.category,
@@ -231,6 +244,7 @@ export default function AdminBoardTab() {
         {
           title: form.title,
           content: form.content,
+          question: form.category === "FAQ" ? form.question : undefined,
           isPinned: form.isPinned,
           status: form.status,
           category: form.category,
@@ -278,8 +292,46 @@ export default function AdminBoardTab() {
             />
           </div>
 
+          {form.category === "FAQ" && (
+            <div className="flex flex-col gap-2">
+              <Label className="flex items-center gap-1.5 text-sm font-semibold text-blue-700 dark:text-blue-400">
+                <HelpCircle className="h-4 w-4" />
+                질문
+              </Label>
+              <Editor
+                tinymceScriptSrc="/tinymce/tinymce.min.js"
+                licenseKey="gpl"
+                value={form.question}
+                onEditorChange={(question) => setForm((prev) => ({ ...prev, question }))}
+                init={{
+                  ...EDITOR_INIT,
+                  images_upload_handler: handleImageUpload,
+                  file_picker_callback: handleFilePick,
+                  setup: (editor: TinyMCEEditor) => {
+                    questionEditorRef.current = editor;
+                    editor.ui.registry.addButton("code", {
+                      icon: "sourcecode",
+                      tooltip: "HTML 소스 편집",
+                      onAction: () => {
+                        setQuestionSourceDraft(editor.getContent({ format: "html" }));
+                        setIsQuestionSourceOpen(true);
+                      },
+                    });
+                  },
+                }}
+              />
+            </div>
+          )}
+
           <div className="flex flex-col gap-2">
-            <Label>본문</Label>
+            {form.category === "FAQ" ? (
+              <Label className="flex items-center gap-1.5 text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+                <MessageCircle className="h-4 w-4" />
+                답변
+              </Label>
+            ) : (
+              <Label>본문</Label>
+            )}
             <Editor
               tinymceScriptSrc="/tinymce/tinymce.min.js"
               licenseKey="gpl"
@@ -303,6 +355,26 @@ export default function AdminBoardTab() {
               }}
             />
           </div>
+
+          <Dialog open={isQuestionSourceOpen} onOpenChange={setIsQuestionSourceOpen}>
+            <DialogContent className="max-w-3xl">
+              <DialogHeader>
+                <DialogTitle>HTML 소스 편집</DialogTitle>
+              </DialogHeader>
+              <CodeMirror
+                value={questionSourceDraft}
+                height="480px"
+                extensions={[html()]}
+                onChange={setQuestionSourceDraft}
+              />
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsQuestionSourceOpen(false)}>
+                  취소
+                </Button>
+                <Button onClick={applyQuestionSourceDraft}>적용</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
           <Dialog open={isSourceOpen} onOpenChange={setIsSourceOpen}>
             <DialogContent className="max-w-3xl">
@@ -383,7 +455,15 @@ export default function AdminBoardTab() {
             <Button variant="outline" onClick={() => setMode("list")}>
               취소
             </Button>
-            <Button onClick={handleSubmit} disabled={!form.title.trim() || isCreating || isUpdating}>
+            <Button
+              onClick={handleSubmit}
+              disabled={
+                !form.title.trim() ||
+                (form.category === "FAQ" && !form.question.trim()) ||
+                isCreating ||
+                isUpdating
+              }
+            >
               {form.id ? "수정" : "작성"}
             </Button>
           </div>
