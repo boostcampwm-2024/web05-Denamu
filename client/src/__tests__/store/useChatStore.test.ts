@@ -100,4 +100,24 @@ describe("useChatStore", () => {
     expect(mockSocket.listenerCount("chatHistory")).toBe(1);
     expect(mockSocket.listenerCount("connect")).toBe(1);
   });
+
+  it("서버가 명시적으로 끊은 경우(io server disconnect) 소켓을 수동으로 재연결한다", () => {
+    useChatStore.getState().getHistory();
+    mockSocket.connect.mockClear();
+
+    mockSocket.trigger("disconnect", "io server disconnect");
+
+    expect(useChatStore.getState().isConnected).toBe(false);
+    expect(mockSocket.connect).toHaveBeenCalledTimes(1);
+  });
+
+  it("네트워크 문제로 끊긴 경우(transport close)는 수동 재연결을 시도하지 않는다", () => {
+    useChatStore.getState().getHistory();
+    mockSocket.connect.mockClear();
+
+    mockSocket.trigger("disconnect", "transport close");
+
+    expect(useChatStore.getState().isConnected).toBe(false);
+    expect(mockSocket.connect).not.toHaveBeenCalled();
+  });
 });
