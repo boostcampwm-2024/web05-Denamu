@@ -8,6 +8,7 @@ import { InternalExceptionsFilter } from '@common/filters/internal.exceptions.fi
 import { LoggingInterceptor } from '@common/logger/logger.interceptor';
 import { WinstonLoggerService } from '@common/logger/logger.service';
 import { MetricsInterceptor } from '@common/metrics/metrics.interceptor';
+import { RedisIoAdapter } from '@common/redis/redis-io.adapter';
 import { setupSwagger } from '@common/swagger/swagger';
 
 import { AppModule } from './app.module';
@@ -15,6 +16,8 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const logger = app.get(WinstonLoggerService);
+  app.enableShutdownHooks();
+  app.useWebSocketAdapter(new RedisIoAdapter(app));
   app.setGlobalPrefix('api');
   app.use(cookieParser());
   app.useGlobalInterceptors(

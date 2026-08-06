@@ -1,4 +1,9 @@
-import { Injectable, UseFilters, ValidationPipe } from '@nestjs/common';
+import {
+  Injectable,
+  OnApplicationShutdown,
+  UseFilters,
+  ValidationPipe,
+} from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
@@ -31,7 +36,9 @@ import { SendMessageDto } from './dto/sendMessage.dto';
     origin: '*', // TODO: 연동 할때 보고 확인 후 설정 해보기
   },
 })
-export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class ChatGateway
+  implements OnGatewayConnection, OnGatewayDisconnect, OnApplicationShutdown
+{
   @WebSocketServer()
   server: Server;
 
@@ -158,6 +165,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     await this.chatService.saveMessageToRedis(redisPayload);
     this.server.to(roomId).emit('message', redisPayload);
+  }
+
+  onApplicationShutdown() {
+    this.server?.local.disconnectSockets(true);
   }
 
   getRoomClientCount(roomId: string): number {
