@@ -103,6 +103,14 @@ export class FileService {
     return now.toISOString().split('T')[0];
   }
 
+  get objectsBasePath(): string {
+    return this.basePath;
+  }
+
+  toAccessUrl(internalPath: string): string {
+    return this.generateAccessUrl(internalPath);
+  }
+
   private generateAccessUrl(filePath: string): string {
     return filePath.replace(this.basePath, '/objects');
   }
