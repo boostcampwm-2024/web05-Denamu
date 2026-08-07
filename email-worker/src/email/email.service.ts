@@ -7,6 +7,7 @@ import logger from '@common/logger/logger';
 import { EmailMetrics } from '@common/metrics/email-metrics';
 import {
   AdminCertification,
+  MarketingBroadcast,
   NoticePublished,
   QnaAnswered,
   Rss,
@@ -21,6 +22,7 @@ import {
   createAdminDeleteAccountContent,
   createAdminVerificationMailContent,
   createDeleteAccountContent,
+  createMarketingBroadcastContent,
   createNoticePublishedContent,
   createPasswordResetMailContent,
   createQnaAnsweredContent,
@@ -350,6 +352,29 @@ export class EmailService {
         notice.userName,
         notice.title,
         notice.boardId,
+        this.emailUser,
+      ),
+    };
+  }
+
+  async sendMarketingBroadcastMail(
+    marketingBroadcast: MarketingBroadcast,
+  ): Promise<void> {
+    const mailOptions = this.createMarketingBroadcastMail(marketingBroadcast);
+
+    await this.sendMail(mailOptions);
+  }
+
+  private createMarketingBroadcastMail(
+    marketingBroadcast: MarketingBroadcast,
+  ): nodemailer.SendMailOptions {
+    return {
+      from: `Denamu<${this.emailUser}>`,
+      to: `${marketingBroadcast.userName}<${marketingBroadcast.email}>`,
+      subject: `(광고) [🎋 Denamu] ${marketingBroadcast.subject}`,
+      html: createMarketingBroadcastContent(
+        marketingBroadcast.userName,
+        marketingBroadcast.content,
         this.emailUser,
       ),
     };

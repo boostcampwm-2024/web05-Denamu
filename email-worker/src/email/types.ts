@@ -1,5 +1,6 @@
 import {
   AdminCertification,
+  MarketingBroadcast,
   NoticePublished,
   QnaAnswered,
   RssCertification,
@@ -44,6 +45,10 @@ export type EmailPayload =
   | {
       type: typeof EmailPayloadConstant.NOTICE_PUBLISHED;
       data: NoticePublished;
+    }
+  | {
+      type: typeof EmailPayloadConstant.MARKETING_BROADCAST;
+      data: MarketingBroadcast;
     };
 
 export type NodeMailerError = Error & {

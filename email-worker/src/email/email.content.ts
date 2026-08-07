@@ -5,7 +5,11 @@ export const PRODUCT_DOMAIN =
 
 const LOGO_URL = 'https://denamu.dev/files/Denamu_Logo_KOR.png';
 
-function mailLayout(bodyContent: string, serviceAddress: string) {
+function mailLayout(
+  bodyContent: string,
+  serviceAddress: string,
+  consentNotice?: string,
+) {
   return `
   <div style="font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', '맑은 고딕', sans-serif; margin: 0; padding: 1px; background-color: #f4f4f4;">
     <div style="max-width: 600px; margin: 20px auto; background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
@@ -15,9 +19,10 @@ function mailLayout(bodyContent: string, serviceAddress: string) {
       <div style="padding: 20px 0;">
         ${bodyContent}
       </div>
-      <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; border-top: 2px solid #f0f0f0; color: #6c757d; font-size: 14px; height: 100px;">
-        <p>본 메일은 발신전용입니다.</p>
-        <p>문의사항이 있으시다면 <a href="mailto:${serviceAddress}" style="color: #007bff; text-decoration: none;">${serviceAddress}</a>로 연락주세요.</p>
+      <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; border-top: 2px solid #f0f0f0; color: #6c757d; font-size: 14px; padding: 10px 0;">
+        <p style="margin: 4px 0;">본 메일은 발신전용입니다.</p>
+        ${consentNotice ?? ''}
+        <p style="margin: 4px 0;">문의사항이 있으시다면 <a href="mailto:${serviceAddress}" style="color: #007bff; text-decoration: none;">${serviceAddress}</a>로 연락주세요.</p>
       </div>
     </div>
   </div>
@@ -303,7 +308,25 @@ export function createNoticePublishedContent(
           ${fallbackLink(noticeLink)}
         `)}
   `;
-  return mailLayout(body, serviceAddress);
+  const consentNotice = `
+        <p style="margin: 4px 0;">본 메일은 [마이페이지 → 정보 수정 → 공지사항 이메일 수신 동의]에서 수신에 동의하신 분께 발송되었습니다.</p>
+        <p style="margin: 4px 0;">해당 메뉴에서 언제든 수신 동의 또는 거절을 다시 선택하실 수 있습니다.</p>`;
+  return mailLayout(body, serviceAddress, consentNotice);
+}
+
+export function createMarketingBroadcastContent(
+  userName: string,
+  content: string,
+  serviceAddress: string,
+) {
+  const body = `
+        <p>안녕하세요, <b>${userName}</b>님!</p>
+        ${content}
+  `;
+  const consentNotice = `
+        <p style="margin: 4px 0;">본 메일은 [마이페이지 → 정보 수정 → 마케팅 활용 및 광고성 정보 수신 동의]에서 수신에 동의하신 분께 발송되었습니다.</p>
+        <p style="margin: 4px 0;">해당 메뉴에서 언제든 수신 동의 또는 거절을 다시 선택하실 수 있습니다.</p>`;
+  return mailLayout(body, serviceAddress, consentNotice);
 }
 
 export function createDeleteAccountContent(

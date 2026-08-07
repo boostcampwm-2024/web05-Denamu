@@ -56,3 +56,10 @@ export interface NoticePublished {
   boardId: number;
   title: string;
 }
+
+export interface MarketingBroadcast {
+  email: string;
+  userName: string;
+  subject: string;
+  content: string;
+}
