@@ -1,4 +1,4 @@
-import { BOARD } from "@/constants/endpoints";
+import { BOARD, FILE } from "@/constants/endpoints";
 
 import { axiosInstance } from "@/api/instance";
 import { ApiData } from "@/types/api";
@@ -39,7 +39,8 @@ export const adminBoard = {
   uploadImage: async (file: File): Promise<string> => {
     const formData = new FormData();
     formData.append("file", file);
-    const response = await axiosInstance.post<ApiData<{ url: string }>>(BOARD.ADMIN_UPLOAD_IMAGE, formData, {
+    const response = await axiosInstance.post<ApiData<{ url: string }>>(FILE.ADMIN_UPLOAD_IMAGE, formData, {
+      params: { uploadType: "BOARD_IMAGE" },
       headers: { "Content-Type": "multipart/form-data" },
     });
     return response.data.data.url;

@@ -9,6 +9,7 @@ import AdminMember from "@/components/admin/layout/AdminMember";
 import AdminMyPage from "@/components/admin/layout/AdminMyPage";
 import { AdminTabs } from "@/components/admin/layout/AdminTabs";
 import AdminLogin from "@/components/admin/login/AdminLoginModal";
+import AdminMarketingEmailTab from "@/components/admin/marketingEmail/AdminMarketingEmailTab";
 import AdminPostTab from "@/components/admin/post/AdminPostTab";
 import AdminQnaTab from "@/components/admin/qna/AdminQnaTab";
 import AdminReportTab from "@/components/admin/report/AdminReportTab";
@@ -19,7 +20,9 @@ import { useAdminCheck } from "@/hooks/queries/useAdminAuth";
 export default function Admin() {
   const [isLogin, setIsLogin] = useState<boolean>(false);
   const { status, isLoading, data } = useAdminCheck();
-  const [tap, setTap] = useState<"RSS" | "MEMBER" | "MYPAGE" | "POST" | "CHAT" | "REPORT" | "BOARD" | "QNA">("RSS");
+  const [tap, setTap] = useState<"RSS" | "MEMBER" | "MYPAGE" | "POST" | "CHAT" | "REPORT" | "BOARD" | "QNA" | "EMAIL">(
+    "RSS"
+  );
 
   useEffect(() => {
     setIsLogin(status === "success");
@@ -51,6 +54,9 @@ export default function Admin() {
     }
     if (tap === "QNA") {
       return <AdminQnaTab />;
+    }
+    if (tap === "EMAIL") {
+      return <AdminMarketingEmailTab />;
     }
     return <AdminMember />;
   };
