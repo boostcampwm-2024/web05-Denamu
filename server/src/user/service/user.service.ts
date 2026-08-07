@@ -11,7 +11,8 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import * as uuid from 'uuid';
 import { Response } from 'express';
-import { DataSource, IsNull, LessThan } from 'typeorm';
+import { DataSource, FindOptionsWhere, IsNull, LessThan } from 'typeorm';
+import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 
 import { cookieConfig } from '@common/cookie/cookie.config';
 import { EmailProducer } from '@common/email/email.producer';
@@ -295,48 +296,35 @@ export class UserService {
     userId: number,
     updateData: Partial<UpdateUserRequestDto>,
   ): Promise<void> {
-    const user = await this.getUser(userId);
+    await this.getUser(userId);
 
-    if (
-      updateData.userName !== undefined &&
-      updateData.userName !== user.userName
-    ) {
-      const existingName = await this.userRepository.findOne({
-        where: { userName: updateData.userName },
-      });
-      if (existingName) {
-        throw new ConflictException('이미 존재하는 닉네임입니다.');
-      }
-      user.userName = updateData.userName;
-    }
-    if (
-      updateData.profileImage !== undefined &&
-      user.profileImage !== updateData.profileImage
-    ) {
-      await this.consumeProfileImageChangeQuota(userId);
-      if (user.profileImage) {
-        await this.fileService.deleteByPath(user.profileImage);
-      }
-      user.profileImage = updateData.profileImage;
+    const partialUpdate: Partial<User> = {};
+
+    if (updateData.userName !== undefined) {
+      partialUpdate.userName = updateData.userName;
     }
     if (updateData.introduction !== undefined) {
-      user.introduction = updateData.introduction;
+      partialUpdate.introduction = updateData.introduction;
     }
     if (updateData.marketingEmailAgreed !== undefined) {
-      user.marketingEmailAgreed = updateData.marketingEmailAgreed;
-      user.marketingEmailAgreedAt = new Date();
+      partialUpdate.marketingEmailAgreed = updateData.marketingEmailAgreed;
+      partialUpdate.marketingEmailAgreedAt = new Date();
     }
     if (updateData.inactivityEmailAgreed !== undefined) {
-      user.inactivityEmailAgreed = updateData.inactivityEmailAgreed;
-      user.inactivityEmailAgreedAt = new Date();
+      partialUpdate.inactivityEmailAgreed = updateData.inactivityEmailAgreed;
+      partialUpdate.inactivityEmailAgreedAt = new Date();
     }
     if (updateData.noticeEmailAgreed !== undefined) {
-      user.noticeEmailAgreed = updateData.noticeEmailAgreed;
-      user.noticeEmailAgreedAt = new Date();
+      partialUpdate.noticeEmailAgreed = updateData.noticeEmailAgreed;
+      partialUpdate.noticeEmailAgreedAt = new Date();
+    }
+
+    if (Object.keys(partialUpdate).length === 0) {
+      return;
     }
 
     try {
-      await this.userRepository.save(user);
+      await this.userRepository.update({ id: userId }, partialUpdate);
     } catch (error) {
       if ((error as { code?: string })?.code === 'ER_DUP_ENTRY') {
         throw new ConflictException('이미 존재하는 닉네임입니다.');
@@ -345,19 +333,31 @@ export class UserService {
     }
   }
 
-  private async consumeProfileImageChangeQuota(userId: number): Promise<void> {
-    const result = await this.userRepository.update(
-      {
-        id: userId,
-        profileImageChangeCount: LessThan(PROFILE_IMAGE_DAILY_LIMIT),
-      },
-      { profileImageChangeCount: () => 'profile_image_change_count + 1' },
-    );
+  async updateProfileImage(userId: number, profileImage: string) {
+    const user = await this.getUser(userId);
 
+    if (profileImage === user.profileImage) {
+      return;
+    }
+
+    const criteria: FindOptionsWhere<User> = {
+      id: userId,
+      profileImageChangeCount: LessThan(PROFILE_IMAGE_DAILY_LIMIT),
+    };
+    const partialUpdate: QueryDeepPartialEntity<User> = {
+      profileImage,
+      profileImageChangeCount: () => 'profile_image_change_count + 1',
+    };
+
+    const result = await this.userRepository.update(criteria, partialUpdate);
     if (result.affected === 0) {
       throw new BadRequestException(
         `프로필 이미지는 하루 최대 ${PROFILE_IMAGE_DAILY_LIMIT}회까지 변경할 수 있습니다.`,
       );
+    }
+
+    if (user.profileImage) {
+      await this.fileService.deleteByPath(user.profileImage);
     }
   }
 
