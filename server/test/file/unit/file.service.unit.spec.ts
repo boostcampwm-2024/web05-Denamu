@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 
 import * as fs from 'fs/promises';
+import * as path from 'path';
 import sharp from 'sharp';
 
 import { WinstonLoggerService } from '@common/logger/logger.service';
@@ -254,6 +255,139 @@ describe(`${FileService.name} Unit Test`, () => {
       // then
       expect(mockedFs.unlink).toHaveBeenCalledWith(file.path);
       expect(fileRepository.delete).toHaveBeenCalledWith(file.id);
+    });
+  });
+
+  describe('saveWithoutOwner', () => {
+    it('파일을 디스크에 저장만 하고 File 레코드는 생성하지 않는다.', async () => {
+      // given
+      const multerFile = {
+        originalname: 'board.png',
+        mimetype: 'image/png',
+        size: 2048,
+        buffer: Buffer.from('original-png-data-longer-than-webp'),
+      } as Express.Multer.File;
+      const webpBuffer = Buffer.from('webp');
+      mockedSharp.mockReturnValue({
+        webp: jest.fn().mockReturnValue({
+          toBuffer: jest.fn().mockResolvedValue(webpBuffer),
+        }),
+      } as any);
+
+      // when
+      const url = await fileService.saveWithoutOwner(
+        multerFile,
+        FileUploadType.BOARD_IMAGE,
+      );
+
+      // then
+      expect(mockedFs.writeFile).toHaveBeenCalledWith(
+        expect.stringMatching(/\.webp$/),
+        webpBuffer,
+      );
+      expect(url).toContain('BOARD_IMAGE');
+      expect(fileRepository.save).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('deleteUntracked', () => {
+    it('물리 파일만 삭제하고 File 레코드는 건드리지 않는다.', async () => {
+      // given
+      const accessUrl = '/objects/BOARD_IMAGE/2026-08-01/a.png';
+
+      // when
+      await fileService.deleteUntracked(accessUrl);
+
+      // then
+      expect(mockedFs.unlink).toHaveBeenCalledWith(
+        '/app/objects/BOARD_IMAGE/2026-08-01/a.png',
+      );
+      expect(fileRepository.findOne).not.toHaveBeenCalled();
+      expect(fileRepository.delete).not.toHaveBeenCalled();
+    });
+
+    it('물리 파일 삭제에 실패해도 경고만 남기고 예외를 던지지 않는다.', async () => {
+      // given
+      mockedFs.access.mockRejectedValue(new Error('ENOENT'));
+
+      // when & then
+      await expect(
+        fileService.deleteUntracked('/objects/BOARD_IMAGE/missing.png'),
+      ).resolves.toBeUndefined();
+      expect(logger.warn).toHaveBeenCalled();
+    });
+  });
+
+  describe('findOldBoardImagePaths', () => {
+    const boardImageDir = path.join('/app/objects', FileUploadType.BOARD_IMAGE);
+    const dateDir1 = path.join(boardImageDir, '2026-08-01');
+    const dateDir2 = path.join(boardImageDir, '2026-08-02');
+    const cutoff = new Date('2026-08-05').getTime();
+
+    it('board image 디렉터리 자체가 없으면 빈 배열을 반환한다.', async () => {
+      // given
+      mockedFs.readdir.mockRejectedValue(new Error('ENOENT'));
+
+      // when
+      const result = await fileService.findOldBoardImagePaths(cutoff);
+
+      // then
+      expect(result).toEqual([]);
+    });
+
+    it('cutoff보다 오래된 파일만 모으고, 읽기 실패한 날짜 디렉터리는 건너뛴다.', async () => {
+      // given
+      mockedFs.readdir.mockImplementation((dir) => {
+        if (dir === boardImageDir)
+          return Promise.resolve(['2026-08-01', '2026-08-02'] as any);
+        if (dir === dateDir1)
+          return Promise.resolve(['old.png', 'new.png'] as any);
+        if (dir === dateDir2) return Promise.reject(new Error('ENOENT'));
+        return Promise.reject(new Error(`unexpected dir: ${String(dir)}`));
+      });
+      mockedFs.stat.mockImplementation((filePath) => {
+        if (filePath === path.join(dateDir1, 'old.png')) {
+          return Promise.resolve({
+            isFile: () => true,
+            mtimeMs: cutoff - 1000,
+          } as any);
+        }
+        if (filePath === path.join(dateDir1, 'new.png')) {
+          return Promise.resolve({
+            isFile: () => true,
+            mtimeMs: cutoff + 1000,
+          } as any);
+        }
+        return Promise.reject(
+          new Error(`unexpected file: ${String(filePath)}`),
+        );
+      });
+
+      // when
+      const result = await fileService.findOldBoardImagePaths(cutoff);
+
+      // then
+      expect(result).toEqual([path.join(dateDir1, 'old.png')]);
+    });
+
+    it('디렉터리 엔트리는 결과에서 제외한다.', async () => {
+      // given
+      mockedFs.readdir.mockImplementation((dir) => {
+        if (dir === boardImageDir)
+          return Promise.resolve(['2026-08-01'] as any);
+        if (dir === dateDir1) return Promise.resolve(['sub-dir'] as any);
+        return Promise.reject(new Error(`unexpected dir: ${String(dir)}`));
+      });
+      mockedFs.stat.mockResolvedValue({
+        isFile: () => false,
+        mtimeMs: cutoff - 1000,
+      } as any);
+
+      // when
+      const result = await fileService.findOldBoardImagePaths(cutoff);
+
+      // then
+      expect(result).toEqual([]);
     });
   });
 });
