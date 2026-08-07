@@ -180,4 +180,35 @@ export class FileService {
 
     await this.fileRepository.delete(file.id);
   }
+
+  async findOldBoardImagePaths(cutoff: number): Promise<string[]> {
+    const boardImageDir = path.join(this.basePath, FileUploadType.BOARD_IMAGE);
+
+    let dateDirs: string[];
+    try {
+      dateDirs = await fs.readdir(boardImageDir);
+    } catch {
+      return [];
+    }
+
+    const files: string[] = [];
+    for (const dateDir of dateDirs) {
+      const dateDirPath = path.join(boardImageDir, dateDir);
+      let fileNames: string[];
+      try {
+        fileNames = await fs.readdir(dateDirPath);
+      } catch {
+        continue;
+      }
+
+      for (const fileName of fileNames) {
+        const filePath = path.join(dateDirPath, fileName);
+        const stat = await fs.stat(filePath);
+        if (stat.isFile() && stat.mtimeMs < cutoff) {
+          files.push(filePath);
+        }
+      }
+    }
+    return files;
+  }
 }
