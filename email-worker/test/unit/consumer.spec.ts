@@ -7,6 +7,7 @@ import {
   RssRegistration,
   RssRegistrationRequest,
   RssRemoval,
+  UnreadNotificationDigest,
   User,
 } from '@common/types';
 
@@ -43,6 +44,7 @@ describe('email consumer unit test', () => {
     let sendAdminDeleteAccountMail: jest.Mock;
     let sendAdminPasswordResetEmail: jest.Mock;
     let sendMarketingBroadcastMail: jest.Mock;
+    let sendUnreadNotificationDigestMail: jest.Mock;
 
     beforeEach(() => {
       sendUserCertificationMail = jest.fn().mockResolvedValue(undefined);
@@ -56,6 +58,7 @@ describe('email consumer unit test', () => {
       sendAdminDeleteAccountMail = jest.fn().mockResolvedValue(undefined);
       sendAdminPasswordResetEmail = jest.fn().mockResolvedValue(undefined);
       sendMarketingBroadcastMail = jest.fn().mockResolvedValue(undefined);
+      sendUnreadNotificationDigestMail = jest.fn().mockResolvedValue(undefined);
 
       emailService = {
         sendUserCertificationMail,
@@ -69,6 +72,7 @@ describe('email consumer unit test', () => {
         sendAdminDeleteAccountMail,
         sendAdminPasswordResetEmail,
         sendMarketingBroadcastMail,
+        sendUnreadNotificationDigestMail,
       } as any;
       rabbitmqService = {
         sendMessageToQueue: jest.fn().mockResolvedValue(null),
@@ -289,6 +293,25 @@ describe('email consumer unit test', () => {
       //then
       expect(sendMarketingBroadcastMail).toHaveBeenCalledTimes(1);
       expect(sendMarketingBroadcastMail).toHaveBeenCalledWith(marketingData);
+    });
+
+    it('UNREAD_NOTIFICATION_DIGEST 타입일 때 sendUnreadNotificationDigestMail을 호출한다', async () => {
+      const digestData: UnreadNotificationDigest = {
+        email: 'test@test.com',
+        userName: 'tester',
+        unreadCount: 5,
+      };
+      const payload: EmailPayload = {
+        type: EmailPayloadConstant.UNREAD_NOTIFICATION_DIGEST,
+        data: digestData,
+      };
+
+      await emailConsumer.handleEmailByType(payload);
+
+      expect(sendUnreadNotificationDigestMail).toHaveBeenCalledTimes(1);
+      expect(sendUnreadNotificationDigestMail).toHaveBeenCalledWith(
+        digestData,
+      );
     });
 
     it('알 수 없는 타입일 때 아무 메서드도 호출하지 않는다', async () => {
