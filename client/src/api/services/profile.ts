@@ -61,6 +61,11 @@ export const updateProfile = async (payload: UpdateProfilePayload): Promise<ApiM
   return response.data;
 };
 
+export const updateProfileImage = async (profileImage: string): Promise<ApiMessage> => {
+  const response = await axiosInstance.patch<ApiMessage>(PROFILE.UPDATE_IMAGE, { profileImage });
+  return response.data;
+};
+
 export const checkUserNameAvailability = async (userName: string): Promise<boolean> => {
   const response = await axiosInstance.get<ApiData<{ exists: boolean }>>(USER.USERNAME_AVAILABILITY, {
     params: { userName },

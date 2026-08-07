@@ -152,6 +152,7 @@ export const NOTIFICATION = {
 export const PROFILE = {
   PROFILE: (id: number) => `/api/users/${id}/profile`,
   UPDATE: "/api/users/profile",
+  UPDATE_IMAGE: "/api/users/profile-image",
   RSS: (id: number) => `/api/users/${id}/rss`,
   LIKES: (id: number) => `/api/users/${id}/likes`,
   COMMENTS: (id: number) => `/api/users/${id}/comments`,

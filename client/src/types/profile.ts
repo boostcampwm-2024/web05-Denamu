@@ -67,7 +67,6 @@ export interface ProfileActivity {
 
 export interface UpdateProfilePayload {
   userName?: string;
-  profileImage?: string;
   introduction?: string;
   marketingEmailAgreed?: boolean;
   inactivityEmailAgreed?: boolean;

@@ -31,6 +31,7 @@ vi.mock("@/hooks/queries/useOAuthLinks.ts", () => ({
 vi.mock("@/hooks/queries/useProfileSettings.ts", () => ({
   useUpdateProfile: () => ({ mutate: updateProfileMutate, isPending: false }),
   useUploadProfileImage: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useUpdateProfileImage: () => ({ mutateAsync: vi.fn(), isPending: false }),
   useChangePassword: () => ({ mutate: changePasswordMutate, isPending: false }),
   useRequestDeleteAccount: () => ({ mutate: requestDeleteMutate, isPending: false }),
 }));

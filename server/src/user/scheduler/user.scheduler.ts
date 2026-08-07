@@ -55,4 +55,21 @@ export class UserScheduler {
       );
     }
   }
+
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  async resetProfileImageChangeCounts() {
+    try {
+      const result = await this.userRepository.update(
+        { profileImageChangeCount: Not(0) },
+        { profileImageChangeCount: 0 },
+      );
+      this.logger.log(
+        `[UserScheduler]: 프로필 이미지 변경 횟수 초기화 완료. ${result.affected ?? 0}명.`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `[UserScheduler]: 프로필 이미지 변경 횟수 초기화 중 오류 발생: ${error}`,
+      );
+    }
+  }
 }

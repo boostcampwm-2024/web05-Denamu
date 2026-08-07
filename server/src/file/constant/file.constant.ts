@@ -11,3 +11,5 @@ export const FILE_SIZE_LIMITS = {
 };
 
 export const IMAGE_WEBP_QUALITY = 80;
+
+export const ORPHAN_FILE_GRACE_PERIOD_MS = 1000 * 60 * 60 * 24;

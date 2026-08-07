@@ -8,7 +8,6 @@ describe(`${UpdateUserRequestDto.name} Test`, () => {
   beforeEach(() => {
     dto = new UpdateUserRequestDto({
       userName: 'test',
-      profileImage: 'test',
       introduction: 'test',
     });
   });
@@ -66,20 +65,6 @@ describe(`${UpdateUserRequestDto.name} Test`, () => {
       // then
       expect(errors).toHaveLength(1);
       expect(errors[0].constraints).toHaveProperty('maxLength');
-    });
-  });
-
-  describe('profileImage', () => {
-    it('프로필 이미지 경로가 문자열이 아니고 정수일 경우 유효성 검사에 실패한다.', async () => {
-      // given
-      dto.profileImage = 123 as any;
-
-      // when
-      const errors = await validate(dto);
-
-      // then
-      expect(errors).toHaveLength(1);
-      expect(errors[0].constraints).toHaveProperty('isString');
     });
   });
 
@@ -155,14 +140,13 @@ describe(`${UpdateUserRequestDto.name} Test`, () => {
     it('여러 필드가 유효하지 않을 경우 여러 유효성 검사에 실패한다.', async () => {
       // given
       dto.userName = 123 as any;
-      dto.profileImage = 456 as any;
       dto.introduction = 789 as any;
 
       // when
       const errors = await validate(dto);
 
       // then
-      expect(errors).toHaveLength(3);
+      expect(errors).toHaveLength(2);
 
       const constraintTypes = errors.flatMap((error) =>
         Object.keys(error.constraints || {}),
