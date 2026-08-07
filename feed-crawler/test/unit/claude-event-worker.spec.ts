@@ -261,7 +261,13 @@ describe('ClaudeEventWorker', () => {
       // Then
       expect(messagesCreateMock).toHaveBeenCalledWith({
         max_tokens: 8192,
-        system: expect.any(String),
+        system: [
+          {
+            type: 'text',
+            text: expect.any(String),
+            cache_control: { type: 'ephemeral' },
+          },
+        ],
         messages: [{ role: 'user', content: mockFeedAIQueueItem.content }],
         model: 'claude-haiku-4-5',
       });

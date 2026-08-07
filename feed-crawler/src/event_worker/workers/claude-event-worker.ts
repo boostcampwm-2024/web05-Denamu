@@ -129,7 +129,13 @@ export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
     try {
       const params: Anthropic.MessageCreateParams = {
         max_tokens: 8192,
-        system: await this.getPromptContent(),
+        system: [
+          {
+            type: 'text',
+            text: await this.getPromptContent(),
+            cache_control: { type: 'ephemeral' },
+          },
+        ],
         messages: [{ role: 'user', content: feed.content }],
         model: 'claude-haiku-4-5',
       };
