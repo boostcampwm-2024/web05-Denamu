@@ -50,9 +50,26 @@ export default function BoardDetailPage() {
               {board.authorName && <span>{board.authorName} · </span>}
               {new Date(board.createdAt).toLocaleString()}
             </p>
-            <div className="mt-6 border-t pt-6">
-              <BoardContent content={board.content} />
-            </div>
+            {board.category === "FAQ" && board.question ? (
+              <div className="mt-6 flex flex-col gap-8 border-t pt-6">
+                <div className="flex gap-4">
+                  <span className="text-3xl font-black leading-none text-green-500">Q</span>
+                  <div className="flex-1 pt-1">
+                    <BoardContent content={board.question} />
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <span className="text-3xl font-black leading-none text-blue-500">A</span>
+                  <div className="flex-1 pt-1">
+                    <BoardContent content={board.content} />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-6 border-t pt-6">
+                <BoardContent content={board.content} />
+              </div>
+            )}
           </article>
         )}
       </div>

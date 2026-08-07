@@ -47,6 +47,7 @@ const makeDetail = (overrides: Partial<BoardDetail> = {}): BoardDetail => ({
   endAt: null,
   createdAt: "2026-07-20T09:00:00.000Z",
   content: "<p>정기 점검으로 인해 서비스 이용이 일시 중단됩니다.</p>",
+  question: null,
   authorName: "관리자",
   updatedAt: "2026-07-20T09:00:00.000Z",
   ...overrides,
@@ -108,5 +109,25 @@ describe("BoardDetailPage", () => {
     fireEvent.click(screen.getByRole("button", { name: /목록으로/ }));
 
     expect(mockNavigate).toHaveBeenCalledWith("/board");
+  });
+
+  it("FAQ이고 question이 있으면 질문/답변을 구분해 렌더링한다", () => {
+    boardState = {
+      data: makeDetail({
+        category: "FAQ",
+        question: "<p>환불은 언제까지 가능한가요?</p>",
+        content: "<p>결제 후 7일 이내입니다.</p>",
+      }),
+      isLoading: false,
+      isError: false,
+    };
+    render(<BoardDetailPage />);
+
+    const contents = screen.getAllByTestId("board-content");
+    expect(contents).toHaveLength(2);
+    expect(contents[0]).toHaveTextContent("환불은 언제까지 가능한가요?");
+    expect(contents[1]).toHaveTextContent("결제 후 7일 이내입니다.");
+    expect(screen.getByText("Q")).toBeInTheDocument();
+    expect(screen.getByText("A")).toBeInTheDocument();
   });
 });

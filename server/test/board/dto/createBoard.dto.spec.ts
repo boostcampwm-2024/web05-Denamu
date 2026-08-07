@@ -103,6 +103,31 @@ describe(`${CreateBoardRequestDto.name} Test`, () => {
     });
   });
 
+  describe('question', () => {
+    it('분류가 FAQ인데 질문이 없을 경우 유효성 검사에 실패한다.', async () => {
+      // given
+      dto.category = BoardCategory.FAQ;
+
+      // when
+      const errors = await validate(dto);
+
+      // then
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isNotEmpty');
+    });
+
+    it('분류가 NOTICE이고 질문이 없을 경우 유효성 검사에 성공한다.', async () => {
+      // given
+      dto.category = BoardCategory.NOTICE;
+
+      // when
+      const errors = await validate(dto);
+
+      // then
+      expect(errors).toHaveLength(0);
+    });
+  });
+
   describe('isPinned', () => {
     it('상단 고정 여부가 boolean이 아닌 문자열일 경우 유효성 검사에 실패한다.', async () => {
       // given
@@ -146,9 +171,10 @@ describe(`${CreateBoardRequestDto.name} Test`, () => {
       expect(errors).toHaveLength(0);
     });
 
-    it('분류가 FAQ일 경우 유효성 검사에 성공한다.', async () => {
+    it('분류가 FAQ이고 질문이 존재할 경우 유효성 검사에 성공한다.', async () => {
       // given
       dto.category = BoardCategory.FAQ;
+      dto.question = '<p>환불은 언제까지 가능한가요?</p>';
 
       // when
       const errors = await validate(dto);

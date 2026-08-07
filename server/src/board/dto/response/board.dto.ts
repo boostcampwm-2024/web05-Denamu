@@ -58,6 +58,13 @@ export class BoardDetailDto extends BoardSummaryDto {
   content: string;
 
   @ApiProperty({
+    description: '질문 (FAQ 전용, 에디터에서 작성된 HTML)',
+    example: '<p>환불은 언제까지 가능한가요?</p>',
+    nullable: true,
+  })
+  question: string | null;
+
+  @ApiProperty({
     example: '테스트 계정',
     description: '작성자 이름 (탈퇴 등으로 계정이 없으면 null)',
     nullable: true,
@@ -83,6 +90,7 @@ export class BoardDetailDto extends BoardSummaryDto {
       endAt: board.endAt,
       createdAt: board.createdAt,
       content: board.content,
+      question: board.question,
       authorName: board.author?.name ?? null,
       updatedAt: board.updatedAt,
     });

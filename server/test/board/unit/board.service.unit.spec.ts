@@ -393,6 +393,7 @@ describe(`${BoardService.name} Unit Test`, () => {
       expect(boardRepository.create).toHaveBeenCalledWith({
         title: '제목',
         content: '<p>본문</p>',
+        question: null,
         status: BoardStatus.DRAFT,
         category: BoardCategory.NOTICE,
         isPinned: false,
@@ -497,6 +498,26 @@ describe(`${BoardService.name} Unit Test`, () => {
 
       // then
       expect(emailProducer.produceNoticePublished).not.toHaveBeenCalled();
+    });
+
+    it('FAQ 분류일 경우 질문을 함께 저장한다.', async () => {
+      // given
+      adminRepository.findOneBy.mockResolvedValue(null);
+      const dto = new CreateBoardRequestDto({
+        title: '질문',
+        content: '<p>답변</p>',
+        question: '<p>환불은 언제까지 가능한가요?</p>',
+        category: BoardCategory.FAQ,
+      });
+
+      // when
+      const result = await boardService.createBoard('admin@test.com', dto);
+
+      // then
+      expect(boardRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({ question: '<p>환불은 언제까지 가능한가요?</p>' }),
+      );
+      expect(result.question).toBe('<p>환불은 언제까지 가능한가요?</p>');
     });
 
     it('노출 시작일이 미래일 경우 이메일을 발행하지 않는다.', async () => {
@@ -664,6 +685,30 @@ describe(`${BoardService.name} Unit Test`, () => {
       );
       expect(fileService.deleteUntracked).not.toHaveBeenCalledWith(
         '/objects/BOARD_IMAGE/2026-08-06/new.jpg',
+      );
+    });
+
+    it('질문을 수정할 경우 질문 필드가 갱신되고 제거된 이미지 파일을 삭제한다.', async () => {
+      // given
+      boardRepository.findOne.mockResolvedValue(
+        createBoard({
+          question:
+            '<p>질문</p><img src="/objects/BOARD_IMAGE/2026-08-06/old-question.jpg">',
+        }),
+      );
+
+      // when
+      const result = await boardService.updateBoard(
+        1,
+        new UpdateBoardRequestDto({
+          question: '<p>수정된 질문</p>',
+        }),
+      );
+
+      // then
+      expect(result.question).toBe('<p>수정된 질문</p>');
+      expect(fileService.deleteUntracked).toHaveBeenCalledWith(
+        '/objects/BOARD_IMAGE/2026-08-06/old-question.jpg',
       );
     });
   });

@@ -232,6 +232,7 @@ describe("AdminBoardTab", () => {
     const detail: BoardDetail = {
       ...board,
       content: "<p>기존 본문</p>",
+      question: null,
       authorName: "관리자",
       updatedAt: board.createdAt,
     };
@@ -252,6 +253,7 @@ describe("AdminBoardTab", () => {
     const detail: BoardDetail = {
       ...board,
       content: "<p>기존 본문</p>",
+      question: null,
       authorName: "관리자",
       updatedAt: board.createdAt,
     };

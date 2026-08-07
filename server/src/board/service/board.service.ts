@@ -90,6 +90,7 @@ export class BoardService {
     const board = this.boardRepository.create({
       title: dto.title,
       content: dto.content,
+      question: dto.question ?? null,
       status: dto.status ?? BoardStatus.DRAFT,
       category: dto.category ?? BoardCategory.NOTICE,
       isPinned: dto.isPinned ?? false,
@@ -173,9 +174,11 @@ export class BoardService {
     validateWindow(startAt, endAt);
 
     const previousContent = board.content;
+    const previousQuestion = board.question;
 
     if (dto.title !== undefined) board.title = dto.title;
     if (dto.content !== undefined) board.content = dto.content;
+    if (dto.question !== undefined) board.question = dto.question;
     if (dto.isPinned !== undefined) board.isPinned = dto.isPinned;
     if (dto.status !== undefined) board.status = dto.status;
     if (dto.category !== undefined) board.category = dto.category;
@@ -184,10 +187,16 @@ export class BoardService {
 
     await this.boardRepository.save(board);
 
-    if (dto.content !== undefined) {
-      const removedUrls = extractBoardImageUrls(previousContent).filter(
-        (url) => !extractBoardImageUrls(dto.content).includes(url),
-      );
+    if (dto.content !== undefined || dto.question !== undefined) {
+      const previousUrls = [
+        ...extractBoardImageUrls(previousContent),
+        ...extractBoardImageUrls(previousQuestion ?? ''),
+      ];
+      const currentUrls = [
+        ...extractBoardImageUrls(board.content),
+        ...extractBoardImageUrls(board.question ?? ''),
+      ];
+      const removedUrls = previousUrls.filter((url) => !currentUrls.includes(url));
       await this.deleteBoardImages(removedUrls);
     }
 
@@ -201,7 +210,10 @@ export class BoardService {
     }
 
     await this.boardRepository.delete(id);
-    await this.deleteBoardImages(extractBoardImageUrls(board.content));
+    await this.deleteBoardImages([
+      ...extractBoardImageUrls(board.content),
+      ...extractBoardImageUrls(board.question ?? ''),
+    ]);
   }
 
   private async deleteBoardImages(urls: string[]): Promise<void> {

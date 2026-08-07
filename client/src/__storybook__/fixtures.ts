@@ -487,8 +487,36 @@ export const mockBoardsPage: BoardPage<BoardSummary> = {
 export const mockBoardDetail: BoardDetail = {
   ...mockBoardSummaries[0],
   content: "<p>정기 점검으로 인해 서비스 이용이 일시 중단됩니다.</p>",
+  question: null,
   authorName: "테스트 계정",
   updatedAt: "2026-07-20T09:00:00.000Z",
+};
+
+const mockFaqBoardSummary: BoardSummary = {
+  id: 4,
+  title: "RSS 등록은 어떻게 하나요?",
+  isPinned: false,
+  status: "PUBLISHED",
+  category: "FAQ",
+  startAt: null,
+  endAt: null,
+  createdAt: "2026-07-22T09:00:00.000Z",
+};
+
+export const mockFaqBoardsPage: BoardPage<BoardSummary> = {
+  result: [mockFaqBoardSummary],
+  page: 1,
+  limit: 10,
+  totalCount: 1,
+  hasMore: false,
+};
+
+export const mockFaqBoardDetail: BoardDetail = {
+  ...mockFaqBoardSummary,
+  content: "<p>마이페이지에서 RSS 주소를 등록하면 검수 후 반영됩니다.</p>",
+  question: "<p>RSS 등록은 어떻게 하나요?</p>",
+  authorName: "테스트 계정",
+  updatedAt: "2026-07-22T09:00:00.000Z",
 };
 
 const mockQnaSummaries: QnaSummary[] = [
