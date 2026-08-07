@@ -1,5 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
+import { BoardCategory, BoardStatus } from '@board/constant/board.constant';
+import { MaxBoardImageCount } from '@board/validator/maxBoardImageCount.validator';
 import { Transform } from 'class-transformer';
 import {
   IsBoolean,
@@ -11,8 +13,6 @@ import {
 } from 'class-validator';
 
 import { sanitizeBoardContent } from '@common/util/sanitizeHtml';
-
-import { BoardCategory, BoardStatus } from '@board/constant/board.constant';
 
 export class UpdateBoardRequestDto {
   @ApiPropertyOptional({
@@ -31,8 +31,20 @@ export class UpdateBoardRequestDto {
   })
   @IsOptional()
   @IsString({ message: '문자열로 입력해주세요.' })
-  @Transform(({ value }) => (value === undefined ? value : sanitizeBoardContent(value)))
+  @Transform(({ value }) =>
+    value === undefined ? value : sanitizeBoardContent(value),
+  )
+  @MaxBoardImageCount()
   content?: string;
+
+  @ApiPropertyOptional({
+    description: '질문 (FAQ 전용, 에디터에서 작성된 HTML)',
+    example: '<p>환불은 언제까지 가능한가요?</p>',
+  })
+  @IsOptional()
+  @IsString({ message: '문자열로 입력해주세요.' })
+  @Transform(({ value }) => (value === undefined ? value : sanitizeBoardContent(value)))
+  question?: string;
 
   @ApiPropertyOptional({ description: '상단 고정 여부' })
   @IsOptional()

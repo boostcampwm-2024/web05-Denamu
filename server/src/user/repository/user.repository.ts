@@ -47,4 +47,11 @@ export class UserRepository extends Repository<User> {
       },
     });
   }
+
+  async findNoticeAgreedUsers(): Promise<Pick<User, 'email' | 'userName'>[]> {
+    return this.find({
+      where: { noticeEmailAgreed: true },
+      select: ['email', 'userName'],
+    });
+  }
 }

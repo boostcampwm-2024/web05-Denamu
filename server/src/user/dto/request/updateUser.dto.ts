@@ -18,17 +18,6 @@ export class UpdateUserRequestDto {
   userName?: string;
 
   @ApiPropertyOptional({
-    example: 'https://denamu.dev/objects/PROFILE_IMAGE/20250816/uuid.png',
-    description: '변경할 프로필 이미지 path',
-    required: false,
-  })
-  @IsOptional()
-  @IsString({
-    message: '프로필 이미지는 문자열이어야 합니다.',
-  })
-  profileImage?: string;
-
-  @ApiPropertyOptional({
     example: '안녕하세요! 김개발입니다.',
     description: '변경할 자기소개',
     required: false,

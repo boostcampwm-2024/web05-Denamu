@@ -13,7 +13,7 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiExcludeEndpoint, ApiTags } from '@nestjs/swagger';
 
 import { Request, Response } from 'express';
 
@@ -127,6 +127,7 @@ export class OAuthController {
     return ApiResponse.responseWithNoContent('OAuth 연결이 해제되었습니다.');
   }
 
+  @ApiExcludeEndpoint()
   @Get('e2e/callback')
   @HttpCode(HttpStatus.FOUND)
   async e2eCallback(

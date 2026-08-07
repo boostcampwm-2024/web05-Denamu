@@ -99,6 +99,9 @@ jobs:
             echo "SERVER_PORT=${{ secrets.SERVER_PORT }}"
             echo "OAUTH_BASE_URL=${{ vars.OAUTH_BASE_URL }}"
             echo "SERVER_DISCORD_WEBHOOK_URL=${{ secrets.SERVER_DISCORD_WEBHOOK_URL }}"
+            echo "RSS_DISCORD_WEBHOOK_URL=${{ secrets.RSS_DISCORD_WEBHOOK_URL }}"
+            echo "REPORT_DISCORD_WEBHOOK_URL=${{ secrets.REPORT_DISCORD_WEBHOOK_URL }}"
+            echo "QNA_DISCORD_WEBHOOK_URL=${{ secrets.QNA_DISCORD_WEBHOOK_URL }}"
           } | sudo tee "${{env.SERVER_ENV_FILE}}" >/dev/null
 
       - name: Blue-Green 무중단 배포

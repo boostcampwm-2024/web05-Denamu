@@ -36,6 +36,7 @@ import {
   useChangePassword,
   useRequestDeleteAccount,
   useUpdateProfile,
+  useUpdateProfileImage,
   useUploadProfileImage,
 } from "@/hooks/queries/useProfileSettings.ts";
 
@@ -96,6 +97,7 @@ export const ProfileEditTab = ({ userId, email }: ProfileEditTabProps) => {
 
   const updateProfile = useUpdateProfile(userId);
   const uploadImage = useUploadProfileImage();
+  const updateProfileImage = useUpdateProfileImage(userId);
   const changePassword = useChangePassword();
   const requestDelete = useRequestDeleteAccount();
 
@@ -188,12 +190,13 @@ export const ProfileEditTab = ({ userId, email }: ProfileEditTabProps) => {
     if (!file) return;
     try {
       const result = await uploadImage.mutateAsync(file);
+      await updateProfileImage.mutateAsync(result.url);
       setProfileImage(result.url);
-      toast({ title: "이미지 업로드 성공", description: "저장을 눌러 변경사항을 반영하세요." });
+      toast({ title: "프로필 이미지 변경 성공", description: "프로필 이미지가 변경되었습니다." });
     } catch (error) {
       toast({
-        title: "이미지 업로드 실패",
-        description: getErrorMessage(error, "이미지 업로드에 실패했습니다."),
+        title: "프로필 이미지 변경 실패",
+        description: getErrorMessage(error, "프로필 이미지 변경에 실패했습니다."),
         variant: "destructive",
       });
     }
@@ -236,9 +239,6 @@ export const ProfileEditTab = ({ userId, email }: ProfileEditTabProps) => {
     }
     if (introduction !== (profile?.introduction ?? "")) {
       payload.introduction = introduction;
-    }
-    if (profileImage && profileImage !== (profile?.profileImage ?? null)) {
-      payload.profileImage = profileImage;
     }
 
     if (Object.keys(payload).length === 0) {
@@ -355,10 +355,10 @@ export const ProfileEditTab = ({ userId, email }: ProfileEditTabProps) => {
               />
               <Button
                 variant="outline"
-                disabled={uploadImage.isPending}
+                disabled={uploadImage.isPending || updateProfileImage.isPending}
                 onClick={() => fileInputRef.current?.click()}
               >
-                {uploadImage.isPending ? "업로드 중..." : "이미지 변경"}
+                {uploadImage.isPending || updateProfileImage.isPending ? "변경 중..." : "이미지 변경"}
               </Button>
               <p className="mt-2 text-xs text-gray-400">PNG, JPG, WEBP, GIF (최대 5MB)</p>
             </div>

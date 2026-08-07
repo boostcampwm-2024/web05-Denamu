@@ -18,6 +18,12 @@ import { testApp } from '@test/config/e2e/env/jest.setup';
 
 const URL = '/api/files';
 
+// 100x100 단색 PNG: webp 변환 시 원본보다 확실히 작아지는 케이스 (353B -> 106B)
+const PNG_FIXTURE_BUFFER = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAIAAAD/gAIDAAAACXBIWXMAAAPoAAAD6AG1e1JrAAABE0lEQVR4nO3WUQ0DAQzD0CExfygHaxTuZ0onPakILCfN5yn3vIPwQep5rQtYgdUvEsOswIpZbd+RGAZWzEoM+5dhrLMCK2Ylhs3LSGcFVsxqHjHTIbBiVvfPgg+smJUYNi8jnRVYMat5xEyHwIpZ3T8LPrBiVmLYvIx0VmDFrOYRMx0CK2Z1/yz4wIpZiWHzMtJZgRWzmkfMdAismNX9s+ADK2Ylhs3LSGcFVsxqHjHTIbBiVvfPgg+smJUYNi8jnRVYMat5xEyHwIpZ3T8LPrBiVmLYvIx0VmDFrOYRMx0CK2Z1/yz4wIpZiWHzMtJZgRWzmkfMdAismNX9s+ADK2Ylhs3LSGcFVsxqHjHTIbBamfUFgy2uiqggRS0AAAAASUVORK5CYII=',
+  'base64',
+);
+
 describe(`POST ${URL} E2E Test`, () => {
   let agent: TestAgent;
   let user: User;
@@ -147,7 +153,7 @@ describe(`POST ${URL} E2E Test`, () => {
       .post(URL)
       .query(requestDto)
       .set('Authorization', `Bearer ${accessToken}`)
-      .attach('file', Buffer.alloc(1024, 0), 'test.png');
+      .attach('file', PNG_FIXTURE_BUFFER, 'test.png');
 
     // Http then
     const { data } = response.body;
@@ -155,9 +161,9 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(data).toStrictEqual({
       id: expect.any(Number),
       originalName: 'test.png',
-      mimetype: 'image/png',
-      size: 1024,
-      url: expect.stringContaining(fileRandomName),
+      mimetype: 'image/webp',
+      size: expect.any(Number),
+      url: expect.stringContaining(`${fileRandomName}.webp`),
       userId: user.id,
       createdAt: expect.any(String),
     });
@@ -165,7 +171,7 @@ describe(`POST ${URL} E2E Test`, () => {
     // DB, Redis when
     const savedFile = await fileRepository.findOneBy({
       originalName: 'test.png',
-      mimetype: 'image/png',
+      mimetype: 'image/webp',
     });
 
     // DB, Redis then

@@ -1,4 +1,5 @@
 import { ApiData } from "@/types/api";
+import { RssOwner } from "@/types/profile";
 
 export interface FeedBase {
   id: number;
@@ -26,8 +27,8 @@ export interface FeedDetail extends Omit<FeedBase, "blog"> {
   blog: {
     id: number;
     name: string;
-    ownerName: string | null;
-    isOwnerCertified: boolean;
+    userName: string;
+    owner: RssOwner | null;
     platform: string;
     image: string | null;
   };

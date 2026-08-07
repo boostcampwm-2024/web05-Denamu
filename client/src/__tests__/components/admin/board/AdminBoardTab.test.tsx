@@ -2,8 +2,6 @@ import type { ReactNode } from "react";
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { lucideProxy } from "@/__tests__/__mocks__/external/lucide-proxy.tsx";
-
 import AdminBoardTab from "@/components/admin/board/AdminBoardTab.tsx";
 
 import { BoardDetail, BoardPage, BoardSummary } from "@/types/board";
@@ -16,8 +14,18 @@ const updateMutateMock = vi.hoisted(() => vi.fn());
 const deleteMutateMock = vi.hoisted(() => vi.fn());
 const toastMock = vi.hoisted(() => vi.fn());
 const getDetailMock = vi.hoisted(() => vi.fn());
+const uploadImageMock = vi.hoisted(() => vi.fn());
 
-vi.mock("lucide-react", () => lucideProxy());
+// @tinymce/tinymce-react mock: 실제 에디터 대신 textarea로 대체하고, 컴포넌트가 넘긴 props(특히
+// init.images_upload_handler / init.file_picker_callback)를 테스트에서 직접 호출하기 위해 스파이로 기록.
+const editorPropsSpy = vi.hoisted(() => vi.fn());
+
+// AdminBoardTab import(위 5번째 줄)가 lucide-react를 로드하는 시점보다 lucideProxy 바인딩이
+// 늦게 초기화되어 TDZ ReferenceError가 나므로, 동적 import로 참조 시점을 팩토리 실행 시점까지 늦춘다.
+vi.mock("lucide-react", async () => {
+  const { lucideProxy } = await import("@/__tests__/__mocks__/external/lucide-proxy.tsx");
+  return lucideProxy();
+});
 
 vi.mock("@/hooks/common/useCustomToast", () => ({
   useCustomToast: () => ({ toast: toastMock }),
@@ -31,13 +39,14 @@ vi.mock("@/hooks/queries/useAdminBoards", () => ({
 }));
 
 vi.mock("@/api/services/admin/board", () => ({
-  adminBoard: { getDetail: getDetailMock },
+  adminBoard: { getDetail: getDetailMock, uploadImage: uploadImageMock },
 }));
 
-vi.mock("react-quill-new", () => ({
-  default: ({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-    <textarea aria-label="본문" value={value} onChange={(e) => onChange(e.target.value)} />
-  ),
+vi.mock("@tinymce/tinymce-react", () => ({
+  Editor: (props: { value: string; onEditorChange: (content: string) => void; init?: Record<string, unknown> }) => {
+    editorPropsSpy(props);
+    return <textarea aria-label="본문" value={props.value} onChange={(e) => props.onEditorChange(e.target.value)} />;
+  },
 }));
 
 vi.mock("@/components/ui/select", () => {
@@ -223,6 +232,7 @@ describe("AdminBoardTab", () => {
     const detail: BoardDetail = {
       ...board,
       content: "<p>기존 본문</p>",
+      question: null,
       authorName: "관리자",
       updatedAt: board.createdAt,
     };
@@ -243,6 +253,7 @@ describe("AdminBoardTab", () => {
     const detail: BoardDetail = {
       ...board,
       content: "<p>기존 본문</p>",
+      question: null,
       authorName: "관리자",
       updatedAt: board.createdAt,
     };
@@ -285,5 +296,83 @@ describe("AdminBoardTab", () => {
 
     expect(deleteMutateMock).toHaveBeenCalledWith(11, expect.any(Object));
     expect(toastMock).toHaveBeenCalledWith(expect.objectContaining({ description: "삭제를 완료했습니다." }));
+  });
+
+  type EditorInit = {
+    file_picker_callback: (callback: (url: string, meta?: Record<string, string>) => void) => void;
+    images_upload_handler: (blobInfo: { blob: () => Blob; filename: () => string }) => Promise<string>;
+  };
+  const latestEditorInit = () => (editorPropsSpy.mock.calls.at(-1)?.[0].init as EditorInit) ?? undefined;
+
+  it("에디터 이미지 툴바 버튼으로 파일 선택 시 업로드 후 삽입 콜백에 URL을 전달한다", async () => {
+    uploadImageMock.mockResolvedValue("https://cdn.example.com/board/a.png");
+    renderTab();
+    fireEvent.click(screen.getByRole("button", { name: "공지사항 작성" }));
+
+    await waitFor(() => expect(latestEditorInit()).toBeDefined());
+    const insertCallback = vi.fn();
+
+    const createElementSpy = vi.spyOn(document, "createElement");
+    latestEditorInit().file_picker_callback(insertCallback);
+    const input = createElementSpy.mock.results.at(-1)?.value as HTMLInputElement;
+    createElementSpy.mockRestore();
+
+    const file = new File(["binary"], "photo.png", { type: "image/png" });
+    Object.defineProperty(input, "files", { value: [file] });
+    input.dispatchEvent(new Event("change"));
+
+    await waitFor(() => expect(uploadImageMock).toHaveBeenCalledWith(file));
+    await waitFor(() =>
+      expect(insertCallback).toHaveBeenCalledWith("https://cdn.example.com/board/a.png", { alt: "photo.png" })
+    );
+  });
+
+  it("이미지 업로드 실패 시 오류 toast를 띄우고 삽입 콜백을 호출하지 않는다", async () => {
+    uploadImageMock.mockRejectedValue(new Error("network error"));
+    renderTab();
+    fireEvent.click(screen.getByRole("button", { name: "공지사항 작성" }));
+
+    await waitFor(() => expect(latestEditorInit()).toBeDefined());
+    const insertCallback = vi.fn();
+
+    const createElementSpy = vi.spyOn(document, "createElement");
+    latestEditorInit().file_picker_callback(insertCallback);
+    const input = createElementSpy.mock.results.at(-1)?.value as HTMLInputElement;
+    createElementSpy.mockRestore();
+
+    const file = new File(["binary"], "photo.png", { type: "image/png" });
+    Object.defineProperty(input, "files", { value: [file] });
+    input.dispatchEvent(new Event("change"));
+
+    await waitFor(() =>
+      expect(toastMock).toHaveBeenCalledWith(
+        expect.objectContaining({ description: "이미지 업로드에 실패했습니다.", variant: "destructive" })
+      )
+    );
+    expect(insertCallback).not.toHaveBeenCalled();
+  });
+
+  it("붙여넣기/드래그로 들어온 이미지는 images_upload_handler로 업로드하고 URL을 반환한다", async () => {
+    uploadImageMock.mockResolvedValueOnce("https://cdn.example.com/board/1.png");
+    uploadImageMock.mockResolvedValueOnce("https://cdn.example.com/board/2.png");
+    renderTab();
+    fireEvent.click(screen.getByRole("button", { name: "공지사항 작성" }));
+
+    await waitFor(() => expect(latestEditorInit()).toBeDefined());
+
+    const blob1 = new Blob(["a"], { type: "image/png" });
+    const blob2 = new Blob(["b"], { type: "image/png" });
+    const url1 = await latestEditorInit().images_upload_handler({
+      blob: () => blob1,
+      filename: () => "a.png",
+    });
+    const url2 = await latestEditorInit().images_upload_handler({
+      blob: () => blob2,
+      filename: () => "b.png",
+    });
+
+    expect(url1).toBe("https://cdn.example.com/board/1.png");
+    expect(url2).toBe("https://cdn.example.com/board/2.png");
+    expect(uploadImageMock).toHaveBeenCalledTimes(2);
   });
 });

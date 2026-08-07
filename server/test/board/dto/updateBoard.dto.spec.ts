@@ -1,7 +1,6 @@
-import { validate } from 'class-validator';
-
 import { BoardCategory, BoardStatus } from '@board/constant/board.constant';
 import { UpdateBoardRequestDto } from '@board/dto/request/updateBoard.dto';
+import { validate } from 'class-validator';
 
 describe(`${UpdateBoardRequestDto.name} Test`, () => {
   let dto: UpdateBoardRequestDto;
@@ -85,6 +84,57 @@ describe(`${UpdateBoardRequestDto.name} Test`, () => {
       // then
       expect(errors).toHaveLength(1);
       expect(errors[0].constraints).toHaveProperty('isString');
+    });
+
+    it('첨부 이미지가 최대 개수(5장)까지면 유효성 검사에 성공한다.', async () => {
+      // given
+      dto.content = Array.from(
+        { length: 5 },
+        (_, i) => `<img src="/objects/BOARD_IMAGE/2026-08-01/${i}.png">`,
+      ).join('');
+
+      // when
+      const errors = await validate(dto);
+
+      // then
+      expect(errors).toHaveLength(0);
+    });
+
+    it('첨부 이미지가 최대 개수(5장)를 초과하면 유효성 검사에 실패한다.', async () => {
+      // given
+      dto.content = Array.from(
+        { length: 6 },
+        (_, i) => `<img src="/objects/BOARD_IMAGE/2026-08-01/${i}.png">`,
+      ).join('');
+
+      // when
+      const errors = await validate(dto);
+
+      // then
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('maxBoardImageCount');
+    });
+  });
+
+  describe('question', () => {
+    it('질문이 문자열이 아닌 객체일 경우 유효성 검사에 실패한다.', async () => {
+      // given
+      dto.question = { text: 'test' } as any;
+
+      // when
+      const errors = await validate(dto);
+
+      // then
+      expect(errors).toHaveLength(1);
+      expect(errors[0].constraints).toHaveProperty('isString');
+    });
+
+    it('질문이 입력되지 않을 경우 유효성 검사에 성공한다.', async () => {
+      // when
+      const errors = await validate(dto);
+
+      // then
+      expect(errors).toHaveLength(0);
     });
   });
 

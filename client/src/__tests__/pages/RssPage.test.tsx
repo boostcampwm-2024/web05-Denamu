@@ -2,17 +2,19 @@ import type { ReactNode } from "react";
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { lucideProxy } from "@/__tests__/__mocks__/external/lucide-proxy.tsx";
-
 import RssPage from "@/pages/RssPage.tsx";
 
 import { useAuthStore } from "@/store/useAuthStore";
 import { RssInfo } from "@/types/profile.ts";
 import { fireEvent, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 
 let rssInfoState: { data: RssInfo | undefined; isLoading: boolean; isError: boolean };
 
-vi.mock("lucide-react", () => lucideProxy());
+vi.mock("lucide-react", async () => {
+  const { lucideProxy } = await import("@/__tests__/__mocks__/external/lucide-proxy.tsx");
+  return lucideProxy();
+});
 
 vi.mock("react-router-dom", () => ({
   useParams: () => ({ rssId: "5" }),
@@ -58,16 +60,54 @@ vi.mock("@/components/profile/header/ui/ActivityGraph/ActivityGraph.tsx", () => 
 }));
 
 const blockRssMock = vi.hoisted(() => vi.fn());
+const blockRssAsyncMock = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
+const blockUserAsyncMock = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
 const unblockRssMock = vi.hoisted(() => vi.fn());
+const mockToast = vi.hoisted(() => vi.fn());
+const reportRssMock = vi.hoisted(() =>
+  vi.fn((_vars: unknown, options?: { onSuccess?: () => void; onError?: (error: unknown) => void }) =>
+    options?.onSuccess?.()
+  )
+);
 
 vi.mock("@/hooks/queries/useBlock.ts", () => ({
-  useBlockRss: () => ({ mutate: blockRssMock, isPending: false }),
+  useBlockRss: () => ({ mutate: blockRssMock, mutateAsync: blockRssAsyncMock, isPending: false }),
+  useBlockUser: () => ({ mutateAsync: blockUserAsyncMock }),
   useUnblockRss: () => ({ mutate: unblockRssMock, isPending: false }),
 }));
 
+vi.mock("@/hooks/common/useCustomToast.ts", () => ({ useCustomToast: () => ({ toast: mockToast }) }));
+
+const mockCertifiedRss = vi.hoisted(() => vi.fn(() => ({ data: [] })));
+vi.mock("@/hooks/queries/useProfile.ts", () => ({ useCertifiedRss: () => mockCertifiedRss() }));
+
 vi.mock("@/hooks/queries/useReport", () => ({
-  useReportRss: () => ({ mutate: vi.fn(), isPending: false }),
+  useReportRss: () => ({ mutate: reportRssMock, isPending: false }),
 }));
+
+vi.mock("@/components/ui/select", () => {
+  const pass = ({ children }: { children: ReactNode }) => <>{children}</>;
+  return {
+    Select: ({ children, onValueChange }: { children: ReactNode; onValueChange: (value: string) => void }) => (
+      <div
+        onClick={(event) => {
+          const value = (event.target as HTMLElement).getAttribute("data-value");
+          if (value) onValueChange(value);
+        }}
+      >
+        {children}
+      </div>
+    ),
+    SelectContent: pass,
+    SelectItem: ({ children, value }: { children: ReactNode; value: string }) => (
+      <div role="option" data-value={value}>
+        {children}
+      </div>
+    ),
+    SelectTrigger: pass,
+    SelectValue: () => null,
+  };
+});
 
 vi.mock("@/hooks/queries/useRssCertification.ts", () => ({
   useOwnedRssFeeds: () => ({
@@ -114,6 +154,11 @@ describe("RssPage", () => {
   beforeEach(() => {
     rssInfoState = { data: baseRss, isLoading: false, isError: false };
     useAuthStore.setState({ isAuthenticated: false });
+    mockToast.mockClear();
+    reportRssMock.mockClear();
+    blockRssAsyncMock.mockClear();
+    blockUserAsyncMock.mockClear();
+    mockCertifiedRss.mockReturnValue({ data: [] });
   });
 
   it("소유자 없는 RSS는 인증 배지와 소유자 카드를 노출하지 않는다", () => {
@@ -231,5 +276,116 @@ describe("RssPage", () => {
     fireEvent.click(screen.getByRole("button", { name: "차단 해제" }));
 
     expect(unblockRssMock).toHaveBeenCalledWith(5, expect.any(Object));
+  });
+
+  it("이미 신고한 RSS를 다시 신고하면 중복 신고 안내 토스트를 보여준다", async () => {
+    useAuthStore.setState({ isAuthenticated: true });
+    reportRssMock.mockImplementationOnce((_vars, options) =>
+      options?.onError?.({
+        isAxiosError: true,
+        response: { status: 409, data: { message: "이미 신고한 대상입니다." } },
+      })
+    );
+
+    const user = userEvent.setup();
+    render(<RssPage />);
+
+    await user.click(screen.getByRole("button", { name: "더보기" }));
+    await user.click(await screen.findByText("신고하기"));
+    await user.click(screen.getByText("스팸/광고"));
+    await user.click(screen.getByRole("button", { name: "신고하기" }));
+
+    expect(mockToast).toHaveBeenCalledWith({ title: "신고 실패", description: "이미 신청된 신고입니다." });
+  });
+
+  it("존재하지 않는 RSS를 신고하면 찾을 수 없다는 토스트를 보여준다", async () => {
+    useAuthStore.setState({ isAuthenticated: true });
+    reportRssMock.mockImplementationOnce((_vars, options) =>
+      options?.onError?.({
+        isAxiosError: true,
+        response: { status: 404, data: { message: "존재하지 않는 RSS입니다." } },
+      })
+    );
+
+    const user = userEvent.setup();
+    render(<RssPage />);
+
+    await user.click(screen.getByRole("button", { name: "더보기" }));
+    await user.click(await screen.findByText("신고하기"));
+    await user.click(screen.getByText("스팸/광고"));
+    await user.click(screen.getByRole("button", { name: "신고하기" }));
+
+    expect(mockToast).toHaveBeenCalledWith({ title: "신고 실패", description: "RSS를 찾을 수 없습니다." });
+  });
+
+  it("그 외 오류로 신고에 실패하면 서버 오류 토스트를 보여준다", async () => {
+    useAuthStore.setState({ isAuthenticated: true });
+    reportRssMock.mockImplementationOnce((_vars, options) =>
+      options?.onError?.({ isAxiosError: true, response: { status: 500, data: { message: "Internal Server Error" } } })
+    );
+
+    const user = userEvent.setup();
+    render(<RssPage />);
+
+    await user.click(screen.getByRole("button", { name: "더보기" }));
+    await user.click(await screen.findByText("신고하기"));
+    await user.click(screen.getByText("스팸/광고"));
+    await user.click(screen.getByRole("button", { name: "신고하기" }));
+
+    expect(mockToast).toHaveBeenCalledWith({
+      title: "신고 실패",
+      description: "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+    });
+  });
+
+  it("신고 접수 후에는 RSS를 자동으로 차단하지 않고 차단 확인 모달을 띄운다", async () => {
+    useAuthStore.setState({ isAuthenticated: true });
+
+    const user = userEvent.setup();
+    render(<RssPage />);
+
+    await user.click(screen.getByRole("button", { name: "더보기" }));
+    await user.click(await screen.findByText("신고하기"));
+    await user.click(screen.getByText("스팸/광고"));
+    await user.click(screen.getByRole("button", { name: "신고하기" }));
+
+    expect(blockRssAsyncMock).not.toHaveBeenCalled();
+    expect(await screen.findByText("데나무 블로그 RSS를 차단하시겠습니까?")).toBeInTheDocument();
+  });
+
+  it("신고 후 뜬 차단 모달에서 확정하면 이 RSS와 함께 소유자 유저도 선택해 차단할 수 있어야 한다", async () => {
+    useAuthStore.setState({ isAuthenticated: true });
+    rssInfoState = {
+      data: { ...baseRss, owner: { id: 99, userName: "김개발", profileImage: null } },
+      isLoading: false,
+      isError: false,
+    };
+
+    const user = userEvent.setup();
+    render(<RssPage />);
+
+    await user.click(screen.getByRole("button", { name: "더보기" }));
+    await user.click(await screen.findByText("신고하기"));
+    await user.click(screen.getByText("스팸/광고"));
+    await user.click(screen.getByRole("button", { name: "신고하기" }));
+    await user.click(await screen.findByRole("switch", { name: "김개발 유저도 차단" }));
+    await user.click(screen.getByRole("button", { name: "차단" }));
+
+    expect(blockRssAsyncMock).toHaveBeenCalledWith(5);
+    expect(blockUserAsyncMock).toHaveBeenCalledWith(99);
+  });
+
+  it("차단하기 메뉴에서 바로 차단 모달을 띄워 RSS를 차단할 수 있어야 한다", async () => {
+    useAuthStore.setState({ isAuthenticated: true });
+
+    const user = userEvent.setup();
+    render(<RssPage />);
+
+    await user.click(screen.getByRole("button", { name: "더보기" }));
+    await user.click(await screen.findByText("차단하기"));
+    await user.click(await screen.findByRole("button", { name: "차단" }));
+
+    expect(blockRssAsyncMock).toHaveBeenCalledWith(5);
+    expect(reportRssMock).not.toHaveBeenCalled();
   });
 });

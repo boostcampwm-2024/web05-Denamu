@@ -12,7 +12,7 @@ export class QnaCreatedDto {
     Object.assign(this, partial);
   }
 
-  static of(id: number): QnaCreatedDto {
+  static toResponseDto(id: number): QnaCreatedDto {
     return new QnaCreatedDto({ id });
   }
 }
@@ -43,7 +43,7 @@ export class QnaSummaryDto {
     Object.assign(this, partial);
   }
 
-  static fromSummary(qna: Qna): QnaSummaryDto {
+  static toResultDto(qna: Qna): QnaSummaryDto {
     return new QnaSummaryDto({
       id: qna.id,
       title: qna.title,
@@ -54,8 +54,8 @@ export class QnaSummaryDto {
     });
   }
 
-  static fromSummaryArray(qnas: Qna[]): QnaSummaryDto[] {
-    return qnas.map((qna) => this.fromSummary(qna));
+  static toResultDtoArray(qnas: Qna[]): QnaSummaryDto[] {
+    return qnas.map((qna) => this.toResultDto(qna));
   }
 }
 
@@ -79,14 +79,14 @@ export class QnaListResponseDto {
     Object.assign(this, partial);
   }
 
-  static of(
+  static toResponseDto(
     qnas: Qna[],
     page: number,
     limit: number,
     totalCount: number,
   ): QnaListResponseDto {
     return new QnaListResponseDto({
-      result: QnaSummaryDto.fromSummaryArray(qnas),
+      result: QnaSummaryDto.toResultDtoArray(qnas),
       page,
       limit,
       totalCount,
@@ -119,7 +119,7 @@ export class QnaMessageResponseDto {
     Object.assign(this, partial);
   }
 
-  static from(message: QnaMessage): QnaMessageResponseDto {
+  static toResultDto(message: QnaMessage): QnaMessageResponseDto {
     return new QnaMessageResponseDto({
       type: message.type,
       content: message.content,
@@ -144,7 +144,7 @@ export class QnaDetailDto extends QnaSummaryDto {
     Object.assign(this, partial);
   }
 
-  static fromDetail(qna: Qna): QnaDetailDto {
+  static toResponseDto(qna: Qna): QnaDetailDto {
     return new QnaDetailDto({
       id: qna.id,
       title: qna.title,
@@ -154,7 +154,7 @@ export class QnaDetailDto extends QnaSummaryDto {
       createdAt: qna.createdAt,
       updatedAt: qna.updatedAt,
       messages: (qna.messages ?? []).map((message) =>
-        QnaMessageResponseDto.from(message),
+        QnaMessageResponseDto.toResultDto(message),
       ),
     });
   }
@@ -180,7 +180,7 @@ export class QnaLockedDto {
     Object.assign(this, partial);
   }
 
-  static of(qna: Qna): QnaLockedDto {
+  static toResponseDto(qna: Qna): QnaLockedDto {
     return new QnaLockedDto({
       id: qna.id,
       title: qna.title,

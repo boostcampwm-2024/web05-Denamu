@@ -9,10 +9,19 @@ import {
   BoardDetailDto,
   BoardListResponseDto,
 } from '@board/dto/response/board.dto';
+import { Board } from '@board/entity/board.entity';
 import { BoardRepository } from '@board/repository/board.repository';
+import { extractBoardImageUrls } from '@board/util/extractBoardImageUrls';
 import { validateWindow } from '@board/util/validateWindow';
 
 import { AdminRepository } from '@admin/repository/admin.repository';
+
+import { EmailProducer } from '@common/email/email.producer';
+import { WinstonLoggerService } from '@common/logger/logger.service';
+
+import { FileService } from '@file/service/file.service';
+
+import { UserRepository } from '@user/repository/user.repository';
 
 const NOT_FOUND_MESSAGE = '존재하지 않는 게시글입니다.';
 
@@ -21,6 +30,10 @@ export class BoardService {
   constructor(
     private readonly boardRepository: BoardRepository,
     private readonly adminRepository: AdminRepository,
+    private readonly userRepository: UserRepository,
+    private readonly emailProducer: EmailProducer,
+    private readonly fileService: FileService,
+    private readonly logger: WinstonLoggerService,
   ) {}
 
   async getPublicBoards(queryDto: GetBoardsRequestDto) {
@@ -31,7 +44,7 @@ export class BoardService {
       new Date(),
       category,
     );
-    return BoardListResponseDto.of(items, page, limit, totalCount);
+    return BoardListResponseDto.toResponseDto(items, page, limit, totalCount);
   }
 
   async getPublicBoard(id: number): Promise<BoardDetailDto> {
@@ -39,7 +52,7 @@ export class BoardService {
     if (!board) {
       throw new NotFoundException(NOT_FOUND_MESSAGE);
     }
-    return BoardDetailDto.fromDetail(board);
+    return BoardDetailDto.toResponseDto(board);
   }
 
   async getAdminBoards(queryDto: GetAdminBoardsRequestDto) {
@@ -50,7 +63,7 @@ export class BoardService {
       status,
       category,
     );
-    return BoardListResponseDto.of(items, page, limit, totalCount);
+    return BoardListResponseDto.toResponseDto(items, page, limit, totalCount);
   }
 
   async getAdminBoard(id: number): Promise<BoardDetailDto> {
@@ -61,7 +74,7 @@ export class BoardService {
     if (!board) {
       throw new NotFoundException(NOT_FOUND_MESSAGE);
     }
-    return BoardDetailDto.fromDetail(board);
+    return BoardDetailDto.toResponseDto(board);
   }
 
   async createBoard(
@@ -77,6 +90,7 @@ export class BoardService {
     const board = this.boardRepository.create({
       title: dto.title,
       content: dto.content,
+      question: dto.question ?? null,
       status: dto.status ?? BoardStatus.DRAFT,
       category: dto.category ?? BoardCategory.NOTICE,
       isPinned: dto.isPinned ?? false,
@@ -85,7 +99,51 @@ export class BoardService {
       author,
     });
     await this.boardRepository.save(board);
-    return BoardDetailDto.fromDetail(board);
+
+    if (this.isNoticeVisibleNow(board)) {
+      await this.notifyNoticePublished(board);
+    }
+
+    return BoardDetailDto.toResponseDto(board);
+  }
+
+  private isNoticeVisibleNow(board: Board): boolean {
+    const now = new Date();
+    return (
+      board.category === BoardCategory.NOTICE &&
+      board.status === BoardStatus.PUBLISHED &&
+      (!board.startAt || board.startAt <= now) &&
+      (!board.endAt || board.endAt >= now)
+    );
+  }
+
+  private async notifyNoticePublished(board: Board): Promise<void> {
+    try {
+      const recipients = await this.userRepository.findNoticeAgreedUsers();
+      const results = await Promise.allSettled(
+        recipients.map((recipient) =>
+          this.emailProducer.produceNoticePublished({
+            email: recipient.email,
+            userName: recipient.userName,
+            boardId: board.id,
+            title: board.title,
+          }),
+        ),
+      );
+
+      const failedCount = results.filter(
+        (result) => result.status === 'rejected',
+      ).length;
+      if (failedCount > 0) {
+        this.logger.error(
+          `공지사항 이메일 발행 중 일부가 실패했습니다.: boardId=${board.id}, failed=${failedCount}/${recipients.length}`,
+        );
+      }
+    } catch (error) {
+      this.logger.error(
+        `공지사항 이메일 발행에 실패했습니다.: boardId=${board.id}, error=${error}`,
+      );
+    }
   }
 
   async updateBoard(
@@ -115,8 +173,12 @@ export class BoardService {
         : board.endAt;
     validateWindow(startAt, endAt);
 
+    const previousContent = board.content;
+    const previousQuestion = board.question;
+
     if (dto.title !== undefined) board.title = dto.title;
     if (dto.content !== undefined) board.content = dto.content;
+    if (dto.question !== undefined) board.question = dto.question;
     if (dto.isPinned !== undefined) board.isPinned = dto.isPinned;
     if (dto.status !== undefined) board.status = dto.status;
     if (dto.category !== undefined) board.category = dto.category;
@@ -124,13 +186,39 @@ export class BoardService {
     board.endAt = endAt;
 
     await this.boardRepository.save(board);
-    return BoardDetailDto.fromDetail(board);
+
+    if (dto.content !== undefined || dto.question !== undefined) {
+      const previousUrls = [
+        ...extractBoardImageUrls(previousContent),
+        ...extractBoardImageUrls(previousQuestion ?? ''),
+      ];
+      const currentUrls = [
+        ...extractBoardImageUrls(board.content),
+        ...extractBoardImageUrls(board.question ?? ''),
+      ];
+      const removedUrls = previousUrls.filter((url) => !currentUrls.includes(url));
+      await this.deleteBoardImages(removedUrls);
+    }
+
+    return BoardDetailDto.toResponseDto(board);
   }
 
   async deleteBoard(id: number): Promise<void> {
-    const result = await this.boardRepository.delete(id);
-    if (!result.affected) {
+    const board = await this.boardRepository.findOneBy({ id });
+    if (!board) {
       throw new NotFoundException(NOT_FOUND_MESSAGE);
     }
+
+    await this.boardRepository.delete(id);
+    await this.deleteBoardImages([
+      ...extractBoardImageUrls(board.content),
+      ...extractBoardImageUrls(board.question ?? ''),
+    ]);
+  }
+
+  private async deleteBoardImages(urls: string[]): Promise<void> {
+    await Promise.allSettled(
+      urls.map((url) => this.fileService.deleteUntracked(url)),
+    );
   }
 }

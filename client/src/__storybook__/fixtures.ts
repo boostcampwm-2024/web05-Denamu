@@ -3,10 +3,9 @@ import { FileText, Sparkles } from "lucide-react";
 import type { FeatureItem } from "@/types/about";
 import type { DayInfo, WeekInfo } from "@/types/activity";
 import type { ChildAdmin } from "@/types/admin";
+import type { BoardDetail, BoardPage, BoardSummary } from "@/types/board";
 import type { ChartPlatform, ChartType } from "@/types/chart";
 import type { AdminChatRoom, ChatType } from "@/types/chat";
-import type { BoardDetail, BoardPage, BoardSummary } from "@/types/board";
-import type { QnaPage, QnaSummary, QnaThread } from "@/types/qna";
 import type { FeedDetail, FeedList } from "@/types/post";
 import type {
   BlockedRss,
@@ -19,6 +18,7 @@ import type {
   User,
   UserProfile,
 } from "@/types/profile";
+import type { QnaPage, QnaSummary, QnaThread } from "@/types/qna";
 import type { ReportItem } from "@/types/report";
 import type { AdminRssData, RecentRss } from "@/types/rss";
 import type { RssSearchResult, SearchResult, UserSearchResult } from "@/types/search";
@@ -45,8 +45,8 @@ export const mockFeedDetail: FeedDetail = {
   blog: {
     id: 1,
     name: "데나무",
-    ownerName: "조민석",
-    isOwnerCertified: true,
+    userName: "조민석",
+    owner: { id: 1, userName: "조민석", profileImage: null },
     platform: "tistory",
     image: null,
   },
@@ -487,8 +487,36 @@ export const mockBoardsPage: BoardPage<BoardSummary> = {
 export const mockBoardDetail: BoardDetail = {
   ...mockBoardSummaries[0],
   content: "<p>정기 점검으로 인해 서비스 이용이 일시 중단됩니다.</p>",
+  question: null,
   authorName: "테스트 계정",
   updatedAt: "2026-07-20T09:00:00.000Z",
+};
+
+const mockFaqBoardSummary: BoardSummary = {
+  id: 4,
+  title: "RSS 등록은 어떻게 하나요?",
+  isPinned: false,
+  status: "PUBLISHED",
+  category: "FAQ",
+  startAt: null,
+  endAt: null,
+  createdAt: "2026-07-22T09:00:00.000Z",
+};
+
+export const mockFaqBoardsPage: BoardPage<BoardSummary> = {
+  result: [mockFaqBoardSummary],
+  page: 1,
+  limit: 10,
+  totalCount: 1,
+  hasMore: false,
+};
+
+export const mockFaqBoardDetail: BoardDetail = {
+  ...mockFaqBoardSummary,
+  content: "<p>마이페이지에서 RSS 주소를 등록하면 검수 후 반영됩니다.</p>",
+  question: "<p>RSS 등록은 어떻게 하나요?</p>",
+  authorName: "테스트 계정",
+  updatedAt: "2026-07-22T09:00:00.000Z",
 };
 
 const mockQnaSummaries: QnaSummary[] = [

@@ -45,7 +45,7 @@ describe(`${CommentListener.name} Unit Test`, () => {
       feedRepository.getBlogMetaByFeedId.mockResolvedValue({
         id: 1,
         userName: 'blog',
-        userId: null,
+        owner: null,
       });
 
       // when
@@ -64,7 +64,7 @@ describe(`${CommentListener.name} Unit Test`, () => {
       feedRepository.getBlogMetaByFeedId.mockResolvedValue({
         id: 1,
         userName: 'blog',
-        userId: 2,
+        owner: { id: 2, userName: 'owner', profileImage: null },
       });
 
       // when
@@ -83,7 +83,7 @@ describe(`${CommentListener.name} Unit Test`, () => {
       feedRepository.getBlogMetaByFeedId.mockResolvedValue({
         id: 1,
         userName: 'blog',
-        userId: 99,
+        owner: { id: 99, userName: 'owner', profileImage: null },
       });
 
       // when
@@ -105,7 +105,9 @@ describe(`${CommentListener.name} Unit Test`, () => {
 
       // when & then
       await expect(
-        commentListener.handleCommentCreated(new CommentCreatedEvent(10, 2, null)),
+        commentListener.handleCommentCreated(
+          new CommentCreatedEvent(10, 2, null),
+        ),
       ).resolves.toBeUndefined();
       expect(logger.error).toHaveBeenCalled();
     });
@@ -115,7 +117,7 @@ describe(`${CommentListener.name} Unit Test`, () => {
       feedRepository.getBlogMetaByFeedId.mockResolvedValue({
         id: 1,
         userName: 'blog',
-        userId: 99,
+        owner: { id: 99, userName: 'owner', profileImage: null },
       });
 
       // when
@@ -134,7 +136,7 @@ describe(`${CommentListener.name} Unit Test`, () => {
       feedRepository.getBlogMetaByFeedId.mockResolvedValue({
         id: 1,
         userName: 'blog',
-        userId: 99,
+        owner: { id: 99, userName: 'owner', profileImage: null },
       });
 
       // when
@@ -153,7 +155,7 @@ describe(`${CommentListener.name} Unit Test`, () => {
       feedRepository.getBlogMetaByFeedId.mockResolvedValue({
         id: 1,
         userName: 'blog',
-        userId: 99,
+        owner: { id: 99, userName: 'owner', profileImage: null },
       });
 
       // when
@@ -162,9 +164,10 @@ describe(`${CommentListener.name} Unit Test`, () => {
       );
 
       // then
-      expect(
-        notificationService.upsertReplyNotification,
-      ).toHaveBeenCalledWith(5, 10);
+      expect(notificationService.upsertReplyNotification).toHaveBeenCalledWith(
+        5,
+        10,
+      );
     });
 
     it('내 게시글의 내 댓글에 답글이 달리면 답글 알림만 생성하고 댓글 알림은 생성하지 않는다.', async () => {
@@ -172,7 +175,7 @@ describe(`${CommentListener.name} Unit Test`, () => {
       feedRepository.getBlogMetaByFeedId.mockResolvedValue({
         id: 1,
         userName: 'blog',
-        userId: 99,
+        owner: { id: 99, userName: 'owner', profileImage: null },
       });
 
       // when
@@ -195,7 +198,7 @@ describe(`${CommentListener.name} Unit Test`, () => {
       feedRepository.getBlogMetaByFeedId.mockResolvedValue({
         id: 1,
         userName: 'blog',
-        userId: 99,
+        owner: { id: 99, userName: 'owner', profileImage: null },
       });
       notificationService.upsertReplyNotification.mockRejectedValue(
         new Error('db down'),
@@ -203,9 +206,7 @@ describe(`${CommentListener.name} Unit Test`, () => {
 
       // when & then
       await expect(
-        commentListener.handleCommentCreated(
-          new CommentCreatedEvent(10, 2, 5),
-        ),
+        commentListener.handleCommentCreated(new CommentCreatedEvent(10, 2, 5)),
       ).resolves.toBeUndefined();
       expect(logger.error).toHaveBeenCalled();
     });
@@ -217,11 +218,13 @@ describe(`${CommentListener.name} Unit Test`, () => {
       feedRepository.getBlogMetaByFeedId.mockResolvedValue({
         id: 1,
         userName: 'blog',
-        userId: null,
+        owner: null,
       });
 
       // when
-      await commentListener.handleCommentDeleted(new CommentDeletedEvent(10, null));
+      await commentListener.handleCommentDeleted(
+        new CommentDeletedEvent(10, null),
+      );
 
       // then
       expect(
@@ -234,11 +237,13 @@ describe(`${CommentListener.name} Unit Test`, () => {
       feedRepository.getBlogMetaByFeedId.mockResolvedValue({
         id: 1,
         userName: 'blog',
-        userId: 99,
+        owner: { id: 99, userName: 'owner', profileImage: null },
       });
 
       // when
-      await commentListener.handleCommentDeleted(new CommentDeletedEvent(10, null));
+      await commentListener.handleCommentDeleted(
+        new CommentDeletedEvent(10, null),
+      );
 
       // then
       expect(
@@ -264,7 +269,7 @@ describe(`${CommentListener.name} Unit Test`, () => {
       feedRepository.getBlogMetaByFeedId.mockResolvedValue({
         id: 1,
         userName: 'blog',
-        userId: 99,
+        owner: { id: 99, userName: 'owner', profileImage: null },
       });
 
       // when
@@ -283,7 +288,7 @@ describe(`${CommentListener.name} Unit Test`, () => {
       feedRepository.getBlogMetaByFeedId.mockResolvedValue({
         id: 1,
         userName: 'blog',
-        userId: 99,
+        owner: { id: 99, userName: 'owner', profileImage: null },
       });
 
       // when
@@ -302,7 +307,7 @@ describe(`${CommentListener.name} Unit Test`, () => {
       feedRepository.getBlogMetaByFeedId.mockResolvedValue({
         id: 1,
         userName: 'blog',
-        userId: 99,
+        owner: { id: 99, userName: 'owner', profileImage: null },
       });
       notificationService.removeReplyNotificationIfEmpty.mockRejectedValue(
         new Error('db down'),
@@ -310,9 +315,7 @@ describe(`${CommentListener.name} Unit Test`, () => {
 
       // when & then
       await expect(
-        commentListener.handleCommentDeleted(
-          new CommentDeletedEvent(10, 5),
-        ),
+        commentListener.handleCommentDeleted(new CommentDeletedEvent(10, 5)),
       ).resolves.toBeUndefined();
       expect(logger.error).toHaveBeenCalled();
     });

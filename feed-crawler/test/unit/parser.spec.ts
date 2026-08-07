@@ -6,6 +6,7 @@ import {
   FIXED_DATE,
   INVALID_XML,
   MOCK_RSS_OBJ,
+  RSS_20_ENTITY_HEAVY,
   RSS_20_SAMPLE,
   RSS_20_SINGLE_ITEM,
 } from '@test/config/constant/parser-fixtures';
@@ -185,6 +186,11 @@ describe('Parser 모듈 테스트', () => {
         const result = rss20Parser.canParse(INVALID_XML);
         expect(result).toBe(false);
       });
+
+      it('entity 참조가 1000개를 초과하는 대용량 피드도 지원 형식으로 식별해야 한다 (tistory/wordpress 유사 케이스)', () => {
+        const result = rss20Parser.canParse(RSS_20_ENTITY_HEAVY);
+        expect(result).toBe(true);
+      });
     });
 
     describe('extractRawFeeds', () => {
@@ -219,6 +225,16 @@ describe('Parser 모듈 테스트', () => {
         expect(rawFeeds[0]).toMatchObject({
           title: '유일한 글',
           link: 'https://rssfeed.com/only',
+        });
+      });
+
+      it('entity 참조가 1000개를 초과하는 대용량 피드도 예외 없이 파싱해야 한다', () => {
+        const rawFeeds = rss20Parser['extractRawFeeds'](RSS_20_ENTITY_HEAVY);
+
+        expect(rawFeeds).toHaveLength(1);
+        expect(rawFeeds[0]).toMatchObject({
+          title: 'entity가 많은 글',
+          link: 'https://rssfeed.com/entity-heavy',
         });
       });
     });

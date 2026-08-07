@@ -3,6 +3,8 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 import axios from 'axios';
 import { Request, Response } from 'express';
 
+import { RssBlockRepository } from '@block/repository/rssBlock.repository';
+
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
 
@@ -15,8 +17,6 @@ import {
   FeedViewRepository,
 } from '@feed/repository/feed.repository';
 import { FeedService } from '@feed/service/feed.service';
-
-import { RssBlockRepository } from '@block/repository/rssBlock.repository';
 
 import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
 
@@ -122,12 +122,19 @@ describe(`${FeedService.name} Unit Test`, () => {
   describe('getPublicFeed', () => {
     it('존재하지 않으면 NotFoundException을 던진다.', async () => {
       feedRepository.findOneBy.mockResolvedValue(null);
-      await expect(feedService.getPublicFeed(1)).rejects.toThrow(NotFoundException);
+      await expect(feedService.getPublicFeed(1)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('비공개 게시글이면 NotFoundException을 던진다.', async () => {
-      feedRepository.findOneBy.mockResolvedValue({ id: 1, isPublic: false } as any);
-      await expect(feedService.getPublicFeed(1)).rejects.toThrow(NotFoundException);
+      feedRepository.findOneBy.mockResolvedValue({
+        id: 1,
+        isPublic: false,
+      } as any);
+      await expect(feedService.getPublicFeed(1)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('공개 게시글이면 피드를 반환한다.', async () => {
@@ -417,7 +424,11 @@ describe(`${FeedService.name} Unit Test`, () => {
   });
 
   describe('getFeedDetail', () => {
-    const blogMeta = { id: 1, userName: '조민석', userId: 5 };
+    const blogMeta = {
+      id: 1,
+      userName: '조민석',
+      owner: { id: 5, userName: '조민석', profileImage: null },
+    };
 
     it('피드 뷰를 조회하고 상세 응답으로 변환한다.', async () => {
       // given

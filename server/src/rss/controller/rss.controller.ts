@@ -3,21 +3,27 @@ import {
   Controller,
   Delete,
   Get,
+  Header,
   HttpCode,
   HttpStatus,
+  NotFoundException,
   Param,
   Patch,
   Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiExcludeEndpoint, ApiTags } from '@nestjs/swagger';
 
 import { ReadActivityQueryRequestDto } from '@activity/dto/request/readActivity.dto';
 
 import { CurrentUser } from '@common/decorator';
 import { JwtGuard, OptionalJwtGuard, Payload } from '@common/guard/jwt.guard';
 import { ApiResponse } from '@common/response/common.response';
+import {
+  renderDefaultOgHtml,
+  renderRssOgHtml,
+} from '@common/util/renderOgHtml';
 
 import { ApiCreateRss } from '@rss/api-docs/createRss.api-docs';
 import { ApiCreateRssCertification } from '@rss/api-docs/createRssCertification.api-docs';
@@ -273,5 +279,25 @@ export class RssController {
       'RSS 게시글 목록 조회를 처리했습니다.',
       await this.rssService.getRssFeeds(paramDto.rssId, queryDto),
     );
+  }
+
+  @ApiExcludeEndpoint()
+  @Get(':rssId/og')
+  @HttpCode(HttpStatus.OK)
+  @Header('Content-Type', 'text/html; charset=utf-8')
+  async getRssOg(@Param() paramDto: GetRssInfoParamRequestDto) {
+    try {
+      const rss = await this.rssService.getRssInfo(paramDto.rssId);
+      return renderRssOgHtml({
+        rssId: paramDto.rssId,
+        name: rss.name,
+        blogImage: rss.blogImage,
+      });
+    } catch (err) {
+      if (err instanceof NotFoundException) {
+        return renderDefaultOgHtml();
+      }
+      throw err;
+    }
   }
 }

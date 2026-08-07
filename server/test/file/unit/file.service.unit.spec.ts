@@ -1,6 +1,12 @@
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 
 import * as fs from 'fs/promises';
+import * as path from 'path';
+import sharp from 'sharp';
 
 import { WinstonLoggerService } from '@common/logger/logger.service';
 
@@ -11,8 +17,10 @@ import { FileService } from '@file/service/file.service';
 import { FileFixture } from '@test/config/common/fixture/file.fixture';
 
 jest.mock('fs/promises');
+jest.mock('sharp');
 
 const mockedFs = fs as jest.Mocked<typeof fs>;
+const mockedSharp = sharp as jest.MockedFunction<typeof sharp>;
 
 describe(`${FileService.name} Unit Test`, () => {
   let fileService: FileService;
@@ -33,14 +41,20 @@ describe(`${FileService.name} Unit Test`, () => {
   });
 
   describe('handleUpload', () => {
-    it('디렉터리를 생성하고 파일을 쓴 뒤 메타데이터를 저장한다.', async () => {
+    it('webp 변환 결과가 원본보다 작으면 webp로 재인코딩한 파일을 쓴 뒤 메타데이터를 저장한다.', async () => {
       // given
       const multerFile = {
         originalname: 'avatar.png',
         mimetype: 'image/png',
         size: 2048,
-        buffer: Buffer.from('data'),
+        buffer: Buffer.from('original-png-data-longer-than-webp'),
       } as Express.Multer.File;
+      const webpBuffer = Buffer.from('webp');
+      mockedSharp.mockReturnValue({
+        webp: jest.fn().mockReturnValue({
+          toBuffer: jest.fn().mockResolvedValue(webpBuffer),
+        }),
+      } as any);
       const savedFile = FileFixture.createFileFixture({
         id: 1,
         user: { id: 7 } as any,
@@ -55,24 +69,89 @@ describe(`${FileService.name} Unit Test`, () => {
       );
 
       // then
+      expect(mockedSharp).toHaveBeenCalledWith(multerFile.buffer, {
+        animated: true,
+      });
       expect(mockedFs.mkdir).toHaveBeenCalledWith(expect.any(String), {
         recursive: true,
       });
       expect(mockedFs.writeFile).toHaveBeenCalledWith(
-        expect.any(String),
-        multerFile.buffer,
+        expect.stringMatching(/\.webp$/),
+        webpBuffer,
       );
       expect(fileRepository.save).toHaveBeenCalledWith(
         expect.objectContaining({
           originalName: 'avatar.png',
-          mimetype: 'image/png',
-          size: 2048,
+          mimetype: 'image/webp',
+          size: webpBuffer.length,
           user: { id: 7 },
         }),
       );
       expect(result.id).toBe(savedFile.id);
       expect(result.userId).toBe(7);
       expect(typeof result.url).toBe('string');
+    });
+
+    it('이미지 변환에 실패하면 BadRequestException을 던진다.', async () => {
+      // given
+      const multerFile = {
+        originalname: 'broken.png',
+        mimetype: 'image/png',
+        size: 10,
+        buffer: Buffer.from('broken'),
+      } as Express.Multer.File;
+      mockedSharp.mockReturnValue({
+        webp: jest.fn().mockReturnValue({
+          toBuffer: jest.fn().mockRejectedValue(new Error('invalid image')),
+        }),
+      } as any);
+
+      // when & then
+      await expect(
+        fileService.handleUpload(multerFile, FileUploadType.PROFILE_IMAGE, 7),
+      ).rejects.toThrow(BadRequestException);
+      expect(fileRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('webp 변환 결과가 원본보다 크거나 같으면 원본을 그대로 저장한다.', async () => {
+      // given
+      const multerFile = {
+        originalname: 'tiny.gif',
+        mimetype: 'image/gif',
+        size: 4,
+        buffer: Buffer.from('data'),
+      } as Express.Multer.File;
+      const largerWebpBuffer = Buffer.from('webp-is-bigger-than-original');
+      mockedSharp.mockReturnValue({
+        webp: jest.fn().mockReturnValue({
+          toBuffer: jest.fn().mockResolvedValue(largerWebpBuffer),
+        }),
+      } as any);
+      const savedFile = FileFixture.createFileFixture({
+        id: 2,
+        user: { id: 7 } as any,
+      });
+      fileRepository.save.mockResolvedValue(savedFile);
+
+      // when
+      await fileService.handleUpload(
+        multerFile,
+        FileUploadType.PROFILE_IMAGE,
+        7,
+      );
+
+      // then
+      expect(mockedFs.writeFile).toHaveBeenCalledWith(
+        expect.stringMatching(/\.gif$/),
+        multerFile.buffer,
+      );
+      expect(fileRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          originalName: 'tiny.gif',
+          mimetype: 'image/gif',
+          size: multerFile.buffer.length,
+        }),
+      );
     });
   });
 
@@ -150,14 +229,16 @@ describe(`${FileService.name} Unit Test`, () => {
   });
 
   describe('deleteByPath', () => {
-    it('경로에 해당하는 파일이 없으면 NotFoundException을 던진다.', async () => {
+    it('경로에 해당하는 파일이 없으면 아무 동작도 하지 않는다.', async () => {
       // given
       fileRepository.findOne.mockResolvedValue(null);
 
-      // when & then
-      await expect(fileService.deleteByPath('/app/objects/x.png')).rejects.toThrow(
-        NotFoundException,
-      );
+      // when
+      await fileService.deleteByPath('/app/objects/x.png');
+
+      // then
+      expect(mockedFs.unlink).not.toHaveBeenCalled();
+      expect(fileRepository.delete).not.toHaveBeenCalled();
     });
 
     it('파일을 찾으면 물리 파일과 레코드를 삭제한다.', async () => {
@@ -174,6 +255,139 @@ describe(`${FileService.name} Unit Test`, () => {
       // then
       expect(mockedFs.unlink).toHaveBeenCalledWith(file.path);
       expect(fileRepository.delete).toHaveBeenCalledWith(file.id);
+    });
+  });
+
+  describe('saveWithoutOwner', () => {
+    it('파일을 디스크에 저장만 하고 File 레코드는 생성하지 않는다.', async () => {
+      // given
+      const multerFile = {
+        originalname: 'board.png',
+        mimetype: 'image/png',
+        size: 2048,
+        buffer: Buffer.from('original-png-data-longer-than-webp'),
+      } as Express.Multer.File;
+      const webpBuffer = Buffer.from('webp');
+      mockedSharp.mockReturnValue({
+        webp: jest.fn().mockReturnValue({
+          toBuffer: jest.fn().mockResolvedValue(webpBuffer),
+        }),
+      } as any);
+
+      // when
+      const url = await fileService.saveWithoutOwner(
+        multerFile,
+        FileUploadType.BOARD_IMAGE,
+      );
+
+      // then
+      expect(mockedFs.writeFile).toHaveBeenCalledWith(
+        expect.stringMatching(/\.webp$/),
+        webpBuffer,
+      );
+      expect(url).toContain('BOARD_IMAGE');
+      expect(fileRepository.save).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('deleteUntracked', () => {
+    it('물리 파일만 삭제하고 File 레코드는 건드리지 않는다.', async () => {
+      // given
+      const accessUrl = '/objects/BOARD_IMAGE/2026-08-01/a.png';
+
+      // when
+      await fileService.deleteUntracked(accessUrl);
+
+      // then
+      expect(mockedFs.unlink).toHaveBeenCalledWith(
+        '/app/objects/BOARD_IMAGE/2026-08-01/a.png',
+      );
+      expect(fileRepository.findOne).not.toHaveBeenCalled();
+      expect(fileRepository.delete).not.toHaveBeenCalled();
+    });
+
+    it('물리 파일 삭제에 실패해도 경고만 남기고 예외를 던지지 않는다.', async () => {
+      // given
+      mockedFs.access.mockRejectedValue(new Error('ENOENT'));
+
+      // when & then
+      await expect(
+        fileService.deleteUntracked('/objects/BOARD_IMAGE/missing.png'),
+      ).resolves.toBeUndefined();
+      expect(logger.warn).toHaveBeenCalled();
+    });
+  });
+
+  describe('findOldBoardImagePaths', () => {
+    const boardImageDir = path.join('/app/objects', FileUploadType.BOARD_IMAGE);
+    const dateDir1 = path.join(boardImageDir, '2026-08-01');
+    const dateDir2 = path.join(boardImageDir, '2026-08-02');
+    const cutoff = new Date('2026-08-05').getTime();
+
+    it('board image 디렉터리 자체가 없으면 빈 배열을 반환한다.', async () => {
+      // given
+      mockedFs.readdir.mockRejectedValue(new Error('ENOENT'));
+
+      // when
+      const result = await fileService.findOldBoardImagePaths(cutoff);
+
+      // then
+      expect(result).toEqual([]);
+    });
+
+    it('cutoff보다 오래된 파일만 모으고, 읽기 실패한 날짜 디렉터리는 건너뛴다.', async () => {
+      // given
+      mockedFs.readdir.mockImplementation((dir) => {
+        if (dir === boardImageDir)
+          return Promise.resolve(['2026-08-01', '2026-08-02'] as any);
+        if (dir === dateDir1)
+          return Promise.resolve(['old.png', 'new.png'] as any);
+        if (dir === dateDir2) return Promise.reject(new Error('ENOENT'));
+        return Promise.reject(new Error(`unexpected dir: ${String(dir)}`));
+      });
+      mockedFs.stat.mockImplementation((filePath) => {
+        if (filePath === path.join(dateDir1, 'old.png')) {
+          return Promise.resolve({
+            isFile: () => true,
+            mtimeMs: cutoff - 1000,
+          } as any);
+        }
+        if (filePath === path.join(dateDir1, 'new.png')) {
+          return Promise.resolve({
+            isFile: () => true,
+            mtimeMs: cutoff + 1000,
+          } as any);
+        }
+        return Promise.reject(
+          new Error(`unexpected file: ${String(filePath)}`),
+        );
+      });
+
+      // when
+      const result = await fileService.findOldBoardImagePaths(cutoff);
+
+      // then
+      expect(result).toEqual([path.join(dateDir1, 'old.png')]);
+    });
+
+    it('디렉터리 엔트리는 결과에서 제외한다.', async () => {
+      // given
+      mockedFs.readdir.mockImplementation((dir) => {
+        if (dir === boardImageDir)
+          return Promise.resolve(['2026-08-01'] as any);
+        if (dir === dateDir1) return Promise.resolve(['sub-dir'] as any);
+        return Promise.reject(new Error(`unexpected dir: ${String(dir)}`));
+      });
+      mockedFs.stat.mockResolvedValue({
+        isFile: () => false,
+        mtimeMs: cutoff - 1000,
+      } as any);
+
+      // when
+      const result = await fileService.findOldBoardImagePaths(cutoff);
+
+      // then
+      expect(result).toEqual([]);
     });
   });
 });

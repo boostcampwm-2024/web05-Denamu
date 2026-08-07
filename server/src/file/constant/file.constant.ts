@@ -1,5 +1,6 @@
 export enum FileUploadType {
   PROFILE_IMAGE = 'PROFILE_IMAGE',
+  BOARD_IMAGE = 'BOARD_IMAGE',
   // 추후 추가될 타입들 명시
 }
 
@@ -8,3 +9,7 @@ export const FILE_SIZE_LIMITS = {
   IMAGE: 5 * 1024 * 1024,
   DEFAULT: 10 * 1024 * 1024,
 };
+
+export const IMAGE_WEBP_QUALITY = 80;
+
+export const ORPHAN_FILE_GRACE_PERIOD_MS = 1000 * 60 * 60 * 24;

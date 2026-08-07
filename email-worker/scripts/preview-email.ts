@@ -5,6 +5,7 @@ import {
   createAdminDeleteAccountContent,
   createAdminVerificationMailContent,
   createDeleteAccountContent,
+  createNoticePublishedContent,
   createPasswordResetMailContent,
   createQnaAnsweredContent,
   createRssCertificationContent,
@@ -97,6 +98,16 @@ const previews: [string, string, string][] = [
     createQnaAnsweredContent(
       '김데나무',
       '로그인이 안 돼요',
+      1,
+      SERVICE_ADDRESS,
+    ),
+  ],
+  [
+    'notice-published',
+    '공지사항 등록 알림',
+    createNoticePublishedContent(
+      '김데나무',
+      '서비스 점검 안내',
       1,
       SERVICE_ADDRESS,
     ),

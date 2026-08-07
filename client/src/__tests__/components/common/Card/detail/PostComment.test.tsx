@@ -3,11 +3,19 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import PostComment from "@/components/common/Card/detail/PostComment.tsx";
 
 import { FeedCommentType } from "@/types/post.ts";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 
 const createComment = vi.fn();
 const updateComment = vi.fn();
 const deleteComment = vi.fn();
+const mockBlockUser = vi.fn().mockResolvedValue(undefined);
+const mockBlockRss = vi.fn().mockResolvedValue(undefined);
+const mockCertifiedRss = vi.fn(() => ({ data: [] as { id: number; name: string; blogPlatform: string }[] }));
+const mockToast = vi.fn();
+const mockReportComment = vi.fn(
+  (_vars: unknown, options?: { onSuccess?: () => void; onError?: (error: unknown) => void }) => options?.onSuccess?.()
+);
 let isAuthenticated: boolean;
 let comments: FeedCommentType[];
 
@@ -24,13 +32,48 @@ vi.mock("@/hooks/queries/useComments", () => ({
   useAdminDeleteComment: () => ({ mutate: vi.fn() }),
 }));
 
-vi.mock("@/hooks/queries/useProfile", () => ({ useUserProfile: () => ({ data: undefined }) }));
-vi.mock("@/hooks/queries/useReport", () => ({
-  useReportComment: () => ({ mutate: vi.fn(), isPending: false }),
+vi.mock("@/hooks/queries/useProfile", () => ({
+  useUserProfile: () => ({ data: undefined }),
+  useCertifiedRss: () => mockCertifiedRss(),
 }));
+vi.mock("@/hooks/queries/useReport", () => ({
+  useReportComment: () => ({ mutate: mockReportComment, isPending: false }),
+}));
+vi.mock("@/hooks/queries/useBlock", () => ({
+  useBlockUser: () => ({ mutateAsync: mockBlockUser }),
+  useBlockRss: () => ({ mutateAsync: mockBlockRss }),
+}));
+vi.mock("@/hooks/common/useCustomToast", () => ({ useCustomToast: () => ({ toast: mockToast }) }));
 vi.mock("@/hooks/common/useNavigateToProfile", () => ({ useNavigateToProfile: () => vi.fn() }));
 vi.mock("@/utils/timeago", () => ({ timeAgo: () => "방금 전" }));
 vi.mock("@/components/auth/AuthSignInForm", () => ({ AuthSignInForm: () => <div data-testid="signin-form" /> }));
+vi.mock("lucide-react", async () => {
+  const { lucideProxy } = await import("@/__tests__/__mocks__/external/lucide-proxy.tsx");
+  return lucideProxy();
+});
+vi.mock("@/components/ui/select", () => {
+  const pass = ({ children }: { children: React.ReactNode }) => <>{children}</>;
+  return {
+    Select: ({ children, onValueChange }: { children: React.ReactNode; onValueChange: (value: string) => void }) => (
+      <div
+        onClick={(event) => {
+          const value = (event.target as HTMLElement).getAttribute("data-value");
+          if (value) onValueChange(value);
+        }}
+      >
+        {children}
+      </div>
+    ),
+    SelectContent: pass,
+    SelectItem: ({ children, value }: { children: React.ReactNode; value: string }) => (
+      <div role="option" data-value={value}>
+        {children}
+      </div>
+    ),
+    SelectTrigger: pass,
+    SelectValue: () => null,
+  };
+});
 
 const makeComment = (id: number, override: Partial<FeedCommentType> = {}): FeedCommentType =>
   ({
@@ -48,6 +91,7 @@ describe("PostComment", () => {
     vi.clearAllMocks();
     isAuthenticated = true;
     comments = [makeComment(1), makeComment(2)];
+    mockCertifiedRss.mockReturnValue({ data: [] });
   });
 
   it("댓글 개수와 목록, 작성시간을 렌더링해야 한다", () => {
@@ -94,10 +138,7 @@ describe("PostComment", () => {
     fireEvent.change(editArea, { target: { value: "수정된 댓글" } });
     fireEvent.click(screen.getByRole("button", { name: "댓글 수정" }));
 
-    expect(updateComment).toHaveBeenCalledWith(
-      { commentId: 1, newComment: "수정된 댓글" },
-      expect.any(Object)
-    );
+    expect(updateComment).toHaveBeenCalledWith({ commentId: 1, newComment: "수정된 댓글" }, expect.any(Object));
   });
 
   it("답글 버튼 클릭 후 답글 작성 시 parentId와 함께 createComment를 호출해야 한다", () => {
@@ -108,10 +149,7 @@ describe("PostComment", () => {
     fireEvent.change(screen.getByPlaceholderText("답글을 입력하세요..."), { target: { value: "답글 내용" } });
     fireEvent.click(screen.getByRole("button", { name: "답글 등록" }));
 
-    expect(createComment).toHaveBeenCalledWith(
-      { comment: "답글 내용", parentId: 1 },
-      expect.any(Object)
-    );
+    expect(createComment).toHaveBeenCalledWith({ comment: "답글 내용", parentId: 1 }, expect.any(Object));
   });
 
   it("대댓글(parentId)이 있으면 기본적으로 숨겨지고 답글 개수가 표시되며, 클릭하면 펼쳐진다", () => {
@@ -190,5 +228,107 @@ describe("PostComment", () => {
 
     expect(screen.queryByRole("button", { name: "댓글 더보기" })).not.toBeInTheDocument();
     expect(document.getElementById("comment-5")).not.toBeNull();
+  });
+
+  const openReportModal = async () => {
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "댓글 옵션" }));
+    await user.click(await screen.findByText("신고하기"));
+    return user;
+  };
+
+  it("신고 접수 후에는 작성자를 자동으로 차단하지 않고 차단 확인 모달을 띄운다", async () => {
+    comments = [makeComment(1, { user: { id: 2, userName: "타인", profileImage: null } })];
+    render(<PostComment feedId={10} />);
+
+    const user = await openReportModal();
+    await user.click(screen.getByText("스팸/광고"));
+    await user.click(screen.getByRole("button", { name: "신고하기" }));
+
+    expect(mockReportComment).toHaveBeenCalledWith(
+      { commentId: 1, payload: { reason: "SPAM", detail: undefined } },
+      expect.anything()
+    );
+    expect(mockBlockUser).not.toHaveBeenCalled();
+    expect(await screen.findByText("작성자를 차단하시겠습니까?")).toBeInTheDocument();
+  });
+
+  it("신고 후 뜬 차단 모달에서 확정하면 작성자를 차단해야 한다", async () => {
+    comments = [makeComment(1, { user: { id: 2, userName: "타인", profileImage: null } })];
+    render(<PostComment feedId={10} />);
+
+    const user = await openReportModal();
+    await user.click(screen.getByText("스팸/광고"));
+    await user.click(screen.getByRole("button", { name: "신고하기" }));
+    await user.click(await screen.findByRole("button", { name: "차단" }));
+
+    await waitFor(() => expect(mockBlockUser).toHaveBeenCalledWith(2));
+    expect(mockBlockRss).not.toHaveBeenCalled();
+  });
+
+  it("작성자가 인증한 RSS가 있으면 신고 후 뜬 차단 모달에서 선택해 차단할 수 있어야 한다", async () => {
+    mockCertifiedRss.mockReturnValue({ data: [{ id: 55, name: "author.log", blogPlatform: "velog" }] });
+    comments = [makeComment(1, { user: { id: 2, userName: "타인", profileImage: null } })];
+    render(<PostComment feedId={10} />);
+
+    const user = await openReportModal();
+    await user.click(screen.getByText("스팸/광고"));
+    await user.click(screen.getByRole("button", { name: "신고하기" }));
+    await user.click(await screen.findByRole("switch", { name: "author.log 차단" }));
+    await user.click(screen.getByRole("button", { name: "차단" }));
+
+    await waitFor(() => expect(mockBlockUser).toHaveBeenCalledWith(2));
+    expect(mockBlockRss).toHaveBeenCalledWith(55);
+  });
+
+  it("이미 신고한 댓글을 다시 신고하면 중복 신고 안내 토스트를 보여준다", async () => {
+    comments = [makeComment(1, { user: { id: 2, userName: "타인", profileImage: null } })];
+    mockReportComment.mockImplementationOnce((_vars, options) =>
+      options?.onError?.({
+        isAxiosError: true,
+        response: { status: 409, data: { message: "이미 신고한 대상입니다." } },
+      })
+    );
+    render(<PostComment feedId={10} />);
+
+    const user = await openReportModal();
+    await user.click(screen.getByText("스팸/광고"));
+    await user.click(screen.getByRole("button", { name: "신고하기" }));
+
+    expect(mockToast).toHaveBeenCalledWith({ title: "신고 실패", description: "이미 신청된 신고입니다." });
+  });
+
+  it("존재하지 않는 댓글을 신고하면 찾을 수 없다는 토스트를 보여준다", async () => {
+    comments = [makeComment(1, { user: { id: 2, userName: "타인", profileImage: null } })];
+    mockReportComment.mockImplementationOnce((_vars, options) =>
+      options?.onError?.({
+        isAxiosError: true,
+        response: { status: 404, data: { message: "존재하지 않는 댓글입니다." } },
+      })
+    );
+    render(<PostComment feedId={10} />);
+
+    const user = await openReportModal();
+    await user.click(screen.getByText("스팸/광고"));
+    await user.click(screen.getByRole("button", { name: "신고하기" }));
+
+    expect(mockToast).toHaveBeenCalledWith({ title: "신고 실패", description: "댓글을 찾을 수 없습니다." });
+  });
+
+  it("그 외 오류로 신고에 실패하면 서버 오류 토스트를 보여준다", async () => {
+    comments = [makeComment(1, { user: { id: 2, userName: "타인", profileImage: null } })];
+    mockReportComment.mockImplementationOnce((_vars, options) =>
+      options?.onError?.({ isAxiosError: true, response: { status: 500, data: { message: "Internal Server Error" } } })
+    );
+    render(<PostComment feedId={10} />);
+
+    const user = await openReportModal();
+    await user.click(screen.getByText("스팸/광고"));
+    await user.click(screen.getByRole("button", { name: "신고하기" }));
+
+    expect(mockToast).toHaveBeenCalledWith({
+      title: "신고 실패",
+      description: "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+    });
   });
 });

@@ -3,8 +3,10 @@ import {
   Controller,
   Delete,
   Get,
+  Header,
   HttpCode,
   HttpStatus,
+  NotFoundException,
   Param,
   Patch,
   Post,
@@ -12,7 +14,7 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiExcludeEndpoint, ApiTags } from '@nestjs/swagger';
 
 import { Response } from 'express';
 
@@ -25,6 +27,10 @@ import {
 } from '@common/guard/jwt.guard';
 import { LoginThrottlerGuard } from '@common/guard/login-throttler.guard';
 import { ApiResponse } from '@common/response/common.response';
+import {
+  renderDefaultOgHtml,
+  renderProfileOgHtml,
+} from '@common/util/renderOgHtml';
 
 import { ApiCertificateUser } from '@user/api-docs/certificateUser.api-docs';
 import { ApiChangePassword } from '@user/api-docs/changePassword.api-docs';
@@ -41,6 +47,7 @@ import { ApiRegisterUser } from '@user/api-docs/registerUser.api-docs';
 import { ApiRequestDeleteAccount } from '@user/api-docs/requestDeleteAccount.api-docs';
 import { ApiResetPassword } from '@user/api-docs/resetPassword.api-docs';
 import { ApiSearchUser } from '@user/api-docs/searchUser.api-docs';
+import { ApiUpdateProfileImage } from '@user/api-docs/updateProfileImage.api-docs';
 import { ApiUpdateUser } from '@user/api-docs/updateUser.api-docs';
 import { CertificateUserRequestDto } from '@user/dto/request/certificateUser.dto';
 import { ChangePasswordRequestDto } from '@user/dto/request/changePassword.dto';
@@ -55,6 +62,7 @@ import { RequestDeleteAccountRequestDto } from '@user/dto/request/requestDeleteA
 import { ResetPasswordRequestDto } from '@user/dto/request/resetPassword.dto';
 import { ResetPasswordParamRequestDto } from '@user/dto/request/resetPasswordParam.dto';
 import { SearchUserRequestDto } from '@user/dto/request/searchUser.dto';
+import { UpdateProfileImageRequestDto } from '@user/dto/request/updateProfileImage.dto';
 import { UpdateUserRequestDto } from '@user/dto/request/updateUser.dto';
 import { UserService } from '@user/service/user.service';
 
@@ -206,6 +214,23 @@ export class UserController {
     );
   }
 
+  @ApiUpdateProfileImage()
+  @Patch('/profile-image')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtGuard)
+  async updateProfileImage(
+    @Body() updateProfileImageDto: UpdateProfileImageRequestDto,
+    @CurrentUser() user: Payload,
+  ) {
+    await this.userService.updateProfileImage(
+      user.id,
+      updateProfileImageDto.profileImage,
+    );
+    return ApiResponse.responseWithNoContent(
+      '프로필 이미지가 성공적으로 변경되었습니다.',
+    );
+  }
+
   @ApiChangePassword()
   @Patch('/password')
   @HttpCode(HttpStatus.OK)
@@ -271,5 +296,26 @@ export class UserController {
     return ApiResponse.responseWithNoContent(
       '비밀번호가 성공적으로 수정되었습니다.',
     );
+  }
+
+  @ApiExcludeEndpoint()
+  @Get('/:id/profile/og')
+  @HttpCode(HttpStatus.OK)
+  @Header('Content-Type', 'text/html; charset=utf-8')
+  async getUserProfileOg(@Param() paramDto: GetUserProfileParamRequestDto) {
+    try {
+      const profile = await this.userService.getUserProfile(paramDto.id);
+      return renderProfileOgHtml({
+        userId: paramDto.id,
+        userName: profile.userName,
+        introduction: profile.introduction,
+        profileImage: profile.profileImage,
+      });
+    } catch (err) {
+      if (err instanceof NotFoundException) {
+        return renderDefaultOgHtml();
+      }
+      throw err;
+    }
   }
 }

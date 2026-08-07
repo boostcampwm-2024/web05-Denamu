@@ -4,6 +4,7 @@ import type { EmojiClickData } from "emoji-picker-react";
 import { ChevronDown, ChevronUp, Flag, MoreVertical } from "lucide-react";
 
 import { AuthSignInForm } from "@/components/auth/AuthSignInForm";
+import { BlockConfirmDialog } from "@/components/common/BlockConfirmDialog";
 import CommentAction from "@/components/common/Card/detail/CommentAction";
 import EmojiPickerButton from "@/components/common/EmojiPickerButton";
 import { ReportDialog } from "@/components/common/ReportDialog";
@@ -18,6 +19,7 @@ import {
 
 import { useCustomToast } from "@/hooks/common/useCustomToast";
 import { useNavigateToProfile } from "@/hooks/common/useNavigateToProfile";
+import { useBlockRss, useBlockUser } from "@/hooks/queries/useBlock";
 import {
   useComments,
   useCreateComment,
@@ -25,9 +27,10 @@ import {
   useDeleteComment,
   useAdminDeleteComment,
 } from "@/hooks/queries/useComments";
-import { useUserProfile } from "@/hooks/queries/useProfile";
+import { useCertifiedRss, useUserProfile } from "@/hooks/queries/useProfile";
 import { useReportComment } from "@/hooks/queries/useReport";
 
+import { getReportErrorMessage } from "@/utils/reportError";
 import { timeAgo } from "@/utils/timeago";
 
 import { useAuthStore } from "@/store/useAuthStore";
@@ -53,7 +56,7 @@ interface CommentItemProps {
   onUpdate: (commentId: number, newComment: string) => void;
   onDelete: (commentId: number) => void;
   onReply: (rootId: number, mention?: string) => void;
-  onReport: (commentId: number) => void;
+  onReport: (commentId: number, authorId: number) => void;
 }
 
 const INITIAL_VISIBLE = 3;
@@ -75,6 +78,8 @@ export default function PostComment({
   const { mutate: deleteCommentAdmin } = useAdminDeleteComment(feedId);
   const deleteComment = isAdmin ? deleteCommentAdmin : deleteCommentUser;
   const { mutate: reportComment, isPending: isReportPending } = useReportComment();
+  const { mutateAsync: blockUser } = useBlockUser();
+  const { mutateAsync: blockRss } = useBlockRss();
   const { toast } = useCustomToast();
 
   const [content, setContent] = useState("");
@@ -83,7 +88,9 @@ export default function PostComment({
   const [loginOpen, setLoginOpen] = useState(false);
   const [replyTo, setReplyTo] = useState<number | null>(null);
   const [replyContent, setReplyContent] = useState("");
-  const [reportCommentId, setReportCommentId] = useState<number | null>(null);
+  const [reportTarget, setReportTarget] = useState<{ commentId: number; authorId: number } | null>(null);
+  const [blockAuthorId, setBlockAuthorId] = useState<number | null>(null);
+  const { data: blockTargetOwnedRss = [] } = useCertifiedRss(blockAuthorId ?? 0);
   const [expandedReplyIds, setExpandedReplyIds] = useState<Set<number>>(new Set());
 
   const handleModify = (id: number | null) => setModifyId(id);
@@ -145,19 +152,40 @@ export default function PostComment({
   };
 
   const handleReportSubmit = (payload: CreateReportPayload) => {
-    if (reportCommentId === null) return;
+    if (!reportTarget) return;
+    const { commentId, authorId } = reportTarget;
     reportComment(
-      { commentId: reportCommentId, payload },
+      { commentId, payload },
       {
         onSuccess: () => {
-          setReportCommentId(null);
+          setReportTarget(null);
           toast({ title: "신고 접수 완료", description: "신고가 접수되었습니다." });
+          setBlockAuthorId(authorId);
         },
-        onError: () => {
-          toast({ title: "신고 실패", description: "잠시 후 다시 시도해주세요." });
+        onError: (error) => {
+          toast({ title: "신고 실패", description: getReportErrorMessage(error, "댓글을 찾을 수 없습니다.") });
         },
       }
     );
+  };
+
+  const handleBlock = async (block: { rssIds: number[] }) => {
+    if (!blockAuthorId) return;
+    try {
+      await blockUser(blockAuthorId);
+      const results = await Promise.allSettled(block.rssIds.map((rssId) => blockRss(rssId)));
+      const failedRssCount = results.filter((result) => result.status === "rejected").length;
+      if (failedRssCount > 0) {
+        toast({
+          title: "차단 완료",
+          description: `작성자를 차단했습니다. RSS ${failedRssCount}건은 차단하지 못했습니다.`,
+        });
+      } else {
+        toast({ title: "차단 완료", description: "작성자를 차단했습니다." });
+      }
+    } catch {
+      toast({ title: "차단 실패", description: "잠시 후 다시 시도해주세요." });
+    }
   };
 
   const canEditComment = (comment: FeedCommentType) => !isAdmin && !comment.isDeleted && comment.user.id === userId;
@@ -263,7 +291,7 @@ export default function PostComment({
               onUpdate={handleUpdate}
               onDelete={deleteComment}
               onReply={handleReplyOpen}
-              onReport={setReportCommentId}
+              onReport={(commentId, authorId) => setReportTarget({ commentId, authorId })}
             />
 
             {/* 답글 펼치기/접기 토글 */}
@@ -304,7 +332,7 @@ export default function PostComment({
                       onUpdate={handleUpdate}
                       onDelete={deleteComment}
                       onReply={() => handleReplyOpen(root.id, reply.user.userName)}
-                      onReport={setReportCommentId}
+                      onReport={(commentId, authorId) => setReportTarget({ commentId, authorId })}
                     />
                   </li>
                 ))}
@@ -367,11 +395,20 @@ export default function PostComment({
       </div>
 
       <ReportDialog
-        open={reportCommentId !== null}
-        onOpenChange={(open) => !open && setReportCommentId(null)}
+        open={reportTarget !== null}
+        onOpenChange={(open) => !open && setReportTarget(null)}
         title="댓글 신고"
         isPending={isReportPending}
         onSubmit={handleReportSubmit}
+      />
+
+      <BlockConfirmDialog
+        open={blockAuthorId !== null}
+        onOpenChange={(open) => !open && setBlockAuthorId(null)}
+        title="작성자를 차단하시겠습니까?"
+        description="차단하면 댓글, 프로필 페이지 열람이 제한됩니다."
+        ownedRss={blockTargetOwnedRss}
+        onConfirm={handleBlock}
       />
     </div>
   );
@@ -442,7 +479,7 @@ const CommentItem = ({
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="z-[1000]" onClick={(event) => event.stopPropagation()}>
-                      <DropdownMenuItem onClick={() => onReport(comment.id)}>
+                      <DropdownMenuItem onClick={() => onReport(comment.id, comment.user.id)}>
                         <Flag className="w-4 h-4 mr-2" />
                         신고하기
                       </DropdownMenuItem>

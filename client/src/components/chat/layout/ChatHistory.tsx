@@ -2,17 +2,27 @@ import { CircleAlert } from "lucide-react";
 
 import ChatItem from "@/components/chat/ChatItem";
 import ChatSkeleton from "@/components/chat/layout/ChatSkeleton";
+import { Button } from "@/components/ui/button";
 
 import Empty from "@/assets/empty-panda.svg";
 
-import { useChatStore } from "@/store/useChatStore";
 import { getLocalDateString, getLocalMinuteKey } from "@/utils/date";
 
-export default function ChatHistory({ isFull, isConnected }: { isFull: boolean; isConnected: boolean }) {
-  const { chatHistory, isLoading } = useChatStore();
+import { useChatStore } from "@/store/useChatStore";
+
+export default function ChatHistory({
+  isFull,
+  isConnected,
+  onReconnect,
+}: {
+  isFull: boolean;
+  isConnected: boolean;
+  onReconnect?: () => void;
+}) {
+  const { chatHistory, isLoading, connect, currentRoomId } = useChatStore();
 
   if (isLoading) return <ChatSkeleton number={14} />;
-  if (!isConnected) return <NotConnected />;
+  if (!isConnected) return <NotConnected onReconnect={onReconnect ?? (() => connect(currentRoomId || undefined))} />;
   if (isFull) return <FullChatWarning />;
   if (chatHistory.length === 0) return <EmptyChatHistory />;
 
@@ -59,12 +69,15 @@ const EmptyChatHistory = () => (
   </div>
 );
 
-const NotConnected = () => (
+const NotConnected = ({ onReconnect }: { onReconnect: () => void }) => (
   <div className="flex flex-col justify-center items-center h-[70vh] gap-3">
     <CircleAlert color="red" size={200} />
     <div className="flex flex-col items-center gap-1">
       <p className="font-bold">채팅이 연결되지 않았습니다.</p>
       <p>잠시 기다리면 연결이 됩니다.</p>
     </div>
+    <Button variant="default" onClick={onReconnect}>
+      재연결
+    </Button>
   </div>
 );

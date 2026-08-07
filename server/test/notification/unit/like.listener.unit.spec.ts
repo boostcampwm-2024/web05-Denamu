@@ -1,12 +1,12 @@
-import { LikeListener } from '@notification/listener/like.listener';
-import { NotificationService } from '@notification/service/notification.service';
-
 import { WinstonLoggerService } from '@common/logger/logger.service';
 
 import { FeedRepository } from '@feed/repository/feed.repository';
 
 import { LikeCreatedEvent } from '@like/event/like-created.event';
 import { LikeDeletedEvent } from '@like/event/like-deleted.event';
+
+import { LikeListener } from '@notification/listener/like.listener';
+import { NotificationService } from '@notification/service/notification.service';
 
 describe(`${LikeListener.name} Unit Test`, () => {
   let likeListener: LikeListener;
@@ -42,7 +42,7 @@ describe(`${LikeListener.name} Unit Test`, () => {
       feedRepository.getBlogMetaByFeedId.mockResolvedValue({
         id: 1,
         userName: 'blog',
-        userId: null,
+        owner: null,
       });
 
       // when
@@ -57,7 +57,7 @@ describe(`${LikeListener.name} Unit Test`, () => {
       feedRepository.getBlogMetaByFeedId.mockResolvedValue({
         id: 1,
         userName: 'blog',
-        userId: 2,
+        owner: { id: 2, userName: 'blog-owner', profileImage: null },
       });
 
       // when
@@ -72,7 +72,7 @@ describe(`${LikeListener.name} Unit Test`, () => {
       feedRepository.getBlogMetaByFeedId.mockResolvedValue({
         id: 1,
         userName: 'blog',
-        userId: 99,
+        owner: { id: 99, userName: 'blog-owner', profileImage: null },
       });
 
       // when

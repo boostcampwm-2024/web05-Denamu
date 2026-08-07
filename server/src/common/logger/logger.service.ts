@@ -5,12 +5,13 @@ import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 
 import { NotifierRegistry } from '@common/notification/notifier-registry';
+import { SERVER_NOTIFIER } from '@common/notification/notifier.constant';
 
 @Injectable()
 export class WinstonLoggerService implements LoggerService {
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-    private readonly notifierRegistry: NotifierRegistry,
+    @Inject(SERVER_NOTIFIER) private readonly notifierRegistry: NotifierRegistry,
   ) {}
 
   log(message: string, context?: string) {

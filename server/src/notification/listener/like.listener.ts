@@ -22,10 +22,13 @@ export class LikeListener {
   async handleLikeCreated({ feedId, likerUserId }: LikeCreatedEvent) {
     try {
       const blogMeta = await this.feedRepository.getBlogMetaByFeedId(feedId);
-      if (!blogMeta?.userId) return;
-      if (blogMeta.userId === likerUserId) return;
+      if (!blogMeta?.owner) return;
+      if (blogMeta.owner.id === likerUserId) return;
 
-      await this.notificationService.upsertLikeNotification(blogMeta.userId, feedId);
+      await this.notificationService.upsertLikeNotification(
+        blogMeta.owner.id,
+        feedId,
+      );
     } catch (error) {
       this.logger.error(
         `[LikeListener]: 좋아요 알림 생성 중 오류 발생 (feedId: ${feedId}): ${error}`,
@@ -39,7 +42,10 @@ export class LikeListener {
       const feed = await this.feedRepository.findOneBy({ id: feedId });
       if (!feed) return;
 
-      await this.notificationService.removeLikeNotificationIfEmpty(feedId, feed.likeCount);
+      await this.notificationService.removeLikeNotificationIfEmpty(
+        feedId,
+        feed.likeCount,
+      );
     } catch (error) {
       this.logger.error(
         `[LikeListener]: 좋아요 알림 삭제 중 오류 발생 (feedId: ${feedId}): ${error}`,

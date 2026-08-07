@@ -29,7 +29,7 @@ type Action = {
 };
 
 export const useChatStore = create<State & Action>((set, get) => {
-  const initializeSocket = (room: string = 'anonymous') => {
+  const initializeSocket = (room: string = "anonymous") => {
     if (socket) return socket;
     socket = io(CHAT_SERVER_URL, {
       transports: ["websocket"],
@@ -57,26 +57,34 @@ export const useChatStore = create<State & Action>((set, get) => {
       });
     });
 
+    socket.on("chatHistory", (data: ChatType[]) => {
+      set((state) => {
+        const failedMessages = state.chatHistory.filter((chat) => chat.isFailed || !chat.isSend);
+        return {
+          chatHistory: [...data.map((chat) => ({ ...chat, isSend: true })), ...failedMessages],
+          isLoading: false,
+        };
+      });
+    });
+
     socket.on("messageDeleted", (data) => {
       set((state) => ({
         chatHistory: state.chatHistory.map((msg) =>
-          msg.messageId === data.messageId
-            ? { ...msg, message: data.message, userName: data.userName }
-            : msg
+          msg.messageId === data.messageId ? { ...msg, message: data.message, userName: data.userName } : msg
         ),
       }));
     });
 
-    socket.on('assignUserId', ({ userId }: { userId: string }) => {
-      localStorage.setItem('userID', userId);
+    socket.on("assignUserId", ({ userId }: { userId: string }) => {
+      localStorage.setItem("userID", userId);
     });
 
-    socket.on('assignRoom', ({ roomId, roomName }: { roomId: string; roomName: string }) => {
+    socket.on("assignRoom", ({ roomId, roomName }: { roomId: string; roomName: string }) => {
       set({ currentRoomId: roomId, currentRoomName: roomName });
     });
 
-    socket.on('assignUserName', ({ userName }: { userName: string }) => {
-      localStorage.setItem('userName', userName);
+    socket.on("assignUserName", ({ userName }: { userName: string }) => {
+      localStorage.setItem("userName", userName);
       set({ currentUserName: userName });
     });
 
@@ -86,10 +94,14 @@ export const useChatStore = create<State & Action>((set, get) => {
 
     socket.on("connect", () => {
       useChatStore.setState({ isConnected: true });
+      socket?.emit("register", { userId: localStorage.getItem("userID") });
     });
 
-    socket.on("disconnect", () => {
+    socket.on("disconnect", (reason) => {
       useChatStore.setState({ isConnected: false });
+      if (reason === "io server disconnect") {
+        socket?.connect();
+      }
     });
 
     return socket;
@@ -100,18 +112,15 @@ export const useChatStore = create<State & Action>((set, get) => {
     userCount: 0,
     isLoading: true,
     isConnected: false,
-    currentRoomId: '',
-    currentRoomName: '',
-    currentUserName: localStorage.getItem('userName') ?? '',
+    currentRoomId: "",
+    currentRoomName: "",
+    currentUserName: localStorage.getItem("userName") ?? "",
 
     connect: (room?: string) => {
-      const s = initializeSocket(room ?? 'anonymous');
+      const s = initializeSocket(room ?? "anonymous");
       if (!s.connected) {
         s.connect();
       }
-      s.on('connect', () => {
-        s.emit('register', { userId: localStorage.getItem('userID') });
-      });
     },
 
     disconnect: () => {
@@ -121,33 +130,14 @@ export const useChatStore = create<State & Action>((set, get) => {
     switchRoom: (roomId: string) => {
       socket?.disconnect();
       socket = null;
-      set({ chatHistory: [], currentRoomId: '', currentRoomName: '', isLoading: true, isConnected: false });
+      set({ chatHistory: [], currentRoomId: "", currentRoomName: "", isLoading: true, isConnected: false });
 
       const s = initializeSocket(roomId);
       s.connect();
-      s.on('connect', () => {
-        s.emit('register', { userId: localStorage.getItem('userID') });
-      });
-      s.on("chatHistory", (data) => {
-        set((state) => {
-          const failedMessages = state.chatHistory.filter((chat) => chat.isFailed || !chat.isSend);
-          return { chatHistory: [...data, ...failedMessages], isLoading: false };
-        });
-      });
     },
 
     getHistory: () => {
-      const s = initializeSocket();
-
-      s.on("chatHistory", (data) => {
-        useChatStore.setState((state) => {
-          const failedMessages = state.chatHistory.filter((chat) => chat.isFailed || !chat.isSend);
-          return {
-            chatHistory: [...data, ...failedMessages],
-            isLoading: false,
-          };
-        });
-      });
+      initializeSocket();
     },
 
     sendMessage: (message: SendChatType) => {
@@ -157,7 +147,7 @@ export const useChatStore = create<State & Action>((set, get) => {
         chatHistory: [
           ...state.chatHistory,
           {
-            timestamp: '전송중',
+            timestamp: "전송중",
             userName: state.currentUserName,
             message: message.message,
             messageId: message.messageId,

@@ -40,7 +40,7 @@ export default function SideButton() {
 
   return (
     <div className="flex h-full items-center">
-      <SidebarProvider defaultOpen={false}>
+      <SidebarProvider defaultOpen={false} className="min-h-0 w-auto">
         <ChatSidebarEffects />
         <Chat />
         <OpenChat />

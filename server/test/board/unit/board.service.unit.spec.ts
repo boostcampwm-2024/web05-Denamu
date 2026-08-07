@@ -1,7 +1,5 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 
-import { AdminRepository } from '@admin/repository/admin.repository';
-
 import { BoardCategory, BoardStatus } from '@board/constant/board.constant';
 import { CreateBoardRequestDto } from '@board/dto/request/createBoard.dto';
 import { GetAdminBoardsRequestDto } from '@board/dto/request/getAdminBoards.dto';
@@ -10,6 +8,15 @@ import { UpdateBoardRequestDto } from '@board/dto/request/updateBoard.dto';
 import { Board } from '@board/entity/board.entity';
 import { BoardRepository } from '@board/repository/board.repository';
 import { BoardService } from '@board/service/board.service';
+
+import { AdminRepository } from '@admin/repository/admin.repository';
+
+import { EmailProducer } from '@common/email/email.producer';
+import { WinstonLoggerService } from '@common/logger/logger.service';
+
+import { FileService } from '@file/service/file.service';
+
+import { UserRepository } from '@user/repository/user.repository';
 
 import { BoardFixture } from '@test/config/common/fixture/board.fixture';
 
@@ -20,12 +27,19 @@ describe(`${BoardService.name} Unit Test`, () => {
     | 'findPublicById'
     | 'findAdminList'
     | 'findOne'
+    | 'findOneBy'
     | 'create'
     | 'save'
     | 'delete',
     jest.Mock
   >;
   let adminRepository: Record<'findOneBy', jest.Mock>;
+  let userRepository: jest.Mocked<
+    Pick<UserRepository, 'findNoticeAgreedUsers'>
+  >;
+  let emailProducer: jest.Mocked<Pick<EmailProducer, 'produceNoticePublished'>>;
+  let fileService: jest.Mocked<Pick<FileService, 'deleteUntracked'>>;
+  let logger: jest.Mocked<Pick<WinstonLoggerService, 'error'>>;
 
   const createBoard = (overwrites: Partial<Board> = {}): Board =>
     BoardFixture.createBoardFixture({
@@ -41,6 +55,7 @@ describe(`${BoardService.name} Unit Test`, () => {
       findPublicById: jest.fn(),
       findAdminList: jest.fn(),
       findOne: jest.fn(),
+      findOneBy: jest.fn(),
       create: jest.fn((entityLike) => entityLike),
       save: jest.fn((entity) => entity),
       delete: jest.fn(),
@@ -48,10 +63,24 @@ describe(`${BoardService.name} Unit Test`, () => {
     adminRepository = {
       findOneBy: jest.fn(),
     };
+    userRepository = {
+      findNoticeAgreedUsers: jest.fn().mockResolvedValue([]),
+    };
+    emailProducer = {
+      produceNoticePublished: jest.fn(),
+    };
+    fileService = {
+      deleteUntracked: jest.fn().mockResolvedValue(undefined),
+    };
+    logger = { error: jest.fn() };
 
     boardService = new BoardService(
       boardRepository as unknown as BoardRepository,
       adminRepository as unknown as AdminRepository,
+      userRepository as unknown as UserRepository,
+      emailProducer as unknown as EmailProducer,
+      fileService as unknown as FileService,
+      logger as unknown as WinstonLoggerService,
     );
   });
 
@@ -145,7 +174,11 @@ describe(`${BoardService.name} Unit Test`, () => {
 
       // when
       await boardService.getPublicBoards(
-        new GetBoardsRequestDto({ page: 1, limit: 10, category: BoardCategory.FAQ }),
+        new GetBoardsRequestDto({
+          page: 1,
+          limit: 10,
+          category: BoardCategory.FAQ,
+        }),
       );
 
       // then
@@ -319,9 +352,9 @@ describe(`${BoardService.name} Unit Test`, () => {
       });
 
       // when & then
-      await expect(boardService.createBoard('admin@test.com', dto)).rejects.toThrow(
-        BadRequestException,
-      );
+      await expect(
+        boardService.createBoard('admin@test.com', dto),
+      ).rejects.toThrow(BadRequestException);
       expect(boardRepository.save).not.toHaveBeenCalled();
     });
 
@@ -335,9 +368,9 @@ describe(`${BoardService.name} Unit Test`, () => {
       });
 
       // when & then
-      await expect(boardService.createBoard('admin@test.com', dto)).rejects.toThrow(
-        BadRequestException,
-      );
+      await expect(
+        boardService.createBoard('admin@test.com', dto),
+      ).rejects.toThrow(BadRequestException);
       expect(boardRepository.save).not.toHaveBeenCalled();
     });
 
@@ -360,6 +393,7 @@ describe(`${BoardService.name} Unit Test`, () => {
       expect(boardRepository.create).toHaveBeenCalledWith({
         title: '제목',
         content: '<p>본문</p>',
+        question: null,
         status: BoardStatus.DRAFT,
         category: BoardCategory.NOTICE,
         isPinned: false,
@@ -400,6 +434,128 @@ describe(`${BoardService.name} Unit Test`, () => {
       );
       expect(result.authorName).toBeNull();
     });
+
+    it('공지사항이 공개 상태로 즉시 노출될 경우 알림 수신에 동의한 사용자에게 이메일을 발행한다.', async () => {
+      // given
+      adminRepository.findOneBy.mockResolvedValue(null);
+      boardRepository.save.mockImplementation((entity: Board) => {
+        entity.id = 1;
+        return entity;
+      });
+      userRepository.findNoticeAgreedUsers.mockResolvedValue([
+        { email: 'a@test.com', userName: 'a' },
+        { email: 'b@test.com', userName: 'b' },
+      ]);
+      const dto = new CreateBoardRequestDto({
+        title: '점검 안내',
+        content: '<p>본문</p>',
+        category: BoardCategory.NOTICE,
+        status: BoardStatus.PUBLISHED,
+      });
+
+      // when
+      await boardService.createBoard('admin@test.com', dto);
+
+      // then
+      expect(userRepository.findNoticeAgreedUsers).toHaveBeenCalled();
+      expect(emailProducer.produceNoticePublished).toHaveBeenCalledTimes(2);
+      expect(emailProducer.produceNoticePublished).toHaveBeenCalledWith({
+        email: 'a@test.com',
+        userName: 'a',
+        boardId: 1,
+        title: '점검 안내',
+      });
+    });
+
+    it('임시저장 상태일 경우 이메일을 발행하지 않는다.', async () => {
+      // given
+      adminRepository.findOneBy.mockResolvedValue(null);
+      const dto = new CreateBoardRequestDto({
+        title: '점검 안내',
+        content: '<p>본문</p>',
+      });
+
+      // when
+      await boardService.createBoard('admin@test.com', dto);
+
+      // then
+      expect(userRepository.findNoticeAgreedUsers).not.toHaveBeenCalled();
+      expect(emailProducer.produceNoticePublished).not.toHaveBeenCalled();
+    });
+
+    it('FAQ 분류일 경우 이메일을 발행하지 않는다.', async () => {
+      // given
+      adminRepository.findOneBy.mockResolvedValue(null);
+      const dto = new CreateBoardRequestDto({
+        title: '질문',
+        content: '<p>본문</p>',
+        category: BoardCategory.FAQ,
+        status: BoardStatus.PUBLISHED,
+      });
+
+      // when
+      await boardService.createBoard('admin@test.com', dto);
+
+      // then
+      expect(emailProducer.produceNoticePublished).not.toHaveBeenCalled();
+    });
+
+    it('FAQ 분류일 경우 질문을 함께 저장한다.', async () => {
+      // given
+      adminRepository.findOneBy.mockResolvedValue(null);
+      const dto = new CreateBoardRequestDto({
+        title: '질문',
+        content: '<p>답변</p>',
+        question: '<p>환불은 언제까지 가능한가요?</p>',
+        category: BoardCategory.FAQ,
+      });
+
+      // when
+      const result = await boardService.createBoard('admin@test.com', dto);
+
+      // then
+      expect(boardRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({ question: '<p>환불은 언제까지 가능한가요?</p>' }),
+      );
+      expect(result.question).toBe('<p>환불은 언제까지 가능한가요?</p>');
+    });
+
+    it('노출 시작일이 미래일 경우 이메일을 발행하지 않는다.', async () => {
+      // given
+      adminRepository.findOneBy.mockResolvedValue(null);
+      const dto = new CreateBoardRequestDto({
+        title: '점검 안내',
+        content: '<p>본문</p>',
+        status: BoardStatus.PUBLISHED,
+        startAt: '2099-01-01T00:00:00.000Z',
+      });
+
+      // when
+      await boardService.createBoard('admin@test.com', dto);
+
+      // then
+      expect(emailProducer.produceNoticePublished).not.toHaveBeenCalled();
+    });
+
+    it('이메일 발행에 실패해도 게시글 작성 자체는 성공한다.', async () => {
+      // given
+      adminRepository.findOneBy.mockResolvedValue(null);
+      userRepository.findNoticeAgreedUsers.mockRejectedValue(
+        new Error('DB 오류'),
+      );
+      const dto = new CreateBoardRequestDto({
+        title: '점검 안내',
+        content: '<p>본문</p>',
+        status: BoardStatus.PUBLISHED,
+      });
+
+      // when
+      const result = await boardService.createBoard('admin@test.com', dto);
+
+      // then
+      expect(result.title).toBe('점검 안내');
+      expect(logger.error).toHaveBeenCalled();
+    });
   });
 
   describe('updateBoard', () => {
@@ -409,7 +565,10 @@ describe(`${BoardService.name} Unit Test`, () => {
 
       // when & then
       await expect(
-        boardService.updateBoard(1, new UpdateBoardRequestDto({ title: '수정' })),
+        boardService.updateBoard(
+          1,
+          new UpdateBoardRequestDto({ title: '수정' }),
+        ),
       ).rejects.toThrow(NotFoundException);
       expect(boardRepository.save).not.toHaveBeenCalled();
     });
@@ -501,28 +660,101 @@ describe(`${BoardService.name} Unit Test`, () => {
       expect(result.isPinned).toBe(true);
       expect(boardRepository.save).toHaveBeenCalled();
     });
+
+    it('본문에서 제거된 이미지 파일을 삭제한다.', async () => {
+      // given
+      boardRepository.findOne.mockResolvedValue(
+        createBoard({
+          content:
+            '<p>본문</p><img src="/objects/BOARD_IMAGE/2026-08-06/old.jpg">',
+        }),
+      );
+
+      // when
+      await boardService.updateBoard(
+        1,
+        new UpdateBoardRequestDto({
+          content:
+            '<p>본문</p><img src="/objects/BOARD_IMAGE/2026-08-06/new.jpg">',
+        }),
+      );
+
+      // then
+      expect(fileService.deleteUntracked).toHaveBeenCalledWith(
+        '/objects/BOARD_IMAGE/2026-08-06/old.jpg',
+      );
+      expect(fileService.deleteUntracked).not.toHaveBeenCalledWith(
+        '/objects/BOARD_IMAGE/2026-08-06/new.jpg',
+      );
+    });
+
+    it('질문을 수정할 경우 질문 필드가 갱신되고 제거된 이미지 파일을 삭제한다.', async () => {
+      // given
+      boardRepository.findOne.mockResolvedValue(
+        createBoard({
+          question:
+            '<p>질문</p><img src="/objects/BOARD_IMAGE/2026-08-06/old-question.jpg">',
+        }),
+      );
+
+      // when
+      const result = await boardService.updateBoard(
+        1,
+        new UpdateBoardRequestDto({
+          question: '<p>수정된 질문</p>',
+        }),
+      );
+
+      // then
+      expect(result.question).toBe('<p>수정된 질문</p>');
+      expect(fileService.deleteUntracked).toHaveBeenCalledWith(
+        '/objects/BOARD_IMAGE/2026-08-06/old-question.jpg',
+      );
+    });
   });
 
   describe('deleteBoard', () => {
-    it('삭제된 행이 없을 경우 NotFoundException을 던진다.', async () => {
+    it('게시글이 존재하지 않을 경우 NotFoundException을 던진다.', async () => {
       // given
-      boardRepository.delete.mockResolvedValue({ affected: 0 });
+      boardRepository.findOneBy.mockResolvedValue(null);
 
       // when & then
       await expect(boardService.deleteBoard(1)).rejects.toThrow(
         NotFoundException,
       );
+      expect(boardRepository.delete).not.toHaveBeenCalled();
     });
 
     it('게시글 삭제에 성공한다.', async () => {
       // given
-      boardRepository.delete.mockResolvedValue({ affected: 1 });
+      boardRepository.findOneBy.mockResolvedValue(
+        createBoard({ content: '<p>본문</p>' }),
+      );
 
       // when
       await boardService.deleteBoard(1);
 
       // then
       expect(boardRepository.delete).toHaveBeenCalledWith(1);
+      expect(fileService.deleteUntracked).not.toHaveBeenCalled();
+    });
+
+    it('본문에 포함된 이미지 파일도 함께 삭제한다.', async () => {
+      // given
+      boardRepository.findOneBy.mockResolvedValue(
+        createBoard({
+          content:
+            '<p>본문</p><img src="/objects/BOARD_IMAGE/2026-08-06/a.jpg">',
+        }),
+      );
+
+      // when
+      await boardService.deleteBoard(1);
+
+      // then
+      expect(fileService.deleteUntracked).toHaveBeenCalledWith(
+        '/objects/BOARD_IMAGE/2026-08-06/a.jpg',
+      );
     });
   });
 });

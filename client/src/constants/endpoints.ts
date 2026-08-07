@@ -130,6 +130,7 @@ export const BOARD = {
   DETAIL: (id: number) => `/api/boards/${id}`,
   ADMIN_LIST: "/api/admins/boards",
   ADMIN_DETAIL: (id: number) => `/api/admins/boards/${id}`,
+  ADMIN_UPLOAD_IMAGE: "/api/admins/boards/images",
 };
 
 export const QNA = {
@@ -151,6 +152,7 @@ export const NOTIFICATION = {
 export const PROFILE = {
   PROFILE: (id: number) => `/api/users/${id}/profile`,
   UPDATE: "/api/users/profile",
+  UPDATE_IMAGE: "/api/users/profile-image",
   RSS: (id: number) => `/api/users/${id}/rss`,
   LIKES: (id: number) => `/api/users/${id}/likes`,
   COMMENTS: (id: number) => `/api/users/${id}/comments`,

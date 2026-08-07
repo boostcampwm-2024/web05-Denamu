@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -23,6 +24,7 @@ import { EmailProducer } from '@common/email/email.producer';
 import { Payload } from '@common/guard/jwt.guard';
 import { WinstonLoggerService } from '@common/logger/logger.service';
 import { NotifierRegistry } from '@common/notification/notifier-registry';
+import { RSS_NOTIFIER } from '@common/notification/notifier.constant';
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
 
@@ -81,7 +83,7 @@ export class RssService {
     private readonly dataSource: DataSource,
     private readonly redisService: RedisService,
     private readonly adminRepository: AdminRepository,
-    private readonly notifierRegistry: NotifierRegistry,
+    @Inject(RSS_NOTIFIER) private readonly notifierRegistry: NotifierRegistry,
     private readonly logger: WinstonLoggerService,
     private readonly rssBlockRepository: RssBlockRepository,
   ) {}

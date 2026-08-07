@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -8,10 +9,14 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as uuid from 'uuid';
 import { access, unlink } from 'fs/promises';
+import sharp from 'sharp';
 
 import { WinstonLoggerService } from '@common/logger/logger.service';
 
-import { FileUploadType } from '@file/constant/file.constant';
+import {
+  FileUploadType,
+  IMAGE_WEBP_QUALITY,
+} from '@file/constant/file.constant';
 import { UploadFileResponseDto } from '@file/dto/response/uploadFile.dto';
 import { File } from '@file/entity/file.entity';
 import { FileRepository } from '@file/repository/file.repository';
@@ -30,20 +35,13 @@ export class FileService {
     uploadType: FileUploadType,
     userId: number,
   ) {
-    const today = this.getDateString();
-    const targetDir = path.join(this.basePath, uploadType, today);
+    const { filePath, mimetype, size } = await this.writeToDisk(
+      file,
+      uploadType,
+    );
 
-    await this.ensureDirectory(targetDir);
-
-    const ext = path.extname(file.originalname);
-    const fileName = `${uuid.v4()}${ext}`;
-    const filePath = path.join(targetDir, fileName);
-
-    await fs.writeFile(filePath, file.buffer);
-
-    const { originalname, mimetype, size } = file;
     const savedFile = await this.fileRepository.save({
-      originalName: originalname,
+      originalName: file.originalname,
       mimetype,
       size,
       path: filePath,
@@ -52,6 +50,48 @@ export class FileService {
     const accessUrl = this.generateAccessUrl(filePath);
 
     return UploadFileResponseDto.toResponseDto(savedFile, accessUrl);
+  }
+
+  async saveWithoutOwner(
+    file: Express.Multer.File,
+    uploadType: FileUploadType,
+  ): Promise<string> {
+    const { filePath } = await this.writeToDisk(file, uploadType);
+    return this.generateAccessUrl(filePath);
+  }
+
+  private async writeToDisk(
+    file: Express.Multer.File,
+    uploadType: FileUploadType,
+  ) {
+    const today = this.getDateString();
+    const targetDir = path.join(this.basePath, uploadType, today);
+
+    await this.ensureDirectory(targetDir);
+
+    const webpBuffer = await this.convertToWebp(file.buffer);
+    const useWebp = webpBuffer.length < file.buffer.length;
+
+    const buffer = useWebp ? webpBuffer : file.buffer;
+    const ext = useWebp ? '.webp' : path.extname(file.originalname);
+    const mimetype = useWebp ? 'image/webp' : file.mimetype;
+
+    const fileName = `${uuid.v4()}${ext}`;
+    const filePath = path.join(targetDir, fileName);
+
+    await fs.writeFile(filePath, buffer);
+
+    return { filePath, mimetype, size: buffer.length };
+  }
+
+  private async convertToWebp(buffer: Buffer): Promise<Buffer> {
+    try {
+      return await sharp(buffer, { animated: true })
+        .webp({ quality: IMAGE_WEBP_QUALITY })
+        .toBuffer();
+    } catch {
+      throw new BadRequestException('올바르지 않은 이미지 파일입니다.');
+    }
   }
 
   private async ensureDirectory(dir: string) {
@@ -63,8 +103,22 @@ export class FileService {
     return now.toISOString().split('T')[0];
   }
 
+  get objectsBasePath(): string {
+    return this.basePath;
+  }
+
+  toAccessUrl(internalPath: string): string {
+    return this.generateAccessUrl(internalPath);
+  }
+
   private generateAccessUrl(filePath: string): string {
     return filePath.replace(this.basePath, '/objects');
+  }
+
+  private resolveInternalPath(accessUrl: string): string {
+    return accessUrl.startsWith('/objects')
+      ? accessUrl.replace('/objects', this.basePath)
+      : accessUrl;
   }
 
   async findById(id: number): Promise<File> {
@@ -99,19 +153,62 @@ export class FileService {
     return this.findById(id);
   }
 
-  async deleteByPath(path: string): Promise<void> {
-    const file = await this.fileRepository.findOne({ where: { path } });
-    if (file) {
+  async deleteUntracked(accessUrl: string): Promise<void> {
+    const filePath = this.resolveInternalPath(accessUrl);
+    try {
+      await access(filePath);
+      await unlink(filePath);
+    } catch {
+      this.logger.warn(`파일 삭제 실패: ${filePath}`, 'FileService');
+    }
+  }
+
+  async deleteByPath(accessUrl: string): Promise<void> {
+    const file = await this.fileRepository.findOne({
+      where: { path: this.resolveInternalPath(accessUrl) },
+    });
+    if (!file) {
+      return;
+    }
+
+    try {
+      await access(file.path);
+      await unlink(file.path);
+    } catch {
+      this.logger.warn(`파일 삭제 실패: ${file.path}`, 'FileService');
+    }
+
+    await this.fileRepository.delete(file.id);
+  }
+
+  async findOldBoardImagePaths(cutoff: number): Promise<string[]> {
+    const boardImageDir = path.join(this.basePath, FileUploadType.BOARD_IMAGE);
+
+    let dateDirs: string[];
+    try {
+      dateDirs = await fs.readdir(boardImageDir);
+    } catch {
+      return [];
+    }
+
+    const files: string[] = [];
+    for (const dateDir of dateDirs) {
+      const dateDirPath = path.join(boardImageDir, dateDir);
+      let fileNames: string[];
       try {
-        await access(file.path);
-        await unlink(file.path);
+        fileNames = await fs.readdir(dateDirPath);
       } catch {
-        this.logger.warn(`파일 삭제 실패: ${file.path}`, 'FileService');
+        continue;
       }
 
-      await this.fileRepository.delete(file.id);
-    } else {
-      throw new NotFoundException('파일을 찾을 수 없습니다.');
+      for (const fileName of fileNames) {
+        const filePath = path.join(dateDirPath, fileName);
+        const stat = await fs.stat(filePath);
+        if (stat.isFile() && stat.mtimeMs < cutoff) {
+          files.push(filePath);
+        }
+      }
     }
+    return files;
   }
 }

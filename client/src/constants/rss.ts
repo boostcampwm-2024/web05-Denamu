@@ -11,7 +11,9 @@ interface Platform {
 export const PLATFORM_BADGE_COLORS: Record<string, string> = {
   tistory: "#EB531F",
   velog: "#20C997",
-  github: "#000000",
+  github: "#7F00AF",
+  naver: "#2DB400",
+  medium: "#000000",
 };
 
 export const DEFAULT_BADGE_COLOR = "#6B7280";

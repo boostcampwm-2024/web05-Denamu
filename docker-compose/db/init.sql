@@ -53,6 +53,7 @@ CREATE TABLE `user` (
   `inactivity_email_agreed_at` datetime DEFAULT NULL,
   `notice_email_agreed` tinyint NOT NULL DEFAULT 0,
   `notice_email_agreed_at` datetime DEFAULT NULL,
+  `profile_image_change_count` int NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   UNIQUE KEY `UQ_user_user_name` (`user_name`),
   UNIQUE KEY `UQ_user_email` (`email`)
@@ -326,6 +327,7 @@ CREATE TABLE `board` (
   `id` int NOT NULL AUTO_INCREMENT,
   `title` varchar(255) NOT NULL,
   `content` longtext NOT NULL,
+  `question` longtext,
   `status` varchar(20) NOT NULL DEFAULT 'DRAFT',
   `category` varchar(20) NOT NULL DEFAULT 'NOTICE',
   `is_pinned` tinyint NOT NULL DEFAULT 0,
@@ -648,9 +650,9 @@ INSERT INTO report (target_type, target_id, reason, detail, status, reporter_id,
 
 -- denamu.board insert data
 
-INSERT INTO board (title, content, status, category, is_pinned, author_admin_id) VALUES
-	('서비스 점검 안내', '<p>2026-08-05 새벽 점검이 진행됩니다.</p>', 'PUBLISHED', 'NOTICE', 1, 1),
-	('자주 묻는 질문', '<p><strong>Q. RSS 등록은 어떻게 하나요?</strong></p><p>마이페이지에서 RSS 주소를 등록하면 검수 후 반영됩니다.</p>', 'PUBLISHED', 'FAQ', 0, 1);
+INSERT INTO board (title, content, question, status, category, is_pinned, author_admin_id) VALUES
+	('서비스 점검 안내', '<p>2026-08-05 새벽 점검이 진행됩니다.</p>', NULL, 'PUBLISHED', 'NOTICE', 1, 1),
+	('RSS 등록은 어떻게 하나요?', '<p>마이페이지에서 RSS 주소를 등록하면 검수 후 반영됩니다.</p>', '<p>RSS 등록은 어떻게 하나요?</p>', 'PUBLISHED', 'FAQ', 0, 1);
 
 -- denamu.qna insert data
 

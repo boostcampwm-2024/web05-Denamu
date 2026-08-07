@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { Helmet } from "react-helmet";
 import { useLocation, useParams } from "react-router-dom";
 
 import { BlockedFeedNotice } from "@/components/common/Card/detail/BlockedFeedNotice";
@@ -49,6 +50,9 @@ export default function PostDetailPage() {
 
   return (
     <div ref={modalRef} className="bg-white overflow-y-auto relative">
+      <Helmet>
+        <title>{data.data.title} - 데나무</title>
+      </Helmet>
       <Header />
       <div className="mt-5 px-10 md:px-40 flex flex-col gap-2 max-w-7xl mx-auto">
         <PostHeader data={data.data} />
