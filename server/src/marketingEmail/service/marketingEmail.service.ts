@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { AdminRepository } from '@admin/repository/admin.repository';
 
@@ -8,12 +8,15 @@ import { WinstonLoggerService } from '@common/logger/logger.service';
 import { GetAdminMarketingEmailsRequestDto } from '@marketingEmail/dto/request/getAdminMarketingEmails.dto';
 import { SendMarketingEmailRequestDto } from '@marketingEmail/dto/request/sendMarketingEmail.dto';
 import {
+  MarketingEmailDetailDto,
   MarketingEmailListResponseDto,
   MarketingEmailSummaryDto,
 } from '@marketingEmail/dto/response/marketingEmail.dto';
 import { MarketingEmailRepository } from '@marketingEmail/repository/marketingEmail.repository';
 
 import { UserRepository } from '@user/repository/user.repository';
+
+const NOT_FOUND_MESSAGE = '존재하지 않는 발송 이력입니다.';
 
 @Injectable()
 export class MarketingEmailService {
@@ -35,6 +38,17 @@ export class MarketingEmailService {
       limit,
       totalCount,
     );
+  }
+
+  async getAdminMarketingEmail(id: number): Promise<MarketingEmailDetailDto> {
+    const marketingEmail = await this.marketingEmailRepository.findOne({
+      where: { id },
+      relations: ['author'],
+    });
+    if (!marketingEmail) {
+      throw new NotFoundException(NOT_FOUND_MESSAGE);
+    }
+    return MarketingEmailDetailDto.toResponseDto(marketingEmail);
   }
 
   async sendMarketingEmail(

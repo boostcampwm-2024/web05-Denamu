@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
   Query,
   UseGuards,
@@ -14,9 +15,11 @@ import { CurrentAdmin } from '@common/decorator/current-admin.decorator';
 import { AdminAuthGuard } from '@common/guard/session.guard';
 import { ApiResponse } from '@common/response/common.response';
 
+import { ApiGetAdminMarketingEmail } from '@marketingEmail/api-docs/getAdminMarketingEmail.api-docs';
 import { ApiGetAdminMarketingEmails } from '@marketingEmail/api-docs/getAdminMarketingEmails.api-docs';
 import { ApiSendMarketingEmail } from '@marketingEmail/api-docs/sendMarketingEmail.api-docs';
 import { GetAdminMarketingEmailsRequestDto } from '@marketingEmail/dto/request/getAdminMarketingEmails.dto';
+import { GetMarketingEmailRequestDto } from '@marketingEmail/dto/request/getMarketingEmail.dto';
 import { SendMarketingEmailRequestDto } from '@marketingEmail/dto/request/sendMarketingEmail.dto';
 import { MarketingEmailService } from '@marketingEmail/service/marketingEmail.service';
 
@@ -35,6 +38,16 @@ export class AdminMarketingEmailController {
     return ApiResponse.responseWithData(
       '발송 이력 조회를 성공했습니다.',
       await this.marketingEmailService.getAdminMarketingEmails(queryDto),
+    );
+  }
+
+  @ApiGetAdminMarketingEmail()
+  @Get('/:id')
+  @HttpCode(HttpStatus.OK)
+  async getAdminMarketingEmail(@Param() paramDto: GetMarketingEmailRequestDto) {
+    return ApiResponse.responseWithData(
+      '발송 상세 조회를 성공했습니다.',
+      await this.marketingEmailService.getAdminMarketingEmail(paramDto.id),
     );
   }
 

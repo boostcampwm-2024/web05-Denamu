@@ -48,6 +48,53 @@ export class MarketingEmailSummaryDto {
   }
 }
 
+export class MarketingEmailDetailDto {
+  @ApiProperty({ example: 1, description: '발송 ID' })
+  id: number;
+
+  @ApiProperty({
+    example: '8월 신규 기능 소식을 전해드려요',
+    description: '제목',
+  })
+  subject: string;
+
+  @ApiProperty({
+    example: '<p>안녕하세요, 회원님!</p>',
+    description: '본문 (HTML)',
+  })
+  content: string;
+
+  @ApiProperty({ example: 128, description: '수신자 수' })
+  recipientCount: number;
+
+  @ApiProperty({
+    example: '테스트 계정',
+    description: '발송한 관리자 이름 (탈퇴 등으로 계정이 없으면 null)',
+    nullable: true,
+  })
+  authorName: string | null;
+
+  @ApiProperty({ example: '2026-08-06T12:00:00.000Z', description: '발송일시' })
+  createdAt: Date;
+
+  constructor(partial: Partial<MarketingEmailDetailDto>) {
+    Object.assign(this, partial);
+  }
+
+  static toResponseDto(
+    marketingEmail: MarketingEmail,
+  ): MarketingEmailDetailDto {
+    return new MarketingEmailDetailDto({
+      id: marketingEmail.id,
+      subject: marketingEmail.subject,
+      content: marketingEmail.content,
+      recipientCount: marketingEmail.recipientCount,
+      authorName: marketingEmail.author?.name ?? null,
+      createdAt: marketingEmail.createdAt,
+    });
+  }
+}
+
 export class MarketingEmailListResponseDto {
   @ApiProperty({
     type: [MarketingEmailSummaryDto],
