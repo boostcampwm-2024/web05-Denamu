@@ -22,6 +22,7 @@ describe(`${NotificationService.name} Unit Test`, () => {
       | 'findByRecipient'
       | 'markRead'
       | 'deleteExpired'
+      | 'findStaleUnreadDigestTargets'
     >
   >;
 
@@ -41,6 +42,7 @@ describe(`${NotificationService.name} Unit Test`, () => {
       findByRecipient: jest.fn(),
       markRead: jest.fn(),
       deleteExpired: jest.fn(),
+      findStaleUnreadDigestTargets: jest.fn(),
     };
 
     notificationService = new NotificationService(
@@ -212,6 +214,26 @@ describe(`${NotificationService.name} Unit Test`, () => {
         notificationService.markAsRead(1, 2),
       ).resolves.toBeUndefined();
       expect(notificationRepository.markRead).toHaveBeenCalledWith(1, 2);
+    });
+  });
+
+  describe('getStaleUnreadDigestTargets', () => {
+    it('7일 이상 미읽음 & inactivity_email_agreed 유저 목록을 조회하고 unreadCount를 숫자로 변환한다.', async () => {
+      // given
+      notificationRepository.findStaleUnreadDigestTargets.mockResolvedValue([
+        { userId: 1, email: 'a@denamu.dev', userName: 'a', unreadCount: '3' },
+      ]);
+
+      // when
+      const result = await notificationService.getStaleUnreadDigestTargets();
+
+      // then
+      expect(
+        notificationRepository.findStaleUnreadDigestTargets,
+      ).toHaveBeenCalledWith(expect.any(Date), expect.any(Date));
+      expect(result).toEqual([
+        { email: 'a@denamu.dev', userName: 'a', unreadCount: 3 },
+      ]);
     });
   });
 });
