@@ -2,7 +2,12 @@ import { FILE, MARKETING_EMAIL } from "@/constants/endpoints";
 
 import { axiosInstance } from "@/api/instance";
 import { ApiData } from "@/types/api";
-import { MarketingEmailPage, MarketingEmailSummary, SendMarketingEmailPayload } from "@/types/marketingEmail";
+import {
+  MarketingEmailDetail,
+  MarketingEmailPage,
+  MarketingEmailSummary,
+  SendMarketingEmailPayload,
+} from "@/types/marketingEmail";
 
 export interface GetAdminMarketingEmailsParams {
   page?: number;
@@ -15,6 +20,10 @@ export const adminMarketingEmail = {
       MARKETING_EMAIL.ADMIN_LIST,
       { params }
     );
+    return response.data.data;
+  },
+  getDetail: async (id: number): Promise<MarketingEmailDetail> => {
+    const response = await axiosInstance.get<ApiData<MarketingEmailDetail>>(MARKETING_EMAIL.ADMIN_DETAIL(id));
     return response.data.data;
   },
   send: async (payload: SendMarketingEmailPayload): Promise<MarketingEmailSummary> => {

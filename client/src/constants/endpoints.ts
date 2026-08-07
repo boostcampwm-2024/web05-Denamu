@@ -135,6 +135,7 @@ export const BOARD = {
 
 export const MARKETING_EMAIL = {
   ADMIN_LIST: "/api/admins/marketing-emails",
+  ADMIN_DETAIL: (id: number) => `/api/admins/marketing-emails/${id}`,
 };
 
 export const QNA = {

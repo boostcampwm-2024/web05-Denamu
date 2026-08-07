@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 
-import { Mail } from "lucide-react";
+import DOMPurify from "dompurify";
+import { ChevronDown, ChevronUp, Loader2, Mail } from "lucide-react";
 import type { Editor as TinyMCEEditor } from "tinymce";
 
 import {
@@ -24,6 +25,8 @@ import { useCustomToast } from "@/hooks/common/useCustomToast";
 import { useAdminMarketingEmails, useSendMarketingEmail } from "@/hooks/queries/useAdminMarketingEmail";
 
 import { adminMarketingEmail } from "@/api/services/admin/marketingEmail";
+import { MarketingEmailDetail, MarketingEmailSummary } from "@/types/marketingEmail";
+import { useQueryClient } from "@tanstack/react-query";
 import { Editor } from "@tinymce/tinymce-react";
 
 const EDITOR_INIT = {
@@ -45,8 +48,12 @@ export default function AdminMarketingEmailTab() {
   const [subject, setSubject] = useState("");
   const [content, setContent] = useState("");
   const [page, setPage] = useState(1);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [detailsById, setDetailsById] = useState<Record<number, MarketingEmailDetail>>({});
+  const [loadingDetailId, setLoadingDetailId] = useState<number | null>(null);
   const { toast } = useCustomToast();
   const editorRef = useRef<TinyMCEEditor | null>(null);
+  const queryClient = useQueryClient();
 
   const { data, isLoading, isError } = useAdminMarketingEmails({ page, limit: PAGE_SIZE });
   const { mutate: sendMarketingEmail, isPending } = useSendMarketingEmail();
@@ -98,6 +105,29 @@ export default function AdminMarketingEmailTab() {
   };
 
   const canSend = subject.trim().length > 0 && content.trim().length > 0 && !isPending;
+
+  const toggleDetail = async (item: MarketingEmailSummary) => {
+    if (expandedId === item.id) {
+      setExpandedId(null);
+      return;
+    }
+    setExpandedId(item.id);
+    if (detailsById[item.id]) return;
+
+    setLoadingDetailId(item.id);
+    try {
+      const result = await queryClient.fetchQuery({
+        queryKey: ["adminMarketingEmail", item.id],
+        queryFn: () => adminMarketingEmail.getDetail(item.id),
+      });
+      setDetailsById((prev) => ({ ...prev, [item.id]: result }));
+    } catch {
+      toast({ description: "발송 내역을 불러오지 못했습니다.", variant: "destructive" });
+      setExpandedId(null);
+    } finally {
+      setLoadingDetailId(null);
+    }
+  };
 
   return (
     <section className="flex flex-col gap-6 min-h-[300px]">
@@ -172,18 +202,47 @@ export default function AdminMarketingEmailTab() {
           <p className="py-12 text-center text-sm text-gray-400">발송 이력이 없습니다.</p>
         ) : (
           <div className="flex flex-col gap-3">
-            {history.map((item) => (
-              <Card key={item.id}>
-                <CardContent className="flex items-center gap-3 p-4">
-                  <Badge variant="secondary" className="shrink-0">
-                    수신 {item.recipientCount}명
-                  </Badge>
-                  <span className="flex-1 truncate font-medium">{item.subject}</span>
-                  {item.authorName && <span className="shrink-0 text-xs text-gray-400">{item.authorName}</span>}
-                  <span className="shrink-0 text-xs text-gray-400">{new Date(item.createdAt).toLocaleString()}</span>
-                </CardContent>
-              </Card>
-            ))}
+            {history.map((item) => {
+              const isExpanded = expandedId === item.id;
+              const detail = detailsById[item.id];
+              return (
+                <Card key={item.id}>
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    className="cursor-pointer"
+                    onClick={() => toggleDetail(item)}
+                    onKeyDown={(e) => e.key === "Enter" && toggleDetail(item)}
+                  >
+                    <CardContent className="flex items-center gap-3 p-4">
+                      <Badge variant="secondary" className="shrink-0">
+                        수신 {item.recipientCount}명
+                      </Badge>
+                      <span className="flex-1 truncate font-medium">{item.subject}</span>
+                      {item.authorName && <span className="shrink-0 text-xs text-gray-400">{item.authorName}</span>}
+                      <span className="shrink-0 text-xs text-gray-400">
+                        {new Date(item.createdAt).toLocaleString()}
+                      </span>
+                      {loadingDetailId === item.id ? (
+                        <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+                      ) : isExpanded ? (
+                        <ChevronUp className="h-4 w-4 shrink-0 text-gray-400" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4 shrink-0 text-gray-400" />
+                      )}
+                    </CardContent>
+                  </div>
+                  {isExpanded && detail && (
+                    <CardContent className="border-t pt-4">
+                      <div
+                        className="prose max-w-full prose-p:my-2 prose-a:text-primary prose-a:no-underline hover:prose-a:underline"
+                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(detail.content) }}
+                      />
+                    </CardContent>
+                  )}
+                </Card>
+              );
+            })}
           </div>
         )}
 

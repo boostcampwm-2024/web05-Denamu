@@ -6,6 +6,10 @@ export interface MarketingEmailSummary {
   createdAt: string;
 }
 
+export interface MarketingEmailDetail extends MarketingEmailSummary {
+  content: string;
+}
+
 export interface MarketingEmailPage<T> {
   result: T[];
   page: number;
