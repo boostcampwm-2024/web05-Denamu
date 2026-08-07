@@ -11,6 +11,7 @@ import {
   RssRegistration,
   RssRegistrationRequest,
   RssRemoval,
+  UnreadNotificationDigest,
   User,
 } from '@common/types';
 
@@ -334,6 +335,33 @@ describe('EmailService unit test', () => {
       expect(callArgs.html).toContain(
         `${PRODUCT_DOMAIN}/users/deletion-requests/confirm?token=${user.uuid}`,
       );
+    });
+  });
+
+  describe('sendUnreadNotificationDigestMail unit test', () => {
+    it('미읽음 알림 다이제스트 메일을 올바르게 전송한다', async () => {
+      const digest: UnreadNotificationDigest = {
+        email: 'tester@test.com',
+        userName: 'tester',
+        unreadCount: 5,
+      };
+
+      await emailService.sendUnreadNotificationDigestMail(digest);
+
+      expect(mockSendMail).toHaveBeenCalledTimes(1);
+      expect(mockSendMail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          from: `Denamu<${mockEmailUser}>`,
+          to: `${digest.userName}<${digest.email}>`,
+          subject: `[🎋 Denamu] 확인하지 않은 알림이 ${digest.unreadCount}개 있습니다.`,
+        }),
+      );
+
+      const callArgs = (mockSendMail.mock.calls[0] as [{ html: string }])[0];
+      expect(callArgs.html).toContain(digest.userName);
+      expect(callArgs.html).toContain(`>${digest.unreadCount}<`);
+      expect(callArgs.html).toContain('개');
+      expect(callArgs.html).toContain(PRODUCT_DOMAIN);
     });
   });
 

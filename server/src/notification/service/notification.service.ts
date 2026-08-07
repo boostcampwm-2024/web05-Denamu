@@ -1,5 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 
+import {
+  getDigestStaleCutoffDate,
+  getNotificationCutoffDate,
+} from '@notification/constant/notification.constant';
 import { GetNotificationsResponseDto } from '@notification/dto/response/getNotifications.dto';
 import { GetUnreadCountResponseDto } from '@notification/dto/response/getUnreadCount.dto';
 import { NotificationRepository } from '@notification/repository/notification.repository';
@@ -86,5 +90,17 @@ export class NotificationService {
 
   async deleteExpired() {
     await this.notificationRepository.deleteExpired();
+  }
+
+  async getStaleUnreadDigestTargets() {
+    const rows = await this.notificationRepository.findStaleUnreadDigestTargets(
+      getDigestStaleCutoffDate(),
+      getNotificationCutoffDate(),
+    );
+    return rows.map((row) => ({
+      email: row.email,
+      userName: row.userName,
+      unreadCount: Number(row.unreadCount),
+    }));
   }
 }

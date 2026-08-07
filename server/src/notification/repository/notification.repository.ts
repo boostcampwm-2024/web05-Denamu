@@ -207,4 +207,23 @@ export class NotificationRepository extends Repository<Notification> {
   async deleteExpired() {
     return this.delete({ updatedAt: LessThan(getNotificationCutoffDate()) });
   }
+
+  async findStaleUnreadDigestTargets(staleCutoff: Date, retentionCutoff: Date) {
+    return this.dataSource
+      .createQueryBuilder()
+      .select('u.id', 'userId')
+      .addSelect('u.email', 'email')
+      .addSelect('u.user_name', 'userName')
+      .addSelect('COUNT(*)', 'unreadCount')
+      .from(Notification, 'n')
+      .innerJoin('user', 'u', 'u.id = n.recipient_user_id')
+      .where('n.is_read = 0')
+      .andWhere('n.updated_at <= :staleCutoff', { staleCutoff })
+      .andWhere('n.updated_at >= :retentionCutoff', { retentionCutoff })
+      .andWhere('u.inactivity_email_agreed = 1')
+      .groupBy('u.id')
+      .addGroupBy('u.email')
+      .addGroupBy('u.user_name')
+      .getRawMany<{ userId: number; email: string; userName: string; unreadCount: string }>();
+  }
 }

@@ -6,6 +6,7 @@ import {
   MarketingBroadcast,
   NoticePublished,
   QnaAnswered,
+  UnreadNotificationDigest,
 } from '@common/email/email.type';
 import { WinstonLoggerService } from '@common/logger/logger.service';
 import {
@@ -208,6 +209,13 @@ export class EmailProducer {
   async produceMarketingBroadcast(payload: MarketingBroadcast) {
     await this.produceMessage({
       type: EmailPayloadConstant.MARKETING_BROADCAST,
+      data: payload,
+    });
+  }
+
+  async produceUnreadNotificationDigest(payload: UnreadNotificationDigest) {
+    await this.produceMessage({
+      type: EmailPayloadConstant.UNREAD_NOTIFICATION_DIGEST,
       data: payload,
     });
   }

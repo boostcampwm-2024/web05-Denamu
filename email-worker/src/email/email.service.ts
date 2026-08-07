@@ -15,6 +15,7 @@ import {
   RssRegistration,
   RssRegistrationRequest,
   RssRemoval,
+  UnreadNotificationDigest,
   User,
 } from '@common/types';
 
@@ -30,6 +31,7 @@ import {
   createRssRegistrationContent,
   createRssRegistrationRequestContent,
   createRssRemoveCertificateContent,
+  createUnreadNotificationDigestContent,
   createVerificationMailContent,
   PRODUCT_DOMAIN,
 } from '@email/email.content';
@@ -45,6 +47,7 @@ export class EmailService {
   constructor(@inject(EmailMetrics) private readonly metrics: EmailMetrics) {
     this.emailUser = process.env.EMAIL_USER;
     const emailPassword = process.env.EMAIL_PASSWORD;
+
     if (!this.emailUser) {
       throw new Error('EMAIL_USER 환경 변수가 설정되지 않았습니다.');
     }
@@ -52,6 +55,7 @@ export class EmailService {
     if (!emailPassword) {
       throw new Error('EMAIL_PASSWORD 환경 변수가 설정되지 않았습니다.');
     }
+
     this.transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST || 'smtp.gmail.com',
       port: Number(process.env.SMTP_PORT) || 587,
@@ -365,6 +369,14 @@ export class EmailService {
     await this.sendMail(mailOptions);
   }
 
+  async sendUnreadNotificationDigestMail(
+    digest: UnreadNotificationDigest,
+  ): Promise<void> {
+    const mailOptions = this.createUnreadNotificationDigestMail(digest);
+
+    await this.sendMail(mailOptions);
+  }
+
   private createMarketingBroadcastMail(
     marketingBroadcast: MarketingBroadcast,
   ): nodemailer.SendMailOptions {
@@ -375,6 +387,21 @@ export class EmailService {
       html: createMarketingBroadcastContent(
         marketingBroadcast.userName,
         marketingBroadcast.content,
+        this.emailUser,
+      ),
+    };
+  }
+
+  private createUnreadNotificationDigestMail(
+    digest: UnreadNotificationDigest,
+  ): nodemailer.SendMailOptions {
+    return {
+      from: `Denamu<${this.emailUser}>`,
+      to: `${digest.userName}<${digest.email}>`,
+      subject: `[🎋 Denamu] 확인하지 않은 알림이 ${digest.unreadCount}개 있습니다.`,
+      html: createUnreadNotificationDigestContent(
+        digest.userName,
+        digest.unreadCount,
         this.emailUser,
       ),
     };

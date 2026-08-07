@@ -23,4 +23,5 @@ export const REDIS_KEYS = {
   USER_INVALIDATED_PREFIX: 'user:invalidated',
   OAUTH_PENDING_KEY: 'oauth:pending',
   OAUTH_LINK_KEY: 'oauth:link',
+  NOTIFICATION_DIGEST_LOCK: 'notification:digest:lock',
 };

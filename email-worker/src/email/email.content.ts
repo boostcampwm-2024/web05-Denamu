@@ -329,6 +329,26 @@ export function createMarketingBroadcastContent(
   return mailLayout(body, serviceAddress, consentNotice);
 }
 
+export function createUnreadNotificationDigestContent(
+  userName: string,
+  unreadCount: number,
+  serviceAddress: string,
+) {
+  const body = `
+        ${heading('확인하지 않은 알림이 있습니다 🔔', '#007bff')}
+        ${infoBox(`
+          <p><strong>안녕하세요, ${userName}님!</strong></p>
+          <p>일주일 넘게 확인하지 않은 알림이 있습니다.</p>
+        `)}
+        <div style="text-align: center; margin: 20px 0;">
+          <span style="font-size: 64px; font-weight: bold; color: #007bff; line-height: 1;">${unreadCount}</span>
+          <span style="font-size: 20px; color: #007bff; font-weight: bold;">개</span>
+        </div>
+        ${button(PRODUCT_DOMAIN, '알림 확인하러 가기')}
+  `;
+  return mailLayout(body, serviceAddress);
+}
+
 export function createDeleteAccountContent(
   userName: string,
   verificationLink: string,
