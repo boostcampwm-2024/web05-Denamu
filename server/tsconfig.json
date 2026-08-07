@@ -36,6 +36,7 @@
       "@rss/*": ["./src/rss/*"],
       "@statistic/*": ["./src/statistic/*"],
       "@subscribe/*": ["./src/subscribe/*"],
+      "@suspension/*": ["./src/suspension/*"],
       "@tag/*": ["./src/tag/*"],
       "@user/*": ["./src/user/*"],
       "@test/*": ["./test/*"]
