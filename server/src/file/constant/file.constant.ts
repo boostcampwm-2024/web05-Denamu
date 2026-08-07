@@ -1,8 +1,13 @@
 export enum FileUploadType {
   PROFILE_IMAGE = 'PROFILE_IMAGE',
   BOARD_IMAGE = 'BOARD_IMAGE',
-  // 추후 추가될 타입들 명시
+  MARKETING_EMAIL_IMAGE = 'MARKETING_EMAIL_IMAGE',
 }
+
+export const ADMIN_UPLOADABLE_IMAGE_TYPES = [
+  FileUploadType.BOARD_IMAGE,
+  FileUploadType.MARKETING_EMAIL_IMAGE,
+] as const;
 
 export const FILE_SIZE_LIMITS = {
   // MB 단위
