@@ -359,7 +359,8 @@ describe('EmailService unit test', () => {
 
       const callArgs = (mockSendMail.mock.calls[0] as [{ html: string }])[0];
       expect(callArgs.html).toContain(digest.userName);
-      expect(callArgs.html).toContain(`${digest.unreadCount}개`);
+      expect(callArgs.html).toContain(`>${digest.unreadCount}<`);
+      expect(callArgs.html).toContain('개');
       expect(callArgs.html).toContain(PRODUCT_DOMAIN);
     });
   });
