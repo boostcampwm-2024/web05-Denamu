@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import {
   EmailPayload,
   EmailPayloadConstant,
+  MarketingBroadcast,
   NoticePublished,
   QnaAnswered,
 } from '@common/email/email.type';
@@ -200,6 +201,13 @@ export class EmailProducer {
   async produceNoticePublished(payload: NoticePublished) {
     await this.produceMessage({
       type: EmailPayloadConstant.NOTICE_PUBLISHED,
+      data: payload,
+    });
+  }
+
+  async produceMarketingBroadcast(payload: MarketingBroadcast) {
+    await this.produceMessage({
+      type: EmailPayloadConstant.MARKETING_BROADCAST,
       data: payload,
     });
   }

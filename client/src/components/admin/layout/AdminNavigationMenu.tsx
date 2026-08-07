@@ -9,6 +9,7 @@ export const TAB_TYPES = {
   REPORT: "REPORT",
   BOARD: "BOARD",
   QNA: "QNA",
+  EMAIL: "EMAIL",
 } as const;
 
 type TabType = (typeof TAB_TYPES)[keyof typeof TAB_TYPES];
@@ -50,6 +51,11 @@ export const AdminNavigationMenu = ({ handleTap }: { handleTap: (tabType: TabTyp
         <NavigationMenuItem>
           <Button variant="ghost" className="w-full justify-start" onClick={() => handleTap("QNA")}>
             Q&A 관리
+          </Button>
+        </NavigationMenuItem>
+        <NavigationMenuItem>
+          <Button variant="ghost" className="w-full justify-start" onClick={() => handleTap("EMAIL")}>
+            이메일 관리
           </Button>
         </NavigationMenuItem>
       </NavigationMenuList>

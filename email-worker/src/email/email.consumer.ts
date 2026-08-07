@@ -133,6 +133,10 @@ export class EmailConsumer implements Lifecycle {
         await this.emailService.sendNoticePublishedMail(payload.data);
         break;
 
+      case EmailPayloadConstant.MARKETING_BROADCAST:
+        await this.emailService.sendMarketingBroadcastMail(payload.data);
+        break;
+
       case EmailPayloadConstant.ADMIN_CERTIFICATION:
         await this.emailService.sendAdminCertificationMail(payload.data);
         break;

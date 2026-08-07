@@ -123,6 +123,7 @@ export const REPORT = {
 
 export const FILE = {
   UPLOAD: "/api/files",
+  ADMIN_UPLOAD_IMAGE: "/api/admins/images",
 };
 
 export const BOARD = {
@@ -130,7 +131,11 @@ export const BOARD = {
   DETAIL: (id: number) => `/api/boards/${id}`,
   ADMIN_LIST: "/api/admins/boards",
   ADMIN_DETAIL: (id: number) => `/api/admins/boards/${id}`,
-  ADMIN_UPLOAD_IMAGE: "/api/admins/boards/images",
+};
+
+export const MARKETING_EMAIL = {
+  ADMIN_LIST: "/api/admins/marketing-emails",
+  ADMIN_DETAIL: (id: number) => `/api/admins/marketing-emails/${id}`,
 };
 
 export const QNA = {

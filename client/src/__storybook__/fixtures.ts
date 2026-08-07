@@ -6,6 +6,7 @@ import type { ChildAdmin } from "@/types/admin";
 import type { BoardDetail, BoardPage, BoardSummary } from "@/types/board";
 import type { ChartPlatform, ChartType } from "@/types/chart";
 import type { AdminChatRoom, ChatType } from "@/types/chat";
+import type { MarketingEmailDetail, MarketingEmailPage, MarketingEmailSummary } from "@/types/marketingEmail";
 import type { FeedDetail, FeedList } from "@/types/post";
 import type {
   BlockedRss,
@@ -518,6 +519,36 @@ export const mockFaqBoardDetail: BoardDetail = {
   authorName: "테스트 계정",
   updatedAt: "2026-07-22T09:00:00.000Z",
 };
+
+const mockMarketingEmailSummaries: MarketingEmailSummary[] = [
+  {
+    id: 2,
+    subject: "여름 신기능 소식",
+    recipientCount: 1240,
+    authorName: "관리자",
+    createdAt: "2026-07-20T09:00:00.000Z",
+  },
+  {
+    id: 1,
+    subject: "데나무 서비스 오픈 안내",
+    recipientCount: 980,
+    authorName: "메인 관리자",
+    createdAt: "2026-06-25T09:00:00.000Z",
+  },
+];
+
+export const mockMarketingEmailsPage: MarketingEmailPage<MarketingEmailSummary> = {
+  result: mockMarketingEmailSummaries,
+  page: 1,
+  limit: 10,
+  totalCount: mockMarketingEmailSummaries.length,
+  hasMore: false,
+};
+
+export const mockMarketingEmailDetails: MarketingEmailDetail[] = mockMarketingEmailSummaries.map((summary) => ({
+  ...summary,
+  content: `<p>안녕하세요! <b>${summary.subject}</b> 소식을 전해드립니다.</p>`,
+}));
 
 const mockQnaSummaries: QnaSummary[] = [
   {

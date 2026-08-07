@@ -54,4 +54,11 @@ export class UserRepository extends Repository<User> {
       select: ['email', 'userName'],
     });
   }
+
+  async findMarketingAgreedUsers() {
+    return this.find({
+      where: { marketingEmailAgreed: true },
+      select: ['email', 'userName'],
+    });
+  }
 }

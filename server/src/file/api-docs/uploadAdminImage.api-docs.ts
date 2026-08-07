@@ -6,18 +6,18 @@ import {
   ApiOperation,
 } from '@nestjs/swagger';
 
-import { UploadBoardImageResponseDto } from '@board/dto/response/uploadBoardImage.dto';
-
 import {
   ApiBadRequestDoc,
   ApiCreatedDataResponse,
   ApiUnauthorizedDoc,
 } from '@common/swagger/swagger.helper';
 
-export function ApiUploadBoardImage() {
+import { UploadImageResponseDto } from '@file/dto/response/uploadImage.dto';
+
+export function ApiUploadAdminImage() {
   return applyDecorators(
     ApiCookieAuth('sessionId'),
-    ApiOperation({ summary: '게시글 본문 이미지 업로드 API' }),
+    ApiOperation({ summary: '관리자 이미지 업로드 API' }),
     ApiConsumes('multipart/form-data'),
     ApiBody({
       description: '업로드할 이미지 파일',
@@ -33,11 +33,7 @@ export function ApiUploadBoardImage() {
         required: ['file'],
       },
     }),
-    ApiCreatedDataResponse(
-      UploadBoardImageResponseDto,
-      false,
-      '이미지 업로드 성공',
-    ),
+    ApiCreatedDataResponse(UploadImageResponseDto, false, '이미지 업로드 성공'),
     ApiBadRequestDoc('잘못된 요청'),
     ApiUnauthorizedDoc('인증되지 않은 요청입니다.'),
   );

@@ -33,6 +33,8 @@ import { HealthController } from '@health/health.controller';
 
 import { LikeModule } from '@like/module/like.module';
 
+import { MarketingEmailModule } from '@marketingEmail/module/marketingEmail.module';
+
 import { NotificationModule } from '@notification/module/notification.module';
 
 import { QnaModule } from '@qna/module/qna.module';
@@ -100,6 +102,7 @@ const exists = !!chosen && fs.existsSync(chosen);
     CommentModule,
     LikeModule,
     BoardModule,
+    MarketingEmailModule,
     QnaModule,
     NotificationModule,
     BlockModule,

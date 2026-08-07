@@ -5,6 +5,7 @@ import {
   createAdminDeleteAccountContent,
   createAdminVerificationMailContent,
   createDeleteAccountContent,
+  createMarketingBroadcastContent,
   createNoticePublishedContent,
   createPasswordResetMailContent,
   createQnaAnsweredContent,
@@ -109,6 +110,15 @@ const previews: [string, string, string][] = [
       '김데나무',
       '서비스 점검 안내',
       1,
+      SERVICE_ADDRESS,
+    ),
+  ],
+  [
+    'marketing-broadcast',
+    '마케팅 이메일(광고)',
+    createMarketingBroadcastContent(
+      '김데나무',
+      '<p>이번 달 새로운 기능을 소개합니다.</p>',
       SERVICE_ADDRESS,
     ),
   ],
