@@ -2,6 +2,7 @@ import 'reflect-metadata';
 
 import {
   AdminCertification,
+  MarketingBroadcast,
   RssCertification,
   RssRegistration,
   RssRegistrationRequest,
@@ -41,6 +42,7 @@ describe('email consumer unit test', () => {
     let sendAdminCertificationMail: jest.Mock;
     let sendAdminDeleteAccountMail: jest.Mock;
     let sendAdminPasswordResetEmail: jest.Mock;
+    let sendMarketingBroadcastMail: jest.Mock;
 
     beforeEach(() => {
       sendUserCertificationMail = jest.fn().mockResolvedValue(undefined);
@@ -53,6 +55,7 @@ describe('email consumer unit test', () => {
       sendAdminCertificationMail = jest.fn().mockResolvedValue(undefined);
       sendAdminDeleteAccountMail = jest.fn().mockResolvedValue(undefined);
       sendAdminPasswordResetEmail = jest.fn().mockResolvedValue(undefined);
+      sendMarketingBroadcastMail = jest.fn().mockResolvedValue(undefined);
 
       emailService = {
         sendUserCertificationMail,
@@ -65,6 +68,7 @@ describe('email consumer unit test', () => {
         sendAdminCertificationMail,
         sendAdminDeleteAccountMail,
         sendAdminPasswordResetEmail,
+        sendMarketingBroadcastMail,
       } as any;
       rabbitmqService = {
         sendMessageToQueue: jest.fn().mockResolvedValue(null),
@@ -264,6 +268,27 @@ describe('email consumer unit test', () => {
 
       expect(sendAdminPasswordResetEmail).toHaveBeenCalledTimes(1);
       expect(sendAdminPasswordResetEmail).toHaveBeenCalledWith(adminData);
+    });
+
+    it('MARKETING_BROADCAST 타입일 때 sendMarketingBroadcastMail을 호출한다', async () => {
+      //given
+      const marketingData: MarketingBroadcast = {
+        email: 'test@test.com',
+        userName: 'tester',
+        subject: '9월 신규 기능 소식',
+        content: '<p>이번 달 업데이트를 확인해보세요.</p>',
+      };
+      const payload: EmailPayload = {
+        type: EmailPayloadConstant.MARKETING_BROADCAST,
+        data: marketingData,
+      };
+
+      //when
+      await emailConsumer.handleEmailByType(payload);
+
+      //then
+      expect(sendMarketingBroadcastMail).toHaveBeenCalledTimes(1);
+      expect(sendMarketingBroadcastMail).toHaveBeenCalledWith(marketingData);
     });
 
     it('알 수 없는 타입일 때 아무 메서드도 호출하지 않는다', async () => {
@@ -682,7 +707,11 @@ describe('email consumer unit test', () => {
       } as any;
       emailService = { sendUserCertificationMail } as any;
       notifier = { start: jest.fn(), publish: jest.fn() };
-      emailConsumer = new EmailConsumer(rabbitmqService, emailService, notifier);
+      emailConsumer = new EmailConsumer(
+        rabbitmqService,
+        emailService,
+        notifier,
+      );
     });
 
     it('start 호출 시 EMAIL_SEND 큐를 consume 한다', async () => {
@@ -733,7 +762,9 @@ describe('email consumer unit test', () => {
     });
 
     it('대기 중인 작업이 없으면 waitForPendingTasks는 즉시 반환한다', async () => {
-      await expect(emailConsumer.waitForPendingTasks()).resolves.toBeUndefined();
+      await expect(
+        emailConsumer.waitForPendingTasks(),
+      ).resolves.toBeUndefined();
     });
 
     it('stop은 진행 중인 작업이 모두 끝날 때까지 대기한 후 종료한다', async () => {
