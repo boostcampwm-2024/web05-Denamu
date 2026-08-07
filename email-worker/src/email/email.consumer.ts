@@ -149,6 +149,10 @@ export class EmailConsumer implements Lifecycle {
         await this.emailService.sendAdminPasswordResetEmail(payload.data);
         break;
 
+      case EmailPayloadConstant.UNREAD_NOTIFICATION_DIGEST:
+        await this.emailService.sendUnreadNotificationDigestMail(payload.data);
+        break;
+
       default:
         logger.info(`처리할 수 없는 이메일 타입이 입력되었습니다.`);
     }

@@ -63,3 +63,9 @@ export interface MarketingBroadcast {
   subject: string;
   content: string;
 }
+
+export interface UnreadNotificationDigest {
+  email: string;
+  userName: string;
+  unreadCount: number;
+}

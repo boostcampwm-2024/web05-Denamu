@@ -7,6 +7,7 @@ import {
   RssRegistration,
   RssRegistrationRequest,
   RssRemoval,
+  UnreadNotificationDigest,
   User,
 } from '@common/types';
 
@@ -49,6 +50,10 @@ export type EmailPayload =
   | {
       type: typeof EmailPayloadConstant.MARKETING_BROADCAST;
       data: MarketingBroadcast;
+    }
+  | {
+      type: typeof EmailPayloadConstant.UNREAD_NOTIFICATION_DIGEST;
+      data: UnreadNotificationDigest;
     };
 
 export type NodeMailerError = Error & {
