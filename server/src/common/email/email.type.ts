@@ -63,6 +63,12 @@ export interface MarketingBroadcast {
   content: string;
 }
 
+export interface UnreadNotificationDigest {
+  email: string;
+  userName: string;
+  unreadCount: number;
+}
+
 export const EmailPayloadConstant = {
   USER_CERTIFICATION: 'userCertification',
   RSS_REMOVAL: 'rssRemoval',
@@ -77,6 +83,7 @@ export const EmailPayloadConstant = {
   QNA_ANSWERED: 'qnaAnswered',
   NOTICE_PUBLISHED: 'noticePublished',
   MARKETING_BROADCAST: 'marketingBroadcast',
+  UNREAD_NOTIFICATION_DIGEST: 'unreadNotificationDigest',
 } as const;
 
 export type EmailPayload =
@@ -116,4 +123,8 @@ export type EmailPayload =
   | {
       type: typeof EmailPayloadConstant.MARKETING_BROADCAST;
       data: MarketingBroadcast;
+    }
+  | {
+      type: typeof EmailPayloadConstant.UNREAD_NOTIFICATION_DIGEST;
+      data: UnreadNotificationDigest;
     };
