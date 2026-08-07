@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   NotFoundException,
   UnauthorizedException,
@@ -7,7 +8,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 
 import { Response } from 'express';
-import { DataSource } from 'typeorm';
+import { DataSource, LessThan } from 'typeorm';
 
 import { EmailProducer } from '@common/email/email.producer';
 import { Payload } from '@common/guard/jwt.guard';
@@ -23,6 +24,7 @@ import { RssAcceptRepository } from '@rss/repository/rss.repository';
 
 import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
 
+import { PROFILE_IMAGE_DAILY_LIMIT } from '@user/constant/user.constants';
 import { RegisterUserRequestDto } from '@user/dto/request/registerUser.dto';
 import { SearchUserRequestDto } from '@user/dto/request/searchUser.dto';
 import { CheckEmailDuplicationResponseDto } from '@user/dto/response/checkEmailDuplication.dto';
@@ -48,6 +50,7 @@ describe(`${UserService.name} Unit Test`, () => {
       | 'findOne'
       | 'save'
       | 'remove'
+      | 'update'
       | 'searchUserList'
       | 'isUserBlocked'
     >
@@ -95,6 +98,7 @@ describe(`${UserService.name} Unit Test`, () => {
       findOne: jest.fn(),
       save: jest.fn(),
       remove: jest.fn(),
+      update: jest.fn().mockResolvedValue({ affected: 1 }),
       searchUserList: jest.fn(),
       isUserBlocked: jest.fn(),
     };
@@ -585,39 +589,7 @@ describe(`${UserService.name} Unit Test`, () => {
   describe('updateUser', () => {
     const userId = 1;
 
-    it('프로필 이미지가 변경되면 기존 파일을 삭제하고 교체한다.', async () => {
-      // given
-      const user = UserFixture.createUserFixture({
-        profileImage: 'old.png',
-      });
-      userRepository.findOneBy.mockResolvedValue(user);
-
-      // when
-      await userService.updateUser(userId, {
-        profileImage: 'new.png',
-      });
-
-      // then
-      expect(fileService.deleteByPath).toHaveBeenCalledWith('old.png');
-      expect(user.profileImage).toBe('new.png');
-      expect(userRepository.save).toHaveBeenCalledWith(user);
-    });
-
-    it('동일한 프로필 이미지면 파일을 삭제하지 않는다.', async () => {
-      // given
-      const user = UserFixture.createUserFixture({ profileImage: 'same.png' });
-      userRepository.findOneBy.mockResolvedValue(user);
-
-      // when
-      await userService.updateUser(userId, {
-        profileImage: 'same.png',
-      });
-
-      // then
-      expect(fileService.deleteByPath).not.toHaveBeenCalled();
-    });
-
-    it('userName만 들어오면 이름만 변경한다.', async () => {
+    it('userName만 들어오면 해당 필드만 갱신한다.', async () => {
       // given
       const user = UserFixture.createUserFixture({ userName: 'old' });
       userRepository.findOneBy.mockResolvedValue(user);
@@ -628,44 +600,29 @@ describe(`${UserService.name} Unit Test`, () => {
       });
 
       // then
-      expect(user.userName).toBe('new');
+      expect(userRepository.update).toHaveBeenCalledWith(
+        { id: userId },
+        { userName: 'new' },
+      );
       expect(fileService.deleteByPath).not.toHaveBeenCalled();
     });
 
-    it('변경하려는 userName이 이미 존재하면 ConflictException을 던진다.', async () => {
+    it('존재하지 않는 사용자면 NotFoundException을 던지고 갱신하지 않는다.', async () => {
       // given
-      const user = UserFixture.createUserFixture({ userName: 'old' });
-      userRepository.findOneBy.mockResolvedValue(user);
-      userRepository.findOne.mockResolvedValue(
-        UserFixture.createUserFixture({ userName: 'taken' }),
-      );
+      userRepository.findOneBy.mockResolvedValue(null);
 
       // when & then
       await expect(
-        userService.updateUser(userId, { userName: 'taken' }),
-      ).rejects.toThrow(ConflictException);
-      expect(userRepository.save).not.toHaveBeenCalled();
+        userService.updateUser(userId, { userName: 'new' }),
+      ).rejects.toThrow(NotFoundException);
+      expect(userRepository.update).not.toHaveBeenCalled();
     });
 
-    it('동일한 userName이면 중복 조회 없이 통과한다.', async () => {
+    it('갱신 시 unique 제약 위반(ER_DUP_ENTRY)이면 ConflictException으로 변환한다.', async () => {
       // given
-      const user = UserFixture.createUserFixture({ userName: 'same' });
-      userRepository.findOneBy.mockResolvedValue(user);
-
-      // when
-      await userService.updateUser(userId, { userName: 'same' });
-
-      // then
-      expect(userRepository.findOne).not.toHaveBeenCalled();
-      expect(userRepository.save).toHaveBeenCalledWith(user);
-    });
-
-    it('사전 조회를 통과해도 저장 시 unique 제약 위반(ER_DUP_ENTRY)이면 ConflictException으로 변환한다.', async () => {
-      // given: 사전 조회는 비어 있지만(TOCTOU) 저장 시점에 중복이 발생하는 경합 상황
       const user = UserFixture.createUserFixture({ userName: 'old' });
       userRepository.findOneBy.mockResolvedValue(user);
-      userRepository.findOne.mockResolvedValue(null);
-      userRepository.save.mockRejectedValue({ code: 'ER_DUP_ENTRY' });
+      userRepository.update.mockRejectedValue({ code: 'ER_DUP_ENTRY' });
 
       // when & then
       await expect(
@@ -673,13 +630,9 @@ describe(`${UserService.name} Unit Test`, () => {
       ).rejects.toThrow(ConflictException);
     });
 
-    it('이메일 수신 동의 값이 들어오면 해당 필드만 변경한다.', async () => {
+    it('이메일 수신 동의 값이 들어오면 해당 필드만 갱신한다.', async () => {
       // given
-      const user = UserFixture.createUserFixture({
-        marketingEmailAgreed: false,
-        inactivityEmailAgreed: true,
-        noticeEmailAgreed: true,
-      });
+      const user = UserFixture.createUserFixture();
       userRepository.findOneBy.mockResolvedValue(user);
 
       // when
@@ -689,28 +642,96 @@ describe(`${UserService.name} Unit Test`, () => {
       });
 
       // then
-      expect(user.marketingEmailAgreed).toBe(true);
-      expect(user.inactivityEmailAgreed).toBe(false);
-      expect(user.noticeEmailAgreed).toBe(true);
-      expect(userRepository.save).toHaveBeenCalledWith(user);
+      expect(userRepository.update).toHaveBeenCalledWith(
+        { id: userId },
+        {
+          marketingEmailAgreed: true,
+          marketingEmailAgreedAt: expect.any(Date),
+          inactivityEmailAgreed: false,
+          inactivityEmailAgreedAt: expect.any(Date),
+        },
+      );
     });
 
-    it('이메일 수신 동의 값이 없으면 기존 값을 유지한다.', async () => {
+    it('이메일 수신 동의 값이 없으면 갱신 대상에 포함하지 않는다.', async () => {
       // given
-      const user = UserFixture.createUserFixture({
-        marketingEmailAgreed: false,
-        inactivityEmailAgreed: true,
-        noticeEmailAgreed: true,
-      });
+      const user = UserFixture.createUserFixture();
       userRepository.findOneBy.mockResolvedValue(user);
 
       // when
       await userService.updateUser(userId, { introduction: '변경' });
 
       // then
-      expect(user.marketingEmailAgreed).toBe(false);
-      expect(user.inactivityEmailAgreed).toBe(true);
-      expect(user.noticeEmailAgreed).toBe(true);
+      expect(userRepository.update).toHaveBeenCalledWith(
+        { id: userId },
+        { introduction: '변경' },
+      );
+    });
+
+    it('갱신할 필드가 없으면 update를 호출하지 않는다.', async () => {
+      // given
+      const user = UserFixture.createUserFixture();
+      userRepository.findOneBy.mockResolvedValue(user);
+
+      // when
+      await userService.updateUser(userId, {});
+
+      // then
+      expect(userRepository.update).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('updateProfileImage', () => {
+    const userId = 1;
+
+    it('프로필 이미지가 변경되면 기존 파일을 삭제하고 한도 가드와 함께 원자적으로 갱신한다.', async () => {
+      // given
+      const user = UserFixture.createUserFixture({
+        profileImage: 'old.png',
+      });
+      userRepository.findOneBy.mockResolvedValue(user);
+
+      // when
+      await userService.updateProfileImage(userId, 'new.png');
+
+      // then
+      expect(fileService.deleteByPath).toHaveBeenCalledWith('old.png');
+      expect(userRepository.update).toHaveBeenCalledWith(
+        {
+          id: userId,
+          profileImageChangeCount: LessThan(PROFILE_IMAGE_DAILY_LIMIT),
+        },
+        expect.objectContaining({
+          profileImage: 'new.png',
+          profileImageChangeCount: expect.any(Function),
+        }),
+      );
+    });
+
+    it('동일한 프로필 이미지면 파일을 삭제하지 않고 한도 가드도 걸지 않는다.', async () => {
+      // given
+      const user = UserFixture.createUserFixture({ profileImage: 'same.png' });
+      userRepository.findOneBy.mockResolvedValue(user);
+
+      // when
+      await userService.updateProfileImage(userId, 'same.png');
+
+      // then
+      expect(fileService.deleteByPath).not.toHaveBeenCalled();
+      expect(userRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('하루 변경 한도를 초과하면 BadRequestException을 던지고 파일을 삭제하지 않는다.', async () => {
+      // given
+      const user = UserFixture.createUserFixture({ profileImage: 'old.png' });
+      userRepository.findOneBy.mockResolvedValue(user);
+      userRepository.update.mockResolvedValue({ affected: 0 } as any);
+
+      // when & then
+      await expect(
+        userService.updateProfileImage(userId, 'new.png'),
+      ).rejects.toThrow(BadRequestException);
+      expect(fileService.deleteByPath).not.toHaveBeenCalled();
     });
   });
 

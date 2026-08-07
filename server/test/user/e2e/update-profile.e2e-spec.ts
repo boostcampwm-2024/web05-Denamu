@@ -44,7 +44,6 @@ describe(`PATCH ${URL} E2E Test`, () => {
     // given
     const requestDto = new UpdateUserRequestDto({
       userName: '변경된이름',
-      profileImage: 'https://url/objects/PROFILE_IMAGE/20000902/uuid.png',
       introduction: '변경된 소개글입니다.',
     });
 
@@ -69,7 +68,6 @@ describe(`PATCH ${URL} E2E Test`, () => {
     // given
     const requestDto = new UpdateUserRequestDto({
       userName: '변경된이름',
-      profileImage: 'https://url/objects/PROFILE_IMAGE/20000902/uuid.png',
       introduction: '변경된 소개글입니다.',
     });
     accessToken = createAccessToken({ id: Number.MAX_SAFE_INTEGER });
@@ -98,7 +96,6 @@ describe(`PATCH ${URL} E2E Test`, () => {
     // given
     const requestDto = new UpdateUserRequestDto({
       userName: '변경된이름',
-      profileImage: 'https://url/objects/PROFILE_IMAGE/20000902/uuid.png',
       introduction: '변경된 소개글입니다.',
     });
 
@@ -118,7 +115,6 @@ describe(`PATCH ${URL} E2E Test`, () => {
 
     // DB, Redis then
     expect(savedUser.userName).toBe(requestDto.userName);
-    expect(savedUser.profileImage).toBe(requestDto.profileImage);
     expect(savedUser.introduction).toBe(requestDto.introduction);
   });
 
