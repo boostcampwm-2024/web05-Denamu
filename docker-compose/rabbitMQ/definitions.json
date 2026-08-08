@@ -69,6 +69,75 @@
       }
     },
     {
+      "name": "crawling.full.wait.5s",
+      "vhost": "/",
+      "durable": true,
+      "arguments": {
+        "x-message-ttl": 5000,
+        "x-dead-letter-exchange": "",
+        "x-dead-letter-routing-key": "crawling.full.queue"
+      }
+    },
+    {
+      "name": "crawling.full.wait.10s",
+      "vhost": "/",
+      "durable": true,
+      "arguments": {
+        "x-message-ttl": 10000,
+        "x-dead-letter-exchange": "",
+        "x-dead-letter-routing-key": "crawling.full.queue"
+      }
+    },
+    {
+      "name": "crawling.full.wait.20s",
+      "vhost": "/",
+      "durable": true,
+      "arguments": {
+        "x-message-ttl": 20000,
+        "x-dead-letter-exchange": "",
+        "x-dead-letter-routing-key": "crawling.full.queue"
+      }
+    },
+    {
+      "name": "crawling.aiRetry.queue",
+      "vhost": "/",
+      "durable": true,
+      "arguments": {
+        "x-dead-letter-exchange": "DeadLetterExchange",
+        "x-dead-letter-routing-key": "crawling.aiRetry.deadLetter"
+      }
+    },
+    {
+      "name": "crawling.aiRetry.wait.5s",
+      "vhost": "/",
+      "durable": true,
+      "arguments": {
+        "x-message-ttl": 5000,
+        "x-dead-letter-exchange": "",
+        "x-dead-letter-routing-key": "crawling.aiRetry.queue"
+      }
+    },
+    {
+      "name": "crawling.aiRetry.wait.10s",
+      "vhost": "/",
+      "durable": true,
+      "arguments": {
+        "x-message-ttl": 10000,
+        "x-dead-letter-exchange": "",
+        "x-dead-letter-routing-key": "crawling.aiRetry.queue"
+      }
+    },
+    {
+      "name": "crawling.aiRetry.wait.20s",
+      "vhost": "/",
+      "durable": true,
+      "arguments": {
+        "x-message-ttl": 20000,
+        "x-dead-letter-exchange": "",
+        "x-dead-letter-routing-key": "crawling.aiRetry.queue"
+      }
+    },
+    {
       "name": "email.deadLetter.queue",
       "vhost": "/",
       "durable": true,
@@ -76,6 +145,12 @@
     },
     {
       "name": "crawling.full.deadLetter.queue",
+      "vhost": "/",
+      "durable": true,
+      "arguments": {}
+    },
+    {
+      "name": "crawling.aiRetry.deadLetter.queue",
       "vhost": "/",
       "durable": true,
       "arguments": {}
@@ -99,6 +174,14 @@
       "arguments": {}
     },
     {
+      "source": "CrawlingExchange",
+      "vhost": "/",
+      "destination": "crawling.aiRetry.queue",
+      "destination_type": "queue",
+      "routing_key": "crawling.aiRetry",
+      "arguments": {}
+    },
+    {
       "source": "DeadLetterExchange",
       "vhost": "/",
       "destination": "email.deadLetter.queue",
@@ -112,6 +195,14 @@
       "destination": "crawling.full.deadLetter.queue",
       "destination_type": "queue",
       "routing_key": "crawling.full.deadLetter",
+      "arguments": {}
+    },
+    {
+      "source": "DeadLetterExchange",
+      "vhost": "/",
+      "destination": "crawling.aiRetry.deadLetter.queue",
+      "destination_type": "queue",
+      "routing_key": "crawling.aiRetry.deadLetter",
       "arguments": {}
     }
   ]
