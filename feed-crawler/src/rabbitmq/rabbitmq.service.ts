@@ -2,7 +2,10 @@ import { inject, injectable } from 'tsyringe';
 
 import { Options } from 'amqplib/properties';
 
+import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
 import logger from '@common/logger/logger';
+import { NOTIFICATION_EVENT } from '@common/notification/notification-event.constant';
+import { Notifier } from '@common/notification/notifier.interface';
 
 import { RabbitMQManager } from '@rabbitmq/rabbitmq.manager';
 
@@ -13,6 +16,8 @@ export class RabbitMQService {
   constructor(
     @inject(RabbitMQManager)
     private readonly rabbitMQManager: RabbitMQManager,
+    @inject(DEPENDENCY_SYMBOLS.Notifier)
+    private readonly notifier: Notifier,
   ) {
     this.nameTag = '[RabbitMQ]';
   }
@@ -67,6 +72,11 @@ export class RabbitMQService {
             logger.error(`${this.nameTag} 메시지 처리 중 알 수 없는 오류 발생
          오류 내용: ${String(error)}`);
           }
+          this.notifier.publish(NOTIFICATION_EVENT.RABBITMQ_DEAD_LETTER, {
+            error: error instanceof Error ? error : new Error(String(error)),
+            queue,
+            messageContent: message.content.toString(),
+          });
           channel.nack(message, false, false);
         }
       })();
