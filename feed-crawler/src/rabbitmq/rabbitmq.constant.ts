@@ -5,9 +5,6 @@ export const RMQ_EXCHANGES = {
 
 export const RMQ_QUEUES = {
   CRAWLING_FULL: 'crawling.full.queue',
-  CRAWLING_FULL_WAIT_5S: 'crawling.full.wait.5s',
-  CRAWLING_FULL_WAIT_10S: 'crawling.full.wait.10s',
-  CRAWLING_FULL_WAIT_20S: 'crawling.full.wait.20s',
   CRAWLING_FULL_DEAD_LETTER: 'crawling.full.deadLetter.queue',
   CRAWLING_AI_RETRY: 'crawling.aiRetry.queue',
   CRAWLING_AI_RETRY_WAIT_5S: 'crawling.aiRetry.wait.5s',
@@ -25,11 +22,6 @@ export const RMQ_ROUTING_KEYS = {
 
 export const RETRY_CONFIG = {
   MAX_RETRY: 3,
-  FULL_CRAWL_WAITING_QUEUE: [
-    RMQ_QUEUES.CRAWLING_FULL_WAIT_5S,
-    RMQ_QUEUES.CRAWLING_FULL_WAIT_10S,
-    RMQ_QUEUES.CRAWLING_FULL_WAIT_20S,
-  ],
   AI_RETRY_WAITING_QUEUE: [
     RMQ_QUEUES.CRAWLING_AI_RETRY_WAIT_5S,
     RMQ_QUEUES.CRAWLING_AI_RETRY_WAIT_10S,
