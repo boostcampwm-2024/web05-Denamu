@@ -10,11 +10,19 @@ import { Request, Response } from 'express';
 
 import { RssBlockRepository } from '@block/repository/rssBlock.repository';
 
+import {
+  RMQ_EXCHANGES,
+  RMQ_ROUTING_KEYS,
+} from '@common/rabbitmq/rabbitmq.constant';
+import { RabbitMQService } from '@common/rabbitmq/rabbitmq.service';
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
 import { getIp } from '@common/util/getIp';
 
-import { AI_RETRY_LOCK_TTL_SECONDS } from '@feed/constant/feed.constant';
+import {
+  AI_RETRY_LOCK_TTL_SECONDS,
+  FEED_AI_SUMMARY_IN_PROGRESS_MESSAGE,
+} from '@feed/constant/feed.constant';
 import { ManageFeedRequestDto } from '@feed/dto/request/manageFeed.dto';
 import { ReadFeedPaginationRequestDto } from '@feed/dto/request/readFeedPagination.dto';
 import { SearchFeedRequestDto } from '@feed/dto/request/searchFeed.dto';
@@ -45,17 +53,13 @@ import { createCookie, isString } from '@feed/util/viewCookie';
 
 import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
 
-type AiSummaryRetryMessage = {
-  feedId: number;
-  deathCount: number;
-};
-
 @Injectable()
 export class FeedService {
   constructor(
     private readonly feedRepository: FeedRepository,
     private readonly feedViewRepository: FeedViewRepository,
     private readonly redisService: RedisService,
+    private readonly rabbitMQService: RabbitMQService,
     private readonly subscriptionRepository: SubscriptionRepository,
     private readonly rssBlockRepository: RssBlockRepository,
   ) {}
@@ -100,13 +104,13 @@ export class FeedService {
       );
     }
 
-    const message: AiSummaryRetryMessage = {
-      feedId,
-      deathCount: 0,
-    };
-    await this.redisService.rpush(
-      REDIS_KEYS.FEED_AI_RETRY_QUEUE,
-      JSON.stringify(message),
+    await this.feedRepository.update(feedId, {
+      summary: FEED_AI_SUMMARY_IN_PROGRESS_MESSAGE,
+    });
+    await this.rabbitMQService.sendMessage(
+      RMQ_EXCHANGES.CRAWLING,
+      RMQ_ROUTING_KEYS.CRAWLING_AI_RETRY,
+      String(feedId),
     );
   }
 
