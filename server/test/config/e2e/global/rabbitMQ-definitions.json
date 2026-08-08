@@ -161,13 +161,17 @@
       "name": "crawling.full.deadLetter.queue",
       "vhost": "/",
       "durable": true,
-      "arguments": {}
+      "arguments": {
+        "x-message-ttl": 604800000
+      }
     },
     {
       "name": "crawling.aiRetry.deadLetter.queue",
       "vhost": "/",
       "durable": true,
-      "arguments": {}
+      "arguments": {
+        "x-message-ttl": 604800000
+      }
     }
   ],
   "bindings": [
