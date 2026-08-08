@@ -52,7 +52,13 @@ export class FeedCrawler {
     logger.info('==========작업 완료==========');
   }
 
-  async startFullCrawl(rssObj: RssObj): Promise<FeedDetail[]> {
+  async startFullCrawl(rssId: number): Promise<FeedDetail[]> {
+    const rssObj = await this.rssRepository.selectRssById(rssId);
+    if (!rssObj) {
+      logger.warn(`전체 피드 크롤링 대상 RSS ID ${rssId}를 찾을 수 없습니다.`);
+      return [];
+    }
+
     logger.info(`전체 피드 크롤링 시작: ${rssObj.blogName}(${rssObj.rssUrl})`);
 
     const { feeds: newFeeds, channelImage } =

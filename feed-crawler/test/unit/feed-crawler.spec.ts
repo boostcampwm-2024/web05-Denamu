@@ -200,6 +200,7 @@ describe('FeedCrawler', () => {
       // Given
       const rssObj = mockRssObjects[0];
       const expectedFeeds = [mockFeedDetails[0]];
+      selectRssByIdMock.mockResolvedValue(rssObj);
       fetchAndParseAllMock.mockResolvedValue({
         feeds: expectedFeeds,
         channelImage: undefined,
@@ -207,7 +208,7 @@ describe('FeedCrawler', () => {
       insertFeedsMock.mockResolvedValue(expectedFeeds);
 
       // When
-      const result = await feedCrawler.startFullCrawl(rssObj);
+      const result = await feedCrawler.startFullCrawl(rssObj.id);
 
       // Then
       expect(fetchAndParseAllMock).toHaveBeenCalledWith(rssObj);
@@ -219,15 +220,28 @@ describe('FeedCrawler', () => {
     it('가져올 피드가 없을 때 빈 배열을 반환해야 한다', async () => {
       // Given
       const rssObj = mockRssObjects[0];
+      selectRssByIdMock.mockResolvedValue(rssObj);
       fetchAndParseAllMock.mockResolvedValue({ feeds: [], channelImage: undefined });
 
       // When
-      const result = await feedCrawler.startFullCrawl(rssObj);
+      const result = await feedCrawler.startFullCrawl(rssObj.id);
 
       // Then
       expect(fetchAndParseAllMock).toHaveBeenCalledWith(rssObj);
       expect(insertFeedsMock).not.toHaveBeenCalled();
       expect(saveAiQueueMock).not.toHaveBeenCalled();
+      expect(result).toEqual([]);
+    });
+
+    it('RSS를 찾을 수 없으면 크롤링하지 않고 빈 배열을 반환해야 한다', async () => {
+      // Given
+      selectRssByIdMock.mockResolvedValue(null);
+
+      // When
+      const result = await feedCrawler.startFullCrawl(999);
+
+      // Then
+      expect(fetchAndParseAllMock).not.toHaveBeenCalled();
       expect(result).toEqual([]);
     });
   });
