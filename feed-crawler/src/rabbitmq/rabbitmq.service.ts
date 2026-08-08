@@ -1,0 +1,82 @@
+import { inject, injectable } from 'tsyringe';
+
+import { Options } from 'amqplib/properties';
+
+import logger from '@common/logger/logger';
+
+import { RabbitMQManager } from '@rabbitmq/rabbitmq.manager';
+
+@injectable()
+export class RabbitMQService {
+  private nameTag: string;
+
+  constructor(
+    @inject(RabbitMQManager)
+    private readonly rabbitMQManager: RabbitMQManager,
+  ) {
+    this.nameTag = '[RabbitMQ]';
+  }
+
+  async sendMessage(exchange: string, routingKey: string, message: string) {
+    const channel = await this.rabbitMQManager.getChannel();
+    channel.publish(exchange, routingKey, Buffer.from(message));
+  }
+
+  async checkQueue(queue: string) {
+    const channel = await this.rabbitMQManager.getChannel();
+    return channel.checkQueue(queue);
+  }
+
+  async sendMessageToQueue(
+    queue: string,
+    message: string,
+    options?: Options.Publish,
+  ) {
+    const channel = await this.rabbitMQManager.getChannel();
+    channel.sendToQueue(queue, Buffer.from(message), options);
+  }
+
+  async consumeMessage<T>(
+    queue: string,
+    onMessage: (payload: T, retryCount: number) => void | Promise<void>,
+  ) {
+    const channel = await this.rabbitMQManager.getChannel();
+    const { consumerTag } = await channel.consume(queue, (message) => {
+      void (async () => {
+        try {
+          if (!message) return;
+
+          const parsedMessage = JSON.parse(message.content.toString()) as T;
+          const retryCount = message.properties.headers?.['x-retry-count'] || 0;
+          await onMessage(parsedMessage, retryCount);
+
+          channel.ack(message);
+        } catch (error) {
+          if (error instanceof Error) {
+            if (error.message === 'SHUTDOWN_IN_PROGRESS') {
+              logger.info(`${this.nameTag} Shutdown 중, 메시지를 큐에 반환`);
+              channel.nack(message, false, true);
+              return;
+            }
+            logger.error(
+              `${this.nameTag} 메시지 처리 중 오류 발생
+         오류 메시지: ${error.message}
+         스택 트레이스: ${error.stack}`,
+            );
+          } else {
+            logger.error(`${this.nameTag} 메시지 처리 중 알 수 없는 오류 발생
+         오류 내용: ${String(error)}`);
+          }
+          channel.nack(message, false, false);
+        }
+      })();
+    });
+
+    return consumerTag;
+  }
+
+  async closeConsumer(consumerTag: string) {
+    const channel = await this.rabbitMQManager.getChannel();
+    await channel.cancel(consumerTag);
+  }
+}
