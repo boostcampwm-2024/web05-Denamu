@@ -39,7 +39,7 @@ export const useAppInitialization = () => {
     setIsMobile(isMobile);
   }, [isMobile, setIsMobile]);
 
-  const shouldRedirectToAbout = !hasVisited;
+  const shouldRedirectToAbout = !hasVisited && location.pathname === "/";
 
   return {
     state,
