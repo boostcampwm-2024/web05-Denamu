@@ -17,6 +17,7 @@ import { GithubOAuthProvider } from '@user/provider/github.provider';
 import { GoogleOAuthProvider } from '@user/provider/google.provider';
 import { ProviderRepository } from '@user/repository/provider.repository';
 import { UserRepository } from '@user/repository/user.repository';
+import { WithdrawnUserRepository } from '@user/repository/withdrawnUser.repository';
 import { UserScheduler } from '@user/scheduler/user.scheduler';
 import { OAuthService } from '@user/service/oAuth.service';
 import { UserService } from '@user/service/user.service';
@@ -28,6 +29,7 @@ import { UserService } from '@user/service/user.service';
     UserService,
     OAuthService,
     UserRepository,
+    WithdrawnUserRepository,
     ProviderRepository,
     FeedRepository,
     SubscriptionRepository,
