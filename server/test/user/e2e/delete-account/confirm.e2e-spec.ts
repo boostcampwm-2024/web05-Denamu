@@ -23,6 +23,7 @@ import { RssAcceptRepository } from '@rss/repository/rss.repository';
 
 import { User } from '@user/entity/user.entity';
 import { UserRepository } from '@user/repository/user.repository';
+import { WithdrawnUserRepository } from '@user/repository/withdrawnUser.repository';
 
 import { CommentFixture } from '@test/config/common/fixture/comment.fixture';
 import { FeedFixture } from '@test/config/common/fixture/feed.fixture';
@@ -43,6 +44,7 @@ describe(`DELETE /api/users/deletion-requests/:token E2E Test`, () => {
   let fileRepository: FileRepository;
   let feedRepository: FeedRepository;
   let rssAcceptRepository: RssAcceptRepository;
+  let withdrawnUserRepository: WithdrawnUserRepository;
   let user: User;
   let rssAccept: RssAccept;
   let feed: Feed;
@@ -60,6 +62,7 @@ describe(`DELETE /api/users/deletion-requests/:token E2E Test`, () => {
     likeRepository = testApp.get(LikeRepository);
     activityRepository = testApp.get(ActivityRepository);
     fileRepository = testApp.get(FileRepository);
+    withdrawnUserRepository = testApp.get(WithdrawnUserRepository);
   });
 
   beforeEach(async () => {
@@ -221,5 +224,31 @@ describe(`DELETE /api/users/deletion-requests/:token E2E Test`, () => {
     expect(savedRssAccept).not.toBeNull();
     expect(savedRssAccept.userId).toBeNull();
     expect(savedFeed).not.toBeNull();
+  });
+
+  it('[200] 탈퇴에 성공하면 재가입 제한을 위해 이메일을 withdrawn_user에 기록한다.', async () => {
+    // given
+    const user = await userRepository.save(
+      await UserFixture.createUserCryptFixture(),
+    );
+    await redisService.set(
+      redisKeyMake(userDeleteCode),
+      JSON.stringify({ userId: user.id, deleteRss: true }),
+    );
+
+    // Http when
+    const response = await agent.delete(makeURL(userDeleteCode));
+
+    // Http then
+    expect(response.status).toBe(HttpStatus.OK);
+
+    // DB when
+    const withdrawnRecord = await withdrawnUserRepository.findOne({
+      where: { email: user.email },
+    });
+
+    // DB then
+    expect(withdrawnRecord).not.toBeNull();
+    expect(withdrawnRecord.withdrawnAt).toBeInstanceOf(Date);
   });
 });

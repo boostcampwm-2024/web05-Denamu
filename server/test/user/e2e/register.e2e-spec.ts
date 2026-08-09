@@ -11,6 +11,7 @@ import { RedisService } from '@common/redis/redis.service';
 import { RegisterUserRequestDto } from '@user/dto/request/registerUser.dto';
 import { User } from '@user/entity/user.entity';
 import { UserRepository } from '@user/repository/user.repository';
+import { WithdrawnUserRepository } from '@user/repository/withdrawnUser.repository';
 
 import { UserFixture } from '@test/config/common/fixture/user.fixture';
 import { testApp } from '@test/config/e2e/env/jest.setup';
@@ -20,6 +21,7 @@ const URL = '/api/users/registrations';
 describe(`POST ${URL} E2E Test`, () => {
   let agent: TestAgent;
   let userRepository: UserRepository;
+  let withdrawnUserRepository: WithdrawnUserRepository;
   let redisService: RedisService;
   const userRegisterCode = 'user-register-request';
   const redisKeyMake = (data: string) => `${REDIS_KEYS.USER_AUTH_KEY}:${data}`;
@@ -27,6 +29,7 @@ describe(`POST ${URL} E2E Test`, () => {
   beforeAll(() => {
     agent = supertest(testApp.getHttpServer());
     userRepository = testApp.get(UserRepository);
+    withdrawnUserRepository = testApp.get(WithdrawnUserRepository);
     redisService = testApp.get(RedisService);
   });
 
@@ -80,6 +83,54 @@ describe(`POST ${URL} E2E Test`, () => {
       redisKeyMake(userRegisterCode),
     );
     expect(savedRegisterCode).toBeNull();
+  });
+
+  it('[409] 탈퇴 후 재가입 제한 기간 내의 이메일이면 회원가입을 실패한다.', async () => {
+    // given
+    const restrictedEmail = 'restricted@test.com';
+    await withdrawnUserRepository.save({
+      email: restrictedEmail,
+      withdrawnAt: new Date(),
+    });
+    const requestDto = new RegisterUserRequestDto({
+      email: restrictedEmail,
+      password: 'test1234!',
+      userName: 'restricted-user',
+    });
+
+    // Http when
+    const response = await agent.post(URL).send(requestDto);
+
+    // Http then
+    expect(response.status).toBe(HttpStatus.CONFLICT);
+
+    // Redis then
+    const savedRegisterCode = await redisService.get(
+      redisKeyMake(userRegisterCode),
+    );
+    expect(savedRegisterCode).toBeNull();
+  });
+
+  it('[201] 재가입 제한 기간이 지난 탈퇴 이메일이면 회원가입을 성공한다.', async () => {
+    // given
+    const expiredEmail = 'expired-restriction@test.com';
+    const fourMonthsAgo = new Date();
+    fourMonthsAgo.setMonth(fourMonthsAgo.getMonth() - 4);
+    await withdrawnUserRepository.save({
+      email: expiredEmail,
+      withdrawnAt: fourMonthsAgo,
+    });
+    const requestDto = new RegisterUserRequestDto({
+      email: expiredEmail,
+      password: 'test1234!',
+      userName: 'expired-restriction-user',
+    });
+
+    // Http when
+    const response = await agent.post(URL).send(requestDto);
+
+    // Http then
+    expect(response.status).toBe(HttpStatus.CREATED);
   });
 
   it('[201] 중복되는 회원이 없을 경우 회원가입을 성공한다.', async () => {
