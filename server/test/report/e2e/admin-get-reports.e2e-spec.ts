@@ -8,7 +8,7 @@ import { AdminRepository } from '@admin/repository/admin.repository';
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
 
-import { ReportReason, ReportStatus, ReportTargetType } from '@report/constant/report.constant';
+import { ReportReason, ReportTargetType } from '@report/constant/report.constant';
 import { ReportRepository } from '@report/repository/report.repository';
 
 import { User } from '@user/entity/user.entity';
@@ -80,30 +80,6 @@ describe(`GET ${BASE_URL} E2E Test`, () => {
       targetType: ReportTargetType.USER,
       targetId: target.id,
       reason: ReportReason.ABUSE,
-      status: ReportStatus.PENDING,
     });
-  });
-
-  it('[200] status 필터로 신고 목록을 조회한다.', async () => {
-    // given
-    await reportRepository.insert({
-      reporter: { id: reporter.id },
-      targetType: ReportTargetType.USER,
-      targetId: target.id,
-      reportedUser: { id: target.id },
-      reason: ReportReason.ABUSE,
-      status: ReportStatus.ACTIONED,
-    });
-
-    // Http when
-    const response = await agent
-      .get(BASE_URL)
-      .query({ status: ReportStatus.PENDING })
-      .set('Cookie', `sessionId=${sessionKey}`);
-
-    // Http then
-    expect(response.status).toBe(HttpStatus.OK);
-    const { data } = response.body as { data: { result: unknown[] } };
-    expect(data.result).toHaveLength(0);
   });
 });

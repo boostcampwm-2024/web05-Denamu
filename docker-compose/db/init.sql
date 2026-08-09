@@ -300,7 +300,6 @@ CREATE TABLE `report` (
   `target_id` int NOT NULL,
   `reason` varchar(20) NOT NULL,
   `detail` text,
-  `status` varchar(20) NOT NULL DEFAULT 'PENDING',
   `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   `reviewed_at` datetime DEFAULT NULL,
   `reporter_id` int NOT NULL,

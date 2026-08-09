@@ -2,7 +2,6 @@ import { ApiProperty } from '@nestjs/swagger';
 
 import {
   ReportReason,
-  ReportStatus,
   ReportTargetType,
 } from '@report/constant/report.constant';
 import { Report } from '@report/entity/report.entity';
@@ -46,9 +45,6 @@ export class ReportResult {
   @ApiProperty({ example: null, description: '신고 상세 내용', nullable: true })
   detail: string | null;
 
-  @ApiProperty({ enum: ReportStatus, description: '처리 상태' })
-  status: ReportStatus;
-
   @ApiProperty({
     example: { id: 1, userName: '테스트 계정' },
     description: '신고자 정보',
@@ -80,7 +76,6 @@ export class ReportResult {
       targetLabel: resolveTargetLabel(report),
       reason: report.reason,
       detail: report.detail,
-      status: report.status,
       reporter: {
         id: report.reporter.id,
         userName: report.reporter.userName,

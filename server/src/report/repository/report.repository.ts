@@ -25,9 +25,6 @@ export class ReportRepository extends Repository<Report> {
       .addSelect(['reportedComment.id', 'reportedComment.comment'])
       .addSelect(['reportedFeed.id', 'reportedFeed.title']);
 
-    if (queryDto.status) {
-      query.andWhere('report.status = :status', { status: queryDto.status });
-    }
     if (queryDto.targetType) {
       query.andWhere('report.target_type = :targetType', {
         targetType: queryDto.targetType,

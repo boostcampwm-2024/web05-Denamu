@@ -3,17 +3,9 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsEnum, IsInt, IsOptional, Min } from 'class-validator';
 
-import { ReportStatus, ReportTargetType } from '@report/constant/report.constant';
+import { ReportTargetType } from '@report/constant/report.constant';
 
 export class GetReportsRequestDto {
-  @ApiPropertyOptional({
-    description: '조회할 처리 상태 (미입력 시 전체 조회)',
-    enum: ReportStatus,
-  })
-  @IsOptional()
-  @IsEnum(ReportStatus, { message: '올바른 처리 상태를 입력해주세요.' })
-  status?: ReportStatus;
-
   @ApiPropertyOptional({
     description: '조회할 신고 대상 타입 (미입력 시 전체 조회)',
     enum: ReportTargetType,

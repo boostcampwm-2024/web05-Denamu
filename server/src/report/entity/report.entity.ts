@@ -9,7 +9,7 @@ import {
   Unique,
 } from 'typeorm';
 
-import { ReportReason, ReportStatus, ReportTargetType } from '@report/constant/report.constant';
+import { ReportReason, ReportTargetType } from '@report/constant/report.constant';
 
 import { Comment } from '@comment/entity/comment.entity';
 
@@ -40,9 +40,6 @@ export class Report extends BaseEntity {
 
   @Column({ type: 'text', nullable: true })
   detail: string | null;
-
-  @Column({ length: 20, nullable: false, default: ReportStatus.PENDING })
-  status: ReportStatus;
 
   @CreateDateColumn({ name: 'created_at', type: 'datetime', nullable: false })
   createdAt: Date;
