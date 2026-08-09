@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -145,7 +146,7 @@ export class UserService {
       );
 
     if (rejoinAvailableAt) {
-      throw new ConflictException(
+      throw new ForbiddenException(
         `탈퇴 후 재가입 제한 기간입니다. ${rejoinAvailableAt.toLocaleDateString('ko-KR')} 이후 재가입할 수 있습니다.`,
       );
     }

@@ -85,7 +85,7 @@ describe(`POST ${URL} E2E Test`, () => {
     expect(savedRegisterCode).toBeNull();
   });
 
-  it('[409] 탈퇴 후 재가입 제한 기간 내의 이메일이면 회원가입을 실패한다.', async () => {
+  it('[403] 탈퇴 후 재가입 제한 기간 내의 이메일이면 회원가입을 실패한다.', async () => {
     // given
     const restrictedEmail = 'restricted@test.com';
     await withdrawnUserRepository.save({
@@ -102,7 +102,7 @@ describe(`POST ${URL} E2E Test`, () => {
     const response = await agent.post(URL).send(requestDto);
 
     // Http then
-    expect(response.status).toBe(HttpStatus.CONFLICT);
+    expect(response.status).toBe(HttpStatus.FORBIDDEN);
 
     // Redis then
     const savedRegisterCode = await redisService.get(

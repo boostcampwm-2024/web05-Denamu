@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -452,7 +453,7 @@ describe(`${UserService.name} Unit Test`, () => {
       );
     });
 
-    it('재가입 제한 기간 중인 이메일이면 ConflictException을 던진다.', async () => {
+    it('재가입 제한 기간 중인 이메일이면 ForbiddenException을 던진다.', async () => {
       // given
       userRepository.findOne.mockResolvedValue(null);
       const availableAt = new Date('2026-11-01');
@@ -462,7 +463,7 @@ describe(`${UserService.name} Unit Test`, () => {
 
       // when & then
       await expect(userService.registerUser(dto)).rejects.toThrow(
-        ConflictException,
+        ForbiddenException,
       );
       expect(withdrawnUserRepository.getRejoinAvailableAt).toHaveBeenCalledWith(
         dto.email,
