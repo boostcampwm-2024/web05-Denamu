@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.96.0",
+    "@anthropic-ai/sdk": "^0.115.0",
     "amqplib": "^0.10.9",
     "axios": "^1.16.0",
     "dotenv": "^16.6.1",
