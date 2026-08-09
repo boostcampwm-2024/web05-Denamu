@@ -26,9 +26,3 @@ export interface FeedDetail {
   tag?: string[];
   deathCount?: number;
 }
-
-export interface FullFeedCrawlMessage {
-  rssId: number;
-  timestamp: number;
-  deathCount: number;
-}

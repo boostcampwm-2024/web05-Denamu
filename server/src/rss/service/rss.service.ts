@@ -25,6 +25,11 @@ import { Payload } from '@common/guard/jwt.guard';
 import { WinstonLoggerService } from '@common/logger/logger.service';
 import { NotifierRegistry } from '@common/notification/notifier-registry';
 import { RSS_NOTIFIER } from '@common/notification/notifier.constant';
+import {
+  RMQ_EXCHANGES,
+  RMQ_ROUTING_KEYS,
+} from '@common/rabbitmq/rabbitmq.constant';
+import { RabbitMQService } from '@common/rabbitmq/rabbitmq.service';
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
 
@@ -63,12 +68,6 @@ import { fetchChannelImage } from '@rss/util/fetchChannelImage';
 
 import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
 
-type FullFeedCrawlMessage = {
-  rssId: number;
-  timestamp: number;
-  deathCount: number;
-};
-
 @Injectable()
 export class RssService {
   private static readonly RECENT_RSS_LIMIT = 10;
@@ -82,6 +81,7 @@ export class RssService {
     private readonly emailProducer: EmailProducer,
     private readonly dataSource: DataSource,
     private readonly redisService: RedisService,
+    private readonly rabbitMQService: RabbitMQService,
     private readonly adminRepository: AdminRepository,
     @Inject(RSS_NOTIFIER) private readonly notifierRegistry: NotifierRegistry,
     private readonly logger: WinstonLoggerService,
@@ -254,15 +254,10 @@ export class RssService {
   }
 
   private async enqueueFullFeedCrawlMessage(rssId: number) {
-    const fullFeedCrawlMessage: FullFeedCrawlMessage = {
-      rssId,
-      timestamp: Date.now(),
-      deathCount: 0,
-    };
-
-    await this.redisService.rpush(
-      REDIS_KEYS.FULL_FEED_CRAWL_QUEUE,
-      JSON.stringify(fullFeedCrawlMessage),
+    await this.rabbitMQService.sendMessage(
+      RMQ_EXCHANGES.CRAWLING,
+      RMQ_ROUTING_KEYS.CRAWLING_FULL,
+      String(rssId),
     );
   }
 

@@ -1,50 +1,50 @@
 import { inject, injectable } from 'tsyringe';
 
-import { AiSummaryRetryMessage } from '@common/ai/ai.type';
+import { Lifecycle } from '@common/lifecycle/lifecycle.interface';
 import logger from '@common/logger/logger';
 import { RedisConnection } from '@common/redis/redis-access';
 import { redisConstant } from '@common/redis/redis.constant';
 
-import { AbstractQueueWorker } from '@event_worker/abstract-queue-worker';
+import { RMQ_QUEUES } from '@rabbitmq/rabbitmq.constant';
+import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
 
 import { FeedCrawler } from '../../feed-crawler';
 
 @injectable()
-export class AiSummaryRetryEventWorker extends AbstractQueueWorker<AiSummaryRetryMessage> {
+export class AiSummaryRetryEventWorker implements Lifecycle {
+  private readonly nameTag = '[AI Summary Retry]';
+  private consumerTag: string | null = null;
+
   constructor(
+    @inject(RabbitMQService)
+    private readonly rabbitmqService: RabbitMQService,
     @inject(RedisConnection)
-    redisConnection: RedisConnection,
+    private readonly redisConnection: RedisConnection,
     @inject(FeedCrawler)
     private readonly feedCrawler: FeedCrawler,
-  ) {
-    super('[AI Summary Retry]', redisConnection);
+  ) {}
+
+  async start(): Promise<void> {
+    logger.info(`${this.nameTag} 시작 중...`);
+
+    this.consumerTag = await this.rabbitmqService.consumeMessage<number>(
+      RMQ_QUEUES.CRAWLING_AI_RETRY,
+      async (feedId) => {
+        await this.processItem(feedId);
+      },
+    );
+
+    logger.info(`${this.nameTag} 큐 리스닝 시작`);
   }
 
-  protected async processQueue(): Promise<void> {
-    const message = await this.redisConnection.rpop(this.getQueueKey());
-
-    if (!message) {
-      logger.info('처리할 AI 요약 재요청이 없습니다.');
-      return;
+  async stop(): Promise<void> {
+    if (this.consumerTag) {
+      await this.rabbitmqService.closeConsumer(this.consumerTag);
+      logger.info(`${this.nameTag} 종료`);
     }
-
-    const retryMessage = this.parseQueueMessage(message);
-    await this.processItem(retryMessage);
   }
 
-  protected getQueueKey(): string {
-    return redisConstant.FEED_AI_RETRY_QUEUE;
-  }
-
-  protected parseQueueMessage(message: string): AiSummaryRetryMessage {
-    return JSON.parse(message);
-  }
-
-  protected async processItem(
-    retryMessage: AiSummaryRetryMessage,
-  ): Promise<void> {
-    const feedId = retryMessage.feedId;
-
+  private async processItem(feedId: number): Promise<void> {
     logger.info(
       `${this.nameTag} feedId ${feedId} AI 요약 재요청을 시작합니다.`,
     );
@@ -52,22 +52,15 @@ export class AiSummaryRetryEventWorker extends AbstractQueueWorker<AiSummaryRetr
     try {
       await this.feedCrawler.requeueFeedForAiSummary(feedId);
     } catch (error) {
-      await this.handleFailure(retryMessage, error as Error);
+      await this.handleFailure(feedId, error as Error);
     }
   }
 
-  protected getRetryQueueKey(): string {
-    return redisConstant.FEED_AI_RETRY_QUEUE;
-  }
-
-  protected getItemLabel(retryMessage: AiSummaryRetryMessage): string {
-    return `feedId ${retryMessage.feedId}`;
-  }
-
-  protected async onPermanentFailure(
-    retryMessage: AiSummaryRetryMessage,
-  ): Promise<void> {
-    await this.releaseRetryLock(retryMessage.feedId);
+  private async handleFailure(feedId: number, error: Error): Promise<void> {
+    logger.error(
+      `${this.nameTag} feedId ${feedId} AI 요약 재요청 실패: ${error.message}`,
+    );
+    await this.releaseRetryLock(feedId);
   }
 
   private async releaseRetryLock(feedId: number): Promise<void> {

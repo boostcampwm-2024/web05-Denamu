@@ -20,6 +20,7 @@
     "paths": {
       "@common/*": ["./src/common/*"],
       "@event_worker/*": ["./src/event_worker/*"],
+      "@rabbitmq/*": ["./src/rabbitmq/*"],
       "@repository/*": ["./src/repository/*"],
       "@test/*": ["./test/*"]
     },

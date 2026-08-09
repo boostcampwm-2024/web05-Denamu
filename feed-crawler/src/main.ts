@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 
 import * as schedule from 'node-schedule';
+import { RabbitMQManager } from '@rabbitmq/rabbitmq.manager';
 
 import '@common/env-load';
 
@@ -25,6 +26,7 @@ function initializeDependencies() {
       DEPENDENCY_SYMBOLS.DatabaseConnection,
     ),
     redisConnection: container.resolve(RedisConnection),
+    rabbitMQManager: container.resolve(RabbitMQManager),
     feedCrawler: container.resolve(FeedCrawler),
     claudeEventWorker: container.resolve(ClaudeEventWorker),
     fullFeedCrawlEventWorker: container.resolve(FullFeedCrawlEventWorker),
@@ -51,16 +53,6 @@ function registerSchedulers(
       void dependencies.claudeEventWorker.start();
     },
   );
-
-  schedule.scheduleJob('FULL FEED CRAWLING', '*/5 * * * *', () => {
-    logger.info(`Full Feed Crawling Start: ${new Date().toISOString()}`);
-    void dependencies.fullFeedCrawlEventWorker.start();
-  });
-
-  schedule.scheduleJob('AI SUMMARY RETRY', '*/1 * * * *', () => {
-    logger.info(`AI Summary Retry Start: ${new Date().toISOString()}`);
-    void dependencies.aiSummaryRetryEventWorker.start();
-  });
 }
 
 async function handleShutdown(components: Lifecycle[], signal: string) {
@@ -92,6 +84,9 @@ async function startScheduler() {
       dependencies.notifier,
       dependencies.dbConnection,
       dependencies.redisConnection,
+      dependencies.rabbitMQManager,
+      dependencies.fullFeedCrawlEventWorker,
+      dependencies.aiSummaryRetryEventWorker,
     ];
 
     for (const component of components) {

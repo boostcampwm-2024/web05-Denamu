@@ -1,33 +1,41 @@
 import 'reflect-metadata';
 
-import { AiSummaryRetryMessage } from '@common/ai/ai.type';
 import logger from '@common/logger/logger';
 import { RedisConnection } from '@common/redis/redis-access';
 import { redisConstant } from '@common/redis/redis.constant';
 
 import { AiSummaryRetryEventWorker } from '@event_worker/workers/ai-summary-retry-event-worker';
 
+import { RMQ_QUEUES } from '@rabbitmq/rabbitmq.constant';
+import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
+
 import { FeedCrawler } from '../../src/feed-crawler';
 
 describe('AiSummaryRetryEventWorker', () => {
   let worker: AiSummaryRetryEventWorker;
+  let mockRabbitMQService: jest.Mocked<RabbitMQService>;
   let mockRedisConnection: jest.Mocked<RedisConnection>;
   let mockFeedCrawler: jest.Mocked<FeedCrawler>;
-  let rpopMock: jest.Mock;
+  let consumeMessageMock: jest.Mock;
+  let closeConsumerMock: jest.Mock;
   let delMock: jest.Mock;
   let requeueMock: jest.Mock;
 
-  const retryMessage: AiSummaryRetryMessage = { feedId: 7, deathCount: 0 };
+  const feedId = 7;
 
   beforeEach(() => {
-    rpopMock = jest.fn();
+    consumeMessageMock = jest.fn().mockResolvedValue('consumer-tag');
+    closeConsumerMock = jest.fn();
     delMock = jest.fn();
     requeueMock = jest.fn();
 
+    mockRabbitMQService = {
+      consumeMessage: consumeMessageMock,
+      closeConsumer: closeConsumerMock,
+    } as any;
+
     mockRedisConnection = {
-      rpop: rpopMock,
       del: delMock,
-      rpush: jest.fn(),
     } as any;
 
     mockFeedCrawler = {
@@ -35,6 +43,7 @@ describe('AiSummaryRetryEventWorker', () => {
     } as any;
 
     worker = new AiSummaryRetryEventWorker(
+      mockRabbitMQService,
       mockRedisConnection,
       mockFeedCrawler,
     );
@@ -44,44 +53,42 @@ describe('AiSummaryRetryEventWorker', () => {
     jest.clearAllMocks();
   });
 
-  describe('processQueue', () => {
-    it('큐가 비어있으면 처리하지 않아야 한다', async () => {
-      // Given
-      rpopMock.mockResolvedValue(null);
-
+  describe('start', () => {
+    it('crawling.aiRetry.queue를 리스닝해야 한다', async () => {
       // When
-      await worker['processQueue']();
+      await worker.start();
 
       // Then
-      expect(requeueMock).not.toHaveBeenCalled();
-    });
-
-    it('메시지가 있으면 파싱하여 processItem을 호출해야 한다', async () => {
-      // Given
-      rpopMock.mockResolvedValue(JSON.stringify(retryMessage));
-      const processItemSpy = jest
-        .spyOn(worker as any, 'processItem')
-        .mockResolvedValue(undefined);
-
-      // When
-      await worker['processQueue']();
-
-      // Then
-      expect(rpopMock).toHaveBeenCalledWith(redisConstant.FEED_AI_RETRY_QUEUE);
-      expect(processItemSpy).toHaveBeenCalledWith(retryMessage);
+      expect(consumeMessageMock).toHaveBeenCalledWith(
+        RMQ_QUEUES.CRAWLING_AI_RETRY,
+        expect.any(Function),
+      );
     });
   });
 
-  describe('processItem', () => {
+  describe('stop', () => {
+    it('시작 후 종료하면 consumer를 취소해야 한다', async () => {
+      // Given
+      await worker.start();
+
+      // When
+      await worker.stop();
+
+      // Then
+      expect(closeConsumerMock).toHaveBeenCalledWith('consumer-tag');
+    });
+  });
+
+  describe('processItem (private)', () => {
     it('feedCrawler.requeueFeedForAiSummary를 호출해야 한다', async () => {
       // Given
       requeueMock.mockResolvedValue(undefined);
 
       // When
-      await worker['processItem'](retryMessage);
+      await worker['processItem'](feedId);
 
       // Then
-      expect(requeueMock).toHaveBeenCalledWith(retryMessage.feedId);
+      expect(requeueMock).toHaveBeenCalledWith(feedId);
     });
 
     it('에러 발생 시 handleFailure를 호출해야 한다', async () => {
@@ -93,24 +100,25 @@ describe('AiSummaryRetryEventWorker', () => {
         .mockResolvedValue(undefined);
 
       // When
-      await worker['processItem'](retryMessage);
+      await worker['processItem'](feedId);
 
       // Then
-      expect(handleFailureSpy).toHaveBeenCalledWith(retryMessage, error);
+      expect(handleFailureSpy).toHaveBeenCalledWith(feedId, error);
     });
   });
 
-  describe('onPermanentFailure', () => {
-    it('영구 실패 시 재요청 락을 해제해야 한다', async () => {
+  describe('handleFailure (private)', () => {
+    it('실패하면 재시도 없이 재요청 락을 해제해야 한다', async () => {
       // Given
+      const error = new Error('일시적 오류');
       delMock.mockResolvedValue(undefined);
 
       // When
-      await worker['onPermanentFailure'](retryMessage);
+      await worker['handleFailure'](feedId, error);
 
       // Then
       expect(delMock).toHaveBeenCalledWith(
-        `${redisConstant.FEED_AI_RETRY_LOCK}:${retryMessage.feedId}`,
+        `${redisConstant.FEED_AI_RETRY_LOCK}:${feedId}`,
       );
     });
 
@@ -121,31 +129,10 @@ describe('AiSummaryRetryEventWorker', () => {
 
       // When & Then
       await expect(
-        worker['onPermanentFailure'](retryMessage),
+        worker['handleFailure'](feedId, new Error('일시적 오류')),
       ).resolves.toBeUndefined();
       expect(errorSpy).toHaveBeenCalledWith(
         expect.stringContaining('AI 재요청 락 해제 실패'),
-      );
-    });
-  });
-
-  describe('queue key accessors', () => {
-    it('getQueueKey와 getRetryQueueKey는 AI 재시도 큐를 반환해야 한다', () => {
-      expect(worker['getQueueKey']()).toBe(redisConstant.FEED_AI_RETRY_QUEUE);
-      expect(worker['getRetryQueueKey']()).toBe(
-        redisConstant.FEED_AI_RETRY_QUEUE,
-      );
-    });
-
-    it('getItemLabel은 feedId를 포함해야 한다', () => {
-      expect(worker['getItemLabel'](retryMessage)).toBe(
-        `feedId ${retryMessage.feedId}`,
-      );
-    });
-
-    it('parseQueueMessage는 JSON을 파싱해야 한다', () => {
-      expect(worker['parseQueueMessage'](JSON.stringify(retryMessage))).toEqual(
-        retryMessage,
       );
     });
   });

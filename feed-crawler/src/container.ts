@@ -1,5 +1,8 @@
 import { container } from 'tsyringe';
 
+import { RabbitMQManager } from '@rabbitmq/rabbitmq.manager';
+import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
+
 import { DatabaseConnection } from '@common/database/database-connection';
 import { MySQLConnection } from '@common/database/mysql-access';
 import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
@@ -22,8 +25,8 @@ import { FullFeedCrawlEventWorker } from '@event_worker/workers/full-feed-crawl-
 
 import { FeedRepository } from '@repository/feed.repository';
 import { RssRepository } from '@repository/rss.repository';
-import { TagRepository } from '@repository/tag.repository';
 import { TagMapRepository } from '@repository/tag-map.repository';
+import { TagRepository } from '@repository/tag.repository';
 
 import { FeedCrawler } from './feed-crawler';
 
@@ -36,6 +39,8 @@ container.registerSingleton(AiMetrics);
 container.registerSingleton(DbMetrics);
 container.registerSingleton(RedisMetrics);
 container.registerSingleton(RedisConnection);
+container.registerSingleton(RabbitMQManager);
+container.registerSingleton(RabbitMQService);
 container.registerSingleton(RssRepository);
 container.registerSingleton(FeedRepository);
 container.registerSingleton(TagRepository);

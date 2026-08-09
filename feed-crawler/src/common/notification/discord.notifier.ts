@@ -9,6 +9,7 @@ import {
   fullFeedCrawlingPayload,
   NOTIFICATION_EVENT,
   NotificationEventPayloadMap,
+  rabbitmqDeadLetterPayload,
   scheduledFeedCrawlingPayload,
 } from '@common/notification/notification-event.constant';
 import { Notifier } from '@common/notification/notifier.interface';
@@ -42,6 +43,10 @@ export class DiscordNotifier implements Notifier {
       this.eventEmitter.on(
         NOTIFICATION_EVENT.AI_SUMMARY,
         (payload) => void this.sendAiSummaryAlert(payload),
+      );
+      this.eventEmitter.on(
+        NOTIFICATION_EVENT.RABBITMQ_DEAD_LETTER,
+        (payload) => void this.sendRabbitmqDeadLetterAlert(payload),
       );
       this.initialized = true;
     }
@@ -83,6 +88,23 @@ export class DiscordNotifier implements Notifier {
     try {
       await axios.post(this.webhookUrl, {
         content: `${errorSource} ${feedId}번 Feed AI 요약 중 에러 발생 - 오류 메시지: \`\`\`${error.message}\`\`\``,
+      });
+    } catch (e) {
+      logger.error('Discord 알림 전송 실패:', e);
+    }
+    logger.info(`알림 소요 시간: ${Date.now() - discordStartTime}`);
+  };
+
+  private sendRabbitmqDeadLetterAlert = async (
+    payload: rabbitmqDeadLetterPayload,
+  ) => {
+    const { error, queue, messageContent } = payload;
+    const discordStartTime = Date.now();
+    try {
+      await axios.post(this.webhookUrl, {
+        content: `[RabbitMQ] ${queue} 큐 메시지가 Dead Letter Queue로 이동했습니다.
+- 오류 메시지: \`\`\`${error.message}\`\`\`
+- 메시지 내용: \`\`\`${messageContent.slice(0, 500)}\`\`\``,
       });
     } catch (e) {
       logger.error('Discord 알림 전송 실패:', e);
