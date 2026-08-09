@@ -9,7 +9,8 @@ import Header from "@/components/layout/Header";
 
 const SERVICE_NAME = "데나무";
 const CONTACT_EMAIL = "boostcamp9web05@gmail.com";
-const EFFECTIVE_DATE = "2026. 08. 01";
+const EFFECTIVE_DATE = "2026. 08. 17";
+const PREVIOUS_EFFECTIVE_DATE = "2026. 08. 01";
 
 const TOC = [
   "개인정보의 처리 목적",
@@ -43,7 +44,7 @@ const HIGHLIGHTS = [
   {
     icon: Clock,
     title: "보유 기간",
-    body: ["회원 탈퇴 시까지", "이용 통계: 최대 14개월"],
+    body: ["회원 탈퇴 시까지", "이용 통계: 최대 14개월", "탈퇴 후 재가입 제한: 3개월"],
   },
   {
     icon: Share2,
@@ -167,6 +168,12 @@ export default function PrivacyPolicy() {
                 장기간 미접속 시 알림, 서비스 공지사항 등을 이메일로 안내하기 위한 목적으로 개인정보를 처리합니다.
                 정보주체는 회원가입 시 또는 마이페이지에서 언제든지 수신을 거부할 수 있습니다.
               </Li>
+              <Li label="부정 재가입 방지 (탈퇴 회원 재가입 제한)">
+                회원 탈퇴 후 동일한 이메일로 즉시 재가입하여 정지·제재를 회피하거나 서비스를 반복적으로 부정 이용하는
+                것을 방지하기 위한 목적으로, 탈퇴 시점의 이메일 정보를 처리합니다. 이는 「개인정보 보호법」
+                제15조제1항제6호(정당한 이익)에 근거하며, 탈퇴 회원의 이메일만을 최소한으로 보유하고 그 밖의 회원 정보는
+                탈퇴 즉시 파기합니다.
+              </Li>
             </Ol>
           </Article>
 
@@ -239,6 +246,16 @@ export default function PrivacyPolicy() {
                   </li>
                 </Ul>
               </Li>
+              <Li label="회원 탈퇴 시">
+                <Ul>
+                  <li>법적 근거: 「개인정보 보호법」 제15조제1항제6호(정당한 이익)</li>
+                  <li>항목: 이메일 주소</li>
+                  <li>
+                    부정 재가입 방지를 위해 탈퇴 시점의 이메일 주소만을 별도로 보유하며, 그 밖의 회원 정보(비밀번호,
+                    닉네임, 프로필, 활동 이력 등)는 탈퇴 즉시 파기됩니다.
+                  </li>
+                </Ul>
+              </Li>
             </Ol>
             <p className="text-sm leading-7 text-gray-500">
               ※ {SERVICE_NAME}는 댓글·개발자 채팅 등 공개되는 영역에 정보주체가 민감정보(사상·신념, 건강 등)를 입력하지
@@ -264,6 +281,10 @@ export default function PrivacyPolicy() {
                 <Ul>
                   <li>회원 탈퇴 시까지 보유하며, 탈퇴 시 지체 없이 파기합니다.</li>
                   <li>다만, 관계 법령에 따라 보존할 필요가 있는 경우 해당 기간 동안 보관합니다.</li>
+                  <li>
+                    부정 재가입 방지를 위한 이메일 주소는 탈퇴일로부터 3개월간 별도 보유하며, 보유기간 경과 시 지체 없이
+                    파기합니다. 해당 기간 동안에는 동일한 이메일로 재가입할 수 없습니다.
+                  </li>
                 </Ul>
               </Li>
               <Li label="RSS 등록 신청 정보">
@@ -584,7 +605,11 @@ export default function PrivacyPolicy() {
 
           <Article id={15} title="개인정보 처리방침의 변경에 관한 사항">
             <P>이 개인정보 처리방침은 {EFFECTIVE_DATE}부터 적용됩니다.</P>
-            <P>이전 버전은 존재하지 않습니다.</P>
+            <P>
+              {PREVIOUS_EFFECTIVE_DATE}자 처리방침 대비 부정 재가입 방지를 위한 탈퇴 회원 이메일의 처리(제1조, 제2조) 및
+              보유기간(제4조) 조항이 신설되었습니다. 해당 조항은 시행일 이후 탈퇴하는 회원부터 적용되며, 시행일 이전에
+              이미 탈퇴한 회원에게는 소급 적용되지 않습니다.
+            </P>
           </Article>
         </div>
 
