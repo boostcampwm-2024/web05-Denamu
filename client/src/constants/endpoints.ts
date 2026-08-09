@@ -119,6 +119,8 @@ export const REPORT = {
   COMMENT: (commentId: number) => `/api/reports/comments/${commentId}`,
   FEED: (feedId: number) => `/api/reports/feeds/${feedId}`,
   ADMIN_LIST: "/api/admins/reports",
+  ADMIN_APPROVE: (reportId: number) => `/api/admins/reports/${reportId}/suspensions`,
+  ADMIN_REJECT: (reportId: number) => `/api/admins/reports/${reportId}`,
 };
 
 export const FILE = {
