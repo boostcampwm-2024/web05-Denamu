@@ -1,24 +1,32 @@
 import { useState } from "react";
 
-import { useInfiniteQuery } from "@tanstack/react-query";
-
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+
+import { useCustomToast } from "@/hooks/common/useCustomToast";
+import { useApproveReport, useRejectReport } from "@/hooks/queries/useReport";
+
+import { REPORT_REASON_LABELS, SUSPENSION_PRESET_DAYS, SUSPENSION_PRESET_LABELS } from "@/constants/report";
 
 import { getReports } from "@/api/services/report";
-import { REPORT_REASON_LABELS, REPORT_STATUS_LABELS } from "@/constants/report";
-import { ReportItem, ReportStatus } from "@/types/report";
-
-type StatusFilter = ReportStatus | "ALL";
-
-const STATUS_FILTERS: { label: string; value: StatusFilter }[] = [
-  { label: "전체", value: "ALL" },
-  { label: "미처리", value: "PENDING" },
-  { label: "조치완료", value: "ACTIONED" },
-  { label: "반려", value: "REJECTED" },
-];
+import { ApproveReportPayload, ReportItem, SuspensionPreset } from "@/types/report";
+import { useInfiniteQuery } from "@tanstack/react-query";
 
 const TARGET_TYPE_LABELS: Record<ReportItem["targetType"], string> = {
   USER: "사용자",
@@ -27,43 +35,74 @@ const TARGET_TYPE_LABELS: Record<ReportItem["targetType"], string> = {
   FEED: "게시글",
 };
 
-const STATUS_BADGE_VARIANT: Record<ReportStatus, "default" | "secondary" | "outline"> = {
-  PENDING: "default",
-  ACTIONED: "secondary",
-  REJECTED: "outline",
-};
+const SUSPENSION_PRESET_OPTIONS = Object.entries(SUSPENSION_PRESET_LABELS) as [SuspensionPreset, string][];
 
 const PAGE_SIZE = 10;
 
+const fromDatetimeLocal = (value: string): string | undefined => {
+  if (!value) return undefined;
+  return new Date(value).toISOString();
+};
+
+const toDatetimeLocal = (date: Date): string => {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+};
+
+const presetToDatetimeLocal = (preset: SuspensionPreset): string => {
+  const days = SUSPENSION_PRESET_DAYS[preset];
+  if (!days) return "";
+  return toDatetimeLocal(new Date(Date.now() + days * 24 * 60 * 60 * 1000));
+};
+
+const computeSuspendedUntil = (preset: SuspensionPreset | null, dateValue: string): string | undefined => {
+  if (preset === "PERMANENT") return undefined;
+  return fromDatetimeLocal(dateValue);
+};
+
 export default function AdminReportTab() {
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
+  const [approveTarget, setApproveTarget] = useState<ReportItem | null>(null);
+  const { toast } = useCustomToast();
 
   const { data, isLoading, isError, hasNextPage, fetchNextPage, isFetchingNextPage } = useInfiniteQuery({
-    queryKey: ["adminReports", statusFilter],
+    queryKey: ["adminReports"],
     queryFn: ({ pageParam }: { pageParam: number | undefined }) =>
       getReports({
         lastId: pageParam,
         limit: PAGE_SIZE,
-        status: statusFilter === "ALL" ? undefined : statusFilter,
       }),
     getNextPageParam: (lastPage) => (lastPage.hasMore ? lastPage.lastId : undefined),
     initialPageParam: undefined as number | undefined,
   });
 
+  const { mutate: approveReport, isPending: isApproving } = useApproveReport();
+  const { mutate: rejectReport } = useRejectReport();
+
   const reports = data?.pages.flatMap((page) => page.result) ?? [];
+
+  const handleApprove = (payload: ApproveReportPayload) => {
+    if (!approveTarget) return;
+    approveReport(
+      { reportId: approveTarget.id, payload },
+      {
+        onSuccess: () => {
+          toast({ description: "신고를 승인하고 정지 처리를 완료했습니다." });
+          setApproveTarget(null);
+        },
+        onError: () => toast({ description: "승인 처리 중 오류가 발생했습니다.", variant: "destructive" }),
+      }
+    );
+  };
+
+  const handleReject = (reportId: number) => {
+    rejectReport(reportId, {
+      onSuccess: () => toast({ description: "신고를 거절했습니다." }),
+      onError: () => toast({ description: "거절 처리 중 오류가 발생했습니다.", variant: "destructive" }),
+    });
+  };
 
   return (
     <section className="flex flex-col gap-4 min-h-[300px]">
-      <Tabs value={statusFilter} onValueChange={(value) => setStatusFilter(value as StatusFilter)}>
-        <TabsList>
-          {STATUS_FILTERS.map((filter) => (
-            <TabsTrigger key={filter.value} value={filter.value}>
-              {filter.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
-
       {isLoading ? (
         <p className="py-12 text-center text-sm text-gray-400">불러오는 중...</p>
       ) : isError ? (
@@ -77,11 +116,8 @@ export default function AdminReportTab() {
               <CardContent className="flex flex-col gap-2 p-4">
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant="outline">{TARGET_TYPE_LABELS[report.targetType]}</Badge>
-                  <Badge variant={STATUS_BADGE_VARIANT[report.status]}>{REPORT_STATUS_LABELS[report.status]}</Badge>
                   <span className="text-sm font-medium">{REPORT_REASON_LABELS[report.reason]}</span>
-                  <span className="ml-auto text-xs text-gray-400">
-                    {new Date(report.createdAt).toLocaleString()}
-                  </span>
+                  <span className="ml-auto text-xs text-gray-400">{new Date(report.createdAt).toLocaleString()}</span>
                 </div>
 
                 <p className="text-sm text-gray-700">
@@ -91,6 +127,32 @@ export default function AdminReportTab() {
                   신고자: {report.reporter.userName} (#{report.reporter.id})
                 </p>
                 {report.detail && <p className="text-sm text-gray-600 whitespace-pre-wrap">{report.detail}</p>}
+
+                <div className="flex justify-end gap-2 pt-2">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        거절
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>신고 거절</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          이 신고를 거절하고 삭제하시겠습니까? 되돌릴 수 없습니다.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>취소</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleReject(report.id)}>거절하기</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+
+                  <Button size="sm" onClick={() => setApproveTarget(report)}>
+                    승인
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}
@@ -104,6 +166,121 @@ export default function AdminReportTab() {
           )}
         </div>
       )}
+
+      <ApproveSuspensionDialog
+        key={approveTarget?.id ?? "none"}
+        target={approveTarget}
+        isPending={isApproving}
+        onOpenChange={(open) => !open && setApproveTarget(null)}
+        onSubmit={handleApprove}
+      />
     </section>
+  );
+}
+
+interface ApproveSuspensionDialogProps {
+  target: ReportItem | null;
+  isPending: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSubmit: (payload: ApproveReportPayload) => void;
+}
+
+function ApproveSuspensionDialog({ target, isPending, onOpenChange, onSubmit }: ApproveSuspensionDialogProps) {
+  const [preset, setPreset] = useState<SuspensionPreset | null>("SEVEN_DAYS");
+  const [dateValue, setDateValue] = useState(() => presetToDatetimeLocal("SEVEN_DAYS"));
+  const [detail, setDetail] = useState("");
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      setPreset("SEVEN_DAYS");
+      setDateValue(presetToDatetimeLocal("SEVEN_DAYS"));
+      setDetail("");
+    }
+    onOpenChange(nextOpen);
+  };
+
+  const handlePresetChange = (value: SuspensionPreset) => {
+    setPreset(value);
+    setDateValue(value === "PERMANENT" ? "" : presetToDatetimeLocal(value));
+  };
+
+  const handleDateChange = (value: string) => {
+    setDateValue(value);
+    setPreset(null);
+  };
+
+  const isDateMissing = preset !== "PERMANENT" && !dateValue;
+  const canSubmit = !!detail.trim() && !isDateMissing && !isPending;
+
+  const handleSubmit = () => {
+    if (!canSubmit) return;
+    onSubmit({
+      suspendedUntil: computeSuspendedUntil(preset, dateValue),
+      detail: detail.trim(),
+    });
+  };
+
+  return (
+    <Dialog open={!!target} onOpenChange={handleOpenChange}>
+      <DialogContent className="z-[1000]">
+        <DialogHeader>
+          <DialogTitle>신고 승인 및 정지 처리</DialogTitle>
+        </DialogHeader>
+
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <Label>정지 기간</Label>
+            <div className="flex flex-wrap gap-x-4 gap-y-2">
+              {SUSPENSION_PRESET_OPTIONS.map(([value, label]) => (
+                <label key={value} className="flex items-center gap-1.5 text-sm">
+                  <input
+                    type="radio"
+                    name="suspension-preset"
+                    value={value}
+                    checked={preset === value}
+                    onChange={() => handlePresetChange(value)}
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="suspension-custom-until">정지 종료 일시</Label>
+            <Input
+              id="suspension-custom-until"
+              type="datetime-local"
+              value={dateValue}
+              onChange={(event) => handleDateChange(event.target.value)}
+              onClick={(event) => event.currentTarget.showPicker?.()}
+              className="relative [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-2"
+            />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="suspension-detail">처리 상세 내역</Label>
+            <Textarea
+              id="suspension-detail"
+              value={detail}
+              onChange={(event) => setDetail(event.target.value)}
+              placeholder="정지 사유 및 처리 내용을 입력해주세요."
+              maxLength={500}
+              className="resize-none"
+            />
+            <span className="self-end text-xs text-muted-foreground">{detail.length}/500</span>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => handleOpenChange(false)}>
+            취소
+          </Button>
+          <Button onClick={handleSubmit} disabled={!canSubmit}>
+            {isPending ? "처리 중..." : "정지 처리"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

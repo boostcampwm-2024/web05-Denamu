@@ -1,11 +1,11 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, waitFor, within } from "storybook/test";
-
 import AdminReportTab from "@/components/admin/report/AdminReportTab";
+
 import { REPORT } from "@/constants/endpoints";
+
 import { mockReportsPage } from "@/__storybook__/fixtures";
 import { fail, mockApi, ok } from "@/__storybook__/mockApi";
-import { ReportStatus } from "@/types/report";
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 
 const meta = {
   title: "admin/report/AdminReportTab",
@@ -15,17 +15,19 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const setupFilterableReports = () => {
-  mockApi.onGet(REPORT.ADMIN_LIST).reply((config) => {
-    const status = config.params?.status as ReportStatus | undefined;
-    const filtered = status ? mockReportsPage.result.filter((report) => report.status === status) : mockReportsPage.result;
-    return ok({ result: filtered, lastId: filtered.at(-1)?.id ?? 0, hasMore: false });
-  });
+const setupReports = () => {
+  mockApi.onGet(REPORT.ADMIN_LIST).reply(...ok(mockReportsPage));
+};
+
+const setupActionableReports = () => {
+  setupReports();
+  mockApi.onPost(/\/api\/admins\/reports\/\d+\/suspensions/).reply(...ok(null));
+  mockApi.onDelete(/\/api\/admins\/reports\/\d+/).reply(...ok(null));
 };
 
 export const WithData: Story = {
   name: "신고 목록 있음",
-  beforeEach: setupFilterableReports,
+  beforeEach: setupReports,
 };
 
 export const Empty: Story = {
@@ -49,20 +51,36 @@ export const Error: Story = {
   },
 };
 
-export const FilterByStatus: Story = {
-  name: "상태 필터 전환",
-  beforeEach: setupFilterableReports,
+export const ApproveReport: Story = {
+  name: "신고 승인 (정지 처리)",
+  beforeEach: setupActionableReports,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
 
-    await expect(await canvas.findByText("제보자1", { exact: false })).toBeInTheDocument();
-    await expect(canvas.getByText("제보자2", { exact: false })).toBeInTheDocument();
-    await expect(canvas.getByText("제보자3", { exact: false })).toBeInTheDocument();
+    const [approveButton] = await canvas.findAllByRole("button", { name: "승인" });
+    await userEvent.click(approveButton);
+    await userEvent.type(
+      await body.findByPlaceholderText("정지 사유 및 처리 내용을 입력해주세요."),
+      "반복적인 스팸으로 정지 처리합니다."
+    );
+    await userEvent.click(body.getByRole("button", { name: "정지 처리" }));
 
-    await userEvent.click(canvas.getByRole("tab", { name: "미처리" }));
+    await waitFor(() => expect(mockApi.history.post).toHaveLength(1));
+  },
+};
 
-    await waitFor(() => expect(canvas.getByText("제보자1", { exact: false })).toBeInTheDocument());
-    await expect(canvas.queryByText("제보자2", { exact: false })).not.toBeInTheDocument();
-    await expect(canvas.queryByText("제보자3", { exact: false })).not.toBeInTheDocument();
+export const RejectReport: Story = {
+  name: "신고 거절",
+  beforeEach: setupActionableReports,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
+
+    const [rejectButton] = await canvas.findAllByRole("button", { name: "거절" });
+    await userEvent.click(rejectButton);
+    await userEvent.click(await body.findByRole("button", { name: "거절하기" }));
+
+    await waitFor(() => expect(mockApi.history.delete).toHaveLength(1));
   },
 };
