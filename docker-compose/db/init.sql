@@ -387,6 +387,16 @@ CREATE TABLE `qna_message` (
   CONSTRAINT `FK_qna_message_admin_id` FOREIGN KEY (`admin_id`) REFERENCES `admin` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 );
 
+-- denamu.withdrawn_user definition
+
+CREATE TABLE `withdrawn_user` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `email` varchar(255) NOT NULL,
+  `withdrawn_at` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UQ_withdrawn_user_email` (`email`)
+);
+
 -- denamu.admin insert data
 -- id: test1234@denamu.dev, password: test1234!
 -- id: test5678@denamu.dev, password: test1234!
