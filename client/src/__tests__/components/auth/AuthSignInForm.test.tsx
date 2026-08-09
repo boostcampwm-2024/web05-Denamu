@@ -2,12 +2,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AuthSignInForm } from "@/components/auth/AuthSignInForm.tsx";
 
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 
 const mockNavigate = vi.fn();
 const mockToast = vi.fn();
+const mockSetSearchParams = vi.fn();
 const submitForm = vi.fn();
 const updateField = vi.fn();
+let mockSearchParams: URLSearchParams;
 
 let signInState: {
   form: { email: string; password: string };
@@ -20,6 +22,7 @@ let signInState: {
 vi.mock("react-router-dom", () => ({
   useNavigate: () => mockNavigate,
   useLocation: () => ({ pathname: "/signin", state: null }),
+  useSearchParams: () => [mockSearchParams, mockSetSearchParams],
 }));
 
 vi.mock("@/hooks/auth/useSignIn", () => ({
@@ -37,6 +40,7 @@ vi.mock("@/components/auth/AuthSocialLoginButtons.tsx", () => ({
 describe("AuthSignInForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockSearchParams = new URLSearchParams();
     signInState = {
       form: { email: "", password: "" },
       updateField,
@@ -106,5 +110,57 @@ describe("AuthSignInForm", () => {
     render(<AuthSignInForm hideBackButton />);
 
     expect(screen.queryByRole("button", { name: "Denamu 홈으로 돌아가기" })).not.toBeInTheDocument();
+  });
+
+  it("쿼리에 error가 없으면 재가입 제한 toast를 띄우지 않아야 한다", () => {
+    render(<AuthSignInForm />);
+
+    expect(mockToast).not.toHaveBeenCalled();
+    expect(mockSetSearchParams).not.toHaveBeenCalled();
+  });
+
+  it("rejoin_restricted 쿼리가 있으면 재가입 제한 toast를 띄우고 쿼리를 정리해야 한다", () => {
+    vi.useFakeTimers();
+    mockSearchParams = new URLSearchParams("error=rejoin_restricted&availableAt=2026-11-01T00:00:00.000Z");
+    render(<AuthSignInForm />);
+    act(() => {
+      vi.runAllTimers();
+    });
+    vi.useRealTimers();
+
+    expect(mockToast).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: "재가입 제한",
+        description: expect.stringContaining("이후 다시 시도해주세요"),
+        variant: "destructive",
+      })
+    );
+    const [cleanedParams, options] = mockSetSearchParams.mock.calls[0];
+    expect(cleanedParams.get("error")).toBeNull();
+    expect(cleanedParams.get("availableAt")).toBeNull();
+    expect(options).toEqual({ replace: true });
+  });
+
+  it("availableAt이 없거나 파싱 불가능하면 '잠시 후'로 안내해야 한다", () => {
+    vi.useFakeTimers();
+    mockSearchParams = new URLSearchParams("error=rejoin_restricted");
+    render(<AuthSignInForm />);
+    act(() => {
+      vi.runAllTimers();
+    });
+    vi.useRealTimers();
+
+    expect(mockToast).toHaveBeenCalledWith(
+      expect.objectContaining({
+        description: expect.stringContaining("잠시 후"),
+      })
+    );
+  });
+
+  it("error가 rejoin_restricted가 아니면 재가입 제한 toast를 띄우지 않아야 한다", () => {
+    mockSearchParams = new URLSearchParams("error=other");
+    render(<AuthSignInForm />);
+
+    expect(mockToast).not.toHaveBeenCalled();
   });
 });

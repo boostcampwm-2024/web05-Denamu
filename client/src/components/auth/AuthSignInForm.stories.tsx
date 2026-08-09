@@ -1,10 +1,12 @@
+import { AuthSignInForm } from "@/components/auth/AuthSignInForm";
+
+import { USER } from "@/constants/endpoints";
+
+import { nav } from "@/utils/redirect";
+
+import { mockApi, mockRedirect, ok, fail } from "@/__storybook__/mockApi";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, within } from "storybook/test";
-
-import { AuthSignInForm } from "@/components/auth/AuthSignInForm";
-import { USER } from "@/constants/endpoints";
-import { mockApi, mockRedirect, ok, fail } from "@/__storybook__/mockApi";
-import { nav } from "@/utils/redirect";
 
 const meta = {
   title: "auth/AuthSignInForm",
@@ -55,6 +57,20 @@ export const LoginError: Story = {
     await userEvent.click(canvas.getByRole("button", { name: "로그인" }));
     // 401 응답은 axiosInstance 인터셉터의 refresh 요청을 추가로 유발하므로 최소 1건(로그인)만 확인.
     await expect(mockApi.history.post.length).toBeGreaterThanOrEqual(1);
+  },
+};
+
+export const RejoinRestricted: Story = {
+  name: "재가입 제한 안내",
+  parameters: {
+    router: {
+      initialEntries: ["/signin?error=rejoin_restricted&availableAt=2026-11-01T00:00:00.000Z"],
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const body = within(canvasElement.ownerDocument.body);
+    await expect(await body.findByText("재가입 제한")).toBeInTheDocument();
+    await expect(await body.findByText(/이후 다시 시도해주세요/)).toBeInTheDocument();
   },
 };
 
