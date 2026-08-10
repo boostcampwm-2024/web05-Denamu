@@ -24,6 +24,7 @@ import type { ReportItem } from "@/types/report";
 import type { AdminRssData, RecentRss } from "@/types/rss";
 import type { RssSearchResult, SearchResult, UserSearchResult } from "@/types/search";
 import type { SubscribedRss } from "@/types/subscription";
+import type { SuspendedUserItem } from "@/types/userSuspension";
 
 export const mockFeedList: FeedList = {
   id: 1,
@@ -341,6 +342,29 @@ export const mockReportsPage: CursorPage<ReportItem> = {
       reporter: { id: 3, userName: "제보자3" },
       createdAt: "2026-06-23T09:00:00.000Z",
       reviewedAt: "2026-06-23T10:00:00.000Z",
+    },
+  ],
+  lastId: 1,
+  hasMore: false,
+};
+
+export const mockSuspendedUsersPage: CursorPage<SuspendedUserItem> = {
+  result: [
+    {
+      id: 2,
+      user: { userName: "스팸유저", email: "spam-user@test.com" },
+      admin: { name: "관리자1" },
+      detail: "반복적인 스팸 신고 누적으로 영구 정지합니다.",
+      suspendedUntil: null,
+      createdAt: "2026-06-25T09:00:00.000Z",
+    },
+    {
+      id: 1,
+      user: { userName: "욕설유저", email: "abuse-user@test.com" },
+      admin: { name: "관리자1" },
+      detail: "댓글에서 욕설을 반복 사용하여 7일 정지합니다.",
+      suspendedUntil: "2026-07-02T09:00:00.000Z",
+      createdAt: "2026-06-24T09:00:00.000Z",
     },
   ],
   lastId: 1,
