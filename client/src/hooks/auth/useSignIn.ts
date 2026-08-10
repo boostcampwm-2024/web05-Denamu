@@ -58,6 +58,7 @@ export function useSignIn() {
               ? "아이디 혹은 비밀번호가 잘못되었습니다."
               : error.response?.data?.message || "로그인 중 오류가 발생했습니다.",
           status,
+          suspension: status === 403 ? error.response?.data?.data : undefined,
         });
       } else {
         setResult({
