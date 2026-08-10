@@ -301,7 +301,6 @@ CREATE TABLE `report` (
   `reason` varchar(20) NOT NULL,
   `detail` text,
   `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-  `reviewed_at` datetime DEFAULT NULL,
   `reporter_id` int DEFAULT NULL,
   `reported_user_id` int DEFAULT NULL,
   `reported_rss_id` int DEFAULT NULL,

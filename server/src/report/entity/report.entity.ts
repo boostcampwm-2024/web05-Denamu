@@ -47,9 +47,6 @@ export class Report extends BaseEntity {
   @CreateDateColumn({ name: 'created_at', type: 'datetime', nullable: false })
   createdAt: Date;
 
-  @Column({ name: 'reviewed_at', type: 'datetime', nullable: true })
-  reviewedAt: Date | null;
-
   @ManyToOne(() => User, (user) => user.id, {
     nullable: true,
     onUpdate: 'CASCADE',
