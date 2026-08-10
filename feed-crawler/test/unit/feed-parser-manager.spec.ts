@@ -38,14 +38,16 @@ describe('FeedParserManager', () => {
   const mockFeedDetails: FeedDetail[] = [
     {
       id: null,
-      blogId: 1,
-      blogName: '테스트 블로그',
-      blogPlatform: 'tistory',
-      blogImage: null,
+      blog: {
+        id: 1,
+        name: '테스트 블로그',
+        platform: 'tistory',
+        image: null,
+      },
       pubDate: '2024-01-01 12:00:00',
       title: '테스트 피드 1',
       link: 'https://test.tistory.com/1',
-      imageUrl: 'https://test.tistory.com/image1.jpg',
+      thumbnail: 'https://test.tistory.com/image1.jpg',
       content: '테스트 내용 1',
       summary: 'AI 요약 처리 중...',
       deathCount: 0,

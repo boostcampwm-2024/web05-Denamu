@@ -57,11 +57,11 @@ export class FeedRepository {
             VALUES ?
         `;
       const values = candidates.map((feed) => [
-        feed.blogId,
+        feed.blog.id,
         feed.pubDate,
         feed.title,
         feed.link,
-        feed.imageUrl,
+        feed.thumbnail,
         feed.summary,
       ]);
 
@@ -121,11 +121,11 @@ export class FeedRepository {
           const result = await this.dbConnection.executeQueryStrict(
             insertQuery,
             [
-              feed.blogId,
+              feed.blog.id,
               feed.pubDate,
               feed.title,
               feed.link,
-              feed.imageUrl,
+              feed.thumbnail,
               feed.summary,
             ],
           );
@@ -181,12 +181,12 @@ export class FeedRepository {
         for (const feed of feedLists) {
           pipeline.hset(`feed:recent:${feed.id}`, {
             id: feed.id,
-            blogPlatform: feed.blogPlatform,
-            blogImage: feed.blogImage ?? '',
+            blogPlatform: feed.blog.platform,
+            blogImage: feed.blog.image ?? '',
             createdAt: feed.pubDate,
             viewCount: 0,
-            blogName: feed.blogName,
-            thumbnail: feed.imageUrl,
+            blogName: feed.blog.name,
+            thumbnail: feed.thumbnail,
             path: feed.link,
             title: feed.title,
             tag: Array.isArray(feed.tag) ? feed.tag : [],
