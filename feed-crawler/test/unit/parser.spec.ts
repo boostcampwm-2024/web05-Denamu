@@ -12,8 +12,8 @@ import {
 } from '@test/config/constant/parser-fixtures';
 import axios, { HttpStatusCode } from 'axios';
 
+import logger from '@common/logger/logger';
 import { FeedMetrics } from '@common/metrics/feed-metrics';
-import { Notifier } from '@common/notification/notifier.interface';
 import { FeedParserManager } from '@common/parser/feed-parser-manager';
 import { Atom10Parser } from '@common/parser/formats/atom10-parser';
 import { Rss20Parser } from '@common/parser/formats/rss20-parser';
@@ -24,7 +24,6 @@ describe('Parser 모듈 테스트', () => {
   let rss20Parser: Rss20Parser;
   let atom10Parser: Atom10Parser;
   let feedParserManager: FeedParserManager;
-  let notifier: Notifier;
   let mockAxiosGet: jest.SpyInstance;
 
   const mockFeedMetrics = {
@@ -38,13 +37,11 @@ describe('Parser 모듈 테스트', () => {
 
   beforeEach(() => {
     parserUtil = new ParserUtil();
-    notifier = { start: jest.fn(), publish: jest.fn() };
-    rss20Parser = new Rss20Parser(parserUtil, notifier);
-    atom10Parser = new Atom10Parser(parserUtil, notifier);
+    rss20Parser = new Rss20Parser(parserUtil);
+    atom10Parser = new Atom10Parser(parserUtil);
     feedParserManager = new FeedParserManager(
       rss20Parser,
       atom10Parser,
-      notifier,
       mockFeedMetrics,
     );
 
@@ -340,13 +337,13 @@ describe('Parser 모듈 테스트', () => {
     });
 
     describe('convertToFeedDetails 실패 처리', () => {
-      it('일부 피드 변환이 실패하면 성공한 피드만 반환하고 알림을 발행해야 한다', async () => {
+      it('일부 피드 변환이 실패하면 성공한 피드만 반환하고 에러를 로깅해야 한다', async () => {
         // Given - 첫 번째 피드의 썸네일 조회를 실패시켜 변환 실패 유도
         jest
           .spyOn(parserUtil, 'getThumbnailUrl')
           .mockRejectedValueOnce(new Error('썸네일 GET 요청 실패'))
           .mockResolvedValue('https://example.com/image.jpg');
-        const publishSpy = jest.spyOn(notifier, 'publish');
+        const errorSpy = jest.spyOn(logger, 'error').mockImplementation();
 
         // When
         const result = await rss20Parser.parseAllFeeds(
@@ -356,13 +353,8 @@ describe('Parser 모듈 테스트', () => {
 
         // Then - 2개 중 1개만 성공
         expect(result).toHaveLength(1);
-        expect(publishSpy).toHaveBeenCalledWith(
-          expect.any(String),
-          expect.objectContaining({
-            error: expect.any(Error),
-            blogUrl: MOCK_RSS_OBJ.rssUrl,
-            errorSource: '[Full FeedCrawling]',
-          }),
+        expect(errorSpy).toHaveBeenCalledWith(
+          expect.stringContaining('[Full FeedCrawling]'),
         );
       });
     });
