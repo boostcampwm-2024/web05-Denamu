@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import Avvvatars from "avvvatars-react";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,6 +13,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -42,6 +45,81 @@ const TARGET_TYPE_BADGE_CLASSES: Record<ReportItem["targetType"], string> = {
     "border-amber-200 bg-amber-100 text-amber-700 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
   FEED: "border-emerald-200 bg-emerald-100 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400",
 };
+
+function TargetPerson({
+  name,
+  profileImage,
+  label,
+  href,
+}: {
+  name: string;
+  profileImage: string | null;
+  label: string;
+  href: string;
+}) {
+  return (
+    <a href={href} target="_blank" rel="noreferrer" className="flex items-center gap-2 w-fit hover:underline">
+      <Avatar className="h-7 w-7">
+        {profileImage && <AvatarImage src={profileImage} alt={name} />}
+        <AvatarFallback>
+          <Avvvatars value={name} style="shape" size={28} />
+        </AvatarFallback>
+      </Avatar>
+      <span className="text-sm">
+        <span className="text-gray-400">{label}</span> {name}
+      </span>
+    </a>
+  );
+}
+
+function ReportTargetDetail({ report }: { report: ReportItem }) {
+  const { target } = report;
+
+  return (
+    <div className="flex flex-col gap-2">
+      {target.feed && (
+        <a
+          href={`/${target.feed.id}`}
+          target="_blank"
+          rel="noreferrer"
+          className="flex items-center gap-3 w-fit hover:underline"
+        >
+          {target.feed.thumbnail ? (
+            <img src={target.feed.thumbnail} alt={target.feed.title} className="h-20 w-20 rounded object-cover" />
+          ) : (
+            <div className="h-20 w-20 rounded bg-muted" />
+          )}
+          <span className="text-lg font-semibold">{target.feed.title}</span>
+        </a>
+      )}
+      {target.rss && (
+        <TargetPerson
+          label="RSS"
+          name={target.rss.name}
+          profileImage={target.rss.image}
+          href={`/rss/${target.rss.id}`}
+        />
+      )}
+      {target.rssOwner && (
+        <TargetPerson
+          label="소유자"
+          name={target.rssOwner.userName}
+          profileImage={target.rssOwner.profileImage}
+          href={`/profile/${target.rssOwner.id}`}
+        />
+      )}
+      {target.user && (
+        <TargetPerson
+          label={report.targetType === "COMMENT" ? "작성자" : "유저"}
+          name={target.user.userName}
+          profileImage={target.user.profileImage}
+          href={`/profile/${target.user.id}`}
+        />
+      )}
+      {target.comment && <p className="text-sm text-gray-600 whitespace-pre-wrap">{target.comment}</p>}
+    </div>
+  );
+}
 
 const SUSPENSION_PRESET_OPTIONS = Object.entries(SUSPENSION_PRESET_LABELS) as [SuspensionPreset, string][];
 
@@ -130,9 +208,7 @@ export default function AdminReportTab() {
                   <span className="ml-auto text-xs text-gray-400">{new Date(report.createdAt).toLocaleString()}</span>
                 </div>
 
-                <p className="text-sm text-gray-700">
-                  대상: <span className="font-medium">{report.targetLabel ?? `(삭제된 대상 #${report.targetId})`}</span>
-                </p>
+                <ReportTargetDetail report={report} />
                 <p className="text-sm text-gray-500">신고자: {report.reporter?.userName ?? "(탈퇴한 사용자)"}</p>
                 {report.detail && <p className="text-sm text-gray-600 whitespace-pre-wrap">{report.detail}</p>}
 

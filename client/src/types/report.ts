@@ -18,15 +18,39 @@ export interface ReportReporter {
   userName: string;
 }
 
+export interface ReportTargetUser {
+  id: number;
+  userName: string;
+  profileImage: string | null;
+}
+
+export interface ReportTargetFeed {
+  id: number;
+  title: string;
+  thumbnail: string | null;
+}
+
+export interface ReportTargetRss {
+  id: number;
+  name: string;
+  image: string | null;
+}
+
+export interface ReportTargetDetail {
+  feed: ReportTargetFeed | null;
+  rss: ReportTargetRss | null;
+  rssOwner: ReportTargetUser | null;
+  user: ReportTargetUser | null;
+  comment: string | null;
+}
+
 export interface ReportItem {
   id: number;
   targetType: ReportTargetType;
   targetId: number;
-  targetLabel: string | null;
-  targetImage: string | null;
+  target: ReportTargetDetail;
   reason: ReportReason;
   detail: string | null;
   reporter: ReportReporter | null;
   createdAt: string;
-  reviewedAt: string | null;
 }
