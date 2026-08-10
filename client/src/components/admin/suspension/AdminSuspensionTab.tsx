@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import { Ban, Clock } from "lucide-react";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,19 +10,27 @@ import { Input } from "@/components/ui/input";
 
 import { useCustomToast } from "@/hooks/common/useCustomToast";
 import { useUserSearch } from "@/hooks/queries/useUserSearch";
-import { useCreateUserSuspension, useSuspendedUsers } from "@/hooks/queries/useUserSuspension";
+import {
+  useCreateUserSuspension,
+  useDeleteUserSuspension,
+  useSuspendedUsers,
+  useUpdateUserSuspension,
+} from "@/hooks/queries/useUserSuspension";
 
-import { UserSearchResult } from "@/types/search";
-import { CreateUserSuspensionPayload } from "@/types/userSuspension";
-import { Ban, Clock } from "lucide-react";
+import { toDatetimeLocal } from "@/utils/suspension";
 
 import { SuspensionFormDialog } from "./SuspensionFormDialog";
+import { SuspensionReleaseDialog } from "./SuspensionReleaseDialog";
+import { UserSearchResult } from "@/types/search";
+import { CreateUserSuspensionPayload, SuspendedUserItem, SuspensionFormPayload } from "@/types/userSuspension";
 
 const SEARCH_PAGE_SIZE = 5;
 
 export default function AdminSuspensionTab() {
   const [query, setQuery] = useState("");
   const [suspendTarget, setSuspendTarget] = useState<UserSearchResult | null>(null);
+  const [updateTarget, setUpdateTarget] = useState<SuspendedUserItem | null>(null);
+  const [releaseTarget, setReleaseTarget] = useState<SuspendedUserItem | null>(null);
   const { toast } = useCustomToast();
 
   const { data: searchData, isLoading: isSearching } = useUserSearch({
@@ -31,6 +41,8 @@ export default function AdminSuspensionTab() {
   const searchResults = searchData?.data.result ?? [];
 
   const { mutate: createUserSuspension, isPending: isSuspending } = useCreateUserSuspension();
+  const { mutate: updateUserSuspension, isPending: isUpdating } = useUpdateUserSuspension();
+  const { mutate: deleteUserSuspension, isPending: isDeleting } = useDeleteUserSuspension();
 
   const { data, isLoading, isError, hasNextPage, fetchNextPage, isFetchingNextPage } = useSuspendedUsers();
 
@@ -49,6 +61,56 @@ export default function AdminSuspensionTab() {
       }
     );
   };
+
+  const handleUpdateSubmit = (payload: SuspensionFormPayload) => {
+    if (!updateTarget) return;
+    updateUserSuspension(
+      { userId: updateTarget.user.id, ...payload },
+      {
+        onSuccess: () => {
+          toast({ description: "정지 기간을 수정했습니다." });
+          setUpdateTarget(null);
+        },
+        onError: () => toast({ description: "정지 정보 수정 중 오류가 발생했습니다.", variant: "destructive" }),
+      }
+    );
+  };
+
+  const handleReleaseConfirm = (invalidate: boolean) => {
+    if (!releaseTarget) return;
+    const userId = releaseTarget.user.id;
+
+    if (invalidate) {
+      deleteUserSuspension(userId, {
+        onSuccess: () => {
+          toast({ description: "정지 내역을 무효 처리했습니다." });
+          setReleaseTarget(null);
+        },
+        onError: () => toast({ description: "정지 내역 삭제 중 오류가 발생했습니다.", variant: "destructive" }),
+      });
+      return;
+    }
+
+    updateUserSuspension(
+      { userId, suspendedUntil: new Date().toISOString(), detail: "관리자에 의해 정지 해제 처리되었습니다." },
+      {
+        onSuccess: () => {
+          toast({ description: "정지를 해제했습니다." });
+          setReleaseTarget(null);
+        },
+        onError: () => toast({ description: "정지 해제 중 오류가 발생했습니다.", variant: "destructive" }),
+      }
+    );
+  };
+
+  const updateDialogProps = updateTarget
+    ? {
+        title: `${updateTarget.user.userName} 유저 정지 기간 수정`,
+        submitLabel: "수정 처리",
+        initialPreset: updateTarget.suspendedUntil ? null : ("PERMANENT" as const),
+        initialDateValue: updateTarget.suspendedUntil ? toDatetimeLocal(new Date(updateTarget.suspendedUntil)) : "",
+      }
+    : null;
 
   return (
     <section className="flex flex-col gap-4 min-h-[300px]">
@@ -117,8 +179,19 @@ export default function AdminSuspensionTab() {
                   </span>
                 </div>
 
-                <p className="text-sm text-gray-500">처리자: {suspension.admin ? suspension.admin.name : "알 수 없음"}</p>
+                <p className="text-sm text-gray-500">
+                  처리자: {suspension.admin ? suspension.admin.name : "알 수 없음"}
+                </p>
                 <p className="text-sm text-gray-600 whitespace-pre-wrap">{suspension.detail}</p>
+
+                <div className="flex justify-end gap-2">
+                  <Button size="sm" variant="outline" onClick={() => setUpdateTarget(suspension)}>
+                    기간 수정
+                  </Button>
+                  <Button size="sm" onClick={() => setReleaseTarget(suspension)}>
+                    해제
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}
@@ -134,12 +207,33 @@ export default function AdminSuspensionTab() {
       )}
 
       <SuspensionFormDialog
-        key={suspendTarget?.id ?? "none"}
+        key={`create-${suspendTarget?.id ?? "none"}`}
         open={!!suspendTarget}
         title={`${suspendTarget?.userName ?? ""} 유저 정지`}
         isPending={isSuspending}
         onOpenChange={(open) => !open && setSuspendTarget(null)}
         onSubmit={handleSuspend}
+      />
+
+      <SuspensionFormDialog
+        key={`update-${updateTarget?.id ?? "none"}`}
+        open={!!updateTarget}
+        title={updateDialogProps?.title ?? ""}
+        submitLabel={updateDialogProps?.submitLabel}
+        initialPreset={updateDialogProps?.initialPreset}
+        initialDateValue={updateDialogProps?.initialDateValue}
+        isPending={isUpdating}
+        onOpenChange={(open) => !open && setUpdateTarget(null)}
+        onSubmit={handleUpdateSubmit}
+      />
+
+      <SuspensionReleaseDialog
+        key={`release-${releaseTarget?.id ?? "none"}`}
+        open={!!releaseTarget}
+        title={`${releaseTarget?.user.userName ?? ""} 유저 정지 해제`}
+        isPending={isUpdating || isDeleting}
+        onOpenChange={(open) => !open && setReleaseTarget(null)}
+        onConfirm={handleReleaseConfirm}
       />
     </section>
   );
