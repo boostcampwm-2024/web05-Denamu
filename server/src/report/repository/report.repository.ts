@@ -3,7 +3,6 @@ import { Injectable } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 
 import { GetReportsRequestDto } from '@report/dto/request/getReports.dto';
-
 import { Report } from '@report/entity/report.entity';
 
 @Injectable()
@@ -14,12 +13,12 @@ export class ReportRepository extends Repository<Report> {
 
   async getReports(queryDto: GetReportsRequestDto) {
     const query = this.createQueryBuilder('report')
-      .innerJoin('report.reporter', 'reporter')
+      .leftJoin('report.reporter', 'reporter')
       .leftJoin('report.reportedUser', 'reportedUser')
       .leftJoin('report.reportedRss', 'reportedRss')
       .leftJoin('report.reportedComment', 'reportedComment')
       .leftJoin('report.reportedFeed', 'reportedFeed')
-      .select(['report', 'reporter.id', 'reporter.userName'])
+      .select(['report', 'reporter.userName'])
       .addSelect(['reportedUser.id', 'reportedUser.userName'])
       .addSelect(['reportedRss.id', 'reportedRss.name'])
       .addSelect(['reportedComment.id', 'reportedComment.comment'])

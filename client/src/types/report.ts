@@ -15,7 +15,6 @@ export interface ApproveReportPayload {
 }
 
 export interface ReportReporter {
-  id: number;
   userName: string;
 }
 
@@ -24,9 +23,10 @@ export interface ReportItem {
   targetType: ReportTargetType;
   targetId: number;
   targetLabel: string | null;
+  targetImage: string | null;
   reason: ReportReason;
   detail: string | null;
-  reporter: ReportReporter;
+  reporter: ReportReporter | null;
   createdAt: string;
   reviewedAt: string | null;
 }

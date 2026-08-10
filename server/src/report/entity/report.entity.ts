@@ -9,11 +9,14 @@ import {
   Unique,
 } from 'typeorm';
 
-import { ReportReason, ReportTargetType } from '@report/constant/report.constant';
-
 import { Comment } from '@comment/entity/comment.entity';
 
 import { Feed } from '@feed/entity/feed.entity';
+
+import {
+  ReportReason,
+  ReportTargetType,
+} from '@report/constant/report.constant';
 
 import { RssAccept } from '@rss/entity/rss.entity';
 
@@ -48,15 +51,15 @@ export class Report extends BaseEntity {
   reviewedAt: Date | null;
 
   @ManyToOne(() => User, (user) => user.id, {
-    nullable: false,
+    nullable: true,
     onUpdate: 'CASCADE',
-    onDelete: 'CASCADE',
+    onDelete: 'SET NULL',
   })
   @JoinColumn({
     name: 'reporter_id',
     foreignKeyConstraintName: 'FK_report_reporter_id',
   })
-  reporter: User;
+  reporter: User | null;
 
   @ManyToOne(() => User, (user) => user.id, {
     nullable: true,

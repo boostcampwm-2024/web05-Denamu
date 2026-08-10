@@ -46,10 +46,11 @@ export class ReportResult {
   detail: string | null;
 
   @ApiProperty({
-    example: { id: 1, userName: '테스트 계정' },
-    description: '신고자 정보',
+    example: { userName: '테스트 계정' },
+    description: '신고자 정보 (탈퇴한 경우 null)',
+    nullable: true,
   })
-  reporter: { id: number; userName: string };
+  reporter: { userName: string } | null;
 
   @ApiProperty({
     example: '2025-08-16T12:00:00.000Z',
@@ -76,10 +77,9 @@ export class ReportResult {
       targetLabel: resolveTargetLabel(report),
       reason: report.reason,
       detail: report.detail,
-      reporter: {
-        id: report.reporter.id,
-        userName: report.reporter.userName,
-      },
+      reporter: report.reporter
+        ? { userName: report.reporter.userName }
+        : null,
       createdAt: report.createdAt,
       reviewedAt: report.reviewedAt,
     });
