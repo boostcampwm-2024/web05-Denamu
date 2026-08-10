@@ -7,10 +7,10 @@ export class SuspendedUserResult {
   id: number;
 
   @ApiProperty({
-    example: { userName: '테스트 계정', email: 'test@denamu.dev' },
+    example: { id: 1, userName: '테스트 계정', email: 'test@denamu.dev' },
     description: '정지된 유저 정보',
   })
-  user: { userName: string; email: string };
+  user: { id: number; userName: string; email: string };
 
   @ApiProperty({
     example: { name: '관리자1' },
@@ -43,6 +43,7 @@ export class SuspendedUserResult {
     return new SuspendedUserResult({
       id: suspension.id,
       user: {
+        id: suspension.user.id,
         userName: suspension.user.userName,
         email: suspension.user.email,
       },

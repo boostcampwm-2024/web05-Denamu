@@ -4,6 +4,8 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -16,8 +18,11 @@ import { ApiResponse } from '@common/response/common.response';
 
 import { ApiCreateUserSuspension } from '@suspension/api-docs/createUserSuspension.api-docs';
 import { ApiGetSuspendedUsers } from '@suspension/api-docs/getSuspendedUsers.api-docs';
+import { ApiUpdateUserSuspension } from '@suspension/api-docs/updateUserSuspension.api-docs';
 import { CreateUserSuspensionRequestDto } from '@suspension/dto/request/createUserSuspension.dto';
 import { GetSuspendedUsersRequestDto } from '@suspension/dto/request/getSuspendedUsers.dto';
+import { UpdateUserSuspensionRequestDto } from '@suspension/dto/request/updateUserSuspension.dto';
+import { UserSuspensionParamRequestDto } from '@suspension/dto/request/userSuspensionParam.dto';
 import { SuspensionService } from '@suspension/service/suspension.service';
 
 @ApiTags('Admin')
@@ -46,6 +51,24 @@ export class AdminSuspensionController {
     await this.suspensionService.createUserSuspension(email, createDto);
     return ApiResponse.responseWithNoContent(
       '유저 정지 처리가 완료되었습니다.',
+    );
+  }
+
+  @ApiUpdateUserSuspension()
+  @Patch(':userId')
+  @HttpCode(HttpStatus.OK)
+  async updateUserSuspension(
+    @Param() paramDto: UserSuspensionParamRequestDto,
+    @Body() updateDto: UpdateUserSuspensionRequestDto,
+    @CurrentAdmin() email: string,
+  ) {
+    await this.suspensionService.updateUserSuspension(
+      email,
+      paramDto.userId,
+      updateDto,
+    );
+    return ApiResponse.responseWithNoContent(
+      '유저 정지 정보 수정이 완료되었습니다.',
     );
   }
 }

@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 import { EntityManager } from 'typeorm';
 
@@ -6,6 +10,7 @@ import { AdminRepository } from '@admin/repository/admin.repository';
 
 import { CreateUserSuspensionRequestDto } from '@suspension/dto/request/createUserSuspension.dto';
 import { GetSuspendedUsersRequestDto } from '@suspension/dto/request/getSuspendedUsers.dto';
+import { UpdateUserSuspensionRequestDto } from '@suspension/dto/request/updateUserSuspension.dto';
 import { GetSuspendedUsersResponseDto } from '@suspension/dto/response/getSuspendedUsers.dto';
 import { UserSuspension } from '@suspension/entity/userSuspension.entity';
 import { UserSuspensionRepository } from '@suspension/repository/userSuspension.repository';
@@ -66,6 +71,39 @@ export class SuspensionService {
       detail: dto.detail,
       suspendedUntil,
     });
+  }
+
+  async updateUserSuspension(
+    adminEmail: string,
+    userId: number,
+    dto: UpdateUserSuspensionRequestDto,
+  ) {
+    await this.userService.getUser(userId);
+
+    const suspendedUntil = dto.suspendedUntil
+      ? new Date(dto.suspendedUntil)
+      : null;
+
+    const admin = await this.adminRepository.findOneBy({ email: adminEmail });
+
+    const affected = await this.userSuspensionRepository.updateActiveSuspension(
+      userId,
+      {
+        suspendedUntil,
+        detail: dto.detail,
+        adminId: admin?.id ?? null,
+      },
+    );
+
+    if (!affected) {
+      throw new NotFoundException('활성 정지 내역이 없습니다.');
+    }
+
+    const isActive =
+      suspendedUntil === null || suspendedUntil.getTime() > Date.now();
+    if (isActive) {
+      await this.userService.invalidateUserTokens(userId);
+    }
   }
 
   async getSuspendedUsers(queryDto: GetSuspendedUsersRequestDto) {

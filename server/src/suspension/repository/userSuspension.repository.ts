@@ -48,4 +48,29 @@ export class UserSuspensionRepository extends Repository<UserSuspension> {
       order: { id: 'DESC' },
     });
   }
+
+  async updateActiveSuspension(
+    userId: number,
+    data: {
+      suspendedUntil: Date | null;
+      detail: string;
+      adminId: number | null;
+    },
+  ) {
+    const now = new Date();
+
+    const result = await this.update(
+      [
+        { user: { id: userId }, suspendedUntil: IsNull() },
+        { user: { id: userId }, suspendedUntil: MoreThan(now) },
+      ],
+      {
+        suspendedUntil: data.suspendedUntil,
+        detail: data.detail,
+        admin: data.adminId ? { id: data.adminId } : null,
+      },
+    );
+
+    return result.affected ?? 0;
+  }
 }
