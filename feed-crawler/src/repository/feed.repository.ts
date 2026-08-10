@@ -8,6 +8,10 @@ import { DbMetrics } from '@common/metrics/db-metrics';
 import { RedisMetrics } from '@common/metrics/redis-metrics';
 import { RedisConnection } from '@common/redis/redis-access';
 import { redisConstant } from '@common/redis/redis.constant';
+import {
+  FeedAiQueueMessage,
+  FeedRecentRedisRecord,
+} from '@common/redis/redis.type';
 
 @injectable()
 export class FeedRepository {
@@ -179,7 +183,7 @@ export class FeedRepository {
     try {
       await this.redisConnection.executePipeline((pipeline) => {
         for (const feed of feedLists) {
-          pipeline.hset(`feed:recent:${feed.id}`, {
+          const record: FeedRecentRedisRecord = {
             id: feed.id,
             blogPlatform: feed.blog.platform,
             blogImage: feed.blog.image ?? '',
@@ -192,7 +196,8 @@ export class FeedRepository {
             tag: Array.isArray(feed.tag) ? feed.tag : [],
             likes: 0,
             comments: 0,
-          });
+          };
+          pipeline.hset(`feed:recent:${feed.id}`, record);
           pipeline.sadd(
             redisConstant.FEED_RECENT_INDEX_KEY,
             `feed:recent:${feed.id}`,
@@ -266,14 +271,12 @@ export class FeedRepository {
     try {
       await this.redisConnection.executePipeline((pipeline) => {
         for (const feed of feedLists) {
-          pipeline.lpush(
-            redisConstant.FEED_AI_QUEUE,
-            JSON.stringify({
-              id: feed.id,
-              content: feed.content,
-              deathCount: feed.deathCount,
-            }),
-          );
+          const message: FeedAiQueueMessage = {
+            id: feed.id,
+            content: feed.content,
+            deathCount: feed.deathCount,
+          };
+          pipeline.lpush(redisConstant.FEED_AI_QUEUE, JSON.stringify(message));
         }
       });
       this.redisMetrics.success.inc({ operation: 'enqueue_ai' });
