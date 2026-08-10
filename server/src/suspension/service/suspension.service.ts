@@ -9,7 +9,7 @@ import { UserSuspension } from '@suspension/entity/userSuspension.entity';
 import { UserSuspensionRepository } from '@suspension/repository/userSuspension.repository';
 
 interface SuspendParams {
-  adminId: number;
+  adminId: number | null;
   detail: string;
   suspendedUntil: Date | null;
 }
@@ -31,7 +31,7 @@ export class SuspensionService {
   ) {
     await manager.save(UserSuspension, {
       user: { id: userId },
-      admin: { id: adminId },
+      admin: adminId ? { id: adminId } : null,
       detail,
       suspendedUntil,
     });
@@ -48,7 +48,7 @@ export class SuspensionService {
   ) {
     await manager.save(RssSuspension, {
       rss: { id: rssId },
-      admin: { id: adminId },
+      admin: adminId ? { id: adminId } : null,
       detail,
       suspendedUntil,
     });

@@ -234,14 +234,14 @@ export class ReportService {
       if (targetUserId) {
         await this.suspensionService.suspendUser(manager, {
           userId: targetUserId,
-          adminId: admin.id,
+          adminId: admin?.id ?? null,
           detail: approveDto.detail,
           suspendedUntil,
         });
       } else if (targetRssId) {
         await this.suspensionService.suspendRss(manager, {
           rssId: targetRssId,
-          adminId: admin.id,
+          adminId: admin?.id ?? null,
           detail: approveDto.detail,
           suspendedUntil,
         });
