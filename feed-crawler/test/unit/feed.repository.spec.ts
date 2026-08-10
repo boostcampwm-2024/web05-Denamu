@@ -22,25 +22,27 @@ describe('FeedRepository', () => {
 
   const createFeed = (id: number): FeedDetail => ({
     id,
-    blogId: id,
-    blogName: `테스트 블로그 ${id}`,
-    blogPlatform: 'tistory',
-    blogImage: null,
+    blog: {
+      id,
+      name: `테스트 블로그 ${id}`,
+      platform: 'tistory',
+      image: null,
+    },
     pubDate: `2024-01-01 12:0${id}:00`,
     title: `테스트 피드 ${id}`,
     link: `https://test${id}.tistory.com/${id}`,
-    imageUrl: `https://test${id}.tistory.com/image${id}.jpg`,
+    thumbnail: `https://test${id}.tistory.com/image${id}.jpg`,
     content: `테스트 내용 ${id}`,
     summary: 'AI 요약 처리 중...',
     deathCount: 0,
   });
 
   const toValueRow = (feed: FeedDetail) => [
-    feed.blogId,
+    feed.blog.id,
     feed.pubDate,
     feed.title,
     feed.link,
-    feed.imageUrl,
+    feed.thumbnail,
     feed.summary,
   ];
 

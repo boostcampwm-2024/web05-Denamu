@@ -91,7 +91,7 @@ export abstract class BaseFeedParser {
   ): Promise<FeedDetail[]> {
     const results = await Promise.allSettled(
       rawFeeds.map(async (feed) => {
-        const imageUrl = await this.parserUtil.getThumbnailUrl(feed.link);
+        const thumbnail = await this.parserUtil.getThumbnailUrl(feed.link);
         const date = new Date(feed.pubDate);
         const formattedDate = date.toISOString().slice(0, 19).replace('T', ' ');
 
@@ -104,14 +104,16 @@ export abstract class BaseFeedParser {
 
         return {
           id: null,
-          blogId: rssObj.id,
-          blogName: rssObj.blogName,
-          blogPlatform: rssObj.blogPlatform,
-          blogImage: rssObj.blogImage,
+          blog: {
+            id: rssObj.id,
+            name: rssObj.blogName,
+            platform: rssObj.blogPlatform,
+            image: rssObj.blogImage,
+          },
           pubDate: formattedDate,
           title: feed.title,
           link: decodeURIComponent(feed.link),
-          imageUrl: imageUrl,
+          thumbnail: thumbnail,
           content: content,
           summary: FEED_AI_SUMMARY_IN_PROGRESS_MESSAGE,
           deathCount: 0,

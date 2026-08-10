@@ -116,12 +116,14 @@ describe('Parser 모듈 테스트', () => {
           );
 
           expect(result.feeds[0]).toMatchObject({
-            blogId: MOCK_RSS_OBJ.id,
-            blogName: MOCK_RSS_OBJ.blogName,
-            blogPlatform: MOCK_RSS_OBJ.blogPlatform,
+            blog: {
+              id: MOCK_RSS_OBJ.id,
+              name: MOCK_RSS_OBJ.blogName,
+              platform: MOCK_RSS_OBJ.blogPlatform,
+            },
             title: '첫 번째 글제목',
             link: expect.stringContaining('https://rssfeed.com/post1'),
-            imageUrl: expect.any(String),
+            thumbnail: expect.any(String),
             content: expect.any(String),
             summary: expect.any(String),
             deathCount: 0,
@@ -155,12 +157,14 @@ describe('Parser 모듈 테스트', () => {
           );
 
           expect(result.feeds[0]).toMatchObject({
-            blogId: MOCK_RSS_OBJ.id,
-            blogName: MOCK_RSS_OBJ.blogName,
-            blogPlatform: MOCK_RSS_OBJ.blogPlatform,
+            blog: {
+              id: MOCK_RSS_OBJ.id,
+              name: MOCK_RSS_OBJ.blogName,
+              platform: MOCK_RSS_OBJ.blogPlatform,
+            },
             title: 'Atom 첫 번째 글',
             link: expect.stringContaining('https://atomfeed.com/entry1'),
-            imageUrl: expect.any(String),
+            thumbnail: expect.any(String),
             content: expect.any(String),
             summary: expect.any(String),
             deathCount: 0,
@@ -325,7 +329,9 @@ describe('Parser 모듈 테스트', () => {
         // Then - parseFeed와 달리 시간 필터가 없으므로 모든 피드 반환
         expect(result).toHaveLength(2);
         expect(result[0]).toMatchObject({
-          blogId: MOCK_RSS_OBJ.id,
+          blog: {
+            id: MOCK_RSS_OBJ.id,
+          },
           title: '첫 번째 글제목',
           summary: expect.any(String),
           deathCount: 0,
