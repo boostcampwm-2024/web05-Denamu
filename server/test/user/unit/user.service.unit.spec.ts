@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -23,6 +24,8 @@ import { RssAccept } from '@rss/entity/rss.entity';
 import { RssAcceptRepository } from '@rss/repository/rss.repository';
 
 import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
+
+import { UserSuspensionRepository } from '@suspension/repository/userSuspension.repository';
 
 import { PROFILE_IMAGE_DAILY_LIMIT } from '@user/constant/user.constants';
 import { RegisterUserRequestDto } from '@user/dto/request/registerUser.dto';
@@ -80,6 +83,9 @@ describe(`${UserService.name} Unit Test`, () => {
   >;
   let manager: { remove: jest.Mock; delete: jest.Mock };
   let dataSource: jest.Mocked<Pick<DataSource, 'transaction'>>;
+  let userSuspensionRepository: jest.Mocked<
+    Pick<UserSuspensionRepository, 'hasActiveSuspension'>
+  >;
 
   const createResponse = () => ({ cookie: jest.fn() }) as unknown as Response;
 
@@ -128,6 +134,9 @@ describe(`${UserService.name} Unit Test`, () => {
     dataSource = {
       transaction: jest.fn((cb: any) => cb(manager)),
     } as any;
+    userSuspensionRepository = {
+      hasActiveSuspension: jest.fn().mockResolvedValue(false),
+    };
 
     userService = new UserService(
       userRepository as unknown as UserRepository,
@@ -140,6 +149,7 @@ describe(`${UserService.name} Unit Test`, () => {
       feedRepository as unknown as FeedRepository,
       subscriptionRepository as unknown as SubscriptionRepository,
       dataSource as unknown as DataSource,
+      userSuspensionRepository as unknown as UserSuspensionRepository,
     );
   });
 
@@ -562,6 +572,18 @@ describe(`${UserService.name} Unit Test`, () => {
       await expect(
         userService.loginUser(dto, createResponse()),
       ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('정지된 계정이면 ForbiddenException을 던진다.', async () => {
+      // given
+      const user = await UserFixture.createUserCryptFixture();
+      userRepository.findOne.mockResolvedValue(user);
+      userSuspensionRepository.hasActiveSuspension.mockResolvedValue(true);
+
+      // when & then
+      await expect(
+        userService.loginUser(dto, createResponse()),
+      ).rejects.toThrow(ForbiddenException);
     });
 
     it('로그인에 성공하면 refresh 쿠키를 설정하고 access token을 반환한다.', async () => {

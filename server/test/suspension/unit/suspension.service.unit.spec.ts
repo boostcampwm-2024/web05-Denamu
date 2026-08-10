@@ -10,14 +10,19 @@ import { UserService } from '@user/service/user.service';
 describe(`${SuspensionService.name} Unit Test`, () => {
   let suspensionService: SuspensionService;
   let userSuspensionRepository: { manager: { save: jest.Mock } };
-  let userService: jest.Mocked<Pick<UserService, 'getUser'>>;
+  let userService: jest.Mocked<
+    Pick<UserService, 'getUser' | 'invalidateUserTokens'>
+  >;
   let adminRepository: jest.Mocked<Pick<AdminRepository, 'findOneBy'>>;
 
   const dto = { userId: 2, detail: '반복적인 스팸으로 인한 정지' };
 
   beforeEach(() => {
     userSuspensionRepository = { manager: { save: jest.fn() } };
-    userService = { getUser: jest.fn() };
+    userService = {
+      getUser: jest.fn(),
+      invalidateUserTokens: jest.fn(),
+    };
     adminRepository = { findOneBy: jest.fn() };
 
     suspensionService = new SuspensionService(
