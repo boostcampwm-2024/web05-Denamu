@@ -105,8 +105,36 @@ describe(`POST ${URL} E2E Test`, () => {
     // Http then
     const { data } = response.body;
     expect(response.status).toBe(HttpStatus.FORBIDDEN);
-    expect(data).toBeUndefined();
+    expect(data).toEqual({ detail: '정지 처리', suspendedUntil: null });
     expect(response.headers['set-cookie']).toBeUndefined();
+  });
+
+  it('[403] 정지 이력이 여러 건이면 가장 최근 정지 정보를 반환한다.', async () => {
+    // given
+    await userSuspensionRepository.save({
+      user: { id: user.id },
+      admin: null,
+      detail: '이전 정지',
+      suspendedUntil: null,
+    });
+    await userSuspensionRepository.save({
+      user: { id: user.id },
+      admin: null,
+      detail: '최신 정지',
+      suspendedUntil: new Date(Date.now() + 60 * 60 * 1000),
+    });
+    const requestDto = new LoginUserRequestDto({
+      email: user.email,
+      password: USER_DEFAULT_PASSWORD,
+    });
+
+    // Http when
+    const response = await agent.post(URL).send(requestDto);
+
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.FORBIDDEN);
+    expect(data).toEqual({ detail: '최신 정지', suspendedUntil: expect.any(String) });
   });
 
   it('[200] 정지 기간이 지난 유저는 로그인에 성공한다.', async () => {

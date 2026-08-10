@@ -25,6 +25,7 @@ import { RssAcceptRepository } from '@rss/repository/rss.repository';
 
 import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
 
+import { UserSuspension } from '@suspension/entity/userSuspension.entity';
 import { UserSuspensionRepository } from '@suspension/repository/userSuspension.repository';
 
 import { PROFILE_IMAGE_DAILY_LIMIT } from '@user/constant/user.constants';
@@ -84,7 +85,7 @@ describe(`${UserService.name} Unit Test`, () => {
   let manager: { remove: jest.Mock; delete: jest.Mock };
   let dataSource: jest.Mocked<Pick<DataSource, 'transaction'>>;
   let userSuspensionRepository: jest.Mocked<
-    Pick<UserSuspensionRepository, 'hasActiveSuspension'>
+    Pick<UserSuspensionRepository, 'findActiveSuspension'>
   >;
 
   const createResponse = () => ({ cookie: jest.fn() }) as unknown as Response;
@@ -135,7 +136,7 @@ describe(`${UserService.name} Unit Test`, () => {
       transaction: jest.fn((cb: any) => cb(manager)),
     } as any;
     userSuspensionRepository = {
-      hasActiveSuspension: jest.fn().mockResolvedValue(false),
+      findActiveSuspension: jest.fn().mockResolvedValue(null),
     };
 
     userService = new UserService(
@@ -578,7 +579,10 @@ describe(`${UserService.name} Unit Test`, () => {
       // given
       const user = await UserFixture.createUserCryptFixture();
       userRepository.findOne.mockResolvedValue(user);
-      userSuspensionRepository.hasActiveSuspension.mockResolvedValue(true);
+      userSuspensionRepository.findActiveSuspension.mockResolvedValue({
+        detail: '정지 처리',
+        suspendedUntil: null,
+      } as UserSuspension);
 
       // when & then
       await expect(
