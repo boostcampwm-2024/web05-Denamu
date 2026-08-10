@@ -71,6 +71,7 @@ CREATE TABLE `rss_accept` (
   `platform` varchar(255) NOT NULL DEFAULT 'etc',
   `user_id` int DEFAULT NULL,
   `image` text,
+  `suspension_count` int NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
   UNIQUE KEY `UQ_rss_accept_name` (`name`),
   UNIQUE KEY `UQ_rss_accept_rss_url` (`rss_url`),
