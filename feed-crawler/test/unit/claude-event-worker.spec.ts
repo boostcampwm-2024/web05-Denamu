@@ -4,7 +4,6 @@ import { ClaudeResponse, FeedAIQueueItem } from '@common/ai/ai.type';
 import { PermanentError, RetryableError } from '@common/errors';
 import { AiMetrics } from '@common/metrics/ai-metrics';
 import { RedisMetrics } from '@common/metrics/redis-metrics';
-import { Notifier } from '@common/notification/notifier.interface';
 import { RedisConnection } from '@common/redis/redis-access';
 import { redisConstant } from '@common/redis/redis.constant';
 
@@ -21,7 +20,6 @@ describe('ClaudeEventWorker', () => {
   let mockFeedRepository: jest.Mocked<FeedRepository>;
   let mockRedisConnection: jest.Mocked<RedisConnection>;
   let mockAnthropicClient: any;
-  let mockNotifier: jest.Mocked<Notifier>;
   let insertTagsMock: jest.Mock;
   let updateSummaryMock: jest.Mock;
   let updateNullSummaryMock: jest.Mock;
@@ -86,11 +84,6 @@ describe('ClaudeEventWorker', () => {
       },
     };
 
-    mockNotifier = {
-      start: jest.fn(),
-      publish: jest.fn(),
-    };
-
     const mockAiMetrics = {
       total: { inc: jest.fn() },
       success: { inc: jest.fn() },
@@ -111,7 +104,6 @@ describe('ClaudeEventWorker', () => {
       mockTagRepository,
       mockFeedRepository,
       mockRedisConnection,
-      mockNotifier,
       mockAiMetrics,
       mockRedisMetrics,
     );

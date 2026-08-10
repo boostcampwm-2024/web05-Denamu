@@ -1,17 +1,12 @@
 import { inject, injectable } from 'tsyringe';
 
-import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
-import { Notifier } from '@common/notification/notifier.interface';
 import { BaseFeedParser, RawFeed } from '@common/parser/base-feed-parser';
 import { ParserUtil } from '@common/parser/utils/parser-util';
 
 @injectable()
 export class Rss20Parser extends BaseFeedParser {
-  constructor(
-    @inject(ParserUtil) parserUtil: ParserUtil,
-    @inject(DEPENDENCY_SYMBOLS.Notifier) notifier: Notifier,
-  ) {
-    super(parserUtil, notifier);
+  constructor(@inject(ParserUtil) parserUtil: ParserUtil) {
+    super(parserUtil);
   }
   canParse(xmlData: string): boolean {
     try {

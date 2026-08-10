@@ -10,7 +10,6 @@ import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
 import { Lifecycle } from '@common/lifecycle/lifecycle.interface';
 import logger from '@common/logger/logger';
 import { FeedMetrics } from '@common/metrics/feed-metrics';
-import { Notifier } from '@common/notification/notifier.interface';
 import { RedisConnection } from '@common/redis/redis-access';
 
 import { AiSummaryRetryEventWorker } from '@event_worker/workers/ai-summary-retry-event-worker';
@@ -31,7 +30,6 @@ function initializeDependencies() {
     claudeEventWorker: container.resolve(ClaudeEventWorker),
     fullFeedCrawlEventWorker: container.resolve(FullFeedCrawlEventWorker),
     aiSummaryRetryEventWorker: container.resolve(AiSummaryRetryEventWorker),
-    notifier: container.resolve<Notifier>(DEPENDENCY_SYMBOLS.Notifier),
     metrics: container.resolve(FeedMetrics),
   };
 }
@@ -81,7 +79,6 @@ async function startScheduler() {
 
     const components: Lifecycle[] = [
       dependencies.metrics,
-      dependencies.notifier,
       dependencies.dbConnection,
       dependencies.redisConnection,
       dependencies.rabbitMQManager,

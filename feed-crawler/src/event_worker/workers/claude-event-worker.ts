@@ -4,13 +4,10 @@ import Anthropic from '@anthropic-ai/sdk';
 
 import { buildPromptContent } from '@common/ai/ai.constant';
 import { ClaudeResponse, FeedAIQueueItem } from '@common/ai/ai.type';
-import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
 import { RetryableError } from '@common/errors';
 import logger from '@common/logger/logger';
 import { AiMetrics } from '@common/metrics/ai-metrics';
 import { RedisMetrics } from '@common/metrics/redis-metrics';
-import { NOTIFICATION_EVENT } from '@common/notification/notification-event.constant';
-import { Notifier } from '@common/notification/notifier.interface';
 import { RedisConnection } from '@common/redis/redis-access';
 import { redisConstant } from '@common/redis/redis.constant';
 
@@ -34,8 +31,6 @@ export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
     private readonly feedRepository: FeedRepository,
     @inject(RedisConnection)
     redisConnection: RedisConnection,
-    @inject(DEPENDENCY_SYMBOLS.Notifier)
-    private readonly notifier: Notifier,
     @inject(AiMetrics)
     private readonly aiMetrics: AiMetrics,
     @inject(RedisMetrics)
@@ -69,11 +64,6 @@ export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
       await this.releaseRetryLock(feed.id);
     } catch (error) {
       await this.handleFailure(feed, error as Error);
-      this.notifier.publish(NOTIFICATION_EVENT.AI_SUMMARY, {
-        error: error as Error,
-        feedId: feed.id,
-        errorSource: '[AI 요약 요청]',
-      });
     }
   }
 

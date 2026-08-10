@@ -1,6 +1,8 @@
 import * as winston from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
 
+import { DiscordErrorTransport } from '@common/logger/discord-error-transport';
+
 const logFormat = winston.format.printf(
   ({ level, message, timestamp }) =>
     `${timestamp as string} [${level}]: ${message as string}`,
@@ -44,6 +46,7 @@ function getLogTransport() {
           maxFiles: 30,
           zippedArchive: true,
         }),
+        new DiscordErrorTransport(),
       ],
     );
   }

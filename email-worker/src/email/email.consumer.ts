@@ -2,7 +2,6 @@ import { inject, injectable } from 'tsyringe';
 
 import { Options } from 'amqplib/properties';
 
-import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
 import { Lifecycle } from '@common/lifecycle/lifecycle.interface';
 import logger from '@common/logger/logger';
 
@@ -10,9 +9,6 @@ import { EmailPayloadConstant } from '@email/constant';
 import { classifyEmailError } from '@email/email.error';
 import { EmailService } from '@email/email.service';
 import { EmailPayload, NodeMailerError } from '@email/types';
-
-import { NOTIFICATION_EVENT } from '@notification/notification-event.constant';
-import { Notifier } from '@notification/notifier.interface';
 
 import { RETRY_CONFIG, RMQ_QUEUES } from '@rabbitmq/rabbitmq.constant';
 import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
@@ -29,8 +25,6 @@ export class EmailConsumer implements Lifecycle {
     private readonly rabbitmqService: RabbitMQService,
     @inject(EmailService)
     private readonly emailService: EmailService,
-    @inject(DEPENDENCY_SYMBOLS.Notifier)
-    private readonly notifier: Notifier,
   ) {}
 
   async start() {
@@ -221,11 +215,6 @@ export class EmailConsumer implements Lifecycle {
     }
 
     if (classification.failureType === 'UNKNOWN_ERROR') {
-      logger.error(
-        `[EmailConsumer] 알 수 없는 에러로 DLQ 메시지 발행
-      오류 메시지: ${error.message}
-      스택 트레이스: ${error.stack}`,
-      );
       await this.sendToDLQ(
         error,
         stringifiedMessage,
@@ -293,6 +282,9 @@ export class EmailConsumer implements Lifecycle {
     logger.info(
       `${error.message}에러에 대한 메시지 발행 소요 시간: ${Date.now() - startTime}`,
     );
-    this.notifier.publish(NOTIFICATION_EVENT.EMAIL_DLQ, { error, dlqMessage });
+    logger.error(
+      `[EmailConsumer] DLQ 발행 (${failureType}) - ${dlqMessage} - 오류 메시지: ${error.message}
+      스택 트레이스: ${error.stack}`,
+    );
   }
 }
