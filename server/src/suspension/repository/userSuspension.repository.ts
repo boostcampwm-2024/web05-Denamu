@@ -73,4 +73,15 @@ export class UserSuspensionRepository extends Repository<UserSuspension> {
 
     return result.affected ?? 0;
   }
+
+  async deleteActiveSuspensions(userId: number) {
+    const now = new Date();
+
+    const result = await this.delete([
+      { user: { id: userId }, suspendedUntil: IsNull() },
+      { user: { id: userId }, suspendedUntil: MoreThan(now) },
+    ]);
+
+    return result.affected ?? 0;
+  }
 }

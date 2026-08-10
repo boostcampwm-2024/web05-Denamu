@@ -12,6 +12,7 @@ describe(`${SuspensionService.name} Unit Test`, () => {
   let userSuspensionRepository: {
     manager: { save: jest.Mock };
     updateActiveSuspension: jest.Mock;
+    deleteActiveSuspensions: jest.Mock;
   };
   let userService: jest.Mocked<
     Pick<UserService, 'getUser' | 'invalidateUserTokens'>
@@ -24,6 +25,7 @@ describe(`${SuspensionService.name} Unit Test`, () => {
     userSuspensionRepository = {
       manager: { save: jest.fn() },
       updateActiveSuspension: jest.fn(),
+      deleteActiveSuspensions: jest.fn(),
     };
     userService = {
       getUser: jest.fn(),
@@ -190,6 +192,49 @@ describe(`${SuspensionService.name} Unit Test`, () => {
 
       // then
       expect(userService.invalidateUserTokens).toHaveBeenCalledWith(2);
+    });
+  });
+
+  describe('deleteUserSuspension', () => {
+    it('존재하지 않는 유저면 NotFoundException을 던진다.', async () => {
+      // given
+      userService.getUser.mockRejectedValue(
+        new NotFoundException('존재하지 않는 유저입니다.'),
+      );
+
+      // when & then
+      await expect(
+        suspensionService.deleteUserSuspension(2),
+      ).rejects.toThrow(NotFoundException);
+      expect(
+        userSuspensionRepository.deleteActiveSuspensions,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('활성 정지 내역이 없으면 NotFoundException을 던진다.', async () => {
+      // given
+      userService.getUser.mockResolvedValue({ id: 2 } as any);
+      userSuspensionRepository.deleteActiveSuspensions.mockResolvedValue(0);
+
+      // when & then
+      await expect(
+        suspensionService.deleteUserSuspension(2),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('활성 정지 내역이 있으면 삭제하고 토큰을 무효화하지 않는다.', async () => {
+      // given
+      userService.getUser.mockResolvedValue({ id: 2 } as any);
+      userSuspensionRepository.deleteActiveSuspensions.mockResolvedValue(1);
+
+      // when
+      await suspensionService.deleteUserSuspension(2);
+
+      // then
+      expect(
+        userSuspensionRepository.deleteActiveSuspensions,
+      ).toHaveBeenCalledWith(2);
+      expect(userService.invalidateUserTokens).not.toHaveBeenCalled();
     });
   });
 });

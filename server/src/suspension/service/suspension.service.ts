@@ -106,6 +106,17 @@ export class SuspensionService {
     }
   }
 
+  async deleteUserSuspension(userId: number) {
+    await this.userService.getUser(userId);
+
+    const affected =
+      await this.userSuspensionRepository.deleteActiveSuspensions(userId);
+
+    if (!affected) {
+      throw new NotFoundException('활성 정지 내역이 없습니다.');
+    }
+  }
+
   async getSuspendedUsers(queryDto: GetSuspendedUsersRequestDto) {
     const limit = queryDto.limit ?? 10;
     const suspensions =

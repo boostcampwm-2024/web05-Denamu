@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -17,6 +18,7 @@ import { AdminAuthGuard } from '@common/guard/session.guard';
 import { ApiResponse } from '@common/response/common.response';
 
 import { ApiCreateUserSuspension } from '@suspension/api-docs/createUserSuspension.api-docs';
+import { ApiDeleteUserSuspension } from '@suspension/api-docs/deleteUserSuspension.api-docs';
 import { ApiGetSuspendedUsers } from '@suspension/api-docs/getSuspendedUsers.api-docs';
 import { ApiUpdateUserSuspension } from '@suspension/api-docs/updateUserSuspension.api-docs';
 import { CreateUserSuspensionRequestDto } from '@suspension/dto/request/createUserSuspension.dto';
@@ -69,6 +71,16 @@ export class AdminSuspensionController {
     );
     return ApiResponse.responseWithNoContent(
       '유저 정지 정보 수정이 완료되었습니다.',
+    );
+  }
+
+  @ApiDeleteUserSuspension()
+  @Delete(':userId')
+  @HttpCode(HttpStatus.OK)
+  async deleteUserSuspension(@Param() paramDto: UserSuspensionParamRequestDto) {
+    await this.suspensionService.deleteUserSuspension(paramDto.userId);
+    return ApiResponse.responseWithNoContent(
+      '유저 정지 내역 삭제가 완료되었습니다.',
     );
   }
 }
