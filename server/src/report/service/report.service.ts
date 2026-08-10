@@ -29,8 +29,7 @@ import { ReportRepository } from '@report/repository/report.repository';
 
 import { RssAcceptRepository } from '@rss/repository/rss.repository';
 
-import { RssSuspension } from '@suspension/entity/rssSuspension.entity';
-import { UserSuspension } from '@suspension/entity/userSuspension.entity';
+import { SuspensionService } from '@suspension/service/suspension.service';
 
 import { UserService } from '@user/service/user.service';
 
@@ -45,6 +44,7 @@ export class ReportService {
     private readonly feedRepository: FeedRepository,
     private readonly userService: UserService,
     private readonly adminRepository: AdminRepository,
+    private readonly suspensionService: SuspensionService,
     private readonly dataSource: DataSource,
     @Inject(REPORT_NOTIFIER)
     private readonly notifierRegistry: NotifierRegistry,
@@ -232,16 +232,16 @@ export class ReportService {
       }
 
       if (targetUserId) {
-        await manager.save(UserSuspension, {
-          user: { id: targetUserId },
-          admin: admin ? { id: admin.id } : null,
+        await this.suspensionService.suspendUser(manager, {
+          userId: targetUserId,
+          adminId: admin.id,
           detail: approveDto.detail,
           suspendedUntil,
         });
       } else if (targetRssId) {
-        await manager.save(RssSuspension, {
-          rss: { id: targetRssId },
-          admin: admin ? { id: admin.id } : null,
+        await this.suspensionService.suspendRss(manager, {
+          rssId: targetRssId,
+          adminId: admin.id,
           detail: approveDto.detail,
           suspendedUntil,
         });

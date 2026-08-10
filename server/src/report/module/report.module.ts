@@ -16,13 +16,18 @@ import { ReportService } from '@report/service/report.service';
 
 import { RssAcceptRepository } from '@rss/repository/rss.repository';
 
-import { RssSuspensionRepository } from '@suspension/repository/rssSuspension.repository';
-import { UserSuspensionRepository } from '@suspension/repository/userSuspension.repository';
+import { SuspensionModule } from '@suspension/module/suspension.module';
 
 import { UserModule } from '@user/module/user.module';
 
 @Module({
-  imports: [JwtAuthModule, UserModule, FeedModule, NotifierModule],
+  imports: [
+    JwtAuthModule,
+    UserModule,
+    FeedModule,
+    NotifierModule,
+    SuspensionModule,
+  ],
   controllers: [ReportController, AdminReportController],
   providers: [
     ReportService,
@@ -30,8 +35,6 @@ import { UserModule } from '@user/module/user.module';
     RssAcceptRepository,
     CommentRepository,
     AdminRepository,
-    UserSuspensionRepository,
-    RssSuspensionRepository,
   ],
   exports: [],
 })
