@@ -23,7 +23,6 @@ import { ReportRepository } from '@report/repository/report.repository';
 import { RssAccept } from '@rss/entity/rss.entity';
 import { RssAcceptRepository } from '@rss/repository/rss.repository';
 
-import { RssSuspensionRepository } from '@suspension/repository/rssSuspension.repository';
 import { UserSuspensionRepository } from '@suspension/repository/userSuspension.repository';
 
 import { User } from '@user/entity/user.entity';
@@ -48,7 +47,6 @@ describe('POST /api/admins/reports/{reportId}/suspensions E2E Test', () => {
   let feedRepository: FeedRepository;
   let commentRepository: CommentRepository;
   let userSuspensionRepository: UserSuspensionRepository;
-  let rssSuspensionRepository: RssSuspensionRepository;
 
   const sessionKey = 'admin-report-approve-session-key';
   const redisKeyMake = (data: string) => `${REDIS_KEYS.ADMIN_AUTH_KEY}:${data}`;
@@ -67,7 +65,6 @@ describe('POST /api/admins/reports/{reportId}/suspensions E2E Test', () => {
     feedRepository = testApp.get(FeedRepository);
     commentRepository = testApp.get(CommentRepository);
     userSuspensionRepository = testApp.get(UserSuspensionRepository);
-    rssSuspensionRepository = testApp.get(RssSuspensionRepository);
   });
 
   beforeEach(async () => {
@@ -181,7 +178,7 @@ describe('POST /api/admins/reports/{reportId}/suspensions E2E Test', () => {
     expect(savedSuspension.admin?.id).toBe(adminId);
   });
 
-  it('[201] COMMENT 신고를 승인하면 댓글 작성자가 유저 정지된다.', async () => {
+  it('[201] COMMENT 신고를 승인하면 답글 없는 댓글은 삭제되고 작성자가 정지된다.', async () => {
     // given
     const rssAccept: RssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
@@ -213,9 +210,10 @@ describe('POST /api/admins/reports/{reportId}/suspensions E2E Test', () => {
     expect(response.status).toBe(HttpStatus.CREATED);
 
     // DB when
-    const savedSuspension = await userSuspensionRepository.findOneBy({
-      user: { id: target.id },
-    });
+    const [savedSuspension, savedComment] = await Promise.all([
+      userSuspensionRepository.findOneBy({ user: { id: target.id } }),
+      commentRepository.findOneBy({ id: comment.id }),
+    ]);
 
     // DB then
     expect(savedSuspension).not.toBeNull();
@@ -226,9 +224,10 @@ describe('POST /api/admins/reports/{reportId}/suspensions E2E Test', () => {
           new Date(suspendedUntil).getTime(),
       ),
     ).toBeLessThan(1000);
+    expect(savedComment).toBeNull();
   });
 
-  it('[201] RSS 신고를 승인하면 RSS가 정지된다.', async () => {
+  it('[201] RSS 신고를 승인하면 RSS가 삭제되고 소유자가 정지된다.', async () => {
     // given
     const rssAccept: RssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture({ userId: target.id }),
@@ -245,22 +244,24 @@ describe('POST /api/admins/reports/{reportId}/suspensions E2E Test', () => {
     const response = await agent
       .post(URL(report.id))
       .set('Cookie', `sessionId=${sessionKey}`)
-      .send({ detail: '저작권 침해로 인한 RSS 정지' });
+      .send({ detail: '저작권 침해로 인한 RSS 삭제' });
 
     // Http then
     expect(response.status).toBe(HttpStatus.CREATED);
 
     // DB when
-    const savedSuspension = await rssSuspensionRepository.findOneBy({
-      rss: { id: rssAccept.id },
-    });
+    const [savedRssAccept, savedSuspension] = await Promise.all([
+      rssAcceptRepository.findOneBy({ id: rssAccept.id }),
+      userSuspensionRepository.findOneBy({ user: { id: target.id } }),
+    ]);
 
     // DB then
+    expect(savedRssAccept).toBeNull();
     expect(savedSuspension).not.toBeNull();
-    expect(savedSuspension.detail).toBe('저작권 침해로 인한 RSS 정지');
+    expect(savedSuspension.detail).toBe('저작권 침해로 인한 RSS 삭제');
   });
 
-  it('[201] FEED 신고를 승인하면 게시글이 속한 RSS가 정지된다.', async () => {
+  it('[201] FEED 신고를 승인하면 게시글이 비공개 처리되고 RSS 소유자가 정지된다.', async () => {
     // given
     const rssAccept: RssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture({ userId: target.id }),
@@ -280,17 +281,59 @@ describe('POST /api/admins/reports/{reportId}/suspensions E2E Test', () => {
     const response = await agent
       .post(URL(report.id))
       .set('Cookie', `sessionId=${sessionKey}`)
-      .send({ detail: '음란물 게시로 인한 RSS 정지' });
+      .send({ detail: '음란물 게시로 인한 비공개 처리' });
 
     // Http then
     expect(response.status).toBe(HttpStatus.CREATED);
 
     // DB when
-    const savedSuspension = await rssSuspensionRepository.findOneBy({
-      rss: { id: rssAccept.id },
+    const [savedFeed, savedRssAccept, savedSuspension] = await Promise.all([
+      feedRepository.findOneBy({ id: feed.id }),
+      rssAcceptRepository.findOneBy({ id: rssAccept.id }),
+      userSuspensionRepository.findOneBy({ user: { id: target.id } }),
+    ]);
+
+    // DB then
+    expect(savedFeed.isPublic).toBe(false);
+    expect(savedRssAccept).not.toBeNull();
+    expect(savedRssAccept.suspensionCount).toBe(1);
+    expect(savedSuspension).not.toBeNull();
+  });
+
+  it('[201] 동일 RSS의 게시글이 3번 신고 승인되면 RSS가 삭제된다.', async () => {
+    // given
+    const rssAccept: RssAccept = await rssAcceptRepository.save(
+      RssAcceptFixture.createRssAcceptFixture({ userId: target.id }),
+    );
+    const feeds: Feed[] = await feedRepository.save(
+      FeedFixture.createFeedsFixture(rssAccept, 3),
+    );
+    const reports = await reportRepository.save(
+      feeds.map((feed) => ({
+        reporter: { id: reporter.id },
+        targetType: ReportTargetType.FEED,
+        targetId: feed.id,
+        reportedFeed: { id: feed.id },
+        reason: ReportReason.ADULT,
+      })),
+    );
+
+    // Http when
+    for (const report of reports) {
+      const response = await agent
+        .post(URL(report.id))
+        .set('Cookie', `sessionId=${sessionKey}`)
+        .send({ detail: '반복 신고로 인한 처리' });
+
+      expect(response.status).toBe(HttpStatus.CREATED);
+    }
+
+    // DB when
+    const savedRssAccept = await rssAcceptRepository.findOneBy({
+      id: rssAccept.id,
     });
 
     // DB then
-    expect(savedSuspension).not.toBeNull();
+    expect(savedRssAccept).toBeNull();
   });
 });

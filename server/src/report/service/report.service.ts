@@ -5,18 +5,22 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
-import { DataSource } from 'typeorm';
+import { DataSource, EntityManager } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 
 import { AdminRepository } from '@admin/repository/admin.repository';
 
+import { Comment } from '@comment/entity/comment.entity';
+import { CommentDeletedEvent } from '@comment/event/comment-deleted.event';
 import { CommentRepository } from '@comment/repository/comment.repository';
 
 import { Payload } from '@common/guard/jwt.guard';
 import { NotifierRegistry } from '@common/notification/notifier-registry';
 import { REPORT_NOTIFIER } from '@common/notification/notifier.constant';
 
+import { Feed } from '@feed/entity/feed.entity';
 import { FeedRepository } from '@feed/repository/feed.repository';
 
 import { ReportTargetType } from '@report/constant/report.constant';
@@ -27,6 +31,7 @@ import { GetReportsResponseDto } from '@report/dto/response/getReports.dto';
 import { Report } from '@report/entity/report.entity';
 import { ReportRepository } from '@report/repository/report.repository';
 
+import { RssAccept } from '@rss/entity/rss.entity';
 import { RssAcceptRepository } from '@rss/repository/rss.repository';
 
 import { SuspensionService } from '@suspension/service/suspension.service';
@@ -34,6 +39,13 @@ import { SuspensionService } from '@suspension/service/suspension.service';
 import { UserService } from '@user/service/user.service';
 
 const DUPLICATE_MESSAGE = '이미 신고한 대상입니다.';
+const RSS_SUSPENSION_LIMIT = 3;
+
+interface ApprovalTarget {
+  targetUserId: number | null;
+  applyEffect: (manager: EntityManager) => Promise<void>;
+  afterCommit?: () => void;
+}
 
 @Injectable()
 export class ReportService {
@@ -46,6 +58,7 @@ export class ReportService {
     private readonly adminRepository: AdminRepository,
     private readonly suspensionService: SuspensionService,
     private readonly dataSource: DataSource,
+    private readonly eventEmitter: EventEmitter2,
     @Inject(REPORT_NOTIFIER)
     private readonly notifierRegistry: NotifierRegistry,
   ) {}
@@ -174,6 +187,94 @@ export class ReportService {
     return GetReportsResponseDto.toResponseDto(reports, lastId, hasMore);
   }
 
+  private resolveApprovalTarget(report: Report): ApprovalTarget {
+    switch (report.targetType) {
+      case ReportTargetType.USER:
+        return {
+          targetUserId: report.reportedUser.id,
+          applyEffect: async () => {},
+        };
+
+      case ReportTargetType.COMMENT: {
+        const comment = report.reportedComment;
+
+        return {
+          targetUserId: comment.user.id,
+          applyEffect: async (manager) => {
+            const replyCount =
+              comment.parentId === null
+                ? await manager.count(Comment, {
+                    where: { parentId: comment.id },
+                  })
+                : 0;
+
+            if (replyCount > 0) {
+              await manager.update(
+                Comment,
+                { id: comment.id },
+                { isDeleted: true, isAdminDeleted: true },
+              );
+            } else {
+              await manager.delete(Comment, { id: comment.id });
+              await manager.decrement(
+                Feed,
+                { id: comment.feed.id },
+                'commentCount',
+                1,
+              );
+            }
+          },
+          afterCommit: () => {
+            this.eventEmitter.emit(
+              'comment.deleted',
+              new CommentDeletedEvent(
+                comment.feed.id,
+                comment.parent?.user.id ?? null,
+              ),
+            );
+          },
+        };
+      }
+
+      case ReportTargetType.RSS:
+        return {
+          targetUserId: report.reportedRss.userId,
+          applyEffect: async (manager) => {
+            await manager.delete(RssAccept, { id: report.reportedRss.id });
+          },
+        };
+
+      case ReportTargetType.FEED: {
+        const feedId = report.reportedFeed.id;
+        const rssId = report.reportedFeed.blog.id;
+
+        return {
+          targetUserId: report.reportedFeed.blog.userId,
+          applyEffect: async (manager) => {
+            await manager.update(Feed, { id: feedId }, { isPublic: false });
+            await manager.increment(
+              RssAccept,
+              { id: rssId },
+              'suspensionCount',
+              1,
+            );
+
+            const rssAccept = await manager.findOne(RssAccept, {
+              where: { id: rssId },
+              select: { id: true, suspensionCount: true },
+            });
+            if (
+              rssAccept &&
+              rssAccept.suspensionCount >= RSS_SUSPENSION_LIMIT
+            ) {
+              await manager.delete(RssAccept, { id: rssId });
+            }
+          },
+        };
+      }
+    }
+  }
+
   async approveReport(
     reportId: number,
     adminEmail: string,
@@ -185,6 +286,9 @@ export class ReportService {
         'reportedUser',
         'reportedComment',
         'reportedComment.user',
+        'reportedComment.feed',
+        'reportedComment.parent',
+        'reportedComment.parent.user',
         'reportedRss',
         'reportedFeed',
         'reportedFeed.blog',
@@ -201,27 +305,8 @@ export class ReportService {
       throw new BadRequestException('정지 종료 일시는 현재 이후여야 합니다.');
     }
 
-    let targetUserId: number | null = null;
-    let targetRssId: number | null = null;
-
-    switch (report.targetType) {
-      case ReportTargetType.USER:
-        targetUserId = report.reportedUser?.id ?? null;
-        break;
-      case ReportTargetType.COMMENT:
-        targetUserId = report.reportedComment?.user?.id ?? null;
-        break;
-      case ReportTargetType.RSS:
-        targetRssId = report.reportedRss?.id ?? null;
-        break;
-      case ReportTargetType.FEED:
-        targetRssId = report.reportedFeed?.blog?.id ?? null;
-        break;
-    }
-
-    if (!targetUserId && !targetRssId) {
-      throw new BadRequestException('이미 삭제된 대상이라 정지할 수 없습니다.');
-    }
+    const { targetUserId, applyEffect, afterCommit } =
+      this.resolveApprovalTarget(report);
 
     const admin = await this.adminRepository.findOneBy({ email: adminEmail });
 
@@ -231,6 +316,8 @@ export class ReportService {
         throw new ConflictException('이미 처리된 신고입니다.');
       }
 
+      await applyEffect(manager);
+
       if (targetUserId) {
         await this.suspensionService.suspendUser(manager, {
           userId: targetUserId,
@@ -238,15 +325,10 @@ export class ReportService {
           detail: approveDto.detail,
           suspendedUntil,
         });
-      } else if (targetRssId) {
-        await this.suspensionService.suspendRss(manager, {
-          rssId: targetRssId,
-          adminId: admin?.id ?? null,
-          detail: approveDto.detail,
-          suspendedUntil,
-        });
       }
     });
+
+    afterCommit?.();
   }
 
   async rejectReport(reportId: number) {

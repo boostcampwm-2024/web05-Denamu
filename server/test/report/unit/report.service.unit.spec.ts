@@ -4,6 +4,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
+import { EventEmitter2 } from '@nestjs/event-emitter';
+
 import { DataSource } from 'typeorm';
 
 import { AdminRepository } from '@admin/repository/admin.repository';
@@ -38,12 +40,19 @@ describe(`${ReportService.name} Unit Test`, () => {
   let feedRepository: jest.Mocked<Pick<FeedRepository, 'findOne'>>;
   let userService: jest.Mocked<Pick<UserService, 'getUser'>>;
   let adminRepository: jest.Mocked<Pick<AdminRepository, 'findOneBy'>>;
-  let suspensionService: jest.Mocked<
-    Pick<SuspensionService, 'suspendUser' | 'suspendRss'>
-  >;
+  let suspensionService: jest.Mocked<Pick<SuspensionService, 'suspendUser'>>;
   let dataSource: { transaction: jest.Mock };
   let notifierRegistry: jest.Mocked<Pick<NotifierRegistry, 'sendAlert'>>;
-  let manager: { delete: jest.Mock; save: jest.Mock };
+  let eventEmitter: jest.Mocked<Pick<EventEmitter2, 'emit'>>;
+  let manager: {
+    delete: jest.Mock;
+    save: jest.Mock;
+    update: jest.Mock;
+    count: jest.Mock;
+    decrement: jest.Mock;
+    increment: jest.Mock;
+    findOne: jest.Mock;
+  };
 
   const user: Payload = {
     id: 1,
@@ -65,14 +74,23 @@ describe(`${ReportService.name} Unit Test`, () => {
     feedRepository = { findOne: jest.fn() };
     userService = { getUser: jest.fn() };
     adminRepository = { findOneBy: jest.fn() };
-    suspensionService = { suspendUser: jest.fn(), suspendRss: jest.fn() };
-    manager = { delete: jest.fn(), save: jest.fn() };
+    suspensionService = { suspendUser: jest.fn() };
+    manager = {
+      delete: jest.fn(),
+      save: jest.fn(),
+      update: jest.fn(),
+      count: jest.fn().mockResolvedValue(0),
+      decrement: jest.fn(),
+      increment: jest.fn(),
+      findOne: jest.fn(),
+    };
     dataSource = {
       transaction: jest.fn((callback: (manager: unknown) => Promise<unknown>) =>
         callback(manager),
       ),
     };
     notifierRegistry = { sendAlert: jest.fn() };
+    eventEmitter = { emit: jest.fn() };
 
     reportService = new ReportService(
       reportRepository as unknown as ReportRepository,
@@ -83,6 +101,7 @@ describe(`${ReportService.name} Unit Test`, () => {
       adminRepository as unknown as AdminRepository,
       suspensionService as unknown as SuspensionService,
       dataSource as unknown as DataSource,
+      eventEmitter as unknown as EventEmitter2,
       notifierRegistry as unknown as NotifierRegistry,
     );
   });
@@ -317,21 +336,6 @@ describe(`${ReportService.name} Unit Test`, () => {
       expect(dataSource.transaction).not.toHaveBeenCalled();
     });
 
-    it('신고 대상이 이미 삭제됐으면 BadRequestException을 던진다.', async () => {
-      // given
-      reportRepository.findOne.mockResolvedValue({
-        id: 1,
-        targetType: ReportTargetType.USER,
-        reportedUser: null,
-      } as any);
-
-      // when & then
-      await expect(
-        reportService.approveReport(1, 'admin@test.com', approveDto),
-      ).rejects.toThrow(BadRequestException);
-      expect(dataSource.transaction).not.toHaveBeenCalled();
-    });
-
     it('이미 처리된 신고면 ConflictException을 던진다.', async () => {
       // given
       reportRepository.findOne.mockResolvedValue({
@@ -347,18 +351,24 @@ describe(`${ReportService.name} Unit Test`, () => {
         reportService.approveReport(1, 'admin@test.com', approveDto),
       ).rejects.toThrow(ConflictException);
       expect(suspensionService.suspendUser).not.toHaveBeenCalled();
-      expect(suspensionService.suspendRss).not.toHaveBeenCalled();
     });
 
-    it('USER/COMMENT 신고는 유저 정지를 생성하고 신고를 삭제한다.', async () => {
+    it('COMMENT 신고 승인 시 유저 정지를 생성하고 신고를 삭제한다.', async () => {
       // given
       reportRepository.findOne.mockResolvedValue({
         id: 1,
         targetType: ReportTargetType.COMMENT,
-        reportedComment: { id: 5, user: { id: 2 } },
+        reportedComment: {
+          id: 5,
+          user: { id: 2 },
+          feed: { id: 100 },
+          parentId: null,
+          parent: null,
+        },
       } as any);
       adminRepository.findOneBy.mockResolvedValue({ id: 9 } as any);
       manager.delete.mockResolvedValue({ affected: 1 });
+      manager.count.mockResolvedValue(0);
 
       // when
       await reportService.approveReport(1, 'admin@test.com', approveDto);
@@ -375,25 +385,204 @@ describe(`${ReportService.name} Unit Test`, () => {
       });
     });
 
-    it('RSS/FEED 신고는 RSS 정지를 생성하고 신고를 삭제한다.', async () => {
+    it('답글이 없는 최상위 댓글 신고를 승인하면 댓글을 hard delete하고 피드 댓글 수를 감소시킨다.', async () => {
       // given
       reportRepository.findOne.mockResolvedValue({
         id: 1,
-        targetType: ReportTargetType.FEED,
-        reportedFeed: { id: 30, blog: { id: 7 } },
+        targetType: ReportTargetType.COMMENT,
+        reportedComment: {
+          id: 5,
+          user: { id: 2 },
+          feed: { id: 100 },
+          parentId: null,
+          parent: null,
+        },
       } as any);
-      adminRepository.findOneBy.mockResolvedValue(null);
+      adminRepository.findOneBy.mockResolvedValue({ id: 9 } as any);
+      manager.delete.mockResolvedValue({ affected: 1 });
+      manager.count.mockResolvedValue(0);
+
+      // when
+      await reportService.approveReport(1, 'admin@test.com', approveDto);
+
+      // then
+      expect(manager.count).toHaveBeenCalledWith(expect.anything(), {
+        where: { parentId: 5 },
+      });
+      expect(manager.delete).toHaveBeenCalledWith(expect.anything(), {
+        id: 5,
+      });
+      expect(manager.decrement).toHaveBeenCalledWith(
+        expect.anything(),
+        { id: 100 },
+        'commentCount',
+        1,
+      );
+      expect(manager.update).not.toHaveBeenCalled();
+      expect(eventEmitter.emit).toHaveBeenCalledWith(
+        'comment.deleted',
+        expect.objectContaining({ feedId: 100, parentAuthorId: null }),
+      );
+    });
+
+    it('답글이 있는 최상위 댓글 신고를 승인하면 댓글을 soft delete한다.', async () => {
+      // given
+      reportRepository.findOne.mockResolvedValue({
+        id: 1,
+        targetType: ReportTargetType.COMMENT,
+        reportedComment: {
+          id: 5,
+          user: { id: 2 },
+          feed: { id: 100 },
+          parentId: null,
+          parent: null,
+        },
+      } as any);
+      adminRepository.findOneBy.mockResolvedValue({ id: 9 } as any);
+      manager.delete.mockResolvedValue({ affected: 1 });
+      manager.count.mockResolvedValue(2);
+
+      // when
+      await reportService.approveReport(1, 'admin@test.com', approveDto);
+
+      // then
+      expect(manager.update).toHaveBeenCalledWith(
+        expect.anything(),
+        { id: 5 },
+        { isDeleted: true, isAdminDeleted: true },
+      );
+      expect(manager.decrement).not.toHaveBeenCalled();
+    });
+
+    it('답글 댓글 신고를 승인하면 답글 여부를 조회하지 않고 hard delete한다.', async () => {
+      // given
+      reportRepository.findOne.mockResolvedValue({
+        id: 1,
+        targetType: ReportTargetType.COMMENT,
+        reportedComment: {
+          id: 5,
+          user: { id: 2 },
+          feed: { id: 100 },
+          parentId: 1,
+          parent: { user: { id: 3 } },
+        },
+      } as any);
+      adminRepository.findOneBy.mockResolvedValue({ id: 9 } as any);
       manager.delete.mockResolvedValue({ affected: 1 });
 
       // when
       await reportService.approveReport(1, 'admin@test.com', approveDto);
 
       // then
-      expect(suspensionService.suspendRss).toHaveBeenCalledWith(manager, {
-        rssId: 7,
-        adminId: null,
+      expect(manager.count).not.toHaveBeenCalled();
+      expect(manager.delete).toHaveBeenCalledWith(expect.anything(), {
+        id: 5,
+      });
+      expect(eventEmitter.emit).toHaveBeenCalledWith(
+        'comment.deleted',
+        expect.objectContaining({ feedId: 100, parentAuthorId: 3 }),
+      );
+    });
+
+    it('RSS 신고를 승인하면 RSS를 삭제하고 소유자를 정지한다.', async () => {
+      // given
+      reportRepository.findOne.mockResolvedValue({
+        id: 1,
+        targetType: ReportTargetType.RSS,
+        reportedRss: { id: 7, userId: 4 },
+      } as any);
+      adminRepository.findOneBy.mockResolvedValue({ id: 9 } as any);
+      manager.delete.mockResolvedValue({ affected: 1 });
+
+      // when
+      await reportService.approveReport(1, 'admin@test.com', approveDto);
+
+      // then
+      expect(manager.delete).toHaveBeenCalledWith(expect.anything(), {
+        id: 7,
+      });
+      expect(suspensionService.suspendUser).toHaveBeenCalledWith(manager, {
+        userId: 4,
+        adminId: 9,
         detail: approveDto.detail,
         suspendedUntil: null,
+      });
+    });
+
+    it('소유자가 없는 RSS 신고를 승인하면 RSS만 삭제하고 정지는 생략한다.', async () => {
+      // given
+      reportRepository.findOne.mockResolvedValue({
+        id: 1,
+        targetType: ReportTargetType.RSS,
+        reportedRss: { id: 7, userId: null },
+      } as any);
+      adminRepository.findOneBy.mockResolvedValue({ id: 9 } as any);
+      manager.delete.mockResolvedValue({ affected: 1 });
+
+      // when
+      await reportService.approveReport(1, 'admin@test.com', approveDto);
+
+      // then
+      expect(manager.delete).toHaveBeenCalledWith(expect.anything(), {
+        id: 7,
+      });
+      expect(suspensionService.suspendUser).not.toHaveBeenCalled();
+    });
+
+    it('게시글 신고를 승인하면 게시글을 비공개 처리하고 RSS 소유자를 정지한다.', async () => {
+      // given
+      reportRepository.findOne.mockResolvedValue({
+        id: 1,
+        targetType: ReportTargetType.FEED,
+        reportedFeed: { id: 30, blog: { id: 7, userId: 4 } },
+      } as any);
+      adminRepository.findOneBy.mockResolvedValue({ id: 9 } as any);
+      manager.delete.mockResolvedValue({ affected: 1 });
+      manager.findOne.mockResolvedValue({ id: 7, suspensionCount: 1 });
+
+      // when
+      await reportService.approveReport(1, 'admin@test.com', approveDto);
+
+      // then
+      expect(manager.update).toHaveBeenCalledWith(
+        expect.anything(),
+        { id: 30 },
+        { isPublic: false },
+      );
+      expect(manager.increment).toHaveBeenCalledWith(
+        expect.anything(),
+        { id: 7 },
+        'suspensionCount',
+        1,
+      );
+      expect(suspensionService.suspendUser).toHaveBeenCalledWith(manager, {
+        userId: 4,
+        adminId: 9,
+        detail: approveDto.detail,
+        suspendedUntil: null,
+      });
+      expect(manager.delete).not.toHaveBeenCalledWith(expect.anything(), {
+        id: 7,
+      });
+    });
+
+    it('게시글 정지 누적 횟수가 3회 이상이면 RSS를 삭제한다.', async () => {
+      // given
+      reportRepository.findOne.mockResolvedValue({
+        id: 1,
+        targetType: ReportTargetType.FEED,
+        reportedFeed: { id: 30, blog: { id: 7, userId: 4 } },
+      } as any);
+      adminRepository.findOneBy.mockResolvedValue({ id: 9 } as any);
+      manager.delete.mockResolvedValue({ affected: 1 });
+      manager.findOne.mockResolvedValue({ id: 7, suspensionCount: 3 });
+
+      // when
+      await reportService.approveReport(1, 'admin@test.com', approveDto);
+
+      // then
+      expect(manager.delete).toHaveBeenCalledWith(expect.anything(), {
+        id: 7,
       });
     });
   });
