@@ -9,6 +9,8 @@ import { fireEvent, render, screen } from "@testing-library/react";
 
 const useSuspendedUsersMock = vi.hoisted(() => vi.fn());
 const useCreateUserSuspensionMock = vi.hoisted(() => vi.fn());
+const useUpdateUserSuspensionMock = vi.hoisted(() => vi.fn());
+const useDeleteUserSuspensionMock = vi.hoisted(() => vi.fn());
 const useUserSearchMock = vi.hoisted(() => vi.fn());
 const toastMock = vi.hoisted(() => vi.fn());
 
@@ -20,6 +22,8 @@ vi.mock("lucide-react", async () => {
 vi.mock("@/hooks/queries/useUserSuspension", () => ({
   useSuspendedUsers: () => useSuspendedUsersMock(),
   useCreateUserSuspension: () => useCreateUserSuspensionMock(),
+  useUpdateUserSuspension: () => useUpdateUserSuspensionMock(),
+  useDeleteUserSuspension: () => useDeleteUserSuspensionMock(),
 }));
 
 vi.mock("@/hooks/queries/useUserSearch", () => ({
@@ -32,7 +36,7 @@ vi.mock("@/hooks/common/useCustomToast", () => ({
 
 const makeSuspension = (overrides: Partial<SuspendedUserItem> = {}): SuspendedUserItem => ({
   id: 1,
-  user: { userName: "스팸유저", email: "spam-user@test.com" },
+  user: { id: 30, userName: "스팸유저", email: "spam-user@test.com" },
   admin: { name: "관리자1" },
   detail: "반복적인 스팸 신고 누적으로 정지합니다.",
   suspendedUntil: null,
@@ -93,6 +97,8 @@ describe("AdminSuspensionTab", () => {
     vi.clearAllMocks();
     useUserSearchMock.mockReturnValue(makeSearchResult());
     useCreateUserSuspensionMock.mockReturnValue({ mutate: vi.fn(), isPending: false });
+    useUpdateUserSuspensionMock.mockReturnValue({ mutate: vi.fn(), isPending: false });
+    useDeleteUserSuspensionMock.mockReturnValue({ mutate: vi.fn(), isPending: false });
   });
 
   it("로딩 중이면 로딩 문구를 표시한다", () => {
@@ -205,5 +211,71 @@ describe("AdminSuspensionTab", () => {
       expect.objectContaining({ userId: 42, detail: "악성 게시글 반복 작성" }),
       expect.any(Object)
     );
+  });
+
+  it("해제 버튼 클릭 시 해당 유저 이름으로 해제 확인 다이얼로그가 열린다", () => {
+    useSuspendedUsersMock.mockReturnValue(makeQueryResult({ result: [makeSuspension()] }));
+    renderTab();
+
+    fireEvent.click(screen.getByRole("button", { name: "해제" }));
+
+    expect(screen.getByText("스팸유저 유저 정지 해제")).toBeInTheDocument();
+    expect(screen.getByRole("switch")).not.toBeChecked();
+  });
+
+  it("무효처리 토글 없이 해제하면 정지 기간을 현재로 바꾸는 updateUserSuspension을 호출한다", () => {
+    const updateMutateMock = vi.fn();
+    const deleteMutateMock = vi.fn();
+    useSuspendedUsersMock.mockReturnValue(
+      makeQueryResult({
+        result: [makeSuspension({ user: { id: 55, userName: "스팸유저", email: "spam-user@test.com" } })],
+      })
+    );
+    useUpdateUserSuspensionMock.mockReturnValue({ mutate: updateMutateMock, isPending: false });
+    useDeleteUserSuspensionMock.mockReturnValue({ mutate: deleteMutateMock, isPending: false });
+    renderTab();
+
+    fireEvent.click(screen.getByRole("button", { name: "해제" }));
+    const releaseButtons = screen.getAllByRole("button", { name: "해제" });
+    fireEvent.click(releaseButtons[releaseButtons.length - 1]);
+
+    expect(updateMutateMock).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: 55, suspendedUntil: expect.any(String) }),
+      expect.any(Object)
+    );
+    expect(deleteMutateMock).not.toHaveBeenCalled();
+  });
+
+  it("무효처리 토글 후 해제하면 deleteUserSuspension을 호출해 정지 내역을 삭제한다", () => {
+    const updateMutateMock = vi.fn();
+    const deleteMutateMock = vi.fn();
+    useSuspendedUsersMock.mockReturnValue(
+      makeQueryResult({
+        result: [makeSuspension({ user: { id: 55, userName: "스팸유저", email: "spam-user@test.com" } })],
+      })
+    );
+    useUpdateUserSuspensionMock.mockReturnValue({ mutate: updateMutateMock, isPending: false });
+    useDeleteUserSuspensionMock.mockReturnValue({ mutate: deleteMutateMock, isPending: false });
+    renderTab();
+
+    fireEvent.click(screen.getByRole("button", { name: "해제" }));
+    fireEvent.click(screen.getByRole("switch"));
+    const releaseButtons = screen.getAllByRole("button", { name: "해제" });
+    fireEvent.click(releaseButtons[releaseButtons.length - 1]);
+
+    expect(deleteMutateMock).toHaveBeenCalledWith(55, expect.any(Object));
+    expect(updateMutateMock).not.toHaveBeenCalled();
+  });
+
+  it("기간 수정 버튼 클릭 시 해당 유저 이름으로 기간 수정 다이얼로그가 열린다", () => {
+    useSuspendedUsersMock.mockReturnValue(
+      makeQueryResult({ result: [makeSuspension({ suspendedUntil: "2026-07-02T09:00:00.000Z" })] })
+    );
+    renderTab();
+
+    fireEvent.click(screen.getByRole("button", { name: "기간 수정" }));
+
+    expect(screen.getByText("스팸유저 유저 정지 기간 수정")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "수정 처리" })).toBeInTheDocument();
   });
 });

@@ -21,9 +21,7 @@ const setupSuspensions = () => {
 
 const setupSearchAndSuspend = () => {
   mockApi.onGet(SUSPENSION.ADMIN_LIST).reply(...ok({ result: [], lastId: 0, hasMore: false }));
-  mockApi.onGet(SEARCH.GET_USER_RESULT).reply(
-    ...ok({ result: [mockUserSearchResult], totalCount: 1, totalPages: 1 })
-  );
+  mockApi.onGet(SEARCH.GET_USER_RESULT).reply(...ok({ result: [mockUserSearchResult], totalCount: 1, totalPages: 1 }));
   mockApi.onPost(SUSPENSION.ADMIN_LIST).reply(...ok(null));
 };
 
@@ -57,6 +55,48 @@ export const Error: Story = {
   name: "오류",
   beforeEach: () => {
     mockApi.onGet(SUSPENSION.ADMIN_LIST).reply(...fail());
+  },
+};
+
+export const ReleaseSuspension: Story = {
+  name: "정지 해제 (무효처리 미체크)",
+  beforeEach: () => {
+    setupSuspensions();
+    mockApi.onPatch(new RegExp(`${SUSPENSION.ADMIN_LIST}/\\d+`)).reply(...ok(null));
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
+
+    const releaseButton = (await canvas.findAllByRole("button", { name: "해제" }))[0];
+    await userEvent.click(releaseButton);
+
+    await expect(body.findByText(/유저 정지 해제/)).resolves.toBeInTheDocument();
+    const confirmButtons = body.getAllByRole("button", { name: "해제" });
+    await userEvent.click(confirmButtons[confirmButtons.length - 1]);
+
+    await waitFor(() => expect(mockApi.history.patch).toHaveLength(1));
+  },
+};
+
+export const InvalidateSuspension: Story = {
+  name: "정지 해제 (무효처리 체크)",
+  beforeEach: () => {
+    setupSuspensions();
+    mockApi.onDelete(new RegExp(`${SUSPENSION.ADMIN_LIST}/\\d+`)).reply(...ok(null));
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
+
+    const releaseButton = (await canvas.findAllByRole("button", { name: "해제" }))[0];
+    await userEvent.click(releaseButton);
+
+    await userEvent.click(await body.findByRole("switch"));
+    const confirmButtons = body.getAllByRole("button", { name: "해제" });
+    await userEvent.click(confirmButtons[confirmButtons.length - 1]);
+
+    await waitFor(() => expect(mockApi.history.delete).toHaveLength(1));
   },
 };
 
