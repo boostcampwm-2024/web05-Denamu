@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 
+import logger from '@common/logger/logger';
 import {
   AdminCertification,
   MarketingBroadcast,
@@ -16,9 +17,6 @@ import { EmailConsumer } from '@email/email.consumer';
 import { EmailService } from '@email/email.service';
 import { EmailPayload, NodeMailerError } from '@email/types';
 
-import { NOTIFICATION_EVENT } from '@notification/notification-event.constant';
-import { Notifier } from '@notification/notifier.interface';
-
 import { RETRY_CONFIG, RMQ_QUEUES } from '@rabbitmq/rabbitmq.constant';
 import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
 
@@ -26,7 +24,6 @@ describe('email consumer unit test', () => {
   let emailConsumer: EmailConsumer;
   let rabbitmqService: jest.Mocked<RabbitMQService>;
   let emailService: jest.Mocked<EmailService>;
-  let notifier: jest.Mocked<Notifier>;
 
   afterEach(() => {
     jest.clearAllMocks();
@@ -77,15 +74,7 @@ describe('email consumer unit test', () => {
       rabbitmqService = {
         sendMessageToQueue: jest.fn().mockResolvedValue(null),
       } as any;
-      notifier = {
-        start: jest.fn(),
-        publish: jest.fn(),
-      };
-      emailConsumer = new EmailConsumer(
-        rabbitmqService,
-        emailService,
-        notifier,
-      );
+      emailConsumer = new EmailConsumer(rabbitmqService, emailService);
     });
 
     it('USER_CERTIFICATION 타입일 때 sendUserCertificationMail을 호출한다', async () => {
@@ -332,7 +321,7 @@ describe('email consumer unit test', () => {
 
   describe('handleEmailByError unit test', () => {
     let sendMessageToQueue: jest.Mock;
-    let notifierPublish: jest.Mock;
+    let loggerErrorSpy: jest.SpyInstance;
 
     const networkErrors = [
       `ESOCKET`,
@@ -360,16 +349,12 @@ describe('email consumer unit test', () => {
       rabbitmqService = {
         sendMessageToQueue,
       } as any;
-      notifierPublish = jest.fn();
-      notifier = {
-        start: jest.fn(),
-        publish: notifierPublish,
-      };
-      emailConsumer = new EmailConsumer(
-        rabbitmqService,
-        emailService,
-        notifier,
-      );
+      loggerErrorSpy = jest.spyOn(logger, 'error').mockImplementation();
+      emailConsumer = new EmailConsumer(rabbitmqService, emailService);
+    });
+
+    afterEach(() => {
+      loggerErrorSpy.mockRestore();
     });
 
     describe('Transient Error test', () => {
@@ -609,7 +594,7 @@ describe('email consumer unit test', () => {
         );
       });
 
-      it('DLQ 발행 시 notifier로 EMAIL_DLQ 이벤트를 발행한다', async () => {
+      it('DLQ 발행 시 logger.error로 에러를 기록한다', async () => {
         const error = new Error('Mailbox unavailable') as NodeMailerError;
         error.responseCode = 550;
         const emailPayload: EmailPayload = {
@@ -623,14 +608,16 @@ describe('email consumer unit test', () => {
 
         await emailConsumer.handleEmailByError(error, emailPayload, 0);
 
-        expect(notifierPublish).toHaveBeenCalledTimes(1);
-        expect(notifierPublish).toHaveBeenCalledWith(
-          NOTIFICATION_EVENT.EMAIL_DLQ,
-          expect.objectContaining({ error }),
+        expect(loggerErrorSpy).toHaveBeenCalledTimes(1);
+        expect(loggerErrorSpy).toHaveBeenCalledWith(
+          expect.stringContaining('[SMTP 500 에러 발생]'),
+        );
+        expect(loggerErrorSpy).toHaveBeenCalledWith(
+          expect.stringContaining(error.message),
         );
       });
 
-      it('재시도 가능한 에러는 notifier로 이벤트를 발행하지 않는다', async () => {
+      it('재시도 가능한 에러는 DLQ logger.error를 호출하지 않는다', async () => {
         const error = new Error('ECONNREFUSED') as NodeMailerError;
         const emailPayload: EmailPayload = {
           type: EmailPayloadConstant.USER_CERTIFICATION,
@@ -643,7 +630,7 @@ describe('email consumer unit test', () => {
 
         await emailConsumer.handleEmailByError(error, emailPayload, 0);
 
-        expect(notifierPublish).not.toHaveBeenCalled();
+        expect(loggerErrorSpy).not.toHaveBeenCalled();
       });
     });
 
@@ -729,12 +716,7 @@ describe('email consumer unit test', () => {
         sendMessageToQueue: jest.fn().mockResolvedValue(null),
       } as any;
       emailService = { sendUserCertificationMail } as any;
-      notifier = { start: jest.fn(), publish: jest.fn() };
-      emailConsumer = new EmailConsumer(
-        rabbitmqService,
-        emailService,
-        notifier,
-      );
+      emailConsumer = new EmailConsumer(rabbitmqService, emailService);
     });
 
     it('start 호출 시 EMAIL_SEND 큐를 consume 한다', async () => {
