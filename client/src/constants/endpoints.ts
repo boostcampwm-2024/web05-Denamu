@@ -123,6 +123,10 @@ export const REPORT = {
   ADMIN_REJECT: (reportId: number) => `/api/admins/reports/${reportId}`,
 };
 
+export const SUSPENSION = {
+  ADMIN_LIST: "/api/admins/user-suspensions",
+};
+
 export const FILE = {
   UPLOAD: "/api/files",
   ADMIN_UPLOAD_IMAGE: "/api/admins/images",

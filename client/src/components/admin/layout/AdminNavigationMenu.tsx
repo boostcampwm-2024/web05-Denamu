@@ -7,6 +7,7 @@ export const TAB_TYPES = {
   POST: "POST",
   CHAT: "CHAT",
   REPORT: "REPORT",
+  SUSPENSION: "SUSPENSION",
   BOARD: "BOARD",
   QNA: "QNA",
   EMAIL: "EMAIL",
@@ -41,6 +42,11 @@ export const AdminNavigationMenu = ({ handleTap }: { handleTap: (tabType: TabTyp
         <NavigationMenuItem>
           <Button variant="ghost" className="w-full justify-start" onClick={() => handleTap("REPORT")}>
             신고 관리
+          </Button>
+        </NavigationMenuItem>
+        <NavigationMenuItem>
+          <Button variant="ghost" className="w-full justify-start" onClick={() => handleTap("SUSPENSION")}>
+            정지 유저 관리
           </Button>
         </NavigationMenuItem>
         <NavigationMenuItem>
