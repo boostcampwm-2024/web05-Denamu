@@ -8,33 +8,42 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { SUSPENSION_PRESET_LABELS } from "@/constants/report";
 
-import { SuspensionPreset } from "@/types/report";
 import { computeSuspendedUntil, presetToDatetimeLocal } from "@/utils/suspension";
 
-const SUSPENSION_PRESET_OPTIONS = Object.entries(SUSPENSION_PRESET_LABELS) as [SuspensionPreset, string][];
+import { SuspensionPreset } from "@/types/report";
+import { SuspensionFormPayload } from "@/types/userSuspension";
 
-interface SuspensionPayload {
-  suspendedUntil?: string;
-  detail: string;
-}
+const SUSPENSION_PRESET_OPTIONS = Object.entries(SUSPENSION_PRESET_LABELS) as [SuspensionPreset, string][];
 
 interface SuspensionFormDialogProps {
   open: boolean;
   title: string;
+  submitLabel?: string;
   isPending: boolean;
+  initialPreset?: SuspensionPreset | null;
+  initialDateValue?: string;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (payload: SuspensionPayload) => void;
+  onSubmit: (payload: SuspensionFormPayload) => void;
 }
 
-export function SuspensionFormDialog({ open, title, isPending, onOpenChange, onSubmit }: SuspensionFormDialogProps) {
-  const [preset, setPreset] = useState<SuspensionPreset | null>("SEVEN_DAYS");
-  const [dateValue, setDateValue] = useState(() => presetToDatetimeLocal("SEVEN_DAYS"));
+export function SuspensionFormDialog({
+  open,
+  title,
+  submitLabel = "정지 처리",
+  isPending,
+  initialPreset = "SEVEN_DAYS",
+  initialDateValue = presetToDatetimeLocal("SEVEN_DAYS"),
+  onOpenChange,
+  onSubmit,
+}: SuspensionFormDialogProps) {
+  const [preset, setPreset] = useState<SuspensionPreset | null>(initialPreset);
+  const [dateValue, setDateValue] = useState(initialDateValue);
   const [detail, setDetail] = useState("");
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
-      setPreset("SEVEN_DAYS");
-      setDateValue(presetToDatetimeLocal("SEVEN_DAYS"));
+      setPreset(initialPreset);
+      setDateValue(initialDateValue);
       setDetail("");
     }
     onOpenChange(nextOpen);
@@ -118,7 +127,7 @@ export function SuspensionFormDialog({ open, title, isPending, onOpenChange, onS
             취소
           </Button>
           <Button onClick={handleSubmit} disabled={!canSubmit}>
-            {isPending ? "처리 중..." : "정지 처리"}
+            {isPending ? "처리 중..." : submitLabel}
           </Button>
         </DialogFooter>
       </DialogContent>
