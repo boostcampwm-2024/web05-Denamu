@@ -37,14 +37,15 @@ export class UserSuspensionRepository extends Repository<UserSuspension> {
       .getMany();
   }
 
-  async hasActiveSuspension(userId: number): Promise<boolean> {
+  async findActiveSuspension(userId: number): Promise<UserSuspension | null> {
     const now = new Date();
 
-    return this.exists({
+    return this.findOne({
       where: [
         { user: { id: userId }, suspendedUntil: IsNull() },
         { user: { id: userId }, suspendedUntil: MoreThan(now) },
       ],
+      order: { id: 'DESC' },
     });
   }
 }

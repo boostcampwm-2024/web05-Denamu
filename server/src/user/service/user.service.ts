@@ -460,10 +460,16 @@ export class UserService {
   }
 
   async assertNotSuspended(userId: number) {
-    const suspended =
-      await this.userSuspensionRepository.hasActiveSuspension(userId);
-    if (suspended) {
-      throw new ForbiddenException('정지된 계정입니다.');
+    const suspension =
+      await this.userSuspensionRepository.findActiveSuspension(userId);
+    if (suspension) {
+      throw new ForbiddenException({
+        message: '정지된 계정입니다.',
+        data: {
+          detail: suspension.detail,
+          suspendedUntil: suspension.suspendedUntil,
+        },
+      });
     }
   }
 

@@ -16,10 +16,15 @@ export class HttpExceptionsFilter implements ExceptionFilter {
     const response = host.switchToHttp().getResponse<Response>();
 
     const statusCode = exception.getStatus();
-    const res = exception.getResponse()['message'];
+    const exceptionResponse = exception.getResponse();
+    const res = exceptionResponse['message'];
     const message = Array.isArray(res) ? res[0] : res;
+    const data = exceptionResponse['data'];
 
-    const apiResponse = ApiResponse.responseWithNoContent(message);
+    const apiResponse =
+      data === undefined
+        ? ApiResponse.responseWithNoContent(message)
+        : ApiResponse.responseWithData(message, data);
     response.status(statusCode).json(apiResponse);
   }
 }
