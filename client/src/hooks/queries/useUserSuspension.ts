@@ -1,5 +1,5 @@
-import { getSuspendedUsers } from "@/api/services/userSuspension";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { createUserSuspension, getSuspendedUsers } from "@/api/services/userSuspension";
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 const PAGE_SIZE = 10;
 
@@ -11,3 +11,13 @@ export const useSuspendedUsers = () =>
     getNextPageParam: (lastPage) => (lastPage.hasMore ? lastPage.lastId : undefined),
     initialPageParam: undefined as number | undefined,
   });
+
+export const useCreateUserSuspension = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createUserSuspension,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["adminUserSuspensions"] });
+    },
+  });
+};

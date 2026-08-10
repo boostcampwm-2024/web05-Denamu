@@ -15,3 +15,9 @@ export interface SuspendedUserItem {
   suspendedUntil: string | null;
   createdAt: string;
 }
+
+export interface CreateUserSuspensionPayload {
+  userId: number;
+  suspendedUntil?: string;
+  detail: string;
+}
