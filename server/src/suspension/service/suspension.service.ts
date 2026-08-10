@@ -7,7 +7,6 @@ import { AdminRepository } from '@admin/repository/admin.repository';
 import { CreateUserSuspensionRequestDto } from '@suspension/dto/request/createUserSuspension.dto';
 import { GetSuspendedUsersRequestDto } from '@suspension/dto/request/getSuspendedUsers.dto';
 import { GetSuspendedUsersResponseDto } from '@suspension/dto/response/getSuspendedUsers.dto';
-import { RssSuspension } from '@suspension/entity/rssSuspension.entity';
 import { UserSuspension } from '@suspension/entity/userSuspension.entity';
 import { UserSuspensionRepository } from '@suspension/repository/userSuspension.repository';
 
@@ -38,23 +37,6 @@ export class SuspensionService {
   ) {
     await manager.save(UserSuspension, {
       user: { id: userId },
-      admin: adminId ? { id: adminId } : null,
-      detail,
-      suspendedUntil,
-    });
-  }
-
-  async suspendRss(
-    manager: EntityManager,
-    {
-      rssId,
-      adminId,
-      detail,
-      suspendedUntil,
-    }: SuspendParams & { rssId: number },
-  ) {
-    await manager.save(RssSuspension, {
-      rss: { id: rssId },
       admin: adminId ? { id: adminId } : null,
       detail,
       suspendedUntil,
