@@ -1,12 +1,16 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import AdminSuspensionTab from "@/components/admin/suspension/AdminSuspensionTab.tsx";
 
+import { UserSearchResult } from "@/types/search";
 import { SuspendedUserItem } from "@/types/userSuspension";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen } from "@testing-library/react";
 
 const useSuspendedUsersMock = vi.hoisted(() => vi.fn());
+const useCreateUserSuspensionMock = vi.hoisted(() => vi.fn());
+const useUserSearchMock = vi.hoisted(() => vi.fn());
+const toastMock = vi.hoisted(() => vi.fn());
 
 vi.mock("lucide-react", async () => {
   const { lucideProxy } = await import("@/__tests__/__mocks__/external/lucide-proxy.tsx");
@@ -15,6 +19,15 @@ vi.mock("lucide-react", async () => {
 
 vi.mock("@/hooks/queries/useUserSuspension", () => ({
   useSuspendedUsers: () => useSuspendedUsersMock(),
+  useCreateUserSuspension: () => useCreateUserSuspensionMock(),
+}));
+
+vi.mock("@/hooks/queries/useUserSearch", () => ({
+  useUserSearch: () => useUserSearchMock(),
+}));
+
+vi.mock("@/hooks/common/useCustomToast", () => ({
+  useCustomToast: () => ({ toast: toastMock }),
 }));
 
 const makeSuspension = (overrides: Partial<SuspendedUserItem> = {}): SuspendedUserItem => ({
@@ -24,6 +37,13 @@ const makeSuspension = (overrides: Partial<SuspendedUserItem> = {}): SuspendedUs
   detail: "반복적인 스팸 신고 누적으로 정지합니다.",
   suspendedUntil: null,
   createdAt: "2026-06-25T09:00:00.000Z",
+  ...overrides,
+});
+
+const makeSearchUser = (overrides: Partial<UserSearchResult> = {}): UserSearchResult => ({
+  id: 10,
+  userName: "검색된유저",
+  profileImage: null,
   ...overrides,
 });
 
@@ -53,6 +73,12 @@ const makeQueryResult = (
   };
 };
 
+const makeSearchResult = (users: UserSearchResult[] = [], isLoading = false) => ({
+  data: { data: { result: users, totalCount: users.length, totalPages: 1 } },
+  isLoading,
+  error: null,
+});
+
 const renderTab = () => {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
@@ -63,6 +89,12 @@ const renderTab = () => {
 };
 
 describe("AdminSuspensionTab", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    useUserSearchMock.mockReturnValue(makeSearchResult());
+    useCreateUserSuspensionMock.mockReturnValue({ mutate: vi.fn(), isPending: false });
+  });
+
   it("로딩 중이면 로딩 문구를 표시한다", () => {
     useSuspendedUsersMock.mockReturnValue(makeQueryResult({ isLoading: true }));
     renderTab();
@@ -126,5 +158,52 @@ describe("AdminSuspensionTab", () => {
     renderTab();
 
     expect(screen.queryByRole("button", { name: "더 보기" })).not.toBeInTheDocument();
+  });
+
+  it("검색어를 입력하면 검색 결과 유저를 카드로 보여준다", () => {
+    useSuspendedUsersMock.mockReturnValue(makeQueryResult());
+    useUserSearchMock.mockReturnValue(makeSearchResult([makeSearchUser()]));
+    renderTab();
+
+    fireEvent.change(screen.getByPlaceholderText("정지할 유저의 닉네임을 검색하세요"), {
+      target: { value: "검색된유저" },
+    });
+
+    expect(screen.getByText("검색된유저")).toBeInTheDocument();
+  });
+
+  it("검색 결과의 정지 버튼 클릭 시 해당 유저 이름으로 정지 다이얼로그가 열린다", () => {
+    useSuspendedUsersMock.mockReturnValue(makeQueryResult());
+    useUserSearchMock.mockReturnValue(makeSearchResult([makeSearchUser({ userName: "검색된유저" })]));
+    renderTab();
+
+    fireEvent.change(screen.getByPlaceholderText("정지할 유저의 닉네임을 검색하세요"), {
+      target: { value: "검색된유저" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "정지" }));
+
+    expect(screen.getByText("검색된유저 유저 정지")).toBeInTheDocument();
+  });
+
+  it("정지 다이얼로그에서 상세 내역을 입력하고 제출하면 createUserSuspension을 호출한다", () => {
+    const mutateMock = vi.fn();
+    useSuspendedUsersMock.mockReturnValue(makeQueryResult());
+    useUserSearchMock.mockReturnValue(makeSearchResult([makeSearchUser({ id: 42, userName: "검색된유저" })]));
+    useCreateUserSuspensionMock.mockReturnValue({ mutate: mutateMock, isPending: false });
+    renderTab();
+
+    fireEvent.change(screen.getByPlaceholderText("정지할 유저의 닉네임을 검색하세요"), {
+      target: { value: "검색된유저" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "정지" }));
+    fireEvent.change(screen.getByPlaceholderText("정지 사유 및 처리 내용을 입력해주세요."), {
+      target: { value: "악성 게시글 반복 작성" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "정지 처리" }));
+
+    expect(mutateMock).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: 42, detail: "악성 게시글 반복 작성" }),
+      expect.any(Object)
+    );
   });
 });
