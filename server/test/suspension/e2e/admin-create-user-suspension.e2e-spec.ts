@@ -15,7 +15,7 @@ import { UserRepository } from '@user/repository/user.repository';
 
 import { AdminFixture } from '@test/config/common/fixture/admin.fixture';
 import { UserFixture } from '@test/config/common/fixture/user.fixture';
-import { testApp } from '@test/config/e2e/env/jest.setup';
+import { createAccessToken, testApp } from '@test/config/e2e/env/jest.setup';
 
 const BASE_URL = '/api/admins/user-suspensions';
 
@@ -138,4 +138,25 @@ describe(`POST ${BASE_URL} E2E Test`, () => {
       1000
     );
   });
+
+  it('[201] 정지 처리 시 기존에 발급된 Access Token은 즉시 무효화된다.', async () => {
+    // given - iat(초 단위)와 정지 시각의 초 단위 경계가 겹치지 않도록 대기한다.
+    const accessToken = createAccessToken({ id: target.id, email: target.email, userName: target.userName });
+    await new Promise((resolve) => setTimeout(resolve, 1100));
+
+    // Http when
+    const response = await agent
+      .post(BASE_URL)
+      .set('Cookie', `sessionId=${sessionKey}`)
+      .send({ userId: target.id, detail: '반복적인 스팸으로 인한 정지' });
+
+    // Http then
+    expect(response.status).toBe(HttpStatus.CREATED);
+
+    // 기존 Access Token으로 보호된 API 호출 시 401
+    const logoutResponse = await agent
+      .post('/api/users/logout')
+      .set('Authorization', `Bearer ${accessToken}`);
+    expect(logoutResponse.status).toBe(HttpStatus.UNAUTHORIZED);
+  }, 10000);
 });
