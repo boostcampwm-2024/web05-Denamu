@@ -35,6 +35,14 @@ const TARGET_TYPE_LABELS: Record<ReportItem["targetType"], string> = {
   FEED: "게시글",
 };
 
+const TARGET_TYPE_BADGE_CLASSES: Record<ReportItem["targetType"], string> = {
+  USER: "border-blue-200 bg-blue-100 text-blue-700 dark:border-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
+  RSS: "border-purple-200 bg-purple-100 text-purple-700 dark:border-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
+  COMMENT:
+    "border-amber-200 bg-amber-100 text-amber-700 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
+  FEED: "border-emerald-200 bg-emerald-100 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400",
+};
+
 const SUSPENSION_PRESET_OPTIONS = Object.entries(SUSPENSION_PRESET_LABELS) as [SuspensionPreset, string][];
 
 const PAGE_SIZE = 10;
@@ -115,7 +123,9 @@ export default function AdminReportTab() {
             <Card key={report.id}>
               <CardContent className="flex flex-col gap-2 p-4">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="outline">{TARGET_TYPE_LABELS[report.targetType]}</Badge>
+                  <Badge variant="outline" className={TARGET_TYPE_BADGE_CLASSES[report.targetType]}>
+                    {TARGET_TYPE_LABELS[report.targetType]}
+                  </Badge>
                   <span className="text-sm font-medium">{REPORT_REASON_LABELS[report.reason]}</span>
                   <span className="ml-auto text-xs text-gray-400">{new Date(report.createdAt).toLocaleString()}</span>
                 </div>
@@ -123,9 +133,7 @@ export default function AdminReportTab() {
                 <p className="text-sm text-gray-700">
                   대상: <span className="font-medium">{report.targetLabel ?? `(삭제된 대상 #${report.targetId})`}</span>
                 </p>
-                <p className="text-sm text-gray-500">
-                  신고자: {report.reporter.userName} (#{report.reporter.id})
-                </p>
+                <p className="text-sm text-gray-500">신고자: {report.reporter?.userName ?? "(탈퇴한 사용자)"}</p>
                 {report.detail && <p className="text-sm text-gray-600 whitespace-pre-wrap">{report.detail}</p>}
 
                 <div className="flex justify-end gap-2 pt-2">
