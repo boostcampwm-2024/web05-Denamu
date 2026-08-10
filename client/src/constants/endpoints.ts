@@ -125,6 +125,7 @@ export const REPORT = {
 
 export const SUSPENSION = {
   ADMIN_LIST: "/api/admins/user-suspensions",
+  ADMIN_UPDATE: (userId: number) => `/api/admins/user-suspensions/${userId}`,
 };
 
 export const FILE = {

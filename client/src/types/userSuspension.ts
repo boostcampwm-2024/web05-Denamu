@@ -1,4 +1,5 @@
 export interface SuspendedUserTarget {
+  id: number;
   userName: string;
   email: string;
 }
@@ -16,8 +17,13 @@ export interface SuspendedUserItem {
   createdAt: string;
 }
 
-export interface CreateUserSuspensionPayload {
-  userId: number;
+export interface SuspensionFormPayload {
   suspendedUntil?: string;
   detail: string;
 }
+
+export interface CreateUserSuspensionPayload extends SuspensionFormPayload {
+  userId: number;
+}
+
+export type UpdateUserSuspensionPayload = CreateUserSuspensionPayload;
