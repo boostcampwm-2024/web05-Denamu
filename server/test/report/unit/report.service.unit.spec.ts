@@ -24,6 +24,8 @@ import { ReportService } from '@report/service/report.service';
 
 import { RssAcceptRepository } from '@rss/repository/rss.repository';
 
+import { SuspensionService } from '@suspension/service/suspension.service';
+
 import { UserService } from '@user/service/user.service';
 
 describe(`${ReportService.name} Unit Test`, () => {
@@ -36,6 +38,9 @@ describe(`${ReportService.name} Unit Test`, () => {
   let feedRepository: jest.Mocked<Pick<FeedRepository, 'findOne'>>;
   let userService: jest.Mocked<Pick<UserService, 'getUser'>>;
   let adminRepository: jest.Mocked<Pick<AdminRepository, 'findOneBy'>>;
+  let suspensionService: jest.Mocked<
+    Pick<SuspensionService, 'suspendUser' | 'suspendRss'>
+  >;
   let dataSource: { transaction: jest.Mock };
   let notifierRegistry: jest.Mocked<Pick<NotifierRegistry, 'sendAlert'>>;
   let manager: { delete: jest.Mock; save: jest.Mock };
@@ -60,6 +65,7 @@ describe(`${ReportService.name} Unit Test`, () => {
     feedRepository = { findOne: jest.fn() };
     userService = { getUser: jest.fn() };
     adminRepository = { findOneBy: jest.fn() };
+    suspensionService = { suspendUser: jest.fn(), suspendRss: jest.fn() };
     manager = { delete: jest.fn(), save: jest.fn() };
     dataSource = {
       transaction: jest.fn((callback: (manager: unknown) => Promise<unknown>) =>
@@ -75,6 +81,7 @@ describe(`${ReportService.name} Unit Test`, () => {
       feedRepository as unknown as FeedRepository,
       userService as unknown as UserService,
       adminRepository as unknown as AdminRepository,
+      suspensionService as unknown as SuspensionService,
       dataSource as unknown as DataSource,
       notifierRegistry as unknown as NotifierRegistry,
     );
@@ -339,7 +346,8 @@ describe(`${ReportService.name} Unit Test`, () => {
       await expect(
         reportService.approveReport(1, 'admin@test.com', approveDto),
       ).rejects.toThrow(ConflictException);
-      expect(manager.save).not.toHaveBeenCalled();
+      expect(suspensionService.suspendUser).not.toHaveBeenCalled();
+      expect(suspensionService.suspendRss).not.toHaveBeenCalled();
     });
 
     it('USER/COMMENT 신고는 유저 정지를 생성하고 신고를 삭제한다.', async () => {
@@ -359,15 +367,12 @@ describe(`${ReportService.name} Unit Test`, () => {
       expect(manager.delete).toHaveBeenCalledWith(expect.anything(), {
         id: 1,
       });
-      expect(manager.save).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.objectContaining({
-          user: { id: 2 },
-          admin: { id: 9 },
-          detail: approveDto.detail,
-          suspendedUntil: null,
-        }),
-      );
+      expect(suspensionService.suspendUser).toHaveBeenCalledWith(manager, {
+        userId: 2,
+        adminId: 9,
+        detail: approveDto.detail,
+        suspendedUntil: null,
+      });
     });
 
     it('RSS/FEED 신고는 RSS 정지를 생성하고 신고를 삭제한다.', async () => {
@@ -384,15 +389,12 @@ describe(`${ReportService.name} Unit Test`, () => {
       await reportService.approveReport(1, 'admin@test.com', approveDto);
 
       // then
-      expect(manager.save).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.objectContaining({
-          rss: { id: 7 },
-          admin: null,
-          detail: approveDto.detail,
-          suspendedUntil: null,
-        }),
-      );
+      expect(suspensionService.suspendRss).toHaveBeenCalledWith(manager, {
+        rssId: 7,
+        adminId: null,
+        detail: approveDto.detail,
+        suspendedUntil: null,
+      });
     });
   });
 
