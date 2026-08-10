@@ -41,6 +41,8 @@ export class SuspensionService {
       detail,
       suspendedUntil,
     });
+
+    await this.userService.invalidateUserTokens(userId);
   }
 
   async createUserSuspension(

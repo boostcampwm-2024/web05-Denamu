@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, IsNull, MoreThan, Repository } from 'typeorm';
 
 import { UserSuspension } from '@suspension/entity/userSuspension.entity';
 
@@ -35,5 +35,16 @@ export class UserSuspensionRepository extends Repository<UserSuspension> {
       .orderBy('suspension.id', 'DESC')
       .take(limit + 1)
       .getMany();
+  }
+
+  async hasActiveSuspension(userId: number): Promise<boolean> {
+    const now = new Date();
+
+    return this.exists({
+      where: [
+        { user: { id: userId }, suspendedUntil: IsNull() },
+        { user: { id: userId }, suspendedUntil: MoreThan(now) },
+      ],
+    });
   }
 }
