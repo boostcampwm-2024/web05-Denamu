@@ -33,7 +33,7 @@ export class FeedCrawler {
     }
 
     const crawlResults = await this.feedGroupByRss(rssObjects, startTime);
-    await this.syncChannelImages(rssObjects, crawlResults);
+    await this.syncChannelImages(crawlResults);
     const newFeeds = crawlResults.flatMap((result) => result.feeds);
 
     if (!newFeeds.length) {
@@ -44,7 +44,10 @@ export class FeedCrawler {
     const insertedData: FeedDetail[] =
       await this.feedRepository.insertFeeds(newFeeds);
     await this.feedRepository.saveAiQueue(insertedData);
-    await this.feedRepository.setRecentFeedList(insertedData);
+    const rssObjectsById = new Map(
+      crawlResults.map((result) => [result.rssObj.id, result.rssObj]),
+    );
+    await this.feedRepository.setRecentFeedList(insertedData, rssObjectsById);
 
     const executionTime = Date.now() - startTime.getTime();
 
@@ -61,12 +64,11 @@ export class FeedCrawler {
 
     logger.info(`전체 피드 크롤링 시작: ${rssObj.blogName}(${rssObj.rssUrl})`);
 
-    const { feeds: newFeeds, channelImage } =
+    const { feeds: newFeeds, rssObj: updatedRssObj } =
       await this.feedParserManager.fetchAndParseAll(rssObj);
-    await this.syncChannelImages(
-      [rssObj],
-      [{ rssId: rssObj.id, channelImage }],
-    );
+    await this.syncChannelImages([
+      { rssObj: updatedRssObj, originalRssObj: rssObj },
+    ]);
 
     if (!newFeeds.length) {
       logger.info(`${rssObj.blogName}에서 가져올 피드가 없습니다.`);
@@ -94,12 +96,11 @@ export class FeedCrawler {
       throw new PermanentError(`RSS를 찾을 수 없습니다: blogId=${feed.blogId}`);
     }
 
-    const { feeds: allFeeds, channelImage } =
+    const { feeds: allFeeds, rssObj: updatedRssObj } =
       await this.feedParserManager.fetchAndParseAll(rssObj);
-    await this.syncChannelImages(
-      [rssObj],
-      [{ rssId: rssObj.id, channelImage }],
-    );
+    await this.syncChannelImages([
+      { rssObj: updatedRssObj, originalRssObj: rssObj },
+    ]);
     const matched = allFeeds.find((parsed) => parsed.link === feed.path);
     if (!matched) {
       throw await this.buildMissingFeedError(feedId, feed.path);
@@ -147,7 +148,7 @@ export class FeedCrawler {
   private feedGroupByRss(
     rssObjects: RssObj[],
     startTime: Date,
-  ): Promise<(FeedFetchResult & { rssId: number })[]> {
+  ): Promise<(FeedFetchResult & { originalRssObj: RssObj })[]> {
     return Promise.all(
       rssObjects.map(async (rssObj: RssObj) => {
         logger.info(
@@ -157,26 +158,21 @@ export class FeedCrawler {
           rssObj,
           startTime,
         );
-        return { ...result, rssId: rssObj.id };
+        return { ...result, originalRssObj: rssObj };
       }),
     );
   }
 
   private async syncChannelImages(
-    rssObjects: RssObj[],
-    crawlResults: { rssId: number; channelImage: string | null | undefined }[],
+    pairs: { rssObj: RssObj; originalRssObj: RssObj }[],
   ) {
-    const rssById = new Map(rssObjects.map((rssObj) => [rssObj.id, rssObj]));
-
     await Promise.all(
-      crawlResults
-        .filter((result) => result.channelImage !== undefined)
+      pairs
         .filter(
-          (result) =>
-            result.channelImage !== rssById.get(result.rssId)?.blogImage,
+          (pair) => pair.rssObj.blogImage !== pair.originalRssObj.blogImage,
         )
-        .map((result) =>
-          this.rssRepository.updateImage(result.rssId, result.channelImage),
+        .map((pair) =>
+          this.rssRepository.updateImage(pair.rssObj.id, pair.rssObj.blogImage),
         ),
     );
   }

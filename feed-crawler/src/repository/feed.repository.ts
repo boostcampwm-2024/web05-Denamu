@@ -2,7 +2,7 @@ import { inject, injectable } from 'tsyringe';
 
 import { DatabaseConnection } from '@common/database/database-connection';
 import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
-import { FeedDetail } from '@common/feed/feed.type';
+import { FeedDetail, RssObj } from '@common/feed/feed.type';
 import logger from '@common/logger/logger';
 import { DbMetrics } from '@common/metrics/db-metrics';
 import { RedisMetrics } from '@common/metrics/redis-metrics';
@@ -61,7 +61,7 @@ export class FeedRepository {
             VALUES ?
         `;
       const values = candidates.map((feed) => [
-        feed.blog.id,
+        feed.blogId,
         feed.pubDate,
         feed.title,
         feed.link,
@@ -125,7 +125,7 @@ export class FeedRepository {
           const result = await this.dbConnection.executeQueryStrict(
             insertQuery,
             [
-              feed.blog.id,
+              feed.blogId,
               feed.pubDate,
               feed.title,
               feed.link,
@@ -178,18 +178,28 @@ export class FeedRepository {
     }
   }
 
-  async setRecentFeedList(feedLists: FeedDetail[]) {
+  async setRecentFeedList(
+    feedLists: FeedDetail[],
+    rssObjectsById: Map<number, RssObj>,
+  ) {
     this.redisMetrics.total.inc({ operation: 'cache_feeds' });
     try {
       await this.redisConnection.executePipeline((pipeline) => {
         for (const feed of feedLists) {
+          const rssObj = rssObjectsById.get(feed.blogId);
+          if (!rssObj) {
+            logger.warn(
+              `[Redis] 최근 게시글 캐시 스킵: rss 정보를 찾을 수 없습니다. feedId=${feed.id}, blogId=${feed.blogId}`,
+            );
+            continue;
+          }
           const record: FeedRecentRedisRecord = {
             id: feed.id,
-            blogPlatform: feed.blog.platform,
-            blogImage: feed.blog.image ?? '',
+            blogPlatform: rssObj.blogPlatform,
+            blogImage: rssObj.blogImage ?? '',
             createdAt: feed.pubDate,
             viewCount: 0,
-            blogName: feed.blog.name,
+            blogName: rssObj.blogName,
             thumbnail: feed.thumbnail,
             path: feed.link,
             title: feed.title,

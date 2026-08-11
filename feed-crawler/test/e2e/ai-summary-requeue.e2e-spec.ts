@@ -42,12 +42,7 @@ describe('AI 요약 재요청 e2e-test', () => {
         feeds: [
           {
             id: null,
-            blog: {
-              id: rssId,
-              name: 'requeue blog',
-              platform: 'etc',
-              image: null,
-            },
+            blogId: rssId,
             title: 'requeue title',
             link: feedPath,
             pubDate: new Date().toISOString().slice(0, 19).replace('T', ' '),
@@ -57,7 +52,13 @@ describe('AI 요약 재요청 e2e-test', () => {
             deathCount: 0,
           },
         ],
-        channelImage: null,
+        rssObj: {
+          id: rssId,
+          blogName: 'requeue blog',
+          blogPlatform: 'etc',
+          rssUrl: 'https://requeue-test.com/rss',
+          blogImage: null,
+        },
       });
 
     // when

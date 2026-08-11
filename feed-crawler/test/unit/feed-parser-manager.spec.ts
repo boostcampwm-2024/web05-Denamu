@@ -37,12 +37,7 @@ describe('FeedParserManager', () => {
   const mockFeedDetails: FeedDetail[] = [
     {
       id: null,
-      blog: {
-        id: 1,
-        name: '테스트 블로그',
-        platform: 'tistory',
-        image: null,
-      },
+      blogId: 1,
       pubDate: '2024-01-01 12:00:00',
       title: '테스트 피드 1',
       link: 'https://test.tistory.com/1',
@@ -137,7 +132,7 @@ describe('FeedParserManager', () => {
         rssXmlData,
         startTime,
       );
-      expect(result).toEqual({ feeds: mockFeedDetails, channelImage: null });
+      expect(result).toEqual({ feeds: mockFeedDetails, rssObj: mockRssObj });
     });
 
     it('Atom 1.0 피드를 성공적으로 파싱해야 한다', async () => {
@@ -165,7 +160,7 @@ describe('FeedParserManager', () => {
         atomXmlData,
         startTime,
       );
-      expect(result).toEqual({ feeds: mockFeedDetails, channelImage: null });
+      expect(result).toEqual({ feeds: mockFeedDetails, rssObj: mockRssObj });
     });
 
     it('HTTP 요청이 실패할 때 빈 배열을 반환해야 한다', async () => {
@@ -181,7 +176,7 @@ describe('FeedParserManager', () => {
       );
 
       // Then
-      expect(result).toEqual({ feeds: [], channelImage: undefined });
+      expect(result).toEqual({ feeds: [], rssObj: mockRssObj });
     });
 
     it('지원하지 않는 피드 형식일 때 빈 배열을 반환해야 한다', async () => {
@@ -201,7 +196,7 @@ describe('FeedParserManager', () => {
       );
 
       // Then
-      expect(result).toEqual({ feeds: [], channelImage: undefined });
+      expect(result).toEqual({ feeds: [], rssObj: mockRssObj });
     });
 
     it('파서에서 에러가 발생할 때 빈 배열을 반환해야 한다', async () => {
@@ -221,7 +216,7 @@ describe('FeedParserManager', () => {
       );
 
       // Then
-      expect(result).toEqual({ feeds: [], channelImage: undefined });
+      expect(result).toEqual({ feeds: [], rssObj: mockRssObj });
     });
   });
 
@@ -245,7 +240,7 @@ describe('FeedParserManager', () => {
         mockRssObj,
         rssXmlData,
       );
-      expect(result).toEqual({ feeds: mockFeedDetails, channelImage: null });
+      expect(result).toEqual({ feeds: mockFeedDetails, rssObj: mockRssObj });
       expect(metricsTotalIncMock).toHaveBeenCalledWith({ type: 'full' });
       expect(metricsSuccessIncMock).toHaveBeenCalledWith({ type: 'full' });
     });
@@ -270,7 +265,7 @@ describe('FeedParserManager', () => {
         mockRssObj,
         atomXmlData,
       );
-      expect(result).toEqual({ feeds: mockFeedDetails, channelImage: null });
+      expect(result).toEqual({ feeds: mockFeedDetails, rssObj: mockRssObj });
     });
 
     it('HTTP 요청이 실패하면 빈 배열을 반환하고 에러를 로깅해야 한다', async () => {
@@ -281,7 +276,7 @@ describe('FeedParserManager', () => {
       const result = await feedParserManager.fetchAndParseAll(mockRssObj);
 
       // Then
-      expect(result).toEqual({ feeds: [], channelImage: undefined });
+      expect(result).toEqual({ feeds: [], rssObj: mockRssObj });
       expect(metricsFailureIncMock).toHaveBeenCalledWith({ type: 'full' });
       expect(errorSpy).toHaveBeenCalled();
     });
@@ -299,7 +294,7 @@ describe('FeedParserManager', () => {
       const result = await feedParserManager.fetchAndParseAll(mockRssObj);
 
       // Then
-      expect(result).toEqual({ feeds: [], channelImage: undefined });
+      expect(result).toEqual({ feeds: [], rssObj: mockRssObj });
       expect(metricsFailureIncMock).toHaveBeenCalledWith({ type: 'full' });
     });
 
@@ -317,7 +312,7 @@ describe('FeedParserManager', () => {
       const result = await feedParserManager.fetchAndParseAll(mockRssObj);
 
       // Then
-      expect(result).toEqual({ feeds: [], channelImage: undefined });
+      expect(result).toEqual({ feeds: [], rssObj: mockRssObj });
     });
   });
 
@@ -339,7 +334,7 @@ describe('FeedParserManager', () => {
       );
 
       // Then
-      expect(result).toEqual({ feeds: [], channelImage: undefined });
+      expect(result).toEqual({ feeds: [], rssObj: mockRssObj });
     });
 
     it('매우 큰 응답을 처리해야 한다', async () => {
@@ -362,7 +357,7 @@ describe('FeedParserManager', () => {
       );
 
       // Then
-      expect(result).toEqual({ feeds: mockFeedDetails, channelImage: null });
+      expect(result).toEqual({ feeds: mockFeedDetails, rssObj: mockRssObj });
       expect(rss20ParseFeedMock).toHaveBeenCalledWith(
         mockRssObj,
         largeXmlData,

@@ -44,11 +44,14 @@ export class FeedParserManager {
 
       const feeds = await parser.parseFeed(rssObj, xmlData, startTime);
       this.metrics.success.inc({ type: 'scheduled' });
-      return { feeds, channelImage: parser.extractChannelImage(xmlData) };
+      return {
+        feeds,
+        rssObj: this.applyChannelImage(rssObj, parser.extractChannelImage(xmlData)),
+      };
     } catch (error) {
       this.metrics.failure.inc({ type: 'scheduled' });
       logger.error(`[${rssObj.rssUrl}] 피드 파싱 중 오류 발생: ${error}`);
-      return { feeds: [], channelImage: undefined };
+      return { feeds: [], rssObj };
     }
   }
 
@@ -75,12 +78,24 @@ export class FeedParserManager {
 
       const feeds = await parser.parseAllFeeds(rssObj, xmlData);
       this.metrics.success.inc({ type: 'full' });
-      return { feeds, channelImage: parser.extractChannelImage(xmlData) };
+      return {
+        feeds,
+        rssObj: this.applyChannelImage(rssObj, parser.extractChannelImage(xmlData)),
+      };
     } catch (error) {
       this.metrics.failure.inc({ type: 'full' });
       logger.error(`[${rssObj.rssUrl}] 전체 피드 파싱 중 오류 발생: ${error}`);
-      return { feeds: [], channelImage: undefined };
+      return { feeds: [], rssObj };
     }
+  }
+
+  private applyChannelImage(
+    rssObj: RssObj,
+    channelImage: string | null,
+  ): RssObj {
+    return channelImage !== rssObj.blogImage
+      ? { ...rssObj, blogImage: channelImage }
+      : rssObj;
   }
 
   private findSuitableParser(xmlData: string): BaseFeedParser | null {
