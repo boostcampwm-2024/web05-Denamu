@@ -6,6 +6,9 @@ import { PermanentError, RetryableError } from '@common/errors';
 import { FeedDetail, RssObj } from '@common/feed/feed.type';
 import { FeedParserManager } from '@common/parser/feed-parser-manager';
 
+import { RMQ_EXCHANGES, RMQ_ROUTING_KEYS } from '@rabbitmq/rabbitmq.constant';
+import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
+
 import { FeedRepository } from '@repository/feed.repository';
 import { RssRepository } from '@repository/rss.repository';
 
@@ -16,6 +19,7 @@ describe('FeedCrawler', () => {
   let mockFeedRepository: jest.Mocked<FeedRepository>;
   let mockRssRepository: jest.Mocked<RssRepository>;
   let mockFeedParserManager: jest.Mocked<FeedParserManager>;
+  let mockRabbitMQService: jest.Mocked<RabbitMQService>;
   let deleteRecentFeedMock: jest.Mock;
   let insertFeedsMock: jest.Mock;
   let saveAiQueueMock: jest.Mock;
@@ -26,6 +30,7 @@ describe('FeedCrawler', () => {
   let updateImageMock: jest.Mock;
   let fetchAndParseMock: jest.Mock;
   let fetchAndParseAllMock: jest.Mock;
+  let sendMessageMock: jest.Mock;
 
   const mockRssObjects: RssObj[] = [
     {
@@ -82,6 +87,7 @@ describe('FeedCrawler', () => {
     updateImageMock = jest.fn();
     fetchAndParseMock = jest.fn();
     fetchAndParseAllMock = jest.fn();
+    sendMessageMock = jest.fn();
 
     mockFeedRepository = {
       deleteRecentFeed: deleteRecentFeedMock,
@@ -104,10 +110,15 @@ describe('FeedCrawler', () => {
       fetchAndParseAll: fetchAndParseAllMock,
     } as any;
 
+    mockRabbitMQService = {
+      sendMessage: sendMessageMock,
+    } as any;
+
     feedCrawler = new FeedCrawler(
       mockRssRepository,
       mockFeedRepository,
       mockFeedParserManager,
+      mockRabbitMQService,
     );
   });
 
@@ -144,6 +155,16 @@ describe('FeedCrawler', () => {
         mockRssObjects[0],
         mockRssObjects[1],
       ]);
+      expect(sendMessageMock).toHaveBeenCalledWith(
+        RMQ_EXCHANGES.CRAWLING,
+        RMQ_ROUTING_KEYS.CRAWLING_NEW_POST,
+        JSON.stringify(
+          mockFeedDetails.map((feed) => ({
+            feedId: feed.id,
+            rssAcceptId: feed.blogId,
+          })),
+        ),
+      );
     });
 
     it('등록된 RSS가 없을 때 조기 종료해야 한다', async () => {
@@ -212,6 +233,8 @@ describe('FeedCrawler', () => {
       expect(insertFeedsMock).toHaveBeenCalledWith(expectedFeeds);
       expect(saveAiQueueMock).toHaveBeenCalledWith(expectedFeeds);
       expect(result).toEqual(expectedFeeds);
+      // 전체 크롤링(관리자 승인 시 백카탈로그)은 신규 글 알림을 발행하지 않아야 한다.
+      expect(sendMessageMock).not.toHaveBeenCalled();
     });
 
     it('가져올 피드가 없을 때 빈 배열을 반환해야 한다', async () => {

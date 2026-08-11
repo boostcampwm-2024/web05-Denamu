@@ -13,6 +13,7 @@ describe('feed crawling e2e-test', () => {
       testContext.rssRepository,
       testContext.feedRepository,
       testContext.feedParserManager,
+      { sendMessage: jest.fn() } as any,
     );
   });
 

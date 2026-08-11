@@ -24,6 +24,16 @@ export class SubscriptionRepository extends Repository<Subscription> {
     return this.countBy({ rssAccept: { id: blogId } });
   }
 
+  async getSubscriberIdsByBlog(blogId: number): Promise<number[]> {
+    const rows = await this.find({
+      where: { rssAccept: { id: blogId } },
+      relations: { user: true },
+      select: { id: true, user: { id: true } },
+    });
+
+    return rows.map((row) => row.user.id);
+  }
+
   async countByBlogIds(blogIds: number[]): Promise<Map<number, number>> {
     if (!blogIds.length) return new Map();
 
@@ -49,7 +59,10 @@ export class SubscriptionRepository extends Repository<Subscription> {
         ...(lastId && { id: LessThan(lastId) }),
       },
       relations: { user: true },
-      select: { id: true, user: { id: true, userName: true, profileImage: true } },
+      select: {
+        id: true,
+        user: { id: true, userName: true, profileImage: true },
+      },
       order: { id: 'DESC' },
       take: limit + 1,
     });
