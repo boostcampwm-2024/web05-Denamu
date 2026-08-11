@@ -56,6 +56,19 @@ export interface NoticePublished {
   title: string;
 }
 
+export interface MarketingBroadcast {
+  email: string;
+  userName: string;
+  subject: string;
+  content: string;
+}
+
+export interface UnreadNotificationDigest {
+  email: string;
+  userName: string;
+  unreadCount: number;
+}
+
 export const EmailPayloadConstant = {
   USER_CERTIFICATION: 'userCertification',
   RSS_REMOVAL: 'rssRemoval',
@@ -69,6 +82,8 @@ export const EmailPayloadConstant = {
   ADMIN_PASSWORD_RESET: 'adminPasswordReset',
   QNA_ANSWERED: 'qnaAnswered',
   NOTICE_PUBLISHED: 'noticePublished',
+  MARKETING_BROADCAST: 'marketingBroadcast',
+  UNREAD_NOTIFICATION_DIGEST: 'unreadNotificationDigest',
 } as const;
 
 export type EmailPayload =
@@ -104,4 +119,12 @@ export type EmailPayload =
   | {
       type: typeof EmailPayloadConstant.NOTICE_PUBLISHED;
       data: NoticePublished;
+    }
+  | {
+      type: typeof EmailPayloadConstant.MARKETING_BROADCAST;
+      data: MarketingBroadcast;
+    }
+  | {
+      type: typeof EmailPayloadConstant.UNREAD_NOTIFICATION_DIGEST;
+      data: UnreadNotificationDigest;
     };

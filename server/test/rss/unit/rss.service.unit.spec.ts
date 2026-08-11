@@ -15,6 +15,11 @@ import { RssBlockRepository } from '@block/repository/rssBlock.repository';
 import { EmailProducer } from '@common/email/email.producer';
 import { WinstonLoggerService } from '@common/logger/logger.service';
 import { NotifierRegistry } from '@common/notification/notifier-registry';
+import {
+  RMQ_EXCHANGES,
+  RMQ_ROUTING_KEYS,
+} from '@common/rabbitmq/rabbitmq.constant';
+import { RabbitMQService } from '@common/rabbitmq/rabbitmq.service';
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
 
@@ -82,6 +87,7 @@ describe(`${RssService.name} Unit Test`, () => {
   let redisService: jest.Mocked<
     Pick<RedisService, 'rpush' | 'set' | 'get' | 'del'>
   >;
+  let rabbitMQService: jest.Mocked<Pick<RabbitMQService, 'sendMessage'>>;
   let adminRepository: jest.Mocked<Pick<AdminRepository, 'find'>>;
   let notifierRegistry: jest.Mocked<Pick<NotifierRegistry, 'sendAlert'>>;
   let logger: jest.Mocked<Pick<WinstonLoggerService, 'error'>>;
@@ -134,6 +140,9 @@ describe(`${RssService.name} Unit Test`, () => {
       get: jest.fn(),
       del: jest.fn(),
     };
+    rabbitMQService = {
+      sendMessage: jest.fn(),
+    };
     adminRepository = { find: jest.fn().mockResolvedValue([]) };
     notifierRegistry = { sendAlert: jest.fn() };
     logger = { error: jest.fn() };
@@ -150,6 +159,7 @@ describe(`${RssService.name} Unit Test`, () => {
       emailProducer as unknown as EmailProducer,
       dataSource as unknown as DataSource,
       redisService as unknown as RedisService,
+      rabbitMQService as unknown as RabbitMQService,
       adminRepository as unknown as AdminRepository,
       notifierRegistry as unknown as NotifierRegistry,
       logger as unknown as WinstonLoggerService,
@@ -459,8 +469,9 @@ describe(`${RssService.name} Unit Test`, () => {
       await rssService.acceptRss(param);
 
       // then
-      expect(redisService.rpush).toHaveBeenCalledWith(
-        REDIS_KEYS.FULL_FEED_CRAWL_QUEUE,
+      expect(rabbitMQService.sendMessage).toHaveBeenCalledWith(
+        RMQ_EXCHANGES.CRAWLING,
+        RMQ_ROUTING_KEYS.CRAWLING_FULL,
         expect.any(String),
       );
       expect(emailProducer.produceRssRegistration).toHaveBeenCalledWith(

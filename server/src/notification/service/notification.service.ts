@@ -1,13 +1,20 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 
+import {
+  getDigestStaleCutoffDate,
+  getNotificationCutoffDate,
+} from '@notification/constant/notification.constant';
 import { GetNotificationsResponseDto } from '@notification/dto/response/getNotifications.dto';
 import { GetUnreadCountResponseDto } from '@notification/dto/response/getUnreadCount.dto';
 import { NotificationRepository } from '@notification/repository/notification.repository';
+
+import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
 
 @Injectable()
 export class NotificationService {
   constructor(
     private readonly notificationRepository: NotificationRepository,
+    private readonly subscriptionRepository: SubscriptionRepository,
   ) {}
 
   async upsertLikeNotification(recipientId: number, feedId: number) {
@@ -53,6 +60,14 @@ export class NotificationService {
     await this.notificationRepository.upsertSubscribe(recipientId, rssAcceptId);
   }
 
+  async upsertNewPostNotifications(rssAcceptId: number, feedId: number) {
+    const subscriberIds =
+      await this.subscriptionRepository.getSubscriberIdsByBlog(rssAcceptId);
+    if (!subscriberIds.length) return;
+
+    await this.notificationRepository.upsertNewPost(feedId, subscriberIds);
+  }
+
   async removeSubscribeNotificationIfEmpty(
     rssAcceptId: number,
     subscriberCount: number,
@@ -86,5 +101,17 @@ export class NotificationService {
 
   async deleteExpired() {
     await this.notificationRepository.deleteExpired();
+  }
+
+  async getStaleUnreadDigestTargets() {
+    const rows = await this.notificationRepository.findStaleUnreadDigestTargets(
+      getDigestStaleCutoffDate(),
+      getNotificationCutoffDate(),
+    );
+    return rows.map((row) => ({
+      email: row.email,
+      userName: row.userName,
+      unreadCount: Number(row.unreadCount),
+    }));
   }
 }

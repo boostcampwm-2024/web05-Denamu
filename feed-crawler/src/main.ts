@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 
 import * as schedule from 'node-schedule';
+import { RabbitMQManager } from '@rabbitmq/rabbitmq.manager';
 
 import '@common/env-load';
 
@@ -9,7 +10,6 @@ import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
 import { Lifecycle } from '@common/lifecycle/lifecycle.interface';
 import logger from '@common/logger/logger';
 import { FeedMetrics } from '@common/metrics/feed-metrics';
-import { Notifier } from '@common/notification/notifier.interface';
 import { RedisConnection } from '@common/redis/redis-access';
 
 import { AiSummaryRetryEventWorker } from '@event_worker/workers/ai-summary-retry-event-worker';
@@ -25,11 +25,11 @@ function initializeDependencies() {
       DEPENDENCY_SYMBOLS.DatabaseConnection,
     ),
     redisConnection: container.resolve(RedisConnection),
+    rabbitMQManager: container.resolve(RabbitMQManager),
     feedCrawler: container.resolve(FeedCrawler),
     claudeEventWorker: container.resolve(ClaudeEventWorker),
     fullFeedCrawlEventWorker: container.resolve(FullFeedCrawlEventWorker),
     aiSummaryRetryEventWorker: container.resolve(AiSummaryRetryEventWorker),
-    notifier: container.resolve<Notifier>(DEPENDENCY_SYMBOLS.Notifier),
     metrics: container.resolve(FeedMetrics),
   };
 }
@@ -51,16 +51,6 @@ function registerSchedulers(
       void dependencies.claudeEventWorker.start();
     },
   );
-
-  schedule.scheduleJob('FULL FEED CRAWLING', '*/5 * * * *', () => {
-    logger.info(`Full Feed Crawling Start: ${new Date().toISOString()}`);
-    void dependencies.fullFeedCrawlEventWorker.start();
-  });
-
-  schedule.scheduleJob('AI SUMMARY RETRY', '*/1 * * * *', () => {
-    logger.info(`AI Summary Retry Start: ${new Date().toISOString()}`);
-    void dependencies.aiSummaryRetryEventWorker.start();
-  });
 }
 
 async function handleShutdown(components: Lifecycle[], signal: string) {
@@ -89,9 +79,11 @@ async function startScheduler() {
 
     const components: Lifecycle[] = [
       dependencies.metrics,
-      dependencies.notifier,
       dependencies.dbConnection,
       dependencies.redisConnection,
+      dependencies.rabbitMQManager,
+      dependencies.fullFeedCrawlEventWorker,
+      dependencies.aiSummaryRetryEventWorker,
     ];
 
     for (const component of components) {

@@ -33,6 +33,8 @@ import { HealthController } from '@health/health.controller';
 
 import { LikeModule } from '@like/module/like.module';
 
+import { MarketingEmailModule } from '@marketingEmail/module/marketingEmail.module';
+
 import { NotificationModule } from '@notification/module/notification.module';
 
 import { QnaModule } from '@qna/module/qna.module';
@@ -44,6 +46,8 @@ import { RssModule } from '@rss/module/rss.module';
 import { StatisticModule } from '@statistic/module/statistic.module';
 
 import { SubscribeModule } from '@subscribe/module/subscribe.module';
+
+import { SuspensionModule } from '@suspension/module/suspension.module';
 
 import { TagModule } from '@tag/module/tag.module';
 
@@ -100,11 +104,13 @@ const exists = !!chosen && fs.existsSync(chosen);
     CommentModule,
     LikeModule,
     BoardModule,
+    MarketingEmailModule,
     QnaModule,
     NotificationModule,
     BlockModule,
     ReportModule,
     SubscribeModule,
+    SuspensionModule,
     FileModule,
     RabbitMQModule,
   ],

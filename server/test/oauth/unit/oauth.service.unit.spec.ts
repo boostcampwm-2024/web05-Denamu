@@ -33,7 +33,9 @@ describe(`${OAuthService.name} Unit Test`, () => {
   let redisService: jest.Mocked<
     Pick<RedisService, 'eval' | 'set' | 'get' | 'del'>
   >;
-  let userService: jest.Mocked<Pick<UserService, 'issueRefreshToken'>>;
+  let userService: jest.Mocked<
+    Pick<UserService, 'issueRefreshToken' | 'assertNotSuspended'>
+  >;
   let googleProvider: {
     getAuthUrl: jest.Mock;
     getTokens: jest.Mock;
@@ -67,7 +69,10 @@ describe(`${OAuthService.name} Unit Test`, () => {
       get: jest.fn(),
       del: jest.fn(),
     };
-    userService = { issueRefreshToken: jest.fn() };
+    userService = {
+      issueRefreshToken: jest.fn(),
+      assertNotSuspended: jest.fn(),
+    };
     googleProvider = {
       getAuthUrl: jest.fn(),
       getTokens: jest.fn(),

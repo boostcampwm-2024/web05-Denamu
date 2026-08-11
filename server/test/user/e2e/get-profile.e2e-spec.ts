@@ -5,6 +5,8 @@ import TestAgent from 'supertest/lib/agent';
 
 import { UserBlockRepository } from '@block/repository/userBlock.repository';
 
+import { UserSuspensionRepository } from '@suspension/repository/userSuspension.repository';
+
 import { GetUserProfileResponseDto } from '@user/dto/response/getUserProfile.dto';
 import { User } from '@user/entity/user.entity';
 import { UserRepository } from '@user/repository/user.repository';
@@ -18,12 +20,14 @@ describe(`GET /api/users/:id/profile E2E Test`, () => {
   let agent: TestAgent;
   let userRepository: UserRepository;
   let blockRepository: UserBlockRepository;
+  let userSuspensionRepository: UserSuspensionRepository;
   let user: User;
 
   beforeAll(() => {
     agent = supertest(testApp.getHttpServer());
     userRepository = testApp.get(UserRepository);
     blockRepository = testApp.get(UserBlockRepository);
+    userSuspensionRepository = testApp.get(UserSuspensionRepository);
   });
 
   beforeEach(async () => {
@@ -127,6 +131,23 @@ describe(`GET /api/users/:id/profile E2E Test`, () => {
     const { data }: { data: GetUserProfileResponseDto } = response.body;
     expect(response.status).toBe(HttpStatus.OK);
     expect(data.isBlocked).toBe(false);
+  });
+
+  it('[403] 정지 중인 유저의 프로필은 조회할 수 없다.', async () => {
+    // given
+    await userSuspensionRepository.save({
+      user: { id: user.id },
+      detail: '정지 처리',
+      suspendedUntil: null,
+    });
+
+    // Http when
+    const response = await agent.get(URL(user.id));
+
+    // Http then
+    const { message }: { message: string } = response.body;
+    expect(response.status).toBe(HttpStatus.FORBIDDEN);
+    expect(message).toBe('정지 처리된 유저입니다.');
   });
 
   it('[404] 존재하지 않는 유저를 조회하면 실패한다.', async () => {

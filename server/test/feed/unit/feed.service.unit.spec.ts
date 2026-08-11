@@ -5,9 +5,15 @@ import { Request, Response } from 'express';
 
 import { RssBlockRepository } from '@block/repository/rssBlock.repository';
 
+import {
+  RMQ_EXCHANGES,
+  RMQ_ROUTING_KEYS,
+} from '@common/rabbitmq/rabbitmq.constant';
+import { RabbitMQService } from '@common/rabbitmq/rabbitmq.service';
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
 
+import { FEED_AI_SUMMARY_IN_PROGRESS_MESSAGE } from '@feed/constant/feed.constant';
 import { ReadFeedPaginationRequestDto } from '@feed/dto/request/readFeedPagination.dto';
 import { SearchFeedRequestDto } from '@feed/dto/request/searchFeed.dto';
 import { GetFeedDetailResponseDto } from '@feed/dto/response/getFeedDetail';
@@ -59,6 +65,7 @@ describe(`${FeedService.name} Unit Test`, () => {
       | 'set'
     >
   >;
+  let rabbitMQService: jest.Mocked<Pick<RabbitMQService, 'sendMessage'>>;
 
   const createResponse = () => ({ cookie: jest.fn() }) as unknown as Response;
 
@@ -88,6 +95,10 @@ describe(`${FeedService.name} Unit Test`, () => {
       set: jest.fn().mockResolvedValue('OK'),
     };
 
+    rabbitMQService = {
+      sendMessage: jest.fn(),
+    };
+
     subscriptionRepository = {
       findOneBy: jest.fn(),
       getSubscribedBlogIds: jest.fn().mockResolvedValue([]),
@@ -101,6 +112,7 @@ describe(`${FeedService.name} Unit Test`, () => {
       feedRepository as unknown as FeedRepository,
       feedViewRepository as unknown as FeedViewRepository,
       redisService as unknown as RedisService,
+      rabbitMQService as unknown as RabbitMQService,
       subscriptionRepository as unknown as SubscriptionRepository,
       rssBlockRepository as unknown as RssBlockRepository,
     );
@@ -155,7 +167,7 @@ describe(`${FeedService.name} Unit Test`, () => {
 
   describe('requestAiSummary', () => {
     const parseEnqueued = () =>
-      JSON.parse(redisService.rpush.mock.calls[0][1] as string);
+      JSON.parse(rabbitMQService.sendMessage.mock.calls[0][2]);
 
     it('존재하지 않는 피드면 NotFoundException을 던지고 큐에 넣지 않는다.', async () => {
       // given
@@ -165,10 +177,11 @@ describe(`${FeedService.name} Unit Test`, () => {
       await expect(feedService.requestAiSummary(7)).rejects.toThrow(
         NotFoundException,
       );
-      expect(redisService.rpush).not.toHaveBeenCalled();
+      expect(feedRepository.update).not.toHaveBeenCalled();
+      expect(rabbitMQService.sendMessage).not.toHaveBeenCalled();
     });
 
-    it('요약이 NULL(영구 실패)이면 deathCount 0으로 재요청 큐에 넣는다.', async () => {
+    it('요약이 NULL(영구 실패)이면 진행중 placeholder로 갱신 후 재요청 큐에 발행한다.', async () => {
       // given
       feedRepository.findOneBy.mockResolvedValue({
         id: 7,
@@ -186,11 +199,15 @@ describe(`${FeedService.name} Unit Test`, () => {
         'EX',
         expect.any(Number),
       );
-      expect(redisService.rpush).toHaveBeenCalledWith(
-        REDIS_KEYS.FEED_AI_RETRY_QUEUE,
+      expect(feedRepository.update).toHaveBeenCalledWith(7, {
+        summary: FEED_AI_SUMMARY_IN_PROGRESS_MESSAGE,
+      });
+      expect(rabbitMQService.sendMessage).toHaveBeenCalledWith(
+        RMQ_EXCHANGES.CRAWLING,
+        RMQ_ROUTING_KEYS.CRAWLING_AI_RETRY,
         expect.any(String),
       );
-      expect(parseEnqueued()).toMatchObject({ feedId: 7, deathCount: 0 });
+      expect(parseEnqueued()).toBe(7);
     });
 
     it('이미 처리 중(락 점유)이면 ConflictException을 던지고 큐에 넣지 않는다.', async () => {
@@ -205,7 +222,8 @@ describe(`${FeedService.name} Unit Test`, () => {
       await expect(feedService.requestAiSummary(7)).rejects.toThrow(
         ConflictException,
       );
-      expect(redisService.rpush).not.toHaveBeenCalled();
+      expect(feedRepository.update).not.toHaveBeenCalled();
+      expect(rabbitMQService.sendMessage).not.toHaveBeenCalled();
     });
   });
 

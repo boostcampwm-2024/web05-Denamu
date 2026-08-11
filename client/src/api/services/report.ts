@@ -1,10 +1,9 @@
 import { REPORT } from "@/constants/endpoints";
 
 import { axiosInstance } from "@/api/instance";
-
 import { ApiData, ApiMessage } from "@/types/api";
 import { CursorPage } from "@/types/profile";
-import { CreateReportPayload, ReportItem, ReportStatus, ReportTargetType } from "@/types/report";
+import { ApproveReportPayload, CreateReportPayload, ReportItem, ReportTargetType } from "@/types/report";
 
 export const reportUser = async (userId: number, payload: CreateReportPayload): Promise<ApiMessage> => {
   const response = await axiosInstance.post<ApiMessage>(REPORT.USER(userId), payload);
@@ -27,7 +26,6 @@ export const reportFeed = async (feedId: number, payload: CreateReportPayload): 
 };
 
 export interface GetReportsParams {
-  status?: ReportStatus;
   targetType?: ReportTargetType;
   lastId?: number;
   limit?: number;
@@ -36,4 +34,14 @@ export interface GetReportsParams {
 export const getReports = async (params: GetReportsParams): Promise<CursorPage<ReportItem>> => {
   const response = await axiosInstance.get<ApiData<CursorPage<ReportItem>>>(REPORT.ADMIN_LIST, { params });
   return response.data.data;
+};
+
+export const approveReport = async (reportId: number, payload: ApproveReportPayload): Promise<ApiMessage> => {
+  const response = await axiosInstance.post<ApiMessage>(REPORT.ADMIN_APPROVE(reportId), payload);
+  return response.data;
+};
+
+export const rejectReport = async (reportId: number): Promise<ApiMessage> => {
+  const response = await axiosInstance.delete<ApiMessage>(REPORT.ADMIN_REJECT(reportId));
+  return response.data;
 };

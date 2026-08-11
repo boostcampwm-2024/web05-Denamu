@@ -36,7 +36,7 @@ describe("PrivacyPolicy", () => {
     renderPage();
 
     expect(screen.getByRole("heading", { level: 1, name: "개인정보처리방침" })).toBeInTheDocument();
-    expect(screen.getByText(/시행일: 2026\. 08\. 01/)).toBeInTheDocument();
+    expect(screen.getByText(/시행일: 2026\. 08\. 17/)).toBeInTheDocument();
   });
 
   it("15개 조항 제목이 모두 렌더링되어야 한다", () => {
@@ -53,6 +53,13 @@ describe("PrivacyPolicy", () => {
     expect(container).toHaveTextContent("이메일, 비밀번호, 닉네임");
     expect(container).toHaveTextContent("소셜 로그인 시 (Google, GitHub)");
     expect(container).toHaveTextContent("IP 주소, 쿠키, 방문 일시, 서비스 이용 기록, 브라우저 및 기기 정보");
+  });
+
+  it("탈퇴 후 재가입 제한 정책을 고지해야 한다", () => {
+    const { container } = renderPage();
+
+    expect(container).toHaveTextContent("탈퇴 후 재가입 제한: 3개월");
+    expect(container).toHaveTextContent("부정 재가입 방지");
   });
 
   it("문의처로 팀 이메일을 노출해야 한다", () => {

@@ -4,6 +4,8 @@ import { DataSource, Repository } from 'typeorm';
 
 import { UserBlock } from '@block/entity/userBlock.entity';
 
+import { activeSuspensionExclusion } from '@suspension/constant/activeSuspension.constant';
+
 import { User } from '@user/entity/user.entity';
 
 @Injectable()
@@ -22,10 +24,11 @@ export class UserRepository extends Repository<User> {
 
     const query = this.createQueryBuilder('user')
       .where('user.userName LIKE :pattern', { pattern: `%${escaped}%` })
+      .andWhere(activeSuspensionExclusion('user.id'))
       .orderBy('user.userName = :find', 'DESC')
       .addOrderBy('user.userName LIKE :prefix', 'DESC')
       .addOrderBy('user.userName', 'ASC')
-      .setParameters({ find, prefix: `${escaped}%` })
+      .setParameters({ find, prefix: `${escaped}%`, now: new Date() })
       .skip(offset)
       .take(limit);
 
@@ -51,6 +54,13 @@ export class UserRepository extends Repository<User> {
   async findNoticeAgreedUsers(): Promise<Pick<User, 'email' | 'userName'>[]> {
     return this.find({
       where: { noticeEmailAgreed: true },
+      select: ['email', 'userName'],
+    });
+  }
+
+  async findMarketingAgreedUsers() {
+    return this.find({
+      where: { marketingEmailAgreed: true },
       select: ['email', 'userName'],
     });
   }

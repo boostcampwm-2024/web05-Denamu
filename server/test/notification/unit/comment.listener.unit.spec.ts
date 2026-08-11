@@ -223,7 +223,7 @@ describe(`${CommentListener.name} Unit Test`, () => {
 
       // when
       await commentListener.handleCommentDeleted(
-        new CommentDeletedEvent(10, null),
+        new CommentDeletedEvent(10, null, -1),
       );
 
       // then
@@ -242,7 +242,7 @@ describe(`${CommentListener.name} Unit Test`, () => {
 
       // when
       await commentListener.handleCommentDeleted(
-        new CommentDeletedEvent(10, null),
+        new CommentDeletedEvent(10, null, -1),
       );
 
       // then
@@ -259,7 +259,9 @@ describe(`${CommentListener.name} Unit Test`, () => {
 
       // when & then
       await expect(
-        commentListener.handleCommentDeleted(new CommentDeletedEvent(10, null)),
+        commentListener.handleCommentDeleted(
+          new CommentDeletedEvent(10, null, -1),
+        ),
       ).resolves.toBeUndefined();
       expect(logger.error).toHaveBeenCalled();
     });
@@ -274,7 +276,7 @@ describe(`${CommentListener.name} Unit Test`, () => {
 
       // when
       await commentListener.handleCommentDeleted(
-        new CommentDeletedEvent(10, null),
+        new CommentDeletedEvent(10, null, -1),
       );
 
       // then
@@ -293,7 +295,7 @@ describe(`${CommentListener.name} Unit Test`, () => {
 
       // when
       await commentListener.handleCommentDeleted(
-        new CommentDeletedEvent(10, 5),
+        new CommentDeletedEvent(10, 5, -1),
       );
 
       // then
@@ -315,7 +317,9 @@ describe(`${CommentListener.name} Unit Test`, () => {
 
       // when & then
       await expect(
-        commentListener.handleCommentDeleted(new CommentDeletedEvent(10, 5)),
+        commentListener.handleCommentDeleted(
+          new CommentDeletedEvent(10, 5, -1),
+        ),
       ).resolves.toBeUndefined();
       expect(logger.error).toHaveBeenCalled();
     });

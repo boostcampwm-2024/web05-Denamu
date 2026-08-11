@@ -4,6 +4,7 @@ import { JwtAuthModule } from '@common/auth/jwt.module';
 
 import { FeedModule } from '@feed/module/feed.module';
 
+import { NewPostConsumer } from '@notification/consumer/newPost.consumer';
 import { NotificationController } from '@notification/controller/notification.controller';
 import { CommentListener } from '@notification/listener/comment.listener';
 import { LikeListener } from '@notification/listener/like.listener';
@@ -25,6 +26,7 @@ import { SubscriptionRepository } from '@subscribe/repository/subscription.repos
     SubscriptionListener,
     SubscriptionRepository,
     NotificationScheduler,
+    NewPostConsumer,
   ],
   exports: [],
 })

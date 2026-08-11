@@ -1,89 +1,71 @@
 import { inject, injectable } from 'tsyringe';
 
-import { FullFeedCrawlMessage } from '@common/feed/feed.type';
+import { Lifecycle } from '@common/lifecycle/lifecycle.interface';
 import logger from '@common/logger/logger';
 import { FeedMetrics } from '@common/metrics/feed-metrics';
-import { RedisConnection } from '@common/redis/redis-access';
-import { redisConstant } from '@common/redis/redis.constant';
 
-import { AbstractQueueWorker } from '@event_worker/abstract-queue-worker';
-
-import { RssRepository } from '@repository/rss.repository';
+import { RMQ_QUEUES } from '@rabbitmq/rabbitmq.constant';
+import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
 
 import { FeedCrawler } from '../../feed-crawler';
 
 @injectable()
-export class FullFeedCrawlEventWorker extends AbstractQueueWorker<FullFeedCrawlMessage> {
+export class FullFeedCrawlEventWorker implements Lifecycle {
+  private readonly nameTag = '[Full Feed Crawler]';
+  private consumerTag: string | null = null;
+
   constructor(
-    @inject(RedisConnection)
-    redisConnection: RedisConnection,
-    @inject(RssRepository)
-    private readonly rssRepository: RssRepository,
+    @inject(RabbitMQService)
+    private readonly rabbitmqService: RabbitMQService,
     @inject(FeedCrawler)
     private readonly feedCrawler: FeedCrawler,
     @inject(FeedMetrics)
     private readonly feedMetrics: FeedMetrics,
-  ) {
-    super('[Full Feed Crawler]', redisConnection);
+  ) {}
+
+  async start(): Promise<void> {
+    logger.info(`${this.nameTag} 시작 중...`);
+
+    this.consumerTag = await this.rabbitmqService.consumeMessage<number>(
+      RMQ_QUEUES.CRAWLING_FULL,
+      async (rssId) => {
+        const { messageCount } = await this.rabbitmqService.checkQueue(
+          RMQ_QUEUES.CRAWLING_FULL,
+        );
+        this.feedMetrics.fullCrawlQueueDepth.set(messageCount);
+        await this.processItem(rssId);
+      },
+    );
+
+    logger.info(`${this.nameTag} 큐 리스닝 시작`);
   }
 
-  protected async processQueue(): Promise<void> {
-    const depth = await this.redisConnection.llen(this.getQueueKey());
-    this.feedMetrics.fullCrawlQueueDepth.set(depth);
-    const rssIdMessage = await this.redisConnection.rpop(this.getQueueKey());
-
-    if (!rssIdMessage) {
-      logger.info('처리할 전체 피드 크롤링 요청이 없습니다.');
-      return;
+  async stop(): Promise<void> {
+    if (this.consumerTag) {
+      await this.rabbitmqService.closeConsumer(this.consumerTag);
+      logger.info(`${this.nameTag} 종료`);
     }
-
-    const crawlMessage = this.parseQueueMessage(rssIdMessage);
-    await this.processItem(crawlMessage);
   }
 
-  protected getQueueKey(): string {
-    return redisConstant.FULL_FEED_CRAWL_QUEUE;
-  }
-
-  protected parseQueueMessage(message: string): FullFeedCrawlMessage {
-    return JSON.parse(message);
-  }
-
-  protected async processItem(
-    crawlMessage: FullFeedCrawlMessage,
-  ): Promise<void> {
-    const rssId = crawlMessage.rssId;
-
+  private async processItem(rssId: number): Promise<void> {
     logger.info(
       `${this.nameTag} RSS ID ${rssId}에 대한 전체 피드 크롤링을 시작합니다.`,
     );
 
-    const rssObj = await this.rssRepository.selectRssById(rssId);
-    if (!rssObj) {
-      logger.warn(`${this.nameTag} RSS ID ${rssId}를 찾을 수 없습니다.`);
-      return;
-    }
-
     try {
-      const insertedFeeds = await this.feedCrawler.startFullCrawl(rssObj);
+      const insertedFeeds = await this.feedCrawler.startFullCrawl(rssId);
       logger.info(
         `${this.nameTag} RSS ID ${rssId}에서 ${insertedFeeds.length}개의 피드를 처리했습니다.`,
       );
     } catch (error) {
-      await this.handleFailure(crawlMessage, error as Error);
+      this.handleFailure(rssId, error as Error);
     }
   }
 
-  protected getRetryQueueKey(): string {
-    return redisConstant.FULL_FEED_CRAWL_QUEUE;
-  }
-
-  protected getItemLabel(crawlMessage: FullFeedCrawlMessage): string {
-    return `RSS ID ${crawlMessage.rssId}`;
-  }
-
-  protected onPermanentFailure(): Promise<void> {
+  private handleFailure(rssId: number, error: Error): void {
+    logger.error(
+      `${this.nameTag} RSS ID ${rssId} 전체 피드 크롤링 실패: ${error.message}`,
+    );
     this.feedMetrics.fullCrawlPermanentFailure.inc();
-    return Promise.resolve();
   }
 }

@@ -119,10 +119,18 @@ export const REPORT = {
   COMMENT: (commentId: number) => `/api/reports/comments/${commentId}`,
   FEED: (feedId: number) => `/api/reports/feeds/${feedId}`,
   ADMIN_LIST: "/api/admins/reports",
+  ADMIN_APPROVE: (reportId: number) => `/api/admins/reports/${reportId}/suspensions`,
+  ADMIN_REJECT: (reportId: number) => `/api/admins/reports/${reportId}`,
+};
+
+export const SUSPENSION = {
+  ADMIN_LIST: "/api/admins/user-suspensions",
+  ADMIN_UPDATE: (userId: number) => `/api/admins/user-suspensions/${userId}`,
 };
 
 export const FILE = {
   UPLOAD: "/api/files",
+  ADMIN_UPLOAD_IMAGE: "/api/admins/images",
 };
 
 export const BOARD = {
@@ -130,7 +138,11 @@ export const BOARD = {
   DETAIL: (id: number) => `/api/boards/${id}`,
   ADMIN_LIST: "/api/admins/boards",
   ADMIN_DETAIL: (id: number) => `/api/admins/boards/${id}`,
-  ADMIN_UPLOAD_IMAGE: "/api/admins/boards/images",
+};
+
+export const MARKETING_EMAIL = {
+  ADMIN_LIST: "/api/admins/marketing-emails",
+  ADMIN_DETAIL: (id: number) => `/api/admins/marketing-emails/${id}`,
 };
 
 export const QNA = {

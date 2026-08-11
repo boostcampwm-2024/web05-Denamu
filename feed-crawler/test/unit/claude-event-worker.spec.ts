@@ -4,7 +4,6 @@ import { ClaudeResponse, FeedAIQueueItem } from '@common/ai/ai.type';
 import { PermanentError, RetryableError } from '@common/errors';
 import { AiMetrics } from '@common/metrics/ai-metrics';
 import { RedisMetrics } from '@common/metrics/redis-metrics';
-import { Notifier } from '@common/notification/notifier.interface';
 import { RedisConnection } from '@common/redis/redis-access';
 import { redisConstant } from '@common/redis/redis.constant';
 
@@ -21,12 +20,12 @@ describe('ClaudeEventWorker', () => {
   let mockFeedRepository: jest.Mocked<FeedRepository>;
   let mockRedisConnection: jest.Mocked<RedisConnection>;
   let mockAnthropicClient: any;
-  let mockNotifier: jest.Mocked<Notifier>;
   let insertTagsMock: jest.Mock;
   let updateSummaryMock: jest.Mock;
   let updateNullSummaryMock: jest.Mock;
   let executePipelineMock: jest.Mock;
   let hsetMock: jest.Mock;
+  let existsMock: jest.Mock;
   let rpushMock: jest.Mock;
   let messagesCreateMock: jest.Mock;
 
@@ -57,6 +56,7 @@ describe('ClaudeEventWorker', () => {
     updateNullSummaryMock = jest.fn();
     executePipelineMock = jest.fn();
     hsetMock = jest.fn();
+    existsMock = jest.fn().mockResolvedValue(true);
     rpushMock = jest.fn();
     messagesCreateMock = jest.fn();
 
@@ -76,6 +76,7 @@ describe('ClaudeEventWorker', () => {
     mockRedisConnection = {
       executePipeline: executePipelineMock,
       hset: hsetMock,
+      exists: existsMock,
       rpush: rpushMock,
       llen: jest.fn().mockResolvedValue(0),
     } as any;
@@ -84,11 +85,6 @@ describe('ClaudeEventWorker', () => {
       messages: {
         create: messagesCreateMock,
       },
-    };
-
-    mockNotifier = {
-      start: jest.fn(),
-      publish: jest.fn(),
     };
 
     const mockAiMetrics = {
@@ -111,7 +107,6 @@ describe('ClaudeEventWorker', () => {
       mockTagRepository,
       mockFeedRepository,
       mockRedisConnection,
-      mockNotifier,
       mockAiMetrics,
       mockRedisMetrics,
     );
@@ -261,7 +256,13 @@ describe('ClaudeEventWorker', () => {
       // Then
       expect(messagesCreateMock).toHaveBeenCalledWith({
         max_tokens: 8192,
-        system: expect.any(String),
+        system: [
+          {
+            type: 'text',
+            text: expect.any(String),
+            cache_control: { type: 'ephemeral' },
+          },
+        ],
         messages: [{ role: 'user', content: mockFeedAIQueueItem.content }],
         model: 'claude-haiku-4-5',
       });
@@ -307,9 +308,31 @@ describe('ClaudeEventWorker', () => {
       );
       expect(hsetMock).toHaveBeenCalledWith(
         `feed:recent:${feedWithAIResult.id}`,
-        'tag',
+        'tagList',
         feedWithAIResult.tagList.join(','),
+        'summary',
+        feedWithAIResult.summary,
       );
+      expect(updateSummaryMock).toHaveBeenCalledWith(
+        feedWithAIResult.id,
+        feedWithAIResult.summary,
+      );
+    });
+
+    it('캐시에 없는 게시글이면 hset을 호출하지 않아야 한다', async () => {
+      // Given
+      existsMock.mockResolvedValue(false);
+      const feedWithAIResult = {
+        ...mockFeedAIQueueItem,
+        summary: mockClaudeResponse.summary,
+        tagList: Object.keys(mockClaudeResponse.tags),
+      };
+
+      // When
+      await claudeEventWorker['saveAIResult'](feedWithAIResult);
+
+      // Then
+      expect(hsetMock).not.toHaveBeenCalled();
       expect(updateSummaryMock).toHaveBeenCalledWith(
         feedWithAIResult.id,
         feedWithAIResult.summary,

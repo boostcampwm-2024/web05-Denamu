@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { lucideProxy } from "@/__tests__/__mocks__/external/lucide-proxy.tsx";
 import { NotificationBell } from "@/components/common/NotificationBell.tsx";
 import { NotificationItem } from "@/api/services/notifications";
-
 import { fireEvent, render, screen } from "@testing-library/react";
 
 const mockNavigate = vi.fn();
@@ -242,5 +241,44 @@ describe("NotificationBell", () => {
 
     expect(markRead).toHaveBeenCalledWith(6);
     expect(mockNavigate).toHaveBeenCalledWith("/rss/7");
+  });
+
+  it("새 글 알림 메시지를 구독한 RSS 이름과 게시글 제목으로 표시한다", () => {
+    listState = {
+      data: [
+        makeItem({
+          type: "NEW_POST",
+          actor: { userName: null, profileImage: null },
+          rss: { id: 7, name: "테스트 블로그" },
+        }),
+      ],
+      isLoading: false,
+    };
+    render(<NotificationBell />);
+
+    const item = screen.getByTestId("notification-item");
+    expect(item).toHaveTextContent("구독한 테스트 블로그에 테스트 게시글 새로운 게시글이 생겼습니다.");
+  });
+
+  it("새 글 알림을 클릭하면 해당 게시글로 이동한다", () => {
+    listState = {
+      data: [
+        makeItem({
+          id: 8,
+          type: "NEW_POST",
+          actor: { userName: null, profileImage: null },
+          rss: { id: 7, name: "테스트 블로그" },
+        }),
+      ],
+      isLoading: false,
+    };
+    render(<NotificationBell />);
+
+    fireEvent.click(screen.getByTestId("notification-item"));
+
+    expect(markRead).toHaveBeenCalledWith(8);
+    expect(mockNavigate).toHaveBeenCalledWith("/10", {
+      state: { backgroundLocation: { pathname: "/" }, highlightCommentId: null },
+    });
   });
 });

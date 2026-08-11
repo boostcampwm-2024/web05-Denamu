@@ -4,6 +4,8 @@ import { DataSource, LessThan, Repository } from 'typeorm';
 
 import { Comment } from '@comment/entity/comment.entity';
 
+import { activeSuspensionExclusion } from '@suspension/constant/activeSuspension.constant';
+
 @Injectable()
 export class CommentRepository extends Repository<Comment> {
   constructor(private dataSource: DataSource) {
@@ -13,13 +15,18 @@ export class CommentRepository extends Repository<Comment> {
   async getCommentInformation(feedId: number, blockerId?: number) {
     const query = this.createQueryBuilder('comment')
       .innerJoin('comment.user', 'user')
+      .leftJoin('comment.parent', 'parent')
       .select(['comment', 'comment.date', 'user'])
       .where('comment.feed_id = :feedId', { feedId })
+      .andWhere(activeSuspensionExclusion('comment.user_id'))
+      .andWhere(
+        `(comment.parent_id IS NULL OR ${activeSuspensionExclusion('parent.user_id')})`,
+      )
+      .setParameter('now', new Date())
       .orderBy('comment.date', 'ASC');
 
     if (blockerId) {
       query
-        .leftJoin('comment.parent', 'parent')
         .andWhere(
           'comment.user_id NOT IN (SELECT block.blocked_id FROM blocks block WHERE block.blocker_id = :blockerId)',
           { blockerId },

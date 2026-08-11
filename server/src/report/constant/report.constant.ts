@@ -13,9 +13,3 @@ export enum ReportReason {
   PRIVACY = 'PRIVACY',
   ETC = 'ETC',
 }
-
-export enum ReportStatus {
-  PENDING = 'PENDING',
-  ACTIONED = 'ACTIONED',
-  REJECTED = 'REJECTED',
-}

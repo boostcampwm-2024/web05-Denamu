@@ -7,8 +7,6 @@ import {
 } from '@common/feed/feed.constant';
 import { FeedDetail, RssObj } from '@common/feed/feed.type';
 import logger from '@common/logger/logger';
-import { NOTIFICATION_EVENT } from '@common/notification/notification-event.constant';
-import { Notifier } from '@common/notification/notifier.interface';
 import { ParserUtil } from '@common/parser/utils/parser-util';
 
 export interface RawFeed {
@@ -31,11 +29,9 @@ export abstract class BaseFeedParser {
     },
   });
   protected readonly parserUtil: ParserUtil;
-  protected readonly notifier: Notifier;
 
-  constructor(parserUtil: ParserUtil, notifier: Notifier) {
+  constructor(parserUtil: ParserUtil) {
     this.parserUtil = parserUtil;
-    this.notifier = notifier;
   }
 
   async parseFeed(
@@ -49,7 +45,6 @@ export abstract class BaseFeedParser {
     const detailedFeeds = await this.convertToFeedDetails(
       rssObj,
       timeMatchedFeeds,
-      NOTIFICATION_EVENT.FEED_CRAWLING_SCHEDULED,
       '[Scheduled FeedCrawling]',
     );
 
@@ -61,7 +56,6 @@ export abstract class BaseFeedParser {
     const detailedFeeds = await this.convertToFeedDetails(
       rssObj,
       rawFeeds,
-      NOTIFICATION_EVENT.FEED_CRAWLING_FULL,
       '[Full FeedCrawling]',
     );
 
@@ -84,14 +78,11 @@ export abstract class BaseFeedParser {
   private async convertToFeedDetails(
     rssObj: RssObj,
     rawFeeds: RawFeed[],
-    event:
-      | typeof NOTIFICATION_EVENT.FEED_CRAWLING_SCHEDULED
-      | typeof NOTIFICATION_EVENT.FEED_CRAWLING_FULL,
     errorSource: string,
   ): Promise<FeedDetail[]> {
     const results = await Promise.allSettled(
       rawFeeds.map(async (feed) => {
-        const imageUrl = await this.parserUtil.getThumbnailUrl(feed.link);
+        const thumbnail = await this.parserUtil.getThumbnailUrl(feed.link);
         const date = new Date(feed.pubDate);
         const formattedDate = date.toISOString().slice(0, 19).replace('T', ' ');
 
@@ -105,13 +96,10 @@ export abstract class BaseFeedParser {
         return {
           id: null,
           blogId: rssObj.id,
-          blogName: rssObj.blogName,
-          blogPlatform: rssObj.blogPlatform,
-          blogImage: rssObj.blogImage,
           pubDate: formattedDate,
           title: feed.title,
           link: decodeURIComponent(feed.link),
-          imageUrl: imageUrl,
+          thumbnail: thumbnail,
           content: content,
           summary: FEED_AI_SUMMARY_IN_PROGRESS_MESSAGE,
           deathCount: 0,
@@ -145,13 +133,9 @@ export abstract class BaseFeedParser {
         .map(([message, count]) => `- ${message} (${count}건)`)
         .join('\n');
 
-      this.notifier.publish(event, {
-        error: new Error(
-          `${rssObj.blogName}: 게시글 ${failedReasons.length}/${rawFeeds.length}개 변환 실패\n${reasonDetail}`,
-        ),
-        blogUrl: rssObj.rssUrl,
-        errorSource,
-      });
+      logger.error(
+        `[${rssObj.blogName}] ${errorSource} 게시글 ${failedReasons.length}/${rawFeeds.length}개 변환 실패\n${reasonDetail}`,
+      );
     }
 
     return succeeded;

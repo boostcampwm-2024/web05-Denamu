@@ -13,6 +13,7 @@ export const useUserProfile = (userId: number) =>
     queryKey: ["userProfile", userId],
     queryFn: () => getProfile(userId),
     enabled: !!userId,
+    retry: 1,
   });
 
 export const useActivities = (userId: number, year: number) =>

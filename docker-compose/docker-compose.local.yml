@@ -61,6 +61,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     volumes:
       - ../feed-crawler/logs:/var/web05-Denamu/feed-crawler/logs
     environment:

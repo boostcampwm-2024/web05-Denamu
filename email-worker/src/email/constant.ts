@@ -11,4 +11,6 @@ export const EmailPayloadConstant = {
   ADMIN_PASSWORD_RESET: 'adminPasswordReset',
   QNA_ANSWERED: 'qnaAnswered',
   NOTICE_PUBLISHED: 'noticePublished',
+  MARKETING_BROADCAST: 'marketingBroadcast',
+  UNREAD_NOTIFICATION_DIGEST: 'unreadNotificationDigest',
 } as const;

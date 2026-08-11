@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { ChevronDown, FileText, Pencil, Trash2, Users } from "lucide-react";
+import { ChevronDown, FileText, Pencil, ShieldAlert, Trash2, Users } from "lucide-react";
 
 import { BlogPlatformBadge } from "@/components/profile/rss/BlogPlatformBadge.tsx";
 import { PlatformIcon } from "@/components/profile/rss/PlatformIcon.tsx";
@@ -12,6 +12,13 @@ import { useCustomToast } from "@/hooks/common/useCustomToast.ts";
 import { useOwnedRssFeeds, useSetFeedVisibility } from "@/hooks/queries/useRssCertification.ts";
 
 import { CertifiedRss } from "@/types/profile.ts";
+
+const getSuspensionColor = (count: number) => {
+  if (count >= 3) return "text-red-500";
+  if (count === 2) return "text-orange-500";
+  if (count === 1) return "text-yellow-500";
+  return "text-gray-400";
+};
 
 interface OwnedRssCardProps {
   rss: CertifiedRss;
@@ -71,6 +78,10 @@ export const OwnedRssCard = ({ rss, onEdit, onDelete }: OwnedRssCardProps) => {
               <Users className="w-3.5 h-3.5" />
               구독자 {rss.subscriberCount}명
             </button>
+            <p className={`flex items-center gap-1 text-sm ${getSuspensionColor(rss.suspensionCount)}`}>
+              <ShieldAlert className="w-3.5 h-3.5" />
+              게시글 정지 {rss.suspensionCount}회
+            </p>
           </div>
         </div>
         <div className="flex flex-shrink-0 gap-1 ml-3">

@@ -11,15 +11,25 @@ interface PlatformIconProps {
 
 export const PlatformIcon = ({ platform, image, className = "w-5 h-5", alt }: PlatformIconProps) => {
   const altText = alt ?? platform;
+  const key = platform.toLowerCase().replace(" ", "_");
+  const fallbackSrc = `https://denamu.dev/files/${key}-icon.svg`;
 
   if (image) {
-    return <img src={image} alt={altText} className={`${className} rounded-full object-cover`} />;
+    return (
+      <img
+        src={image}
+        alt={altText}
+        className={`${className} rounded-full object-cover`}
+        onError={(e) => {
+          e.currentTarget.onerror = null;
+          e.currentTarget.src = fallbackSrc;
+        }}
+      />
+    );
   }
 
-  const key = platform.toLowerCase().replace(" ", "_");
-
   if (KNOWN_PLATFORMS.includes(key)) {
-    return <img src={`https://denamu.dev/files/${key}-icon.svg`} alt={altText} className={className} />;
+    return <img src={fallbackSrc} alt={altText} className={className} />;
   }
 
   return <Rss className={`${className} text-blue-500`} />;

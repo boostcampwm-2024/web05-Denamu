@@ -93,6 +93,7 @@ export interface CertifiedRss {
   subscriberCount: number;
   isSubscribed: boolean;
   blogImage: string | null;
+  suspensionCount: number;
 }
 
 export interface RssCertificationPreview {

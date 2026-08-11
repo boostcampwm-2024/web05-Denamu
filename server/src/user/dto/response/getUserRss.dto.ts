@@ -53,10 +53,17 @@ export class GetUserRssResponseDto {
 
   @ApiProperty({
     example: 'https://blog-platform.com/blog-profile-image.png',
-    description: 'RSS 피드에서 추출한 블로그 프로필 이미지 URL (미설정 시 null)',
+    description:
+      'RSS 피드에서 추출한 블로그 프로필 이미지 URL (미설정 시 null)',
     nullable: true,
   })
   blogImage: string | null;
+
+  @ApiProperty({
+    example: 0,
+    description: '해당 RSS가 정지당한 횟수',
+  })
+  suspensionCount: number;
 
   constructor(partial: Partial<GetUserRssResponseDto>) {
     Object.assign(this, partial);
@@ -78,6 +85,7 @@ export class GetUserRssResponseDto {
       subscriberCount,
       isSubscribed,
       blogImage: rssAccept.blogImage ?? null,
+      suspensionCount: rssAccept.suspensionCount,
     });
   }
 

@@ -71,6 +71,7 @@ CREATE TABLE `rss_accept` (
   `platform` varchar(255) NOT NULL DEFAULT 'etc',
   `user_id` int DEFAULT NULL,
   `image` text,
+  `suspension_count` int NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
   UNIQUE KEY `UQ_rss_accept_name` (`name`),
   UNIQUE KEY `UQ_rss_accept_rss_url` (`rss_url`),
@@ -300,10 +301,8 @@ CREATE TABLE `report` (
   `target_id` int NOT NULL,
   `reason` varchar(20) NOT NULL,
   `detail` text,
-  `status` varchar(20) NOT NULL DEFAULT 'PENDING',
   `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-  `reviewed_at` datetime DEFAULT NULL,
-  `reporter_id` int NOT NULL,
+  `reporter_id` int DEFAULT NULL,
   `reported_user_id` int DEFAULT NULL,
   `reported_rss_id` int DEFAULT NULL,
   `reported_comment_id` int DEFAULT NULL,
@@ -314,7 +313,7 @@ CREATE TABLE `report` (
   KEY `FK_report_reported_rss_id` (`reported_rss_id`),
   KEY `FK_report_reported_comment_id` (`reported_comment_id`),
   KEY `FK_report_reported_feed_id` (`reported_feed_id`),
-  CONSTRAINT `FK_report_reporter_id` FOREIGN KEY (`reporter_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_report_reporter_id` FOREIGN KEY (`reporter_id`) REFERENCES `user` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT `FK_report_reported_user_id` FOREIGN KEY (`reported_user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `FK_report_reported_rss_id` FOREIGN KEY (`reported_rss_id`) REFERENCES `rss_accept` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `FK_report_reported_comment_id` FOREIGN KEY (`reported_comment_id`) REFERENCES `comment` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -339,6 +338,18 @@ CREATE TABLE `board` (
   PRIMARY KEY (`id`),
   KEY `FK_board_author_admin_id` (`author_admin_id`),
   CONSTRAINT `FK_board_author_admin_id` FOREIGN KEY (`author_admin_id`) REFERENCES `admin` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+);
+
+CREATE TABLE `marketing_email` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `subject` varchar(255) NOT NULL,
+  `content` longtext NOT NULL,
+  `recipient_count` int NOT NULL,
+  `author_admin_id` int DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `FK_marketing_email_author_admin_id` (`author_admin_id`),
+  CONSTRAINT `FK_marketing_email_author_admin_id` FOREIGN KEY (`author_admin_id`) REFERENCES `admin` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 -- denamu.qna definition
@@ -375,6 +386,23 @@ CREATE TABLE `qna_message` (
   CONSTRAINT `FK_qna_message_admin_id` FOREIGN KEY (`admin_id`) REFERENCES `admin` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 );
 
+-- denamu.user_suspension definition
+
+CREATE TABLE `user_suspension` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `admin_id` int DEFAULT NULL,
+  `detail` text NOT NULL,
+  `suspended_until` datetime DEFAULT NULL,
+  `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (`id`),
+  KEY `FK_user_suspension_user_id` (`user_id`),
+  KEY `FK_user_suspension_admin_id` (`admin_id`),
+  KEY `IDX_user_suspension_suspended_until` (`suspended_until`),
+  CONSTRAINT `FK_user_suspension_user_id` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_user_suspension_admin_id` FOREIGN KEY (`admin_id`) REFERENCES `admin` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+);
+
 -- denamu.admin insert data
 -- id: test1234@denamu.dev, password: test1234!
 -- id: test5678@denamu.dev, password: test1234!
@@ -382,14 +410,19 @@ INSERT INTO admin (email,password, name, parent_admin_id) VALUES
 	('test1234@denamu.dev','$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정', NULL),
 	('test5678@denamu.dev','$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정의 자식', 1);
 
--- denamu.user insert data
--- id: test@test.com, password: test1234!
--- id: test2@test.com, password: test1234!
--- id: test3@test.com, password: test1234!
-INSERT INTO user (email, password, user_name, profile_image, introduction) VALUES
-	('test@test.com', '$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정', 'https://tistory1.daumcdn.net/tistory/8709220/attach/22a2a2633a304b0c9fce20b4aa07ebcc', '안녕하세요 테스트입니다.'),
-	('test2@test.com', '$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정2', 'https://velog.velcdn.com/images/seok3765/profile/bfb84abe-3508-462a-9d07-e8e73c8da67c/image.png', '안녕하세요 테스트2입니다.'),
-	('test3@test.com', '$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정3', NULL, '안녕하세요 테스트3입니다.');
+-- denamu.user insert data (10명)
+-- id: test@test.com ~ test10@test.com, password: test1234!
+INSERT INTO user (email, password, user_name, profile_image, introduction, totalViews, currentStreak, lastActiveDate, maxStreak) VALUES
+	('test@test.com', '$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정', 'https://tistory1.daumcdn.net/tistory/8709220/attach/22a2a2633a304b0c9fce20b4aa07ebcc', '안녕하세요 테스트입니다.', 0, 0, NULL, 0),
+	('test2@test.com', '$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정2', 'https://velog.velcdn.com/images/seok3765/profile/bfb84abe-3508-462a-9d07-e8e73c8da67c/image.png', '안녕하세요 테스트2입니다.', 0, 0, NULL, 0),
+	('test3@test.com', '$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정3', NULL, '안녕하세요 테스트3입니다.', 0, 0, NULL, 0),
+	('test4@test.com', '$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정4', NULL, '안녕하세요 테스트4입니다.', 12, 3, '2026-08-10', 5),
+	('test5@test.com', '$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정5', NULL, '안녕하세요 테스트5입니다.', 0, 0, NULL, 0),
+	('test6@test.com', '$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정6', NULL, '안녕하세요 테스트6입니다.', 34, 7, '2026-08-11', 10),
+	('test7@test.com', '$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정7', NULL, '안녕하세요 테스트7입니다.', 5, 1, '2026-08-05', 2),
+	('test8@test.com', '$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정8', NULL, '안녕하세요 테스트8입니다.', 0, 0, NULL, 0),
+	('test9@test.com', '$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정9', NULL, '안녕하세요 테스트9입니다.', 21, 2, '2026-08-09', 4),
+	('test10@test.com', '$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '테스트 계정10', NULL, '안녕하세요 테스트10입니다.', 8, 0, '2026-07-20', 3);
 
 -- denamu.rss_accept insert data
 
@@ -601,18 +634,29 @@ INSERT INTO tag_map (feed_id, tag_id) VALUES
 
 INSERT INTO comment(comment, date, feed_id, user_id) VALUES
 	('유익한 글 감사합니다~','2025-05-01 02:24:02.575811',94,1),
-	('글이 정말 유익해요~','2025-05-01 02:26:05.575811',95,1);
+	('글이 정말 유익해요~','2025-05-01 02:26:05.575811',95,1),
+	('좋은 정보 감사합니다!', '2025-05-02 10:00:00.000000', 9, 2),
+	('저도 리눅스 공부 중인데 도움이 많이 되네요.', '2025-05-03 11:00:00.000000', 10, 4),
+	('Docker 개념 정리 잘 봤습니다.', '2025-05-04 12:00:00.000000', 15, 6);
 
 -- denamu.activity insert data
 
 INSERT INTO activity (activity_date, view_count, user_id) VALUES
-	('2025-07-01 11:48:00.575811', 1, 1);
+	('2025-07-01', 1, 1),
+	('2025-07-02', 3, 2),
+	('2025-07-03', 2, 4),
+	('2025-07-04', 5, 6),
+	('2025-07-05', 1, 9);
 
 -- denamu.like insert data
 
 INSERT INTO likes(feed_id, user_id, like_date) VALUES
 	(94,1,'2025-06-13 17:47:05.575811'),
-	(95,1,'2025-06-13 17:47:07.575811');
+	(95,1,'2025-06-13 17:47:07.575811'),
+	(9, 2, '2025-06-14 09:00:00.000000'),
+	(10, 4, '2025-06-15 10:00:00.000000'),
+	(15, 6, '2025-06-16 11:00:00.000000'),
+	(94, 9, '2025-06-17 12:00:00.000000');
 
 -- denamu.subscription insert data
 
@@ -620,7 +664,10 @@ INSERT INTO subscription(user_id, rss_accept_id, subscribed_at) VALUES
 	(2, 1, '2025-06-14 10:00:00.000000'),
 	(2, 2, '2025-06-14 10:01:00.000000'),
 	(2, 3, '2025-06-14 10:02:00.000000'),
-	(1, 2, '2025-06-14 10:03:00.000000');
+	(1, 2, '2025-06-14 10:03:00.000000'),
+	(4, 1, '2025-06-15 10:00:00.000000'),
+	(6, 3, '2025-06-16 10:00:00.000000'),
+	(9, 4, '2025-06-17 10:00:00.000000');
 
 -- denamu.rss insert data
 
@@ -631,22 +678,30 @@ INSERT INTO rss (name, user_name, email, rss_url, blog_url, platform) VALUES
 
 INSERT INTO notification (type, is_read, recipient_user_id, feed_id, rss_accept_id) VALUES
 	('LIKE', 0, 1, 94, NULL),
-	('SUBSCRIBE', 1, 2, NULL, 1);
+	('SUBSCRIBE', 1, 2, NULL, 1),
+	('COMMENT', 0, 1, 9, NULL),
+	('LIKE', 1, 4, 10, NULL),
+	('SUBSCRIBE', 0, 3, NULL, 2);
 
 -- denamu.blocks insert data
 
 INSERT INTO blocks (blocker_id, blocked_id) VALUES
-	(3, 2);
+	(3, 2),
+	(5, 7),
+	(8, 3);
 
 -- denamu.rss_blocks insert data
 
 INSERT INTO rss_blocks (blocker_id, blocked_rss_id) VALUES
-	(3, 4);
+	(3, 4),
+	(6, 2),
+	(9, 1);
 
 -- denamu.report insert data
 
-INSERT INTO report (target_type, target_id, reason, detail, status, reporter_id, reported_feed_id) VALUES
-	('FEED', 94, 'SPAM', '광고성 게시글입니다.', 'PENDING', 3, 94);
+INSERT INTO report (target_type, target_id, reason, detail, reporter_id, reported_user_id, reported_feed_id) VALUES
+	('FEED', 94, 'SPAM', '광고성 게시글입니다.', 3, NULL, 94),
+	('USER', 7, 'ABUSE', '욕설 및 비방성 댓글을 반복적으로 작성합니다.', 2, 7, NULL);
 
 -- denamu.board insert data
 
@@ -658,11 +713,28 @@ INSERT INTO board (title, content, question, status, category, is_pinned, author
 
 INSERT INTO qna (title, is_secret, password, guest_name, guest_email, user_id, status) VALUES
 	('RSS 등록 문의드립니다', 0, NULL, '홍길동', 'guest@test.com', NULL, 'PENDING'),
-	('탈퇴 절차가 궁금합니다', 0, NULL, NULL, NULL, 2, 'ANSWERED');
+	('탈퇴 절차가 궁금합니다', 0, NULL, NULL, NULL, 2, 'ANSWERED'),
+	('마이페이지 프로필 이미지가 안 바뀌어요', 0, NULL, NULL, NULL, 6, 'PENDING'),
+	('비공개 문의드립니다', 1, '$2b$10$lmNFQaXm6yVo3hGMRJk5SuwV2Wn..ej9my29rXOSpiVj7iMrSWau.', '익명사용자', 'anon@test.com', NULL, 'PENDING');
 
 -- denamu.qna_message insert data
 
 INSERT INTO qna_message (qna_id, type, content, admin_id) VALUES
 	(1, 'QUESTION', 'RSS 등록은 어떻게 진행하나요?', NULL),
 	(2, 'QUESTION', '탈퇴 절차를 알려주세요.', NULL),
-	(2, 'ANSWER', '마이페이지 > 회원 탈퇴에서 진행 가능합니다.', 1);
+	(2, 'ANSWER', '마이페이지 > 회원 탈퇴에서 진행 가능합니다.', 1),
+	(3, 'QUESTION', '프로필 이미지 변경이 반영되지 않습니다.', NULL),
+	(4, 'QUESTION', '문의 내용은 비공개로 부탁드립니다.', NULL);
+
+-- denamu.user_suspension insert data
+
+INSERT INTO user_suspension (user_id, admin_id, detail, suspended_until) VALUES
+	(7, 1, '반복적인 스팸성 댓글 작성으로 인한 7일 정지', '2026-08-19 00:00:00'),
+	(9, 2, '커뮤니티 가이드라인 위반(부적절한 게시글)', NULL);
+
+-- denamu.marketing_email insert data
+
+INSERT INTO marketing_email (subject, content, recipient_count, author_admin_id) VALUES
+	('데나무 8월 소식지', '<p>이번 달 인기 게시글과 업데이트 소식을 전해드립니다.</p>', 128, 1),
+	('신규 기능 안내: 좋아요 알림', '<p>좋아요/댓글 알림 기능이 추가되었습니다.</p>', 96, 1);
+

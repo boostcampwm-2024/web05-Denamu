@@ -10,8 +10,6 @@ import { AiMetrics } from '@common/metrics/ai-metrics';
 import { DbMetrics } from '@common/metrics/db-metrics';
 import { FeedMetrics } from '@common/metrics/feed-metrics';
 import { RedisMetrics } from '@common/metrics/redis-metrics';
-import { DiscordNotifier } from '@common/notification/discord.notifier';
-import { Notifier } from '@common/notification/notifier.interface';
 import { FeedParserManager } from '@common/parser/feed-parser-manager';
 import { Atom10Parser } from '@common/parser/formats/atom10-parser';
 import { Rss20Parser } from '@common/parser/formats/rss20-parser';
@@ -39,7 +37,6 @@ export interface TestContext {
   rss20Parser: Rss20Parser;
   atom10Parser: Atom10Parser;
   feedCrawler: FeedCrawler;
-  notifier: Notifier;
 }
 
 declare global {
@@ -69,10 +66,6 @@ export function setupTestContainer(): TestContext {
     testContainer.registerSingleton(Atom10Parser);
     testContainer.registerSingleton(FeedParserManager);
     testContainer.registerSingleton(FeedCrawler);
-    testContainer.registerSingleton<Notifier>(
-      DEPENDENCY_SYMBOLS.Notifier,
-      DiscordNotifier,
-    );
 
     global.testContext = {
       container: testContainer,
@@ -89,7 +82,6 @@ export function setupTestContainer(): TestContext {
       rss20Parser: testContainer.resolve(Rss20Parser),
       atom10Parser: testContainer.resolve(Atom10Parser),
       feedCrawler: testContainer.resolve(FeedCrawler),
-      notifier: testContainer.resolve<Notifier>(DEPENDENCY_SYMBOLS.Notifier),
     };
   }
 

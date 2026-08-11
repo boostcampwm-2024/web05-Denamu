@@ -2,12 +2,16 @@ import { inject, injectable } from 'tsyringe';
 
 import { DatabaseConnection } from '@common/database/database-connection';
 import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
-import { FeedDetail } from '@common/feed/feed.type';
+import { FeedDetail, RssObj } from '@common/feed/feed.type';
 import logger from '@common/logger/logger';
 import { DbMetrics } from '@common/metrics/db-metrics';
 import { RedisMetrics } from '@common/metrics/redis-metrics';
 import { RedisConnection } from '@common/redis/redis-access';
 import { redisConstant } from '@common/redis/redis.constant';
+import {
+  FeedAiQueueMessage,
+  FeedRecentRedisRecord,
+} from '@common/redis/redis.type';
 
 @injectable()
 export class FeedRepository {
@@ -23,48 +27,78 @@ export class FeedRepository {
   ) {}
 
   public async insertFeeds(resultData: FeedDetail[]) {
-    const query = `
-            INSERT INTO feed (blog_id, created_at, title, path, thumbnail, summary)
-            VALUES (?, ?, ?, ?, ?, ?)
-        `;
+    this.dbMetrics.total.inc({ operation: 'insert_feed' }, resultData.length);
 
-    const insertPromises = resultData.map(async (feed, index) => {
-      this.dbMetrics.total.inc({ operation: 'insert_feed' });
-      try {
-        const result = await this.dbConnection.executeQueryStrict(query, [
-          feed.blogId,
-          feed.pubDate,
-          feed.title,
-          feed.link,
-          feed.imageUrl,
-          feed.summary,
-        ]);
-        this.dbMetrics.success.inc({ operation: 'insert_feed' });
-        return { result, index, success: true };
-      } catch (error) {
-        const mysqlError = error as { code?: string };
-        if (mysqlError.code === 'ER_DUP_ENTRY') {
-          this.dbMetrics.duplicate.inc();
-          logger.info(`중복 피드 스킵: ${feed.title} (${feed.link})`);
-          return { result: null, index, success: false, duplicate: true };
-        }
-        this.dbMetrics.failure.inc({ operation: 'insert_feed' });
-        throw error;
+    const paths = resultData.map((feed) => feed.link);
+    let existing: { path: string }[];
+
+    try {
+      existing = await this.dbConnection.executeQueryStrict<{
+        path: string;
+      }>(`SELECT path FROM feed WHERE path IN (?)`, [paths]);
+    } catch (error) {
+      this.dbMetrics.failure.inc(
+        { operation: 'insert_feed' },
+        resultData.length,
+      );
+      throw error;
+    }
+
+    const existingPaths = new Set(existing.map((row) => row.path));
+    const seenPaths = new Set<string>();
+    const candidates = resultData.filter((feed) => {
+      if (existingPaths.has(feed.link) || seenPaths.has(feed.link)) {
+        return false;
       }
+      seenPaths.add(feed.link);
+      return true;
     });
 
-    const promiseResults = await Promise.all(insertPromises);
+    let insertedFeeds: FeedDetail[] = [];
+    if (candidates.length > 0) {
+      const insertQuery = `
+            INSERT IGNORE INTO feed (blog_id, created_at, title, path, thumbnail, summary)
+            VALUES ?
+        `;
+      const values = candidates.map((feed) => [
+        feed.blogId,
+        feed.pubDate,
+        feed.title,
+        feed.link,
+        feed.thumbnail,
+        feed.summary,
+      ]);
 
-    const insertedFeeds = promiseResults
-      .filter((result) => result.success)
-      .map((result) => ({
-        ...resultData[result.index],
-        id: (result.result as unknown as { insertId: number }).insertId,
-      }));
+      try {
+        await this.dbConnection.executeQueryStrict(insertQuery, [values]);
 
-    const duplicateCount = promiseResults.filter(
-      (result) => result.duplicate,
-    ).length;
+        const candidatePaths = candidates.map((feed) => feed.link);
+        const inserted = await this.dbConnection.executeQueryStrict<{
+          id: number;
+          path: string;
+        }>(`SELECT id, path FROM feed WHERE path IN (?)`, [candidatePaths]);
+        const idByPath = new Map(inserted.map((row) => [row.path, row.id]));
+
+        insertedFeeds = candidates
+          .filter((feed) => idByPath.has(feed.link))
+          .map((feed) => ({ ...feed, id: idByPath.get(feed.link) }));
+      } catch (error) {
+        logger.error(
+          `[MySQL] Bulk 방식으로 삽입 실패, 행 단위 재시도로 폴백합니다.
+          에러 메시지: ${error instanceof Error ? error.message : String(error)}`,
+        );
+        insertedFeeds = await this.insertFeedsIndividually(candidates);
+      }
+    }
+
+    const duplicateCount = resultData.length - insertedFeeds.length;
+    this.dbMetrics.success.inc(
+      { operation: 'insert_feed' },
+      insertedFeeds.length,
+    );
+    if (duplicateCount > 0) {
+      this.dbMetrics.duplicate.inc(duplicateCount);
+    }
 
     logger.info(
       `[MySQL] ${
@@ -75,6 +109,47 @@ export class FeedRepository {
     );
 
     return insertedFeeds;
+  }
+
+  private async insertFeedsIndividually(
+    candidates: FeedDetail[],
+  ): Promise<FeedDetail[]> {
+    const insertQuery = `
+            INSERT INTO feed (blog_id, created_at, title, path, thumbnail, summary)
+            VALUES (?, ?, ?, ?, ?, ?)
+        `;
+
+    const results = await Promise.all(
+      candidates.map(async (feed) => {
+        try {
+          const result = await this.dbConnection.executeQueryStrict(
+            insertQuery,
+            [
+              feed.blogId,
+              feed.pubDate,
+              feed.title,
+              feed.link,
+              feed.thumbnail,
+              feed.summary,
+            ],
+          );
+          const insertId = (result as unknown as { insertId: number }).insertId;
+          return { ...feed, id: insertId };
+        } catch (error) {
+          const mysqlError = error as { code?: string };
+          if (mysqlError.code !== 'ER_DUP_ENTRY') {
+            this.dbMetrics.failure.inc({ operation: 'insert_feed' });
+            logger.error(
+              `[MySQL] 개별 삽입 재시도 실패: ${feed.title} (${feed.link})
+              에러 메시지: ${error instanceof Error ? error.message : String(error)}`,
+            );
+          }
+          return null;
+        }
+      }),
+    );
+
+    return results.filter((feed) => feed !== null);
   }
 
   async deleteRecentFeed() {
@@ -103,25 +178,36 @@ export class FeedRepository {
     }
   }
 
-  async setRecentFeedList(feedLists: FeedDetail[]) {
+  async setRecentFeedList(feedLists: FeedDetail[], rssObjects: RssObj[]) {
     this.redisMetrics.total.inc({ operation: 'cache_feeds' });
+    const rssObjectsById = new Map(
+      rssObjects.map((rssObj) => [rssObj.id, rssObj]),
+    );
     try {
       await this.redisConnection.executePipeline((pipeline) => {
         for (const feed of feedLists) {
-          pipeline.hset(`feed:recent:${feed.id}`, {
+          const rssObj = rssObjectsById.get(feed.blogId);
+          if (!rssObj) {
+            logger.warn(
+              `[Redis] 최근 게시글 캐시 스킵: rss 정보를 찾을 수 없습니다. feedId=${feed.id}, blogId=${feed.blogId}`,
+            );
+            continue;
+          }
+          const record: FeedRecentRedisRecord = {
             id: feed.id,
-            blogPlatform: feed.blogPlatform,
-            blogImage: feed.blogImage ?? '',
+            blogPlatform: rssObj.blogPlatform,
+            blogImage: rssObj.blogImage ?? '',
             createdAt: feed.pubDate,
             viewCount: 0,
-            blogName: feed.blogName,
-            thumbnail: feed.imageUrl,
+            blogName: rssObj.blogName,
+            thumbnail: feed.thumbnail,
             path: feed.link,
             title: feed.title,
-            tag: Array.isArray(feed.tag) ? feed.tag : [],
+            tagList: Array.isArray(feed.tag) ? feed.tag : [],
             likes: 0,
             comments: 0,
-          });
+          };
+          pipeline.hset(`feed:recent:${feed.id}`, record);
           pipeline.sadd(
             redisConstant.FEED_RECENT_INDEX_KEY,
             `feed:recent:${feed.id}`,
@@ -195,14 +281,12 @@ export class FeedRepository {
     try {
       await this.redisConnection.executePipeline((pipeline) => {
         for (const feed of feedLists) {
-          pipeline.lpush(
-            redisConstant.FEED_AI_QUEUE,
-            JSON.stringify({
-              id: feed.id,
-              content: feed.content,
-              deathCount: feed.deathCount,
-            }),
-          );
+          const message: FeedAiQueueMessage = {
+            id: feed.id,
+            content: feed.content,
+            deathCount: feed.deathCount,
+          };
+          pipeline.lpush(redisConstant.FEED_AI_QUEUE, JSON.stringify(message));
         }
       });
       this.redisMetrics.success.inc({ operation: 'enqueue_ai' });

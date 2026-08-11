@@ -1,6 +1,7 @@
 import path from "path";
 import { visualizer } from "rollup-plugin-visualizer";
 import { defineConfig } from "vite";
+import { viteStaticCopy } from "vite-plugin-static-copy";
 
 import react from "@vitejs/plugin-react-swc";
 
@@ -11,6 +12,9 @@ export default defineConfig({
     visualizer({
       open: !process.env.VITE_VISUALIZE,
       brotliSize: true,
+    }),
+    viteStaticCopy({
+      targets: [{ src: "node_modules/tinymce", dest: "." }],
     }),
   ],
   resolve: {

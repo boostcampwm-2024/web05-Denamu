@@ -7,8 +7,10 @@ export const TAB_TYPES = {
   POST: "POST",
   CHAT: "CHAT",
   REPORT: "REPORT",
+  SUSPENSION: "SUSPENSION",
   BOARD: "BOARD",
   QNA: "QNA",
+  EMAIL: "EMAIL",
 } as const;
 
 type TabType = (typeof TAB_TYPES)[keyof typeof TAB_TYPES];
@@ -43,6 +45,11 @@ export const AdminNavigationMenu = ({ handleTap }: { handleTap: (tabType: TabTyp
           </Button>
         </NavigationMenuItem>
         <NavigationMenuItem>
+          <Button variant="ghost" className="w-full justify-start" onClick={() => handleTap("SUSPENSION")}>
+            정지 유저 관리
+          </Button>
+        </NavigationMenuItem>
+        <NavigationMenuItem>
           <Button variant="ghost" className="w-full justify-start" onClick={() => handleTap("BOARD")}>
             공지사항 · FAQ 관리
           </Button>
@@ -50,6 +57,11 @@ export const AdminNavigationMenu = ({ handleTap }: { handleTap: (tabType: TabTyp
         <NavigationMenuItem>
           <Button variant="ghost" className="w-full justify-start" onClick={() => handleTap("QNA")}>
             Q&A 관리
+          </Button>
+        </NavigationMenuItem>
+        <NavigationMenuItem>
+          <Button variant="ghost" className="w-full justify-start" onClick={() => handleTap("EMAIL")}>
+            이메일 관리
           </Button>
         </NavigationMenuItem>
       </NavigationMenuList>

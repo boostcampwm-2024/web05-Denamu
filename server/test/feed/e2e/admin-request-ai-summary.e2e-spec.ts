@@ -1,10 +1,13 @@
 import { HttpStatus } from '@nestjs/common';
 
+import { Channel } from 'amqplib';
 import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 
 import { AdminRepository } from '@admin/repository/admin.repository';
 
+import { RMQ_QUEUES } from '@common/rabbitmq/rabbitmq.constant';
+import { RabbitMQManager } from '@common/rabbitmq/rabbitmq.manager';
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
 
@@ -29,24 +32,37 @@ describe(`POST /api/admins/feeds/{feedId}/ai-summary-requests E2E Test`, () => {
   let feedRepository: FeedRepository;
   let rssAcceptRepository: RssAcceptRepository;
   let adminRepository: AdminRepository;
+  let channel: Channel;
   let rssAccept: RssAccept;
 
   const sessionKey = 'ai-summary-session-key';
   const adminSessionKey = (sid: string) =>
     `${REDIS_KEYS.ADMIN_AUTH_KEY}:${sid}`;
 
-  const readRetryQueue = () =>
-    redisService.lrange(REDIS_KEYS.FEED_AI_RETRY_QUEUE, 0, -1);
+  const readRetryQueueMessages = async () => {
+    const messages: unknown[] = [];
+    for (;;) {
+      const message = await channel.get(RMQ_QUEUES.CRAWLING_AI_RETRY, {
+        noAck: true,
+      });
+      if (!message) break;
+      messages.push(JSON.parse(message.content.toString()));
+    }
+    return messages;
+  };
 
-  beforeAll(() => {
+  beforeAll(async () => {
     agent = supertest(testApp.getHttpServer());
     redisService = testApp.get(RedisService);
     feedRepository = testApp.get(FeedRepository);
     rssAcceptRepository = testApp.get(RssAcceptRepository);
     adminRepository = testApp.get(AdminRepository);
+    channel = await testApp.get(RabbitMQManager).getChannel();
   });
 
   beforeEach(async () => {
+    await channel.purgeQueue(RMQ_QUEUES.CRAWLING_AI_RETRY);
+
     rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture(),
     );
@@ -69,8 +85,8 @@ describe(`POST /api/admins/feeds/{feedId}/ai-summary-requests E2E Test`, () => {
     // Http then
     expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
 
-    // Redis then
-    expect(await readRetryQueue()).toHaveLength(0);
+    // RabbitMQ then
+    expect(await readRetryQueueMessages()).toHaveLength(0);
   });
 
   it('[404] 존재하지 않는 피드면 실패한다.', async () => {
@@ -81,10 +97,10 @@ describe(`POST /api/admins/feeds/{feedId}/ai-summary-requests E2E Test`, () => {
 
     // Http then
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
-    expect(await readRetryQueue()).toHaveLength(0);
+    expect(await readRetryQueueMessages()).toHaveLength(0);
   });
 
-  it('[202] 요약이 NULL(영구 실패)인 피드를 deathCount 0으로 재요청 큐에 넣는다.', async () => {
+  it('[202] 요약이 NULL(영구 실패)인 피드를 재요청 큐에 발행한다.', async () => {
     // given
     const feed: Feed = await createFeed(null);
 
@@ -96,16 +112,17 @@ describe(`POST /api/admins/feeds/{feedId}/ai-summary-requests E2E Test`, () => {
     // Http then
     expect(response.status).toBe(HttpStatus.ACCEPTED);
 
-    // Redis then
-    const queued = await readRetryQueue();
+    // RabbitMQ then
+    const queued = await readRetryQueueMessages();
     expect(queued).toHaveLength(1);
-    expect(JSON.parse(queued[0])).toMatchObject({
-      feedId: feed.id,
-      deathCount: 0,
-    });
+    expect(queued[0]).toBe(feed.id);
+
+    // DB then
+    const updated = await feedRepository.findOneBy({ id: feed.id });
+    expect(updated?.summary).toBe(IN_PROGRESS);
   });
 
-  it('[202] 요약이 진행중 placeholder(요청 미전송)인 피드를 재요청 큐에 넣는다.', async () => {
+  it('[202] 요약이 진행중 placeholder(요청 미전송)인 피드를 재요청 큐에 발행한다.', async () => {
     // given
     const feed: Feed = await createFeed(IN_PROGRESS);
 
@@ -117,13 +134,13 @@ describe(`POST /api/admins/feeds/{feedId}/ai-summary-requests E2E Test`, () => {
     // Http then
     expect(response.status).toBe(HttpStatus.ACCEPTED);
 
-    // Redis then
-    const queued = await readRetryQueue();
+    // RabbitMQ then
+    const queued = await readRetryQueueMessages();
     expect(queued).toHaveLength(1);
-    expect(JSON.parse(queued[0])).toMatchObject({ feedId: feed.id });
+    expect(queued[0]).toBe(feed.id);
   });
 
-  it('[409] 이미 재요청해 처리 중인 피드를 다시 요청하면 충돌이 발생하고 큐에 중복 적재되지 않는다.', async () => {
+  it('[409] 이미 재요청해 처리 중인 피드를 다시 요청하면 충돌이 발생하고 큐에 중복 발행되지 않는다.', async () => {
     // given
     const feed: Feed = await createFeed(null);
     const first = await agent
@@ -139,7 +156,7 @@ describe(`POST /api/admins/feeds/{feedId}/ai-summary-requests E2E Test`, () => {
     // Http then
     expect(second.status).toBe(HttpStatus.CONFLICT);
 
-    // Redis then
-    expect(await readRetryQueue()).toHaveLength(1);
+    // RabbitMQ then
+    expect(await readRetryQueueMessages()).toHaveLength(1);
   });
 });

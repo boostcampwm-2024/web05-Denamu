@@ -184,6 +184,8 @@ export class CommentService {
           })
         : 0;
 
+    let commentCountDelta = 0;
+
     await this.dataSource.transaction(async (manager) => {
       if (replyCount > 0) {
         comment.isDeleted = true;
@@ -194,6 +196,7 @@ export class CommentService {
       const feed = comment.feed;
       await manager.remove(comment);
       feed.commentCount--;
+      commentCountDelta--;
 
       if (comment.parent?.isDeleted) {
         const remainingReplyCount = await manager.count(Comment, {
@@ -203,6 +206,7 @@ export class CommentService {
         if (remainingReplyCount === 0) {
           await manager.remove(comment.parent);
           feed.commentCount--;
+          commentCountDelta--;
         }
       }
 
@@ -211,7 +215,11 @@ export class CommentService {
 
     this.eventEmitter.emit(
       'comment.deleted',
-      new CommentDeletedEvent(comment.feed.id, parentAuthorId),
+      new CommentDeletedEvent(
+        comment.feed.id,
+        parentAuthorId,
+        commentCountDelta,
+      ),
     );
   }
 
@@ -231,7 +239,11 @@ export class CommentService {
 
     this.eventEmitter.emit(
       'comment.deleted',
-      new CommentDeletedEvent(comment.feed.id, comment.parent?.user.id ?? null),
+      new CommentDeletedEvent(
+        comment.feed.id,
+        comment.parent?.user.id ?? null,
+        0,
+      ),
     );
   }
 

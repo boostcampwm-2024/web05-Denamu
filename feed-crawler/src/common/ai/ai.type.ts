@@ -10,8 +10,3 @@ export type FeedAIQueueItem = {
   tagList?: string[];
   summary?: string;
 };
-
-export interface AiSummaryRetryMessage {
-  feedId: number;
-  deathCount: number;
-}

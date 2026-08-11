@@ -5,6 +5,7 @@ import {
   createAdminDeleteAccountContent,
   createAdminVerificationMailContent,
   createDeleteAccountContent,
+  createMarketingBroadcastContent,
   createNoticePublishedContent,
   createPasswordResetMailContent,
   createQnaAnsweredContent,
@@ -12,6 +13,7 @@ import {
   createRssRegistrationContent,
   createRssRegistrationRequestContent,
   createRssRemoveCertificateContent,
+  createUnreadNotificationDigestContent,
   createVerificationMailContent,
 } from '@email/email.content';
 
@@ -111,6 +113,20 @@ const previews: [string, string, string][] = [
       1,
       SERVICE_ADDRESS,
     ),
+  ],
+  [
+    'marketing-broadcast',
+    '마케팅 이메일(광고)',
+    createMarketingBroadcastContent(
+      '김데나무',
+      '<p>이번 달 새로운 기능을 소개합니다.</p>',
+      SERVICE_ADDRESS,
+    ),
+  ],
+  [
+    'unread-notification-digest',
+    '미확인 알림 다이제스트',
+    createUnreadNotificationDigestContent('김데나무', 5, SERVICE_ADDRESS),
   ],
 ];
 

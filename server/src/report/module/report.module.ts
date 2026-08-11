@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 
+import { AdminRepository } from '@admin/repository/admin.repository';
+
 import { CommentRepository } from '@comment/repository/comment.repository';
 
 import { JwtAuthModule } from '@common/auth/jwt.module';
@@ -14,16 +16,25 @@ import { ReportService } from '@report/service/report.service';
 
 import { RssAcceptRepository } from '@rss/repository/rss.repository';
 
+import { SuspensionModule } from '@suspension/module/suspension.module';
+
 import { UserModule } from '@user/module/user.module';
 
 @Module({
-  imports: [JwtAuthModule, UserModule, FeedModule, NotifierModule],
+  imports: [
+    JwtAuthModule,
+    UserModule,
+    FeedModule,
+    NotifierModule,
+    SuspensionModule,
+  ],
   controllers: [ReportController, AdminReportController],
   providers: [
     ReportService,
     ReportRepository,
     RssAcceptRepository,
     CommentRepository,
+    AdminRepository,
   ],
   exports: [],
 })

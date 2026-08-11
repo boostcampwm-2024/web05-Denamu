@@ -1,11 +1,14 @@
 import 'reflect-metadata';
 
+import logger from '@common/logger/logger';
 import {
   AdminCertification,
+  MarketingBroadcast,
   RssCertification,
   RssRegistration,
   RssRegistrationRequest,
   RssRemoval,
+  UnreadNotificationDigest,
   User,
 } from '@common/types';
 
@@ -14,9 +17,6 @@ import { EmailConsumer } from '@email/email.consumer';
 import { EmailService } from '@email/email.service';
 import { EmailPayload, NodeMailerError } from '@email/types';
 
-import { NOTIFICATION_EVENT } from '@notification/notification-event.constant';
-import { Notifier } from '@notification/notifier.interface';
-
 import { RETRY_CONFIG, RMQ_QUEUES } from '@rabbitmq/rabbitmq.constant';
 import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
 
@@ -24,7 +24,6 @@ describe('email consumer unit test', () => {
   let emailConsumer: EmailConsumer;
   let rabbitmqService: jest.Mocked<RabbitMQService>;
   let emailService: jest.Mocked<EmailService>;
-  let notifier: jest.Mocked<Notifier>;
 
   afterEach(() => {
     jest.clearAllMocks();
@@ -41,6 +40,8 @@ describe('email consumer unit test', () => {
     let sendAdminCertificationMail: jest.Mock;
     let sendAdminDeleteAccountMail: jest.Mock;
     let sendAdminPasswordResetEmail: jest.Mock;
+    let sendMarketingBroadcastMail: jest.Mock;
+    let sendUnreadNotificationDigestMail: jest.Mock;
 
     beforeEach(() => {
       sendUserCertificationMail = jest.fn().mockResolvedValue(undefined);
@@ -53,6 +54,8 @@ describe('email consumer unit test', () => {
       sendAdminCertificationMail = jest.fn().mockResolvedValue(undefined);
       sendAdminDeleteAccountMail = jest.fn().mockResolvedValue(undefined);
       sendAdminPasswordResetEmail = jest.fn().mockResolvedValue(undefined);
+      sendMarketingBroadcastMail = jest.fn().mockResolvedValue(undefined);
+      sendUnreadNotificationDigestMail = jest.fn().mockResolvedValue(undefined);
 
       emailService = {
         sendUserCertificationMail,
@@ -65,19 +68,13 @@ describe('email consumer unit test', () => {
         sendAdminCertificationMail,
         sendAdminDeleteAccountMail,
         sendAdminPasswordResetEmail,
+        sendMarketingBroadcastMail,
+        sendUnreadNotificationDigestMail,
       } as any;
       rabbitmqService = {
         sendMessageToQueue: jest.fn().mockResolvedValue(null),
       } as any;
-      notifier = {
-        start: jest.fn(),
-        publish: jest.fn(),
-      };
-      emailConsumer = new EmailConsumer(
-        rabbitmqService,
-        emailService,
-        notifier,
-      );
+      emailConsumer = new EmailConsumer(rabbitmqService, emailService);
     });
 
     it('USER_CERTIFICATION 타입일 때 sendUserCertificationMail을 호출한다', async () => {
@@ -266,6 +263,46 @@ describe('email consumer unit test', () => {
       expect(sendAdminPasswordResetEmail).toHaveBeenCalledWith(adminData);
     });
 
+    it('MARKETING_BROADCAST 타입일 때 sendMarketingBroadcastMail을 호출한다', async () => {
+      //given
+      const marketingData: MarketingBroadcast = {
+        email: 'test@test.com',
+        userName: 'tester',
+        subject: '9월 신규 기능 소식',
+        content: '<p>이번 달 업데이트를 확인해보세요.</p>',
+      };
+      const payload: EmailPayload = {
+        type: EmailPayloadConstant.MARKETING_BROADCAST,
+        data: marketingData,
+      };
+
+      //when
+      await emailConsumer.handleEmailByType(payload);
+
+      //then
+      expect(sendMarketingBroadcastMail).toHaveBeenCalledTimes(1);
+      expect(sendMarketingBroadcastMail).toHaveBeenCalledWith(marketingData);
+    });
+
+    it('UNREAD_NOTIFICATION_DIGEST 타입일 때 sendUnreadNotificationDigestMail을 호출한다', async () => {
+      const digestData: UnreadNotificationDigest = {
+        email: 'test@test.com',
+        userName: 'tester',
+        unreadCount: 5,
+      };
+      const payload: EmailPayload = {
+        type: EmailPayloadConstant.UNREAD_NOTIFICATION_DIGEST,
+        data: digestData,
+      };
+
+      await emailConsumer.handleEmailByType(payload);
+
+      expect(sendUnreadNotificationDigestMail).toHaveBeenCalledTimes(1);
+      expect(sendUnreadNotificationDigestMail).toHaveBeenCalledWith(
+        digestData,
+      );
+    });
+
     it('알 수 없는 타입일 때 아무 메서드도 호출하지 않는다', async () => {
       const payload = {
         type: 'unknownType',
@@ -284,7 +321,7 @@ describe('email consumer unit test', () => {
 
   describe('handleEmailByError unit test', () => {
     let sendMessageToQueue: jest.Mock;
-    let notifierPublish: jest.Mock;
+    let loggerErrorSpy: jest.SpyInstance;
 
     const networkErrors = [
       `ESOCKET`,
@@ -312,16 +349,12 @@ describe('email consumer unit test', () => {
       rabbitmqService = {
         sendMessageToQueue,
       } as any;
-      notifierPublish = jest.fn();
-      notifier = {
-        start: jest.fn(),
-        publish: notifierPublish,
-      };
-      emailConsumer = new EmailConsumer(
-        rabbitmqService,
-        emailService,
-        notifier,
-      );
+      loggerErrorSpy = jest.spyOn(logger, 'error').mockImplementation();
+      emailConsumer = new EmailConsumer(rabbitmqService, emailService);
+    });
+
+    afterEach(() => {
+      loggerErrorSpy.mockRestore();
     });
 
     describe('Transient Error test', () => {
@@ -561,7 +594,7 @@ describe('email consumer unit test', () => {
         );
       });
 
-      it('DLQ 발행 시 notifier로 EMAIL_DLQ 이벤트를 발행한다', async () => {
+      it('DLQ 발행 시 logger.error로 에러를 기록한다', async () => {
         const error = new Error('Mailbox unavailable') as NodeMailerError;
         error.responseCode = 550;
         const emailPayload: EmailPayload = {
@@ -575,14 +608,16 @@ describe('email consumer unit test', () => {
 
         await emailConsumer.handleEmailByError(error, emailPayload, 0);
 
-        expect(notifierPublish).toHaveBeenCalledTimes(1);
-        expect(notifierPublish).toHaveBeenCalledWith(
-          NOTIFICATION_EVENT.EMAIL_DLQ,
-          expect.objectContaining({ error }),
+        expect(loggerErrorSpy).toHaveBeenCalledTimes(1);
+        expect(loggerErrorSpy).toHaveBeenCalledWith(
+          expect.stringContaining('[SMTP 500 에러 발생]'),
+        );
+        expect(loggerErrorSpy).toHaveBeenCalledWith(
+          expect.stringContaining(error.message),
         );
       });
 
-      it('재시도 가능한 에러는 notifier로 이벤트를 발행하지 않는다', async () => {
+      it('재시도 가능한 에러는 DLQ logger.error를 호출하지 않는다', async () => {
         const error = new Error('ECONNREFUSED') as NodeMailerError;
         const emailPayload: EmailPayload = {
           type: EmailPayloadConstant.USER_CERTIFICATION,
@@ -595,7 +630,7 @@ describe('email consumer unit test', () => {
 
         await emailConsumer.handleEmailByError(error, emailPayload, 0);
 
-        expect(notifierPublish).not.toHaveBeenCalled();
+        expect(loggerErrorSpy).not.toHaveBeenCalled();
       });
     });
 
@@ -681,8 +716,7 @@ describe('email consumer unit test', () => {
         sendMessageToQueue: jest.fn().mockResolvedValue(null),
       } as any;
       emailService = { sendUserCertificationMail } as any;
-      notifier = { start: jest.fn(), publish: jest.fn() };
-      emailConsumer = new EmailConsumer(rabbitmqService, emailService, notifier);
+      emailConsumer = new EmailConsumer(rabbitmqService, emailService);
     });
 
     it('start 호출 시 EMAIL_SEND 큐를 consume 한다', async () => {
@@ -733,7 +767,9 @@ describe('email consumer unit test', () => {
     });
 
     it('대기 중인 작업이 없으면 waitForPendingTasks는 즉시 반환한다', async () => {
-      await expect(emailConsumer.waitForPendingTasks()).resolves.toBeUndefined();
+      await expect(
+        emailConsumer.waitForPendingTasks(),
+      ).resolves.toBeUndefined();
     });
 
     it('stop은 진행 중인 작업이 모두 끝날 때까지 대기한 후 종료한다', async () => {

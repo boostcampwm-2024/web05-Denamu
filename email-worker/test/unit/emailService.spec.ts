@@ -5,10 +5,13 @@ import * as nodemailer from 'nodemailer';
 import { EmailMetrics } from '@common/metrics/email-metrics';
 import {
   AdminCertification,
+  MarketingBroadcast,
+  NoticePublished,
   RssCertification,
   RssRegistration,
   RssRegistrationRequest,
   RssRemoval,
+  UnreadNotificationDigest,
   User,
 } from '@common/types';
 
@@ -335,6 +338,33 @@ describe('EmailService unit test', () => {
     });
   });
 
+  describe('sendUnreadNotificationDigestMail unit test', () => {
+    it('미읽음 알림 다이제스트 메일을 올바르게 전송한다', async () => {
+      const digest: UnreadNotificationDigest = {
+        email: 'tester@test.com',
+        userName: 'tester',
+        unreadCount: 5,
+      };
+
+      await emailService.sendUnreadNotificationDigestMail(digest);
+
+      expect(mockSendMail).toHaveBeenCalledTimes(1);
+      expect(mockSendMail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          from: `Denamu<${mockEmailUser}>`,
+          to: `${digest.userName}<${digest.email}>`,
+          subject: `[🎋 Denamu] 확인하지 않은 알림이 ${digest.unreadCount}개 있습니다.`,
+        }),
+      );
+
+      const callArgs = (mockSendMail.mock.calls[0] as [{ html: string }])[0];
+      expect(callArgs.html).toContain(digest.userName);
+      expect(callArgs.html).toContain(`>${digest.unreadCount}<`);
+      expect(callArgs.html).toContain('개');
+      expect(callArgs.html).toContain(PRODUCT_DOMAIN);
+    });
+  });
+
   describe('sendAdminCertificationMail unit test', () => {
     it('관리자 계정 인증 메일을 올바르게 전송한다', async () => {
       const admin: AdminCertification = {
@@ -442,6 +472,95 @@ describe('EmailService unit test', () => {
       const callArgs = (mockSendMail.mock.calls[0] as [{ html: string }])[0];
       expect(callArgs.html).toContain(request.rss.name);
       expect(callArgs.html).toContain(request.rss.rssUrl);
+    });
+  });
+
+  describe('sendNoticePublishedMail unit test', () => {
+    it('공지사항 등록 메일을 공지 수신동의 안내와 함께 올바르게 전송한다', async () => {
+      //given
+      const notice: NoticePublished = {
+        email: 'tester@test.com',
+        userName: 'tester',
+        boardId: 42,
+        title: '서비스 점검 안내',
+      };
+
+      //when
+      await emailService.sendNoticePublishedMail(notice);
+
+      //then
+      expect(mockSendMail).toHaveBeenCalledTimes(1);
+      expect(mockSendMail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          from: `Denamu<${mockEmailUser}>`,
+          to: `${notice.userName}<${notice.email}>`,
+          subject: '[🎋 Denamu] 새로운 공지사항이 등록되었습니다.',
+        }),
+      );
+
+      const callArgs = (mockSendMail.mock.calls[0] as [{ html: string }])[0];
+      expect(callArgs.html).toContain(notice.userName);
+      expect(callArgs.html).toContain(notice.title);
+      expect(callArgs.html).toContain(
+        `${PRODUCT_DOMAIN}/board/${notice.boardId}`,
+      );
+      expect(callArgs.html).toContain('공지사항 이메일 수신 동의');
+      expect(callArgs.html).not.toContain(
+        '마케팅 활용 및 광고성 정보 수신 동의',
+      );
+    });
+  });
+
+  describe('sendMarketingBroadcastMail unit test', () => {
+    const marketingBroadcast: MarketingBroadcast = {
+      email: 'tester@test.com',
+      userName: 'tester',
+      subject: '9월 신규 기능 소식',
+      content: '<p>이번 달 업데이트를 확인해보세요.</p>',
+    };
+
+    it('광고성 단체 메일을 (광고) 접두사가 붙은 제목으로 전송한다', async () => {
+      //given
+      const expectedSubject = `(광고) [🎋 Denamu] ${marketingBroadcast.subject}`;
+
+      //when
+      await emailService.sendMarketingBroadcastMail(marketingBroadcast);
+
+      //then
+      expect(mockSendMail).toHaveBeenCalledTimes(1);
+      expect(mockSendMail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          from: `Denamu<${mockEmailUser}>`,
+          to: `${marketingBroadcast.userName}<${marketingBroadcast.email}>`,
+          subject: expectedSubject,
+        }),
+      );
+    });
+
+    it('본문에 수신자 이름, 전달 내용, 마케팅 수신동의 안내가 포함된다', async () => {
+      //given
+      //when
+      await emailService.sendMarketingBroadcastMail(marketingBroadcast);
+
+      //then
+      const callArgs = (mockSendMail.mock.calls[0] as [{ html: string }])[0];
+      expect(callArgs.html).toContain(marketingBroadcast.userName);
+      expect(callArgs.html).toContain(marketingBroadcast.content);
+      expect(callArgs.html).toContain('마케팅 활용 및 광고성 정보 수신 동의');
+      expect(callArgs.html).not.toContain('공지사항 이메일 수신 동의');
+    });
+
+    it('메일 전송 실패 시 에러를 그대로 전파한다', async () => {
+      //given
+      const error = new Error('SMTP connection failed');
+      mockSendMail.mockRejectedValue(error);
+
+      //when
+      const sending =
+        emailService.sendMarketingBroadcastMail(marketingBroadcast);
+
+      //then
+      await expect(sending).rejects.toThrow('SMTP connection failed');
     });
   });
 });
