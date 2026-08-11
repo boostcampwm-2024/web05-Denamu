@@ -3,7 +3,12 @@ name: BE Deployment
 on:
   push:
     branches: [main]
-    paths: ['server/**', 'docker-compose/docker-compose.prod.yml']
+    paths:
+      [
+        'server/**',
+        'docker-compose/docker-compose.prod.yml',
+        'docker-compose/scripts/**',
+      ]
   workflow_dispatch:
 
 permissions:
