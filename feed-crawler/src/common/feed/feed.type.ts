@@ -8,17 +8,12 @@ export interface RssObj {
 
 export interface FeedFetchResult {
   feeds: FeedDetail[];
-  channelImage: string | null | undefined;
+  rssObj: RssObj;
 }
 
 export interface FeedDetail {
   id: number;
-  blog: {
-    id: number;
-    name: string;
-    platform: string;
-    image: string | null;
-  };
+  blogId: number;
   pubDate: string;
   title: string;
   link: string;

@@ -22,12 +22,7 @@ describe('FeedRepository', () => {
 
   const createFeed = (id: number): FeedDetail => ({
     id,
-    blog: {
-      id,
-      name: `테스트 블로그 ${id}`,
-      platform: 'tistory',
-      image: null,
-    },
+    blogId: id,
     pubDate: `2024-01-01 12:0${id}:00`,
     title: `테스트 피드 ${id}`,
     link: `https://test${id}.tistory.com/${id}`,
@@ -38,7 +33,7 @@ describe('FeedRepository', () => {
   });
 
   const toValueRow = (feed: FeedDetail) => [
-    feed.blog.id,
+    feed.blogId,
     feed.pubDate,
     feed.title,
     feed.link,

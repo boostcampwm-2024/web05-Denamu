@@ -8,7 +8,7 @@ export interface FeedRecentRedisRecord {
   thumbnail: string;
   path: string;
   title: string;
-  tag: string[];
+  tagList: string[];
   likes: number;
   comments: number;
 }

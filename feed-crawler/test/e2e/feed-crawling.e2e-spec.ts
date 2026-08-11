@@ -51,12 +51,7 @@ describe('feed crawling e2e-test', () => {
         feeds: [
           {
             id: null,
-            blog: {
-              id: 1,
-              name: 'test blog',
-              platform: 'etc',
-              image: null,
-            },
+            blogId: 1,
             title: 'Mock Title',
             link: 'https://example.com/mock',
             pubDate: new Date().toISOString().slice(0, 19).replace('T', ' '),
@@ -66,7 +61,13 @@ describe('feed crawling e2e-test', () => {
             deathCount: 0,
           },
         ],
-        channelImage: null,
+        rssObj: {
+          id: 1,
+          blogName: 'test blog',
+          blogPlatform: 'etc',
+          rssUrl: 'https://test.com/rss',
+          blogImage: null,
+        },
       });
 
     await testContext.dbConnection.executeQuery(

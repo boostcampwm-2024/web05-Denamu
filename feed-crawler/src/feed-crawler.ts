@@ -3,7 +3,7 @@ import { inject, injectable } from 'tsyringe';
 import axios from 'axios';
 
 import { PermanentError, RetryableError } from '@common/errors';
-import { FeedDetail, FeedFetchResult, RssObj } from '@common/feed/feed.type';
+import { FeedDetail, RssObj } from '@common/feed/feed.type';
 import logger from '@common/logger/logger';
 import { FeedParserManager } from '@common/parser/feed-parser-manager';
 
@@ -31,7 +31,7 @@ export class FeedCrawler {
 
     const message = insertedData.map((feed) => ({
       feedId: feed.id,
-      rssAcceptId: feed.blog.id,
+      rssAcceptId: feed.blogId,
     }));
 
     try {
@@ -58,8 +58,9 @@ export class FeedCrawler {
       return;
     }
 
-    const crawlResults = await this.feedGroupByRss(rssObjects, startTime);
-    await this.syncChannelImages(rssObjects, crawlResults);
+    const crawlResults = await Promise.all(
+      rssObjects.map((rssObj) => this.crawlRss(rssObj, startTime)),
+    );
     const newFeeds = crawlResults.flatMap((result) => result.feeds);
 
     if (!newFeeds.length) {
@@ -70,7 +71,10 @@ export class FeedCrawler {
     const insertedData: FeedDetail[] =
       await this.feedRepository.insertFeeds(newFeeds);
     await this.feedRepository.saveAiQueue(insertedData);
-    await this.feedRepository.setRecentFeedList(insertedData);
+    await this.feedRepository.setRecentFeedList(
+      insertedData,
+      crawlResults.map((result) => result.rssObj),
+    );
     await this.publishNewPostEvent(insertedData);
 
     const executionTime = Date.now() - startTime.getTime();
@@ -88,12 +92,7 @@ export class FeedCrawler {
 
     logger.info(`전체 피드 크롤링 시작: ${rssObj.blogName}(${rssObj.rssUrl})`);
 
-    const { feeds: newFeeds, channelImage } =
-      await this.feedParserManager.fetchAndParseAll(rssObj);
-    await this.syncChannelImages(
-      [rssObj],
-      [{ rssId: rssObj.id, channelImage }],
-    );
+    const { feeds: newFeeds } = await this.crawlRssAll(rssObj);
 
     if (!newFeeds.length) {
       logger.info(`${rssObj.blogName}에서 가져올 피드가 없습니다.`);
@@ -121,8 +120,7 @@ export class FeedCrawler {
       throw new PermanentError(`RSS를 찾을 수 없습니다: blogId=${feed.blogId}`);
     }
 
-    const { feeds: allFeeds } =
-      await this.feedParserManager.fetchAndParseAll(rssObj);
+    const { feeds: allFeeds } = await this.crawlRssAll(rssObj);
     const matched = allFeeds.find((parsed) => parsed.link === feed.path);
     if (!matched) {
       throw await this.buildMissingFeedError(feedId, feed.path);
@@ -167,40 +165,38 @@ export class FeedCrawler {
     }
   }
 
-  private feedGroupByRss(
-    rssObjects: RssObj[],
+  private async crawlRss(
+    rssObj: RssObj,
     startTime: Date,
-  ): Promise<(FeedFetchResult & { rssId: number })[]> {
-    return Promise.all(
-      rssObjects.map(async (rssObj: RssObj) => {
-        logger.info(
-          `${rssObj.blogName}(${rssObj.rssUrl}) 에서 데이터 조회하는 중...`,
-        );
-        const result = await this.feedParserManager.fetchAndParse(
-          rssObj,
-          startTime,
-        );
-        return { ...result, rssId: rssObj.id };
-      }),
+  ) {
+    logger.info(
+      `${rssObj.blogName}(${rssObj.rssUrl}) 에서 데이터 조회하는 중...`,
     );
+    const result = await this.feedParserManager.fetchAndParse(
+      rssObj,
+      startTime,
+    );
+    await this.syncChannelImage(rssObj, result.rssObj);
+    return result;
   }
 
-  private async syncChannelImages(
-    rssObjects: RssObj[],
-    crawlResults: { rssId: number; channelImage: string | null | undefined }[],
-  ) {
-    const rssById = new Map(rssObjects.map((rssObj) => [rssObj.id, rssObj]));
+  private async crawlRssAll(rssObj: RssObj) {
+    const result = await this.feedParserManager.fetchAndParseAll(rssObj);
+    await this.syncChannelImage(rssObj, result.rssObj);
+    return result;
+  }
 
-    await Promise.all(
-      crawlResults
-        .filter((result) => result.channelImage !== undefined)
-        .filter(
-          (result) =>
-            result.channelImage !== rssById.get(result.rssId)?.blogImage,
-        )
-        .map((result) =>
-          this.rssRepository.updateImage(result.rssId, result.channelImage),
-        ),
-    );
+  private async syncChannelImage(rssObj: RssObj, updatedRssObj: RssObj) {
+    if (updatedRssObj.blogImage === rssObj.blogImage) {
+      return;
+    }
+    try {
+      await this.rssRepository.updateImage(
+        updatedRssObj.id,
+        updatedRssObj.blogImage,
+      );
+    } catch (error) {
+      logger.error(`[${rssObj.rssUrl}] 채널 이미지 갱신 실패: ${error}`);
+    }
   }
 }

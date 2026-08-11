@@ -95,12 +95,7 @@ export abstract class BaseFeedParser {
 
         return {
           id: null,
-          blog: {
-            id: rssObj.id,
-            name: rssObj.blogName,
-            platform: rssObj.blogPlatform,
-            image: rssObj.blogImage,
-          },
+          blogId: rssObj.id,
           pubDate: formattedDate,
           title: feed.title,
           link: decodeURIComponent(feed.link),
