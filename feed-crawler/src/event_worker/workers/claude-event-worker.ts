@@ -14,8 +14,8 @@ import { redisConstant } from '@common/redis/redis.constant';
 import { AbstractQueueWorker } from '@event_worker/abstract-queue-worker';
 
 import { FeedRepository } from '@repository/feed.repository';
-import { TagRepository } from '@repository/tag.repository';
 import { TagMapRepository } from '@repository/tag-map.repository';
+import { TagRepository } from '@repository/tag.repository';
 
 @injectable()
 export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
@@ -171,11 +171,16 @@ export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
     await this.tagMapRepository.insertTags(feed.id, feed.tagList);
     this.redisMetrics.total.inc({ operation: 'save_ai_result' });
     try {
-      await this.redisConnection.hset(
-        `feed:recent:${feed.id}`,
-        'tag',
-        feed.tagList.join(','),
-      );
+      const cacheKey = `feed:recent:${feed.id}`;
+      if (await this.redisConnection.exists(cacheKey)) {
+        await this.redisConnection.hset(
+          cacheKey,
+          'tagList',
+          feed.tagList.join(','),
+          'summary',
+          feed.summary,
+        );
+      }
       this.redisMetrics.success.inc({ operation: 'save_ai_result' });
     } catch (error) {
       this.redisMetrics.failure.inc({ operation: 'save_ai_result' });

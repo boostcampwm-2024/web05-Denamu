@@ -25,6 +25,7 @@ describe('ClaudeEventWorker', () => {
   let updateNullSummaryMock: jest.Mock;
   let executePipelineMock: jest.Mock;
   let hsetMock: jest.Mock;
+  let existsMock: jest.Mock;
   let rpushMock: jest.Mock;
   let messagesCreateMock: jest.Mock;
 
@@ -55,6 +56,7 @@ describe('ClaudeEventWorker', () => {
     updateNullSummaryMock = jest.fn();
     executePipelineMock = jest.fn();
     hsetMock = jest.fn();
+    existsMock = jest.fn().mockResolvedValue(true);
     rpushMock = jest.fn();
     messagesCreateMock = jest.fn();
 
@@ -74,6 +76,7 @@ describe('ClaudeEventWorker', () => {
     mockRedisConnection = {
       executePipeline: executePipelineMock,
       hset: hsetMock,
+      exists: existsMock,
       rpush: rpushMock,
       llen: jest.fn().mockResolvedValue(0),
     } as any;
@@ -305,9 +308,31 @@ describe('ClaudeEventWorker', () => {
       );
       expect(hsetMock).toHaveBeenCalledWith(
         `feed:recent:${feedWithAIResult.id}`,
-        'tag',
+        'tagList',
         feedWithAIResult.tagList.join(','),
+        'summary',
+        feedWithAIResult.summary,
       );
+      expect(updateSummaryMock).toHaveBeenCalledWith(
+        feedWithAIResult.id,
+        feedWithAIResult.summary,
+      );
+    });
+
+    it('캐시에 없는 게시글이면 hset을 호출하지 않아야 한다', async () => {
+      // Given
+      existsMock.mockResolvedValue(false);
+      const feedWithAIResult = {
+        ...mockFeedAIQueueItem,
+        summary: mockClaudeResponse.summary,
+        tagList: Object.keys(mockClaudeResponse.tags),
+      };
+
+      // When
+      await claudeEventWorker['saveAIResult'](feedWithAIResult);
+
+      // Then
+      expect(hsetMock).not.toHaveBeenCalled();
       expect(updateSummaryMock).toHaveBeenCalledWith(
         feedWithAIResult.id,
         feedWithAIResult.summary,
