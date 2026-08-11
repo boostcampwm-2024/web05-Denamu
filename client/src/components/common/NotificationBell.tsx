@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { ReactNode, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import { Bell } from "lucide-react";
@@ -19,35 +19,41 @@ import { NotificationItem } from "@/api/services/notifications";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/useAuthStore";
 
-const NOTIFICATION_MESSAGE_CONFIG: Record<
-  NotificationItem["type"],
-  { target: (item: NotificationItem) => string | null | undefined; connector: string; action: [string, string] }
-> = {
-  LIKE: { target: (item) => item.feed?.title, connector: "에", action: ["좋아요", "를 표시했습니다"] },
-  COMMENT: { target: (item) => item.feed?.title, connector: "에", action: ["댓글", "을 남겼습니다"] },
-  REPLY: { target: (item) => item.feed?.title, connector: "에", action: ["답글", "을 남겼습니다"] },
-  SUBSCRIBE: { target: (item) => item.rss?.name, connector: "을(를)", action: ["구독", "했습니다"] },
-};
-
-const buildMessage = (item: NotificationItem) => {
+const actorMessage = (
+  item: NotificationItem,
+  target: string | null | undefined,
+  connector: string,
+  action: [string, string],
+): ReactNode => {
   const actorSuffix = item.otherCount > 0 ? `님 외 ${item.otherCount}명이 ` : "님이 ";
-  const {
-    target,
-    connector,
-    action: [actionBold, actionRest],
-  } = NOTIFICATION_MESSAGE_CONFIG[item.type];
+  const [actionBold, actionRest] = action;
 
   return (
     <>
       <span className="font-semibold">{item.actor.userName ?? "알 수 없는 사용자"}</span>
       {actorSuffix}
-      <span className="font-semibold">{target(item)}</span>
+      <span className="font-semibold">{target}</span>
       {connector}{" "}
       <span className="font-semibold">{actionBold}</span>
       {actionRest}.
     </>
   );
 };
+
+const NOTIFICATION_MESSAGE_CONFIG: Record<NotificationItem["type"], (item: NotificationItem) => ReactNode> = {
+  LIKE: (item) => actorMessage(item, item.feed?.title, "에", ["좋아요", "를 표시했습니다"]),
+  COMMENT: (item) => actorMessage(item, item.feed?.title, "에", ["댓글", "을 남겼습니다"]),
+  REPLY: (item) => actorMessage(item, item.feed?.title, "에", ["답글", "을 남겼습니다"]),
+  SUBSCRIBE: (item) => actorMessage(item, item.rss?.name, "을(를)", ["구독", "했습니다"]),
+  NEW_POST: (item) => (
+    <>
+      구독한 <span className="font-semibold">{item.rss?.name}</span>에{" "}
+      <span className="font-semibold">{item.feed?.title}</span> 새로운 게시글이 생겼습니다.
+    </>
+  ),
+};
+
+const buildMessage = (item: NotificationItem): ReactNode => NOTIFICATION_MESSAGE_CONFIG[item.type](item);
 
 export const NotificationBell = () => {
   const [open, setOpen] = useState(false);
