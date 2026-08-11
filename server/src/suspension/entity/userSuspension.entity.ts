@@ -3,6 +3,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -42,6 +43,7 @@ export class UserSuspension extends BaseEntity {
   @Column({ type: 'text', nullable: false })
   detail: string;
 
+  @Index('IDX_user_suspension_suspended_until')
   @Column({ name: 'suspended_until', type: 'datetime', nullable: true })
   suspendedUntil: Date | null;
 

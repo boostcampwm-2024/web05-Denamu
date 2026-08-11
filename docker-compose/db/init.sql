@@ -398,6 +398,7 @@ CREATE TABLE `user_suspension` (
   PRIMARY KEY (`id`),
   KEY `FK_user_suspension_user_id` (`user_id`),
   KEY `FK_user_suspension_admin_id` (`admin_id`),
+  KEY `IDX_user_suspension_suspended_until` (`suspended_until`),
   CONSTRAINT `FK_user_suspension_user_id` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `FK_user_suspension_admin_id` FOREIGN KEY (`admin_id`) REFERENCES `admin` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 );
