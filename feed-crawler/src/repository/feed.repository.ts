@@ -178,11 +178,11 @@ export class FeedRepository {
     }
   }
 
-  async setRecentFeedList(
-    feedLists: FeedDetail[],
-    rssObjectsById: Map<number, RssObj>,
-  ) {
+  async setRecentFeedList(feedLists: FeedDetail[], rssObjects: RssObj[]) {
     this.redisMetrics.total.inc({ operation: 'cache_feeds' });
+    const rssObjectsById = new Map(
+      rssObjects.map((rssObj) => [rssObj.id, rssObj]),
+    );
     try {
       await this.redisConnection.executePipeline((pipeline) => {
         for (const feed of feedLists) {
