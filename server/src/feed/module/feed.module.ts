@@ -2,13 +2,14 @@ import { Module } from '@nestjs/common';
 
 import { ActivityModule } from '@activity/module/activity.module';
 
-import { JwtAuthModule } from '@common/auth/jwt.module';
-
 import { RssBlockRepository } from '@block/repository/rssBlock.repository';
+
+import { JwtAuthModule } from '@common/auth/jwt.module';
 
 import { AdminFeedController } from '@feed/controller/adminFeed.controller';
 import { FeedController } from '@feed/controller/feed.controller';
 import { FeedViewedListener } from '@feed/listener/feed-viewed.listener';
+import { FeedRecentListener } from '@feed/listener/feedRecent.listener';
 import {
   FeedRepository,
   FeedViewRepository,
@@ -29,6 +30,7 @@ import { UserModule } from '@user/module/user.module';
     FeedViewRepository,
     FeedScheduler,
     FeedViewedListener,
+    FeedRecentListener,
     SubscriptionRepository,
     RssBlockRepository,
   ],
