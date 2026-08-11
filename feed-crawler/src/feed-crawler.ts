@@ -94,8 +94,12 @@ export class FeedCrawler {
       throw new PermanentError(`RSS를 찾을 수 없습니다: blogId=${feed.blogId}`);
     }
 
-    const { feeds: allFeeds } =
+    const { feeds: allFeeds, channelImage } =
       await this.feedParserManager.fetchAndParseAll(rssObj);
+    await this.syncChannelImages(
+      [rssObj],
+      [{ rssId: rssObj.id, channelImage }],
+    );
     const matched = allFeeds.find((parsed) => parsed.link === feed.path);
     if (!matched) {
       throw await this.buildMissingFeedError(feedId, feed.path);
