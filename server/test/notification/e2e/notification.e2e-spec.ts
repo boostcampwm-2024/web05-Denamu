@@ -13,6 +13,8 @@ import { NotificationRepository } from '@notification/repository/notification.re
 import { RssAccept } from '@rss/entity/rss.entity';
 import { RssAcceptRepository } from '@rss/repository/rss.repository';
 
+import { UserSuspensionRepository } from '@suspension/repository/userSuspension.repository';
+
 import { User } from '@user/entity/user.entity';
 import { UserRepository } from '@user/repository/user.repository';
 
@@ -45,6 +47,7 @@ describe(`${NOTIFICATION_URL} E2E Test`, () => {
   let rssAcceptRepository: RssAcceptRepository;
   let feedRepository: FeedRepository;
   let notificationRepository: NotificationRepository;
+  let userSuspensionRepository: UserSuspensionRepository;
   let owner: User;
   let liker: User;
   let rssAccept: RssAccept;
@@ -58,6 +61,7 @@ describe(`${NOTIFICATION_URL} E2E Test`, () => {
     rssAcceptRepository = testApp.get(RssAcceptRepository);
     feedRepository = testApp.get(FeedRepository);
     notificationRepository = testApp.get(NotificationRepository);
+    userSuspensionRepository = testApp.get(UserSuspensionRepository);
   });
 
   beforeEach(async () => {
@@ -153,6 +157,59 @@ describe(`${NOTIFICATION_URL} E2E Test`, () => {
     const item = notifications.result[0];
     expect(item.actor.userName).toBe(secondLiker.userName);
     expect(item.otherCount).toBe(1);
+  });
+
+  it('[200] 정지 중인 유저의 좋아요만 있으면 알림이 표시되지 않는다.', async () => {
+    // given
+    await likeFeed(likerToken).expect(HttpStatus.CREATED);
+    await waitFor(
+      () => getUnreadCount(ownerToken),
+      (result) => result.count > 0,
+    );
+    await userSuspensionRepository.save({
+      user: { id: liker.id },
+      detail: '정지 처리',
+      suspendedUntil: null,
+    });
+
+    // Http when
+    const notifications = await getNotifications(ownerToken);
+
+    // Http then - 유일한 좋아요 작성자가 정지 상태라 노출할 알림이 없다
+    expect(notifications.result).toHaveLength(0);
+  });
+
+  it('[200] 최신 좋아요 작성자가 정지 중이면 정지되지 않은 다음 작성자를 대신 노출한다.', async () => {
+    // given
+    const secondLiker = await userRepository.save(await UserFixture.createUserCryptFixture());
+    const secondLikerToken = createAccessToken({ id: secondLiker.id });
+
+    await likeFeed(likerToken).expect(HttpStatus.CREATED);
+    await waitFor(
+      () => getUnreadCount(ownerToken),
+      (result) => result.count > 0,
+    );
+    await likeFeed(secondLikerToken).expect(HttpStatus.CREATED);
+    await waitFor(
+      () => getNotifications(ownerToken),
+      (result) => result.result[0]?.actor.userName === secondLiker.userName,
+    );
+    await userSuspensionRepository.save({
+      user: { id: secondLiker.id },
+      detail: '정지 처리',
+      suspendedUntil: null,
+    });
+
+    // Http when
+    const notifications = await waitFor(
+      () => getNotifications(ownerToken),
+      (result) => result.result[0]?.actor.userName === liker.userName,
+    );
+
+    // Http then - 정지된 최신 작성자 대신 정지되지 않은 첫 번째 좋아요 작성자가 노출된다
+    const item = notifications.result[0];
+    expect(item.actor.userName).toBe(liker.userName);
+    expect(item.otherCount).toBe(0);
   });
 
   it('[200] 좋아요를 누른 사람은 알림을 받지 않는다(수신자는 게시글 소유자).', async () => {

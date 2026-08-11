@@ -3,7 +3,7 @@ import { HttpStatus } from '@nestjs/common';
 import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 
-import { ReportReason, ReportStatus, ReportTargetType } from '@report/constant/report.constant';
+import { ReportReason, ReportTargetType } from '@report/constant/report.constant';
 import { ReportRepository } from '@report/repository/report.repository';
 
 import { User } from '@user/entity/user.entity';
@@ -107,6 +107,5 @@ describe(`POST ${BASE_URL}/:userId E2E Test`, () => {
     expect(saved).not.toBeNull();
     expect(saved.reason).toBe(ReportReason.ABUSE);
     expect(saved.detail).toBe('욕설을 사용했습니다.');
-    expect(saved.status).toBe(ReportStatus.PENDING);
   });
 });

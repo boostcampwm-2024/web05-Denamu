@@ -19,10 +19,14 @@ import { QueryKey } from "@tanstack/react-query";
 import { useCustomToast } from "@/hooks/common/useCustomToast.ts";
 import { useUpdateRssCertification } from "@/hooks/queries/useRssCertification.ts";
 
-import { CertifiedRss } from "@/types/profile.ts";
+interface RssEditTarget {
+  id: number;
+  name: string;
+  userName: string;
+}
 
 interface RssEditModalProps {
-  target: CertifiedRss | null;
+  target: RssEditTarget | null;
   userId: number;
   onClose: () => void;
   extraInvalidateKeys?: QueryKey[];

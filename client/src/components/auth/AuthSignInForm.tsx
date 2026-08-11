@@ -1,15 +1,26 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Ban, Clock } from "lucide-react";
 
 import { AuthCard } from "@/components/auth/AuthCard.tsx";
 import { AuthSocialLoginButtons } from "@/components/auth/AuthSocialLoginButtons.tsx";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog.tsx";
+import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 import { useSignIn } from "@/hooks/auth/useSignIn";
 import { useCustomToast } from "@/hooks/common/useCustomToast.ts";
+import { SignInSuspension } from "@/types/auth";
 
 interface AuthSignInFormProps {
   hideBackButton?: boolean;
@@ -21,6 +32,7 @@ export const AuthSignInForm = ({ hideBackButton = false, onSuccess }: AuthSignIn
   const location = useLocation();
   const { toast } = useCustomToast();
   const { form, updateField, isLoading, result, submitForm } = useSignIn();
+  const [suspension, setSuspension] = useState<SignInSuspension | null>(null);
 
   useEffect(() => {
     if (result) {
@@ -37,6 +49,8 @@ export const AuthSignInForm = ({ hideBackButton = false, onSuccess }: AuthSignIn
 
         const from = location.state?.from || "/";
         navigate(from === "/signup" ? "/" : from);
+      } else if (result.status === 403 && result.suspension) {
+        setSuspension(result.suspension);
       } else {
         toast({
           title: "로그인 실패",
@@ -112,6 +126,45 @@ export const AuthSignInForm = ({ hideBackButton = false, onSuccess }: AuthSignIn
           </Button>
         </div>
       </AuthCard>
+      <AlertDialog open={!!suspension} onOpenChange={(open) => !open && setSuspension(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>정지된 계정입니다</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-left">
+                <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+                  <p className="text-xs font-medium text-red-600">정지 사유</p>
+                  <p className="mt-1 text-sm font-semibold leading-relaxed text-red-900">{suspension?.detail}</p>
+                </div>
+                <Badge
+                  className={
+                    suspension?.suspendedUntil
+                      ? "gap-1.5 border-amber-200 bg-amber-100 py-1 text-sm font-semibold text-amber-800 hover:bg-amber-100"
+                      : "gap-1.5 border-transparent bg-red-600 py-1 text-sm font-semibold text-white hover:bg-red-600"
+                  }
+                >
+                  {suspension?.suspendedUntil ? <Clock className="h-3.5 w-3.5" /> : <Ban className="h-3.5 w-3.5" />}
+                  해제 예정일:{" "}
+                  {suspension?.suspendedUntil ? new Date(suspension.suspendedUntil).toLocaleString() : "무기한"}
+                </Badge>
+                <p className="text-xs text-muted-foreground">
+                  이의가 있으신 경우{" "}
+                  <a
+                    href="mailto:boostcamp9web05@gmail.com"
+                    className="font-medium text-primary underline underline-offset-2 hover:text-primary/80"
+                  >
+                    boostcamp9web05@gmail.com
+                  </a>
+                  으로 문의해주세요.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setSuspension(null)}>확인</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };

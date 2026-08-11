@@ -71,6 +71,7 @@ CREATE TABLE `rss_accept` (
   `platform` varchar(255) NOT NULL DEFAULT 'etc',
   `user_id` int DEFAULT NULL,
   `image` text,
+  `suspension_count` int NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
   UNIQUE KEY `UQ_rss_accept_name` (`name`),
   UNIQUE KEY `UQ_rss_accept_rss_url` (`rss_url`),
@@ -300,10 +301,8 @@ CREATE TABLE `report` (
   `target_id` int NOT NULL,
   `reason` varchar(20) NOT NULL,
   `detail` text,
-  `status` varchar(20) NOT NULL DEFAULT 'PENDING',
   `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-  `reviewed_at` datetime DEFAULT NULL,
-  `reporter_id` int NOT NULL,
+  `reporter_id` int DEFAULT NULL,
   `reported_user_id` int DEFAULT NULL,
   `reported_rss_id` int DEFAULT NULL,
   `reported_comment_id` int DEFAULT NULL,
@@ -314,7 +313,7 @@ CREATE TABLE `report` (
   KEY `FK_report_reported_rss_id` (`reported_rss_id`),
   KEY `FK_report_reported_comment_id` (`reported_comment_id`),
   KEY `FK_report_reported_feed_id` (`reported_feed_id`),
-  CONSTRAINT `FK_report_reporter_id` FOREIGN KEY (`reporter_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_report_reporter_id` FOREIGN KEY (`reporter_id`) REFERENCES `user` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT `FK_report_reported_user_id` FOREIGN KEY (`reported_user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `FK_report_reported_rss_id` FOREIGN KEY (`reported_rss_id`) REFERENCES `rss_accept` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `FK_report_reported_comment_id` FOREIGN KEY (`reported_comment_id`) REFERENCES `comment` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -385,6 +384,23 @@ CREATE TABLE `qna_message` (
   KEY `FK_qna_message_admin_id` (`admin_id`),
   CONSTRAINT `FK_qna_message_qna_id` FOREIGN KEY (`qna_id`) REFERENCES `qna` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `FK_qna_message_admin_id` FOREIGN KEY (`admin_id`) REFERENCES `admin` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+);
+
+-- denamu.user_suspension definition
+
+CREATE TABLE `user_suspension` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `admin_id` int DEFAULT NULL,
+  `detail` text NOT NULL,
+  `suspended_until` datetime DEFAULT NULL,
+  `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (`id`),
+  KEY `FK_user_suspension_user_id` (`user_id`),
+  KEY `FK_user_suspension_admin_id` (`admin_id`),
+  KEY `IDX_user_suspension_suspended_until` (`suspended_until`),
+  CONSTRAINT `FK_user_suspension_user_id` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_user_suspension_admin_id` FOREIGN KEY (`admin_id`) REFERENCES `admin` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 -- denamu.admin insert data
@@ -657,8 +673,8 @@ INSERT INTO rss_blocks (blocker_id, blocked_rss_id) VALUES
 
 -- denamu.report insert data
 
-INSERT INTO report (target_type, target_id, reason, detail, status, reporter_id, reported_feed_id) VALUES
-	('FEED', 94, 'SPAM', '광고성 게시글입니다.', 'PENDING', 3, 94);
+INSERT INTO report (target_type, target_id, reason, detail, reporter_id, reported_feed_id) VALUES
+	('FEED', 94, 'SPAM', '광고성 게시글입니다.', 3, 94);
 
 -- denamu.board insert data
 

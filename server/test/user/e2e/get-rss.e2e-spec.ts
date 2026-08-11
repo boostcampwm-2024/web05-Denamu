@@ -40,7 +40,7 @@ describe(`GET /api/users/:id/rss E2E Test`, () => {
     const response = await agent.get(makeURL(user.id));
     expect(response.status).toBe(HttpStatus.OK);
     const { data } = response.body;
-    expect(data).toEqual([]);
+    expect(data).toStrictEqual([]);
   });
 
   it('[200] 소유한 RSS 목록을 반환하며 email 등 민감 정보는 제외한다.', async () => {
@@ -61,13 +61,52 @@ describe(`GET /api/users/:id/rss E2E Test`, () => {
 
     // Http then
     expect(response.status).toBe(HttpStatus.OK);
-    const { data }: { data: GetUserRssResponseDto[] } = response.body;
-    expect(data).toHaveLength(1);
-    const [item] = data;
-    expect(item.id).toBe(rssAccept.id);
-    expect(item.name).toBe(rssAccept.name);
-    expect(item.blogPlatform).toBe(rssAccept.blogPlatform);
-    expect(item).not.toHaveProperty('email');
+    const { data } = response.body;
+    expect(data).toStrictEqual([
+      {
+        id: rssAccept.id,
+        name: rssAccept.name,
+        userName: rssAccept.userName,
+        rssUrl: rssAccept.rssUrl,
+        blogPlatform: rssAccept.blogPlatform,
+        feedCount: 0,
+        subscriberCount: 0,
+        isSubscribed: false,
+        blogImage: rssAccept.blogImage ?? null,
+        suspensionCount: 0,
+      },
+    ]);
+  });
+
+  it('[200] 각 RSS의 정지 횟수(suspensionCount)를 반환한다.', async () => {
+    // given
+    const rssAccept = await rssAcceptRepository.save(
+      RssAcceptFixture.createRssAcceptFixture({
+        userId: user.id,
+        suspensionCount: 2,
+      }),
+    );
+
+    // when
+    const response = await agent.get(makeURL(user.id));
+
+    // then
+    expect(response.status).toBe(HttpStatus.OK);
+    const { data } = response.body;
+    expect(data).toStrictEqual([
+      {
+        id: rssAccept.id,
+        name: rssAccept.name,
+        userName: rssAccept.userName,
+        rssUrl: rssAccept.rssUrl,
+        blogPlatform: rssAccept.blogPlatform,
+        feedCount: 0,
+        subscriberCount: 0,
+        isSubscribed: false,
+        blogImage: rssAccept.blogImage ?? null,
+        suspensionCount: 2,
+      },
+    ]);
   });
 
   it('[200] 각 RSS의 공개 게시글 수(feedCount)를 반환하며 비공개 게시글은 제외한다.', async () => {

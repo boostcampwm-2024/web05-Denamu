@@ -1,7 +1,7 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
-
 import Profile from "@/pages/Profile";
+
 import { PROFILE, SUBSCRIPTION } from "@/constants/endpoints";
+
 import {
   mockUserProfile,
   mockProfileActivity,
@@ -11,8 +11,9 @@ import {
   mockCommentItemsPage,
   mockSubscribedRss,
 } from "@/__storybook__/fixtures";
-import { mockApi, ok } from "@/__storybook__/mockApi";
+import { mockApi, ok, fail } from "@/__storybook__/mockApi";
 import { useAuthStore } from "@/store/useAuthStore";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta = {
   title: "pages/Profile",
@@ -50,6 +51,23 @@ export const Owner: Story = {
       userInfo: { id: 1, email: "test@test.com", userName: "홍길동" },
     });
     setupProfileApi(1);
+    return resetAuth;
+  },
+};
+
+export const Suspended: Story = {
+  name: "정지된 계정 방문",
+  parameters: {
+    router: { initialEntries: ["/profile/2"], path: "/profile/:id" },
+  },
+  beforeEach: () => {
+    useAuthStore.setState({
+      isInitialized: true,
+      isAuthenticated: true,
+      role: "user",
+      userInfo: { id: 1, email: "test@test.com", userName: "홍길동" },
+    });
+    mockApi.onGet(PROFILE.PROFILE(2)).reply(...fail(403, "정지 처리된 유저입니다."));
     return resetAuth;
   },
 };

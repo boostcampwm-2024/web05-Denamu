@@ -24,6 +24,7 @@ import type { ReportItem } from "@/types/report";
 import type { AdminRssData, RecentRss } from "@/types/rss";
 import type { RssSearchResult, SearchResult, UserSearchResult } from "@/types/search";
 import type { SubscribedRss } from "@/types/subscription";
+import type { SuspendedUserItem } from "@/types/userSuspension";
 
 export const mockFeedList: FeedList = {
   id: 1,
@@ -85,6 +86,7 @@ export const mockCertifiedRss: CertifiedRss = {
   subscriberCount: 12,
   isSubscribed: false,
   blogImage: null,
+  suspensionCount: 0,
 };
 
 export const mockSubscribedRss: SubscribedRss[] = [
@@ -310,40 +312,91 @@ export const mockCommentItemsPage: CursorPage<CommentItem> = {
 export const mockReportsPage: CursorPage<ReportItem> = {
   result: [
     {
+      id: 4,
+      targetType: "FEED",
+      targetId: 21,
+      target: {
+        feed: { id: 21, title: "낚시성 제목의 게시글입니다", thumbnail: "https://picsum.photos/seed/denamu-feed/64" },
+        rss: { id: 3, name: "테크블로그", image: "https://picsum.photos/seed/denamu-rss/64" },
+        rssOwner: { id: 10, userName: "블로그주인", profileImage: null },
+        user: null,
+        comment: null,
+      },
+      reason: "ETC",
+      detail: "제목과 본문 내용이 전혀 관련이 없습니다.",
+      reporter: { userName: "제보자4" },
+      createdAt: "2026-06-26T09:00:00.000Z",
+    },
+    {
       id: 3,
       targetType: "COMMENT",
       targetId: 12,
-      targetLabel: "스팸성 광고 댓글입니다.",
+      target: {
+        feed: { id: 22, title: "댓글이 달린 게시글 제목", thumbnail: null },
+        rss: null,
+        rssOwner: null,
+        user: { id: 11, userName: "댓글작성자", profileImage: "https://picsum.photos/seed/denamu-commenter/64" },
+        comment: "스팸성 광고 댓글입니다.",
+      },
       reason: "SPAM",
       detail: "같은 내용을 여러 게시글에 반복해서 남기고 있습니다.",
-      status: "PENDING",
-      reporter: { id: 1, userName: "제보자1" },
+      reporter: { userName: "제보자1" },
       createdAt: "2026-06-25T09:00:00.000Z",
-      reviewedAt: null,
     },
     {
       id: 2,
       targetType: "RSS",
       targetId: 5,
-      targetLabel: "차단된블로그",
+      target: {
+        feed: null,
+        rss: { id: 5, name: "차단된블로그", image: null },
+        rssOwner: { id: 12, userName: "블로그주인2", profileImage: null },
+        user: null,
+        comment: null,
+      },
       reason: "COPYRIGHT",
       detail: null,
-      status: "ACTIONED",
-      reporter: { id: 2, userName: "제보자2" },
+      reporter: { userName: "제보자2" },
       createdAt: "2026-06-24T12:00:00.000Z",
-      reviewedAt: "2026-06-24T18:00:00.000Z",
     },
     {
       id: 1,
       targetType: "USER",
       targetId: 7,
-      targetLabel: "스팸유저",
+      target: {
+        feed: null,
+        rss: null,
+        rssOwner: null,
+        user: { id: 7, userName: "스팸유저", profileImage: null },
+        comment: null,
+      },
       reason: "ABUSE",
       detail: "댓글마다 욕설을 남깁니다.",
-      status: "REJECTED",
-      reporter: { id: 3, userName: "제보자3" },
+      reporter: null,
       createdAt: "2026-06-23T09:00:00.000Z",
-      reviewedAt: "2026-06-23T10:00:00.000Z",
+    },
+  ],
+  lastId: 1,
+  hasMore: false,
+};
+
+export const mockSuspendedUsersPage: CursorPage<SuspendedUserItem> = {
+  result: [
+    {
+      id: 2,
+      user: { id: 21, userName: "스팸유저", email: "spam-user@test.com" },
+      admin: { name: "관리자1" },
+      detail: "반복적인 스팸 신고 누적으로 영구 정지합니다.",
+      suspendedUntil: null,
+      createdAt: "2026-06-25T09:00:00.000Z",
+    },
+    {
+      id: 1,
+      user: { id: 22, userName: "욕설유저", email: "abuse-user@test.com" },
+      admin: { name: "관리자1" },
+      detail: "댓글에서 욕설을 반복 사용하여 7일 정지합니다.",
+      suspendedUntil: "2026-07-02T09:00:00.000Z",
+      createdAt: "2026-06-24T09:00:00.000Z",
     },
   ],
   lastId: 1,

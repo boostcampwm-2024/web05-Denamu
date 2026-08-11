@@ -125,6 +125,9 @@ export class RssAccept extends RssInformation {
   @Column({ name: 'image', type: 'text', nullable: true })
   blogImage: string | null;
 
+  @Column({ name: 'suspension_count', type: 'int', nullable: false, default: 0 })
+  suspensionCount: number;
+
   static fromRss(rss: Rss) {
     const blog = new RssAccept();
     blog.name = rss.name;
