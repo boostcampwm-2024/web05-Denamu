@@ -1,6 +1,5 @@
 import { HttpStatus } from '@nestjs/common';
 
-import { UserSuspensionRepository } from '@suspension/repository/userSuspension.repository';
 import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 
@@ -22,6 +21,8 @@ import { RssAcceptRepository } from '@rss/repository/rss.repository';
 
 import { Subscription } from '@subscribe/entity/subscription.entity';
 import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
+
+import { UserSuspensionRepository } from '@suspension/repository/userSuspension.repository';
 
 import { User } from '@user/entity/user.entity';
 import { UserRepository } from '@user/repository/user.repository';
