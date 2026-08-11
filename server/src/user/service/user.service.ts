@@ -82,6 +82,11 @@ export class UserService {
 
   async getUserProfile(userId: number, requester: Payload | null = null) {
     const user = await this.getUser(userId);
+    const suspension =
+      await this.userSuspensionRepository.findActiveSuspension(userId);
+    if (suspension) {
+      throw new ForbiddenException('정지 처리된 유저입니다.');
+    }
     const isOwner = requester?.id === userId;
     const isBlocked =
       requester && !isOwner
