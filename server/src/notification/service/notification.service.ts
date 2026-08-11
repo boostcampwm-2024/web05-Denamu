@@ -8,10 +8,13 @@ import { GetNotificationsResponseDto } from '@notification/dto/response/getNotif
 import { GetUnreadCountResponseDto } from '@notification/dto/response/getUnreadCount.dto';
 import { NotificationRepository } from '@notification/repository/notification.repository';
 
+import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
+
 @Injectable()
 export class NotificationService {
   constructor(
     private readonly notificationRepository: NotificationRepository,
+    private readonly subscriptionRepository: SubscriptionRepository,
   ) {}
 
   async upsertLikeNotification(recipientId: number, feedId: number) {
@@ -55,6 +58,14 @@ export class NotificationService {
 
   async upsertSubscribeNotification(recipientId: number, rssAcceptId: number) {
     await this.notificationRepository.upsertSubscribe(recipientId, rssAcceptId);
+  }
+
+  async upsertNewPostNotifications(rssAcceptId: number, feedId: number) {
+    const subscriberIds =
+      await this.subscriptionRepository.getSubscriberIdsByBlog(rssAcceptId);
+    if (!subscriberIds.length) return;
+
+    await this.notificationRepository.upsertNewPost(feedId, subscriberIds);
   }
 
   async removeSubscribeNotificationIfEmpty(

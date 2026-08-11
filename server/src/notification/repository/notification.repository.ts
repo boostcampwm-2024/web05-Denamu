@@ -1,15 +1,17 @@
 import { Injectable } from '@nestjs/common';
 
+import { activeSuspensionExclusion } from '@suspension/constant/activeSuspension.constant';
 import { DataSource, LessThan, MoreThanOrEqual, Repository } from 'typeorm';
 
 import { Feed } from '@feed/entity/feed.entity';
 
-import { Notification, NotificationType } from '@notification/entity/notification.entity';
 import { getNotificationCutoffDate } from '@notification/constant/notification.constant';
+import {
+  Notification,
+  NotificationType,
+} from '@notification/entity/notification.entity';
 
 import { RssAccept } from '@rss/entity/rss.entity';
-
-import { activeSuspensionExclusion } from '@suspension/constant/activeSuspension.constant';
 
 import { User } from '@user/entity/user.entity';
 
@@ -29,7 +31,10 @@ export class NotificationRepository extends Repository<Notification> {
         feed: { id: feedId } as Feed,
         isRead: false,
       })
-      .orUpdate(['is_read', 'updated_at'], ['recipient_user_id', 'type', 'feed_id'])
+      .orUpdate(
+        ['is_read', 'updated_at'],
+        ['recipient_user_id', 'type', 'feed_id'],
+      )
       .execute();
   }
 
@@ -47,7 +52,10 @@ export class NotificationRepository extends Repository<Notification> {
         feed: { id: feedId } as Feed,
         isRead: false,
       })
-      .orUpdate(['is_read', 'updated_at'], ['recipient_user_id', 'type', 'feed_id'])
+      .orUpdate(
+        ['is_read', 'updated_at'],
+        ['recipient_user_id', 'type', 'feed_id'],
+      )
       .execute();
   }
 
@@ -78,7 +86,10 @@ export class NotificationRepository extends Repository<Notification> {
         feed: { id: feedId } as Feed,
         isRead: false,
       })
-      .orUpdate(['is_read', 'updated_at'], ['recipient_user_id', 'type', 'feed_id'])
+      .orUpdate(
+        ['is_read', 'updated_at'],
+        ['recipient_user_id', 'type', 'feed_id'],
+      )
       .execute();
   }
 
@@ -115,12 +126,30 @@ export class NotificationRepository extends Repository<Notification> {
         rssAccept: { id: rssAcceptId } as RssAccept,
         isRead: false,
       })
-      .orUpdate(['is_read', 'updated_at'], ['recipient_user_id', 'type', 'rss_accept_id'])
+      .orUpdate(
+        ['is_read', 'updated_at'],
+        ['recipient_user_id', 'type', 'rss_accept_id'],
+      )
       .execute();
   }
 
   async deleteSubscribeNotification(rssAcceptId: number) {
-    await this.delete({ type: NotificationType.SUBSCRIBE, rssAccept: { id: rssAcceptId } });
+    await this.delete({
+      type: NotificationType.SUBSCRIBE,
+      rssAccept: { id: rssAcceptId },
+    });
+  }
+
+  async upsertNewPost(feedId: number, subscriberIds: number[]) {
+    await this.upsert(
+      subscriberIds.map((userId) => ({
+        recipient: { id: userId } as User,
+        type: NotificationType.NEW_POST,
+        feed: { id: feedId } as Feed,
+        updatedAt: new Date(),
+      })),
+      ['recipient', 'type', 'feed'],
+    );
   }
 
   async findByRecipient(recipientId: number, limit: number) {
@@ -129,6 +158,7 @@ export class NotificationRepository extends Repository<Notification> {
     return this.createQueryBuilder('n')
       .leftJoin('n.feed', 'feed')
       .leftJoin('n.rssAccept', 'rss')
+      .leftJoin('feed.blog', 'feedBlog')
       .leftJoin(
         'likes',
         'latest_like',
@@ -150,9 +180,17 @@ export class NotificationRepository extends Repository<Notification> {
         `latest_subscription.id = (SELECT s2.id FROM subscription s2 WHERE s2.rss_accept_id = n.rss_accept_id AND ${notSuspended('s2.user_id')} ORDER BY s2.id DESC LIMIT 1)`,
       )
       .leftJoin('user', 'like_actor', 'like_actor.id = latest_like.user_id')
-      .leftJoin('user', 'comment_actor', 'comment_actor.id = latest_comment.user_id')
+      .leftJoin(
+        'user',
+        'comment_actor',
+        'comment_actor.id = latest_comment.user_id',
+      )
       .leftJoin('user', 'reply_actor', 'reply_actor.id = latest_reply.user_id')
-      .leftJoin('user', 'subscribe_actor', 'subscribe_actor.id = latest_subscription.user_id')
+      .leftJoin(
+        'user',
+        'subscribe_actor',
+        'subscribe_actor.id = latest_subscription.user_id',
+      )
       .select('n.id', 'id')
       .addSelect('n.type', 'type')
       .addSelect('n.is_read', 'isRead')
@@ -160,8 +198,14 @@ export class NotificationRepository extends Repository<Notification> {
       .addSelect('feed.id', 'feedId')
       .addSelect('feed.title', 'feedTitle')
       .addSelect('feed.path', 'feedPath')
-      .addSelect('rss.id', 'rssId')
-      .addSelect('rss.name', 'rssName')
+      .addSelect(
+        "CASE WHEN n.type = 'NEW_POST' THEN feedBlog.id ELSE rss.id END",
+        'rssId',
+      )
+      .addSelect(
+        "CASE WHEN n.type = 'NEW_POST' THEN feedBlog.name ELSE rss.name END",
+        'rssName',
+      )
       .addSelect(
         'COALESCE(like_actor.user_name, comment_actor.user_name, reply_actor.user_name, subscribe_actor.user_name)',
         'actorUserName',
@@ -170,7 +214,10 @@ export class NotificationRepository extends Repository<Notification> {
         'COALESCE(like_actor.profile_image, comment_actor.profile_image, reply_actor.profile_image, subscribe_actor.profile_image)',
         'actorProfileImage',
       )
-      .addSelect('COALESCE(latest_comment.comment, latest_reply.comment)', 'commentContent')
+      .addSelect(
+        'COALESCE(latest_comment.comment, latest_reply.comment)',
+        'commentContent',
+      )
       .addSelect('COALESCE(latest_comment.id, latest_reply.id)', 'commentId')
       .addSelect(
         `CASE n.type
@@ -183,7 +230,9 @@ export class NotificationRepository extends Repository<Notification> {
         'otherActorsCount',
       )
       .where('n.recipient_user_id = :recipientId', { recipientId })
-      .andWhere('n.updated_at >= :cutoff', { cutoff: getNotificationCutoffDate() })
+      .andWhere('n.updated_at >= :cutoff', {
+        cutoff: getNotificationCutoffDate(),
+      })
       .having('actorUserName IS NOT NULL')
       .setParameter('now', new Date())
       .orderBy('n.updated_at', 'DESC')
@@ -230,6 +279,11 @@ export class NotificationRepository extends Repository<Notification> {
       .groupBy('u.id')
       .addGroupBy('u.email')
       .addGroupBy('u.user_name')
-      .getRawMany<{ userId: number; email: string; userName: string; unreadCount: string }>();
+      .getRawMany<{
+        userId: number;
+        email: string;
+        userName: string;
+        unreadCount: string;
+      }>();
   }
 }
