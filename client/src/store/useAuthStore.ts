@@ -22,6 +22,7 @@ type AuthState = {
   setUserName: (userName: string) => void;
   setUserFromToken: (token: string) => void;
   logout: () => Promise<void>;
+  forceLogout: () => void;
   initialize: () => void;
 };
 
@@ -54,6 +55,19 @@ export const useAuthStore = create<AuthState>((set) => ({
         isInitialized: true,
       });
     }
+  },
+  forceLogout: () => {
+    localStorage.removeItem(AUTH_HINT_KEY);
+    set({
+      accessToken: null,
+      role: "guest",
+      userInfo: {
+        id: null,
+        email: null,
+        userName: null,
+      },
+      isAuthenticated: false,
+    });
   },
   logout: async () => {
     try {
