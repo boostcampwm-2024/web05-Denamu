@@ -6,6 +6,9 @@ on:
     paths:
       [
         'docker-compose/docker-compose.prod.infra.yml',
+        'docker-compose/rabbitMQ/**',
+        'docker-compose/prometheus/**',
+        'docker-compose/redis/**',
         '.github/workflows/deploy_infra.yml',
       ]
   workflow_dispatch:
