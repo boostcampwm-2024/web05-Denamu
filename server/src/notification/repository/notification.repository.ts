@@ -233,7 +233,7 @@ export class NotificationRepository extends Repository<Notification> {
       .andWhere('n.updated_at >= :cutoff', {
         cutoff: getNotificationCutoffDate(),
       })
-      .having('actorUserName IS NOT NULL')
+      .having("n.type = 'NEW_POST' OR actorUserName IS NOT NULL")
       .setParameter('now', new Date())
       .orderBy('n.updated_at', 'DESC')
       .limit(limit)
