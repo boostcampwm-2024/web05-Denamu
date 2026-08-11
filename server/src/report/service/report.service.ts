@@ -197,6 +197,7 @@ export class ReportService {
 
       case ReportTargetType.COMMENT: {
         const comment = report.reportedComment;
+        let commentCountDelta = 0;
 
         return {
           targetUserId: comment.user.id,
@@ -222,6 +223,7 @@ export class ReportService {
                 'commentCount',
                 1,
               );
+              commentCountDelta = -1;
             }
           },
           afterCommit: () => {
@@ -230,6 +232,7 @@ export class ReportService {
               new CommentDeletedEvent(
                 comment.feed.id,
                 comment.parent?.user.id ?? null,
+                commentCountDelta,
               ),
             );
           },

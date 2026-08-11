@@ -4,6 +4,7 @@ export const REDIS_KEYS = {
   FEED_ORIGIN_TREND_KEY: 'feed:origin_trend',
   FEED_RECENT_ALL_KEY: 'feed:recent:*',
   FEED_RECENT_KEY: 'feed:recent',
+  FEED_RECENT_ITEM_KEY: (feedId: number | string) => `feed:recent:${feedId}`,
   FEED_AI_QUEUE: `feed:ai:queue`,
   FEED_AI_RETRY_LOCK: `feed:ai-retry:lock`,
   USER_AUTH_KEY: 'signup',

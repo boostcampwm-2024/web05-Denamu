@@ -165,4 +165,18 @@ export class RedisService {
   ): Promise<any> {
     return this.redisClient.eval(script, keys.length, ...keys, ...args);
   }
+
+  async hincrbyIfExists(
+    key: string,
+    field: string,
+    increment: number,
+  ): Promise<number | null> {
+    const script = `
+      if redis.call('EXISTS', KEYS[1]) == 1 then
+        return redis.call('HINCRBY', KEYS[1], ARGV[1], ARGV[2])
+      end
+      return nil
+    `;
+    return this.eval(script, [key], [field, String(increment)]);
+  }
 }
