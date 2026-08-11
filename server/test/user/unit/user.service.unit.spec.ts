@@ -522,7 +522,7 @@ describe(`${UserService.name} Unit Test`, () => {
   describe('getUserRss', () => {
     it('userId로 소유 RSS를 조회하고 공개 게시글 수와 함께 응답으로 변환한다.', async () => {
       // given
-      const rssList = [{ id: 7 } as RssAccept];
+      const rssList = [{ id: 7, suspensionCount: 2 } as RssAccept];
       const feedCountMap = new Map<number, number>([[7, 3]]);
       rssAcceptRepository.find.mockResolvedValue(rssList);
       feedRepository.countPublicFeedsByBlogIds.mockResolvedValue(feedCountMap);
@@ -538,7 +538,7 @@ describe(`${UserService.name} Unit Test`, () => {
       expect(feedRepository.countPublicFeedsByBlogIds).toHaveBeenCalledWith([
         7,
       ]);
-      expect(result).toEqual(
+      expect(result).toStrictEqual(
         GetUserRssResponseDto.toResponseDtoArray(
           rssList,
           feedCountMap,
@@ -547,6 +547,7 @@ describe(`${UserService.name} Unit Test`, () => {
         ),
       );
       expect(result[0].feedCount).toBe(3);
+      expect(result[0].suspensionCount).toBe(2);
     });
   });
 
