@@ -6,6 +6,9 @@ import { PermanentError, RetryableError } from '@common/errors';
 import { FeedDetail, RssObj } from '@common/feed/feed.type';
 import { FeedParserManager } from '@common/parser/feed-parser-manager';
 
+import { RMQ_EXCHANGES, RMQ_ROUTING_KEYS } from '@rabbitmq/rabbitmq.constant';
+import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
+
 import { FeedRepository } from '@repository/feed.repository';
 import { RssRepository } from '@repository/rss.repository';
 
@@ -16,6 +19,7 @@ describe('FeedCrawler', () => {
   let mockFeedRepository: jest.Mocked<FeedRepository>;
   let mockRssRepository: jest.Mocked<RssRepository>;
   let mockFeedParserManager: jest.Mocked<FeedParserManager>;
+  let mockRabbitMQService: jest.Mocked<RabbitMQService>;
   let deleteRecentFeedMock: jest.Mock;
   let insertFeedsMock: jest.Mock;
   let saveAiQueueMock: jest.Mock;
@@ -26,6 +30,7 @@ describe('FeedCrawler', () => {
   let updateImageMock: jest.Mock;
   let fetchAndParseMock: jest.Mock;
   let fetchAndParseAllMock: jest.Mock;
+  let sendMessageMock: jest.Mock;
 
   const mockRssObjects: RssObj[] = [
     {
@@ -92,6 +97,7 @@ describe('FeedCrawler', () => {
     updateImageMock = jest.fn();
     fetchAndParseMock = jest.fn();
     fetchAndParseAllMock = jest.fn();
+    sendMessageMock = jest.fn();
 
     mockFeedRepository = {
       deleteRecentFeed: deleteRecentFeedMock,
@@ -114,10 +120,15 @@ describe('FeedCrawler', () => {
       fetchAndParseAll: fetchAndParseAllMock,
     } as any;
 
+    mockRabbitMQService = {
+      sendMessage: sendMessageMock,
+    } as any;
+
     feedCrawler = new FeedCrawler(
       mockRssRepository,
       mockFeedRepository,
       mockFeedParserManager,
+      mockRabbitMQService,
     );
   });
 
@@ -127,8 +138,14 @@ describe('FeedCrawler', () => {
       const startTime = new Date('2024-01-01T12:00:00Z');
       selectAllRssMock.mockResolvedValue(mockRssObjects);
       fetchAndParseMock
-        .mockResolvedValueOnce({ feeds: [mockFeedDetails[0]], channelImage: undefined })
-        .mockResolvedValueOnce({ feeds: [mockFeedDetails[1]], channelImage: undefined });
+        .mockResolvedValueOnce({
+          feeds: [mockFeedDetails[0]],
+          channelImage: undefined,
+        })
+        .mockResolvedValueOnce({
+          feeds: [mockFeedDetails[1]],
+          channelImage: undefined,
+        });
       insertFeedsMock.mockResolvedValue(mockFeedDetails);
 
       // When
@@ -151,6 +168,16 @@ describe('FeedCrawler', () => {
       expect(insertFeedsMock).toHaveBeenCalledWith(mockFeedDetails);
       expect(saveAiQueueMock).toHaveBeenCalledWith(mockFeedDetails);
       expect(setRecentFeedListMock).toHaveBeenCalledWith(mockFeedDetails);
+      expect(sendMessageMock).toHaveBeenCalledWith(
+        RMQ_EXCHANGES.CRAWLING,
+        RMQ_ROUTING_KEYS.CRAWLING_NEW_POST,
+        JSON.stringify(
+          mockFeedDetails.map((feed) => ({
+            feedId: feed.id,
+            rssAcceptId: feed.blog.id,
+          })),
+        ),
+      );
     });
 
     it('등록된 RSS가 없을 때 조기 종료해야 한다', async () => {
@@ -172,7 +199,10 @@ describe('FeedCrawler', () => {
       // Given
       const startTime = new Date('2024-01-01T12:00:00Z');
       selectAllRssMock.mockResolvedValue(mockRssObjects);
-      fetchAndParseMock.mockResolvedValue({ feeds: [], channelImage: undefined });
+      fetchAndParseMock.mockResolvedValue({
+        feeds: [],
+        channelImage: undefined,
+      });
 
       // When
       await feedCrawler.start(startTime);
@@ -219,13 +249,18 @@ describe('FeedCrawler', () => {
       expect(insertFeedsMock).toHaveBeenCalledWith(expectedFeeds);
       expect(saveAiQueueMock).toHaveBeenCalledWith(expectedFeeds);
       expect(result).toEqual(expectedFeeds);
+      // 전체 크롤링(관리자 승인 시 백카탈로그)은 신규 글 알림을 발행하지 않아야 한다.
+      expect(sendMessageMock).not.toHaveBeenCalled();
     });
 
     it('가져올 피드가 없을 때 빈 배열을 반환해야 한다', async () => {
       // Given
       const rssObj = mockRssObjects[0];
       selectRssByIdMock.mockResolvedValue(rssObj);
-      fetchAndParseAllMock.mockResolvedValue({ feeds: [], channelImage: undefined });
+      fetchAndParseAllMock.mockResolvedValue({
+        feeds: [],
+        channelImage: undefined,
+      });
 
       // When
       const result = await feedCrawler.startFullCrawl(rssObj.id);
@@ -357,7 +392,9 @@ describe('FeedCrawler', () => {
         selectRssByIdMock.mockResolvedValue(mockRssObjects[0]);
         // 다른 link만 반환하여 매칭 실패 유도
         fetchAndParseAllMock.mockResolvedValue({
-          feeds: [{ ...mockFeedDetails[0], link: 'https://other.com/different' }],
+          feeds: [
+            { ...mockFeedDetails[0], link: 'https://other.com/different' },
+          ],
           channelImage: undefined,
         });
       });

@@ -3,6 +3,8 @@ import { NotFoundException } from '@nestjs/common';
 import { NotificationRepository } from '@notification/repository/notification.repository';
 import { NotificationService } from '@notification/service/notification.service';
 
+import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
+
 describe(`${NotificationService.name} Unit Test`, () => {
   let notificationService: NotificationService;
   let notificationRepository: jest.Mocked<
@@ -18,12 +20,16 @@ describe(`${NotificationService.name} Unit Test`, () => {
       | 'hasActiveOtherReply'
       | 'upsertSubscribe'
       | 'deleteSubscribeNotification'
+      | 'upsertNewPost'
       | 'countUnread'
       | 'findByRecipient'
       | 'markRead'
       | 'deleteExpired'
       | 'findStaleUnreadDigestTargets'
     >
+  >;
+  let subscriptionRepository: jest.Mocked<
+    Pick<SubscriptionRepository, 'getSubscriberIdsByBlog'>
   >;
 
   beforeEach(() => {
@@ -38,6 +44,7 @@ describe(`${NotificationService.name} Unit Test`, () => {
       hasActiveOtherReply: jest.fn(),
       upsertSubscribe: jest.fn(),
       deleteSubscribeNotification: jest.fn(),
+      upsertNewPost: jest.fn(),
       countUnread: jest.fn(),
       findByRecipient: jest.fn(),
       markRead: jest.fn(),
@@ -45,8 +52,13 @@ describe(`${NotificationService.name} Unit Test`, () => {
       findStaleUnreadDigestTargets: jest.fn(),
     };
 
+    subscriptionRepository = {
+      getSubscriberIdsByBlog: jest.fn(),
+    };
+
     notificationService = new NotificationService(
       notificationRepository as unknown as NotificationRepository,
+      subscriptionRepository as unknown as SubscriptionRepository,
     );
   });
 
@@ -172,7 +184,10 @@ describe(`${NotificationService.name} Unit Test`, () => {
       await notificationService.upsertSubscribeNotification(1, 10);
 
       // then
-      expect(notificationRepository.upsertSubscribe).toHaveBeenCalledWith(1, 10);
+      expect(notificationRepository.upsertSubscribe).toHaveBeenCalledWith(
+        1,
+        10,
+      );
     });
   });
 
@@ -182,7 +197,9 @@ describe(`${NotificationService.name} Unit Test`, () => {
       await notificationService.removeSubscribeNotificationIfEmpty(10, 1);
 
       // then
-      expect(notificationRepository.deleteSubscribeNotification).not.toHaveBeenCalled();
+      expect(
+        notificationRepository.deleteSubscribeNotification,
+      ).not.toHaveBeenCalled();
     });
 
     it('구독자가 0명이면 해당 RSS의 알림을 삭제한다.', async () => {
@@ -190,7 +207,39 @@ describe(`${NotificationService.name} Unit Test`, () => {
       await notificationService.removeSubscribeNotificationIfEmpty(10, 0);
 
       // then
-      expect(notificationRepository.deleteSubscribeNotification).toHaveBeenCalledWith(10);
+      expect(
+        notificationRepository.deleteSubscribeNotification,
+      ).toHaveBeenCalledWith(10);
+    });
+  });
+
+  describe('upsertNewPostNotifications', () => {
+    it('구독자가 있으면 feedId와 구독자 ID 목록으로 upsertNewPost를 호출한다.', async () => {
+      // given
+      subscriptionRepository.getSubscriberIdsByBlog.mockResolvedValue([2, 3]);
+
+      // when
+      await notificationService.upsertNewPostNotifications(1, 10);
+
+      // then
+      expect(
+        subscriptionRepository.getSubscriberIdsByBlog,
+      ).toHaveBeenCalledWith(1);
+      expect(notificationRepository.upsertNewPost).toHaveBeenCalledWith(
+        10,
+        [2, 3],
+      );
+    });
+
+    it('구독자가 없으면 upsertNewPost를 호출하지 않는다.', async () => {
+      // given
+      subscriptionRepository.getSubscriberIdsByBlog.mockResolvedValue([]);
+
+      // when
+      await notificationService.upsertNewPostNotifications(1, 10);
+
+      // then
+      expect(notificationRepository.upsertNewPost).not.toHaveBeenCalled();
     });
   });
 
