@@ -5,6 +5,8 @@ import TestAgent from 'supertest/lib/agent';
 
 import { UserBlockRepository } from '@block/repository/userBlock.repository';
 
+import { UserSuspensionRepository } from '@suspension/repository/userSuspension.repository';
+
 import { User } from '@user/entity/user.entity';
 import { UserRepository } from '@user/repository/user.repository';
 
@@ -26,11 +28,13 @@ describe(`GET ${URL}?find={} E2E Test`, () => {
   let agent: TestAgent;
   let userRepository: UserRepository;
   let blockRepository: UserBlockRepository;
+  let userSuspensionRepository: UserSuspensionRepository;
 
   beforeAll(() => {
     agent = supertest(testApp.getHttpServer());
     userRepository = testApp.get(UserRepository);
     blockRepository = testApp.get(UserBlockRepository);
+    userSuspensionRepository = testApp.get(UserSuspensionRepository);
   });
 
   const saveUser = (userName: string, overwrites: Partial<User> = {}) =>
@@ -203,6 +207,26 @@ describe(`GET ${URL}?find={} E2E Test`, () => {
     expect(response.status).toBe(HttpStatus.OK);
     expect(data.totalCount).toBe(1);
     expect(data.result[0].id).toBe(blocked.id);
+  });
+
+  it('[200] 정지 중인 유저는 검색 결과에서 제외한다.', async () => {
+    // given
+    const suspended = await saveUser('김정지');
+    const visible = await saveUser('김공개');
+    await userSuspensionRepository.save({
+      user: { id: suspended.id },
+      detail: '정지 처리',
+      suspendedUntil: null,
+    });
+
+    // when
+    const response = await agent.get(URL).query({ find: '김' });
+
+    // then
+    const { data } = response.body as SearchResponseBody;
+    expect(response.status).toBe(HttpStatus.OK);
+    expect(data.totalCount).toBe(1);
+    expect(data.result.map((user) => user.id)).toStrictEqual([visible.id]);
   });
 
   it('[400] 검색어(find)가 없으면 검증에 실패한다.', async () => {

@@ -14,6 +14,8 @@ import { FeedRepository } from '@feed/repository/feed.repository';
 import { RssAccept } from '@rss/entity/rss.entity';
 import { RssAcceptRepository } from '@rss/repository/rss.repository';
 
+import { UserSuspensionRepository } from '@suspension/repository/userSuspension.repository';
+
 import { User } from '@user/entity/user.entity';
 import { UserRepository } from '@user/repository/user.repository';
 
@@ -33,6 +35,7 @@ describe(`GET ${BASE_URL}/:feedId/comments E2E Test`, () => {
   let userRepository: UserRepository;
   let rssAcceptRepository: RssAcceptRepository;
   let feedRepository: FeedRepository;
+  let userSuspensionRepository: UserSuspensionRepository;
   let rssAccept: RssAccept;
   let user: User;
   let comment: Comment;
@@ -44,6 +47,7 @@ describe(`GET ${BASE_URL}/:feedId/comments E2E Test`, () => {
     userRepository = testApp.get(UserRepository);
     rssAcceptRepository = testApp.get(RssAcceptRepository);
     feedRepository = testApp.get(FeedRepository);
+    userSuspensionRepository = testApp.get(UserSuspensionRepository);
   });
 
   beforeEach(async () => {
@@ -201,6 +205,49 @@ describe(`GET ${BASE_URL}/:feedId/comments E2E Test`, () => {
     expect(data.map((item) => item.id).sort((a, b) => a - b)).toStrictEqual(
       [parent.id, normalReply.id].sort((a, b) => a - b),
     );
+  });
+
+  it('[200] 정지 중인 사용자의 댓글은 로그인 여부와 관계없이 조회 결과에서 제외된다.', async () => {
+    // given
+    await userSuspensionRepository.save({
+      user: { id: user.id },
+      detail: '정지 처리',
+      suspendedUntil: null,
+    });
+
+    // Http when
+    const response = await agent.get(`${BASE_URL}/${feed.id}/comments`);
+
+    // Http then
+    const { data } = response.body;
+    expect(response.status).toBe(HttpStatus.OK);
+    expect(data).toStrictEqual([]);
+  });
+
+  it('[200] 정지 중인 사용자가 작성한 부모 댓글은 대댓글까지 스레드 통째로 제외된다.', async () => {
+    // given - 정지된 user의 부모 댓글(comment)에 다른 유저의 대댓글 존재
+    const replier = await userRepository.save(UserFixture.createUserFixture());
+    await commentRepository.save(
+      CommentFixture.createCommentFixture(feed, replier, {
+        parentId: comment.id,
+      }),
+    );
+    const normalComment = await commentRepository.save(
+      CommentFixture.createCommentFixture(feed, replier),
+    );
+    await userSuspensionRepository.save({
+      user: { id: user.id },
+      detail: '정지 처리',
+      suspendedUntil: null,
+    });
+
+    // Http when
+    const response = await agent.get(`${BASE_URL}/${feed.id}/comments`);
+
+    // Http then - 정지된 유저의 스레드는 사라지고 그 외 최상위 댓글만 남는다
+    const { data } = response.body as { data: { id: number }[] };
+    expect(response.status).toBe(HttpStatus.OK);
+    expect(data.map((item) => item.id)).toStrictEqual([normalComment.id]);
   });
 
   it('[200] 비로그인 사용자는 차단 필터 없이 모든 댓글을 조회한다.', async () => {

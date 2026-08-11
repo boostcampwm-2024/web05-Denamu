@@ -9,6 +9,8 @@ import { getNotificationCutoffDate } from '@notification/constant/notification.c
 
 import { RssAccept } from '@rss/entity/rss.entity';
 
+import { activeSuspensionExclusion } from '@suspension/constant/activeSuspension.constant';
+
 import { User } from '@user/entity/user.entity';
 
 @Injectable()
@@ -122,28 +124,30 @@ export class NotificationRepository extends Repository<Notification> {
   }
 
   async findByRecipient(recipientId: number, limit: number) {
+    const notSuspended = activeSuspensionExclusion;
+
     return this.createQueryBuilder('n')
       .leftJoin('n.feed', 'feed')
       .leftJoin('n.rssAccept', 'rss')
       .leftJoin(
         'likes',
         'latest_like',
-        "n.type = 'LIKE' AND latest_like.id = (SELECT l2.id FROM likes l2 WHERE l2.feed_id = n.feed_id ORDER BY l2.like_date DESC LIMIT 1)",
+        `n.type = 'LIKE' AND latest_like.id = (SELECT l2.id FROM likes l2 WHERE l2.feed_id = n.feed_id AND ${notSuspended('l2.user_id')} ORDER BY l2.like_date DESC LIMIT 1)`,
       )
       .leftJoin(
         'comment',
         'latest_comment',
-        "n.type = 'COMMENT' AND latest_comment.id = (SELECT c2.id FROM `comment` c2 WHERE c2.feed_id = n.feed_id AND c2.is_deleted = 0 AND c2.user_id != n.recipient_user_id ORDER BY c2.date DESC LIMIT 1)",
+        `n.type = 'COMMENT' AND latest_comment.id = (SELECT c2.id FROM \`comment\` c2 WHERE c2.feed_id = n.feed_id AND c2.is_deleted = 0 AND c2.user_id != n.recipient_user_id AND ${notSuspended('c2.user_id')} ORDER BY c2.date DESC LIMIT 1)`,
       )
       .leftJoin(
         'comment',
         'latest_reply',
-        "n.type = 'REPLY' AND latest_reply.id = (SELECT r2.id FROM `comment` r2 INNER JOIN `comment` p2 ON p2.id = r2.parent_id WHERE r2.feed_id = n.feed_id AND r2.is_deleted = 0 AND r2.user_id != n.recipient_user_id AND p2.user_id = n.recipient_user_id ORDER BY r2.date DESC LIMIT 1)",
+        `n.type = 'REPLY' AND latest_reply.id = (SELECT r2.id FROM \`comment\` r2 INNER JOIN \`comment\` p2 ON p2.id = r2.parent_id WHERE r2.feed_id = n.feed_id AND r2.is_deleted = 0 AND r2.user_id != n.recipient_user_id AND p2.user_id = n.recipient_user_id AND ${notSuspended('r2.user_id')} ORDER BY r2.date DESC LIMIT 1)`,
       )
       .leftJoin(
         'subscription',
         'latest_subscription',
-        'latest_subscription.id = (SELECT s2.id FROM subscription s2 WHERE s2.rss_accept_id = n.rss_accept_id ORDER BY s2.id DESC LIMIT 1)',
+        `latest_subscription.id = (SELECT s2.id FROM subscription s2 WHERE s2.rss_accept_id = n.rss_accept_id AND ${notSuspended('s2.user_id')} ORDER BY s2.id DESC LIMIT 1)`,
       )
       .leftJoin('user', 'like_actor', 'like_actor.id = latest_like.user_id')
       .leftJoin('user', 'comment_actor', 'comment_actor.id = latest_comment.user_id')
@@ -170,16 +174,18 @@ export class NotificationRepository extends Repository<Notification> {
       .addSelect('COALESCE(latest_comment.id, latest_reply.id)', 'commentId')
       .addSelect(
         `CASE n.type
-          WHEN 'LIKE' THEN (SELECT COUNT(*) FROM likes l3 WHERE l3.feed_id = n.feed_id AND l3.user_id != n.recipient_user_id)
-          WHEN 'COMMENT' THEN (SELECT COUNT(DISTINCT c3.user_id) FROM \`comment\` c3 WHERE c3.feed_id = n.feed_id AND c3.is_deleted = 0 AND c3.user_id != n.recipient_user_id)
-          WHEN 'REPLY' THEN (SELECT COUNT(DISTINCT r3.user_id) FROM \`comment\` r3 INNER JOIN \`comment\` p3 ON p3.id = r3.parent_id WHERE r3.feed_id = n.feed_id AND r3.is_deleted = 0 AND r3.user_id != n.recipient_user_id AND p3.user_id = n.recipient_user_id)
-          WHEN 'SUBSCRIBE' THEN (SELECT COUNT(*) FROM subscription s3 WHERE s3.rss_accept_id = n.rss_accept_id AND s3.user_id != n.recipient_user_id)
+          WHEN 'LIKE' THEN (SELECT COUNT(*) FROM likes l3 WHERE l3.feed_id = n.feed_id AND l3.user_id != n.recipient_user_id AND ${notSuspended('l3.user_id')})
+          WHEN 'COMMENT' THEN (SELECT COUNT(DISTINCT c3.user_id) FROM \`comment\` c3 WHERE c3.feed_id = n.feed_id AND c3.is_deleted = 0 AND c3.user_id != n.recipient_user_id AND ${notSuspended('c3.user_id')})
+          WHEN 'REPLY' THEN (SELECT COUNT(DISTINCT r3.user_id) FROM \`comment\` r3 INNER JOIN \`comment\` p3 ON p3.id = r3.parent_id WHERE r3.feed_id = n.feed_id AND r3.is_deleted = 0 AND r3.user_id != n.recipient_user_id AND p3.user_id = n.recipient_user_id AND ${notSuspended('r3.user_id')})
+          WHEN 'SUBSCRIBE' THEN (SELECT COUNT(*) FROM subscription s3 WHERE s3.rss_accept_id = n.rss_accept_id AND s3.user_id != n.recipient_user_id AND ${notSuspended('s3.user_id')})
           ELSE 0
         END`,
         'otherActorsCount',
       )
       .where('n.recipient_user_id = :recipientId', { recipientId })
       .andWhere('n.updated_at >= :cutoff', { cutoff: getNotificationCutoffDate() })
+      .having('actorUserName IS NOT NULL')
+      .setParameter('now', new Date())
       .orderBy('n.updated_at', 'DESC')
       .limit(limit)
       .getRawMany();
