@@ -673,8 +673,8 @@ INSERT INTO rss_blocks (blocker_id, blocked_rss_id) VALUES
 
 -- denamu.report insert data
 
-INSERT INTO report (target_type, target_id, reason, detail, status, reporter_id, reported_feed_id) VALUES
-	('FEED', 94, 'SPAM', '광고성 게시글입니다.', 'PENDING', 3, 94);
+INSERT INTO report (target_type, target_id, reason, detail, reporter_id, reported_feed_id) VALUES
+	('FEED', 94, 'SPAM', '광고성 게시글입니다.', 3, 94);
 
 -- denamu.board insert data
 
