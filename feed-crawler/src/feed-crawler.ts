@@ -7,6 +7,9 @@ import { FeedDetail, FeedFetchResult, RssObj } from '@common/feed/feed.type';
 import logger from '@common/logger/logger';
 import { FeedParserManager } from '@common/parser/feed-parser-manager';
 
+import { RMQ_EXCHANGES, RMQ_ROUTING_KEYS } from '@rabbitmq/rabbitmq.constant';
+import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
+
 import { FeedRepository } from '@repository/feed.repository';
 import { RssRepository } from '@repository/rss.repository';
 
@@ -19,7 +22,30 @@ export class FeedCrawler {
     private readonly feedRepository: FeedRepository,
     @inject(FeedParserManager)
     private readonly feedParserManager: FeedParserManager,
+    @inject(RabbitMQService)
+    private readonly rabbitMQService: RabbitMQService,
   ) {}
+
+  private async publishNewPostEvent(insertedData: FeedDetail[]): Promise<void> {
+    if (!insertedData.length) return;
+
+    const message = insertedData.map((feed) => ({
+      feedId: feed.id,
+      rssAcceptId: feed.blog.id,
+    }));
+
+    try {
+      await this.rabbitMQService.sendMessage(
+        RMQ_EXCHANGES.CRAWLING,
+        RMQ_ROUTING_KEYS.CRAWLING_NEW_POST,
+        JSON.stringify(message),
+      );
+    } catch (error) {
+      logger.error(
+        `[FeedCrawler] 새 글 알림 이벤트 발행 실패: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
 
   async start(startTime: Date) {
     logger.info('==========작업 시작==========');
@@ -45,6 +71,7 @@ export class FeedCrawler {
       await this.feedRepository.insertFeeds(newFeeds);
     await this.feedRepository.saveAiQueue(insertedData);
     await this.feedRepository.setRecentFeedList(insertedData);
+    await this.publishNewPostEvent(insertedData);
 
     const executionTime = Date.now() - startTime.getTime();
 
