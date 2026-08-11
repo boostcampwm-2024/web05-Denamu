@@ -193,7 +193,7 @@ export class FeedRepository {
             thumbnail: feed.thumbnail,
             path: feed.link,
             title: feed.title,
-            tag: Array.isArray(feed.tag) ? feed.tag : [],
+            tagList: Array.isArray(feed.tag) ? feed.tag : [],
             likes: 0,
             comments: 0,
           };
