@@ -3,6 +3,19 @@ import axios, { AxiosError, AxiosHeaders, InternalAxiosRequestConfig } from "axi
 import { BASE_URL } from "@/constants/endpoints";
 import { useAuthStore } from "@/store/useAuthStore.ts";
 import { refreshAccessToken } from "@/api/services/user.ts";
+import { toast } from "@/hooks/common/useCustomToast";
+import { TOAST_MESSAGES } from "@/constants/messages";
+import { nav } from "@/utils/redirect";
+
+function handleSessionExpired() {
+  const wasAuthenticated = useAuthStore.getState().isAuthenticated;
+  useAuthStore.getState().forceLogout();
+
+  if (wasAuthenticated && window.location.pathname !== "/signin") {
+    toast(TOAST_MESSAGES.SESSION_EXPIRED);
+    nav.redirect("/signin");
+  }
+}
 
 export const api = axios.create({
   baseURL: "/api",
@@ -68,7 +81,7 @@ axiosInstance.interceptors.response.use((res) => res, async (error: AxiosError) 
 
     const newToken = await refreshPromise;
     if (!newToken) {
-      useAuthStore.getState().setAccessToken(null);
+      handleSessionExpired();
       return Promise.reject(error);
     }
 
@@ -76,7 +89,7 @@ axiosInstance.interceptors.response.use((res) => res, async (error: AxiosError) 
     originalRequest.headers.Authorization = `Bearer ${newToken}`;
     return axiosInstance.request(originalRequest);
   } catch (e) {
-    useAuthStore.getState().setAccessToken(null);
+    handleSessionExpired();
     return Promise.reject(e);
   }
 });
