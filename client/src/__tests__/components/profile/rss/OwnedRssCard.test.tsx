@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { lucideProxy } from "@/__tests__/__mocks__/external/lucide-proxy.tsx";
 import { OwnedRssCard } from "@/components/profile/rss/OwnedRssCard.tsx";
 
 import { CertifiedRss } from "@/types/profile.ts";
@@ -16,7 +15,10 @@ let feedsState: {
   isFetchingNextPage: boolean;
 };
 
-vi.mock("lucide-react", () => lucideProxy());
+vi.mock("lucide-react", async () => {
+  const { lucideProxy } = await import("@/__tests__/__mocks__/external/lucide-proxy.tsx");
+  return lucideProxy();
+});
 
 vi.mock("@/hooks/common/useCustomToast.ts", () => ({ useCustomToast: () => ({ toast: vi.fn() }) }));
 vi.mock("@/hooks/queries/useRssCertification.ts", () => ({
@@ -25,7 +27,9 @@ vi.mock("@/hooks/queries/useRssCertification.ts", () => ({
 }));
 
 vi.mock("@/components/profile/rss/SubscribersModal.tsx", () => ({ SubscribersModal: () => null }));
-vi.mock("@/components/profile/rss/PlatformIcon.tsx", () => ({ PlatformIcon: () => <div data-testid="platform-icon" /> }));
+vi.mock("@/components/profile/rss/PlatformIcon.tsx", () => ({
+  PlatformIcon: () => <div data-testid="platform-icon" />,
+}));
 vi.mock("@/components/profile/rss/RssFeedRow.tsx", () => ({
   RssFeedRow: ({ title, onToggleVisibility }: { title: string; onToggleVisibility?: (n: boolean) => void }) => (
     <li data-testid="feed-row">
@@ -63,6 +67,22 @@ describe("OwnedRssCard", () => {
     expect(screen.getByText("소유 블로그")).toBeInTheDocument();
     expect(screen.getByText("주인")).toBeInTheDocument();
     expect(screen.getByText(/공개 중인 게시글 2개/)).toBeInTheDocument();
+  });
+
+  it("게시글 정지 횟수가 0이어도 정지 횟수를 표시해야 한다", () => {
+    render(<OwnedRssCard rss={{ ...rss, suspensionCount: 0 }} onEdit={vi.fn()} onDelete={vi.fn()} />);
+
+    expect(screen.getByText("게시글 정지 0회")).toHaveClass("text-gray-400");
+  });
+
+  it.each([
+    [1, "text-yellow-500"],
+    [2, "text-orange-500"],
+    [3, "text-red-500"],
+  ])("게시글 정지 횟수가 %i회면 %s 색으로 표시해야 한다", (count, colorClass) => {
+    render(<OwnedRssCard rss={{ ...rss, suspensionCount: count }} onEdit={vi.fn()} onDelete={vi.fn()} />);
+
+    expect(screen.getByText(`게시글 정지 ${count}회`)).toHaveClass(colorClass);
   });
 
   it("수정/삭제 버튼이 onEdit/onDelete 를 호출해야 한다", () => {

@@ -86,6 +86,7 @@ export const mockCertifiedRss: CertifiedRss = {
   subscriberCount: 12,
   isSubscribed: false,
   blogImage: null,
+  suspensionCount: 0,
 };
 
 export const mockSubscribedRss: SubscribedRss[] = [
