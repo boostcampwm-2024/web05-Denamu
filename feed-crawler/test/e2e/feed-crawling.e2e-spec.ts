@@ -50,14 +50,16 @@ describe('feed crawling e2e-test', () => {
         feeds: [
           {
             id: null,
-            blogId: 1,
-            blogName: 'test blog',
-            blogPlatform: 'etc',
-            blogImage: null,
+            blog: {
+              id: 1,
+              name: 'test blog',
+              platform: 'etc',
+              image: null,
+            },
             title: 'Mock Title',
             link: 'https://example.com/mock',
             pubDate: new Date().toISOString().slice(0, 19).replace('T', ' '),
-            imageUrl: 'https://example.com/mock/thumbnail',
+            thumbnail: 'https://example.com/mock/thumbnail',
             content: 'Mock Content',
             summary: '요약 생성 중...',
             deathCount: 0,

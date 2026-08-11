@@ -13,14 +13,16 @@ export interface FeedFetchResult {
 
 export interface FeedDetail {
   id: number;
-  blogId: number;
-  blogName: string;
-  blogPlatform: string;
-  blogImage: string | null;
+  blog: {
+    id: number;
+    name: string;
+    platform: string;
+    image: string | null;
+  };
   pubDate: string;
   title: string;
   link: string;
-  imageUrl: string;
+  thumbnail: string;
   content?: string;
   summary?: string;
   tag?: string[];

@@ -12,7 +12,7 @@ import { RedisService } from '@common/redis/redis.service';
       imports: [RedisModule],
       inject: [RedisService],
       useFactory: (redisService: RedisService) => ({
-        throttlers: [{ ttl: 60_000, limit: 5 }],
+        throttlers: [{ ttl: 60_000, limit: 10 }],
         storage: new ThrottlerStorageRedisService(redisService.redisClient),
         errorMessage: '로그인 시도가 너무 많습니다. 잠시 후 다시 시도해주세요.',
       }),

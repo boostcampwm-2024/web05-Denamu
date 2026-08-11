@@ -12,8 +12,8 @@ import {
 } from '@test/config/constant/parser-fixtures';
 import axios, { HttpStatusCode } from 'axios';
 
+import logger from '@common/logger/logger';
 import { FeedMetrics } from '@common/metrics/feed-metrics';
-import { Notifier } from '@common/notification/notifier.interface';
 import { FeedParserManager } from '@common/parser/feed-parser-manager';
 import { Atom10Parser } from '@common/parser/formats/atom10-parser';
 import { Rss20Parser } from '@common/parser/formats/rss20-parser';
@@ -24,7 +24,6 @@ describe('Parser 모듈 테스트', () => {
   let rss20Parser: Rss20Parser;
   let atom10Parser: Atom10Parser;
   let feedParserManager: FeedParserManager;
-  let notifier: Notifier;
   let mockAxiosGet: jest.SpyInstance;
 
   const mockFeedMetrics = {
@@ -38,13 +37,11 @@ describe('Parser 모듈 테스트', () => {
 
   beforeEach(() => {
     parserUtil = new ParserUtil();
-    notifier = { start: jest.fn(), publish: jest.fn() };
-    rss20Parser = new Rss20Parser(parserUtil, notifier);
-    atom10Parser = new Atom10Parser(parserUtil, notifier);
+    rss20Parser = new Rss20Parser(parserUtil);
+    atom10Parser = new Atom10Parser(parserUtil);
     feedParserManager = new FeedParserManager(
       rss20Parser,
       atom10Parser,
-      notifier,
       mockFeedMetrics,
     );
 
@@ -116,12 +113,14 @@ describe('Parser 모듈 테스트', () => {
           );
 
           expect(result.feeds[0]).toMatchObject({
-            blogId: MOCK_RSS_OBJ.id,
-            blogName: MOCK_RSS_OBJ.blogName,
-            blogPlatform: MOCK_RSS_OBJ.blogPlatform,
+            blog: {
+              id: MOCK_RSS_OBJ.id,
+              name: MOCK_RSS_OBJ.blogName,
+              platform: MOCK_RSS_OBJ.blogPlatform,
+            },
             title: '첫 번째 글제목',
             link: expect.stringContaining('https://rssfeed.com/post1'),
-            imageUrl: expect.any(String),
+            thumbnail: expect.any(String),
             content: expect.any(String),
             summary: expect.any(String),
             deathCount: 0,
@@ -155,12 +154,14 @@ describe('Parser 모듈 테스트', () => {
           );
 
           expect(result.feeds[0]).toMatchObject({
-            blogId: MOCK_RSS_OBJ.id,
-            blogName: MOCK_RSS_OBJ.blogName,
-            blogPlatform: MOCK_RSS_OBJ.blogPlatform,
+            blog: {
+              id: MOCK_RSS_OBJ.id,
+              name: MOCK_RSS_OBJ.blogName,
+              platform: MOCK_RSS_OBJ.blogPlatform,
+            },
             title: 'Atom 첫 번째 글',
             link: expect.stringContaining('https://atomfeed.com/entry1'),
-            imageUrl: expect.any(String),
+            thumbnail: expect.any(String),
             content: expect.any(String),
             summary: expect.any(String),
             deathCount: 0,
@@ -325,7 +326,9 @@ describe('Parser 모듈 테스트', () => {
         // Then - parseFeed와 달리 시간 필터가 없으므로 모든 피드 반환
         expect(result).toHaveLength(2);
         expect(result[0]).toMatchObject({
-          blogId: MOCK_RSS_OBJ.id,
+          blog: {
+            id: MOCK_RSS_OBJ.id,
+          },
           title: '첫 번째 글제목',
           summary: expect.any(String),
           deathCount: 0,
@@ -334,13 +337,13 @@ describe('Parser 모듈 테스트', () => {
     });
 
     describe('convertToFeedDetails 실패 처리', () => {
-      it('일부 피드 변환이 실패하면 성공한 피드만 반환하고 알림을 발행해야 한다', async () => {
+      it('일부 피드 변환이 실패하면 성공한 피드만 반환하고 에러를 로깅해야 한다', async () => {
         // Given - 첫 번째 피드의 썸네일 조회를 실패시켜 변환 실패 유도
         jest
           .spyOn(parserUtil, 'getThumbnailUrl')
           .mockRejectedValueOnce(new Error('썸네일 GET 요청 실패'))
           .mockResolvedValue('https://example.com/image.jpg');
-        const publishSpy = jest.spyOn(notifier, 'publish');
+        const errorSpy = jest.spyOn(logger, 'error').mockImplementation();
 
         // When
         const result = await rss20Parser.parseAllFeeds(
@@ -350,13 +353,8 @@ describe('Parser 모듈 테스트', () => {
 
         // Then - 2개 중 1개만 성공
         expect(result).toHaveLength(1);
-        expect(publishSpy).toHaveBeenCalledWith(
-          expect.any(String),
-          expect.objectContaining({
-            error: expect.any(Error),
-            blogUrl: MOCK_RSS_OBJ.rssUrl,
-            errorSource: '[Full FeedCrawling]',
-          }),
+        expect(errorSpy).toHaveBeenCalledWith(
+          expect.stringContaining('[Full FeedCrawling]'),
         );
       });
     });

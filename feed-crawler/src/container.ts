@@ -10,9 +10,6 @@ import { AiMetrics } from '@common/metrics/ai-metrics';
 import { DbMetrics } from '@common/metrics/db-metrics';
 import { FeedMetrics } from '@common/metrics/feed-metrics';
 import { RedisMetrics } from '@common/metrics/redis-metrics';
-import { DiscordNotifier } from '@common/notification/discord.notifier';
-import { NotifierRegistry } from '@common/notification/notifier-registry';
-import { Notifier } from '@common/notification/notifier.interface';
 import { FeedParserManager } from '@common/parser/feed-parser-manager';
 import { Atom10Parser } from '@common/parser/formats/atom10-parser';
 import { Rss20Parser } from '@common/parser/formats/rss20-parser';
@@ -53,13 +50,5 @@ container.registerSingleton(FeedParserManager);
 container.registerSingleton(FeedCrawler);
 container.registerSingleton(FullFeedCrawlEventWorker);
 container.registerSingleton(AiSummaryRetryEventWorker);
-
-container.registerSingleton(DiscordNotifier);
-container.registerSingleton(NotifierRegistry);
-
-const registry = container.resolve(NotifierRegistry);
-registry.register('discord', container.resolve(DiscordNotifier));
-
-container.registerInstance<Notifier>(DEPENDENCY_SYMBOLS.Notifier, registry);
 
 export { container };

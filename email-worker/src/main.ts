@@ -1,14 +1,11 @@
 import 'reflect-metadata';
 
-import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
 import '@common/env/env-load';
 import { Lifecycle } from '@common/lifecycle/lifecycle.interface';
 import logger from '@common/logger/logger';
 import { EmailMetrics } from '@common/metrics/email-metrics';
 
 import { EmailConsumer } from '@email/email.consumer';
-
-import { Notifier } from '@notification/notifier.interface';
 
 import { RabbitMQManager } from '@rabbitmq/rabbitmq.manager';
 
@@ -17,7 +14,6 @@ import { container } from './container';
 function resolveComponents(): Lifecycle[] {
   return [
     container.resolve(EmailMetrics),
-    container.resolve<Notifier>(DEPENDENCY_SYMBOLS.Notifier),
     container.resolve(RabbitMQManager),
     container.resolve(EmailConsumer),
   ];

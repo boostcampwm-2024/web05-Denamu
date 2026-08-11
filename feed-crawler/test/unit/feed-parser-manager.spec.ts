@@ -3,8 +3,8 @@ import 'reflect-metadata';
 import axios, { HttpStatusCode } from 'axios';
 
 import { FeedDetail, RssObj } from '@common/feed/feed.type';
+import logger from '@common/logger/logger';
 import { FeedMetrics } from '@common/metrics/feed-metrics';
-import { Notifier } from '@common/notification/notifier.interface';
 import { FeedParserManager } from '@common/parser/feed-parser-manager';
 import { Atom10Parser } from '@common/parser/formats/atom10-parser';
 import { Rss20Parser } from '@common/parser/formats/rss20-parser';
@@ -14,7 +14,6 @@ describe('FeedParserManager', () => {
   let mockRss20Parser: jest.Mocked<Rss20Parser>;
   let mockAtom10Parser: jest.Mocked<Atom10Parser>;
   let mockAxiosGet: jest.SpyInstance;
-  let mockNotifier: jest.Mocked<Notifier>;
   let mockFeedMetrics: jest.Mocked<FeedMetrics>;
   let rss20CanParseMock: jest.Mock;
   let rss20ParseFeedMock: jest.Mock;
@@ -25,7 +24,7 @@ describe('FeedParserManager', () => {
   let metricsTotalIncMock: jest.Mock;
   let metricsSuccessIncMock: jest.Mock;
   let metricsFailureIncMock: jest.Mock;
-  let notifierPublishMock: jest.Mock;
+  let errorSpy: jest.SpyInstance;
 
   const mockRssObj: RssObj = {
     id: 1,
@@ -38,14 +37,16 @@ describe('FeedParserManager', () => {
   const mockFeedDetails: FeedDetail[] = [
     {
       id: null,
-      blogId: 1,
-      blogName: '테스트 블로그',
-      blogPlatform: 'tistory',
-      blogImage: null,
+      blog: {
+        id: 1,
+        name: '테스트 블로그',
+        platform: 'tistory',
+        image: null,
+      },
       pubDate: '2024-01-01 12:00:00',
       title: '테스트 피드 1',
       link: 'https://test.tistory.com/1',
-      imageUrl: 'https://test.tistory.com/image1.jpg',
+      thumbnail: 'https://test.tistory.com/image1.jpg',
       content: '테스트 내용 1',
       summary: 'AI 요약 처리 중...',
       deathCount: 0,
@@ -77,11 +78,7 @@ describe('FeedParserManager', () => {
       extractChannelImage: jest.fn().mockReturnValue(null),
     } as any;
 
-    notifierPublishMock = jest.fn();
-    mockNotifier = {
-      start: jest.fn(),
-      publish: notifierPublishMock,
-    };
+    errorSpy = jest.spyOn(logger, 'error').mockImplementation();
 
     metricsTotalIncMock = jest.fn();
     metricsSuccessIncMock = jest.fn();
@@ -98,7 +95,6 @@ describe('FeedParserManager', () => {
     feedParserManager = new FeedParserManager(
       mockRss20Parser,
       mockAtom10Parser,
-      mockNotifier,
       mockFeedMetrics,
     );
   });
@@ -277,7 +273,7 @@ describe('FeedParserManager', () => {
       expect(result).toEqual({ feeds: mockFeedDetails, channelImage: null });
     });
 
-    it('HTTP 요청이 실패하면 빈 배열을 반환하고 알림을 발행해야 한다', async () => {
+    it('HTTP 요청이 실패하면 빈 배열을 반환하고 에러를 로깅해야 한다', async () => {
       // Given
       mockAxiosGet.mockRejectedValueOnce(new Error('Network error'));
 
@@ -287,7 +283,7 @@ describe('FeedParserManager', () => {
       // Then
       expect(result).toEqual({ feeds: [], channelImage: undefined });
       expect(metricsFailureIncMock).toHaveBeenCalledWith({ type: 'full' });
-      expect(notifierPublishMock).toHaveBeenCalled();
+      expect(errorSpy).toHaveBeenCalled();
     });
 
     it('지원하지 않는 피드 형식이면 빈 배열을 반환해야 한다', async () => {
