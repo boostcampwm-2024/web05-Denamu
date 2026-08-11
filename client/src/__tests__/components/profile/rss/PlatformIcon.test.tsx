@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { lucideProxy } from "@/__tests__/__mocks__/external/lucide-proxy.tsx";
 import { PlatformIcon } from "@/components/profile/rss/PlatformIcon.tsx";
 
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 
 vi.mock("lucide-react", () => lucideProxy());
 
@@ -20,5 +20,21 @@ describe("PlatformIcon", () => {
 
     expect(screen.getByTestId("lucide-Rss")).toBeInTheDocument();
     expect(screen.queryByRole("img")).not.toBeInTheDocument();
+  });
+
+  it("image가 주어지면 해당 이미지를 렌더링해야 한다", () => {
+    render(<PlatformIcon platform="naver" image="https://blog.naver.com/profile.png" />);
+
+    const img = screen.getByRole("img", { name: "naver" });
+    expect(img).toHaveAttribute("src", "https://blog.naver.com/profile.png");
+  });
+
+  it("image 로드에 실패하면 플랫폼 아이콘으로 대체해야 한다", () => {
+    render(<PlatformIcon platform="naver" image="https://blog.naver.com/profile.png" />);
+
+    const img = screen.getByRole("img", { name: "naver" });
+    fireEvent.error(img);
+
+    expect(img).toHaveAttribute("src", expect.stringContaining("naver-icon.svg"));
   });
 });
