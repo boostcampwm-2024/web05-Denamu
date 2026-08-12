@@ -173,6 +173,31 @@ export class FeedService {
     );
   }
 
+  async cacheTrendFeeds(trendFeeds: FeedTrendResponseDto[]) {
+    if (!trendFeeds.length) return;
+
+    await this.redisService.executePipeline((pipeline) => {
+      for (const feed of trendFeeds) {
+        const infoKey = REDIS_KEYS.FEED_INFO_ITEM_KEY(feed.id);
+        pipeline.hset(infoKey, {
+          id: feed.id,
+          blogPlatform: feed.blog.platform,
+          blogImage: feed.blog.image ?? '',
+          createdAt: feed.createdAt.toISOString(),
+          viewCount: feed.viewCount,
+          blogName: feed.blog.name,
+          thumbnail: feed.thumbnail,
+          path: feed.path,
+          title: feed.title,
+          tagList: feed.tag ?? [],
+          likes: feed.likes,
+          comments: feed.comments,
+        });
+        pipeline.expire(infoKey, REDIS_KEYS.FEED_INFO_TTL_SECONDS);
+      }
+    });
+  }
+
   async searchFeedList(
     searchFeedQueryDto: SearchFeedRequestDto,
     blockerId?: number,

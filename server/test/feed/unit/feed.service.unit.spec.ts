@@ -319,6 +319,65 @@ describe(`${FeedService.name} Unit Test`, () => {
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe(1);
     });
+
+  });
+
+  describe('cacheTrendFeeds', () => {
+    const createdAt = new Date('2025-01-01T00:00:00.000Z');
+    const trendFeeds = [
+      {
+        id: 1,
+        blog: { name: 'blog', platform: 'tistory', image: null },
+        title: 'title',
+        path: 'path',
+        createdAt,
+        thumbnail: 'thumb',
+        viewCount: 10,
+        likes: 3,
+        comments: 2,
+        tag: ['a', 'b'],
+      },
+    ] as any;
+    const infoKey = REDIS_KEYS.FEED_INFO_ITEM_KEY(1);
+
+    it('feed:info 키마다 HSET으로 채우고 EXPIRE를 건다.', async () => {
+      // given
+      const hsetMock = jest.fn();
+      const expireMock = jest.fn();
+      redisService.executePipeline.mockImplementation((cb: any) => {
+        cb({ hset: hsetMock, expire: expireMock });
+        return Promise.resolve([]);
+      });
+
+      // when
+      await feedService.cacheTrendFeeds(trendFeeds);
+
+      // then
+      expect(hsetMock).toHaveBeenCalledWith(
+        infoKey,
+        expect.objectContaining({
+          id: 1,
+          blogPlatform: 'tistory',
+          createdAt: createdAt.toISOString(),
+          viewCount: 10,
+          likes: 3,
+          comments: 2,
+          tagList: ['a', 'b'],
+        }),
+      );
+      expect(expireMock).toHaveBeenCalledWith(
+        infoKey,
+        REDIS_KEYS.FEED_INFO_TTL_SECONDS,
+      );
+    });
+
+    it('빈 배열이면 파이프라인을 실행하지 않는다.', async () => {
+      // when
+      await feedService.cacheTrendFeeds([]);
+
+      // then
+      expect(redisService.executePipeline).not.toHaveBeenCalled();
+    });
   });
 
   describe('searchFeedList', () => {
