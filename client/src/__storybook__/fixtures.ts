@@ -146,6 +146,7 @@ export const mockRssSearchResult: RssSearchResult = {
   name: "seok3765.log",
   blogPlatform: "velog",
   blogImage: "https://picsum.photos/seed/rsearch/80/80",
+  feedCount: 24,
 };
 
 export const mockAdminRssList: AdminRssData[] = [

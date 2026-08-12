@@ -19,21 +19,30 @@ export class SearchRssResult {
   })
   blogImage: string | null;
 
+  @ApiProperty({ example: 12, description: '공개 게시글 개수' })
+  feedCount: number;
+
   private constructor(partial: Partial<SearchRssResult>) {
     Object.assign(this, partial);
   }
 
-  static toResultDto(rss: RssAccept) {
+  static toResultDto(rss: RssAccept, feedCount: number) {
     return new SearchRssResult({
       id: rss.id,
       name: rss.name,
       blogPlatform: rss.blogPlatform,
       blogImage: rss.blogImage ?? null,
+      feedCount,
     });
   }
 
-  static toResultDtoArray(rssList: RssAccept[]) {
-    return rssList.map((rss) => this.toResultDto(rss));
+  static toResultDtoArray(
+    rssList: RssAccept[],
+    feedCountMap: Map<number, number>,
+  ) {
+    return rssList.map((rss) =>
+      this.toResultDto(rss, feedCountMap.get(rss.id) ?? 0),
+    );
   }
 }
 

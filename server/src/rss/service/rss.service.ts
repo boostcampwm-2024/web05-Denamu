@@ -344,7 +344,14 @@ export class RssService {
         viewerId,
       );
 
-    const rssList = SearchRssResult.toResultDtoArray(searchResult);
+    const feedCountMap = await this.feedRepository.countPublicFeedsByBlogIds(
+      searchResult.map((rss) => rss.id),
+    );
+
+    const rssList = SearchRssResult.toResultDtoArray(
+      searchResult,
+      feedCountMap,
+    );
     const totalPages = Math.ceil(totalCount / limit);
 
     return SearchRssResponseDto.toResponseDto(
