@@ -22,26 +22,43 @@ export class SearchRssResult {
   @ApiProperty({ example: 12, description: '공개 게시글 개수' })
   feedCount: number;
 
+  @ApiProperty({
+    example: '2025-01-15T00:00:00.000Z',
+    description: '최근 공개 게시글 발행일',
+    nullable: true,
+  })
+  lastPublishedAt: Date | null;
+
   private constructor(partial: Partial<SearchRssResult>) {
     Object.assign(this, partial);
   }
 
-  static toResultDto(rss: RssAccept, feedCount: number) {
+  static toResultDto(
+    rss: RssAccept,
+    feedCount: number,
+    lastPublishedAt: Date | null = null,
+  ) {
     return new SearchRssResult({
       id: rss.id,
       name: rss.name,
       blogPlatform: rss.blogPlatform,
       blogImage: rss.blogImage ?? null,
       feedCount,
+      lastPublishedAt,
     });
   }
 
   static toResultDtoArray(
     rssList: RssAccept[],
     feedCountMap: Map<number, number>,
+    lastPublishedAtMap: Map<number, Date> = new Map(),
   ) {
     return rssList.map((rss) =>
-      this.toResultDto(rss, feedCountMap.get(rss.id) ?? 0),
+      this.toResultDto(
+        rss,
+        feedCountMap.get(rss.id) ?? 0,
+        lastPublishedAtMap.get(rss.id) ?? null,
+      ),
     );
   }
 }
@@ -53,7 +70,7 @@ export class SearchRssResponseDto {
   })
   totalCount: number;
 
-  @ApiProperty({ type: [SearchRssResult], description: '검색 결과 RSS' })
+  @ApiProperty({ type: [SearchRssResult], description: 'RSS 목록' })
   result: SearchRssResult[];
 
   @ApiProperty({

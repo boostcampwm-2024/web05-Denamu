@@ -37,6 +37,7 @@ import { FeedRepository } from '@feed/repository/feed.repository';
 
 import { DeleteCertificateRssRequestDto } from '@rss/dto/request/deleteCertificateRss.dto';
 import { DeleteRssRequestDto } from '@rss/dto/request/deleteRss.dto';
+import { GetAllRssRequestDto } from '@rss/dto/request/getAllRss.dto';
 import { GetOwnedRssFeedsRequestDto } from '@rss/dto/request/getOwnedRssFeeds.dto';
 import { GetRssFeedsRequestDto } from '@rss/dto/request/getRssFeeds.dto';
 import { ManageRssRequestDto } from '@rss/dto/request/manageRss.dto';
@@ -329,6 +330,39 @@ export class RssService {
     );
     return recentRssList.map((row) =>
       GetRecentRssResponseDto.toResponseDto(row),
+    );
+  }
+
+  async getAllRss(getAllRssQueryDto: GetAllRssRequestDto, viewerId?: number) {
+    const { page, limit, blogPlatform } = getAllRssQueryDto;
+    const offset = (page - 1) * limit;
+
+    const [rssAcceptList, totalCount] =
+      await this.rssAcceptRepository.findAllRssList(
+        limit,
+        offset,
+        viewerId,
+        blogPlatform,
+      );
+
+    const blogIds = rssAcceptList.map((rss) => rss.id);
+    const [feedCountMap, lastPublishedAtMap] = await Promise.all([
+      this.feedRepository.countPublicFeedsByBlogIds(blogIds),
+      this.feedRepository.getLatestPublicFeedDateByBlogIds(blogIds),
+    ]);
+
+    const rssList = SearchRssResult.toResultDtoArray(
+      rssAcceptList,
+      feedCountMap,
+      lastPublishedAtMap,
+    );
+    const totalPages = Math.ceil(totalCount / limit);
+
+    return SearchRssResponseDto.toResponseDto(
+      totalCount,
+      rssList,
+      totalPages,
+      limit,
     );
   }
 

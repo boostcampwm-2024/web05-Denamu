@@ -30,6 +30,7 @@ import { ApiCreateRssCertification } from '@rss/api-docs/createRssCertification.
 import { ApiDeleteCertificateRss } from '@rss/api-docs/deleteCertificateRss.api-docs';
 import { ApiDeleteRss } from '@rss/api-docs/deleteRss.api-docs';
 import { ApiDeleteRssCertification } from '@rss/api-docs/deleteRssCertification.api-docs';
+import { ApiGetAllRss } from '@rss/api-docs/getAllRss.api-docs';
 import { ApiGetOwnedRssFeeds } from '@rss/api-docs/getOwnedRssFeeds.api-docs';
 import { ApiGetRecentRss } from '@rss/api-docs/getRecentRss.api-docs';
 import { ApiGetRssActivities } from '@rss/api-docs/getRssActivities.api-docs';
@@ -45,6 +46,7 @@ import { CreateRssCertificationRequestDto } from '@rss/dto/request/createRssCert
 import { DeleteCertificateRssRequestDto } from '@rss/dto/request/deleteCertificateRss.dto';
 import { DeleteRssRequestDto } from '@rss/dto/request/deleteRss.dto';
 import { DeleteRssCertificationParamRequestDto } from '@rss/dto/request/deleteRssCertificationParam.dto';
+import { GetAllRssRequestDto } from '@rss/dto/request/getAllRss.dto';
 import { GetOwnedRssFeedsRequestDto } from '@rss/dto/request/getOwnedRssFeeds.dto';
 import { GetOwnedRssFeedsParamRequestDto } from '@rss/dto/request/getOwnedRssFeedsParam.dto';
 import { GetRssFeedsRequestDto } from '@rss/dto/request/getRssFeeds.dto';
@@ -278,6 +280,20 @@ export class RssController {
     return ApiResponse.responseWithData(
       'RSS 게시글 목록 조회를 처리했습니다.',
       await this.rssService.getRssFeeds(paramDto.rssId, queryDto),
+    );
+  }
+
+  @ApiGetAllRss()
+  @UseGuards(OptionalJwtGuard)
+  @Get()
+  @HttpCode(HttpStatus.OK)
+  async getAllRss(
+    @CurrentUser() viewer: Payload | null,
+    @Query() getAllRssQueryDto: GetAllRssRequestDto,
+  ) {
+    return ApiResponse.responseWithData(
+      '전체 RSS 목록 조회를 처리했습니다.',
+      await this.rssService.getAllRss(getAllRssQueryDto, viewer?.id),
     );
   }
 

@@ -56,6 +56,7 @@ describe(`${RssService.name} Unit Test`, () => {
       | 'update'
       | 'findRecentlyPublished'
       | 'searchRssList'
+      | 'findAllRssList'
     >
   >;
   let rssRejectRepository: jest.Mocked<Pick<RssRejectRepository, 'find'>>;
@@ -66,6 +67,7 @@ describe(`${RssService.name} Unit Test`, () => {
       | 'setVisibilityForBlog'
       | 'countPublicFeedsByBlogIds'
       | 'getLatestPublicFeedDate'
+      | 'getLatestPublicFeedDateByBlogIds'
       | 'findPublishActivityByBlogAndYear'
       | 'findPublishYearsByBlogId'
     >
@@ -110,6 +112,7 @@ describe(`${RssService.name} Unit Test`, () => {
       update: jest.fn().mockResolvedValue({ affected: 1 }),
       findRecentlyPublished: jest.fn().mockResolvedValue([]),
       searchRssList: jest.fn().mockResolvedValue([[], 0]),
+      findAllRssList: jest.fn().mockResolvedValue([[], 0]),
     };
     rssRejectRepository = { find: jest.fn() };
     feedRepository = {
@@ -117,6 +120,7 @@ describe(`${RssService.name} Unit Test`, () => {
       setVisibilityForBlog: jest.fn().mockResolvedValue(1),
       countPublicFeedsByBlogIds: jest.fn().mockResolvedValue(new Map()),
       getLatestPublicFeedDate: jest.fn().mockResolvedValue(null),
+      getLatestPublicFeedDateByBlogIds: jest.fn().mockResolvedValue(new Map()),
       findPublishActivityByBlogAndYear: jest.fn().mockResolvedValue([]),
       findPublishYearsByBlogId: jest.fn().mockResolvedValue([]),
     };
@@ -934,6 +938,119 @@ describe(`${RssService.name} Unit Test`, () => {
     });
   });
 
+  describe('getAllRss', () => {
+    const makeRssAccept = (id: number, name: string) =>
+      ({
+        id,
+        name,
+        blogPlatform: 'velog',
+        blogImage: null,
+      }) as any;
+
+    it('page와 limit으로 offset을 계산해 저장소에 전달하고 응답 DTO로 변환한다.', async () => {
+      // given
+      const rssList = [makeRssAccept(1, 'seok3765.log')];
+      const lastPublishedAt = new Date('2025-01-15T00:00:00.000Z');
+      rssAcceptRepository.findAllRssList.mockResolvedValue([rssList, 1]);
+      feedRepository.countPublicFeedsByBlogIds.mockResolvedValue(
+        new Map([[1, 12]]),
+      );
+      feedRepository.getLatestPublicFeedDateByBlogIds.mockResolvedValue(
+        new Map([[1, lastPublishedAt]]),
+      );
+
+      // when
+      const result = await rssService.getAllRss({ page: 3, limit: 5 });
+
+      // then
+      expect(rssAcceptRepository.findAllRssList).toHaveBeenCalledWith(
+        5,
+        10,
+        undefined,
+        undefined,
+      );
+      expect(feedRepository.countPublicFeedsByBlogIds).toHaveBeenCalledWith([
+        1,
+      ]);
+      expect(
+        feedRepository.getLatestPublicFeedDateByBlogIds,
+      ).toHaveBeenCalledWith([1]);
+      expect(result).toEqual(
+        SearchRssResponseDto.toResponseDto(
+          1,
+          [
+            {
+              id: 1,
+              name: 'seok3765.log',
+              blogPlatform: 'velog',
+              blogImage: null,
+              feedCount: 12,
+              lastPublishedAt,
+            },
+          ],
+          1,
+          5,
+        ),
+      );
+    });
+
+    it('viewerId가 있으면 차단 필터링을 위해 저장소에 함께 전달한다.', async () => {
+      // given
+      rssAcceptRepository.findAllRssList.mockResolvedValue([[], 0]);
+
+      // when
+      await rssService.getAllRss({ page: 1, limit: 5 }, 10);
+
+      // then
+      expect(rssAcceptRepository.findAllRssList).toHaveBeenCalledWith(
+        5,
+        0,
+        10,
+        undefined,
+      );
+    });
+
+    it('blogPlatform이 있으면 저장소에 함께 전달한다.', async () => {
+      // given
+      rssAcceptRepository.findAllRssList.mockResolvedValue([[], 0]);
+
+      // when
+      await rssService.getAllRss({ page: 1, limit: 5, blogPlatform: 'velog' });
+
+      // then
+      expect(rssAcceptRepository.findAllRssList).toHaveBeenCalledWith(
+        5,
+        0,
+        undefined,
+        'velog',
+      );
+    });
+
+    it('전체 개수를 limit으로 나눠 totalPages를 올림 계산한다.', async () => {
+      // given
+      rssAcceptRepository.findAllRssList.mockResolvedValue([[], 12]);
+
+      // when
+      const result = await rssService.getAllRss({ page: 1, limit: 5 });
+
+      // then
+      expect(result.totalPages).toBe(3);
+    });
+
+    it('등록된 RSS가 없으면 빈 배열을 반환한다.', async () => {
+      // given
+      rssAcceptRepository.findAllRssList.mockResolvedValue([[], 0]);
+
+      // when
+      const result = await rssService.getAllRss({ page: 1, limit: 5 });
+
+      // then
+      expect(result.result).toEqual([]);
+      expect(result.totalCount).toBe(0);
+      expect(result.totalPages).toBe(0);
+    });
+  });
+
   describe('searchRss', () => {
     const makeRssAccept = (id: number, name: string) =>
       ({
@@ -978,6 +1095,7 @@ describe(`${RssService.name} Unit Test`, () => {
               blogPlatform: 'velog',
               blogImage: null,
               feedCount: 12,
+              lastPublishedAt: null,
             },
           ],
           1,
