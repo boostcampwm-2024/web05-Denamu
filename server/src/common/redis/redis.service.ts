@@ -107,6 +107,14 @@ export class RedisService {
     return this.redisClient.sadd(key, ...members);
   }
 
+  async smembers(key: string): Promise<string[]> {
+    return this.redisClient.smembers(key);
+  }
+
+  async expire(key: string, seconds: number): Promise<number> {
+    return this.redisClient.expire(key, seconds);
+  }
+
   async zadd(
     key: string,
     ...scoreMembers: (string | Buffer | number)[]

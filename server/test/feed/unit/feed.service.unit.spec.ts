@@ -55,7 +55,7 @@ describe(`${FeedService.name} Unit Test`, () => {
   let redisService: jest.Mocked<
     Pick<
       RedisService,
-      | 'keys'
+      | 'smembers'
       | 'lrange'
       | 'sismember'
       | 'sadd'
@@ -85,7 +85,7 @@ describe(`${FeedService.name} Unit Test`, () => {
       findFeedPagination: jest.fn(),
     };
     redisService = {
-      keys: jest.fn(),
+      smembers: jest.fn(),
       lrange: jest.fn(),
       sismember: jest.fn(),
       sadd: jest.fn(),
@@ -264,7 +264,7 @@ describe(`${FeedService.name} Unit Test`, () => {
       const dto = { limit: 2 } as ReadFeedPaginationRequestDto;
       const feedList = [{ feedId: 1 }, { feedId: 2 }, { feedId: 3 }] as any[];
       feedViewRepository.findFeedPagination.mockResolvedValue(feedList);
-      redisService.keys.mockResolvedValue(['feed:recent:2']);
+      redisService.smembers.mockResolvedValue(['2']);
 
       // when
       const result = await feedService.readFeedPagination(dto);
@@ -283,7 +283,7 @@ describe(`${FeedService.name} Unit Test`, () => {
       feedViewRepository.findFeedPagination.mockResolvedValue([
         { feedId: 1 },
       ] as any);
-      redisService.keys.mockResolvedValue([]);
+      redisService.smembers.mockResolvedValue([]);
 
       // when
       const result = await feedService.readFeedPagination(dto);
@@ -414,7 +414,7 @@ describe(`${FeedService.name} Unit Test`, () => {
   describe('readRecentFeedList', () => {
     it('최근 피드 키가 없으면 빈 배열을 반환한다.', async () => {
       // given
-      redisService.keys.mockResolvedValue([]);
+      redisService.smembers.mockResolvedValue([]);
 
       // when
       const result = await feedService.readRecentFeedList();
@@ -426,7 +426,7 @@ describe(`${FeedService.name} Unit Test`, () => {
 
     it('파이프라인 결과를 최신순으로 정렬하고 태그를 분리한다.', async () => {
       // given
-      redisService.keys.mockResolvedValue(['feed:recent:1', 'feed:recent:2']);
+      redisService.smembers.mockResolvedValue(['1', '2']);
       redisService.executePipeline.mockResolvedValue([
         [null, { id: '1', createdAt: '2025-01-01', tagList: 'a,b' }],
         [null, { id: '2', createdAt: '2025-02-01', tagList: 'c' }],
@@ -438,6 +438,22 @@ describe(`${FeedService.name} Unit Test`, () => {
       // then
       expect(result).toHaveLength(2);
       expect(result[0].id).toBe(2);
+    });
+
+    it('인덱스에는 있지만 feed:info 캐시가 만료된 항목은 결과에서 제외한다.', async () => {
+      // given
+      redisService.smembers.mockResolvedValue(['1', '2']);
+      redisService.executePipeline.mockResolvedValue([
+        [null, { id: '1', createdAt: '2025-01-01', tagList: 'a' }],
+        [null, {}],
+      ] as any);
+
+      // when
+      const result = await feedService.readRecentFeedList();
+
+      // then
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe(1);
     });
   });
 

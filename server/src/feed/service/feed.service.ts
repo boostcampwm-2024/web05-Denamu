@@ -146,11 +146,8 @@ export class FeedService {
 
   private async checkNewFeeds(feedList: FeedView[]) {
     const newFeedIds = (
-      await this.redisService.keys(REDIS_KEYS.FEED_RECENT_ALL_KEY)
-    ).map((key) => {
-      const feedId = key.match(/feed:recent:(\d+)/);
-      return parseInt(feedId[1]);
-    });
+      await this.redisService.smembers(REDIS_KEYS.FEED_RECENT_INDEX_KEY)
+    ).map((id) => parseInt(id));
 
     return feedList.map((feed): FeedPaginationResult => {
       return {
@@ -250,22 +247,22 @@ export class FeedService {
   }
 
   async readRecentFeedList() {
-    const recentKeys = await this.redisService.keys(
-      REDIS_KEYS.FEED_RECENT_ALL_KEY,
+    const recentIds = await this.redisService.smembers(
+      REDIS_KEYS.FEED_RECENT_INDEX_KEY,
     );
 
-    if (!recentKeys.length) {
+    if (!recentIds.length) {
       return [];
     }
 
     const recentFeeds = await this.redisService.executePipeline((pipeline) => {
-      for (const key of recentKeys) {
-        pipeline.hgetall(key);
+      for (const id of recentIds) {
+        pipeline.hgetall(REDIS_KEYS.FEED_INFO_ITEM_KEY(id));
       }
     });
 
     const recentFeedList = recentFeeds
-      .filter(([err]) => !err)
+      .filter(([err, feed]) => !err && (feed as FeedRecentRedis)?.id)
       .map(([, feed]) => feed as FeedRecentRedis)
       .map((feed) => ({
         ...feed,

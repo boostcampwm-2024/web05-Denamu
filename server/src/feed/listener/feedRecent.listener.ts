@@ -17,7 +17,7 @@ export class FeedRecentListener {
   @OnEvent('like.created')
   async handleLikeCreated({ feedId }: LikeCreatedEvent) {
     await this.redisService.hincrbyIfExists(
-      REDIS_KEYS.FEED_RECENT_ITEM_KEY(feedId),
+      REDIS_KEYS.FEED_INFO_ITEM_KEY(feedId),
       'likes',
       1,
     );
@@ -26,7 +26,7 @@ export class FeedRecentListener {
   @OnEvent('like.deleted')
   async handleLikeDeleted({ feedId }: LikeDeletedEvent) {
     await this.redisService.hincrbyIfExists(
-      REDIS_KEYS.FEED_RECENT_ITEM_KEY(feedId),
+      REDIS_KEYS.FEED_INFO_ITEM_KEY(feedId),
       'likes',
       -1,
     );
@@ -35,7 +35,7 @@ export class FeedRecentListener {
   @OnEvent('comment.created')
   async handleCommentCreated({ feedId }: CommentCreatedEvent) {
     await this.redisService.hincrbyIfExists(
-      REDIS_KEYS.FEED_RECENT_ITEM_KEY(feedId),
+      REDIS_KEYS.FEED_INFO_ITEM_KEY(feedId),
       'comments',
       1,
     );
@@ -49,7 +49,7 @@ export class FeedRecentListener {
     if (commentCountDelta === 0) return;
 
     await this.redisService.hincrbyIfExists(
-      REDIS_KEYS.FEED_RECENT_ITEM_KEY(feedId),
+      REDIS_KEYS.FEED_INFO_ITEM_KEY(feedId),
       'comments',
       commentCountDelta,
     );
