@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-import { User } from '@user/entity/user.entity';
+import { UserSearchRow } from '@user/repository/user.repository';
 
 export class SearchUserResult {
   @ApiProperty({ example: 1, description: '유저 ID' })
@@ -16,20 +16,32 @@ export class SearchUserResult {
   })
   profileImage: string | null;
 
+  @ApiProperty({
+    example: '안녕하세요, 프론트엔드 개발자입니다.',
+    description: '유저 자기소개 (미설정 시 null)',
+    nullable: true,
+  })
+  introduction: string | null;
+
+  @ApiProperty({ example: 3, description: '유저가 소유한 RSS 블로그 개수' })
+  blogCount: number;
+
   private constructor(partial: Partial<SearchUserResult>) {
     Object.assign(this, partial);
   }
 
-  static toResultDto(user: User) {
+  static toResultDto(row: UserSearchRow) {
     return new SearchUserResult({
-      id: user.id,
-      userName: user.userName,
-      profileImage: user.profileImage ?? null,
+      id: row.id,
+      userName: row.userName,
+      profileImage: row.profileImage ?? null,
+      introduction: row.introduction ?? null,
+      blogCount: row.blogCount,
     });
   }
 
-  static toResultDtoArray(users: User[]) {
-    return users.map((user) => this.toResultDto(user));
+  static toResultDtoArray(rows: UserSearchRow[]) {
+    return rows.map((row) => this.toResultDto(row));
   }
 }
 
