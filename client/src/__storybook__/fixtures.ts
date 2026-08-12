@@ -137,6 +137,8 @@ export const mockUserSearchResult: UserSearchResult = {
   id: 1,
   userName: "조민석",
   profileImage: "https://picsum.photos/seed/usearch/80/80",
+  introduction: "안녕하세요, 데나무 블로그 운영자입니다.",
+  blogCount: 2,
 };
 
 export const mockRssSearchResult: RssSearchResult = {

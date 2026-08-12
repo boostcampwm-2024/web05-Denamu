@@ -37,6 +37,8 @@ export interface UserSearchResult {
   id: number;
   userName: string;
   profileImage: string | null;
+  introduction: string | null;
+  blogCount: number;
 }
 
 export interface UserSearchData {
