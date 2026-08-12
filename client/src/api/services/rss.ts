@@ -12,9 +12,17 @@ import {
   RssInfo,
 } from "@/types/profile";
 import { RecentRss, RegisterRss, RegisterResponse } from "@/types/rss";
+import { RssSearchResponse } from "@/types/search";
 
 export const registerRss = async (data: RegisterRss): Promise<RegisterResponse> => {
   const response = await axiosInstance.post<RegisterResponse>(BLOG.RSS.REGISTRER_RSS, data);
+  return response.data;
+};
+
+export const getAllRss = async (page: number, limit: number, blogPlatform?: string): Promise<RssSearchResponse> => {
+  const response = await axiosInstance.get<RssSearchResponse>(BLOG.RSS.ALL, {
+    params: { page, limit, blogPlatform },
+  });
   return response.data;
 };
 
@@ -95,11 +103,7 @@ export const getOwnedRssFeeds = async (
   return response.data.data;
 };
 
-export const setFeedVisibility = async (
-  rssId: number,
-  feedId: number,
-  isPublic: boolean
-): Promise<ApiMessage> => {
+export const setFeedVisibility = async (rssId: number, feedId: number, isPublic: boolean): Promise<ApiMessage> => {
   const response = await axiosInstance.patch<ApiMessage>(BLOG.RSS.FEED_VISIBILITY(rssId, feedId), { isPublic });
   return response.data;
 };

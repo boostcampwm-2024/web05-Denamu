@@ -91,7 +91,7 @@ describe("useRssSearch", () => {
 
   it("API 응답을 data로 반환한다.", async () => {
     const response = makeResponse([
-      { id: 1, name: "seok3765.log", blogPlatform: "velog", blogImage: null, feedCount: 5 },
+      { id: 1, name: "seok3765.log", blogPlatform: "velog", blogImage: null, feedCount: 5, lastPublishedAt: null },
     ]);
     getRssSearch.mockResolvedValue(response);
 
