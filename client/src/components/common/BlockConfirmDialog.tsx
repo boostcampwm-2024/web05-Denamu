@@ -111,7 +111,7 @@ export function BlockConfirmDialog({
                   className="flex items-center justify-between gap-3 p-3 border border-gray-100 rounded-lg"
                 >
                   <div className="flex items-center min-w-0 gap-3">
-                    <PlatformIcon platform={rss.blogPlatform} image={rss.blogImage} className="flex-shrink-0 w-9 h-9" />
+                    <PlatformIcon platform={rss.blogPlatform} image={rss.blogImage} name={rss.name} className="flex-shrink-0 w-9 h-9" />
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-medium truncate">{rss.name}</p>

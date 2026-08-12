@@ -143,7 +143,7 @@ export const RssClaimModal = ({ open, onClose, userId }: RssClaimModalProps) => 
               </DialogDescription>
             </DialogHeader>
             <div className="flex items-center gap-3 p-4 border rounded-lg border-gray-100">
-              <PlatformIcon platform={preview.blogPlatform} className="flex-shrink-0 w-12 h-12" />
+              <PlatformIcon platform={preview.blogPlatform} name={preview.name} className="flex-shrink-0 w-12 h-12" />
               <div className="min-w-0">
                 <p className="font-semibold truncate">{preview.name}</p>
                 <p className="text-sm text-gray-500 truncate">{preview.userName}</p>

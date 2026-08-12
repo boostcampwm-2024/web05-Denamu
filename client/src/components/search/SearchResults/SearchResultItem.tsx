@@ -25,7 +25,7 @@ export default function SearchResultItem({ id, title, blog, thumbnail, createdAt
             <SearchHighlight text={title} highlight={searchParam} />
           </p>
           <div className="flex items-center gap-1.5">
-            <PlatformIcon platform={blog.platform} image={blog.image} className="w-4 h-4 shrink-0" />
+            <PlatformIcon platform={blog.platform} image={blog.image} name={blog.name} className="w-4 h-4 shrink-0" />
             <p className="text-sm text-gray-500 truncate">
               <SearchHighlight text={blog.name} highlight={searchParam} />
             </p>

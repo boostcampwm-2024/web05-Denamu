@@ -28,7 +28,7 @@ export default function RssSearchResultItem({
         className="flex items-center gap-3 w-full px-2 py-1.5 text-left cursor-pointer"
       >
         <div className="overflow-hidden bg-white border rounded-full w-9 h-9 shrink-0">
-          <PlatformIcon platform={blogPlatform} image={blogImage} className="object-cover w-full h-full" />
+          <PlatformIcon platform={blogPlatform} image={blogImage} name={name} className="object-cover w-full h-full" />
         </div>
         <div className="flex flex-col min-w-0 gap-0.5 flex-1">
           <p className="text-sm">

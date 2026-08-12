@@ -153,7 +153,7 @@ const RssHeader = ({
     <CardContent className="p-6">
       <div className="flex items-start justify-between gap-4">
         <div className="flex min-w-0 gap-4">
-          <PlatformIcon platform={rss.blogPlatform} image={rss.blogImage} className="flex-shrink-0 w-14 h-14" />
+          <PlatformIcon platform={rss.blogPlatform} image={rss.blogImage} name={rss.name} className="flex-shrink-0 w-14 h-14" />
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-2xl font-bold truncate">{rss.name}</h1>
