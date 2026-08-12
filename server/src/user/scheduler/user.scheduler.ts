@@ -1,16 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 
-import { Not } from 'typeorm';
+import { LessThanOrEqual, Not } from 'typeorm';
 
 import { WinstonLoggerService } from '@common/logger/logger.service';
 
+import { REJOIN_RESTRICTION_MONTHS } from '@user/constant/user.constants';
 import { UserRepository } from '@user/repository/user.repository';
+import { WithdrawnUserRepository } from '@user/repository/withdrawnUser.repository';
 
 @Injectable()
 export class UserScheduler {
   constructor(
     private readonly userRepository: UserRepository,
+    private readonly withdrawnUserRepository: WithdrawnUserRepository,
     private readonly logger: WinstonLoggerService,
   ) {}
 
@@ -69,6 +72,26 @@ export class UserScheduler {
     } catch (error) {
       this.logger.error(
         `[UserScheduler]: 프로필 이미지 변경 횟수 초기화 중 오류 발생: ${error}`,
+      );
+    }
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  async purgeExpiredWithdrawnUsers() {
+    const threshold = new Date();
+    threshold.setMonth(threshold.getMonth() - REJOIN_RESTRICTION_MONTHS);
+
+    try {
+      const result = await this.withdrawnUserRepository.delete({
+        withdrawnAt: LessThanOrEqual(threshold),
+      });
+
+      this.logger.log(
+        `[UserScheduler]: 재가입 제한 만료 기록 ${result.affected ?? 0}건 파기 완료.`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `[UserScheduler]: 재가입 제한 기록 파기 중 오류 발생: ${error}`,
       );
     }
   }

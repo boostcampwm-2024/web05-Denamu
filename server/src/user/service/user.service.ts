@@ -52,12 +52,15 @@ import {
   SearchUserResult,
 } from '@user/dto/response/searchUser.dto';
 import { User } from '@user/entity/user.entity';
+import { WithdrawnUser } from '@user/entity/withdrawnUser.entity';
 import { UserRepository } from '@user/repository/user.repository';
+import { WithdrawnUserRepository } from '@user/repository/withdrawnUser.repository';
 
 @Injectable()
 export class UserService {
   constructor(
     private readonly userRepository: UserRepository,
+    private readonly withdrawnUserRepository: WithdrawnUserRepository,
     private readonly redisService: RedisService,
     private readonly emailProducer: EmailProducer,
     private readonly jwtService: JwtService,
@@ -143,6 +146,17 @@ export class UserService {
 
     if (existingName) {
       throw new ConflictException('이미 존재하는 닉네임입니다.');
+    }
+
+    const rejoinAvailableAt =
+      await this.withdrawnUserRepository.getRejoinAvailableAt(
+        registerDto.email,
+      );
+
+    if (rejoinAvailableAt) {
+      throw new ForbiddenException(
+        `탈퇴 후 재가입 제한 기간입니다. ${rejoinAvailableAt.toLocaleDateString('ko-KR')} 이후 재가입할 수 있습니다.`,
+      );
     }
 
     const newUser = registerDto.toEntity();
@@ -518,6 +532,11 @@ export class UserService {
       if (deleteRss) {
         await manager.delete(RssAccept, { userId });
       }
+      await manager.upsert(
+        WithdrawnUser,
+        { email: user.email, withdrawnAt: new Date() },
+        ['email'],
+      );
       await manager.remove(user);
     });
 

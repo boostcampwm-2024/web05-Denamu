@@ -6,19 +6,22 @@ import { DataSource } from 'typeorm';
 import { WinstonLoggerService } from '@common/logger/logger.service';
 import { RedisService } from '@common/redis/redis.service';
 
-import {
-  OAUTH_URL_PATH,
-  OAuthType,
-} from '@user/constant/oauth.constant';
+import { OAUTH_URL_PATH, OAuthType } from '@user/constant/oauth.constant';
 import { OAuthCallbackRequestDto } from '@user/dto/request/oAuthCallbackDto';
 import { ProviderRepository } from '@user/repository/provider.repository';
 import { UserRepository } from '@user/repository/user.repository';
+import { WithdrawnUserRepository } from '@user/repository/withdrawnUser.repository';
 import { OAuthService } from '@user/service/oAuth.service';
 import { UserService } from '@user/service/user.service';
 
 describe(`${OAuthService.name} Unit Test`, () => {
   let oAuthService: OAuthService;
-  let userRepository: jest.Mocked<Pick<UserRepository, 'findOne' | 'findOneBy'>>;
+  let userRepository: jest.Mocked<
+    Pick<UserRepository, 'findOne' | 'findOneBy'>
+  >;
+  let withdrawnUserRepository: jest.Mocked<
+    Pick<WithdrawnUserRepository, 'getRejoinAvailableAt'>
+  >;
   let providerRepository: jest.Mocked<
     Pick<
       ProviderRepository,
@@ -55,6 +58,9 @@ describe(`${OAuthService.name} Unit Test`, () => {
 
   beforeEach(() => {
     userRepository = { findOne: jest.fn(), findOneBy: jest.fn() };
+    withdrawnUserRepository = {
+      getRejoinAvailableAt: jest.fn().mockResolvedValue(null),
+    };
     providerRepository = {
       findByProviderTypeAndId: jest.fn(),
       findByUserId: jest.fn(),
@@ -90,6 +96,7 @@ describe(`${OAuthService.name} Unit Test`, () => {
 
     oAuthService = new OAuthService(
       userRepository as unknown as UserRepository,
+      withdrawnUserRepository as unknown as WithdrawnUserRepository,
       providerRepository as unknown as ProviderRepository,
       logger as unknown as WinstonLoggerService,
       redisService as unknown as RedisService,
@@ -115,7 +122,9 @@ describe(`${OAuthService.name} Unit Test`, () => {
         expect.any(String),
         expect.anything(),
       );
-      expect(googleProvider.getAuthUrl).toHaveBeenCalledWith(expect.any(String));
+      expect(googleProvider.getAuthUrl).toHaveBeenCalledWith(
+        expect.any(String),
+      );
       expect(result).toBe('https://auth.url');
     });
   });
@@ -193,7 +202,11 @@ describe(`${OAuthService.name} Unit Test`, () => {
       const res = { cookie, clearCookie: jest.fn() } as unknown as Response;
 
       // when
-      const result = await oAuthService.callback(dto, res, createRequest('key-1'));
+      const result = await oAuthService.callback(
+        dto,
+        res,
+        createRequest('key-1'),
+      );
 
       // then
       expect(manager.save).not.toHaveBeenCalled();
@@ -210,6 +223,43 @@ describe(`${OAuthService.name} Unit Test`, () => {
         expect.anything(),
       );
       expect(result).toBe(`${OAUTH_URL_PATH.BASE_URL}/oauth-signup`);
+    });
+
+    it('재가입 제한 기간 중인 이메일은 가입을 임시 저장하지 않고 signin으로 리다이렉트한다.', async () => {
+      // given
+      const dto = {
+        state: encodeState({ provider: OAuthType.Google, csrfToken: 'key-1' }),
+        code: 'auth-code',
+      } as OAuthCallbackRequestDto;
+      redisService.eval.mockResolvedValue(`${OAuthType.Google}-CSRF`);
+      googleProvider.getTokens.mockResolvedValue({
+        access_token: 'at',
+        refresh_token: 'rt',
+      });
+      googleProvider.getUserInfo.mockResolvedValue({
+        id: 'provider-uid',
+        email: 'oauth@test.com',
+        name: 'oauth-user',
+        picture: null,
+      });
+      userRepository.findOne.mockResolvedValue(null);
+      const availableAt = new Date('2026-11-01T00:00:00.000Z');
+      withdrawnUserRepository.getRejoinAvailableAt.mockResolvedValue(
+        availableAt,
+      );
+
+      // when
+      const result = await oAuthService.callback(
+        dto,
+        createResponse(),
+        createRequest('key-1'),
+      );
+
+      // then
+      expect(redisService.set).not.toHaveBeenCalled();
+      expect(result).toBe(
+        `${OAUTH_URL_PATH.BASE_URL}/signin?error=rejoin_restricted&availableAt=${availableAt.toISOString()}`,
+      );
     });
 
     it('기존 사용자는 바로 로그인 처리 후 성공 URL을 반환한다.', async () => {
@@ -238,7 +288,11 @@ describe(`${OAuthService.name} Unit Test`, () => {
       const res = createResponse();
 
       // when
-      const result = await oAuthService.callback(dto, res, createRequest('key-1'));
+      const result = await oAuthService.callback(
+        dto,
+        res,
+        createRequest('key-1'),
+      );
 
       // then
       expect(userService.issueRefreshToken).toHaveBeenCalledWith(
@@ -343,7 +397,9 @@ describe(`${OAuthService.name} Unit Test`, () => {
       // given
       setupLinkCallback({ userId: 1, providerType: OAuthType.Google });
       providerRepository.findByProviderTypeAndId.mockResolvedValue(null);
-      providerRepository.findByUserIdAndType.mockResolvedValue({ id: 5 } as any);
+      providerRepository.findByUserIdAndType.mockResolvedValue({
+        id: 5,
+      } as any);
 
       // when
       const result = await oAuthService.callback(
@@ -361,7 +417,10 @@ describe(`${OAuthService.name} Unit Test`, () => {
   describe('unlinkProvider', () => {
     it('마지막 OAuth이고 비밀번호가 없으면 BadRequestException을 던진다.', async () => {
       // given
-      userRepository.findOneBy.mockResolvedValue({ id: 1, password: null } as any);
+      userRepository.findOneBy.mockResolvedValue({
+        id: 1,
+        password: null,
+      } as any);
       providerRepository.findByUserId.mockResolvedValue([
         { id: 10, providerType: OAuthType.Google },
       ] as any);

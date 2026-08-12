@@ -37,7 +37,9 @@ import { CreateAccessTokenResponseDto } from '@user/dto/response/createAccessTok
 import { GetUserProfileResponseDto } from '@user/dto/response/getUserProfile.dto';
 import { GetUserRssResponseDto } from '@user/dto/response/getUserRss.dto';
 import { User } from '@user/entity/user.entity';
+import { WithdrawnUser } from '@user/entity/withdrawnUser.entity';
 import { UserRepository } from '@user/repository/user.repository';
+import { WithdrawnUserRepository } from '@user/repository/withdrawnUser.repository';
 import { UserService } from '@user/service/user.service';
 
 import {
@@ -58,6 +60,9 @@ describe(`${UserService.name} Unit Test`, () => {
       | 'searchUserList'
       | 'isUserBlocked'
     >
+  >;
+  let withdrawnUserRepository: jest.Mocked<
+    Pick<WithdrawnUserRepository, 'getRejoinAvailableAt'>
   >;
   let redisService: jest.Mocked<
     Pick<RedisService, 'set' | 'get' | 'del' | 'setex'>
@@ -82,7 +87,7 @@ describe(`${UserService.name} Unit Test`, () => {
   let subscriptionRepository: jest.Mocked<
     Pick<SubscriptionRepository, 'countByBlogIds' | 'getSubscribedBlogIds'>
   >;
-  let manager: { remove: jest.Mock; delete: jest.Mock };
+  let manager: { remove: jest.Mock; delete: jest.Mock; upsert: jest.Mock };
   let dataSource: jest.Mocked<Pick<DataSource, 'transaction'>>;
   let userSuspensionRepository: jest.Mocked<
     Pick<UserSuspensionRepository, 'findActiveSuspension'>
@@ -109,6 +114,9 @@ describe(`${UserService.name} Unit Test`, () => {
       searchUserList: jest.fn(),
       isUserBlocked: jest.fn(),
     };
+    withdrawnUserRepository = {
+      getRejoinAvailableAt: jest.fn().mockResolvedValue(null),
+    };
     redisService = {
       set: jest.fn(),
       get: jest.fn(),
@@ -134,7 +142,7 @@ describe(`${UserService.name} Unit Test`, () => {
       countByBlogIds: jest.fn().mockResolvedValue(new Map()),
       getSubscribedBlogIds: jest.fn().mockResolvedValue([]),
     };
-    manager = { remove: jest.fn(), delete: jest.fn() };
+    manager = { remove: jest.fn(), delete: jest.fn(), upsert: jest.fn() };
     dataSource = {
       transaction: jest.fn((cb: any) => cb(manager)),
     } as any;
@@ -144,6 +152,7 @@ describe(`${UserService.name} Unit Test`, () => {
 
     userService = new UserService(
       userRepository as unknown as UserRepository,
+      withdrawnUserRepository as unknown as WithdrawnUserRepository,
       redisService as unknown as RedisService,
       emailProducer as unknown as EmailProducer,
       jwtService as unknown as JwtService,
@@ -481,6 +490,23 @@ describe(`${UserService.name} Unit Test`, () => {
       userRepository.findOne.mockResolvedValue(UserFixture.createUserFixture());
       await expect(userService.registerUser(dto)).rejects.toThrow(
         ConflictException,
+      );
+    });
+
+    it('재가입 제한 기간 중인 이메일이면 ForbiddenException을 던진다.', async () => {
+      // given
+      userRepository.findOne.mockResolvedValue(null);
+      const availableAt = new Date('2026-11-01');
+      withdrawnUserRepository.getRejoinAvailableAt.mockResolvedValue(
+        availableAt,
+      );
+
+      // when & then
+      await expect(userService.registerUser(dto)).rejects.toThrow(
+        ForbiddenException,
+      );
+      expect(withdrawnUserRepository.getRejoinAvailableAt).toHaveBeenCalledWith(
+        dto.email,
       );
     });
 
@@ -1068,6 +1094,11 @@ describe(`${UserService.name} Unit Test`, () => {
       // then
       expect(fileService.deleteByPath).toHaveBeenCalledWith('avatar.png');
       expect(manager.delete).toHaveBeenCalledWith(RssAccept, { userId: 1 });
+      expect(manager.upsert).toHaveBeenCalledWith(
+        WithdrawnUser,
+        { email: user.email, withdrawnAt: expect.any(Date) },
+        ['email'],
+      );
       expect(manager.remove).toHaveBeenCalledWith(user);
       // RSS 삭제가 user 제거보다 먼저 호출되어야 한다(FK SET NULL 함정 방지).
       expect(manager.delete.mock.invocationCallOrder[0]).toBeLessThan(

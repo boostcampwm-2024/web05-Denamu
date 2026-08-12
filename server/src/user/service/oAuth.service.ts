@@ -38,6 +38,7 @@ import { User } from '@user/entity/user.entity';
 import { OAuthProvider } from '@user/provider/oauth-provider.interface';
 import { ProviderRepository } from '@user/repository/provider.repository';
 import { UserRepository } from '@user/repository/user.repository';
+import { WithdrawnUserRepository } from '@user/repository/withdrawnUser.repository';
 import { UserService } from '@user/service/user.service';
 import { parseStateData } from '@user/util/parseStateData';
 
@@ -45,6 +46,7 @@ import { parseStateData } from '@user/util/parseStateData';
 export class OAuthService {
   constructor(
     private readonly userRepository: UserRepository,
+    private readonly withdrawnUserRepository: WithdrawnUserRepository,
     private readonly providerRepository: ProviderRepository,
     private readonly logger: WinstonLoggerService,
     private readonly redisService: RedisService,
@@ -250,6 +252,13 @@ export class OAuthService {
     });
 
     if (!existingUser) {
+      const rejoinAvailableAt =
+        await this.withdrawnUserRepository.getRejoinAvailableAt(userInfo.email);
+
+      if (rejoinAvailableAt) {
+        return `${OAUTH_URL_PATH.BASE_URL}/signin?error=rejoin_restricted&availableAt=${rejoinAvailableAt.toISOString()}`;
+      }
+
       await this.stagePendingOAuthSignUp(
         {
           providerType,

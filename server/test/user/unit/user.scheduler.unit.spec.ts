@@ -3,19 +3,25 @@ import { Not } from 'typeorm';
 import { WinstonLoggerService } from '@common/logger/logger.service';
 
 import { UserRepository } from '@user/repository/user.repository';
+import { WithdrawnUserRepository } from '@user/repository/withdrawnUser.repository';
 import { UserScheduler } from '@user/scheduler/user.scheduler';
 
 describe(`${UserScheduler.name} Unit Test`, () => {
   let userScheduler: UserScheduler;
   let userRepository: jest.Mocked<Pick<UserRepository, 'update'>>;
+  let withdrawnUserRepository: jest.Mocked<
+    Pick<WithdrawnUserRepository, 'delete'>
+  >;
   let logger: jest.Mocked<Pick<WinstonLoggerService, 'log' | 'error'>>;
 
   beforeEach(() => {
     userRepository = { update: jest.fn() };
+    withdrawnUserRepository = { delete: jest.fn() };
     logger = { log: jest.fn(), error: jest.fn() };
 
     userScheduler = new UserScheduler(
       userRepository as unknown as UserRepository,
+      withdrawnUserRepository as unknown as WithdrawnUserRepository,
       logger as unknown as WinstonLoggerService,
     );
   });
