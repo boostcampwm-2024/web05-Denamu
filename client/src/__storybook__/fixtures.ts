@@ -123,7 +123,7 @@ export const mockChatItem: ChatType = {
 export const mockSearchResult: SearchResult = {
   id: 1,
   title: "Storybook으로 컴포넌트 문서화하기",
-  blog: { name: "데나무 블로그", platform: "tistory" },
+  blog: { name: "데나무 블로그", platform: "tistory", image: "https://picsum.photos/seed/blog/80/80" },
   path: "https://example.com/post/1",
   createdAt: "2026-06-20T09:00:00.000Z",
   thumbnail: "https://picsum.photos/seed/search/400/240",

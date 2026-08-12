@@ -6,6 +6,7 @@ export interface SearchResult {
   blog: {
     name: string;
     platform: string;
+    image: string | null;
   };
   path: string;
   createdAt: string;
