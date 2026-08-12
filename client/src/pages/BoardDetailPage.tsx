@@ -23,7 +23,7 @@ export default function BoardDetailPage() {
   const categoryLabel = board ? CATEGORY_LABELS[board.category] : "공지사항 · FAQ";
 
   return (
-    <Layout>
+    <Layout footer>
       <Helmet>
         <title>{board ? `${board.title} - ${categoryLabel}` : "공지사항 · FAQ"} - 데나무</title>
       </Helmet>
