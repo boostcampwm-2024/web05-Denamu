@@ -14,15 +14,16 @@ import AdminPostTab from "@/components/admin/post/AdminPostTab";
 import AdminQnaTab from "@/components/admin/qna/AdminQnaTab";
 import AdminReportTab from "@/components/admin/report/AdminReportTab";
 import { RssRequestSearchBar } from "@/components/admin/rss/RssSearchBar";
+import AdminSuspensionTab from "@/components/admin/suspension/AdminSuspensionTab";
 
 import { useAdminCheck } from "@/hooks/queries/useAdminAuth";
 
 export default function Admin() {
   const [isLogin, setIsLogin] = useState<boolean>(false);
   const { status, isLoading, data } = useAdminCheck();
-  const [tap, setTap] = useState<"RSS" | "MEMBER" | "MYPAGE" | "POST" | "CHAT" | "REPORT" | "BOARD" | "QNA" | "EMAIL">(
-    "RSS"
-  );
+  const [tap, setTap] = useState<
+    "RSS" | "MEMBER" | "MYPAGE" | "POST" | "CHAT" | "REPORT" | "SUSPENSION" | "BOARD" | "QNA" | "EMAIL"
+  >("RSS");
 
   useEffect(() => {
     setIsLogin(status === "success");
@@ -48,6 +49,9 @@ export default function Admin() {
     }
     if (tap === "REPORT") {
       return <AdminReportTab />;
+    }
+    if (tap === "SUSPENSION") {
+      return <AdminSuspensionTab />;
     }
     if (tap === "BOARD") {
       return <AdminBoardTab />;

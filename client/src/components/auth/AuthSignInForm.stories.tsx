@@ -60,6 +60,29 @@ export const LoginError: Story = {
   },
 };
 
+export const SuspendedLogin: Story = {
+  name: "정지된 계정 로그인",
+  beforeEach: () => {
+    const cleanup = mockRedirect();
+    mockApi.onPost(USER.LOGIN).reply(403, {
+      message: "정지된 계정입니다.",
+      data: { detail: "부적절한 게시글 반복 등록", suspendedUntil: null },
+    });
+    return cleanup;
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await fillCredentials(canvas);
+    await userEvent.click(canvas.getByRole("button", { name: "로그인" }));
+
+    const body = within(canvasElement.ownerDocument.body);
+    await expect(await body.findByText("정지된 계정입니다")).toBeInTheDocument();
+    await expect(body.getByText(/부적절한 게시글 반복 등록/)).toBeInTheDocument();
+    await expect(body.getByText(/무기한/)).toBeInTheDocument();
+    await expect(body.getByText(/boostcamp9web05@gmail.com/)).toBeInTheDocument();
+  },
+};
+
 export const RejoinRestricted: Story = {
   name: "재가입 제한 안내",
   parameters: {

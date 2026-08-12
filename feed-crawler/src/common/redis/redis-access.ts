@@ -84,8 +84,13 @@ export class RedisConnection implements Lifecycle {
     return this.execute('smembers', () => this.redis.smembers(key));
   }
 
+  async exists(key: string) {
+    const result = await this.execute('exists', () => this.redis.exists(key));
+    return result === 1;
+  }
+
   async hset(key: string, ...fieldValues: (string | Buffer | number)[]) {
-    await this.execute('hset', () => this.redis.hset(key, fieldValues));
+    await this.execute('hset', () => this.redis.hset(key, ...fieldValues));
   }
 
   async llen(key: string): Promise<number> {

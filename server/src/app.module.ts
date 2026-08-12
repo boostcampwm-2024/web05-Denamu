@@ -47,6 +47,8 @@ import { StatisticModule } from '@statistic/module/statistic.module';
 
 import { SubscribeModule } from '@subscribe/module/subscribe.module';
 
+import { SuspensionModule } from '@suspension/module/suspension.module';
+
 import { TagModule } from '@tag/module/tag.module';
 
 import { UserModule } from '@user/module/user.module';
@@ -108,6 +110,7 @@ const exists = !!chosen && fs.existsSync(chosen);
     BlockModule,
     ReportModule,
     SubscribeModule,
+    SuspensionModule,
     FileModule,
     RabbitMQModule,
   ],

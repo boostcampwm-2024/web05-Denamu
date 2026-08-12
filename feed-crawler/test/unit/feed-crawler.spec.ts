@@ -6,6 +6,9 @@ import { PermanentError, RetryableError } from '@common/errors';
 import { FeedDetail, RssObj } from '@common/feed/feed.type';
 import { FeedParserManager } from '@common/parser/feed-parser-manager';
 
+import { RMQ_EXCHANGES, RMQ_ROUTING_KEYS } from '@rabbitmq/rabbitmq.constant';
+import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
+
 import { FeedRepository } from '@repository/feed.repository';
 import { RssRepository } from '@repository/rss.repository';
 
@@ -16,6 +19,7 @@ describe('FeedCrawler', () => {
   let mockFeedRepository: jest.Mocked<FeedRepository>;
   let mockRssRepository: jest.Mocked<RssRepository>;
   let mockFeedParserManager: jest.Mocked<FeedParserManager>;
+  let mockRabbitMQService: jest.Mocked<RabbitMQService>;
   let deleteRecentFeedMock: jest.Mock;
   let insertFeedsMock: jest.Mock;
   let saveAiQueueMock: jest.Mock;
@@ -26,6 +30,7 @@ describe('FeedCrawler', () => {
   let updateImageMock: jest.Mock;
   let fetchAndParseMock: jest.Mock;
   let fetchAndParseAllMock: jest.Mock;
+  let sendMessageMock: jest.Mock;
 
   const mockRssObjects: RssObj[] = [
     {
@@ -48,13 +53,10 @@ describe('FeedCrawler', () => {
     {
       id: 1,
       blogId: 1,
-      blogName: '테스트 블로그 1',
-      blogPlatform: 'tistory',
-      blogImage: null,
       pubDate: '2024-01-01 12:00:00',
       title: '테스트 피드 1',
       link: 'https://test1.tistory.com/1',
-      imageUrl: 'https://test1.tistory.com/image1.jpg',
+      thumbnail: 'https://test1.tistory.com/image1.jpg',
       content: '테스트 내용 1',
       summary: 'AI 요약 처리 중...',
       deathCount: 0,
@@ -62,13 +64,10 @@ describe('FeedCrawler', () => {
     {
       id: 2,
       blogId: 2,
-      blogName: '테스트 블로그 2',
-      blogPlatform: 'velog',
-      blogImage: null,
       pubDate: '2024-01-01 12:30:00',
       title: '테스트 피드 2',
       link: 'https://velog.io/@test2/2',
-      imageUrl: 'https://velog.io/image2.jpg',
+      thumbnail: 'https://velog.io/image2.jpg',
       content: '테스트 내용 2',
       summary: 'AI 요약 처리 중...',
       deathCount: 0,
@@ -88,6 +87,7 @@ describe('FeedCrawler', () => {
     updateImageMock = jest.fn();
     fetchAndParseMock = jest.fn();
     fetchAndParseAllMock = jest.fn();
+    sendMessageMock = jest.fn();
 
     mockFeedRepository = {
       deleteRecentFeed: deleteRecentFeedMock,
@@ -110,10 +110,15 @@ describe('FeedCrawler', () => {
       fetchAndParseAll: fetchAndParseAllMock,
     } as any;
 
+    mockRabbitMQService = {
+      sendMessage: sendMessageMock,
+    } as any;
+
     feedCrawler = new FeedCrawler(
       mockRssRepository,
       mockFeedRepository,
       mockFeedParserManager,
+      mockRabbitMQService,
     );
   });
 
@@ -123,8 +128,8 @@ describe('FeedCrawler', () => {
       const startTime = new Date('2024-01-01T12:00:00Z');
       selectAllRssMock.mockResolvedValue(mockRssObjects);
       fetchAndParseMock
-        .mockResolvedValueOnce({ feeds: [mockFeedDetails[0]], channelImage: undefined })
-        .mockResolvedValueOnce({ feeds: [mockFeedDetails[1]], channelImage: undefined });
+        .mockResolvedValueOnce({ feeds: [mockFeedDetails[0]], rssObj: mockRssObjects[0] })
+        .mockResolvedValueOnce({ feeds: [mockFeedDetails[1]], rssObj: mockRssObjects[1] });
       insertFeedsMock.mockResolvedValue(mockFeedDetails);
 
       // When
@@ -146,7 +151,20 @@ describe('FeedCrawler', () => {
       );
       expect(insertFeedsMock).toHaveBeenCalledWith(mockFeedDetails);
       expect(saveAiQueueMock).toHaveBeenCalledWith(mockFeedDetails);
-      expect(setRecentFeedListMock).toHaveBeenCalledWith(mockFeedDetails);
+      expect(setRecentFeedListMock).toHaveBeenCalledWith(mockFeedDetails, [
+        mockRssObjects[0],
+        mockRssObjects[1],
+      ]);
+      expect(sendMessageMock).toHaveBeenCalledWith(
+        RMQ_EXCHANGES.CRAWLING,
+        RMQ_ROUTING_KEYS.CRAWLING_NEW_POST,
+        JSON.stringify(
+          mockFeedDetails.map((feed) => ({
+            feedId: feed.id,
+            rssAcceptId: feed.blogId,
+          })),
+        ),
+      );
     });
 
     it('등록된 RSS가 없을 때 조기 종료해야 한다', async () => {
@@ -168,7 +186,7 @@ describe('FeedCrawler', () => {
       // Given
       const startTime = new Date('2024-01-01T12:00:00Z');
       selectAllRssMock.mockResolvedValue(mockRssObjects);
-      fetchAndParseMock.mockResolvedValue({ feeds: [], channelImage: undefined });
+      fetchAndParseMock.mockResolvedValue({ feeds: [], rssObj: mockRssObjects[0] });
 
       // When
       await feedCrawler.start(startTime);
@@ -203,7 +221,7 @@ describe('FeedCrawler', () => {
       selectRssByIdMock.mockResolvedValue(rssObj);
       fetchAndParseAllMock.mockResolvedValue({
         feeds: expectedFeeds,
-        channelImage: undefined,
+        rssObj,
       });
       insertFeedsMock.mockResolvedValue(expectedFeeds);
 
@@ -215,13 +233,15 @@ describe('FeedCrawler', () => {
       expect(insertFeedsMock).toHaveBeenCalledWith(expectedFeeds);
       expect(saveAiQueueMock).toHaveBeenCalledWith(expectedFeeds);
       expect(result).toEqual(expectedFeeds);
+      // 전체 크롤링(관리자 승인 시 백카탈로그)은 신규 글 알림을 발행하지 않아야 한다.
+      expect(sendMessageMock).not.toHaveBeenCalled();
     });
 
     it('가져올 피드가 없을 때 빈 배열을 반환해야 한다', async () => {
       // Given
       const rssObj = mockRssObjects[0];
       selectRssByIdMock.mockResolvedValue(rssObj);
-      fetchAndParseAllMock.mockResolvedValue({ feeds: [], channelImage: undefined });
+      fetchAndParseAllMock.mockResolvedValue({ feeds: [], rssObj });
 
       // When
       const result = await feedCrawler.startFullCrawl(rssObj.id);
@@ -246,53 +266,63 @@ describe('FeedCrawler', () => {
     });
   });
 
-  describe('feedGroupByRss', () => {
-    it('모든 RSS 객체에 대해 병렬 처리해야 한다', async () => {
-      // Given
-      const startTime = new Date('2024-01-01T12:00:00Z');
-      const callOrder: number[] = [];
+  describe('crawlRss', () => {
+    const startTime = new Date('2024-01-01T12:00:00Z');
 
-      // 병렬 실행 검증: 첫 번째 호출에 지연을 주어 병렬 실행 시 순서가 뒤바뀌는지 확인
-      fetchAndParseMock
-        .mockImplementationOnce(async () => {
-          await new Promise((resolve) => setTimeout(resolve, 50));
-          callOrder.push(1);
-          return { feeds: [mockFeedDetails[0]], channelImage: undefined };
-        })
-        .mockImplementationOnce(() => {
-          callOrder.push(2);
-          return Promise.resolve({
-            feeds: [mockFeedDetails[1]],
-            channelImage: undefined,
-          });
-        });
+    it('크롤링 결과를 그대로 반환해야 한다', async () => {
+      // Given
+      fetchAndParseMock.mockResolvedValue({
+        feeds: [mockFeedDetails[0]],
+        rssObj: mockRssObjects[0],
+      });
 
       // When
-      const result = await feedCrawler['feedGroupByRss'](
-        mockRssObjects,
+      const result = await feedCrawler['crawlRss'](
+        mockRssObjects[0],
         startTime,
       );
 
       // Then
-      expect(fetchAndParseMock).toHaveBeenCalledTimes(2);
-      expect(result).toEqual([
-        { feeds: [mockFeedDetails[0]], channelImage: undefined, rssId: 1 },
-        { feeds: [mockFeedDetails[1]], channelImage: undefined, rssId: 2 },
-      ]);
-      // 병렬 실행이면 지연이 없는 두 번째가 먼저 완료됨
-      expect(callOrder).toEqual([2, 1]);
+      expect(fetchAndParseMock).toHaveBeenCalledWith(
+        mockRssObjects[0],
+        startTime,
+      );
+      expect(result).toEqual({
+        feeds: [mockFeedDetails[0]],
+        rssObj: mockRssObjects[0],
+      });
     });
 
-    it('빈 RSS 배열에 대해 빈 결과를 반환해야 한다', async () => {
+    it('채널 이미지가 바뀌면 rss의 이미지를 갱신해야 한다', async () => {
       // Given
-      const startTime = new Date('2024-01-01T12:00:00Z');
+      const updatedRssObj = {
+        ...mockRssObjects[0],
+        blogImage: 'https://example.com/new-image.png',
+      };
+      fetchAndParseMock.mockResolvedValue({ feeds: [], rssObj: updatedRssObj });
 
       // When
-      const result = await feedCrawler['feedGroupByRss']([], startTime);
+      await feedCrawler['crawlRss'](mockRssObjects[0], startTime);
 
       // Then
-      expect(fetchAndParseMock).not.toHaveBeenCalled();
-      expect(result).toEqual([]);
+      expect(updateImageMock).toHaveBeenCalledWith(
+        updatedRssObj.id,
+        updatedRssObj.blogImage,
+      );
+    });
+
+    it('채널 이미지가 그대로면 이미지를 갱신하지 않아야 한다', async () => {
+      // Given
+      fetchAndParseMock.mockResolvedValue({
+        feeds: [],
+        rssObj: mockRssObjects[0],
+      });
+
+      // When
+      await feedCrawler['crawlRss'](mockRssObjects[0], startTime);
+
+      // Then
+      expect(updateImageMock).not.toHaveBeenCalled();
     });
   });
 
@@ -310,7 +340,7 @@ describe('FeedCrawler', () => {
       selectRssByIdMock.mockResolvedValue(mockRssObjects[0]);
       fetchAndParseAllMock.mockResolvedValue({
         feeds: [{ ...mockFeedDetails[0], link: mockFeed.path }],
-        channelImage: undefined,
+        rssObj: mockRssObjects[0],
       });
 
       // When
@@ -354,7 +384,7 @@ describe('FeedCrawler', () => {
         // 다른 link만 반환하여 매칭 실패 유도
         fetchAndParseAllMock.mockResolvedValue({
           feeds: [{ ...mockFeedDetails[0], link: 'https://other.com/different' }],
-          channelImage: undefined,
+          rssObj: mockRssObjects[0],
         });
       });
 

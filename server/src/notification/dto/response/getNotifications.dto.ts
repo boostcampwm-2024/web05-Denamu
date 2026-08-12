@@ -57,7 +57,7 @@ export class NotificationItemResult {
 
   @ApiProperty({
     example: { id: 1, name: 'seok3765.log' },
-    description: '알림 대상 RSS 정보(SUBSCRIBE 알림에만 존재)',
+    description: '알림 대상 RSS 정보(SUBSCRIBE/NEW_POST 알림에만 존재)',
     nullable: true,
   })
   rss: {

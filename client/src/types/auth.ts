@@ -73,11 +73,17 @@ export interface SignInForm {
   password: string;
 }
 
+export interface SignInSuspension {
+  detail: string;
+  suspendedUntil: string | null;
+}
+
 export interface SignInResult {
   success: boolean;
   message: string;
   accessToken?: string;
   status?: number;
+  suspension?: SignInSuspension;
 }
 
 export interface ForgotPasswordResult {

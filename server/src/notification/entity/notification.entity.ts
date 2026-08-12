@@ -22,6 +22,7 @@ export enum NotificationType {
   COMMENT = 'COMMENT',
   REPLY = 'REPLY',
   SUBSCRIBE = 'SUBSCRIBE',
+  NEW_POST = 'NEW_POST',
 }
 
 @Entity({ name: 'notification' })

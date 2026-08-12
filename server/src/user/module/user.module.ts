@@ -11,6 +11,8 @@ import { RssModule } from '@rss/module/rss.module';
 
 import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
 
+import { UserSuspensionRepository } from '@suspension/repository/userSuspension.repository';
+
 import { OAuthController } from '@user/controller/oAuth.controller';
 import { UserController } from '@user/controller/user.controller';
 import { GithubOAuthProvider } from '@user/provider/github.provider';
@@ -33,6 +35,7 @@ import { UserService } from '@user/service/user.service';
     ProviderRepository,
     FeedRepository,
     SubscriptionRepository,
+    UserSuspensionRepository,
     GoogleOAuthProvider,
     GithubOAuthProvider,
     UserScheduler,

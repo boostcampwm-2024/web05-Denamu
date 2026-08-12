@@ -16,6 +16,7 @@ const ownedRss = [
     subscriberCount: 1,
     isSubscribed: false,
     blogImage: null,
+    suspensionCount: 0,
   },
 ];
 

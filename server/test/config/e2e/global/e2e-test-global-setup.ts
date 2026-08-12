@@ -1,3 +1,4 @@
+import * as fs from 'fs';
 import * as mysql from 'mysql2/promise';
 import * as os from 'os';
 import * as path from 'path';
@@ -12,9 +13,6 @@ import { DataSource } from 'typeorm';
 
 import tsconfig from '../../../../tsconfig.json';
 
-// globalSetup은 Jest의 moduleNameMapper(경로 alias 매핑)를 적용받지 않는 별도 컨텍스트라,
-// 아래 synchronizeTestDatabases가 typeorm entities glob으로 로드하는 파일들의
-// '@xxx/*' import를 직접 해석하도록 tsconfig paths를 등록해준다.
 register({
   baseUrl: path.resolve(__dirname, '../../../../'),
   paths: tsconfig.compilerOptions.paths,
@@ -83,10 +81,6 @@ const createTestDatabases = async (container: StartedMySqlContainer) => {
   await conn.end();
 };
 
-// 각 Jest 워커가 자체 DataSource로 synchronize를 실행하면(파일마다 재실행)
-// self-referencing FK(예: comment.parent_id) 등에서 TypeORM 스키마 diff가
-// 이미 존재하는 제약조건을 다시 생성하려다 충돌하는 문제가 있어,
-// 워커 프로세스가 뜨기 전 이 전역 setup(단일 프로세스)에서 워커별 DB마다 한 번만 스키마를 만든다.
 const synchronizeTestDatabases = async (container: StartedMySqlContainer) => {
   console.log('Synchronizing test database schemas...');
 
@@ -125,16 +119,57 @@ const createRedisContainer = async () => {
   process.env.REDIS_PASSWORD = '';
 };
 
+type RabbitMQDefinitionEntry = { vhost: string; [key: string]: unknown };
+type RabbitMQDefinitions = {
+  permissions: RabbitMQDefinitionEntry[];
+  exchanges: RabbitMQDefinitionEntry[];
+  queues: RabbitMQDefinitionEntry[];
+  bindings: RabbitMQDefinitionEntry[];
+};
+
+const buildWorkerScopedDefinitions = (workerCount: number) => {
+  const template = JSON.parse(
+    fs.readFileSync(
+      path.resolve(__dirname, 'rabbitMQ-definitions.json'),
+      'utf-8',
+    ),
+  ) as RabbitMQDefinitions;
+  const vhosts = Array.from(
+    { length: workerCount },
+    (_, index) => `denamu_test_${index + 1}`,
+  );
+  const perVhost = <T extends { vhost: string }>(items: T[]) =>
+    vhosts.flatMap((vhost) => items.map((item) => ({ ...item, vhost })));
+
+  return {
+    vhosts: vhosts.map((name) => ({ name })),
+    permissions: perVhost(template.permissions),
+    exchanges: perVhost(template.exchanges),
+    queues: perVhost(template.queues),
+    bindings: perVhost(template.bindings),
+  };
+};
+
 const createRabbitMQContainer = async () => {
   console.log('Starting RabbitMQ container...');
+  const generatedDefinitionsPath = path.join(
+    os.tmpdir(),
+    `rabbitMQ-definitions.${process.pid}.json`,
+  );
+  fs.writeFileSync(
+    generatedDefinitionsPath,
+    JSON.stringify(buildWorkerScopedDefinitions(MAX_WORKERS)),
+  );
+
   rabbitMQContainer = await new RabbitMQContainer('rabbitmq:4.1-management')
     .withCopyFilesToContainer([
       {
-        source: `${path.resolve(__dirname, 'rabbitMQ-definitions.json')}`,
+        source: generatedDefinitionsPath,
         target: '/etc/rabbitmq/definitions.json',
       },
     ])
     .start();
+  fs.unlinkSync(generatedDefinitionsPath);
 
   process.env.RABBITMQ_HOST = rabbitMQContainer.getHost();
   process.env.RABBITMQ_PORT = rabbitMQContainer.getMappedPort(5672).toString();

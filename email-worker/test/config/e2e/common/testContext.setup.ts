@@ -1,12 +1,7 @@
 import { container, DependencyContainer } from 'tsyringe';
 
-import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
-
 import { EmailConsumer } from '@email/email.consumer';
 import { EmailService } from '@email/email.service';
-
-import { DiscordNotifier } from '@notification/discord.notifier';
-import { Notifier } from '@notification/notifier.interface';
 
 import { RabbitMQManager } from '@rabbitmq/rabbitmq.manager';
 import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
@@ -17,7 +12,6 @@ export interface TestContext {
   emailService: EmailService;
   rabbitmqManager: RabbitMQManager;
   rabbitmqService: RabbitMQService;
-  notifier: Notifier;
 }
 
 declare global {
@@ -32,10 +26,6 @@ export function setupTestContainer(): TestContext {
     testContainer.registerSingleton(RabbitMQService);
     testContainer.registerSingleton(EmailService);
     testContainer.registerSingleton(EmailConsumer);
-    testContainer.registerSingleton<Notifier>(
-      DEPENDENCY_SYMBOLS.Notifier,
-      DiscordNotifier,
-    );
 
     global.testContext = {
       container: testContainer,
@@ -43,7 +33,6 @@ export function setupTestContainer(): TestContext {
       emailConsumer: testContainer.resolve(EmailConsumer),
       rabbitmqManager: testContainer.resolve(RabbitMQManager),
       rabbitmqService: testContainer.resolve(RabbitMQService),
-      notifier: testContainer.resolve<Notifier>(DEPENDENCY_SYMBOLS.Notifier),
     };
   }
 

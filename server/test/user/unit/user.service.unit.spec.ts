@@ -25,6 +25,9 @@ import { RssAcceptRepository } from '@rss/repository/rss.repository';
 
 import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
 
+import { UserSuspension } from '@suspension/entity/userSuspension.entity';
+import { UserSuspensionRepository } from '@suspension/repository/userSuspension.repository';
+
 import { PROFILE_IMAGE_DAILY_LIMIT } from '@user/constant/user.constants';
 import { RegisterUserRequestDto } from '@user/dto/request/registerUser.dto';
 import { SearchUserRequestDto } from '@user/dto/request/searchUser.dto';
@@ -86,6 +89,9 @@ describe(`${UserService.name} Unit Test`, () => {
   >;
   let manager: { remove: jest.Mock; delete: jest.Mock; upsert: jest.Mock };
   let dataSource: jest.Mocked<Pick<DataSource, 'transaction'>>;
+  let userSuspensionRepository: jest.Mocked<
+    Pick<UserSuspensionRepository, 'findActiveSuspension'>
+  >;
 
   const createResponse = () => ({ cookie: jest.fn() }) as unknown as Response;
 
@@ -137,6 +143,9 @@ describe(`${UserService.name} Unit Test`, () => {
     dataSource = {
       transaction: jest.fn((cb: any) => cb(manager)),
     } as any;
+    userSuspensionRepository = {
+      findActiveSuspension: jest.fn().mockResolvedValue(null),
+    };
 
     userService = new UserService(
       userRepository as unknown as UserRepository,
@@ -150,6 +159,7 @@ describe(`${UserService.name} Unit Test`, () => {
       feedRepository as unknown as FeedRepository,
       subscriptionRepository as unknown as SubscriptionRepository,
       dataSource as unknown as DataSource,
+      userSuspensionRepository as unknown as UserSuspensionRepository,
     );
   });
 
@@ -538,7 +548,7 @@ describe(`${UserService.name} Unit Test`, () => {
   describe('getUserRss', () => {
     it('userId로 소유 RSS를 조회하고 공개 게시글 수와 함께 응답으로 변환한다.', async () => {
       // given
-      const rssList = [{ id: 7 } as RssAccept];
+      const rssList = [{ id: 7, suspensionCount: 2 } as RssAccept];
       const feedCountMap = new Map<number, number>([[7, 3]]);
       rssAcceptRepository.find.mockResolvedValue(rssList);
       feedRepository.countPublicFeedsByBlogIds.mockResolvedValue(feedCountMap);
@@ -554,7 +564,7 @@ describe(`${UserService.name} Unit Test`, () => {
       expect(feedRepository.countPublicFeedsByBlogIds).toHaveBeenCalledWith([
         7,
       ]);
-      expect(result).toEqual(
+      expect(result).toStrictEqual(
         GetUserRssResponseDto.toResponseDtoArray(
           rssList,
           feedCountMap,
@@ -563,6 +573,7 @@ describe(`${UserService.name} Unit Test`, () => {
         ),
       );
       expect(result[0].feedCount).toBe(3);
+      expect(result[0].suspensionCount).toBe(2);
     });
   });
 
@@ -589,6 +600,21 @@ describe(`${UserService.name} Unit Test`, () => {
       await expect(
         userService.loginUser(dto, createResponse()),
       ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('정지된 계정이면 ForbiddenException을 던진다.', async () => {
+      // given
+      const user = await UserFixture.createUserCryptFixture();
+      userRepository.findOne.mockResolvedValue(user);
+      userSuspensionRepository.findActiveSuspension.mockResolvedValue({
+        detail: '정지 처리',
+        suspendedUntil: null,
+      } as UserSuspension);
+
+      // when & then
+      await expect(
+        userService.loginUser(dto, createResponse()),
+      ).rejects.toThrow(ForbiddenException);
     });
 
     it('로그인에 성공하면 refresh 쿠키를 설정하고 access token을 반환한다.', async () => {

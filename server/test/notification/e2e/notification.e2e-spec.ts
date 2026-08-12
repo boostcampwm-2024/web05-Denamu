@@ -3,6 +3,12 @@ import { HttpStatus } from '@nestjs/common';
 import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 
+import {
+  RMQ_EXCHANGES,
+  RMQ_ROUTING_KEYS,
+} from '@common/rabbitmq/rabbitmq.constant';
+import { RabbitMQService } from '@common/rabbitmq/rabbitmq.service';
+
 import { Feed } from '@feed/entity/feed.entity';
 import { FeedRepository } from '@feed/repository/feed.repository';
 
@@ -12,6 +18,11 @@ import { NotificationRepository } from '@notification/repository/notification.re
 
 import { RssAccept } from '@rss/entity/rss.entity';
 import { RssAcceptRepository } from '@rss/repository/rss.repository';
+
+import { Subscription } from '@subscribe/entity/subscription.entity';
+import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
+
+import { UserSuspensionRepository } from '@suspension/repository/userSuspension.repository';
 
 import { User } from '@user/entity/user.entity';
 import { UserRepository } from '@user/repository/user.repository';
@@ -45,6 +56,9 @@ describe(`${NOTIFICATION_URL} E2E Test`, () => {
   let rssAcceptRepository: RssAcceptRepository;
   let feedRepository: FeedRepository;
   let notificationRepository: NotificationRepository;
+  let userSuspensionRepository: UserSuspensionRepository;
+  let subscriptionRepository: SubscriptionRepository;
+  let rabbitMQService: RabbitMQService;
   let owner: User;
   let liker: User;
   let rssAccept: RssAccept;
@@ -58,11 +72,18 @@ describe(`${NOTIFICATION_URL} E2E Test`, () => {
     rssAcceptRepository = testApp.get(RssAcceptRepository);
     feedRepository = testApp.get(FeedRepository);
     notificationRepository = testApp.get(NotificationRepository);
+    userSuspensionRepository = testApp.get(UserSuspensionRepository);
+    subscriptionRepository = testApp.get(SubscriptionRepository);
+    rabbitMQService = testApp.get(RabbitMQService);
   });
 
   beforeEach(async () => {
-    owner = await userRepository.save(await UserFixture.createUserCryptFixture());
-    liker = await userRepository.save(await UserFixture.createUserCryptFixture());
+    owner = await userRepository.save(
+      await UserFixture.createUserCryptFixture(),
+    );
+    liker = await userRepository.save(
+      await UserFixture.createUserCryptFixture(),
+    );
     rssAccept = await rssAcceptRepository.save(
       RssAcceptFixture.createRssAcceptFixture({ user: owner }),
     );
@@ -72,10 +93,14 @@ describe(`${NOTIFICATION_URL} E2E Test`, () => {
   });
 
   const likeFeed = (token: string) =>
-    agent.post(`/api/feeds/${feed.id}/likes`).set('Authorization', `Bearer ${token}`);
+    agent
+      .post(`/api/feeds/${feed.id}/likes`)
+      .set('Authorization', `Bearer ${token}`);
 
   const unlikeFeed = (token: string) =>
-    agent.delete(`/api/feeds/${feed.id}/likes`).set('Authorization', `Bearer ${token}`);
+    agent
+      .delete(`/api/feeds/${feed.id}/likes`)
+      .set('Authorization', `Bearer ${token}`);
 
   const getUnreadCount = async (token: string) => {
     const response = await agent
@@ -127,14 +152,20 @@ describe(`${NOTIFICATION_URL} E2E Test`, () => {
     const item = notifications.result[0];
     expect(item.type).toBe('LIKE');
     expect(item.isRead).toBe(false);
-    expect(item.feed).toStrictEqual({ id: feed.id, title: feed.title, path: feed.path });
+    expect(item.feed).toStrictEqual({
+      id: feed.id,
+      title: feed.title,
+      path: feed.path,
+    });
     expect(item.actor.userName).toBe(liker.userName);
     expect(item.otherCount).toBe(0);
   });
 
   it('[200] 여러 명이 좋아요를 누르면 최신 좋아요 사용자 외 나머지 인원 수가 otherCount로 표시된다.', async () => {
     // given
-    const secondLiker = await userRepository.save(await UserFixture.createUserCryptFixture());
+    const secondLiker = await userRepository.save(
+      await UserFixture.createUserCryptFixture(),
+    );
     const secondLikerToken = createAccessToken({ id: secondLiker.id });
 
     // Http when
@@ -153,6 +184,61 @@ describe(`${NOTIFICATION_URL} E2E Test`, () => {
     const item = notifications.result[0];
     expect(item.actor.userName).toBe(secondLiker.userName);
     expect(item.otherCount).toBe(1);
+  });
+
+  it('[200] 정지 중인 유저의 좋아요만 있으면 알림이 표시되지 않는다.', async () => {
+    // given
+    await likeFeed(likerToken).expect(HttpStatus.CREATED);
+    await waitFor(
+      () => getUnreadCount(ownerToken),
+      (result) => result.count > 0,
+    );
+    await userSuspensionRepository.save({
+      user: { id: liker.id },
+      detail: '정지 처리',
+      suspendedUntil: null,
+    });
+
+    // Http when
+    const notifications = await getNotifications(ownerToken);
+
+    // Http then - 유일한 좋아요 작성자가 정지 상태라 노출할 알림이 없다
+    expect(notifications.result).toHaveLength(0);
+  });
+
+  it('[200] 최신 좋아요 작성자가 정지 중이면 정지되지 않은 다음 작성자를 대신 노출한다.', async () => {
+    // given
+    const secondLiker = await userRepository.save(
+      await UserFixture.createUserCryptFixture(),
+    );
+    const secondLikerToken = createAccessToken({ id: secondLiker.id });
+
+    await likeFeed(likerToken).expect(HttpStatus.CREATED);
+    await waitFor(
+      () => getUnreadCount(ownerToken),
+      (result) => result.count > 0,
+    );
+    await likeFeed(secondLikerToken).expect(HttpStatus.CREATED);
+    await waitFor(
+      () => getNotifications(ownerToken),
+      (result) => result.result[0]?.actor.userName === secondLiker.userName,
+    );
+    await userSuspensionRepository.save({
+      user: { id: secondLiker.id },
+      detail: '정지 처리',
+      suspendedUntil: null,
+    });
+
+    // Http when
+    const notifications = await waitFor(
+      () => getNotifications(ownerToken),
+      (result) => result.result[0]?.actor.userName === liker.userName,
+    );
+
+    // Http then - 정지된 최신 작성자 대신 정지되지 않은 첫 번째 좋아요 작성자가 노출된다
+    const item = notifications.result[0];
+    expect(item.actor.userName).toBe(liker.userName);
+    expect(item.otherCount).toBe(0);
   });
 
   it('[200] 좋아요를 누른 사람은 알림을 받지 않는다(수신자는 게시글 소유자).', async () => {
@@ -224,5 +310,98 @@ describe(`${NOTIFICATION_URL} E2E Test`, () => {
       (result) => result === null,
     );
     expect(remaining).toBeNull();
+  });
+
+  describe('crawling.newPost.queue 메시지 처리', () => {
+    let subscriber: User;
+    let subscriberToken: string;
+
+    beforeEach(async () => {
+      subscriber = await userRepository.save(
+        await UserFixture.createUserCryptFixture(),
+      );
+      subscriberToken = createAccessToken({ id: subscriber.id });
+      await subscriptionRepository.save({
+        rssAccept,
+        user: subscriber,
+      } as Subscription);
+    });
+
+    const publishNewPost = (items: { feedId: number; rssAcceptId: number }[]) =>
+      rabbitMQService.sendMessage(
+        RMQ_EXCHANGES.CRAWLING,
+        RMQ_ROUTING_KEYS.CRAWLING_NEW_POST,
+        JSON.stringify(items),
+      );
+
+    it('[200] 구독한 블로그에 새 글이 올라오면 구독자에게 NEW_POST 알림이 생성된다.', async () => {
+      // when
+      await publishNewPost([{ feedId: feed.id, rssAcceptId: rssAccept.id }]);
+
+      // then
+      const count = await waitFor(
+        () => getUnreadCount(subscriberToken),
+        (result) => result.count > 0,
+      );
+      expect(count.count).toBe(1);
+
+      const notifications = await getNotifications(subscriberToken);
+      expect(notifications.result).toHaveLength(1);
+      const item = notifications.result[0];
+      expect(item.type).toBe('NEW_POST');
+      expect(item.isRead).toBe(false);
+      expect(item.feed).toStrictEqual({
+        id: feed.id,
+        title: feed.title,
+        path: feed.path,
+      });
+      expect(item.rss).toStrictEqual({
+        id: rssAccept.id,
+        name: rssAccept.name,
+      });
+    });
+
+    it('[200] 구독하지 않은 사용자에게는 알림이 생성되지 않는다.', async () => {
+      // given
+      const nonSubscriber = await userRepository.save(
+        await UserFixture.createUserCryptFixture(),
+      );
+      const nonSubscriberToken = createAccessToken({ id: nonSubscriber.id });
+
+      // when
+      await publishNewPost([{ feedId: feed.id, rssAcceptId: rssAccept.id }]);
+      await waitFor(
+        () => getUnreadCount(subscriberToken),
+        (result) => result.count > 0,
+      );
+
+      // then
+      const count = await getUnreadCount(nonSubscriberToken);
+      expect(count.count).toBe(0);
+    });
+
+    it('[200] 같은 블로그의 서로 다른 새 글은 각각 별도의 알림으로 생성된다.', async () => {
+      // given - rss_accept_id를 공유하는 두 번째 새 글
+      const secondFeed = await feedRepository.save(
+        FeedFixture.createFeedFixture(rssAccept, { title: 'second post' }),
+      );
+
+      // when
+      await publishNewPost([
+        { feedId: feed.id, rssAcceptId: rssAccept.id },
+        { feedId: secondFeed.id, rssAcceptId: rssAccept.id },
+      ]);
+
+      // then - 같은 (recipient, type, rss_accept_id)로 충돌해 하나로 뭉개지지 않고 글 단위로 각각 생성돼야 한다
+      const count = await waitFor(
+        () => getUnreadCount(subscriberToken),
+        (result) => result.count >= 2,
+      );
+      expect(count.count).toBe(2);
+
+      const notifications = await getNotifications(subscriberToken);
+      const feedIds = notifications.result.map((item) => item.feed?.id).sort();
+      expect(feedIds).toStrictEqual([feed.id, secondFeed.id].sort());
+    });
   });
 });

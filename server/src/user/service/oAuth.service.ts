@@ -487,6 +487,10 @@ export class OAuthService {
       where: { email },
     });
 
+    if (user) {
+      await this.userService.assertNotSuspended(user.id);
+    }
+
     await this.dataSource.transaction(async (entityManager) => {
       try {
         if (!user) {

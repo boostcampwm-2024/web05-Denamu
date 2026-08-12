@@ -5,7 +5,9 @@ import { ClaudeEventWorker } from '@event_worker/workers/claude-event-worker';
 
 describe('Claude AI e2e-test', () => {
   const testContext = setupTestContainer();
-  let claudeEventWorker: ClaudeEventWorker, feedData: ResultSetHeader;
+  let claudeEventWorker: ClaudeEventWorker,
+    feedData: ResultSetHeader,
+    rssData: ResultSetHeader;
   const feedRedisAiQueueData: any = {
     content: 'test',
     deathCount: 0,
@@ -14,7 +16,7 @@ describe('Claude AI e2e-test', () => {
   beforeAll(async () => {
     claudeEventWorker = testContext.claudeEventWorker;
 
-    const rssData = (await testContext.dbConnection.executeQuery(
+    rssData = (await testContext.dbConnection.executeQuery(
       `INSERT INTO rss_accept (name, user_name, email, rss_url, platform) VALUES (?, ?, ?, ?, ?)`,
       ['test', 'test_name', 'test@test.com', 'https://test.com/rss', 'etc'],
     )) as any as ResultSetHeader;
@@ -165,5 +167,71 @@ describe('Claude AI e2e-test', () => {
       'test2',
       'test3',
     ]);
+  });
+
+  it('최근 게시글 캐시가 존재하면 tagList와 summary를 갱신한다.', async () => {
+    // given
+    await testContext.redisConnection.hset(
+      `feed:recent:${feedData.insertId}`,
+      'title',
+      'test',
+      'summary',
+      'AI 요약 처리 중...',
+    );
+
+    jest
+      .spyOn(claudeEventWorker as any, 'loadFeeds')
+      .mockResolvedValue([feedRedisAiQueueData]);
+
+    jest.spyOn(claudeEventWorker as any, 'requestAI').mockResolvedValue({
+      ...feedRedisAiQueueData,
+      id: feedData.insertId,
+      summary: 'cache summary',
+      tagList: ['test1'],
+    });
+
+    // when
+    await claudeEventWorker.start();
+
+    // then
+    const cached = (await testContext.redisConnection.executePipeline(
+      (pipeline) => {
+        pipeline.hgetall(`feed:recent:${feedData.insertId}`);
+      },
+    )) as [error: Error, result: Record<string, string>][];
+
+    expect(cached[0][1]).toMatchObject({
+      title: 'test',
+      summary: 'cache summary',
+      tagList: 'test1',
+    });
+  });
+
+  it('최근 게시글 캐시가 없으면 캐시를 새로 만들지 않는다.', async () => {
+    // given
+    const uncachedFeedData = (await testContext.dbConnection.executeQuery(
+      `INSERT INTO feed (created_at, title, path, thumbnail, blog_id) VALUES (?, ?, ?, ?, ?)`,
+      [new Date(), 'uncached', 'uncached-path', 'test', rssData.insertId],
+    )) as any as ResultSetHeader;
+
+    jest
+      .spyOn(claudeEventWorker as any, 'loadFeeds')
+      .mockResolvedValue([feedRedisAiQueueData]);
+
+    jest.spyOn(claudeEventWorker as any, 'requestAI').mockResolvedValue({
+      ...feedRedisAiQueueData,
+      id: uncachedFeedData.insertId,
+      summary: 'no cache summary',
+      tagList: ['test1'],
+    });
+
+    // when
+    await claudeEventWorker.start();
+
+    // then
+    const exists = await testContext.redisConnection.exists(
+      `feed:recent:${uncachedFeedData.insertId}`,
+    );
+    expect(exists).toBe(false);
   });
 });

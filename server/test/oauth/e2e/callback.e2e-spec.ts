@@ -6,6 +6,8 @@ import TestAgent from 'supertest/lib/agent';
 
 import { RedisService } from '@common/redis/redis.service';
 
+import { UserSuspensionRepository } from '@suspension/repository/userSuspension.repository';
+
 import { OAUTH_CSRF_TOKEN_TTL, OAuthType } from '@user/constant/oauth.constant';
 import { OAuthCallbackRequestDto } from '@user/dto/request/oAuthCallbackDto';
 import { ProviderRepository } from '@user/repository/provider.repository';
@@ -21,6 +23,7 @@ describe(`GET ${URL} E2E Test`, () => {
   let providerRepository: ProviderRepository;
   let userRepository: UserRepository;
   let redisService: RedisService;
+  let userSuspensionRepository: UserSuspensionRepository;
 
   const createCsrfState = async (provider: OAuthType) => {
     const csrfToken = `csrf-token-${provider}`;
@@ -44,6 +47,7 @@ describe(`GET ${URL} E2E Test`, () => {
     providerRepository = testApp.get(ProviderRepository);
     userRepository = testApp.get(UserRepository);
     redisService = testApp.get(RedisService);
+    userSuspensionRepository = testApp.get(UserSuspensionRepository);
   });
 
   it('[302] 신규 사용자가 Github OAuth 콜백을 받을 경우 닉네임 입력 페이지로 리다이렉트한다.', async () => {
@@ -190,6 +194,58 @@ describe(`GET ${URL} E2E Test`, () => {
       providerType: OAuthType.Google,
     });
     expect(savedProvider).not.toBeNull();
+  });
+
+  it('[403] 정지된 기존 사용자는 OAuth 로그인이 차단된다.', async () => {
+    // given
+    const suspendedUser = await userRepository.save(
+      UserFixture.createUserFixture({ email: 'suspended@test.com' }),
+    );
+    await userSuspensionRepository.save({
+      user: { id: suspendedUser.id },
+      admin: null,
+      detail: '정지 처리',
+      suspendedUntil: null,
+    });
+
+    const { csrfToken, state } = await createCsrfState(OAuthType.Google);
+    const requestDto = new OAuthCallbackRequestDto({
+      code: 'testCode',
+      state,
+    });
+
+    jest.spyOn(axios, 'post').mockResolvedValue({
+      data: {
+        id_token: '1',
+        access_token: 'test_access_token',
+        expires_in: 3600,
+      },
+    });
+
+    jest.spyOn(axios, 'get').mockResolvedValue({
+      data: {
+        id: '1',
+        email: 'suspended@test.com',
+        name: 'test',
+        picture: 'https://test.com/test.png',
+      },
+    });
+
+    // Http when
+    const response = await agent
+      .get(URL)
+      .query(requestDto)
+      .set('Cookie', `oauth_csrf_token=${csrfToken}`);
+
+    // Http then
+    expect(response.status).toBe(HttpStatus.FORBIDDEN);
+
+    // DB then - provider 연결도 되지 않는다
+    const savedProvider = await providerRepository.findOneBy({
+      providerUserId: '1',
+      providerType: OAuthType.Google,
+    });
+    expect(savedProvider).toBeNull();
   });
 
   it('[502] GitHub 토큰 API 호출 실패 시 BadGatewayException을 반환한다.', async () => {

@@ -28,6 +28,7 @@ module.exports = {
     '^@rss/(.*)?$',
     '^@statistic/(.*)?$',
     '^@subscribe/(.*)?$',
+    '^@suspension/(.*)?$',
     '^@tag/(.*)?$',
     '^@user/(.*)?$',
     '^@test/(.*)$',

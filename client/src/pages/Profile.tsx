@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
+import axios from "axios";
+
 import { Footer } from "@/components/about/Footer";
 import Layout from "@/components/layout/Layout";
 import { BlockManagementTab } from "@/components/profile/BlockManagementTab.tsx";
@@ -8,6 +10,7 @@ import { BlockedProfileView } from "@/components/profile/BlockedProfileView.tsx"
 import { MyPage } from "@/components/profile/MyPage.tsx";
 import { ProfileSidebar } from "@/components/profile/ProfileSidebar.tsx";
 import { SubscriptionManagementTab } from "@/components/profile/SubscriptionManagementTab.tsx";
+import { SuspendedProfileView } from "@/components/profile/SuspendedProfileView.tsx";
 import { RssManagementTab } from "@/components/profile/rss/RssManagementTab.tsx";
 import { ProfileEditTab } from "@/components/profile/sections/ProfileEditTab.tsx";
 
@@ -28,10 +31,14 @@ export default function Profile() {
   const isOwner = isAuthenticated && userInfo.id !== null && userInfo.id === targetId;
   const isVisitor = !isOwner && !!targetId && !Number.isNaN(targetId);
 
-  const { data: visitorProfile, isLoading: isVisitorProfileLoading } = useUserProfile(
-    isVisitor ? (targetId as number) : 0
-  );
+  const {
+    data: visitorProfile,
+    isLoading: isVisitorProfileLoading,
+    error: visitorProfileError,
+  } = useUserProfile(isVisitor ? (targetId as number) : 0);
   const isBlocked = isVisitor && (visitorProfile?.isBlocked ?? false);
+  const isSuspended =
+    isVisitor && axios.isAxiosError(visitorProfileError) && visitorProfileError.response?.status === 403;
 
   useEffect(() => {
     if (!isInitialized) return;
@@ -65,7 +72,9 @@ export default function Profile() {
 
           <div className="flex-1 min-w-0 px-4 py-8 md:px-8">
             {currentTab === "mypage" &&
-              (isBlocked ? (
+              (isSuspended ? (
+                <SuspendedProfileView />
+              ) : isBlocked ? (
                 <BlockedProfileView userId={targetId as number} />
               ) : isVisitor && isVisitorProfileLoading ? null : showSubscriptions ? (
                 <SubscriptionManagementTab

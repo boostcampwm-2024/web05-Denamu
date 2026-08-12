@@ -4,6 +4,11 @@ import { AuthSignInForm } from "@/components/auth/AuthSignInForm.tsx";
 
 import { act, fireEvent, render, screen } from "@testing-library/react";
 
+vi.mock("lucide-react", async () => {
+  const { lucideProxy } = await import("@/__tests__/__mocks__/external/lucide-proxy.tsx");
+  return lucideProxy();
+});
+
 const mockNavigate = vi.fn();
 const mockToast = vi.fn();
 const mockSetSearchParams = vi.fn();
@@ -15,7 +20,12 @@ let signInState: {
   form: { email: string; password: string };
   updateField: typeof updateField;
   isLoading: boolean;
-  result: { success: boolean; message: string } | null;
+  result: {
+    success: boolean;
+    message: string;
+    status?: number;
+    suspension?: { detail: string; suspendedUntil: string | null };
+  } | null;
   submitForm: typeof submitForm;
 };
 
@@ -95,6 +105,33 @@ describe("AuthSignInForm", () => {
     render(<AuthSignInForm />);
 
     expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: "로그인 실패", variant: "destructive" }));
+  });
+
+  it("정지된 계정으로 로그인 실패 시 사유·해제일·문의 안내가 담긴 다이얼로그를 띄우고 toast는 띄우지 않아야 한다", () => {
+    signInState.result = {
+      success: false,
+      message: "정지된 계정입니다.",
+      status: 403,
+      suspension: { detail: "부적절한 게시글 반복 등록", suspendedUntil: "2026-12-31T00:00:00.000Z" },
+    };
+    render(<AuthSignInForm />);
+
+    expect(screen.getByText("정지된 계정입니다")).toBeInTheDocument();
+    expect(screen.getByText(/부적절한 게시글 반복 등록/)).toBeInTheDocument();
+    expect(screen.getByText(/boostcamp9web05@gmail.com/)).toBeInTheDocument();
+    expect(mockToast).not.toHaveBeenCalled();
+  });
+
+  it("정지 해제일이 없으면 '무기한'으로 표시해야 한다", () => {
+    signInState.result = {
+      success: false,
+      message: "정지된 계정입니다.",
+      status: 403,
+      suspension: { detail: "약관 위반", suspendedUntil: null },
+    };
+    render(<AuthSignInForm />);
+
+    expect(screen.getByText(/무기한/)).toBeInTheDocument();
   });
 
   it("onSuccess가 주어지면 성공 시 onSuccess만 호출하고 navigate하지 않아야 한다", () => {

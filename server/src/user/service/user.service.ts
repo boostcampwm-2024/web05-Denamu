@@ -31,6 +31,8 @@ import { RssAcceptRepository } from '@rss/repository/rss.repository';
 
 import { SubscriptionRepository } from '@subscribe/repository/subscription.repository';
 
+import { UserSuspensionRepository } from '@suspension/repository/userSuspension.repository';
+
 import {
   PROFILE_IMAGE_DAILY_LIMIT,
   REFRESH_TOKEN_TTL,
@@ -68,6 +70,7 @@ export class UserService {
     private readonly feedRepository: FeedRepository,
     private readonly subscriptionRepository: SubscriptionRepository,
     private readonly dataSource: DataSource,
+    private readonly userSuspensionRepository: UserSuspensionRepository,
   ) {}
 
   async getUser(userId: number) {
@@ -82,6 +85,11 @@ export class UserService {
 
   async getUserProfile(userId: number, requester: Payload | null = null) {
     const user = await this.getUser(userId);
+    const suspension =
+      await this.userSuspensionRepository.findActiveSuspension(userId);
+    if (suspension) {
+      throw new ForbiddenException('정지 처리된 유저입니다.');
+    }
     const isOwner = requester?.id === userId;
     const isBlocked =
       requester && !isOwner
@@ -230,6 +238,8 @@ export class UserService {
     ) {
       throw new UnauthorizedException('아이디 혹은 비밀번호가 잘못되었습니다.');
     }
+
+    await this.assertNotSuspended(user.id);
 
     const payload: Payload = {
       id: user.id,
@@ -457,7 +467,7 @@ export class UserService {
     await this.invalidateUserTokens(user.id);
   }
 
-  private async invalidateUserTokens(userId: number) {
+  async invalidateUserTokens(userId: number) {
     const ttlInSeconds = this.parseTimeToSeconds(
       this.configService.get('JWT_REFRESH_TOKEN_EXPIRE'),
     );
@@ -466,6 +476,20 @@ export class UserService {
       ttlInSeconds,
       Math.floor(Date.now() / 1000).toString(),
     );
+  }
+
+  async assertNotSuspended(userId: number) {
+    const suspension =
+      await this.userSuspensionRepository.findActiveSuspension(userId);
+    if (suspension) {
+      throw new ForbiddenException({
+        message: '정지된 계정입니다.',
+        data: {
+          detail: suspension.detail,
+          suspendedUntil: suspension.suspendedUntil,
+        },
+      });
+    }
   }
 
   async requestDeleteAccount(userId: number, deleteRss = true): Promise<void> {

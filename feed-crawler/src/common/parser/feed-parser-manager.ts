@@ -2,12 +2,9 @@ import { inject, injectable } from 'tsyringe';
 
 import axios from 'axios';
 
-import { DEPENDENCY_SYMBOLS } from '@common/dependency-symbols';
 import { FeedFetchResult, RssObj } from '@common/feed/feed.type';
 import logger from '@common/logger/logger';
 import { FeedMetrics } from '@common/metrics/feed-metrics';
-import { NOTIFICATION_EVENT } from '@common/notification/notification-event.constant';
-import { Notifier } from '@common/notification/notifier.interface';
 import { BaseFeedParser } from '@common/parser/base-feed-parser';
 import { Atom10Parser } from '@common/parser/formats/atom10-parser';
 import { Rss20Parser } from '@common/parser/formats/rss20-parser';
@@ -19,7 +16,6 @@ export class FeedParserManager {
   constructor(
     @inject(Rss20Parser) rss20Parser: Rss20Parser,
     @inject(Atom10Parser) atom10Parser: Atom10Parser,
-    @inject(DEPENDENCY_SYMBOLS.Notifier) private readonly notifier: Notifier,
     @inject(FeedMetrics) private readonly metrics: FeedMetrics,
   ) {
     this.parsers = [rss20Parser, atom10Parser];
@@ -48,16 +44,14 @@ export class FeedParserManager {
 
       const feeds = await parser.parseFeed(rssObj, xmlData, startTime);
       this.metrics.success.inc({ type: 'scheduled' });
-      return { feeds, channelImage: parser.extractChannelImage(xmlData) };
+      return {
+        feeds,
+        rssObj: this.applyChannelImage(rssObj, parser.extractChannelImage(xmlData)),
+      };
     } catch (error) {
       this.metrics.failure.inc({ type: 'scheduled' });
-      logger.warn(`[${rssObj.rssUrl}] 피드 파싱 중 오류 발생: ${error}`);
-      this.notifier.publish(NOTIFICATION_EVENT.FEED_CRAWLING_SCHEDULED, {
-        error: error as Error,
-        blogUrl: rssObj.rssUrl,
-        errorSource: '[Scheduled FeedCrawling]',
-      });
-      return { feeds: [], channelImage: undefined };
+      logger.error(`[${rssObj.rssUrl}] 피드 파싱 중 오류 발생: ${error}`);
+      return { feeds: [], rssObj };
     }
   }
 
@@ -84,17 +78,24 @@ export class FeedParserManager {
 
       const feeds = await parser.parseAllFeeds(rssObj, xmlData);
       this.metrics.success.inc({ type: 'full' });
-      return { feeds, channelImage: parser.extractChannelImage(xmlData) };
+      return {
+        feeds,
+        rssObj: this.applyChannelImage(rssObj, parser.extractChannelImage(xmlData)),
+      };
     } catch (error) {
       this.metrics.failure.inc({ type: 'full' });
-      logger.warn(`[${rssObj.rssUrl}] 전체 피드 파싱 중 오류 발생: ${error}`);
-      this.notifier.publish(NOTIFICATION_EVENT.FEED_CRAWLING_FULL, {
-        error: error as Error,
-        blogUrl: rssObj.rssUrl,
-        errorSource: '[Full FeedCrawling]',
-      });
-      return { feeds: [], channelImage: undefined };
+      logger.error(`[${rssObj.rssUrl}] 전체 피드 파싱 중 오류 발생: ${error}`);
+      return { feeds: [], rssObj };
     }
+  }
+
+  private applyChannelImage(
+    rssObj: RssObj,
+    channelImage: string | null,
+  ): RssObj {
+    return channelImage !== rssObj.blogImage
+      ? { ...rssObj, blogImage: channelImage }
+      : rssObj;
   }
 
   private findSuitableParser(xmlData: string): BaseFeedParser | null {

@@ -356,7 +356,7 @@ describe(`${CommentService.name} Unit Test`, () => {
       expect(manager.remove).toHaveBeenCalledWith(comment);
       expect(eventEmitter.emit).toHaveBeenCalledWith(
         'comment.deleted',
-        new CommentDeletedEvent(10, null),
+        new CommentDeletedEvent(10, null, -1),
       );
     });
 
@@ -383,7 +383,7 @@ describe(`${CommentService.name} Unit Test`, () => {
       expect(manager.remove).not.toHaveBeenCalled();
       expect(eventEmitter.emit).toHaveBeenCalledWith(
         'comment.deleted',
-        new CommentDeletedEvent(10, null),
+        new CommentDeletedEvent(10, null, 0),
       );
     });
 
@@ -408,7 +408,7 @@ describe(`${CommentService.name} Unit Test`, () => {
       expect(manager.remove).toHaveBeenCalledWith(comment);
       expect(eventEmitter.emit).toHaveBeenCalledWith(
         'comment.deleted',
-        new CommentDeletedEvent(10, 42),
+        new CommentDeletedEvent(10, 42, -1),
       );
     });
 
@@ -438,7 +438,7 @@ describe(`${CommentService.name} Unit Test`, () => {
       expect(manager.remove).toHaveBeenCalledWith(parent);
       expect(eventEmitter.emit).toHaveBeenCalledWith(
         'comment.deleted',
-        new CommentDeletedEvent(10, 42),
+        new CommentDeletedEvent(10, 42, -2),
       );
     });
 
@@ -480,7 +480,7 @@ describe(`${CommentService.name} Unit Test`, () => {
       expect(manager.remove).toHaveBeenCalledWith(comment);
       expect(eventEmitter.emit).toHaveBeenCalledWith(
         'comment.deleted',
-        new CommentDeletedEvent(10, null),
+        new CommentDeletedEvent(10, null, -1),
       );
     });
   });
@@ -522,7 +522,7 @@ describe(`${CommentService.name} Unit Test`, () => {
       expect(dataSource.transaction).not.toHaveBeenCalled();
       expect(eventEmitter.emit).toHaveBeenCalledWith(
         'comment.deleted',
-        new CommentDeletedEvent(10, null),
+        new CommentDeletedEvent(10, null, 0),
       );
     });
 
@@ -543,7 +543,7 @@ describe(`${CommentService.name} Unit Test`, () => {
       // then
       expect(eventEmitter.emit).toHaveBeenCalledWith(
         'comment.deleted',
-        new CommentDeletedEvent(10, 42),
+        new CommentDeletedEvent(10, 42, 0),
       );
     });
   });
