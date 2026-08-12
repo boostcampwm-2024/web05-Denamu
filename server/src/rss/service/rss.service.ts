@@ -37,6 +37,7 @@ import { FeedRepository } from '@feed/repository/feed.repository';
 
 import { DeleteCertificateRssRequestDto } from '@rss/dto/request/deleteCertificateRss.dto';
 import { DeleteRssRequestDto } from '@rss/dto/request/deleteRss.dto';
+import { GetAllRssRequestDto } from '@rss/dto/request/getAllRss.dto';
 import { GetOwnedRssFeedsRequestDto } from '@rss/dto/request/getOwnedRssFeeds.dto';
 import { GetRssFeedsRequestDto } from '@rss/dto/request/getRssFeeds.dto';
 import { ManageRssRequestDto } from '@rss/dto/request/manageRss.dto';
@@ -53,9 +54,9 @@ import { ReadRssResponseDto } from '@rss/dto/response/readRss.dto';
 import { ReadRssAcceptHistoryResponseDto } from '@rss/dto/response/readRssAcceptHistory.dto';
 import { ReadRssRejectHistoryResponseDto } from '@rss/dto/response/readRssRejectHistory.dto';
 import {
-  SearchRssResponseDto,
-  SearchRssResult,
-} from '@rss/dto/response/searchRss.dto';
+  RssListItemDto,
+  RssListResponseDto,
+} from '@rss/dto/response/rssList.dto';
 import { Rss, RssAccept, RssReject } from '@rss/entity/rss.entity';
 import {
   RssAcceptRepository,
@@ -332,6 +333,39 @@ export class RssService {
     );
   }
 
+  async getAllRss(getAllRssQueryDto: GetAllRssRequestDto, viewerId?: number) {
+    const { page, limit, blogPlatform } = getAllRssQueryDto;
+    const offset = (page - 1) * limit;
+
+    const [rssAcceptList, totalCount] =
+      await this.rssAcceptRepository.findAllRssList(
+        limit,
+        offset,
+        viewerId,
+        blogPlatform,
+      );
+
+    const blogIds = rssAcceptList.map((rss) => rss.id);
+    const [feedCountMap, lastPublishedAtMap] = await Promise.all([
+      this.feedRepository.countPublicFeedsByBlogIds(blogIds),
+      this.feedRepository.getLatestPublicFeedDateByBlogIds(blogIds),
+    ]);
+
+    const rssList = RssListItemDto.toResultDtoArray(
+      rssAcceptList,
+      feedCountMap,
+      lastPublishedAtMap,
+    );
+    const totalPages = Math.ceil(totalCount / limit);
+
+    return RssListResponseDto.toResponseDto(
+      totalCount,
+      rssList,
+      totalPages,
+      limit,
+    );
+  }
+
   async searchRss(searchRssQueryDto: SearchRssRequestDto, viewerId?: number) {
     const { find, page, limit } = searchRssQueryDto;
     const offset = (page - 1) * limit;
@@ -348,13 +382,10 @@ export class RssService {
       searchResult.map((rss) => rss.id),
     );
 
-    const rssList = SearchRssResult.toResultDtoArray(
-      searchResult,
-      feedCountMap,
-    );
+    const rssList = RssListItemDto.toResultDtoArray(searchResult, feedCountMap);
     const totalPages = Math.ceil(totalCount / limit);
 
-    return SearchRssResponseDto.toResponseDto(
+    return RssListResponseDto.toResponseDto(
       totalCount,
       rssList,
       totalPages,

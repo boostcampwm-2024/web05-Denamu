@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 import { RssAccept } from '@rss/entity/rss.entity';
 
-export class SearchRssResult {
+export class RssListItemDto {
   @ApiProperty({ example: 1, description: 'RSS(rss_accept) ID' })
   id: number;
 
@@ -22,39 +22,56 @@ export class SearchRssResult {
   @ApiProperty({ example: 12, description: '공개 게시글 개수' })
   feedCount: number;
 
-  private constructor(partial: Partial<SearchRssResult>) {
+  @ApiProperty({
+    example: '2025-01-15T00:00:00.000Z',
+    description: '최근 공개 게시글 발행일',
+    nullable: true,
+  })
+  lastPublishedAt: Date | null;
+
+  private constructor(partial: Partial<RssListItemDto>) {
     Object.assign(this, partial);
   }
 
-  static toResultDto(rss: RssAccept, feedCount: number) {
-    return new SearchRssResult({
+  static toResultDto(
+    rss: RssAccept,
+    feedCount: number,
+    lastPublishedAt: Date | null = null,
+  ) {
+    return new RssListItemDto({
       id: rss.id,
       name: rss.name,
       blogPlatform: rss.blogPlatform,
       blogImage: rss.blogImage ?? null,
       feedCount,
+      lastPublishedAt,
     });
   }
 
   static toResultDtoArray(
     rssList: RssAccept[],
     feedCountMap: Map<number, number>,
+    lastPublishedAtMap: Map<number, Date> = new Map(),
   ) {
     return rssList.map((rss) =>
-      this.toResultDto(rss, feedCountMap.get(rss.id) ?? 0),
+      this.toResultDto(
+        rss,
+        feedCountMap.get(rss.id) ?? 0,
+        lastPublishedAtMap.get(rss.id) ?? null,
+      ),
     );
   }
 }
 
-export class SearchRssResponseDto {
+export class RssListResponseDto {
   @ApiProperty({
     example: 1,
     description: '전체 RSS 개수',
   })
   totalCount: number;
 
-  @ApiProperty({ type: [SearchRssResult], description: '검색 결과 RSS' })
-  result: SearchRssResult[];
+  @ApiProperty({ type: [RssListItemDto], description: 'RSS 목록' })
+  result: RssListItemDto[];
 
   @ApiProperty({
     example: 10,
@@ -68,17 +85,17 @@ export class SearchRssResponseDto {
   })
   limit: number;
 
-  constructor(partial: Partial<SearchRssResponseDto>) {
+  constructor(partial: Partial<RssListResponseDto>) {
     Object.assign(this, partial);
   }
 
   static toResponseDto(
     totalCount: number,
-    rssList: SearchRssResult[],
+    rssList: RssListItemDto[],
     totalPages: number,
     limit: number,
   ) {
-    return new SearchRssResponseDto({
+    return new RssListResponseDto({
       totalCount,
       result: rssList,
       totalPages,

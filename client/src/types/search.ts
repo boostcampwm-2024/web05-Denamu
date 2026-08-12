@@ -62,6 +62,7 @@ export interface RssSearchResult {
   blogPlatform: string;
   blogImage: string | null;
   feedCount: number;
+  lastPublishedAt: string | null;
 }
 
 export interface RssSearchData {

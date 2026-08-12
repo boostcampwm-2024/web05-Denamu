@@ -45,6 +45,15 @@ export const PLATFORMS: Record<PlatformType, Platform> = {
   },
 };
 
+export const RSS_LIST_PLATFORM_FILTERS: { value: string; label: string }[] = [
+  { value: "tistory", label: "Tistory" },
+  { value: "velog", label: "Velog" },
+  { value: "medium", label: "Medium" },
+  { value: "github", label: "Github" },
+  { value: "naver", label: "Naver" },
+  { value: "etc", label: "기타" },
+];
+
 export const BLOG_ADDRESS_PLATFORM_TYPES = ["tistory", "velog", "medium", "github", "naver"] as const;
 export type BlogAddressPlatformType = (typeof BLOG_ADDRESS_PLATFORM_TYPES)[number];
 
