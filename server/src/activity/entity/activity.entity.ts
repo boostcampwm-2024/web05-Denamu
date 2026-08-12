@@ -41,7 +41,7 @@ export class Activity extends BaseEntity {
   })
   viewCount: number;
 
-  @ManyToOne(() => User, (user) => user.activities)
+  @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id', foreignKeyConstraintName: 'FK_activity_user_id' })
   user: User;
 }

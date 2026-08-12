@@ -891,7 +891,7 @@ describe(`${UserService.name} Unit Test`, () => {
     it('사용자가 있으면 인증 코드를 저장하고 메일을 발송한다.', async () => {
       // given
       userRepository.findOne.mockResolvedValue(
-        UserFixture.createUserFixture({ id: 1, providers: [] }),
+        UserFixture.createUserFixture({ id: 1 }),
       );
 
       // when
@@ -913,7 +913,6 @@ describe(`${UserService.name} Unit Test`, () => {
         UserFixture.createUserFixture({
           id: 1,
           password: null,
-          providers: [{}] as any,
         }),
       );
 
