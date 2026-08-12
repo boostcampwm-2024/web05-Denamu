@@ -6,7 +6,7 @@ import {
   ApiDataResponse,
 } from '@common/swagger/swagger.helper';
 
-import { SearchRssResponseDto } from '@rss/dto/response/searchRss.dto';
+import { RssListResponseDto } from '@rss/dto/response/rssList.dto';
 
 export function ApiGetAllRss() {
   return applyDecorators(
@@ -36,7 +36,7 @@ export function ApiGetAllRss() {
       description: '필터링할 RSS 블로그 플랫폼',
       example: 'velog',
     }),
-    ApiDataResponse(SearchRssResponseDto, false, '전체 RSS 목록 조회 성공'),
+    ApiDataResponse(RssListResponseDto, false, '전체 RSS 목록 조회 성공'),
     ApiBadRequestDoc('요청 데이터 검증에 실패했습니다.'),
   );
 }

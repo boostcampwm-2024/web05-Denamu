@@ -6,7 +6,7 @@ import {
   ApiDataResponse,
 } from '@common/swagger/swagger.helper';
 
-import { SearchRssResponseDto } from '@rss/dto/response/searchRss.dto';
+import { RssListResponseDto } from '@rss/dto/response/rssList.dto';
 
 export function ApiSearchRss() {
   return applyDecorators(
@@ -36,7 +36,7 @@ export function ApiSearchRss() {
       description: '한 페이지에 보여줄 개수',
       example: 5,
     }),
-    ApiDataResponse(SearchRssResponseDto, false, 'RSS 검색 결과 조회 성공'),
+    ApiDataResponse(RssListResponseDto, false, 'RSS 검색 결과 조회 성공'),
     ApiBadRequestDoc('요청 데이터 검증에 실패했습니다.'),
   );
 }

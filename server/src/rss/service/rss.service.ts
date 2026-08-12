@@ -54,9 +54,9 @@ import { ReadRssResponseDto } from '@rss/dto/response/readRss.dto';
 import { ReadRssAcceptHistoryResponseDto } from '@rss/dto/response/readRssAcceptHistory.dto';
 import { ReadRssRejectHistoryResponseDto } from '@rss/dto/response/readRssRejectHistory.dto';
 import {
-  SearchRssResponseDto,
-  SearchRssResult,
-} from '@rss/dto/response/searchRss.dto';
+  RssListItemDto,
+  RssListResponseDto,
+} from '@rss/dto/response/rssList.dto';
 import { Rss, RssAccept, RssReject } from '@rss/entity/rss.entity';
 import {
   RssAcceptRepository,
@@ -351,14 +351,14 @@ export class RssService {
       this.feedRepository.getLatestPublicFeedDateByBlogIds(blogIds),
     ]);
 
-    const rssList = SearchRssResult.toResultDtoArray(
+    const rssList = RssListItemDto.toResultDtoArray(
       rssAcceptList,
       feedCountMap,
       lastPublishedAtMap,
     );
     const totalPages = Math.ceil(totalCount / limit);
 
-    return SearchRssResponseDto.toResponseDto(
+    return RssListResponseDto.toResponseDto(
       totalCount,
       rssList,
       totalPages,
@@ -382,13 +382,10 @@ export class RssService {
       searchResult.map((rss) => rss.id),
     );
 
-    const rssList = SearchRssResult.toResultDtoArray(
-      searchResult,
-      feedCountMap,
-    );
+    const rssList = RssListItemDto.toResultDtoArray(searchResult, feedCountMap);
     const totalPages = Math.ceil(totalCount / limit);
 
-    return SearchRssResponseDto.toResponseDto(
+    return RssListResponseDto.toResponseDto(
       totalCount,
       rssList,
       totalPages,

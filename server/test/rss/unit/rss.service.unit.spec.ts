@@ -29,7 +29,7 @@ import { RegisterRssRequestDto } from '@rss/dto/request/registerRss.dto';
 import { ReadRssResponseDto } from '@rss/dto/response/readRss.dto';
 import { ReadRssAcceptHistoryResponseDto } from '@rss/dto/response/readRssAcceptHistory.dto';
 import { ReadRssRejectHistoryResponseDto } from '@rss/dto/response/readRssRejectHistory.dto';
-import { SearchRssResponseDto } from '@rss/dto/response/searchRss.dto';
+import { RssListResponseDto } from '@rss/dto/response/rssList.dto';
 import {
   RssAcceptRepository,
   RssRejectRepository,
@@ -976,7 +976,7 @@ describe(`${RssService.name} Unit Test`, () => {
         feedRepository.getLatestPublicFeedDateByBlogIds,
       ).toHaveBeenCalledWith([1]);
       expect(result).toEqual(
-        SearchRssResponseDto.toResponseDto(
+        RssListResponseDto.toResponseDto(
           1,
           [
             {
@@ -1086,7 +1086,7 @@ describe(`${RssService.name} Unit Test`, () => {
         1,
       ]);
       expect(result).toEqual(
-        SearchRssResponseDto.toResponseDto(
+        RssListResponseDto.toResponseDto(
           1,
           [
             {

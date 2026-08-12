@@ -7,7 +7,7 @@ import { RssBlockRepository } from '@block/repository/rssBlock.repository';
 
 import { FeedRepository } from '@feed/repository/feed.repository';
 
-import { SearchRssResponseDto } from '@rss/dto/response/searchRss.dto';
+import { RssListResponseDto } from '@rss/dto/response/rssList.dto';
 import { RssAcceptRepository } from '@rss/repository/rss.repository';
 
 import { UserRepository } from '@user/repository/user.repository';
@@ -47,7 +47,7 @@ describe(`GET ${URL} E2E Test`, () => {
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
-    const { data }: { data: SearchRssResponseDto } = response.body;
+    const { data }: { data: RssListResponseDto } = response.body;
     const ids = data.result.map((rss) => rss.id);
     expect(ids.indexOf(newRss.id)).toBeLessThan(ids.indexOf(oldRss.id));
   });
@@ -74,7 +74,7 @@ describe(`GET ${URL} E2E Test`, () => {
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
-    const { data }: { data: SearchRssResponseDto } = response.body;
+    const { data }: { data: RssListResponseDto } = response.body;
     const ids = data.result.map((rss) => rss.id);
     expect(ids.indexOf(registeredSecond.id)).toBeLessThan(
       ids.indexOf(registeredFirst.id),
@@ -97,7 +97,7 @@ describe(`GET ${URL} E2E Test`, () => {
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
-    const { data }: { data: SearchRssResponseDto } = response.body;
+    const { data }: { data: RssListResponseDto } = response.body;
     const ids = data.result.map((rss) => rss.id);
     expect(ids.indexOf(withPost.id)).toBeLessThan(ids.indexOf(withoutPost.id));
   });
@@ -123,7 +123,7 @@ describe(`GET ${URL} E2E Test`, () => {
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
-    const { data }: { data: SearchRssResponseDto } = response.body;
+    const { data }: { data: RssListResponseDto } = response.body;
     const target = data.result.find((rss) => rss.id === rssAccept.id);
     expect(new Date(target.lastPublishedAt).toISOString()).toBe(
       latest.createdAt.toISOString(),
@@ -139,7 +139,7 @@ describe(`GET ${URL} E2E Test`, () => {
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
-    const { data }: { data: SearchRssResponseDto } = response.body;
+    const { data }: { data: RssListResponseDto } = response.body;
     const target = data.result.find((rss) => rss.id === rssAccept.id);
     expect(target.lastPublishedAt).toBeNull();
   });
@@ -155,7 +155,7 @@ describe(`GET ${URL} E2E Test`, () => {
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
-    const { data }: { data: SearchRssResponseDto } = response.body;
+    const { data }: { data: RssListResponseDto } = response.body;
     expect(data.result.length).toBe(2);
     expect(data.totalCount).toBe(5);
     expect(data.totalPages).toBe(3);
@@ -172,7 +172,7 @@ describe(`GET ${URL} E2E Test`, () => {
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
-    const { data }: { data: SearchRssResponseDto } = response.body;
+    const { data }: { data: RssListResponseDto } = response.body;
     expect(data.result.map((rss) => rss.id)).toEqual([velogRss.id]);
     expect(data.result[0].blogPlatform).toBe('velog');
   });
@@ -192,7 +192,7 @@ describe(`GET ${URL} E2E Test`, () => {
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
-    const { data }: { data: SearchRssResponseDto } = response.body;
+    const { data }: { data: RssListResponseDto } = response.body;
     const target = data.result.find((rss) => rss.id === rssAccept.id);
     expect(target.feedCount).toBe(1);
   });
@@ -219,7 +219,7 @@ describe(`GET ${URL} E2E Test`, () => {
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
-    const { data }: { data: SearchRssResponseDto } = response.body;
+    const { data }: { data: RssListResponseDto } = response.body;
     const ids = data.result.map((rss) => rss.id);
     expect(ids).not.toContain(blockedRss.id);
     expect(ids).toContain(normalRss.id);
@@ -243,7 +243,7 @@ describe(`GET ${URL} E2E Test`, () => {
 
     // then
     expect(response.status).toBe(HttpStatus.OK);
-    const { data }: { data: SearchRssResponseDto } = response.body;
+    const { data }: { data: RssListResponseDto } = response.body;
     expect(data.result.map((rss) => rss.id)).toContain(blockedRss.id);
   });
 

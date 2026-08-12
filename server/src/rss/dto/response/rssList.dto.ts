@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 import { RssAccept } from '@rss/entity/rss.entity';
 
-export class SearchRssResult {
+export class RssListItemDto {
   @ApiProperty({ example: 1, description: 'RSS(rss_accept) ID' })
   id: number;
 
@@ -29,7 +29,7 @@ export class SearchRssResult {
   })
   lastPublishedAt: Date | null;
 
-  private constructor(partial: Partial<SearchRssResult>) {
+  private constructor(partial: Partial<RssListItemDto>) {
     Object.assign(this, partial);
   }
 
@@ -38,7 +38,7 @@ export class SearchRssResult {
     feedCount: number,
     lastPublishedAt: Date | null = null,
   ) {
-    return new SearchRssResult({
+    return new RssListItemDto({
       id: rss.id,
       name: rss.name,
       blogPlatform: rss.blogPlatform,
@@ -63,15 +63,15 @@ export class SearchRssResult {
   }
 }
 
-export class SearchRssResponseDto {
+export class RssListResponseDto {
   @ApiProperty({
     example: 1,
     description: '전체 RSS 개수',
   })
   totalCount: number;
 
-  @ApiProperty({ type: [SearchRssResult], description: 'RSS 목록' })
-  result: SearchRssResult[];
+  @ApiProperty({ type: [RssListItemDto], description: 'RSS 목록' })
+  result: RssListItemDto[];
 
   @ApiProperty({
     example: 10,
@@ -85,17 +85,17 @@ export class SearchRssResponseDto {
   })
   limit: number;
 
-  constructor(partial: Partial<SearchRssResponseDto>) {
+  constructor(partial: Partial<RssListResponseDto>) {
     Object.assign(this, partial);
   }
 
   static toResponseDto(
     totalCount: number,
-    rssList: SearchRssResult[],
+    rssList: RssListItemDto[],
     totalPages: number,
     limit: number,
   ) {
-    return new SearchRssResponseDto({
+    return new RssListResponseDto({
       totalCount,
       result: rssList,
       totalPages,
