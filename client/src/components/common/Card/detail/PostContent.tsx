@@ -7,6 +7,8 @@ import ShareButton from "@/components/common/Card/detail/ShareButton";
 
 import { usePostCardActions } from "@/hooks/common/usePostCardActions";
 
+import { DEFAULT_THUMBNAIL } from "@/constants/thumbnail";
+
 import { useMediaStore } from "@/store/useMediaStore";
 import { FeedDetail } from "@/types/post";
 
@@ -40,7 +42,7 @@ export const PostContent = React.memo(({ post, highlightCommentId }: PostContent
         </div>
         {!isMobile && (
           <img
-            src={post.thumbnail}
+            src={post.thumbnail || DEFAULT_THUMBNAIL}
             alt={`Thumbnail for ${post.title}`}
             className="w-full max-h-[200px] object-cover col-span-2 "
           />
