@@ -172,7 +172,7 @@ describe('Claude AI e2e-test', () => {
   it('최근 게시글 캐시가 존재하면 tagList와 summary를 갱신한다.', async () => {
     // given
     await testContext.redisConnection.hset(
-      `feed:recent:${feedData.insertId}`,
+      `feed:info:${feedData.insertId}`,
       'title',
       'test',
       'summary',
@@ -196,7 +196,7 @@ describe('Claude AI e2e-test', () => {
     // then
     const cached = (await testContext.redisConnection.executePipeline(
       (pipeline) => {
-        pipeline.hgetall(`feed:recent:${feedData.insertId}`);
+        pipeline.hgetall(`feed:info:${feedData.insertId}`);
       },
     )) as [error: Error, result: Record<string, string>][];
 
@@ -230,7 +230,7 @@ describe('Claude AI e2e-test', () => {
 
     // then
     const exists = await testContext.redisConnection.exists(
-      `feed:recent:${uncachedFeedData.insertId}`,
+      `feed:info:${uncachedFeedData.insertId}`,
     );
     expect(exists).toBe(false);
   });

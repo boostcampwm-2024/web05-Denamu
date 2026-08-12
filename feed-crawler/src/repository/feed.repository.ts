@@ -155,13 +155,13 @@ export class FeedRepository {
   async deleteRecentFeed() {
     this.redisMetrics.total.inc({ operation: 'delete_recent' });
     try {
-      const trackedKeys = await this.redisConnection.smembers(
+      const trackedIds = await this.redisConnection.smembers(
         redisConstant.FEED_RECENT_INDEX_KEY,
       );
 
-      if (trackedKeys.length > 0) {
+      if (trackedIds.length > 0) {
         await this.redisConnection.del(
-          ...trackedKeys,
+          ...trackedIds.map((id) => redisConstant.FEED_INFO_ITEM_KEY(id)),
           redisConstant.FEED_RECENT_INDEX_KEY,
         );
       }
@@ -207,11 +207,10 @@ export class FeedRepository {
             likes: 0,
             comments: 0,
           };
-          pipeline.hset(`feed:recent:${feed.id}`, record);
-          pipeline.sadd(
-            redisConstant.FEED_RECENT_INDEX_KEY,
-            `feed:recent:${feed.id}`,
-          );
+          const infoKey = redisConstant.FEED_INFO_ITEM_KEY(feed.id);
+          pipeline.hset(infoKey, record);
+          pipeline.expire(infoKey, redisConstant.FEED_INFO_TTL_SECONDS);
+          pipeline.sadd(redisConstant.FEED_RECENT_INDEX_KEY, feed.id);
         }
       });
       this.redisMetrics.success.inc({ operation: 'cache_feeds' });
