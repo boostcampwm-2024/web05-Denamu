@@ -1,14 +1,5 @@
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  ManyToMany,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-  Unique,
-} from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique } from 'typeorm';
 
-import { Feed } from '@feed/entity/feed.entity';
 import { Category } from '@tag/entity/category.entity';
 
 @Entity({ name: 'tag' })
@@ -29,7 +20,4 @@ export class Tag {
     foreignKeyConstraintName: 'FK_tag_category',
   })
   category: Category;
-
-  @ManyToMany(() => Feed, (feed) => feed.tags)
-  feeds: Feed[];
 }

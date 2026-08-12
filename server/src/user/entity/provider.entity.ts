@@ -55,7 +55,7 @@ export class Provider extends BaseEntity {
   })
   updatedAt: Date;
 
-  @ManyToOne(() => User, (user) => user.providers, {
+  @ManyToOne(() => User, {
     nullable: false,
     onUpdate: 'CASCADE',
     onDelete: 'CASCADE',
