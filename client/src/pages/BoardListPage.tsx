@@ -138,7 +138,7 @@ export default function BoardListPage() {
   const isQnaFormMode = tab === "QNA" && qnaMode === "form";
 
   return (
-    <Layout>
+    <Layout footer>
       <Helmet>
         <title>공지사항 · FAQ · Q&A - 데나무</title>
       </Helmet>
