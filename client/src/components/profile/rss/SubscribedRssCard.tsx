@@ -28,7 +28,7 @@ export const SubscribedRssCard = ({ rss }: SubscribedRssCardProps) => {
   return (
     <li className="flex items-center justify-between p-4 border border-gray-100 rounded-lg">
       <div className="flex items-center min-w-0 space-x-3">
-        <PlatformIcon platform={rss.blogPlatform} image={rss.blogImage} className="flex-shrink-0 w-10 h-10" />
+        <PlatformIcon platform={rss.blogPlatform} image={rss.blogImage} name={rss.name} className="flex-shrink-0 w-10 h-10" />
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <p className="font-medium truncate">{rss.name}</p>

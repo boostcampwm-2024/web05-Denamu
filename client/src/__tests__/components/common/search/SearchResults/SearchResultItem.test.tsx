@@ -20,7 +20,7 @@ describe("SearchResultItem", () => {
     id: 1,
     createdAt: "2024-01-01",
     title: "테스트 제목입니다",
-    blog: { name: "테스트 블로그", platform: "etc" },
+    blog: { name: "테스트 블로그", platform: "etc", image: null },
     path: "/test-path",
     thumbnail: "",
     viewCount: 0,

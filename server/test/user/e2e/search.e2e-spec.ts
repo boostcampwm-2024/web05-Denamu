@@ -5,11 +5,14 @@ import TestAgent from 'supertest/lib/agent';
 
 import { UserBlockRepository } from '@block/repository/userBlock.repository';
 
+import { RssAcceptRepository } from '@rss/repository/rss.repository';
+
 import { UserSuspensionRepository } from '@suspension/repository/userSuspension.repository';
 
 import { User } from '@user/entity/user.entity';
 import { UserRepository } from '@user/repository/user.repository';
 
+import { RssAcceptFixture } from '@test/config/common/fixture/rss-accept.fixture';
 import { UserFixture } from '@test/config/common/fixture/user.fixture';
 import { createAccessToken, testApp } from '@test/config/e2e/env/jest.setup';
 
@@ -20,7 +23,13 @@ type SearchResponseBody = {
     totalCount: number;
     totalPages: number;
     limit: number;
-    result: { id: number; userName: string; profileImage: string | null }[];
+    result: {
+      id: number;
+      userName: string;
+      profileImage: string | null;
+      introduction: string | null;
+      blogCount: number;
+    }[];
   };
 };
 
@@ -29,12 +38,14 @@ describe(`GET ${URL}?find={} E2E Test`, () => {
   let userRepository: UserRepository;
   let blockRepository: UserBlockRepository;
   let userSuspensionRepository: UserSuspensionRepository;
+  let rssAcceptRepository: RssAcceptRepository;
 
   beforeAll(() => {
     agent = supertest(testApp.getHttpServer());
     userRepository = testApp.get(UserRepository);
     blockRepository = testApp.get(UserBlockRepository);
     userSuspensionRepository = testApp.get(UserSuspensionRepository);
+    rssAcceptRepository = testApp.get(RssAcceptRepository);
   });
 
   const saveUser = (userName: string, overwrites: Partial<User> = {}) =>
@@ -67,11 +78,12 @@ describe(`GET ${URL}?find={} E2E Test`, () => {
     ]);
   });
 
-  it('[200] 검색 결과는 id, 닉네임, 프로필 이미지만 포함한다.', async () => {
+  it('[200] 검색 결과는 id, 닉네임, 프로필 이미지, 자기소개, 소유 RSS 개수를 포함한다.', async () => {
     // given
     const user = await saveUser('프로필유저', {
       profileImage:
         'https://denamu.dev/objects/PROFILE_IMAGE/20250816/uuid.png',
+      introduction: '안녕하세요, 프로필유저입니다.',
     });
 
     // when
@@ -85,11 +97,13 @@ describe(`GET ${URL}?find={} E2E Test`, () => {
         id: user.id,
         userName: user.userName,
         profileImage: user.profileImage,
+        introduction: user.introduction,
+        blogCount: 0,
       },
     ]);
   });
 
-  it('[200] 프로필 이미지가 없으면 null로 반환한다.', async () => {
+  it('[200] 프로필 이미지·자기소개가 없으면 null로 반환한다.', async () => {
     // given
     const user = await saveUser('이미지없음', { profileImage: null });
 
@@ -103,7 +117,33 @@ describe(`GET ${URL}?find={} E2E Test`, () => {
       id: user.id,
       userName: user.userName,
       profileImage: null,
+      introduction: null,
+      blogCount: 0,
     });
+  });
+
+  it('[200] 유저가 소유한 RSS 개수를 함께 반환한다.', async () => {
+    // given
+    const user = await saveUser('블로그유저');
+    await rssAcceptRepository.save(
+      RssAcceptFixture.createRssAcceptFixture({ userId: user.id }),
+    );
+    await rssAcceptRepository.save(
+      RssAcceptFixture.createRssAcceptFixture({ userId: user.id }),
+    );
+    // 다른 유저 소유 RSS는 개수에 포함되면 안 된다.
+    const other = await saveUser('다른블로그유저');
+    await rssAcceptRepository.save(
+      RssAcceptFixture.createRssAcceptFixture({ userId: other.id }),
+    );
+
+    // when
+    const response = await agent.get(URL).query({ find: '블로그유저' });
+
+    // then
+    const { data } = response.body as SearchResponseBody;
+    expect(response.status).toBe(HttpStatus.OK);
+    expect(data.result[0].blogCount).toBe(2);
   });
 
   it('[200] LIKE 와일드카드(%)가 포함된 검색어는 리터럴로 처리한다.', async () => {

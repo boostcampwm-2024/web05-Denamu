@@ -48,6 +48,8 @@ const makeSearchUser = (overrides: Partial<UserSearchResult> = {}): UserSearchRe
   id: 10,
   userName: "검색된유저",
   profileImage: null,
+  introduction: null,
+  blogCount: 0,
   ...overrides,
 });
 

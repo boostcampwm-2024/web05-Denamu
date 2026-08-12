@@ -18,8 +18,8 @@ describe("FilterButton", () => {
     render(<FilterButton />);
 
     expect(screen.getByText("제목")).toBeInTheDocument();
-    expect(screen.getByText("블로거")).toBeInTheDocument();
-    expect(screen.getByText("블로거 + 제목")).toBeInTheDocument();
+    expect(screen.getByText("RSS 이름")).toBeInTheDocument();
+    expect(screen.getByText("RSS 이름 + 제목")).toBeInTheDocument();
   });
 
   it("현재 선택된 필터에 accent 스타일이 적용되어야 한다", () => {
@@ -41,7 +41,7 @@ describe("FilterButton", () => {
 
     render(<FilterButton />);
 
-    fireEvent.click(screen.getByText("블로거"));
+    fireEvent.click(screen.getByText("RSS 이름"));
 
     expect(mockSetFilter).toHaveBeenCalledWith("blogName");
     expect(mockSetPage).toHaveBeenCalledWith(1);

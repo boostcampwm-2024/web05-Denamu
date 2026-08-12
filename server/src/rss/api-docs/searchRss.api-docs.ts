@@ -13,7 +13,7 @@ export function ApiSearchRss() {
     ApiOperation({
       summary: 'RSS 블로그 이름 검색 API',
       description:
-        '승인된 RSS(rss_accept) 중 블로그 이름으로 검색합니다. 결과는 id, 이름, 플랫폼, 프로필 이미지를 포함합니다.',
+        '승인된 RSS(rss_accept) 중 블로그 이름으로 검색합니다. 결과는 id, 이름, 플랫폼, 프로필 이미지, 공개 게시글 개수를 포함합니다.',
     }),
     ApiQuery({
       name: 'find',

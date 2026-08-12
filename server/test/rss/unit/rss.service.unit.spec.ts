@@ -947,6 +947,9 @@ describe(`${RssService.name} Unit Test`, () => {
       // given
       const rssList = [makeRssAccept(1, 'seok3765.log')];
       rssAcceptRepository.searchRssList.mockResolvedValue([rssList, 1]);
+      feedRepository.countPublicFeedsByBlogIds.mockResolvedValue(
+        new Map([[1, 12]]),
+      );
 
       // when
       const result = await rssService.searchRss({
@@ -962,6 +965,9 @@ describe(`${RssService.name} Unit Test`, () => {
         10,
         undefined,
       );
+      expect(feedRepository.countPublicFeedsByBlogIds).toHaveBeenCalledWith([
+        1,
+      ]);
       expect(result).toEqual(
         SearchRssResponseDto.toResponseDto(
           1,
@@ -971,6 +977,7 @@ describe(`${RssService.name} Unit Test`, () => {
               name: 'seok3765.log',
               blogPlatform: 'velog',
               blogImage: null,
+              feedCount: 12,
             },
           ],
           1,

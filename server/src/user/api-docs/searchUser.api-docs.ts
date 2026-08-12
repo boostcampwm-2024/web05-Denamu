@@ -13,7 +13,7 @@ export function ApiSearchUser() {
     ApiOperation({
       summary: '유저 닉네임 검색 API',
       description:
-        '닉네임 부분 일치(LIKE)로 유저를 검색합니다. 결과는 id, 닉네임, 프로필 이미지를 포함합니다.',
+        '닉네임 부분 일치(LIKE)로 유저를 검색합니다. 결과는 id, 닉네임, 프로필 이미지, 자기소개, 소유 RSS 블로그 개수를 포함합니다.',
     }),
     ApiQuery({
       name: 'find',
