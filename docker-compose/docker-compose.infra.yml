@@ -13,13 +13,13 @@ services:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
       - --skip-character-set-client-handshake
+      - --default-time-zone=+00:00
     environment:
       MYSQL_ROOT_HOST: localhost
       MYSQL_ROOT_PASSWORD: 'denamu-db'
       MYSQL_DATABASE: 'denamu'
       MYSQL_USER: 'denamu-db-user'
       MYSQL_PASSWORD: 'denamu-db-pw'
-      TZ: 'Asia/Seoul'
     healthcheck:
       test:
         [
@@ -60,8 +60,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
-    environment:
-      TZ: 'Asia/Seoul'
     profiles:
       - was
       - feed-crawler
