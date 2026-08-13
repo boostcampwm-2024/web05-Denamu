@@ -321,7 +321,9 @@ export class FeedService {
       .map((feed) => ({
         ...feed,
         tagList:
-          typeof feed.tagList === 'string' ? feed.tagList.split(',') : [],
+          typeof feed.tagList === 'string' && feed.tagList
+            ? feed.tagList.split(',')
+            : [],
         isNew: true,
       }))
       .sort(
