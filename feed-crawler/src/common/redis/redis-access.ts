@@ -84,6 +84,14 @@ export class RedisConnection implements Lifecycle {
     return this.execute('smembers', () => this.redis.smembers(key));
   }
 
+  async sadd(key: string, ...members: (string | number)[]): Promise<number> {
+    return this.execute('sadd', () => this.redis.sadd(key, ...members));
+  }
+
+  async expire(key: string, seconds: number): Promise<number> {
+    return this.execute('expire', () => this.redis.expire(key, seconds));
+  }
+
   async exists(key: string) {
     const result = await this.execute('exists', () => this.redis.exists(key));
     return result === 1;

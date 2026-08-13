@@ -146,11 +146,8 @@ export class FeedService {
 
   private async checkNewFeeds(feedList: FeedView[]) {
     const newFeedIds = (
-      await this.redisService.keys(REDIS_KEYS.FEED_RECENT_ALL_KEY)
-    ).map((key) => {
-      const feedId = key.match(/feed:recent:(\d+)/);
-      return parseInt(feedId[1]);
-    });
+      await this.redisService.smembers(REDIS_KEYS.FEED_RECENT_INDEX_KEY)
+    ).map((id) => parseInt(id));
 
     return feedList.map((feed): FeedPaginationResult => {
       return {
@@ -161,19 +158,73 @@ export class FeedService {
   }
 
   async readTrendFeedList() {
-    const trendFeedIdList = await this.redisService.lrange(
-      REDIS_KEYS.FEED_ORIGIN_TREND_KEY,
-      0,
-      -1,
-    );
-    const trendFeeds = await Promise.all(
-      trendFeedIdList.map(async (feedId) =>
-        this.feedViewRepository.findOneBy({ feedId: parseInt(feedId) }),
-      ),
-    );
-    return FeedTrendResponseDto.toResponseDtoArray(
-      trendFeeds.filter((feed) => feed !== null),
-    );
+    const trendFeedIdList = (
+      await this.redisService.lrange(REDIS_KEYS.FEED_ORIGIN_TREND_KEY, 0, -1)
+    ).map((id) => parseInt(id));
+    if (!trendFeedIdList.length) return [];
+
+    const cachedFeeds = await this.redisService.executePipeline((pipeline) => {
+      for (const feedId of trendFeedIdList) {
+        pipeline.hgetall(REDIS_KEYS.FEED_INFO_ITEM_KEY(feedId));
+      }
+    });
+
+    const cachedById = new Map<number, FeedRecentRedis>();
+    const missingIds: number[] = [];
+    cachedFeeds.forEach(([err, feed], index) => {
+      const cache = feed as FeedRecentRedis;
+      const feedId = trendFeedIdList[index];
+      if (!err && cache?.id) {
+        cachedById.set(feedId, cache);
+      } else {
+        missingIds.push(feedId);
+      }
+    });
+
+    const dbFeedsById = new Map<number, FeedTrendResponseDto>();
+    if (missingIds.length) {
+      const dbFeeds = await Promise.all(
+        missingIds.map((feedId) =>
+          this.feedViewRepository.findOneBy({ feedId }),
+        ),
+      );
+      FeedTrendResponseDto.toResponseDtoArray(
+        dbFeeds.filter((feed) => feed !== null),
+      ).forEach((feed) => dbFeedsById.set(feed.id, feed));
+    }
+
+    return trendFeedIdList
+      .map((feedId) =>
+        cachedById.has(feedId)
+          ? FeedTrendResponseDto.toResponseDtoFromCache(cachedById.get(feedId))
+          : dbFeedsById.get(feedId),
+      )
+      .filter((feed): feed is FeedTrendResponseDto => feed !== undefined);
+  }
+
+  async cacheTrendFeeds(trendFeeds: FeedTrendResponseDto[]) {
+    if (!trendFeeds.length) return;
+
+    await this.redisService.executePipeline((pipeline) => {
+      for (const feed of trendFeeds) {
+        const infoKey = REDIS_KEYS.FEED_INFO_ITEM_KEY(feed.id);
+        pipeline.hset(infoKey, {
+          id: feed.id,
+          blogPlatform: feed.blog.platform,
+          blogImage: feed.blog.image ?? '',
+          createdAt: feed.createdAt.toISOString(),
+          viewCount: feed.viewCount,
+          blogName: feed.blog.name,
+          thumbnail: feed.thumbnail,
+          path: feed.path,
+          title: feed.title,
+          tagList: feed.tag ?? [],
+          likes: feed.likes,
+          comments: feed.comments,
+        });
+        pipeline.expire(infoKey, REDIS_KEYS.FEED_INFO_TTL_SECONDS);
+      }
+    });
   }
 
   async searchFeedList(
@@ -246,31 +297,38 @@ export class FeedService {
         1,
         feedId.toString(),
       ),
+      this.redisService.hincrbyIfExists(
+        REDIS_KEYS.FEED_INFO_ITEM_KEY(feedId),
+        'viewCount',
+        1,
+      ),
     ]);
   }
 
   async readRecentFeedList() {
-    const recentKeys = await this.redisService.keys(
-      REDIS_KEYS.FEED_RECENT_ALL_KEY,
+    const recentIds = await this.redisService.smembers(
+      REDIS_KEYS.FEED_RECENT_INDEX_KEY,
     );
 
-    if (!recentKeys.length) {
+    if (!recentIds.length) {
       return [];
     }
 
     const recentFeeds = await this.redisService.executePipeline((pipeline) => {
-      for (const key of recentKeys) {
-        pipeline.hgetall(key);
+      for (const id of recentIds) {
+        pipeline.hgetall(REDIS_KEYS.FEED_INFO_ITEM_KEY(id));
       }
     });
 
     const recentFeedList = recentFeeds
-      .filter(([err]) => !err)
+      .filter(([err, feed]) => !err && (feed as FeedRecentRedis)?.id)
       .map(([, feed]) => feed as FeedRecentRedis)
       .map((feed) => ({
         ...feed,
         tagList:
-          typeof feed.tagList === 'string' ? feed.tagList.split(',') : [],
+          typeof feed.tagList === 'string' && feed.tagList
+            ? feed.tagList.split(',')
+            : [],
         isNew: true,
       }))
       .sort(
@@ -357,7 +415,21 @@ export class FeedService {
 
     if (response.status === Number(HttpStatus.NOT_FOUND)) {
       await this.feedRepository.delete({ id: feedDeleteCheckDto.feedId });
+      await this.evictFeedCache([feedDeleteCheckDto.feedId]);
       throw new NotFoundException('원본 게시글이 삭제되었습니다.');
     }
+  }
+
+  private async evictFeedCache(feedIds: number[]) {
+    if (!feedIds.length) return;
+
+    await this.redisService.executePipeline((pipeline) => {
+      for (const feedId of feedIds) {
+        pipeline.del(REDIS_KEYS.FEED_INFO_ITEM_KEY(feedId));
+        pipeline.srem(REDIS_KEYS.FEED_RECENT_INDEX_KEY, feedId.toString());
+        pipeline.lrem(REDIS_KEYS.FEED_ORIGIN_TREND_KEY, 0, feedId.toString());
+        pipeline.zrem(REDIS_KEYS.FEED_TREND_KEY, feedId.toString());
+      }
+    });
   }
 }

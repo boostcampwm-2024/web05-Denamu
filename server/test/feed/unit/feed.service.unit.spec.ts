@@ -55,11 +55,12 @@ describe(`${FeedService.name} Unit Test`, () => {
   let redisService: jest.Mocked<
     Pick<
       RedisService,
-      | 'keys'
+      | 'smembers'
       | 'lrange'
       | 'sismember'
       | 'sadd'
       | 'zincrby'
+      | 'hincrbyIfExists'
       | 'executePipeline'
       | 'rpush'
       | 'set'
@@ -85,11 +86,12 @@ describe(`${FeedService.name} Unit Test`, () => {
       findFeedPagination: jest.fn(),
     };
     redisService = {
-      keys: jest.fn(),
+      smembers: jest.fn(),
       lrange: jest.fn(),
       sismember: jest.fn(),
       sadd: jest.fn(),
       zincrby: jest.fn(),
+      hincrbyIfExists: jest.fn(),
       executePipeline: jest.fn(),
       rpush: jest.fn(),
       set: jest.fn().mockResolvedValue('OK'),
@@ -264,7 +266,7 @@ describe(`${FeedService.name} Unit Test`, () => {
       const dto = { limit: 2 } as ReadFeedPaginationRequestDto;
       const feedList = [{ feedId: 1 }, { feedId: 2 }, { feedId: 3 }] as any[];
       feedViewRepository.findFeedPagination.mockResolvedValue(feedList);
-      redisService.keys.mockResolvedValue(['feed:recent:2']);
+      redisService.smembers.mockResolvedValue(['2']);
 
       // when
       const result = await feedService.readFeedPagination(dto);
@@ -283,7 +285,7 @@ describe(`${FeedService.name} Unit Test`, () => {
       feedViewRepository.findFeedPagination.mockResolvedValue([
         { feedId: 1 },
       ] as any);
-      redisService.keys.mockResolvedValue([]);
+      redisService.smembers.mockResolvedValue([]);
 
       // when
       const result = await feedService.readFeedPagination(dto);
@@ -296,9 +298,96 @@ describe(`${FeedService.name} Unit Test`, () => {
   });
 
   describe('readTrendFeedList', () => {
-    it('트렌드 ID 목록으로 피드를 조회하고 null을 제외한다.', async () => {
+    it('트렌드 목록이 비어있으면 DB/Redis 파이프라인 없이 빈 배열을 반환한다.', async () => {
+      // given
+      redisService.lrange.mockResolvedValue([]);
+
+      // when
+      const result = await feedService.readTrendFeedList();
+
+      // then
+      expect(result).toEqual([]);
+      expect(redisService.executePipeline).not.toHaveBeenCalled();
+      expect(feedViewRepository.findOneBy).not.toHaveBeenCalled();
+    });
+
+    it('feed:info 캐시가 모두 있으면 DB 조회 없이 캐시에서 응답을 만든다.', async () => {
+      // given
+      redisService.lrange.mockResolvedValue(['1']);
+      redisService.executePipeline.mockResolvedValueOnce([
+        [
+          null,
+          {
+            id: '1',
+            title: 'cached title',
+            path: 'path',
+            createdAt: '2025-01-01T00:00:00.000Z',
+            thumbnail: 'thumb',
+            viewCount: '10',
+            blogName: 'blog',
+            blogPlatform: 'tistory',
+            blogImage: '',
+            likes: '3',
+            comments: '2',
+            tagList: 'a,b',
+          },
+        ],
+      ] as any);
+
+      // when
+      const result = await feedService.readTrendFeedList();
+
+      // then
+      expect(feedViewRepository.findOneBy).not.toHaveBeenCalled();
+      expect(redisService.executePipeline).toHaveBeenCalledTimes(1);
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchObject({
+        id: 1,
+        title: 'cached title',
+        viewCount: 10,
+        likes: 3,
+        comments: 2,
+        tag: ['a', 'b'],
+      });
+    });
+
+    it('캐시의 tagList가 빈 문자열이면 태그를 빈 배열로 반환한다.', async () => {
+      // given
+      redisService.lrange.mockResolvedValue(['1']);
+      redisService.executePipeline.mockResolvedValueOnce([
+        [
+          null,
+          {
+            id: '1',
+            title: 'no tag title',
+            path: 'path',
+            createdAt: '2025-01-01T00:00:00.000Z',
+            thumbnail: 'thumb',
+            viewCount: '10',
+            blogName: 'blog',
+            blogPlatform: 'tistory',
+            blogImage: '',
+            likes: '0',
+            comments: '0',
+            tagList: '',
+          },
+        ],
+      ] as any);
+
+      // when
+      const result = await feedService.readTrendFeedList();
+
+      // then
+      expect(result[0].tag).toEqual([]);
+    });
+
+    it('feed:info 캐시가 없으면 DB로 폴백하고, null을 제외한 뒤 캐시에는 쓰지 않는다.', async () => {
       // given
       redisService.lrange.mockResolvedValue(['1', '2']);
+      redisService.executePipeline.mockResolvedValueOnce([
+        [null, {}],
+        [null, {}],
+      ] as any);
       feedViewRepository.findOneBy.mockImplementation((where) =>
         Promise.resolve(
           (where as { feedId: number }).feedId === 1
@@ -318,6 +407,65 @@ describe(`${FeedService.name} Unit Test`, () => {
       );
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe(1);
+      expect(redisService.executePipeline).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('cacheTrendFeeds', () => {
+    const createdAt = new Date('2025-01-01T00:00:00.000Z');
+    const trendFeeds = [
+      {
+        id: 1,
+        blog: { name: 'blog', platform: 'tistory', image: null },
+        title: 'title',
+        path: 'path',
+        createdAt,
+        thumbnail: 'thumb',
+        viewCount: 10,
+        likes: 3,
+        comments: 2,
+        tag: ['a', 'b'],
+      },
+    ] as any;
+    const infoKey = REDIS_KEYS.FEED_INFO_ITEM_KEY(1);
+
+    it('feed:info 키마다 HSET으로 채우고 EXPIRE를 건다.', async () => {
+      // given
+      const hsetMock = jest.fn();
+      const expireMock = jest.fn();
+      redisService.executePipeline.mockImplementation((cb: any) => {
+        cb({ hset: hsetMock, expire: expireMock });
+        return Promise.resolve([]);
+      });
+
+      // when
+      await feedService.cacheTrendFeeds(trendFeeds);
+
+      // then
+      expect(hsetMock).toHaveBeenCalledWith(
+        infoKey,
+        expect.objectContaining({
+          id: 1,
+          blogPlatform: 'tistory',
+          createdAt: createdAt.toISOString(),
+          viewCount: 10,
+          likes: 3,
+          comments: 2,
+          tagList: ['a', 'b'],
+        }),
+      );
+      expect(expireMock).toHaveBeenCalledWith(
+        infoKey,
+        REDIS_KEYS.FEED_INFO_TTL_SECONDS,
+      );
+    });
+
+    it('빈 배열이면 파이프라인을 실행하지 않는다.', async () => {
+      // when
+      await feedService.cacheTrendFeeds([]);
+
+      // then
+      expect(redisService.executePipeline).not.toHaveBeenCalled();
     });
   });
 
@@ -408,13 +556,18 @@ describe(`${FeedService.name} Unit Test`, () => {
         1,
         '10',
       );
+      expect(redisService.hincrbyIfExists).toHaveBeenCalledWith(
+        REDIS_KEYS.FEED_INFO_ITEM_KEY(10),
+        'viewCount',
+        1,
+      );
     });
   });
 
   describe('readRecentFeedList', () => {
     it('최근 피드 키가 없으면 빈 배열을 반환한다.', async () => {
       // given
-      redisService.keys.mockResolvedValue([]);
+      redisService.smembers.mockResolvedValue([]);
 
       // when
       const result = await feedService.readRecentFeedList();
@@ -426,7 +579,7 @@ describe(`${FeedService.name} Unit Test`, () => {
 
     it('파이프라인 결과를 최신순으로 정렬하고 태그를 분리한다.', async () => {
       // given
-      redisService.keys.mockResolvedValue(['feed:recent:1', 'feed:recent:2']);
+      redisService.smembers.mockResolvedValue(['1', '2']);
       redisService.executePipeline.mockResolvedValue([
         [null, { id: '1', createdAt: '2025-01-01', tagList: 'a,b' }],
         [null, { id: '2', createdAt: '2025-02-01', tagList: 'c' }],
@@ -438,6 +591,22 @@ describe(`${FeedService.name} Unit Test`, () => {
       // then
       expect(result).toHaveLength(2);
       expect(result[0].id).toBe(2);
+    });
+
+    it('인덱스에는 있지만 feed:info 캐시가 만료된 항목은 결과에서 제외한다.', async () => {
+      // given
+      redisService.smembers.mockResolvedValue(['1', '2']);
+      redisService.executePipeline.mockResolvedValue([
+        [null, { id: '1', createdAt: '2025-01-01', tagList: 'a' }],
+        [null, {}],
+      ] as any);
+
+      // when
+      const result = await feedService.readRecentFeedList();
+
+      // then
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe(1);
     });
   });
 
@@ -512,12 +681,36 @@ describe(`${FeedService.name} Unit Test`, () => {
         path: 'https://blog.test/post',
       } as any);
       mockedAxios.get.mockResolvedValue({ status: 404 });
+      const delMock = jest.fn();
+      const sremMock = jest.fn();
+      const lremMock = jest.fn();
+      const zremMock = jest.fn();
+      redisService.executePipeline.mockImplementation((cb: any) => {
+        cb({
+          del: delMock,
+          srem: sremMock,
+          lrem: lremMock,
+          zrem: zremMock,
+        });
+        return Promise.resolve([]);
+      });
 
       // when & then
       await expect(feedService.deleteCheckFeed(dto)).rejects.toThrow(
         NotFoundException,
       );
       expect(feedRepository.delete).toHaveBeenCalledWith({ id: 10 });
+      expect(delMock).toHaveBeenCalledWith(REDIS_KEYS.FEED_INFO_ITEM_KEY(10));
+      expect(sremMock).toHaveBeenCalledWith(
+        REDIS_KEYS.FEED_RECENT_INDEX_KEY,
+        '10',
+      );
+      expect(lremMock).toHaveBeenCalledWith(
+        REDIS_KEYS.FEED_ORIGIN_TREND_KEY,
+        0,
+        '10',
+      );
+      expect(zremMock).toHaveBeenCalledWith(REDIS_KEYS.FEED_TREND_KEY, '10');
     });
 
     it('원본이 살아있으면 삭제하지 않는다.', async () => {

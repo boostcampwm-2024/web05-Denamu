@@ -25,8 +25,7 @@ describe(`GET ${URL} E2E Test`, () => {
   let rssAccept: RssAccept;
   let rssAcceptRepository: RssAcceptRepository;
   let feedRepository: FeedRepository;
-  const redisKeyMake = (data: string) =>
-    `${REDIS_KEYS.FEED_RECENT_KEY}:${data}`;
+  const redisKeyMake = (data: string) => REDIS_KEYS.FEED_INFO_ITEM_KEY(data);
 
   beforeAll(() => {
     agent = supertest(testApp.getHttpServer());
@@ -62,6 +61,7 @@ describe(`GET ${URL} E2E Test`, () => {
           likes: feed.likeCount,
           comments: feed.commentCount,
         });
+        pipeline.sadd(REDIS_KEYS.FEED_RECENT_INDEX_KEY, feed.id);
       });
     });
 

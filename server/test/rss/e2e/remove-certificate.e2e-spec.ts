@@ -129,6 +129,43 @@ describe(`DELETE ${URL}/{code} E2E Test`, () => {
     expect(savedRssRemoveURL).toBeNull();
   });
 
+  it('[200] 삭제된 게시글의 feed:info/recent/trend 캐시도 함께 정리된다.', async () => {
+    // given
+    await redisService.set(redisKeyMake(rssDeleteCode), rssAccept.rssUrl);
+    const infoKey = REDIS_KEYS.FEED_INFO_ITEM_KEY(feed.id);
+    await redisService.redisClient.hset(infoKey, {
+      id: feed.id,
+      title: feed.title,
+    });
+    await redisService.sadd(REDIS_KEYS.FEED_RECENT_INDEX_KEY, feed.id);
+    await redisService.rpush(REDIS_KEYS.FEED_ORIGIN_TREND_KEY, feed.id);
+    await redisService.zincrby(REDIS_KEYS.FEED_TREND_KEY, 1, feed.id.toString());
+
+    // Http when
+    const response = await agent.delete(`${URL}/${rssDeleteCode}`);
+
+    // Http then
+    expect(response.status).toBe(HttpStatus.OK);
+
+    // Redis when
+    const [infoExists, isInRecentIndex, originTrendList, trendScore] =
+      await Promise.all([
+        redisService.redisClient.exists(infoKey),
+        redisService.sismember(
+          REDIS_KEYS.FEED_RECENT_INDEX_KEY,
+          feed.id.toString(),
+        ),
+        redisService.lrange(REDIS_KEYS.FEED_ORIGIN_TREND_KEY, 0, -1),
+        redisService.zscore(REDIS_KEYS.FEED_TREND_KEY, feed.id.toString()),
+      ]);
+
+    // Redis then
+    expect(infoExists).toBe(0);
+    expect(isInRecentIndex).toBe(0);
+    expect(originTrendList).not.toContain(feed.id.toString());
+    expect(trendScore).toBeNull();
+  });
+
   it('[200] 삭제 신청된 RSS가 대기중인 RSS에 있을 경우 대기중인 RSS 데이터 삭제를 성공한다.', async () => {
     // given
     await redisService.set(redisKeyMake(rssDeleteCode), rss.rssUrl);

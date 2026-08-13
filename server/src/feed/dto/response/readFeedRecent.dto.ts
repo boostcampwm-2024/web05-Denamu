@@ -8,7 +8,11 @@ export class ReadFeedRecentResponseDto {
   id: number;
 
   @ApiProperty({
-    example: { name: 'example author', platform: 'example', image: 'https://example.com/profile.png' },
+    example: {
+      name: 'example author',
+      platform: 'example',
+      image: 'https://example.com/profile.png',
+    },
     description: 'RSS 채널 정보',
   })
   blog: {

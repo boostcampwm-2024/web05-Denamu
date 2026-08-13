@@ -40,7 +40,7 @@ describe(`좋아요/댓글 등록·삭제 시 feed:recent 캐시 동기화 E2E T
   let feed: Feed;
   let accessToken: string;
 
-  const recentKey = () => REDIS_KEYS.FEED_RECENT_ITEM_KEY(feed.id);
+  const recentKey = () => REDIS_KEYS.FEED_INFO_ITEM_KEY(feed.id);
 
   const seedRecentCache = async (likes = 0, comments = 0) => {
     await redisService.executePipeline((pipeline) => {
