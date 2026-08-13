@@ -12,6 +12,8 @@
     "winston-transport": "^4.9.0"
   },
   "devDependencies": {
+    "@swc/core": "^1.15.47",
+    "@swc/jest": "^0.2.39",
     "@testcontainers/rabbitmq": "^11.14.0",
     "@trivago/prettier-plugin-sort-imports": "^6.0.2",
     "@types/amqplib": "^0.10.7",
@@ -36,6 +38,7 @@
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
     "build": "tsc --project tsconfig.build.json && tsc-alias",
     "preview:email": "ts-node -r tsconfig-paths/register scripts/preview-email.ts",
     "start": "node dist/src/main.js",

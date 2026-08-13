@@ -10,7 +10,7 @@ const config: Config.InitialOptions = {
   setupFiles: ['<rootDir>/test/config/common/test-env.setup.ts'],
   testRegex: 'test/.*\\.spec.ts$',
   transform: {
-    '^.+\\.(t|j)s$': 'ts-jest',
+    '^.+\\.(t|j)s$': '@swc/jest',
   },
   coverageDirectory: './coverage/unit',
   testTimeout: 10000,

@@ -10,7 +10,7 @@ const config: Config.InitialOptions = {
   setupFiles: ['<rootDir>/test/config/common/test-env.setup.ts'],
   testRegex: 'test/.*\\.(e2e-spec|spec).ts$',
   transform: {
-    '^.+\\.(t|j)s$': 'ts-jest',
+    '^.+\\.(t|j)s$': '@swc/jest',
   },
   coverageDirectory: './coverage/integration',
   coverageReporters: ['json-summary', 'text', 'lcov'],
