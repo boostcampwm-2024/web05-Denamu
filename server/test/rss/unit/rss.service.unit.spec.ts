@@ -51,6 +51,7 @@ describe(`${RssService.name} Unit Test`, () => {
     Pick<
       RssAcceptRepository,
       | 'findOne'
+      | 'findOneBy'
       | 'find'
       | 'delete'
       | 'update'
@@ -62,6 +63,7 @@ describe(`${RssService.name} Unit Test`, () => {
   let feedRepository: jest.Mocked<
     Pick<
       FeedRepository,
+      | 'find'
       | 'getFeedsByBlog'
       | 'setVisibilityForBlog'
       | 'countPublicFeedsByBlogIds'
@@ -85,7 +87,7 @@ describe(`${RssService.name} Unit Test`, () => {
   let manager: { save: jest.Mock; remove: jest.Mock; delete: jest.Mock };
   let dataSource: jest.Mocked<Pick<DataSource, 'transaction'>>;
   let redisService: jest.Mocked<
-    Pick<RedisService, 'rpush' | 'set' | 'get' | 'del'>
+    Pick<RedisService, 'rpush' | 'set' | 'get' | 'del' | 'executePipeline'>
   >;
   let rabbitMQService: jest.Mocked<Pick<RabbitMQService, 'sendMessage'>>;
   let adminRepository: jest.Mocked<Pick<AdminRepository, 'find'>>;
@@ -105,6 +107,7 @@ describe(`${RssService.name} Unit Test`, () => {
     };
     rssAcceptRepository = {
       findOne: jest.fn(),
+      findOneBy: jest.fn(),
       find: jest.fn(),
       delete: jest.fn(),
       update: jest.fn().mockResolvedValue({ affected: 1 }),
@@ -113,6 +116,7 @@ describe(`${RssService.name} Unit Test`, () => {
     };
     rssRejectRepository = { find: jest.fn() };
     feedRepository = {
+      find: jest.fn(),
       getFeedsByBlog: jest.fn(),
       setVisibilityForBlog: jest.fn().mockResolvedValue(1),
       countPublicFeedsByBlogIds: jest.fn().mockResolvedValue(new Map()),
@@ -139,6 +143,7 @@ describe(`${RssService.name} Unit Test`, () => {
       set: jest.fn(),
       get: jest.fn(),
       del: jest.fn(),
+      executePipeline: jest.fn(),
     };
     rabbitMQService = {
       sendMessage: jest.fn(),
@@ -592,6 +597,57 @@ describe(`${RssService.name} Unit Test`, () => {
 
       // then
       expect(redisService.del).toHaveBeenCalledWith(redisKey);
+    });
+
+    it('삭제에 성공하면 해당 블로그의 게시글 캐시(feed:info, recent, trend)를 정리한다.', async () => {
+      // given
+      redisService.get.mockResolvedValue('https://blog.test/rss');
+      rssAcceptRepository.findOneBy.mockResolvedValue({ id: 1 } as any);
+      feedRepository.find.mockResolvedValue([
+        { id: 10 },
+        { id: 20 },
+      ] as any);
+      rssAcceptRepository.delete.mockResolvedValue({ affected: 1 } as any);
+      rssRepository.delete.mockResolvedValue({ affected: 0 } as any);
+      const delMock = jest.fn();
+      const sremMock = jest.fn();
+      const lremMock = jest.fn();
+      const zremMock = jest.fn();
+      redisService.executePipeline.mockImplementation((cb: any) => {
+        cb({ del: delMock, srem: sremMock, lrem: lremMock, zrem: zremMock });
+        return Promise.resolve([]);
+      });
+
+      // when
+      await rssService.deleteRss(dto);
+
+      // then
+      expect(feedRepository.find).toHaveBeenCalledWith({
+        where: { blog: { id: 1 } },
+        select: ['id'],
+      });
+      expect(delMock).toHaveBeenCalledWith(REDIS_KEYS.FEED_INFO_ITEM_KEY(10));
+      expect(delMock).toHaveBeenCalledWith(REDIS_KEYS.FEED_INFO_ITEM_KEY(20));
+      expect(sremMock).toHaveBeenCalledWith(
+        REDIS_KEYS.FEED_RECENT_INDEX_KEY,
+        '10',
+      );
+      expect(zremMock).toHaveBeenCalledWith(REDIS_KEYS.FEED_TREND_KEY, '20');
+    });
+
+    it('삭제 대상 RssAccept를 찾지 못하면 게시글 캐시 정리를 시도하지 않는다.', async () => {
+      // given
+      redisService.get.mockResolvedValue('https://blog.test/rss');
+      rssAcceptRepository.findOneBy.mockResolvedValue(null);
+      rssAcceptRepository.delete.mockResolvedValue({ affected: 1 } as any);
+      rssRepository.delete.mockResolvedValue({ affected: 0 } as any);
+
+      // when
+      await rssService.deleteRss(dto);
+
+      // then
+      expect(feedRepository.find).not.toHaveBeenCalled();
+      expect(redisService.executePipeline).not.toHaveBeenCalled();
     });
   });
 

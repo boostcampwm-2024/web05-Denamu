@@ -308,6 +308,16 @@ export class RssService {
       );
     }
 
+    const rssAcceptEntity = await this.rssAcceptRepository.findOneBy({
+      rssUrl,
+    });
+    const feeds = rssAcceptEntity
+      ? await this.feedRepository.find({
+          where: { blog: { id: rssAcceptEntity.id } },
+          select: ['id'],
+        })
+      : [];
+
     try {
       const [rssAccept, rss] = await Promise.all([
         this.rssAcceptRepository.delete({ rssUrl }),
@@ -317,9 +327,24 @@ export class RssService {
       if (rssAccept.affected === 0 && rss.affected === 0) {
         throw new NotFoundException('이미 지워진 RSS 정보입니다.');
       }
+
+      await this.evictFeedCache(feeds.map((feed) => feed.id));
     } finally {
       await this.redisService.del(redisKey);
     }
+  }
+
+  private async evictFeedCache(feedIds: number[]) {
+    if (!feedIds.length) return;
+
+    await this.redisService.executePipeline((pipeline) => {
+      for (const feedId of feedIds) {
+        pipeline.del(REDIS_KEYS.FEED_INFO_ITEM_KEY(feedId));
+        pipeline.srem(REDIS_KEYS.FEED_RECENT_INDEX_KEY, feedId.toString());
+        pipeline.lrem(REDIS_KEYS.FEED_ORIGIN_TREND_KEY, 0, feedId.toString());
+        pipeline.zrem(REDIS_KEYS.FEED_TREND_KEY, feedId.toString());
+      }
+    });
   }
 
   async getRecentRss(viewerId?: number) {

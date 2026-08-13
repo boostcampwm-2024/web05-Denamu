@@ -415,7 +415,21 @@ export class FeedService {
 
     if (response.status === Number(HttpStatus.NOT_FOUND)) {
       await this.feedRepository.delete({ id: feedDeleteCheckDto.feedId });
+      await this.evictFeedCache([feedDeleteCheckDto.feedId]);
       throw new NotFoundException('원본 게시글이 삭제되었습니다.');
     }
+  }
+
+  private async evictFeedCache(feedIds: number[]) {
+    if (!feedIds.length) return;
+
+    await this.redisService.executePipeline((pipeline) => {
+      for (const feedId of feedIds) {
+        pipeline.del(REDIS_KEYS.FEED_INFO_ITEM_KEY(feedId));
+        pipeline.srem(REDIS_KEYS.FEED_RECENT_INDEX_KEY, feedId.toString());
+        pipeline.lrem(REDIS_KEYS.FEED_ORIGIN_TREND_KEY, 0, feedId.toString());
+        pipeline.zrem(REDIS_KEYS.FEED_TREND_KEY, feedId.toString());
+      }
+    });
   }
 }

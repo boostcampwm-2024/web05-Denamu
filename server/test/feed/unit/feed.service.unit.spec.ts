@@ -681,12 +681,36 @@ describe(`${FeedService.name} Unit Test`, () => {
         path: 'https://blog.test/post',
       } as any);
       mockedAxios.get.mockResolvedValue({ status: 404 });
+      const delMock = jest.fn();
+      const sremMock = jest.fn();
+      const lremMock = jest.fn();
+      const zremMock = jest.fn();
+      redisService.executePipeline.mockImplementation((cb: any) => {
+        cb({
+          del: delMock,
+          srem: sremMock,
+          lrem: lremMock,
+          zrem: zremMock,
+        });
+        return Promise.resolve([]);
+      });
 
       // when & then
       await expect(feedService.deleteCheckFeed(dto)).rejects.toThrow(
         NotFoundException,
       );
       expect(feedRepository.delete).toHaveBeenCalledWith({ id: 10 });
+      expect(delMock).toHaveBeenCalledWith(REDIS_KEYS.FEED_INFO_ITEM_KEY(10));
+      expect(sremMock).toHaveBeenCalledWith(
+        REDIS_KEYS.FEED_RECENT_INDEX_KEY,
+        '10',
+      );
+      expect(lremMock).toHaveBeenCalledWith(
+        REDIS_KEYS.FEED_ORIGIN_TREND_KEY,
+        0,
+        '10',
+      );
+      expect(zremMock).toHaveBeenCalledWith(REDIS_KEYS.FEED_TREND_KEY, '10');
     });
 
     it('원본이 살아있으면 삭제하지 않는다.', async () => {
