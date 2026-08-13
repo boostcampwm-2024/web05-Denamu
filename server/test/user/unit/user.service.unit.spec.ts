@@ -96,10 +96,12 @@ describe(`${UserService.name} Unit Test`, () => {
   const createResponse = () => ({ cookie: jest.fn() }) as unknown as Response;
 
   const DAY_MS = 24 * 60 * 60 * 1000;
+  const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
   const midnightToday = () => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d;
+    const kst = new Date(Date.now() + KST_OFFSET_MS);
+    return new Date(
+      Date.UTC(kst.getUTCFullYear(), kst.getUTCMonth(), kst.getUTCDate()),
+    );
   };
   const daysAgo = (days: number) =>
     new Date(midnightToday().getTime() - days * DAY_MS);

@@ -21,6 +21,7 @@ import { Payload } from '@common/guard/jwt.guard';
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
 import { createHashedPassword } from '@common/util/createHashedPassword';
+import { getKstCalendarDate } from '@common/util/kstDate';
 
 import { FeedRepository } from '@feed/repository/feed.repository';
 
@@ -289,13 +290,11 @@ export class UserService {
   async updateUserActivity(userId: number) {
     const user = await this.getUser(userId);
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const today = getKstCalendarDate();
     user.totalViews += 1;
 
     if (user.lastActiveDate) {
-      const lastActive = new Date(user.lastActiveDate);
-      lastActive.setHours(0, 0, 0, 0);
+      const lastActive = getKstCalendarDate(user.lastActiveDate);
 
       const timeDiff = today.getTime() - lastActive.getTime();
       const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
