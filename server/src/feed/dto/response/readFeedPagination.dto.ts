@@ -2,12 +2,18 @@ import { ApiProperty } from '@nestjs/swagger';
 
 import { FeedView } from '@feed/entity/feed.entity';
 
+import { FeedRecentRedis } from './readFeedRecent.dto';
+
 export class FeedResult {
   @ApiProperty({ example: 1, description: '게시글 ID' })
   id: number;
 
   @ApiProperty({
-    example: { name: 'example author', platform: 'example platform', image: 'https://example.com/profile.png' },
+    example: {
+      name: 'example author',
+      platform: 'example platform',
+      image: 'https://example.com/profile.png',
+    },
     description: 'RSS 채널 정보',
   })
   blog: {
@@ -19,13 +25,22 @@ export class FeedResult {
   @ApiProperty({ example: 'example title', description: '게시글 제목' })
   title: string;
 
-  @ApiProperty({ example: 'https://example.com/feed', description: '게시글 URL' })
+  @ApiProperty({
+    example: 'https://example.com/feed',
+    description: '게시글 URL',
+  })
   path: string;
 
-  @ApiProperty({ example: '2025-01-01T01:00:00.000Z', description: '게시글 작성 일자' })
+  @ApiProperty({
+    example: '2025-01-01T01:00:00.000Z',
+    description: '게시글 작성 일자',
+  })
   createdAt: Date;
 
-  @ApiProperty({ example: 'https://example.com/thumbnail', description: '썸네일 URL' })
+  @ApiProperty({
+    example: 'https://example.com/thumbnail',
+    description: '썸네일 URL',
+  })
   thumbnail: string;
 
   @ApiProperty({ example: 0, description: '조회수' })
@@ -201,5 +216,27 @@ export class FeedTrendResponseDto {
 
   public static toResponseDtoArray(feedList: FeedView[]) {
     return feedList.map((feed) => this.toResponseDto(feed));
+  }
+
+  public static toResponseDtoFromCache(feed: FeedRecentRedis) {
+    return new FeedTrendResponseDto({
+      id: parseInt(feed.id),
+      blog: {
+        name: feed.blogName,
+        platform: feed.blogPlatform,
+        image: feed.blogImage || null,
+      },
+      title: feed.title,
+      path: feed.path,
+      createdAt: new Date(feed.createdAt),
+      thumbnail: feed.thumbnail,
+      viewCount: parseInt(feed.viewCount),
+      likes: parseInt(feed.likes),
+      comments: parseInt(feed.comments),
+      tag:
+        typeof feed.tagList === 'string' && feed.tagList
+          ? feed.tagList.split(',')
+          : [],
+    });
   }
 }

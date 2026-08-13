@@ -158,19 +158,48 @@ export class FeedService {
   }
 
   async readTrendFeedList() {
-    const trendFeedIdList = await this.redisService.lrange(
-      REDIS_KEYS.FEED_ORIGIN_TREND_KEY,
-      0,
-      -1,
-    );
-    const trendFeeds = await Promise.all(
-      trendFeedIdList.map(async (feedId) =>
-        this.feedViewRepository.findOneBy({ feedId: parseInt(feedId) }),
-      ),
-    );
-    return FeedTrendResponseDto.toResponseDtoArray(
-      trendFeeds.filter((feed) => feed !== null),
-    );
+    const trendFeedIdList = (
+      await this.redisService.lrange(REDIS_KEYS.FEED_ORIGIN_TREND_KEY, 0, -1)
+    ).map((id) => parseInt(id));
+    if (!trendFeedIdList.length) return [];
+
+    const cachedFeeds = await this.redisService.executePipeline((pipeline) => {
+      for (const feedId of trendFeedIdList) {
+        pipeline.hgetall(REDIS_KEYS.FEED_INFO_ITEM_KEY(feedId));
+      }
+    });
+
+    const cachedById = new Map<number, FeedRecentRedis>();
+    const missingIds: number[] = [];
+    cachedFeeds.forEach(([err, feed], index) => {
+      const cache = feed as FeedRecentRedis;
+      const feedId = trendFeedIdList[index];
+      if (!err && cache?.id) {
+        cachedById.set(feedId, cache);
+      } else {
+        missingIds.push(feedId);
+      }
+    });
+
+    const dbFeedsById = new Map<number, FeedTrendResponseDto>();
+    if (missingIds.length) {
+      const dbFeeds = await Promise.all(
+        missingIds.map((feedId) =>
+          this.feedViewRepository.findOneBy({ feedId }),
+        ),
+      );
+      FeedTrendResponseDto.toResponseDtoArray(
+        dbFeeds.filter((feed) => feed !== null),
+      ).forEach((feed) => dbFeedsById.set(feed.id, feed));
+    }
+
+    return trendFeedIdList
+      .map((feedId) =>
+        cachedById.has(feedId)
+          ? FeedTrendResponseDto.toResponseDtoFromCache(cachedById.get(feedId))
+          : dbFeedsById.get(feedId),
+      )
+      .filter((feed): feed is FeedTrendResponseDto => feed !== undefined);
   }
 
   async cacheTrendFeeds(trendFeeds: FeedTrendResponseDto[]) {

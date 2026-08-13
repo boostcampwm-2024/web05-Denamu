@@ -296,9 +296,96 @@ describe(`${FeedService.name} Unit Test`, () => {
   });
 
   describe('readTrendFeedList', () => {
-    it('트렌드 ID 목록으로 피드를 조회하고 null을 제외한다.', async () => {
+    it('트렌드 목록이 비어있으면 DB/Redis 파이프라인 없이 빈 배열을 반환한다.', async () => {
+      // given
+      redisService.lrange.mockResolvedValue([]);
+
+      // when
+      const result = await feedService.readTrendFeedList();
+
+      // then
+      expect(result).toEqual([]);
+      expect(redisService.executePipeline).not.toHaveBeenCalled();
+      expect(feedViewRepository.findOneBy).not.toHaveBeenCalled();
+    });
+
+    it('feed:info 캐시가 모두 있으면 DB 조회 없이 캐시에서 응답을 만든다.', async () => {
+      // given
+      redisService.lrange.mockResolvedValue(['1']);
+      redisService.executePipeline.mockResolvedValueOnce([
+        [
+          null,
+          {
+            id: '1',
+            title: 'cached title',
+            path: 'path',
+            createdAt: '2025-01-01T00:00:00.000Z',
+            thumbnail: 'thumb',
+            viewCount: '10',
+            blogName: 'blog',
+            blogPlatform: 'tistory',
+            blogImage: '',
+            likes: '3',
+            comments: '2',
+            tagList: 'a,b',
+          },
+        ],
+      ] as any);
+
+      // when
+      const result = await feedService.readTrendFeedList();
+
+      // then
+      expect(feedViewRepository.findOneBy).not.toHaveBeenCalled();
+      expect(redisService.executePipeline).toHaveBeenCalledTimes(1);
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchObject({
+        id: 1,
+        title: 'cached title',
+        viewCount: 10,
+        likes: 3,
+        comments: 2,
+        tag: ['a', 'b'],
+      });
+    });
+
+    it('캐시의 tagList가 빈 문자열이면 태그를 빈 배열로 반환한다.', async () => {
+      // given
+      redisService.lrange.mockResolvedValue(['1']);
+      redisService.executePipeline.mockResolvedValueOnce([
+        [
+          null,
+          {
+            id: '1',
+            title: 'no tag title',
+            path: 'path',
+            createdAt: '2025-01-01T00:00:00.000Z',
+            thumbnail: 'thumb',
+            viewCount: '10',
+            blogName: 'blog',
+            blogPlatform: 'tistory',
+            blogImage: '',
+            likes: '0',
+            comments: '0',
+            tagList: '',
+          },
+        ],
+      ] as any);
+
+      // when
+      const result = await feedService.readTrendFeedList();
+
+      // then
+      expect(result[0].tag).toEqual([]);
+    });
+
+    it('feed:info 캐시가 없으면 DB로 폴백하고, null을 제외한 뒤 캐시에는 쓰지 않는다.', async () => {
       // given
       redisService.lrange.mockResolvedValue(['1', '2']);
+      redisService.executePipeline.mockResolvedValueOnce([
+        [null, {}],
+        [null, {}],
+      ] as any);
       feedViewRepository.findOneBy.mockImplementation((where) =>
         Promise.resolve(
           (where as { feedId: number }).feedId === 1
@@ -318,8 +405,8 @@ describe(`${FeedService.name} Unit Test`, () => {
       );
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe(1);
+      expect(redisService.executePipeline).toHaveBeenCalledTimes(1);
     });
-
   });
 
   describe('cacheTrendFeeds', () => {
