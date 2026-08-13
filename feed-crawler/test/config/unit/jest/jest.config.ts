@@ -9,7 +9,7 @@ const config: Config.InitialOptions = {
   rootDir: '../../../..',
   testRegex: 'test/.*\\.spec.ts$',
   transform: {
-    '^.+\\.(t|j)s$': 'ts-jest',
+    '^.+\\.(t|j)s$': '@swc/jest',
   },
   coverageDirectory: './coverage/unit',
   testTimeout: 10000,
