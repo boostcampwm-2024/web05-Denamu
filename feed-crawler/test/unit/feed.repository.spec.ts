@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 
 import { DatabaseConnection } from '@common/database/database-connection';
-import { FeedDetail } from '@common/feed/feed.type';
+import { FeedDetail, RssObj } from '@common/feed/feed.type';
 import { DbMetrics } from '@common/metrics/db-metrics';
 import { RedisMetrics } from '@common/metrics/redis-metrics';
 import { RedisConnection } from '@common/redis/redis-access';
@@ -134,7 +134,10 @@ describe('FeedRepository', () => {
 
       const insertValues = executeQueryStrictMock.mock.calls[1][1][0];
       expect(insertValues).toHaveLength(2);
-      expect(insertValues).toEqual([toValueRow(feeds[0]), toValueRow(feeds[2])]);
+      expect(insertValues).toEqual([
+        toValueRow(feeds[0]),
+        toValueRow(feeds[2]),
+      ]);
       // 기존 path는 INSERT에도 재조회에도 실려서는 안 된다
       expect(executeQueryStrictMock).toHaveBeenNthCalledWith(
         3,
@@ -313,7 +316,10 @@ describe('FeedRepository', () => {
       // THEN: 중복 link 중 먼저 나온 feeds[1]만 후보로 살아남고, feeds[2]는 duplicate로 집계된다
       const insertValues = executeQueryStrictMock.mock.calls[1][1][0];
       expect(insertValues).toHaveLength(2);
-      expect(insertValues).toEqual([toValueRow(feeds[0]), toValueRow(feeds[1])]);
+      expect(insertValues).toEqual([
+        toValueRow(feeds[0]),
+        toValueRow(feeds[1]),
+      ]);
       expect(result).toEqual([
         { ...feeds[0], id: 101 },
         { ...feeds[1], id: 102 },
@@ -338,6 +344,41 @@ describe('FeedRepository', () => {
       expect(successIncMock).toHaveBeenCalledWith(INSERT_LABEL, 0);
       expect(duplicateIncMock).not.toHaveBeenCalled();
       expect(failureIncMock).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('setRecentFeedList', () => {
+    it('Redis 캐시의 createdAt은 new Date()가 UTC로 정확히 파싱하는 ISO(Z) 포맷으로 저장되어야 한다', async () => {
+      // GIVEN: pubDate가 "YYYY-MM-DD HH:mm:ss"(UTC, Z 없음) 포맷인 피드
+      const redisConnection = new RedisConnection();
+      const repository = new FeedRepository(
+        mockDbConnection,
+        redisConnection,
+        mockDbMetrics,
+        {
+          total: { inc: jest.fn() },
+          success: { inc: jest.fn() },
+          failure: { inc: jest.fn() },
+        } as any,
+      );
+      const feed = createFeed(1);
+      const rssObj: RssObj = {
+        id: feed.blogId,
+        rssUrl: 'https://test1.tistory.com/rss',
+        blogName: '테스트 블로그',
+        blogPlatform: 'tistory',
+        blogImage: null,
+      };
+
+      // WHEN
+      await repository.setRecentFeedList([feed], [rssObj]);
+      const [[, createdAt]] = (await redisConnection.executePipeline(
+        (pipeline) => pipeline.hget(`feed:recent:${feed.id}`, 'createdAt'),
+      )) as [unknown, string][];
+
+      // THEN: 공백 구분 UTC 문자열이 그대로 'T'+'Z'가 붙은 ISO로 치환되어야 한다
+      expect(createdAt).toBe('2024-01-01T12:01:00Z');
+      expect(new Date(createdAt).getTime()).not.toBeNaN();
     });
   });
 });

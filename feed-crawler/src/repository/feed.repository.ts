@@ -197,7 +197,7 @@ export class FeedRepository {
             id: feed.id,
             blogPlatform: rssObj.blogPlatform,
             blogImage: rssObj.blogImage ?? '',
-            createdAt: feed.pubDate,
+            createdAt: `${feed.pubDate.replace(' ', 'T')}Z`,
             viewCount: 0,
             blogName: rssObj.blogName,
             thumbnail: feed.thumbnail,
