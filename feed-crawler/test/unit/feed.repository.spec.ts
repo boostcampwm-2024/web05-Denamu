@@ -4,6 +4,7 @@ import { DatabaseConnection } from '@common/database/database-connection';
 import { FeedDetail, RssObj } from '@common/feed/feed.type';
 import { DbMetrics } from '@common/metrics/db-metrics';
 import { RedisMetrics } from '@common/metrics/redis-metrics';
+import { redisConstant } from '@common/redis/redis.constant';
 import { RedisConnection } from '@common/redis/redis-access';
 
 import { FeedRepository } from '@repository/feed.repository';
@@ -373,7 +374,11 @@ describe('FeedRepository', () => {
       // WHEN
       await repository.setRecentFeedList([feed], [rssObj]);
       const [[, createdAt]] = (await redisConnection.executePipeline(
-        (pipeline) => pipeline.hget(`feed:recent:${feed.id}`, 'createdAt'),
+        (pipeline) =>
+          pipeline.hget(
+            redisConstant.FEED_INFO_ITEM_KEY(feed.id),
+            'createdAt',
+          ),
       )) as [unknown, string][];
 
       // THEN: 공백 구분 UTC 문자열이 그대로 'T'+'Z'가 붙은 ISO로 치환되어야 한다
