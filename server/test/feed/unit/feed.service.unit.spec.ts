@@ -60,6 +60,7 @@ describe(`${FeedService.name} Unit Test`, () => {
       | 'sismember'
       | 'sadd'
       | 'zincrby'
+      | 'hincrbyIfExists'
       | 'executePipeline'
       | 'rpush'
       | 'set'
@@ -90,6 +91,7 @@ describe(`${FeedService.name} Unit Test`, () => {
       sismember: jest.fn(),
       sadd: jest.fn(),
       zincrby: jest.fn(),
+      hincrbyIfExists: jest.fn(),
       executePipeline: jest.fn(),
       rpush: jest.fn(),
       set: jest.fn().mockResolvedValue('OK'),
@@ -553,6 +555,11 @@ describe(`${FeedService.name} Unit Test`, () => {
         REDIS_KEYS.FEED_TREND_KEY,
         1,
         '10',
+      );
+      expect(redisService.hincrbyIfExists).toHaveBeenCalledWith(
+        REDIS_KEYS.FEED_INFO_ITEM_KEY(10),
+        'viewCount',
+        1,
       );
     });
   });

@@ -297,6 +297,11 @@ export class FeedService {
         1,
         feedId.toString(),
       ),
+      this.redisService.hincrbyIfExists(
+        REDIS_KEYS.FEED_INFO_ITEM_KEY(feedId),
+        'viewCount',
+        1,
+      ),
     ]);
   }
 
