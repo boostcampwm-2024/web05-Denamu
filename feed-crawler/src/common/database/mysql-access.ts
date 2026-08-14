@@ -21,6 +21,7 @@ export class MySQLConnection implements DatabaseConnection {
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
       connectionLimit: CONNECTION_LIMIT,
+      timezone: 'Z',
     });
   }
 

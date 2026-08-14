@@ -4,6 +4,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { LessThanOrEqual, Not } from 'typeorm';
 
 import { WinstonLoggerService } from '@common/logger/logger.service';
+import { getKstCalendarDate } from '@common/util/kstDate';
 
 import { REJOIN_RESTRICTION_MONTHS } from '@user/constant/user.constants';
 import { UserRepository } from '@user/repository/user.repository';
@@ -17,11 +18,9 @@ export class UserScheduler {
     private readonly logger: WinstonLoggerService,
   ) {}
 
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, { timeZone: 'Asia/Seoul' })
   async resetExpiredStreaks() {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    yesterday.setHours(0, 0, 0, 0);
+    const yesterday = getKstCalendarDate(new Date(), -1);
 
     try {
       const expiredUsers = await this.userRepository.find({
@@ -34,8 +33,7 @@ export class UserScheduler {
       const usersToUpdate = expiredUsers.filter((user) => {
         if (!user.lastActiveDate) return false;
 
-        const lastActive = new Date(user.lastActiveDate);
-        lastActive.setHours(0, 0, 0, 0);
+        const lastActive = getKstCalendarDate(user.lastActiveDate);
 
         return lastActive < yesterday;
       });

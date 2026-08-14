@@ -18,8 +18,7 @@ docker-compose/
 ├── docker-compose.infra.yml      # Local/Dev infra (MySQL, Redis, RabbitMQ)
 ├── docker-compose.prod.infra.yml # Production infra (+ Prometheus, Grafana, Exporters)
 ├── db/
-│   ├── init.sql                  # Initial DB schema
-│   └── my.cnf                    # MySQL production config
+│   └── init.sql                  # Initial DB schema
 ├── rabbitMQ/
 │   ├── definitions.json          # Queue/exchange topology
 │   ├── import-definitions.sh     # Auto-import script

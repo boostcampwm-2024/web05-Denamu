@@ -18,6 +18,7 @@ export function loadDBSetting(configService: ConfigService) {
     port: configService.get<number>('DB_PORT'),
     username: configService.get<string>('DB_USER'),
     password: configService.get<string>('DB_PASSWORD'),
+    timezone: 'Z',
     entities: [`${__dirname}/../../**/*.entity.{js,ts}`],
 
     synchronize: isDev,

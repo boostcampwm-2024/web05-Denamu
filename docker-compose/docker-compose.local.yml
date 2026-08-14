@@ -19,8 +19,6 @@ services:
     volumes:
       - ../nginx/logs:/var/log/nginx
       - ../objects:/var/web05-Denamu/objects
-    environment:
-      TZ: 'Asia/Seoul'
 
   # WAS 서비스
   app:
@@ -44,7 +42,6 @@ services:
       - ../objects:/app/objects
     environment:
       NODE_ENV: 'LOCAL'
-      TZ: 'Asia/Seoul'
     profiles:
       - default
 
@@ -67,7 +64,6 @@ services:
       - ../feed-crawler/logs:/var/web05-Denamu/feed-crawler/logs
     environment:
       NODE_ENV: 'LOCAL'
-      TZ: 'Asia/Seoul'
     profiles:
       - default
 
@@ -87,7 +83,6 @@ services:
     environment:
       NODE_ENV: 'LOCAL'
       PRODUCT_DOMAIN: 'http://localhost'
-      TZ: 'Asia/Seoul'
     stop_grace_period: 30s
     profiles:
       - default

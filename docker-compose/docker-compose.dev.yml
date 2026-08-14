@@ -27,8 +27,6 @@ services:
           action: restart
         - path: ../nginx/scripts/generate_cert.sh
           action: rebuild
-    environment:
-      TZ: 'Asia/Seoul'
     profiles:
       - default
 
@@ -48,8 +46,6 @@ services:
       watch:
         - path: ../client/package.json
           action: rebuild
-    environment:
-      TZ: 'Asia/Seoul'
     profiles:
       - default
 
@@ -76,7 +72,6 @@ services:
       - ../objects:/app/objects
     environment:
       NODE_ENV: 'DEV'
-      TZ: 'Asia/Seoul'
     develop:
       watch:
         - path: ../server/package.json
@@ -105,7 +100,6 @@ services:
       - /var/web05-Denamu/feed-crawler/node_modules
     environment:
       NODE_ENV: 'DEV'
-      TZ: 'Asia/Seoul'
     develop:
       watch:
         - path: ../feed-crawler/package.json
@@ -131,7 +125,6 @@ services:
     environment:
       NODE_ENV: 'DEV'
       PRODUCT_DOMAIN: 'http://localhost:5173'
-      TZ: 'Asia/Seoul'
     stop_grace_period: 30s
     develop:
       watch:

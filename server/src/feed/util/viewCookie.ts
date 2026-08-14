@@ -1,16 +1,14 @@
 import { Response } from 'express';
 
 import { cookieConfig } from '@common/cookie/cookie.config';
+import { getKstMidnightInstant } from '@common/util/kstDate';
 
 export function isString(ip: string | string[]): ip is string {
   return !Array.isArray(ip);
 }
 
 function getExpirationTime() {
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  tomorrow.setHours(0, 0, 0, 0);
-  return tomorrow;
+  return getKstMidnightInstant(new Date(), 1);
 }
 
 export function createCookie(response: Response, feedId: number) {
