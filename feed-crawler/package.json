@@ -19,6 +19,8 @@
     "winston-transport": "^4.9.0"
   },
   "devDependencies": {
+    "@swc/core": "^1.15.47",
+    "@swc/jest": "^0.2.39",
     "@testcontainers/mysql": "^10.28.0",
     "@testcontainers/rabbitmq": "^11.14.0",
     "@trivago/prettier-plugin-sort-imports": "^6.0.2",
@@ -47,6 +49,7 @@
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
     "build": "tsc --project tsconfig.build.json && tsc-alias",
     "start": "node dist/src/main.js",
     "start:dev": "nodemon",

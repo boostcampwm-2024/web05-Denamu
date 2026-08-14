@@ -28,17 +28,22 @@ jobs:
         working-directory: ./email-worker
         run: npm ci
 
-      # 4. 커버리지 측정 실행
+      # 4. 타입 체크 (SWC는 타입 검증을 하지 않으므로 별도 게이트 필요)
+      - name: Typecheck
+        working-directory: ./email-worker
+        run: npm run typecheck
+
+      # 5. 커버리지 측정 실행
       - name: Run Coverage
         working-directory: ./email-worker
         run: npm run test:coverage
 
-      # 5. PR 번호 저장
+      # 6. PR 번호 저장
       - name: Save PR number
         if: always() && github.event_name == 'pull_request'
         run: echo "${{ github.event.pull_request.number }}" > pr_number.txt
 
-      # 6. PR 번호 및 커버리지 결과 업로드
+      # 7. PR 번호 및 커버리지 결과 업로드
       - name: Upload coverage results
         if: always() && github.event_name == 'pull_request'
         uses: actions/upload-artifact@v7
