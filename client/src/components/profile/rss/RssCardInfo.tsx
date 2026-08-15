@@ -26,11 +26,11 @@ export const RssCardInfo = ({
   children,
 }: RssCardInfoProps) => {
   return (
-    <div className="flex flex-col md:flex-row md:items-center gap-3">
+    <div className="relative flex flex-col md:flex-row md:items-center gap-3">
       <div className="flex items-center min-w-0 flex-1 gap-3">
         <PlatformIcon platform={blogPlatform} image={blogImage} name={name} className="flex-shrink-0 w-10 h-10" />
         <div className="min-w-0">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center min-w-0 gap-2 pr-16 md:pr-0">
             {nameTo ? (
               <Link to={nameTo} className="font-medium truncate hover:underline">
                 {name}
@@ -54,7 +54,10 @@ export const RssCardInfo = ({
         </div>
       </div>
       {action && (
-        <div className="flex-shrink-0 self-end md:self-auto" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="absolute top-0 right-0 flex-shrink-0 md:static"
+          onClick={(e) => e.stopPropagation()}
+        >
           {action}
         </div>
       )}

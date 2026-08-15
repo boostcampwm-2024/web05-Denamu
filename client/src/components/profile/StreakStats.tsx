@@ -14,7 +14,7 @@ export const StreakStats = ({ maxStreak, currentStreak, totalViews }: StreakStat
   return (
     <div className="grid grid-cols-3 gap-4 mb-8">
       {stats(maxStreak, currentStreak, totalViews).map((stat) => (
-        <div key={stat.label} className="p-4 text-center bg-white border-0 md:border border-gray-200 rounded-lg">
+        <div key={stat.label} className="p-4 text-center bg-white border-0 rounded-lg">
           <p className="text-2xl font-bold text-blue-600">{stat.value}</p>
           <p className="mt-1 text-sm text-gray-600">{stat.label}</p>
         </div>

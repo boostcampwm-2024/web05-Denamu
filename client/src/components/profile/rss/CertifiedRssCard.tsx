@@ -18,7 +18,7 @@ export const CertifiedRssCard = ({ userId, rss, isOwner }: CertifiedRssCardProps
 
   return (
     <li
-      className="transition-colors border-0 md:border border-gray-100 rounded-lg cursor-pointer hover:bg-gray-50"
+      className="transition-colors border-0 rounded-lg cursor-pointer hover:bg-gray-50"
       onClick={() => navigate(`/rss/${rss.id}`)}
     >
       <div className="p-4">
