@@ -1,8 +1,7 @@
 import { useState } from "react";
 
-import { Plus } from "lucide-react";
-
 import { AxiosError } from "axios";
+import { Plus } from "lucide-react";
 
 import { OwnedRssCard } from "@/components/profile/rss/OwnedRssCard.tsx";
 import { RssClaimModal } from "@/components/profile/rss/RssClaimModal.tsx";
@@ -60,9 +59,9 @@ export const RssManagementTab = ({ userId }: RssManagementTabProps) => {
   return (
     <Card>
       <CardContent className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="flex items-center h-10 text-lg font-semibold">RSS 관리</h3>
-          <Button onClick={() => setClaimOpen(true)} className="gap-1">
+        <div className="flex items-start justify-between mb-4">
+          <h3 className="text-2xl font-semibold leading-none">RSS 관리</h3>
+          <Button size="sm" onClick={() => setClaimOpen(true)} className="gap-1">
             <Plus className="w-4 h-4" />
             RSS 소유 등록
           </Button>
