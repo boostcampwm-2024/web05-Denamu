@@ -61,7 +61,7 @@ export const RssManagementTab = ({ userId }: RssManagementTabProps) => {
     <Card>
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">RSS 관리</h3>
+          <h3 className="flex items-center h-10 text-lg font-semibold">RSS 관리</h3>
           <Button onClick={() => setClaimOpen(true)} className="gap-1">
             <Plus className="w-4 h-4" />
             RSS 소유 등록
