@@ -41,7 +41,7 @@ export const ProfileSidebar = ({ activeTab, onTabChange, isOwner }: ProfileSideb
   return (
     <aside
       className={cn(
-        "w-full md:w-64 shrink-0 border-b md:border-b-0 md:border-r border-gray-200 bg-white",
+        "w-full md:w-64 shrink-0 md:border-r border-gray-200 bg-white",
         !isOwner && "hidden"
       )}
     >
