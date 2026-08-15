@@ -19,7 +19,7 @@ export const CertifiedRssCard = ({ userId, rss, isOwner }: CertifiedRssCardProps
 
   return (
     <li
-      className="transition-colors border border-gray-100 rounded-lg cursor-pointer hover:bg-gray-50"
+      className="transition-colors border-0 md:border border-gray-100 rounded-lg cursor-pointer hover:bg-gray-50"
       onClick={() => navigate(`/rss/${rss.id}`)}
     >
       <div className="flex items-center justify-between gap-3 p-4">
@@ -33,15 +33,15 @@ export const CertifiedRssCard = ({ userId, rss, isOwner }: CertifiedRssCardProps
               <BlogPlatformBadge platform={rss.blogPlatform} className="flex-shrink-0" />
             </div>
             <a
-              href={rss.rssUrl}
+              href={rss.blogUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-gray-400 truncate hover:underline"
+              className="hidden md:block text-sm text-gray-400 truncate hover:underline"
               onClick={(e) => e.stopPropagation()}
             >
-              {rss.rssUrl}
+              {rss.blogUrl}
             </a>
-            <p className="flex items-center gap-3 text-sm text-gray-400">
+            <p className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3 text-sm text-gray-400">
               <span className="flex items-center gap-1">
                 <FileText className="w-3.5 h-3.5" />
                 게시글 {rss.feedCount}개

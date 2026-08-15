@@ -66,13 +66,13 @@ describe("OwnedRssCard", () => {
 
     expect(screen.getByText("소유 블로그")).toBeInTheDocument();
     expect(screen.getByText("주인")).toBeInTheDocument();
-    expect(screen.getByText(/공개 중인 게시글 2개/)).toBeInTheDocument();
+    expect(screen.getByText(/게시글 2개/)).toBeInTheDocument();
   });
 
   it("게시글 정지 횟수가 0이어도 정지 횟수를 표시해야 한다", () => {
     render(<OwnedRssCard rss={{ ...rss, suspensionCount: 0 }} onEdit={vi.fn()} onDelete={vi.fn()} />);
 
-    expect(screen.getByText("게시글 정지 0회")).toHaveClass("text-gray-400");
+    expect(screen.getByText("정지 0회")).toHaveClass("text-gray-400");
   });
 
   it.each([
@@ -82,7 +82,7 @@ describe("OwnedRssCard", () => {
   ])("게시글 정지 횟수가 %i회면 %s 색으로 표시해야 한다", (count, colorClass) => {
     render(<OwnedRssCard rss={{ ...rss, suspensionCount: count }} onEdit={vi.fn()} onDelete={vi.fn()} />);
 
-    expect(screen.getByText(`게시글 정지 ${count}회`)).toHaveClass(colorClass);
+    expect(screen.getByText(`정지 ${count}회`)).toHaveClass(colorClass);
   });
 
   it("수정/삭제 버튼이 onEdit/onDelete 를 호출해야 한다", () => {
@@ -90,8 +90,8 @@ describe("OwnedRssCard", () => {
     const onDelete = vi.fn();
     render(<OwnedRssCard rss={rss} onEdit={onEdit} onDelete={onDelete} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "RSS 정보 수정" }));
-    fireEvent.click(screen.getByRole("button", { name: "RSS 소유 해제" }));
+    fireEvent.click(screen.getByRole("button", { name: "수정" }));
+    fireEvent.click(screen.getByRole("button", { name: "삭제" }));
 
     expect(onEdit).toHaveBeenCalledWith(rss);
     expect(onDelete).toHaveBeenCalledWith(rss);
@@ -101,7 +101,7 @@ describe("OwnedRssCard", () => {
     render(<OwnedRssCard rss={rss} onEdit={vi.fn()} onDelete={vi.fn()} />);
 
     expect(screen.queryByTestId("feed-row")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "게시글 목록 펼치기" }));
+    fireEvent.click(screen.getByRole("button", { name: "펼치기" }));
 
     expect(screen.getByTestId("feed-row")).toHaveTextContent("피드1");
     fireEvent.click(screen.getByTestId("toggle-vis"));
@@ -111,7 +111,7 @@ describe("OwnedRssCard", () => {
   it("펼쳤을 때 로딩/빈 상태 문구를 표시해야 한다", () => {
     feedsState.data = { pages: [{ result: [] }] };
     render(<OwnedRssCard rss={rss} onEdit={vi.fn()} onDelete={vi.fn()} />);
-    fireEvent.click(screen.getByRole("button", { name: "게시글 목록 펼치기" }));
+    fireEvent.click(screen.getByRole("button", { name: "펼치기" }));
 
     expect(screen.getByText("등록된 게시글이 없습니다.")).toBeInTheDocument();
   });
@@ -119,7 +119,7 @@ describe("OwnedRssCard", () => {
   it("다음 페이지가 있으면 '더 보기' 버튼을 표시해야 한다", () => {
     feedsState.hasNextPage = true;
     render(<OwnedRssCard rss={rss} onEdit={vi.fn()} onDelete={vi.fn()} />);
-    fireEvent.click(screen.getByRole("button", { name: "게시글 목록 펼치기" }));
+    fireEvent.click(screen.getByRole("button", { name: "펼치기" }));
 
     expect(screen.getByRole("button", { name: "더 보기" })).toBeInTheDocument();
   });

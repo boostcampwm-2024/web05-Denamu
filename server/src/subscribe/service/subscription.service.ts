@@ -166,7 +166,13 @@ export class SubscriptionService {
     });
     const feedCountMap =
       await this.feedRepository.countPublicFeedsByBlogIds(blogIds);
+    const subscriberCountMap =
+      await this.subscriptionRepository.countByBlogIds(blogIds);
 
-    return SubscribedRssResponseDto.toResponseDtoArray(rssList, feedCountMap);
+    return SubscribedRssResponseDto.toResponseDtoArray(
+      rssList,
+      feedCountMap,
+      subscriberCountMap,
+    );
   }
 }

@@ -1,4 +1,4 @@
-import { ChevronLeft, FileText } from "lucide-react";
+import { ChevronLeft, FileText, Users } from "lucide-react";
 
 import { SubscribeButton } from "@/components/common/Card/detail/SubscribeButton.tsx";
 import { BlogPlatformBadge } from "@/components/profile/rss/BlogPlatformBadge.tsx";
@@ -45,7 +45,7 @@ export const SubscriptionManagementTab = ({ userId, isOwner, onBack }: Subscript
             {list.map((rss) => (
               <li
                 key={rss.id}
-                className="flex items-center justify-between gap-3 p-4 border border-gray-100 rounded-lg"
+                className="flex items-center justify-between gap-3 p-4 border-0 md:border border-gray-100 rounded-lg"
               >
                 <div className="flex items-center min-w-0 gap-3">
                   <PlatformIcon platform={rss.blogPlatform} image={rss.blogImage} name={rss.name} className="flex-shrink-0 w-10 h-10" />
@@ -56,16 +56,22 @@ export const SubscriptionManagementTab = ({ userId, isOwner, onBack }: Subscript
                     </div>
                     <p className="text-sm text-gray-500 truncate">{rss.userName}</p>
                     <a
-                      href={rss.rssUrl}
+                      href={rss.blogUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-gray-400 truncate hover:underline"
+                      className="hidden md:block text-sm text-gray-400 truncate hover:underline"
                     >
-                      {rss.rssUrl}
+                      {rss.blogUrl}
                     </a>
-                    <p className="flex items-center gap-1 text-sm text-gray-400">
-                      <FileText className="w-3.5 h-3.5" />
-                      공개 중인 게시글 {rss.feedCount}개
+                    <p className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3 text-sm text-gray-400">
+                      <span className="flex items-center gap-1">
+                        <FileText className="w-3.5 h-3.5" />
+                        게시글 {rss.feedCount}개
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Users className="w-3.5 h-3.5" />
+                        구독자 {rss.subscriberCount}명
+                      </span>
                     </p>
                   </div>
                 </div>
