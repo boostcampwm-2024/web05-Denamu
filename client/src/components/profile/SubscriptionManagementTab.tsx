@@ -44,7 +44,7 @@ export const SubscriptionManagementTab = ({ userId, isOwner, onBack }: Subscript
             {list.map((rss) => (
               <li
                 key={rss.id}
-                className="flex items-center justify-between gap-3 p-4 border-0 md:border border-gray-100 rounded-lg"
+                className="p-4 border-0 md:border border-gray-100 rounded-lg"
               >
                 <RssCardInfo
                   name={rss.name}
@@ -52,8 +52,9 @@ export const SubscriptionManagementTab = ({ userId, isOwner, onBack }: Subscript
                   blogUrl={rss.blogUrl}
                   blogPlatform={rss.blogPlatform}
                   blogImage={rss.blogImage}
+                  action={<SubscribeButton rssId={rss.id} isSubscribed={isOwner || mySubscribedIds.has(rss.id)} />}
                 >
-                  <p className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3 text-sm text-gray-400">
+                  <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-400">
                     <span className="flex items-center gap-1">
                       <FileText className="w-3.5 h-3.5" />
                       게시글 {rss.feedCount}개
@@ -64,9 +65,6 @@ export const SubscriptionManagementTab = ({ userId, isOwner, onBack }: Subscript
                     </span>
                   </p>
                 </RssCardInfo>
-                <div className="flex-shrink-0">
-                  <SubscribeButton rssId={rss.id} isSubscribed={isOwner || mySubscribedIds.has(rss.id)} />
-                </div>
               </li>
             ))}
           </ul>

@@ -56,19 +56,20 @@ export const OwnedRssCard = ({ rss, onEdit, onDelete }: OwnedRssCardProps) => {
           blogUrl={rss.blogUrl}
           blogPlatform={rss.blogPlatform}
           blogImage={rss.blogImage}
-          hideUrlOnMobile={false}
         >
-          <p className="flex items-center gap-1 text-sm text-gray-400 mt-0.5">
-            <FileText className="w-3.5 h-3.5" />
-            게시글 {rss.feedCount}개
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-400 mt-0.5">
+            <span className="flex items-center gap-1">
+              <FileText className="w-3.5 h-3.5" />
+              게시글 {rss.feedCount}개
+            </span>
+            <button
+              onClick={() => setSubscribersOpen(true)}
+              className="flex items-center gap-1 text-gray-500 hover:text-[#FF870D]"
+            >
+              <Users className="w-3.5 h-3.5" />
+              구독자 {rss.subscriberCount}명
+            </button>
           </p>
-          <button
-            onClick={() => setSubscribersOpen(true)}
-            className="flex items-center gap-1 text-sm text-gray-500 hover:text-[#FF870D]"
-          >
-            <Users className="w-3.5 h-3.5" />
-            구독자 {rss.subscriberCount}명
-          </button>
           <p className={`flex items-center gap-1 text-sm ${getSuspensionColor(rss.suspensionCount)}`}>
             <ShieldAlert className="w-3.5 h-3.5" />
             정지 {rss.suspensionCount}회

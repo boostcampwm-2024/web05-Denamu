@@ -21,7 +21,7 @@ export const CertifiedRssCard = ({ userId, rss, isOwner }: CertifiedRssCardProps
       className="transition-colors border-0 md:border border-gray-100 rounded-lg cursor-pointer hover:bg-gray-50"
       onClick={() => navigate(`/rss/${rss.id}`)}
     >
-      <div className="flex items-center justify-between gap-3 p-4">
+      <div className="p-4">
         <RssCardInfo
           name={rss.name}
           nameTo={`/rss/${rss.id}`}
@@ -29,8 +29,17 @@ export const CertifiedRssCard = ({ userId, rss, isOwner }: CertifiedRssCardProps
           blogUrl={rss.blogUrl}
           blogPlatform={rss.blogPlatform}
           blogImage={rss.blogImage}
+          action={
+            !isOwner && (
+              <SubscribeButton
+                rssId={rss.id}
+                isSubscribed={rss.isSubscribed}
+                invalidateKeys={[["certifiedRss", userId]]}
+              />
+            )
+          }
         >
-          <p className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3 text-sm text-gray-400">
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-400">
             <span className="flex items-center gap-1">
               <FileText className="w-3.5 h-3.5" />
               게시글 {rss.feedCount}개
@@ -41,15 +50,6 @@ export const CertifiedRssCard = ({ userId, rss, isOwner }: CertifiedRssCardProps
             </span>
           </p>
         </RssCardInfo>
-        {!isOwner && (
-          <div className="flex-shrink-0 ml-3" onClick={(e) => e.stopPropagation()}>
-            <SubscribeButton
-              rssId={rss.id}
-              isSubscribed={rss.isSubscribed}
-              invalidateKeys={[["certifiedRss", userId]]}
-            />
-          </div>
-        )}
       </div>
     </li>
   );
