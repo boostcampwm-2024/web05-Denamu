@@ -68,7 +68,7 @@ export default function Profile() {
       <div className="flex flex-col md:flex-row">
         <ProfileSidebar activeTab={currentTab} onTabChange={handleTabChange} isOwner={isOwner} />
 
-        <div className="flex-1 min-w-0 px-5 py-6 md:py-8 md:px-8 [&_.bg-card]:border-0 [&_.bg-card]:shadow-none md:[&_.bg-card]:border md:[&_.bg-card]:shadow-sm [&_.p-6]:p-3 md:[&_.p-6]:p-6 [&_.p-6.pt-0]:pt-0 [&_.mb-8]:mb-4 md:[&_.mb-8]:mb-8">
+        <div className="flex-1 min-w-0 px-5 py-6 md:py-8 md:px-8 [&_.bg-card]:border-0 [&_.bg-card]:shadow-none [&_.p-6]:p-3 md:[&_.p-6]:p-6 [&_.p-6.pt-0]:pt-0 [&_.mb-8]:mb-4 md:[&_.mb-8]:mb-8">
           {currentTab === "mypage" &&
             (isSuspended ? (
               <SuspendedProfileView />
