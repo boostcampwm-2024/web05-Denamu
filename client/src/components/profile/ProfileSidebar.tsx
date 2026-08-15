@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 
-import { Ban, Home, LogOut, Rss, Settings as SettingsIcon, User as UserIcon } from "lucide-react";
+import { Ban, LogOut, Rss, Settings as SettingsIcon, User as UserIcon } from "lucide-react";
 
 import { useCustomToast } from "@/hooks/common/useCustomToast.ts";
 
@@ -42,15 +42,10 @@ export const ProfileSidebar = ({ activeTab, onTabChange, isOwner }: ProfileSideb
     <aside
       className={cn(
         "w-full md:w-64 shrink-0 border-b md:border-b-0 md:border-r border-gray-200 bg-white",
-        !isOwner && "hidden md:block"
+        !isOwner && "hidden"
       )}
     >
       <nav className="sticky top-0 z-10 flex flex-row md:flex-col gap-2 md:gap-0 overflow-x-auto md:overflow-visible bg-white p-4">
-        <button onClick={() => navigate("/")} className={cn(itemClass(), "hidden md:flex md:mb-2")}>
-          <Home className="w-5 h-5" />
-          <span>홈으로</span>
-        </button>
-
         {isOwner &&
           tabs.map((tab) => {
             const Icon = tab.icon;
