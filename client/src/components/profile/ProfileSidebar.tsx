@@ -62,16 +62,15 @@ export const ProfileSidebar = ({ activeTab, onTabChange, isOwner }: ProfileSideb
           })}
 
         {isOwner && (
-          <button
-            onClick={handleLogout}
-            className={cn(
-              itemClass(),
-              "hidden md:flex md:mt-2 md:pt-4 md:border-t border-gray-200 hover:bg-red-50 hover:text-red-600"
-            )}
-          >
-            <LogOut className="w-5 h-5" />
-            <span>로그아웃</span>
-          </button>
+          <div className="hidden md:block md:mt-2 md:pt-4 md:border-t border-gray-200">
+            <button
+              onClick={handleLogout}
+              className={cn(itemClass(), "flex md:flex hover:bg-red-50 hover:text-red-600")}
+            >
+              <LogOut className="w-5 h-5" />
+              <span>로그아웃</span>
+            </button>
+          </div>
         )}
       </nav>
     </aside>
