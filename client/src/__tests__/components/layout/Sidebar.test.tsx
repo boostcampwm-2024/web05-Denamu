@@ -30,14 +30,19 @@ vi.mock("@/components/layout/sidebar/RssButton", () => ({
   ),
 }));
 
+vi.mock("@/components/layout/sidebar/LogoutButton", () => ({
+  LogoutButton: () => <div data-testid="logout-button" />,
+}));
+
 describe("SideBar", () => {
-  it("4개의 하위 섹션을 렌더링해야 한다", () => {
+  it("5개의 하위 섹션을 렌더링해야 한다", () => {
     render(<SideBar handleRssModal={vi.fn()} handleSidebar={vi.fn()} />);
 
     expect(screen.getByTestId("nav-buttons")).toBeInTheDocument();
     expect(screen.getByTestId("auth-section")).toBeInTheDocument();
     expect(screen.getByTestId("chat-section")).toBeInTheDocument();
     expect(screen.getByTestId("rss-button")).toBeInTheDocument();
+    expect(screen.getByTestId("logout-button")).toBeInTheDocument();
   });
 
   it("handleSidebar가 NavigationButtons/AuthSection의 onAction으로 전달되어야 한다", () => {

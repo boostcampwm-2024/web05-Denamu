@@ -4,7 +4,7 @@ import { lucideProxy } from "@/__tests__/__mocks__/external/lucide-proxy.tsx";
 import { mockAvatar } from "@/__tests__/__mocks__/components/ui/Avatar.tsx";
 import { AuthSection } from "@/components/layout/sidebar/AuthSection.tsx";
 
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 
 const mockNavigate = vi.fn();
 const logout = vi.fn();
@@ -51,7 +51,7 @@ describe("AuthSection", () => {
     expect(onAction).toHaveBeenCalledTimes(1);
   });
 
-  it("인증 상태에서는 유저 이름/이메일과 프로필 카드·로그아웃 버튼을 렌더링하고 별도 프로필 버튼은 없어야 한다", () => {
+  it("인증 상태에서는 유저 이름/이메일과 프로필 카드를 렌더링하고 별도 프로필·로그아웃 버튼은 없어야 한다", () => {
     authState.isAuthenticated = true;
     render(<AuthSection onAction={vi.fn()} />);
 
@@ -59,7 +59,7 @@ describe("AuthSection", () => {
     expect(screen.getByText("min@test.com")).toBeInTheDocument();
     expect(screen.getAllByTestId("avatar-fallback").length).toBeGreaterThan(0);
     expect(screen.queryByRole("button", { name: "프로필" })).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /로그아웃/ })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /로그아웃/ })).not.toBeInTheDocument();
   });
 
   it("프로필 카드 클릭 시 /profile로 이동하고 onAction을 호출해야 한다", () => {
@@ -71,20 +71,5 @@ describe("AuthSection", () => {
 
     expect(mockNavigate).toHaveBeenCalledWith("/profile");
     expect(onAction).toHaveBeenCalledTimes(1);
-  });
-
-  it("로그아웃 클릭 시 logout 후 페이지를 새로고침해야 한다", async () => {
-    const reloadMock = vi.fn();
-    Object.defineProperty(window, "location", {
-      value: { ...window.location, reload: reloadMock },
-      writable: true,
-    });
-    authState.isAuthenticated = true;
-    render(<AuthSection onAction={vi.fn()} />);
-
-    fireEvent.click(screen.getByRole("button", { name: /로그아웃/ }));
-
-    expect(logout).toHaveBeenCalledTimes(1);
-    await waitFor(() => expect(reloadMock).toHaveBeenCalledTimes(1));
   });
 });
