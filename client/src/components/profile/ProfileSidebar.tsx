@@ -5,7 +5,6 @@ import { Ban, Home, LogOut, Rss, Settings as SettingsIcon, User as UserIcon } fr
 import { useCustomToast } from "@/hooks/common/useCustomToast.ts";
 
 import { cn } from "@/lib/utils.ts";
-
 import { useAuthStore } from "@/store/useAuthStore.ts";
 import { ProfileTab } from "@/types/profile.ts";
 
@@ -33,56 +32,53 @@ export const ProfileSidebar = ({ activeTab, onTabChange, isOwner }: ProfileSideb
     navigate("/");
   };
 
-  return (
-    <aside className="w-64 shrink-0 border-r border-gray-200 bg-white">
-      <div className="sticky top-0 flex flex-col p-4">
-        <nav className="flex-1">
-          <button
-            onClick={() => navigate("/")}
-            className="flex items-center w-full p-3 mb-2 text-gray-600 rounded-lg hover:bg-gray-50"
-          >
-            <Home className="w-5 h-5 mr-3" />
-            <span>홈으로</span>
-          </button>
+  const itemClass = (isActive?: boolean, activeClass?: string) =>
+    cn(
+      "flex items-center gap-3 shrink-0 p-3 md:w-full rounded-lg transition-colors whitespace-nowrap",
+      isActive ? cn(activeClass, "font-semibold") : "text-gray-600 hover:bg-gray-50"
+    );
 
-          {isOwner && (
-            <ul className="space-y-2">
-              {tabs.map((tab) => {
-                const Icon = tab.icon;
-                const isActive = tab.id === activeTab;
-                return (
-                  <li key={tab.id}>
-                    <button
-                      onClick={() => onTabChange(tab.id)}
-                      className={cn(
-                        "flex items-center w-full p-3 rounded-lg transition-colors",
-                        isActive
-                          ? cn(tab.activeClass, "font-semibold")
-                          : "text-gray-600 hover:bg-gray-50"
-                      )}
-                    >
-                      <Icon className="w-5 h-5 mr-3" />
-                      <span>{tab.label}</span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </nav>
+  return (
+    <aside
+      className={cn(
+        "w-full md:w-64 shrink-0 border-b md:border-b-0 md:border-r border-gray-200 bg-white",
+        !isOwner && "hidden md:block"
+      )}
+    >
+      <nav className="sticky top-0 z-10 flex flex-row md:flex-col gap-2 md:gap-0 overflow-x-auto md:overflow-visible bg-white p-4">
+        <button onClick={() => navigate("/")} className={cn(itemClass(), "hidden md:flex md:mb-2")}>
+          <Home className="w-5 h-5" />
+          <span>홈으로</span>
+        </button>
+
+        {isOwner &&
+          tabs.map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => onTabChange(tab.id)}
+                className={cn(itemClass(tab.id === activeTab, tab.activeClass), "md:mb-2")}
+              >
+                <Icon className="w-5 h-5" />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
 
         {isOwner && (
-          <div className="pt-4 mt-4 border-t border-gray-200">
-            <button
-              onClick={handleLogout}
-              className="flex items-center w-full p-3 text-gray-600 rounded-lg hover:bg-red-50 hover:text-red-600"
-            >
-              <LogOut className="w-5 h-5 mr-3" />
-              <span>로그아웃</span>
-            </button>
-          </div>
+          <button
+            onClick={handleLogout}
+            className={cn(
+              itemClass(),
+              "hidden md:flex md:mt-2 md:pt-4 md:border-t border-gray-200 hover:bg-red-50 hover:text-red-600"
+            )}
+          >
+            <LogOut className="w-5 h-5" />
+            <span>로그아웃</span>
+          </button>
         )}
-      </div>
+      </nav>
     </aside>
   );
 };

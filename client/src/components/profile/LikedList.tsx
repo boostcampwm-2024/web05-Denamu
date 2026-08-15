@@ -32,7 +32,7 @@ export const LikedList = ({ userId }: LikedListProps) => {
             <li key={like.id}>
               <Link
                 to={`/${like.feed.id}`}
-                className="flex items-center justify-between p-3 border border-gray-100 rounded-lg hover:bg-gray-50"
+                className="flex items-center justify-between p-3 border-0 md:border border-gray-100 rounded-lg hover:bg-gray-50"
               >
                 <div className="flex items-center min-w-0 space-x-3">
                   <Heart className="flex-shrink-0 w-4 h-4 text-red-500" />

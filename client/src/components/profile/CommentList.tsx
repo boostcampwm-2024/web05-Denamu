@@ -29,7 +29,7 @@ export const CommentList = ({ userId }: CommentListProps) => {
 
         <ul className="space-y-3">
           {items.map((comment) => (
-            <li key={comment.id} className="p-3 border border-gray-100 rounded-lg">
+            <li key={comment.id} className="p-3 border-0 md:border border-gray-100 rounded-lg">
               <div className="flex items-start space-x-3">
                 <MessageSquare className="flex-shrink-0 w-4 h-4 mt-1 text-blue-500" />
                 <div className="min-w-0 flex-1">

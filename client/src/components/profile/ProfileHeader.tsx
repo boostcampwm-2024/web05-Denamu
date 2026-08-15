@@ -83,8 +83,8 @@ export const ProfileHeader = ({ name, email, profileImage, introduction, blockab
 
   return (
     <Card className="mb-8 overflow-hidden">
-      <CardContent className="p-6">
-        <div className="flex items-start space-x-6">
+      <CardContent className="relative p-6">
+        <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:items-start sm:gap-6 sm:text-left">
           <Avatar className="flex-shrink-0 w-24 h-24 border-4 border-white shadow">
             {profileImage && <AvatarImage src={profileImage} alt={name} />}
             <AvatarFallback>{initials}</AvatarFallback>
@@ -100,7 +100,7 @@ export const ProfileHeader = ({ name, email, profileImage, introduction, blockab
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
-                  className="flex items-center justify-center flex-shrink-0 w-8 h-8 text-gray-500 transition-colors rounded-lg hover:bg-gray-100"
+                  className="absolute right-4 top-4 sm:static flex items-center justify-center flex-shrink-0 w-8 h-8 text-gray-500 transition-colors rounded-lg hover:bg-gray-100"
                   aria-label="더보기"
                 >
                   <MoreVertical className="w-5 h-5" />
