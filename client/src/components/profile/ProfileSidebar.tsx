@@ -41,11 +41,11 @@ export const ProfileSidebar = ({ activeTab, onTabChange, isOwner }: ProfileSideb
   return (
     <aside
       className={cn(
-        "w-full md:w-64 shrink-0 md:border-r border-gray-200 bg-white",
+        "w-full md:fixed md:top-[var(--header-h,81px)] md:left-0 md:z-10 md:w-64 md:h-[calc(100vh-var(--header-h,81px))] md:overflow-y-auto border-gray-200 md:border-r bg-white",
         !isOwner && "hidden"
       )}
     >
-      <nav className="sticky top-0 z-10 flex flex-row md:flex-col gap-2 md:gap-0 overflow-x-auto md:overflow-visible bg-white p-4">
+      <nav className="sticky top-0 z-10 flex flex-row md:static md:flex-col gap-2 md:gap-0 overflow-x-auto md:overflow-visible bg-white p-4">
         {isOwner &&
           tabs.map((tab) => {
             const Icon = tab.icon;
