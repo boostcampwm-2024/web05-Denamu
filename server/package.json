@@ -67,7 +67,7 @@
     "rxjs": "^7.8.1",
     "sanitize-html": "^2.17.6",
     "sharp": "^0.35.3",
-    "typeorm": "^0.3.29",
+    "typeorm": "^0.3.31",
     "uuid": "^11.1.0",
     "winston": "^3.16.0",
     "winston-daily-rotate-file": "^5.0.0"
