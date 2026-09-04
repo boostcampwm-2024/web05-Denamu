@@ -6,12 +6,25 @@ services:
       - '$MYSQL_PORT:3306'
     volumes:
       - denamu-mysql:/var/lib/mysql
-      - ./db/my.cnf:/etc/mysql/conf.d/my.cnf:ro
       - denamu-mysql-logs:/var/log/mysql
     networks:
       - Denamu
     env_file:
       - /var/prod_config/infra/.env.prod
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --skip-character-set-client-handshake
+      - --default-time-zone=+00:00
+      - --slow_query_log=1
+      - --slow_query_log_file=/var/log/mysql/slow-query.log
+      - --long_query_time=1
+      - --log_queries_not_using_indexes=0
+      - --log_slow_admin_statements=1
+      - --log_slow_replica_statements=1
+      - --performance_schema=ON
+      - --performance_schema_instrument=statement/%=ON
+      - --performance_schema_consumer_statements_digest=ON
     healthcheck:
       test:
         [

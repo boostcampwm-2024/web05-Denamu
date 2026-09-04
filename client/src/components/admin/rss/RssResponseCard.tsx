@@ -14,6 +14,7 @@ export const RssResponseCard = ({ request }: RssResponseCardProps) => {
         <PlatformIcon
           platform={request.blogPlatform ?? "etc"}
           image={request.blogImage}
+          name={request.name}
           className="flex-shrink-0 w-10 h-10"
         />
         <div className="min-w-0 space-y-2">

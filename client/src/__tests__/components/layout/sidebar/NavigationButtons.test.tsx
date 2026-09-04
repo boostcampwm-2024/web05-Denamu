@@ -38,6 +38,14 @@ describe("NavigationButtons", () => {
     expect(mockNavigate).toHaveBeenCalledWith("/board");
   });
 
+  it("'블로그 목록' 클릭 시 /rss로 이동해야 한다", () => {
+    render(<NavigationButtons onAction={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "블로그 목록" }));
+
+    expect(mockNavigate).toHaveBeenCalledWith("/rss");
+  });
+
   it("tap이 main이면 '차트' 버튼이 보이고 클릭 시 chart로 전환 후 onAction을 호출해야 한다", () => {
     const onAction = vi.fn();
     render(<NavigationButtons onAction={onAction} />);

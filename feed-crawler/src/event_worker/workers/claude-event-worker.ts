@@ -171,7 +171,7 @@ export class ClaudeEventWorker extends AbstractQueueWorker<FeedAIQueueItem> {
     await this.tagMapRepository.insertTags(feed.id, feed.tagList);
     this.redisMetrics.total.inc({ operation: 'save_ai_result' });
     try {
-      const cacheKey = `feed:recent:${feed.id}`;
+      const cacheKey = redisConstant.FEED_INFO_ITEM_KEY(feed.id);
       if (await this.redisConnection.exists(cacheKey)) {
         await this.redisConnection.hset(
           cacheKey,

@@ -5,6 +5,7 @@ import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
 
 import { FeedRepository } from '@feed/repository/feed.repository';
+import { FeedService } from '@feed/service/feed.service';
 
 import { RssAccept } from '@rss/entity/rss.entity';
 import { RssAcceptRepository } from '@rss/repository/rss.repository';
@@ -122,5 +123,91 @@ describe(`SSE ${URL} E2E Test`, () => {
 
     // SSE then
     expect(data).toStrictEqual([]);
+  });
+});
+
+describe('FeedService.cacheTrendFeeds E2E Test', () => {
+  let feedService: FeedService;
+  let redisService: RedisService;
+  let feedRepository: FeedRepository;
+  let rssAcceptRepository: RssAcceptRepository;
+  let rssAccept: RssAccept;
+
+  beforeAll(() => {
+    feedService = testApp.get(FeedService);
+    redisService = testApp.get(RedisService);
+    feedRepository = testApp.get(FeedRepository);
+    rssAcceptRepository = testApp.get(RssAcceptRepository);
+  });
+
+  beforeEach(async () => {
+    rssAccept = await rssAcceptRepository.save(
+      RssAcceptFixture.createRssAcceptFixture(),
+    );
+  });
+
+  it('feed:info 캐시가 없으면 HSET으로 채우고 TTL을 건다.', async () => {
+    // given
+    const feed = await feedRepository.save(
+      FeedFixture.createFeedFixture(rssAccept),
+    );
+    const infoKey = REDIS_KEYS.FEED_INFO_ITEM_KEY(feed.id);
+
+    // when
+    await feedService.cacheTrendFeeds([
+      {
+        id: feed.id,
+        blog: { name: 'blog', platform: 'tistory', image: null },
+        title: feed.title,
+        path: feed.path,
+        createdAt: feed.createdAt,
+        thumbnail: feed.thumbnail,
+        viewCount: feed.viewCount,
+        likes: feed.likeCount,
+        comments: feed.commentCount,
+        tag: [],
+      },
+    ]);
+
+    // then
+    const cached = await redisService.redisClient.hgetall(infoKey);
+    expect(cached.id).toBe(String(feed.id));
+    expect(cached.title).toBe(feed.title);
+    const ttl = await redisService.redisClient.ttl(infoKey);
+    expect(ttl).toBeGreaterThan(0);
+    expect(ttl).toBeLessThanOrEqual(REDIS_KEYS.FEED_INFO_TTL_SECONDS);
+  });
+
+  it('feed:info 캐시가 이미 있으면 최신 값으로 덮어쓴다.', async () => {
+    // given
+    const feed = await feedRepository.save(
+      FeedFixture.createFeedFixture(rssAccept),
+    );
+    const infoKey = REDIS_KEYS.FEED_INFO_ITEM_KEY(feed.id);
+    await redisService.executePipeline((pipeline) => {
+      pipeline.hset(infoKey, { id: feed.id, likes: '999' });
+    });
+
+    // when
+    await feedService.cacheTrendFeeds([
+      {
+        id: feed.id,
+        blog: { name: 'blog', platform: 'tistory', image: null },
+        title: feed.title,
+        path: feed.path,
+        createdAt: feed.createdAt,
+        thumbnail: feed.thumbnail,
+        viewCount: feed.viewCount,
+        likes: 5,
+        comments: 0,
+        tag: [],
+      },
+    ]);
+
+    // then
+    const cached = await redisService.redisClient.hgetall(infoKey);
+    expect(cached.likes).toBe('5');
+    const ttl = await redisService.redisClient.ttl(infoKey);
+    expect(ttl).toBeGreaterThan(0);
   });
 });

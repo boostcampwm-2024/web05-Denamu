@@ -62,13 +62,43 @@ export class RssAcceptRepository extends Repository<RssAccept> {
     return query.getManyAndCount();
   }
 
-  findRecentlyPublished(limit: number, blockerId?: number) {
-    const query = this.createQueryBuilder('rss')
-      .innerJoin(
-        'feed',
-        'feed',
-        'feed.blog_id = rss.id AND feed.is_public = 1',
+  findAllRssList(
+    limit: number,
+    offset: number,
+    blockerId?: number,
+    blogPlatform?: string,
+  ) {
+    const query = this.createQueryBuilder('rss_accept')
+      .orderBy(
+        '(SELECT MAX(feed.created_at) FROM feed WHERE feed.blog_id = rss_accept.id AND feed.is_public = 1)',
+        'DESC',
+      )
+      .addOrderBy('rss_accept.id', 'DESC')
+      .skip(offset)
+      .take(limit);
+
+    if (blockerId) {
+      query.andWhere(
+        'rss_accept.id NOT IN (SELECT rss_block.blocked_rss_id FROM rss_blocks rss_block WHERE rss_block.blocker_id = :blockerId)',
+        { blockerId },
       );
+    }
+
+    if (blogPlatform) {
+      query.andWhere('rss_accept.blogPlatform = :blogPlatform', {
+        blogPlatform,
+      });
+    }
+
+    return query.getManyAndCount();
+  }
+
+  findRecentlyPublished(limit: number, blockerId?: number) {
+    const query = this.createQueryBuilder('rss').innerJoin(
+      'feed',
+      'feed',
+      'feed.blog_id = rss.id AND feed.is_public = 1',
+    );
 
     if (blockerId) {
       query.where(
@@ -89,9 +119,7 @@ export class RssAcceptRepository extends Repository<RssAccept> {
             .subQuery()
             .select('latest_feed.id')
             .from('feed', 'latest_feed')
-            .where(
-              'latest_feed.blog_id = rss.id AND latest_feed.is_public = 1',
-            )
+            .where('latest_feed.blog_id = rss.id AND latest_feed.is_public = 1')
             .orderBy('latest_feed.created_at', 'DESC')
             .addOrderBy('latest_feed.id', 'DESC')
             .limit(1),

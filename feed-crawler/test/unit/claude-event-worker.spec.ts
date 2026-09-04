@@ -307,7 +307,7 @@ describe('ClaudeEventWorker', () => {
         feedWithAIResult.tagList,
       );
       expect(hsetMock).toHaveBeenCalledWith(
-        `feed:recent:${feedWithAIResult.id}`,
+        `feed:info:${feedWithAIResult.id}`,
         'tagList',
         feedWithAIResult.tagList.join(','),
         'summary',

@@ -37,7 +37,9 @@ import { CreateAccessTokenResponseDto } from '@user/dto/response/createAccessTok
 import { GetUserProfileResponseDto } from '@user/dto/response/getUserProfile.dto';
 import { GetUserRssResponseDto } from '@user/dto/response/getUserRss.dto';
 import { User } from '@user/entity/user.entity';
+import { WithdrawnUser } from '@user/entity/withdrawnUser.entity';
 import { UserRepository } from '@user/repository/user.repository';
+import { WithdrawnUserRepository } from '@user/repository/withdrawnUser.repository';
 import { UserService } from '@user/service/user.service';
 
 import {
@@ -58,6 +60,9 @@ describe(`${UserService.name} Unit Test`, () => {
       | 'searchUserList'
       | 'isUserBlocked'
     >
+  >;
+  let withdrawnUserRepository: jest.Mocked<
+    Pick<WithdrawnUserRepository, 'getRejoinAvailableAt'>
   >;
   let redisService: jest.Mocked<
     Pick<RedisService, 'set' | 'get' | 'del' | 'setex'>
@@ -82,7 +87,7 @@ describe(`${UserService.name} Unit Test`, () => {
   let subscriptionRepository: jest.Mocked<
     Pick<SubscriptionRepository, 'countByBlogIds' | 'getSubscribedBlogIds'>
   >;
-  let manager: { remove: jest.Mock; delete: jest.Mock };
+  let manager: { remove: jest.Mock; delete: jest.Mock; upsert: jest.Mock };
   let dataSource: jest.Mocked<Pick<DataSource, 'transaction'>>;
   let userSuspensionRepository: jest.Mocked<
     Pick<UserSuspensionRepository, 'findActiveSuspension'>
@@ -91,10 +96,12 @@ describe(`${UserService.name} Unit Test`, () => {
   const createResponse = () => ({ cookie: jest.fn() }) as unknown as Response;
 
   const DAY_MS = 24 * 60 * 60 * 1000;
+  const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
   const midnightToday = () => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d;
+    const kst = new Date(Date.now() + KST_OFFSET_MS);
+    return new Date(
+      Date.UTC(kst.getUTCFullYear(), kst.getUTCMonth(), kst.getUTCDate()),
+    );
   };
   const daysAgo = (days: number) =>
     new Date(midnightToday().getTime() - days * DAY_MS);
@@ -108,6 +115,9 @@ describe(`${UserService.name} Unit Test`, () => {
       update: jest.fn().mockResolvedValue({ affected: 1 }),
       searchUserList: jest.fn(),
       isUserBlocked: jest.fn(),
+    };
+    withdrawnUserRepository = {
+      getRejoinAvailableAt: jest.fn().mockResolvedValue(null),
     };
     redisService = {
       set: jest.fn(),
@@ -123,7 +133,10 @@ describe(`${UserService.name} Unit Test`, () => {
     jwtService = { sign: jest.fn().mockReturnValue('signed-token') };
     configService = { get: jest.fn().mockReturnValue('14d') };
     fileService = { deleteByPath: jest.fn() };
-    rssAcceptRepository = { find: jest.fn(), update: jest.fn() };
+    rssAcceptRepository = {
+      find: jest.fn().mockResolvedValue([]),
+      update: jest.fn(),
+    };
     feedRepository = {
       countPublicFeedsByBlogIds: jest.fn().mockResolvedValue(new Map()),
     };
@@ -131,7 +144,7 @@ describe(`${UserService.name} Unit Test`, () => {
       countByBlogIds: jest.fn().mockResolvedValue(new Map()),
       getSubscribedBlogIds: jest.fn().mockResolvedValue([]),
     };
-    manager = { remove: jest.fn(), delete: jest.fn() };
+    manager = { remove: jest.fn(), delete: jest.fn(), upsert: jest.fn() };
     dataSource = {
       transaction: jest.fn((cb: any) => cb(manager)),
     } as any;
@@ -141,6 +154,7 @@ describe(`${UserService.name} Unit Test`, () => {
 
     userService = new UserService(
       userRepository as unknown as UserRepository,
+      withdrawnUserRepository as unknown as WithdrawnUserRepository,
       redisService as unknown as RedisService,
       emailProducer as unknown as EmailProducer,
       jwtService as unknown as JwtService,
@@ -168,12 +182,13 @@ describe(`${UserService.name} Unit Test`, () => {
   });
 
   describe('searchUserList', () => {
-    it('닉네임 검색 결과를 id·닉네임·프로필 이미지로 매핑하고 페이지 정보를 계산한다.', async () => {
+    it('닉네임 검색 결과를 id·닉네임·프로필 이미지·자기소개·소유 RSS 개수로 매핑하고 페이지 정보를 계산한다.', async () => {
       // given
       const users = [
         UserFixture.createUserFixture({
           userName: '김개발',
           profileImage: 'https://denamu.dev/profile.png',
+          introduction: '안녕하세요',
         }),
         UserFixture.createUserFixture({
           userName: '김철수',
@@ -182,7 +197,25 @@ describe(`${UserService.name} Unit Test`, () => {
       ] as User[];
       users[0].id = 1;
       users[1].id = 2;
-      userRepository.searchUserList.mockResolvedValue([users, 2]);
+      userRepository.searchUserList.mockResolvedValue([
+        [
+          {
+            id: users[0].id,
+            userName: users[0].userName,
+            profileImage: users[0].profileImage,
+            introduction: users[0].introduction,
+            blogCount: 3,
+          },
+          {
+            id: users[1].id,
+            userName: users[1].userName,
+            profileImage: users[1].profileImage,
+            introduction: users[1].introduction,
+            blogCount: 0,
+          },
+        ],
+        2,
+      ]);
 
       // when
       const result = await userService.searchUserList(
@@ -197,8 +230,16 @@ describe(`${UserService.name} Unit Test`, () => {
             id: 1,
             userName: '김개발',
             profileImage: 'https://denamu.dev/profile.png',
+            introduction: '안녕하세요',
+            blogCount: 3,
           },
-          { id: 2, userName: '김철수', profileImage: null },
+          {
+            id: 2,
+            userName: '김철수',
+            profileImage: null,
+            introduction: null,
+            blogCount: 0,
+          },
         ],
         totalPages: 1,
         limit: 5,
@@ -451,6 +492,23 @@ describe(`${UserService.name} Unit Test`, () => {
       userRepository.findOne.mockResolvedValue(UserFixture.createUserFixture());
       await expect(userService.registerUser(dto)).rejects.toThrow(
         ConflictException,
+      );
+    });
+
+    it('재가입 제한 기간 중인 이메일이면 ForbiddenException을 던진다.', async () => {
+      // given
+      userRepository.findOne.mockResolvedValue(null);
+      const availableAt = new Date('2026-11-01');
+      withdrawnUserRepository.getRejoinAvailableAt.mockResolvedValue(
+        availableAt,
+      );
+
+      // when & then
+      await expect(userService.registerUser(dto)).rejects.toThrow(
+        ForbiddenException,
+      );
+      expect(withdrawnUserRepository.getRejoinAvailableAt).toHaveBeenCalledWith(
+        dto.email,
       );
     });
 
@@ -861,7 +919,7 @@ describe(`${UserService.name} Unit Test`, () => {
     it('사용자가 있으면 인증 코드를 저장하고 메일을 발송한다.', async () => {
       // given
       userRepository.findOne.mockResolvedValue(
-        UserFixture.createUserFixture({ id: 1, providers: [] }),
+        UserFixture.createUserFixture({ id: 1 }),
       );
 
       // when
@@ -883,7 +941,6 @@ describe(`${UserService.name} Unit Test`, () => {
         UserFixture.createUserFixture({
           id: 1,
           password: null,
-          providers: [{}] as any,
         }),
       );
 
@@ -1038,6 +1095,11 @@ describe(`${UserService.name} Unit Test`, () => {
       // then
       expect(fileService.deleteByPath).toHaveBeenCalledWith('avatar.png');
       expect(manager.delete).toHaveBeenCalledWith(RssAccept, { userId: 1 });
+      expect(manager.upsert).toHaveBeenCalledWith(
+        WithdrawnUser,
+        { email: user.email, withdrawnAt: expect.any(Date) },
+        ['email'],
+      );
       expect(manager.remove).toHaveBeenCalledWith(user);
       // RSS 삭제가 user 제거보다 먼저 호출되어야 한다(FK SET NULL 함정 방지).
       expect(manager.delete.mock.invocationCallOrder[0]).toBeLessThan(

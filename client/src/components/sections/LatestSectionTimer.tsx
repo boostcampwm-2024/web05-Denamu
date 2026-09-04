@@ -4,8 +4,10 @@ import { RotateCw } from "lucide-react";
 
 import { useUpdatePost } from "@/hooks/queries/useUpdatePost";
 
+import { getServerNow } from "@/utils/serverTime";
+
 const calculateTime = () => {
-  const now = new Date();
+  const now = getServerNow();
   const currentMinutes = now.getUTCMinutes();
 
   const targetMinutes = currentMinutes < 31 ? 31 : 1;

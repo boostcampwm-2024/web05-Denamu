@@ -123,7 +123,7 @@ export const mockChatItem: ChatType = {
 export const mockSearchResult: SearchResult = {
   id: 1,
   title: "Storybook으로 컴포넌트 문서화하기",
-  blog: { name: "데나무 블로그", platform: "tistory" },
+  blog: { name: "데나무 블로그", platform: "tistory", image: "https://picsum.photos/seed/blog/80/80" },
   path: "https://example.com/post/1",
   createdAt: "2026-06-20T09:00:00.000Z",
   thumbnail: "https://picsum.photos/seed/search/400/240",
@@ -137,6 +137,8 @@ export const mockUserSearchResult: UserSearchResult = {
   id: 1,
   userName: "조민석",
   profileImage: "https://picsum.photos/seed/usearch/80/80",
+  introduction: "안녕하세요, 데나무 블로그 운영자입니다.",
+  blogCount: 2,
 };
 
 export const mockRssSearchResult: RssSearchResult = {
@@ -144,6 +146,8 @@ export const mockRssSearchResult: RssSearchResult = {
   name: "seok3765.log",
   blogPlatform: "velog",
   blogImage: "https://picsum.photos/seed/rsearch/80/80",
+  feedCount: 24,
+  lastPublishedAt: "2025-01-15T00:00:00.000Z",
 };
 
 export const mockAdminRssList: AdminRssData[] = [

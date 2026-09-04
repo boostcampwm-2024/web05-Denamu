@@ -37,7 +37,7 @@ function RssStoryItem({ rss }: { rss: RecentRss }) {
         >
           <div className={`rounded-full p-[2px] ${isStory ? "bg-white" : ""}`}>
             <div className="overflow-hidden bg-white border rounded-full w-14 h-14">
-              <PlatformIcon platform={rss.blogPlatform} image={rss.blogImage} className="object-cover w-full h-full" />
+              <PlatformIcon platform={rss.blogPlatform} image={rss.blogImage} name={rss.name} className="object-cover w-full h-full" />
             </div>
           </div>
         </div>

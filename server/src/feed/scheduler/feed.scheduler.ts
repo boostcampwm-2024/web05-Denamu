@@ -29,12 +29,24 @@ export class FeedScheduler {
       this.redisService.zrevrange(REDIS_KEYS.FEED_TREND_KEY, 0, 3),
     ]);
 
+    if (nowTrend.length) {
+      await this.redisService.executePipeline((pipeline) => {
+        for (const feedId of nowTrend) {
+          pipeline.expire(
+            REDIS_KEYS.FEED_INFO_ITEM_KEY(feedId),
+            REDIS_KEYS.FEED_INFO_TTL_SECONDS,
+          );
+        }
+      });
+    }
+
     if (!_.isEqual(originTrend, nowTrend)) {
       await this.redisService.executePipeline((pipeline) => {
         pipeline.del(REDIS_KEYS.FEED_ORIGIN_TREND_KEY);
         pipeline.rpush(REDIS_KEYS.FEED_ORIGIN_TREND_KEY, ...nowTrend);
       });
       const trendFeeds = await this.feedService.readTrendFeedList();
+      await this.feedService.cacheTrendFeeds(trendFeeds);
       this.eventService.emit('ranking-update', trendFeeds);
     }
   }

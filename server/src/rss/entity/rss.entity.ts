@@ -5,12 +5,9 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
-  OneToMany,
   PrimaryGeneratedColumn,
   Unique,
 } from 'typeorm';
-
-import { Feed } from '@feed/entity/feed.entity';
 
 import { User } from '@user/entity/user.entity';
 
@@ -95,9 +92,6 @@ export class RssReject extends RssInformation {
 @Unique('UQ_rss_accept_name', ['name'])
 @Unique('UQ_rss_accept_rss_url', ['rssUrl'])
 export class RssAccept extends RssInformation {
-  @OneToMany(() => Feed, (feed) => feed.blog)
-  feeds: Feed[];
-
   @Index('FT_rss_accept_name', { fulltext: true, parser: 'ngram' })
   @Column({ name: 'name', nullable: false })
   name: string;
@@ -137,7 +131,6 @@ export class RssAccept extends RssInformation {
     blog.blogUrl = rss.blogUrl;
     blog.blogPlatform = rss.blogPlatform;
     blog.blogImage = rss.blogImage;
-    blog.feeds = [];
 
     return blog;
   }

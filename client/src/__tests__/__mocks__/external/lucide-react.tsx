@@ -15,4 +15,5 @@ export const mockLucideIcons = {
   ArrowLeft: () => <div data-testid="arrow-left-icon">Mock Arrow Left Icon</div>,
   Rss: () => <div data-testid="rss-icon">Mock Rss Icon</div>,
   Smile: () => <div data-testid="smile-icon">Mock Smile Icon</div>,
+  BadgeCheck: () => <div data-testid="badge-check-icon">Mock Badge Check Icon</div>,
 };

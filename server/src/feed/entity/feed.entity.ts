@@ -78,7 +78,7 @@ export class Feed extends BaseEntity {
   })
   isPublic: boolean;
 
-  @ManyToOne(() => RssAccept, (rssAccept) => rssAccept.feeds, {
+  @ManyToOne(() => RssAccept, {
     nullable: false,
     onUpdate: 'CASCADE',
     onDelete: 'CASCADE',
@@ -89,7 +89,7 @@ export class Feed extends BaseEntity {
   })
   blog: RssAccept;
 
-  @ManyToMany(() => Tag, (tag) => tag.feeds, { cascade: true })
+  @ManyToMany(() => Tag, { cascade: true })
   @JoinTable({
     name: 'tag_map',
     joinColumn: {

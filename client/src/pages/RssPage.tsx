@@ -14,7 +14,6 @@ import {
   Users,
 } from "lucide-react";
 
-import { Footer } from "@/components/about/Footer";
 import { BlockConfirmDialog } from "@/components/common/BlockConfirmDialog";
 import { SubscribeButton } from "@/components/common/Card/detail/SubscribeButton.tsx";
 import { ReportDialog } from "@/components/common/ReportDialog";
@@ -153,7 +152,12 @@ const RssHeader = ({
     <CardContent className="p-6">
       <div className="flex items-start justify-between gap-4">
         <div className="flex min-w-0 gap-4">
-          <PlatformIcon platform={rss.blogPlatform} image={rss.blogImage} className="flex-shrink-0 w-14 h-14" />
+          <PlatformIcon
+            platform={rss.blogPlatform}
+            image={rss.blogImage}
+            name={rss.name}
+            className="flex-shrink-0 w-14 h-14"
+          />
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-2xl font-bold truncate">{rss.name}</h1>
@@ -309,12 +313,9 @@ export default function RssPage() {
 
   if (rss.isBlocked) {
     return (
-      <>
-        <Layout>
-          <BlockedRssView rssId={rss.id} />
-        </Layout>
-        <Footer />
-      </>
+      <Layout footer>
+        <BlockedRssView rssId={rss.id} />
+      </Layout>
     );
   }
 
@@ -369,100 +370,97 @@ export default function RssPage() {
   };
 
   return (
-    <>
-      <Layout>
-        <div className="max-w-4xl px-4 py-8 mx-auto md:px-8">
-          <RssHeader
-            rss={rss}
-            onEdit={() => setEditOpen(true)}
-            onBlock={isAuthenticated && !rss.isOwner ? () => setShowBlockConfirm(true) : undefined}
-            onReport={isAuthenticated && !rss.isOwner ? () => setShowReportDialog(true) : undefined}
-          />
-
-          {rss.owner && <OwnerProfileCard owner={rss.owner} />}
-
-          {rss.isOwner && (
-            <>
-              <OwnerFeedManager rssId={rss.id} />
-              <RssEditModal
-                target={editOpen ? rss : null}
-                userId={rss.owner?.id ?? 0}
-                onClose={() => setEditOpen(false)}
-                extraInvalidateKeys={[["rssInfo", rss.id]]}
-              />
-            </>
-          )}
-
-          <Card className="mb-8">
-            <CardContent className="p-6">
-              <ActivityGraph
-                dailyActivities={activity?.dailyActivities ?? []}
-                year={year}
-                years={years}
-                onYearChange={handleYearChange}
-                scale="posts"
-                selectedDate={selectedDate}
-                onDayClick={handleDayClick}
-              />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="mb-4 text-lg font-semibold">
-                포스트
-                {selectedDate && <span className="ml-2 text-sm font-normal text-gray-500">{selectedDate} 발행분</span>}
-              </h3>
-              {feedsLoading && <p className="text-sm text-gray-400">포스트를 불러오는 중...</p>}
-              {feedsError && <p className="text-sm text-red-500">포스트를 불러오지 못했습니다.</p>}
-              {!feedsLoading && !feedsError && feeds.length === 0 && (
-                <p className="text-sm text-gray-400">포스트가 없습니다.</p>
-              )}
-
-              <ul className="space-y-3">
-                {feeds.map((feed) => (
-                  <RssFeedCard
-                    key={feed.id}
-                    id={feed.id}
-                    title={feed.title}
-                    thumbnail={feed.thumbnail}
-                    createdAt={feed.createdAt}
-                    commentCount={feed.commentCount}
-                    likeCount={feed.likeCount}
-                  />
-                ))}
-              </ul>
-
-              {hasNextPage && (
-                <div className="mt-4 text-center">
-                  <Button variant="outline" size="sm" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
-                    {isFetchingNextPage ? "불러오는 중..." : "더 보기"}
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        <BlockConfirmDialog
-          open={showBlockConfirm}
-          onOpenChange={setShowBlockConfirm}
-          title={`${rss.name} RSS를 차단하시겠습니까?`}
-          description="게시글 및 RSS 프로필 페이지 조회가 제한됩니다."
-          owner={rss.owner ? { id: rss.owner.id, userName: rss.owner.userName } : undefined}
-          ownedRss={otherOwnedRss}
-          onConfirm={handleBlock}
+    <Layout footer>
+      <div className="max-w-4xl px-4 py-8 mx-auto md:px-8">
+        <RssHeader
+          rss={rss}
+          onEdit={() => setEditOpen(true)}
+          onBlock={isAuthenticated && !rss.isOwner ? () => setShowBlockConfirm(true) : undefined}
+          onReport={isAuthenticated && !rss.isOwner ? () => setShowReportDialog(true) : undefined}
         />
 
-        <ReportDialog
-          open={showReportDialog}
-          onOpenChange={setShowReportDialog}
-          title={`${rss.name} RSS 신고`}
-          isPending={isReportPending}
-          onSubmit={handleReport}
-        />
-      </Layout>
-      <Footer />
-    </>
+        {rss.owner && <OwnerProfileCard owner={rss.owner} />}
+
+        {rss.isOwner && (
+          <>
+            <OwnerFeedManager rssId={rss.id} />
+            <RssEditModal
+              target={editOpen ? rss : null}
+              userId={rss.owner?.id ?? 0}
+              onClose={() => setEditOpen(false)}
+              extraInvalidateKeys={[["rssInfo", rss.id]]}
+            />
+          </>
+        )}
+
+        <Card className="mb-8">
+          <CardContent className="p-6">
+            <ActivityGraph
+              dailyActivities={activity?.dailyActivities ?? []}
+              year={year}
+              years={years}
+              onYearChange={handleYearChange}
+              scale="posts"
+              selectedDate={selectedDate}
+              onDayClick={handleDayClick}
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <h3 className="mb-4 text-lg font-semibold">
+              포스트
+              {selectedDate && <span className="ml-2 text-sm font-normal text-gray-500">{selectedDate} 발행분</span>}
+            </h3>
+            {feedsLoading && <p className="text-sm text-gray-400">포스트를 불러오는 중...</p>}
+            {feedsError && <p className="text-sm text-red-500">포스트를 불러오지 못했습니다.</p>}
+            {!feedsLoading && !feedsError && feeds.length === 0 && (
+              <p className="text-sm text-gray-400">포스트가 없습니다.</p>
+            )}
+
+            <ul className="space-y-3">
+              {feeds.map((feed) => (
+                <RssFeedCard
+                  key={feed.id}
+                  id={feed.id}
+                  title={feed.title}
+                  thumbnail={feed.thumbnail}
+                  createdAt={feed.createdAt}
+                  commentCount={feed.commentCount}
+                  likeCount={feed.likeCount}
+                />
+              ))}
+            </ul>
+
+            {hasNextPage && (
+              <div className="mt-4 text-center">
+                <Button variant="outline" size="sm" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
+                  {isFetchingNextPage ? "불러오는 중..." : "더 보기"}
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <BlockConfirmDialog
+        open={showBlockConfirm}
+        onOpenChange={setShowBlockConfirm}
+        title={`${rss.name} RSS를 차단하시겠습니까?`}
+        description="게시글 및 RSS 프로필 페이지 조회가 제한됩니다."
+        owner={rss.owner ? { id: rss.owner.id, userName: rss.owner.userName } : undefined}
+        ownedRss={otherOwnedRss}
+        onConfirm={handleBlock}
+      />
+
+      <ReportDialog
+        open={showReportDialog}
+        onOpenChange={setShowReportDialog}
+        title={`${rss.name} RSS 신고`}
+        isPending={isReportPending}
+        onSubmit={handleReport}
+      />
+    </Layout>
   );
 }

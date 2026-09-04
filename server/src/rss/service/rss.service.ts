@@ -37,6 +37,7 @@ import { FeedRepository } from '@feed/repository/feed.repository';
 
 import { DeleteCertificateRssRequestDto } from '@rss/dto/request/deleteCertificateRss.dto';
 import { DeleteRssRequestDto } from '@rss/dto/request/deleteRss.dto';
+import { GetAllRssRequestDto } from '@rss/dto/request/getAllRss.dto';
 import { GetOwnedRssFeedsRequestDto } from '@rss/dto/request/getOwnedRssFeeds.dto';
 import { GetRssFeedsRequestDto } from '@rss/dto/request/getRssFeeds.dto';
 import { ManageRssRequestDto } from '@rss/dto/request/manageRss.dto';
@@ -53,9 +54,9 @@ import { ReadRssResponseDto } from '@rss/dto/response/readRss.dto';
 import { ReadRssAcceptHistoryResponseDto } from '@rss/dto/response/readRssAcceptHistory.dto';
 import { ReadRssRejectHistoryResponseDto } from '@rss/dto/response/readRssRejectHistory.dto';
 import {
-  SearchRssResponseDto,
-  SearchRssResult,
-} from '@rss/dto/response/searchRss.dto';
+  RssListItemDto,
+  RssListResponseDto,
+} from '@rss/dto/response/rssList.dto';
 import { Rss, RssAccept, RssReject } from '@rss/entity/rss.entity';
 import {
   RssAcceptRepository,
@@ -308,6 +309,16 @@ export class RssService {
       );
     }
 
+    const rssAcceptEntity = await this.rssAcceptRepository.findOneBy({
+      rssUrl,
+    });
+    const feeds = rssAcceptEntity
+      ? await this.feedRepository.find({
+          where: { blog: { id: rssAcceptEntity.id } },
+          select: ['id'],
+        })
+      : [];
+
     try {
       const [rssAccept, rss] = await Promise.all([
         this.rssAcceptRepository.delete({ rssUrl }),
@@ -317,9 +328,24 @@ export class RssService {
       if (rssAccept.affected === 0 && rss.affected === 0) {
         throw new NotFoundException('이미 지워진 RSS 정보입니다.');
       }
+
+      await this.evictFeedCache(feeds.map((feed) => feed.id));
     } finally {
       await this.redisService.del(redisKey);
     }
+  }
+
+  private async evictFeedCache(feedIds: number[]) {
+    if (!feedIds.length) return;
+
+    await this.redisService.executePipeline((pipeline) => {
+      for (const feedId of feedIds) {
+        pipeline.del(REDIS_KEYS.FEED_INFO_ITEM_KEY(feedId));
+        pipeline.srem(REDIS_KEYS.FEED_RECENT_INDEX_KEY, feedId.toString());
+        pipeline.lrem(REDIS_KEYS.FEED_ORIGIN_TREND_KEY, 0, feedId.toString());
+        pipeline.zrem(REDIS_KEYS.FEED_TREND_KEY, feedId.toString());
+      }
+    });
   }
 
   async getRecentRss(viewerId?: number) {
@@ -329,6 +355,39 @@ export class RssService {
     );
     return recentRssList.map((row) =>
       GetRecentRssResponseDto.toResponseDto(row),
+    );
+  }
+
+  async getAllRss(getAllRssQueryDto: GetAllRssRequestDto, viewerId?: number) {
+    const { page, limit, blogPlatform } = getAllRssQueryDto;
+    const offset = (page - 1) * limit;
+
+    const [rssAcceptList, totalCount] =
+      await this.rssAcceptRepository.findAllRssList(
+        limit,
+        offset,
+        viewerId,
+        blogPlatform,
+      );
+
+    const blogIds = rssAcceptList.map((rss) => rss.id);
+    const [feedCountMap, lastPublishedAtMap] = await Promise.all([
+      this.feedRepository.countPublicFeedsByBlogIds(blogIds),
+      this.feedRepository.getLatestPublicFeedDateByBlogIds(blogIds),
+    ]);
+
+    const rssList = RssListItemDto.toResultDtoArray(
+      rssAcceptList,
+      feedCountMap,
+      lastPublishedAtMap,
+    );
+    const totalPages = Math.ceil(totalCount / limit);
+
+    return RssListResponseDto.toResponseDto(
+      totalCount,
+      rssList,
+      totalPages,
+      limit,
     );
   }
 
@@ -344,10 +403,14 @@ export class RssService {
         viewerId,
       );
 
-    const rssList = SearchRssResult.toResultDtoArray(searchResult);
+    const feedCountMap = await this.feedRepository.countPublicFeedsByBlogIds(
+      searchResult.map((rss) => rss.id),
+    );
+
+    const rssList = RssListItemDto.toResultDtoArray(searchResult, feedCountMap);
     const totalPages = Math.ceil(totalCount / limit);
 
-    return SearchRssResponseDto.toResponseDto(
+    return RssListResponseDto.toResponseDto(
       totalCount,
       rssList,
       totalPages,

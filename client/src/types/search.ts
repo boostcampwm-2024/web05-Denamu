@@ -6,6 +6,7 @@ export interface SearchResult {
   blog: {
     name: string;
     platform: string;
+    image: string | null;
   };
   path: string;
   createdAt: string;
@@ -37,6 +38,8 @@ export interface UserSearchResult {
   id: number;
   userName: string;
   profileImage: string | null;
+  introduction: string | null;
+  blogCount: number;
 }
 
 export interface UserSearchData {
@@ -58,6 +61,8 @@ export interface RssSearchResult {
   name: string;
   blogPlatform: string;
   blogImage: string | null;
+  feedCount: number;
+  lastPublishedAt: string | null;
 }
 
 export interface RssSearchData {

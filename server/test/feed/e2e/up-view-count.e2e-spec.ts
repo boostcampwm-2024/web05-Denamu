@@ -3,6 +3,7 @@ import { HttpStatus } from '@nestjs/common';
 import supertest from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 
+import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
 
 import { Feed } from '@feed/entity/feed.entity';
@@ -26,6 +27,16 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
   let rssAcceptRepository: RssAcceptRepository;
   const testIp = '1.1.1.1';
   const redisKeyMake = (data: string) => `feed:${data}:ip`;
+  const infoKey = () => REDIS_KEYS.FEED_INFO_ITEM_KEY(feed.id);
+  const seedInfoCache = async (viewCount: number) => {
+    await redisService.executePipeline((pipeline) => {
+      pipeline.hset(infoKey(), {
+        id: feed.id,
+        title: feed.title,
+        viewCount,
+      });
+    });
+  };
 
   beforeAll(() => {
     agent = supertest(testApp.getHttpServer());
@@ -154,5 +165,42 @@ describe(`POST ${URL}/{feedId} E2E Test`, () => {
 
     // DB, Redis then - remoteAddress가 사용되어 조회수가 증가함
     expect(savedFeed.viewCount).toBeGreaterThanOrEqual(feed.viewCount);
+  });
+
+  describe('feed:info 캐시 동기화', () => {
+    it('[200] 조회수 상승 시 feed:info 캐시가 존재하면 viewCount 필드가 1 증가한다.', async () => {
+      // given
+      await seedInfoCache(0);
+      const testNewIp = '123.234.123.234';
+
+      // Http when
+      const response = await agent
+        .post(`${URL}/${feed.id}`)
+        .set('X-Real-IP', testNewIp);
+
+      // Http then
+      expect(response.status).toBe(HttpStatus.OK);
+
+      // Redis then
+      const cache = await redisService.redisClient.hgetall(infoKey());
+      expect(cache.viewCount).toBe('1');
+    });
+
+    it('[200] 캐시에 없는(순위 밀려난) 게시글의 조회수를 올려도 phantom 캐시가 생성되지 않는다.', async () => {
+      // given - 캐시를 미리 세팅하지 않음
+      const testNewIp = '123.234.123.234';
+
+      // Http when
+      const response = await agent
+        .post(`${URL}/${feed.id}`)
+        .set('X-Real-IP', testNewIp);
+
+      // Http then
+      expect(response.status).toBe(HttpStatus.OK);
+
+      // Redis then
+      const exists = await redisService.redisClient.exists(infoKey());
+      expect(exists).toBe(0);
+    });
   });
 });

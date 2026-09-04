@@ -1,7 +1,6 @@
 import 'reflect-metadata';
 
 import * as schedule from 'node-schedule';
-import { RabbitMQManager } from '@rabbitmq/rabbitmq.manager';
 
 import '@common/env-load';
 
@@ -15,6 +14,8 @@ import { RedisConnection } from '@common/redis/redis-access';
 import { AiSummaryRetryEventWorker } from '@event_worker/workers/ai-summary-retry-event-worker';
 import { ClaudeEventWorker } from '@event_worker/workers/claude-event-worker';
 import { FullFeedCrawlEventWorker } from '@event_worker/workers/full-feed-crawl-event-worker';
+
+import { RabbitMQManager } from '@rabbitmq/rabbitmq.manager';
 
 import { container } from './container';
 import { FeedCrawler } from './feed-crawler';
@@ -37,15 +38,19 @@ function initializeDependencies() {
 function registerSchedulers(
   dependencies: ReturnType<typeof initializeDependencies>,
 ) {
-  schedule.scheduleJob('FEED CRAWLING', '0,30 * * * *', () => {
-    const now = new Date();
-    logger.info(`Feed Crawling Start: ${now.toISOString()}`);
-    void dependencies.feedCrawler.start(now);
-  });
+  schedule.scheduleJob(
+    'FEED CRAWLING',
+    { rule: '0,30 * * * *', tz: 'Etc/UTC' },
+    () => {
+      const now = new Date();
+      logger.info(`Feed Crawling Start: ${now.toISOString()}`);
+      void dependencies.feedCrawler.start(now);
+    },
+  );
 
   schedule.scheduleJob(
     'AI API PER MINUTE REQUEST RATE LIMIT',
-    `*/1 * * * *`,
+    { rule: '*/1 * * * *', tz: 'Etc/UTC' },
     () => {
       logger.info(`AI Request Start: ${new Date().toISOString()}`);
       void dependencies.claudeEventWorker.start();

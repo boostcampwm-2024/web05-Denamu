@@ -3,15 +3,10 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  OneToMany,
   PrimaryGeneratedColumn,
   Unique,
   UpdateDateColumn,
 } from 'typeorm';
-
-import { Activity } from '@activity/entity/activity.entity';
-
-import { Provider } from '@user/entity/provider.entity';
 
 @Entity({
   name: 'user',
@@ -131,10 +126,4 @@ export class User extends BaseEntity {
     default: 0,
   })
   profileImageChangeCount: number;
-
-  @OneToMany(() => Activity, (activity) => activity.user)
-  activities: Activity[];
-
-  @OneToMany(() => Provider, (provider) => provider.user)
-  providers: Provider[];
 }

@@ -48,7 +48,7 @@ export const SubscriptionManagementTab = ({ userId, isOwner, onBack }: Subscript
                 className="flex items-center justify-between gap-3 p-4 border border-gray-100 rounded-lg"
               >
                 <div className="flex items-center min-w-0 gap-3">
-                  <PlatformIcon platform={rss.blogPlatform} image={rss.blogImage} className="flex-shrink-0 w-10 h-10" />
+                  <PlatformIcon platform={rss.blogPlatform} image={rss.blogImage} name={rss.name} className="flex-shrink-0 w-10 h-10" />
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <p className="font-medium truncate">{rss.name}</p>

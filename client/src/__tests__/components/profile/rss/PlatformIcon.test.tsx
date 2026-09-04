@@ -37,4 +37,11 @@ describe("PlatformIcon", () => {
 
     expect(img).toHaveAttribute("src", expect.stringContaining("naver-icon.svg"));
   });
+
+  it("알 수 없는 플랫폼이고 name이 주어지면 이니셜을 렌더링해야 한다", () => {
+    render(<PlatformIcon platform="etc" name="데나무 블로그" />);
+
+    expect(screen.getByText("데나")).toBeInTheDocument();
+    expect(screen.queryByTestId("lucide-Rss")).not.toBeInTheDocument();
+  });
 });

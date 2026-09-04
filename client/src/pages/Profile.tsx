@@ -3,7 +3,6 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import axios from "axios";
 
-import { Footer } from "@/components/about/Footer";
 import Layout from "@/components/layout/Layout";
 import { BlockManagementTab } from "@/components/profile/BlockManagementTab.tsx";
 import { BlockedProfileView } from "@/components/profile/BlockedProfileView.tsx";
@@ -65,42 +64,39 @@ export default function Profile() {
   };
 
   return (
-    <>
-      <Layout>
-        <div className="flex min-h-screen">
-          <ProfileSidebar activeTab={currentTab} onTabChange={handleTabChange} isOwner={isOwner} />
+    <Layout footer>
+      <div className="flex min-h-screen">
+        <ProfileSidebar activeTab={currentTab} onTabChange={handleTabChange} isOwner={isOwner} />
 
-          <div className="flex-1 min-w-0 px-4 py-8 md:px-8">
-            {currentTab === "mypage" &&
-              (isSuspended ? (
-                <SuspendedProfileView />
-              ) : isBlocked ? (
-                <BlockedProfileView userId={targetId as number} />
-              ) : isVisitor && isVisitorProfileLoading ? null : showSubscriptions ? (
-                <SubscriptionManagementTab
-                  userId={targetId as number}
-                  isOwner={isOwner}
-                  onBack={() => setShowSubscriptions(false)}
-                />
-              ) : (
-                <MyPage
-                  userId={targetId as number}
-                  name={isOwner ? (userInfo.userName ?? "") : ""}
-                  email={isOwner ? (userInfo.email ?? "") : ""}
-                  isOwner={isOwner}
-                  canBlock={isAuthenticated && isVisitor}
-                  onShowSubscriptions={() => setShowSubscriptions(true)}
-                />
-              ))}
-            {isOwner && currentTab === "rss" && <RssManagementTab userId={targetId as number} />}
-            {isOwner && currentTab === "blocks" && <BlockManagementTab />}
-            {isOwner && currentTab === "settings" && (
-              <ProfileEditTab userId={targetId as number} email={userInfo.email ?? ""} />
-            )}
-          </div>
+        <div className="flex-1 min-w-0 px-4 py-8 md:px-8">
+          {currentTab === "mypage" &&
+            (isSuspended ? (
+              <SuspendedProfileView />
+            ) : isBlocked ? (
+              <BlockedProfileView userId={targetId as number} />
+            ) : isVisitor && isVisitorProfileLoading ? null : showSubscriptions ? (
+              <SubscriptionManagementTab
+                userId={targetId as number}
+                isOwner={isOwner}
+                onBack={() => setShowSubscriptions(false)}
+              />
+            ) : (
+              <MyPage
+                userId={targetId as number}
+                name={isOwner ? (userInfo.userName ?? "") : ""}
+                email={isOwner ? (userInfo.email ?? "") : ""}
+                isOwner={isOwner}
+                canBlock={isAuthenticated && isVisitor}
+                onShowSubscriptions={() => setShowSubscriptions(true)}
+              />
+            ))}
+          {isOwner && currentTab === "rss" && <RssManagementTab userId={targetId as number} />}
+          {isOwner && currentTab === "blocks" && <BlockManagementTab />}
+          {isOwner && currentTab === "settings" && (
+            <ProfileEditTab userId={targetId as number} email={userInfo.email ?? ""} />
+          )}
         </div>
-      </Layout>
-      <Footer />
-    </>
+      </div>
+    </Layout>
   );
 }

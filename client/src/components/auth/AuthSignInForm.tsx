@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 
 import { ArrowLeft, Ban, Clock } from "lucide-react";
 
@@ -30,9 +30,38 @@ interface AuthSignInFormProps {
 export const AuthSignInForm = ({ hideBackButton = false, onSuccess }: AuthSignInFormProps = {}) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useCustomToast();
   const { form, updateField, isLoading, result, submitForm } = useSignIn();
   const [suspension, setSuspension] = useState<SignInSuspension | null>(null);
+
+  const [rejoinNoticeDate] = useState<string | null>(() => {
+    if (searchParams.get("error") !== "rejoin_restricted") return null;
+    const availableAt = new Date(searchParams.get("availableAt") ?? "");
+    return Number.isNaN(availableAt.getTime()) ? "잠시 후" : availableAt.toLocaleDateString("ko-KR");
+  });
+
+  useEffect(() => {
+    if (!rejoinNoticeDate) return;
+
+    const timer = setTimeout(() => {
+      toast({
+        title: "재가입 제한",
+        description: `탈퇴 후 재가입 제한 기간입니다. ${rejoinNoticeDate} 이후 다시 시도해주세요.`,
+        variant: "destructive",
+      });
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [rejoinNoticeDate, toast]);
+
+  useEffect(() => {
+    if (searchParams.get("error") !== "rejoin_restricted") return;
+
+    searchParams.delete("error");
+    searchParams.delete("availableAt");
+    setSearchParams(searchParams, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   useEffect(() => {
     if (result) {

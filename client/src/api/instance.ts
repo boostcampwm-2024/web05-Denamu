@@ -1,11 +1,15 @@
 import axios, { AxiosError, AxiosHeaders, InternalAxiosRequestConfig } from "axios";
 
-import { BASE_URL } from "@/constants/endpoints";
-import { useAuthStore } from "@/store/useAuthStore.ts";
-import { refreshAccessToken } from "@/api/services/user.ts";
 import { toast } from "@/hooks/common/useCustomToast";
+
+import { BASE_URL } from "@/constants/endpoints";
 import { TOAST_MESSAGES } from "@/constants/messages";
+
 import { nav } from "@/utils/redirect";
+import { updateServerOffset } from "@/utils/serverTime";
+
+import { refreshAccessToken } from "@/api/services/user.ts";
+import { useAuthStore } from "@/store/useAuthStore.ts";
 
 function handleSessionExpired() {
   const wasAuthenticated = useAuthStore.getState().isAuthenticated;
@@ -47,49 +51,55 @@ type RetryConfig = InternalAxiosRequestConfig & {
 };
 
 // 응답 인터셉터: 401이면 refresh 1회 후 재시도
-axiosInstance.interceptors.response.use((res) => res, async (error: AxiosError) => {
-  const status = error.response?.status;
-  const originalRequest = error.config as RetryConfig | undefined;
+axiosInstance.interceptors.response.use(
+  (res) => {
+    updateServerOffset(res.headers?.["date"]);
+    return res;
+  },
+  async (error: AxiosError) => {
+    const status = error.response?.status;
+    const originalRequest = error.config as RetryConfig | undefined;
 
-  if (status !== 401 || !originalRequest) {
-    return Promise.reject(error);
-  }
-
-  if (originalRequest._skipRefresh) {
-    return Promise.reject(error);
-  }
-
-  if (originalRequest._retry) {
-    throw error;
-  }
-  originalRequest._retry = true;
-
-  try {
-    if (!refreshPromise) {
-      refreshPromise = (async () => {
-        const res = await refreshAccessToken({ _skipRefresh: true });
-        const newAT = res.data?.accessToken ?? null;
-
-        if (newAT) {
-          useAuthStore.getState().setUserFromToken(newAT);
-        }
-        return newAT;
-      })().finally(() => {
-        refreshPromise = null;
-      });
-    }
-
-    const newToken = await refreshPromise;
-    if (!newToken) {
-      handleSessionExpired();
+    if (status !== 401 || !originalRequest) {
       return Promise.reject(error);
     }
 
-    originalRequest.headers = originalRequest.headers ?? new AxiosHeaders();
-    originalRequest.headers.Authorization = `Bearer ${newToken}`;
-    return axiosInstance.request(originalRequest);
-  } catch (e) {
-    handleSessionExpired();
-    return Promise.reject(e);
+    if (originalRequest._skipRefresh) {
+      return Promise.reject(error);
+    }
+
+    if (originalRequest._retry) {
+      throw error;
+    }
+    originalRequest._retry = true;
+
+    try {
+      if (!refreshPromise) {
+        refreshPromise = (async () => {
+          const res = await refreshAccessToken({ _skipRefresh: true });
+          const newAT = res.data?.accessToken ?? null;
+
+          if (newAT) {
+            useAuthStore.getState().setUserFromToken(newAT);
+          }
+          return newAT;
+        })().finally(() => {
+          refreshPromise = null;
+        });
+      }
+
+      const newToken = await refreshPromise;
+      if (!newToken) {
+        handleSessionExpired();
+        return Promise.reject(error);
+      }
+
+      originalRequest.headers = originalRequest.headers ?? new AxiosHeaders();
+      originalRequest.headers.Authorization = `Bearer ${newToken}`;
+      return axiosInstance.request(originalRequest);
+    } catch (e) {
+      handleSessionExpired();
+      return Promise.reject(e);
+    }
   }
-});
+);

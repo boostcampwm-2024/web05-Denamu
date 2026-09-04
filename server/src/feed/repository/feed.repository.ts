@@ -143,6 +143,22 @@ export class FeedRepository extends Repository<Feed> {
     return rows.map((row) => Number(row.year));
   }
 
+  async getLatestPublicFeedDateByBlogIds(
+    blogIds: number[],
+  ): Promise<Map<number, Date>> {
+    if (!blogIds.length) return new Map();
+
+    const rows = await this.createQueryBuilder('feed')
+      .select('feed.blog_id', 'blogId')
+      .addSelect('MAX(feed.created_at)', 'latest')
+      .where('feed.blog_id IN (:...blogIds)', { blogIds })
+      .andWhere('feed.is_public = 1')
+      .groupBy('feed.blog_id')
+      .getRawMany<{ blogId: number; latest: Date }>();
+
+    return new Map(rows.map((row) => [Number(row.blogId), row.latest]));
+  }
+
   async countPublicFeedsByBlogIds(
     blogIds: number[],
   ): Promise<Map<number, number>> {

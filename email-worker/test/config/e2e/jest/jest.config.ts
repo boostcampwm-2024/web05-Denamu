@@ -9,7 +9,7 @@ const config: Config.InitialOptions = {
   setupFiles: ['<rootDir>/test/config/common/test-env.setup.ts'],
   testRegex: 'test/.*\\.e2e-spec.ts$',
   transform: {
-    '^.+\\.(t|j)s$': 'ts-jest',
+    '^.+\\.(t|j)s$': '@swc/jest',
   },
   coverageDirectory: './coverage/e2e',
   globalSetup: './test/config/e2e/global/jest.global-setup.ts',

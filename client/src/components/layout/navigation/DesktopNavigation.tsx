@@ -63,6 +63,15 @@ export default function DesktopNavigation({ toggleModal }: { toggleModal: (modal
               </NavigationMenuLink>
             </NavigationMenuItem>
             <NavigationMenuItem>
+              <NavigationMenuLink
+                className={`${navigationMenuTriggerStyle()} hover:text-primary hover:bg-primary/10`}
+                onClick={() => navigate("/rss")}
+                href="#"
+              >
+                블로그 목록
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+            <NavigationMenuItem>
               <NoticeBell />
             </NavigationMenuItem>
             <NavigationMenuItem>

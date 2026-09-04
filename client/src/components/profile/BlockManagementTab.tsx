@@ -107,6 +107,7 @@ export const BlockManagementTab = () => {
                       <PlatformIcon
                         platform={rss.blogPlatform}
                         image={rss.blogImage}
+                        name={rss.name}
                         className="flex-shrink-0 w-10 h-10"
                       />
                       <p className="font-medium truncate">{rss.name}</p>

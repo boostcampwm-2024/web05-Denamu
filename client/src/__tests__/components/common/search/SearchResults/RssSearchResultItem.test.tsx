@@ -21,6 +21,8 @@ describe("RssSearchResultItem", () => {
     name: "denamu.log",
     blogPlatform: "velog",
     blogImage: null,
+    feedCount: 3,
+    lastPublishedAt: null,
   };
 
   it("RSS 이름이 렌더링되어야 한다", () => {
