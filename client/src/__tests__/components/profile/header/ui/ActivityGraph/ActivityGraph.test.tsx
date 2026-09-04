@@ -26,15 +26,15 @@ describe("ActivityGraph", () => {
     render(<ActivityGraph dailyActivities={[]} year={2024} years={[2023, 2024]} onYearChange={vi.fn()} />);
 
     expect(screen.getByText("Activity")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "2023" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "2024" })).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "2023" })).toHaveLength(2);
+    expect(screen.getAllByRole("button", { name: "2024" })).toHaveLength(2);
   });
 
   it("연도 버튼 클릭 시 onYearChange를 호출해야 한다", () => {
     const onYearChange = vi.fn();
     render(<ActivityGraph dailyActivities={[]} year={2024} years={[2023, 2024]} onYearChange={onYearChange} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "2023" }));
+    fireEvent.click(screen.getAllByRole("button", { name: "2023" })[0]);
 
     expect(onYearChange).toHaveBeenCalledWith(2023);
   });

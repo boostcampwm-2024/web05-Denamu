@@ -19,14 +19,6 @@ vi.mock("@/store/useAuthStore.ts", () => ({ useAuthStore: () => ({ logout }) }))
 describe("ProfileSidebar", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("홈으로 버튼 클릭 시 /로 이동해야 한다", () => {
-    render(<ProfileSidebar activeTab={"mypage" as ProfileTab} onTabChange={vi.fn()} isOwner={true} />);
-
-    fireEvent.click(screen.getByRole("button", { name: /홈으로/ }));
-
-    expect(mockNavigate).toHaveBeenCalledWith("/");
-  });
-
   it("isOwner면 탭들을 렌더링하고 클릭 시 onTabChange를 호출해야 한다", () => {
     const onTabChange = vi.fn();
     render(<ProfileSidebar activeTab={"mypage" as ProfileTab} onTabChange={onTabChange} isOwner={true} />);

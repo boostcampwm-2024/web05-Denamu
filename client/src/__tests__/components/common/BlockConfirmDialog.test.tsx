@@ -11,6 +11,7 @@ const ownedRss = [
     name: "seok.log",
     userName: "u",
     rssUrl: "",
+    blogUrl: "",
     blogPlatform: "velog",
     feedCount: 3,
     subscriberCount: 1,

@@ -33,8 +33,10 @@ const rssList: SubscribedRss[] = [
     name: "블로그A",
     userName: "작가A",
     rssUrl: "https://a.test/rss",
+    blogUrl: "https://a.test",
     blogPlatform: "velog",
     feedCount: 5,
+    subscriberCount: 2,
     blogImage: null,
   },
   {
@@ -42,8 +44,10 @@ const rssList: SubscribedRss[] = [
     name: "블로그B",
     userName: "작가B",
     rssUrl: "https://b.test/rss",
+    blogUrl: "https://b.test",
     blogPlatform: "tistory",
     feedCount: 9,
+    subscriberCount: 4,
     blogImage: null,
   },
 ];

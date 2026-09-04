@@ -27,8 +27,10 @@ const rss: SubscribedRss = {
   name: "구독 블로그",
   userName: "글쓴이",
   rssUrl: "https://blog.test/rss",
+  blogUrl: "https://velog.io/@writer",
   blogPlatform: "velog",
   feedCount: 8,
+  subscriberCount: 3,
   blogImage: null,
 };
 

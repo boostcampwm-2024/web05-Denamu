@@ -29,6 +29,7 @@ describe(`${SubscriptionService.name} Unit Test`, () => {
       SubscriptionRepository,
       | 'findOneBy'
       | 'countByBlogId'
+      | 'countByBlogIds'
       | 'save'
       | 'delete'
       | 'getSubscribersByBlog'
@@ -53,6 +54,7 @@ describe(`${SubscriptionService.name} Unit Test`, () => {
     subscriptionRepository = {
       findOneBy: jest.fn(),
       countByBlogId: jest.fn().mockResolvedValue(0),
+      countByBlogIds: jest.fn().mockResolvedValue(new Map()),
       save: jest.fn(),
       delete: jest.fn(),
       getSubscribersByBlog: jest.fn(),
@@ -334,9 +336,13 @@ describe(`${SubscriptionService.name} Unit Test`, () => {
       const blogIds = [7];
       const rssList = [makeRss({ id: 7 })];
       const feedCountMap = new Map<number, number>([[7, 4]]);
+      const subscriberCountMap = new Map<number, number>([[7, 2]]);
       subscriptionRepository.getSubscribedBlogIds.mockResolvedValue(blogIds);
       rssAcceptRepository.find.mockResolvedValue(rssList);
       feedRepository.countPublicFeedsByBlogIds.mockResolvedValue(feedCountMap);
+      subscriptionRepository.countByBlogIds.mockResolvedValue(
+        subscriberCountMap,
+      );
 
       // when
       const result = await subscriptionService.getUserSubscriptions(1);
@@ -346,9 +352,14 @@ describe(`${SubscriptionService.name} Unit Test`, () => {
         blogIds,
       );
       expect(result).toEqual<GetMySubscriptionsResponseDto>(
-        SubscribedRssResponseDto.toResponseDtoArray(rssList, feedCountMap),
+        SubscribedRssResponseDto.toResponseDtoArray(
+          rssList,
+          feedCountMap,
+          subscriberCountMap,
+        ),
       );
       expect(result[0].feedCount).toBe(4);
+      expect(result[0].subscriberCount).toBe(2);
     });
   });
 });

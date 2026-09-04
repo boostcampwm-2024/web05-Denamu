@@ -58,6 +58,7 @@ describe("CommentList", () => {
     renderList();
 
     expect(screen.getByText("좋은 글이네요")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "원본 글" })).toHaveAttribute("href", "/9");
+    expect(screen.getByText("원본 글")).toBeInTheDocument();
+    expect(screen.getByRole("link")).toHaveAttribute("href", "/9");
   });
 });

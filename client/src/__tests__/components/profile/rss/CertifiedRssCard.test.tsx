@@ -35,7 +35,8 @@ vi.mock("@/components/profile/rss/PlatformIcon.tsx", () => ({ PlatformIcon: () =
 const rss = {
   id: 10,
   name: "내 블로그",
-  rssUrl: "https://blog.test/rss",
+  rssUrl: "https://blog.test",
+  blogUrl: "https://blog.test",
   blogPlatform: "velog",
   feedCount: 3,
 } as CertifiedRss;
@@ -45,7 +46,7 @@ describe("CertifiedRssCard", () => {
     render(<CertifiedRssCard userId={1} rss={rss} isOwner={false} />);
 
     expect(screen.getByText("내 블로그")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "https://blog.test/rss" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "https://blog.test" })).toBeInTheDocument();
     expect(screen.getByText(/게시글 3개/)).toBeInTheDocument();
   });
 
@@ -67,7 +68,7 @@ describe("CertifiedRssCard", () => {
     navigateMock.mockClear();
     render(<CertifiedRssCard userId={1} rss={rss} isOwner={false} />);
 
-    fireEvent.click(screen.getByRole("link", { name: "https://blog.test/rss" }));
+    fireEvent.click(screen.getByRole("link", { name: "https://blog.test" }));
 
     expect(navigateMock).not.toHaveBeenCalled();
   });

@@ -28,6 +28,12 @@ export class GetUserRssResponseDto {
   rssUrl: string;
 
   @ApiProperty({
+    example: 'https://velog.io/@seok3765',
+    description: '블로그 URL',
+  })
+  blogUrl: string;
+
+  @ApiProperty({
     example: 'velog',
     description: 'RSS 블로그 플랫폼 종류',
   })
@@ -80,6 +86,7 @@ export class GetUserRssResponseDto {
       name: rssAccept.name,
       userName: rssAccept.userName,
       rssUrl: rssAccept.rssUrl,
+      blogUrl: rssAccept.blogUrl,
       blogPlatform: rssAccept.blogPlatform,
       feedCount,
       subscriberCount,

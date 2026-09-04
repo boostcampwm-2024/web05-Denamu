@@ -6,7 +6,6 @@ import { MoreVertical, Ban, Flag } from "lucide-react";
 import { BlockConfirmDialog } from "@/components/common/BlockConfirmDialog";
 import { ReportDialog } from "@/components/common/ReportDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
-import { Card, CardContent } from "@/components/ui/card.tsx";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -82,44 +81,42 @@ export const ProfileHeader = ({ name, email, profileImage, introduction, blockab
   };
 
   return (
-    <Card className="mb-8 overflow-hidden">
-      <CardContent className="p-6">
-        <div className="flex items-start space-x-6">
-          <Avatar className="flex-shrink-0 w-24 h-24 border-4 border-white shadow">
-            {profileImage && <AvatarImage src={profileImage} alt={name} />}
-            <AvatarFallback>{initials}</AvatarFallback>
-          </Avatar>
-          <div className="min-w-0 flex-1">
-            <h1 className="text-2xl font-bold">{name}</h1>
-            {email && <p className="mt-1 text-gray-600">{email}</p>}
-            <p className="mt-4 text-gray-800 whitespace-pre-wrap">
-              {introduction ? introduction : <span className="text-gray-400">자기소개가 없습니다.</span>}
-            </p>
-          </div>
-          {blockableUserId && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  className="flex items-center justify-center flex-shrink-0 w-8 h-8 text-gray-500 transition-colors rounded-lg hover:bg-gray-100"
-                  aria-label="더보기"
-                >
-                  <MoreVertical className="w-5 h-5" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setShowReportDialog(true)}>
-                  <Flag className="w-4 h-4 mr-2" />
-                  신고하기
-                </DropdownMenuItem>
-                <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={() => setShowBlockConfirm(true)}>
-                  <Ban className="w-4 h-4 mr-2" />
-                  차단하기
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+    <div className="relative mb-4">
+      <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:items-start sm:gap-6 sm:text-left">
+        <Avatar className="flex-shrink-0 w-24 h-24 border-4 border-white shadow">
+          {profileImage && <AvatarImage src={profileImage} alt={name} />}
+          <AvatarFallback>{initials}</AvatarFallback>
+        </Avatar>
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl font-bold">{name}</h1>
+          {email && <p className="mt-1 text-gray-600">{email}</p>}
+          <p className="mt-4 text-gray-800 whitespace-pre-wrap">
+            {introduction ? introduction : <span className="text-gray-400">자기소개가 없습니다.</span>}
+          </p>
         </div>
-      </CardContent>
+        {blockableUserId && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className="absolute right-4 top-4 sm:static flex items-center justify-center flex-shrink-0 w-8 h-8 text-gray-500 transition-colors rounded-lg hover:bg-gray-100"
+                aria-label="더보기"
+              >
+                <MoreVertical className="w-5 h-5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setShowReportDialog(true)}>
+                <Flag className="w-4 h-4 mr-2" />
+                신고하기
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={() => setShowBlockConfirm(true)}>
+                <Ban className="w-4 h-4 mr-2" />
+                차단하기
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </div>
 
       <BlockConfirmDialog
         open={showBlockConfirm}
@@ -137,6 +134,6 @@ export const ProfileHeader = ({ name, email, profileImage, introduction, blockab
         isPending={isReportPending}
         onSubmit={handleReport}
       />
-    </Card>
+    </div>
   );
 };
