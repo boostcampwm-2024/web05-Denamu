@@ -43,10 +43,15 @@ export class FileController {
         validators: [
           new MaxFileSizeValidator({
             maxSize: FILE_SIZE_LIMITS.IMAGE,
-            message: `File size must not exceed ${FILE_SIZE_LIMITS.IMAGE / (1024 * 1024)}MB`,
+            errorMessage(ctx) {
+              return `파일 크기 제한을 넘었습니다. 파일 크기 제한: ${ctx.config.maxSize / (1024 * 1024)}MB, 업로드된 파일 크기: ${ctx.file?.size / (1024 * 1024)}MB`;
+            },
           }),
           new FileTypeValidator({
             fileType: /image\/(png|jpg|jpeg|webp|gif)/,
+            errorMessage(ctx) {
+              return `지원하지 않는 파일 형식입니다. 지원 파일 형식: ${ctx.config.fileType}, 업로드된 파일 형식: ${ctx.file?.mimetype}`;
+            },
             skipMagicNumbersValidation: true,
           }),
         ],
