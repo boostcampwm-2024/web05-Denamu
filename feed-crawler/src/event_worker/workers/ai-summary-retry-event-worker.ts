@@ -8,6 +8,8 @@ import { redisConstant } from '@common/redis/redis.constant';
 import { RMQ_QUEUES } from '@rabbitmq/rabbitmq.constant';
 import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
 
+import { FeedRepository } from '@repository/feed.repository';
+
 import { FeedCrawler } from '../../feed-crawler';
 
 @injectable()
@@ -22,6 +24,8 @@ export class AiSummaryRetryEventWorker implements Lifecycle {
     private readonly redisConnection: RedisConnection,
     @inject(FeedCrawler)
     private readonly feedCrawler: FeedCrawler,
+    @inject(FeedRepository)
+    private readonly feedRepository: FeedRepository,
   ) {}
 
   async start(): Promise<void> {
@@ -60,7 +64,18 @@ export class AiSummaryRetryEventWorker implements Lifecycle {
     logger.error(
       `${this.nameTag} feedId ${feedId} AI 요약 재요청 실패: ${error.message}`,
     );
+    await this.resetSummary(feedId);
     await this.releaseRetryLock(feedId);
+  }
+
+  private async resetSummary(feedId: number): Promise<void> {
+    try {
+      await this.feedRepository.updateNullSummary(feedId);
+    } catch (error) {
+      logger.error(
+        `${this.nameTag} feedId ${feedId} summary 초기화 실패: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
   }
 
   private async releaseRetryLock(feedId: number): Promise<void> {
