@@ -58,7 +58,6 @@ describe(`${FeedService.name} Unit Test`, () => {
       | 'smembers'
       | 'lrange'
       | 'sismember'
-      | 'sadd'
       | 'zincrby'
       | 'hincrbyIfExists'
       | 'executePipeline'
@@ -89,7 +88,6 @@ describe(`${FeedService.name} Unit Test`, () => {
       smembers: jest.fn(),
       lrange: jest.fn(),
       sismember: jest.fn(),
-      sadd: jest.fn(),
       zincrby: jest.fn(),
       hincrbyIfExists: jest.fn(),
       executePipeline: jest.fn(),
@@ -542,12 +540,22 @@ describe(`${FeedService.name} Unit Test`, () => {
       feedRepository.findOneBy.mockResolvedValue({ id: 10 } as any);
       redisService.sismember.mockResolvedValue(0);
       const response = createResponse();
+      const saddMock = jest.fn();
+      const expireMock = jest.fn();
+      redisService.executePipeline.mockImplementation((cb: any) => {
+        cb({ sadd: saddMock, expire: expireMock });
+        return Promise.resolve([]);
+      });
 
       // when
       await feedService.updateFeedViewCount(dto, createRequest(), response);
 
       // then
-      expect(redisService.sadd).toHaveBeenCalledWith('feed:10:ip', '1.2.3.4');
+      expect(saddMock).toHaveBeenCalledWith('feed:10:ip', '1.2.3.4');
+      expect(expireMock).toHaveBeenCalledWith(
+        'feed:10:ip',
+        expect.any(Number),
+      );
       expect(feedRepository.update).toHaveBeenCalledWith(10, {
         viewCount: expect.any(Function),
       });
