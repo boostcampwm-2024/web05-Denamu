@@ -18,6 +18,7 @@ import { RabbitMQService } from '@common/rabbitmq/rabbitmq.service';
 import { REDIS_KEYS } from '@common/redis/redis.constant';
 import { RedisService } from '@common/redis/redis.service';
 import { getIp } from '@common/util/getIp';
+import { getSecondsUntilNextKstMidnight } from '@common/util/kstDate';
 
 import {
   AI_RETRY_LOCK_TTL_SECONDS,
@@ -287,8 +288,13 @@ export class FeedService {
 
     createCookie(response, feedId);
 
+    const ipKey = `feed:${feedId}:ip`;
+
     await Promise.all([
-      this.redisService.sadd(`feed:${feedId}:ip`, ip),
+      this.redisService.executePipeline((pipeline) => {
+        pipeline.sadd(ipKey, ip);
+        pipeline.expire(ipKey, getSecondsUntilNextKstMidnight());
+      }),
       this.feedRepository.update(feedId, {
         viewCount: () => 'view_count + 1',
       }),
