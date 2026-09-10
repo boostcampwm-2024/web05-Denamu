@@ -45,7 +45,7 @@
     "@tinymce/tinymce-react": "^6.3.0",
     "@uiw/react-codemirror": "^4.25.11",
     "avvvatars-react": "^0.4.2",
-    "axios": "^1.16.0",
+    "axios": "^1.19.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
