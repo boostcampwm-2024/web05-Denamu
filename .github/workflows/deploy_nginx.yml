@@ -17,7 +17,7 @@ jobs:
     runs-on: [self-hosted, prod]
     steps:
       - name: 코드 체크아웃
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Blue-Green active backend 시드 (최초 1회 보장)
         run: |
