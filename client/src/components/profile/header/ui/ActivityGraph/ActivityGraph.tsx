@@ -5,11 +5,9 @@ import { Week } from "@/components/profile/header/ui/ActivityGraph/Week.tsx";
 import { TooltipProvider } from "@/components/ui/tooltip.tsx";
 
 import { processYearActivityData } from "@/utils/activity.ts";
-
 import { ActivityScale } from "@/utils/color.ts";
 
 import { cn } from "@/lib/utils.ts";
-
 import { DailyActivity } from "@/types/profile.ts";
 
 interface ActivityGraphProps {
@@ -33,10 +31,24 @@ export const ActivityGraph = ({
 }: ActivityGraphProps) => {
   const { weeks } = processYearActivityData(dailyActivities, year, new Date());
 
+  const yearButtons = years.map((y) => (
+    <button
+      key={y}
+      onClick={() => onYearChange(y)}
+      className={cn(
+        "px-4 py-1.5 text-sm rounded-md transition-colors",
+        y === year ? "bg-[#FF870D] text-white" : "text-gray-600 hover:bg-gray-100"
+      )}
+    >
+      {y}
+    </button>
+  ));
+
   return (
-    <div className="flex gap-4 p-4 bg-white rounded-lg">
+    <div className="flex flex-col gap-4 md:flex-row">
       <div className="flex-1 min-w-0">
-        <h3 className="mb-4 text-lg font-semibold">Activity</h3>
+        <p className="mb-4 text-xs font-semibold tracking-wider text-[#FF870D] uppercase">Activity</p>
+        <div className="flex flex-wrap gap-2 mb-4 md:hidden">{yearButtons}</div>
         <div className="overflow-x-auto">
           <TooltipProvider>
             <div className="flex flex-col">
@@ -61,20 +73,7 @@ export const ActivityGraph = ({
         </div>
       </div>
 
-      <div className="flex flex-col flex-shrink-0 gap-2">
-        {years.map((y) => (
-          <button
-            key={y}
-            onClick={() => onYearChange(y)}
-            className={cn(
-              "px-4 py-1.5 text-sm rounded-md transition-colors",
-              y === year ? "bg-blue-500 text-white" : "text-gray-600 hover:bg-gray-100"
-            )}
-          >
-            {y}
-          </button>
-        ))}
-      </div>
+      <div className="flex-col flex-shrink-0 hidden gap-2 md:flex">{yearButtons}</div>
     </div>
   );
 };

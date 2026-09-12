@@ -9,6 +9,8 @@ import { AiSummaryRetryEventWorker } from '@event_worker/workers/ai-summary-retr
 import { RMQ_QUEUES } from '@rabbitmq/rabbitmq.constant';
 import { RabbitMQService } from '@rabbitmq/rabbitmq.service';
 
+import { FeedRepository } from '@repository/feed.repository';
+
 import { FeedCrawler } from '../../src/feed-crawler';
 
 describe('AiSummaryRetryEventWorker', () => {
@@ -16,10 +18,12 @@ describe('AiSummaryRetryEventWorker', () => {
   let mockRabbitMQService: jest.Mocked<RabbitMQService>;
   let mockRedisConnection: jest.Mocked<RedisConnection>;
   let mockFeedCrawler: jest.Mocked<FeedCrawler>;
+  let mockFeedRepository: jest.Mocked<FeedRepository>;
   let consumeMessageMock: jest.Mock;
   let closeConsumerMock: jest.Mock;
   let delMock: jest.Mock;
   let requeueMock: jest.Mock;
+  let updateNullSummaryMock: jest.Mock;
 
   const feedId = 7;
 
@@ -28,6 +32,7 @@ describe('AiSummaryRetryEventWorker', () => {
     closeConsumerMock = jest.fn();
     delMock = jest.fn();
     requeueMock = jest.fn();
+    updateNullSummaryMock = jest.fn().mockResolvedValue(undefined);
 
     mockRabbitMQService = {
       consumeMessage: consumeMessageMock,
@@ -42,10 +47,15 @@ describe('AiSummaryRetryEventWorker', () => {
       requeueFeedForAiSummary: requeueMock,
     } as any;
 
+    mockFeedRepository = {
+      updateNullSummary: updateNullSummaryMock,
+    } as any;
+
     worker = new AiSummaryRetryEventWorker(
       mockRabbitMQService,
       mockRedisConnection,
       mockFeedCrawler,
+      mockFeedRepository,
     );
   });
 
@@ -117,6 +127,36 @@ describe('AiSummaryRetryEventWorker', () => {
       await worker['handleFailure'](feedId, error);
 
       // Then
+      expect(delMock).toHaveBeenCalledWith(
+        `${redisConstant.FEED_AI_RETRY_LOCK}:${feedId}`,
+      );
+    });
+
+    it('실패하면 summary를 NULL로 초기화해야 한다', async () => {
+      // Given
+      const error = new Error('일시적 오류');
+      delMock.mockResolvedValue(undefined);
+
+      // When
+      await worker['handleFailure'](feedId, error);
+
+      // Then
+      expect(updateNullSummaryMock).toHaveBeenCalledWith(feedId);
+    });
+
+    it('summary 초기화가 실패해도 예외를 던지지 않고 로깅해야 한다', async () => {
+      // Given
+      const errorSpy = jest.spyOn(logger, 'error').mockImplementation();
+      updateNullSummaryMock.mockRejectedValue(new Error('db down'));
+      delMock.mockResolvedValue(undefined);
+
+      // When & Then
+      await expect(
+        worker['handleFailure'](feedId, new Error('일시적 오류')),
+      ).resolves.toBeUndefined();
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.stringContaining('summary 초기화 실패'),
+      );
       expect(delMock).toHaveBeenCalledWith(
         `${redisConstant.FEED_AI_RETRY_LOCK}:${feedId}`,
       );

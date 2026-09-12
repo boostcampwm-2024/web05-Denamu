@@ -4,6 +4,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { ActivityService } from '@activity/service/activity.service';
 
 import { RedisService } from '@common/redis/redis.service';
+import { getSecondsUntilNextKstMidnight } from '@common/util/kstDate';
 
 import { FeedViewedEvent } from '@feed/event/feed-viewed.event';
 
@@ -19,14 +20,15 @@ export class FeedViewedListener {
 
   @OnEvent('feed.viewed')
   async handleFeedViewed({ feedId, userId }: FeedViewedEvent) {
-    const hasUserFlag = await this.redisService.sismember(
-      `feed:${feedId}:userId`,
-      userId,
-    );
+    const key = `feed:${feedId}:userId`;
+    const hasUserFlag = await this.redisService.sismember(key, userId);
 
     if (hasUserFlag) return;
 
-    await this.redisService.sadd(`feed:${feedId}:userId`, userId);
+    await this.redisService.executePipeline((pipeline) => {
+      pipeline.sadd(key, userId);
+      pipeline.expire(key, getSecondsUntilNextKstMidnight());
+    });
     await this.userService.updateUserActivity(userId);
     await this.activityService.upsertActivity(userId);
   }

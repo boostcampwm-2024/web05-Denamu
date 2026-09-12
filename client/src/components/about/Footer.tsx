@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 
 import logo from "@/assets/logo-denamu-main.svg";
+
 import { footerLinks, teamMembers } from "@/constants/footer";
 
 import type { FooterLink } from "@/types/footer";
@@ -36,7 +37,7 @@ export const Footer = () => {
   );
 
   return (
-    <footer className="border-t border-gray-200 bg-gray-50">
+    <footer className="relative z-20 border-t border-gray-200 bg-gray-50">
       <div className="mx-auto max-w-6xl px-8 py-4">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
           <div className="flex flex-col gap-2">

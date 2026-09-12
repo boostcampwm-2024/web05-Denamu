@@ -2,8 +2,7 @@ import { useState } from "react";
 
 import { ChevronDown, FileText, Pencil, ShieldAlert, Trash2, Users } from "lucide-react";
 
-import { BlogPlatformBadge } from "@/components/profile/rss/BlogPlatformBadge.tsx";
-import { PlatformIcon } from "@/components/profile/rss/PlatformIcon.tsx";
+import { RssCardInfo } from "@/components/profile/rss/RssCardInfo.tsx";
 import { RssFeedRow } from "@/components/profile/rss/RssFeedRow.tsx";
 import { SubscribersModal } from "@/components/profile/rss/SubscribersModal.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -49,62 +48,55 @@ export const OwnedRssCard = ({ rss, onEdit, onDelete }: OwnedRssCardProps) => {
   };
 
   return (
-    <li className="border border-gray-100 rounded-lg">
-      <div className="flex items-center justify-between p-4">
-        <div className="flex items-center min-w-0 space-x-3">
-          <PlatformIcon platform={rss.blogPlatform} image={rss.blogImage} name={rss.name} className="flex-shrink-0 w-10 h-10" />
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <p className="font-medium truncate">{rss.name}</p>
-              <BlogPlatformBadge platform={rss.blogPlatform} className="flex-shrink-0" />
-            </div>
-            <p className="text-sm text-gray-500 truncate">{rss.userName}</p>
-            <a
-              href={rss.rssUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-gray-400 truncate hover:underline"
-            >
-              {rss.rssUrl}
-            </a>
-            <p className="flex items-center gap-1 text-sm text-gray-400">
+    <li className="border-0 md:border border-gray-100 rounded-lg">
+      <div className="p-4">
+        <RssCardInfo
+          name={rss.name}
+          userName={rss.userName}
+          blogUrl={rss.blogUrl}
+          blogPlatform={rss.blogPlatform}
+          blogImage={rss.blogImage}
+        >
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-400 mt-0.5">
+            <span className="flex items-center gap-1">
               <FileText className="w-3.5 h-3.5" />
-              공개 중인 게시글 {rss.feedCount}개
-            </p>
+              게시글 {rss.feedCount}개
+            </span>
             <button
               onClick={() => setSubscribersOpen(true)}
-              className="flex items-center gap-1 text-sm text-gray-500 hover:text-[#FF870D]"
+              className="flex items-center gap-1 text-gray-500 hover:text-[#FF870D]"
             >
               <Users className="w-3.5 h-3.5" />
               구독자 {rss.subscriberCount}명
             </button>
-            <p className={`flex items-center gap-1 text-sm ${getSuspensionColor(rss.suspensionCount)}`}>
-              <ShieldAlert className="w-3.5 h-3.5" />
-              게시글 정지 {rss.suspensionCount}회
-            </p>
-          </div>
-        </div>
-        <div className="flex flex-shrink-0 gap-1 ml-3">
+          </p>
+          <p className={`flex items-center gap-1 text-sm ${getSuspensionColor(rss.suspensionCount)}`}>
+            <ShieldAlert className="w-3.5 h-3.5" />
+            정지 {rss.suspensionCount}회
+          </p>
+        </RssCardInfo>
+        <div className="grid grid-cols-3 gap-1 mt-3 pt-3 border-t border-gray-100">
           <Button
-            variant="ghost"
-            size="icon"
+            variant="outline"
+            size="sm"
             onClick={() => setExpanded((prev) => !prev)}
-            aria-label="게시글 목록 펼치기"
             aria-expanded={expanded}
           >
             <ChevronDown className={`w-4 h-4 transition-transform ${expanded ? "rotate-180" : ""}`} />
+            펼치기
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => onEdit(rss)} aria-label="RSS 정보 수정">
+          <Button variant="outline" size="sm" onClick={() => onEdit(rss)}>
             <Pencil className="w-4 h-4" />
+            수정
           </Button>
           <Button
-            variant="ghost"
-            size="icon"
+            variant="outline"
+            size="sm"
             onClick={() => onDelete(rss)}
-            aria-label="RSS 소유 해제"
             className="text-red-500 hover:text-red-600"
           >
             <Trash2 className="w-4 h-4" />
+            삭제
           </Button>
         </div>
       </div>

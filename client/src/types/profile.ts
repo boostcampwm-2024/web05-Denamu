@@ -88,6 +88,7 @@ export interface CertifiedRss {
   name: string;
   userName: string;
   rssUrl: string;
+  blogUrl: string;
   blogPlatform: string;
   feedCount: number;
   subscriberCount: number;

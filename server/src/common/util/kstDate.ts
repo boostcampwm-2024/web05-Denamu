@@ -22,3 +22,7 @@ export function getKstMidnightInstant(
     getKstCalendarDate(base, dayOffset).getTime() - KST_OFFSET_MS,
   );
 }
+
+export function getSecondsUntilNextKstMidnight(base: Date = new Date()) {
+  return Math.ceil((getKstMidnightInstant(base, 1).getTime() - base.getTime()) / 1000);
+}

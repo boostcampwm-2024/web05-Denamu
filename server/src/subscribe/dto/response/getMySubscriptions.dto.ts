@@ -28,6 +28,12 @@ export class SubscribedRssResponseDto {
   rssUrl: string;
 
   @ApiProperty({
+    example: 'https://velog.io/@seok3765',
+    description: '블로그 URL',
+  })
+  blogUrl: string;
+
+  @ApiProperty({
     example: 'velog',
     description: 'RSS 블로그 플랫폼 종류',
   })
@@ -40,6 +46,12 @@ export class SubscribedRssResponseDto {
   feedCount: number;
 
   @ApiProperty({
+    example: 0,
+    description: 'RSS의 총 구독자 수',
+  })
+  subscriberCount: number;
+
+  @ApiProperty({
     example: 'https://example.com/profile.png',
     description: 'RSS 채널 프로필 이미지 URL',
     nullable: true,
@@ -50,14 +62,20 @@ export class SubscribedRssResponseDto {
     Object.assign(this, partial);
   }
 
-  static toResponseDto(rssAccept: RssAccept, feedCount: number) {
+  static toResponseDto(
+    rssAccept: RssAccept,
+    feedCount: number,
+    subscriberCount: number,
+  ) {
     return new SubscribedRssResponseDto({
       id: rssAccept.id,
       name: rssAccept.name,
       userName: rssAccept.userName,
       rssUrl: rssAccept.rssUrl,
+      blogUrl: rssAccept.blogUrl,
       blogPlatform: rssAccept.blogPlatform,
       feedCount,
+      subscriberCount,
       blogImage: rssAccept.blogImage ?? null,
     });
   }
@@ -65,9 +83,14 @@ export class SubscribedRssResponseDto {
   static toResponseDtoArray(
     rssAcceptList: RssAccept[],
     feedCountMap: Map<number, number>,
+    subscriberCountMap: Map<number, number>,
   ): GetMySubscriptionsResponseDto {
     return rssAcceptList.map((rssAccept) =>
-      this.toResponseDto(rssAccept, feedCountMap.get(rssAccept.id) ?? 0),
+      this.toResponseDto(
+        rssAccept,
+        feedCountMap.get(rssAccept.id) ?? 0,
+        subscriberCountMap.get(rssAccept.id) ?? 0,
+      ),
     );
   }
 }

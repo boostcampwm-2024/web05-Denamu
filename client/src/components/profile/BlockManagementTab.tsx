@@ -41,7 +41,7 @@ export const BlockManagementTab = () => {
   return (
     <Card>
       <CardContent className="p-6">
-        <h3 className="mb-4 text-lg font-semibold">차단 관리</h3>
+        <h3 className="mb-4 text-2xl font-semibold leading-none">차단 관리</h3>
 
         <Tabs defaultValue="users">
           <TabsList className="w-full mb-4">

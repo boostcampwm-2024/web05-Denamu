@@ -50,13 +50,4 @@ export class FeedScheduler {
       this.eventService.emit('ranking-update', trendFeeds);
     }
   }
-
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
-  async resetIpTable() {
-    const keys = await this.redisService.keys(REDIS_KEYS.FEED_ALL_IP_KEY);
-
-    if (keys.length > 0) {
-      await this.redisService.del(...keys);
-    }
-  }
 }
