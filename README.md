@@ -72,42 +72,42 @@ RSS 링크만으로 간편하게 블로그를 등록할 수 있어요. 등록된
 
 ### 마이페이지
 
-![마이페이지]()
+![마이페이지](https://github.com/user-attachments/assets/6656ff77-15ae-4cf4-8f27-1509c7a2fc8e)
 마이페이지를 통해 게시글을 읽은 활동 기록, 좋아요, 댓글 목록을 확인하고 본인 소유 RSS를 자랑할 수 있어요.
 
 ### 24시간 스토리 기능 및 최신 RSS
 
-![24시간]()
+![24시간](https://github.com/user-attachments/assets/82cb9a14-9a5c-4e30-9c4d-67d263f0567b)
 인스타그램처럼 24시간 이내에 작성된 RSS에 대해서는 테두리 표기가 생기며 누를 경우 RSS 페이지가 아닌 게시글로 이동하여 새로운 게시글을 빠르게 접할 수 있어요.
 
 ### RSS 구독
 
-![구독]()
+![구독](https://github.com/user-attachments/assets/54ce9a6f-f2f4-4bed-af41-7c2161d5c20c)
 본인이 좋아하는 블로그들을 구독하여 구독한 블로그의 게시글만 필터링해서 볼 수 있어요.
 
 ### AI 기능
 
-![AI]()
+![AI](https://github.com/user-attachments/assets/f1833cb5-10c6-466e-bf24-73d73e4dd3fa)
 게시글의 모든 내용을 확인하지 않더라도 AI 태그를 통해 게시글을 쉽게 접할 수 있고 요약을 미리 접해서 빠르게 정보를 얻을 수 있어요.
 
 ### 알림 기능
 
-![알림]()
+![알림](https://github.com/user-attachments/assets/5be9fa42-dcea-4b55-a3f8-445823426a2a)
 Denamu에 접속하지 않아서 확인하지 못한 알림은 이메일로 받을 수 있고, 소유 RSS의 게시글에 댓글, 답글, 좋아요 발생 시 알림을 받아볼 수 있어요.
 
 ### 공지사항 ㆍ FAQ ㆍ Q&A
 
-![BOARD]()
+![BOARD](https://github.com/user-attachments/assets/906b48ec-75dd-494b-bd0d-aa0970502bd5)
 운영진과의 소통을 위해 공지사항, FAQ, Q&A를 이용함으로써 빠른 소통이 가능해져요. 운영진들도 Q&A 게시글이 온다면 알림을 통해 즉각 응답할 수 있어요.
 
 ## 🛠 기술 스택
 
 각 기능들에 대한 자세한 사항은 Wiki를 참고하면 좋아요!
-<img src="https://github.com/user-attachments/assets/a6434f11-8b71-4a7b-93fd-fcd7e0229fa0" alt="tech stack v3" >
+<img alt="stack" src="https://github.com/user-attachments/assets/844cec64-5a2a-4cdd-a8c2-8c764969a1df" />
 
 ## 🏗️ 인프라 아키텍처
 
-![image]()
+![image](https://github.com/user-attachments/assets/ed599185-2e59-466b-ba08-f07aa0e73f85)
 
 ## 👥 팀 소개
 
