@@ -100,6 +100,32 @@ Denamu에 접속하지 않아서 확인하지 못한 알림은 이메일로 받�
 ![BOARD](https://github.com/user-attachments/assets/906b48ec-75dd-494b-bd0d-aa0970502bd5)
 운영진과의 소통을 위해 공지사항, FAQ, Q&A를 이용함으로써 빠른 소통이 가능해져요. 운영진들도 Q&A 게시글이 온다면 알림을 통해 즉각 응답할 수 있어요.
 
+## 🚀 실행 방법
+
+프로젝트 루트(working directory)에서 아래 명령어를 실행하세요.
+
+| 명령어                    | 설명                                                      |
+| ------------------------- | --------------------------------------------------------- |
+| `npm run start:local`     | 전체 서비스를 로컬 환경으로 실행 포트폴리오용(watch 없음) |
+| `npm run start:dev`       | 전체 서비스를 dev 환경으로 실행 (hot reload)              |
+| `npm run start:dev:was`   | 백엔드(app)만 dev 환경으로 실행                           |
+| `npm run start:dev:feed`  | feed-crawler만 dev 환경으로 실행                          |
+| `npm run start:dev:email` | email-worker만 dev 환경으로 실행                          |
+
+### 포트
+
+| 서비스            | 포트    |
+| ----------------- | ------- |
+| nginx             | 80, 443 |
+| client (web)      | 5173    |
+| server (app)      | 8080    |
+| MySQL             | 3306    |
+| Redis             | 6379    |
+| RabbitMQ (AMQP)   | 5672    |
+| RabbitMQ (관리UI) | 15672   |
+
+> Grafana, Prometheus, Portainer는 운영(prod) 환경에서만 제공됩니다.
+
 ## 🛠 기술 스택
 
 각 기능들에 대한 자세한 사항은 Wiki를 참고하면 좋아요!
