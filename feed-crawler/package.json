@@ -2,7 +2,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.96.0",
     "amqplib": "^0.10.9",
-    "axios": "^1.16.0",
+    "axios": "^1.19.0",
     "dotenv": "^16.6.1",
     "fast-xml-parser": "^4.5.6",
     "html-escaper": "^3.0.3",
