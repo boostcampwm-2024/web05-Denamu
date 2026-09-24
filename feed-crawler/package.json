@@ -4,7 +4,7 @@
     "amqplib": "^0.10.9",
     "axios": "^1.16.0",
     "dotenv": "^16.6.1",
-    "fast-xml-parser": "^4.5.6",
+    "fast-xml-parser": "^4.5.7",
     "html-escaper": "^3.0.3",
     "ioredis": "^5.10.1",
     "ioredis-mock": "^8.13.1",
