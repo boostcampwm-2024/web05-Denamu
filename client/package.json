@@ -59,7 +59,7 @@
     "react-ga4": "^3.0.1",
     "react-helmet": "^6.1.0",
     "react-markdown": "^9.0.3",
-    "react-router-dom": "^6.30.3",
+    "react-router-dom": "^6.30.4",
     "recharts": "^2.13.3",
     "socket.io-client": "^4.8.3",
     "tailwind-merge": "^2.6.1",
