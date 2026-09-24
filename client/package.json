@@ -65,7 +65,7 @@
     "tailwind-merge": "^2.6.1",
     "tailwindcss-animate": "^1.0.7",
     "tinymce": "^8.8.2",
-    "zustand": "^5.0.13"
+    "zustand": "^5.0.15"
   },
   "devDependencies": {
     "@chromatic-com/storybook": "^5.2.1",
