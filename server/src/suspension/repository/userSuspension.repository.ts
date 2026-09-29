@@ -13,27 +13,30 @@ export class UserSuspensionRepository extends Repository<UserSuspension> {
   async findActiveSuspendedUsers(lastId: number | undefined, limit: number) {
     const now = new Date();
 
-    const query = this.createQueryBuilder('suspension')
+    return this.createQueryBuilder('suspension')
+      .innerJoin(
+        (qb) => {
+          qb.select('MAX(latest.id)', 'id')
+            .from(UserSuspension, 'latest')
+            .where(
+              '(latest.suspended_until IS NULL OR latest.suspended_until > :now)',
+              { now },
+            )
+            .groupBy('latest.user_id');
+          if (lastId) {
+            qb.having('MAX(latest.id) < :lastId', { lastId });
+          }
+          return qb;
+        },
+        'active',
+        'active.id = suspension.id',
+      )
       .innerJoin('suspension.user', 'user')
       .leftJoin('suspension.admin', 'admin')
       .select(['suspension', 'user.id', 'user.userName', 'user.email'])
       .addSelect(['admin.id', 'admin.name'])
-      .where(
-        `suspension.id = (
-          SELECT MAX(latest.id) FROM user_suspension latest
-          WHERE latest.user_id = suspension.user_id
-            AND (latest.suspended_until IS NULL OR latest.suspended_until > :now)
-        )`,
-        { now },
-      );
-
-    if (lastId) {
-      query.andWhere('suspension.id < :lastId', { lastId });
-    }
-
-    return query
       .orderBy('suspension.id', 'DESC')
-      .take(limit + 1)
+      .limit(limit + 1)
       .getMany();
   }
 
