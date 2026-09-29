@@ -115,4 +115,41 @@ describe(`GET ${BASE_URL} E2E Test`, () => {
     expect(data.result[0].id).toBe(latest.id);
     expect(data.result[0].detail).toBe('2차 정지');
   });
+
+  it('[200] 다음 페이지에서 이미 조회한 유저의 이전 활성 정지를 다시 조회하지 않는다.', async () => {
+    // given
+    const [repeatedUser, otherUser] = await Promise.all([
+      userRepository.save(await UserFixture.createUserCryptFixture()),
+      userRepository.save(await UserFixture.createUserCryptFixture()),
+    ]);
+    await userSuspensionRepository.save({
+      user: { id: repeatedUser.id },
+      detail: '1차 정지',
+      suspendedUntil: new Date(Date.now() + 1000 * 60 * 60),
+    });
+    const other = await userSuspensionRepository.save({
+      user: { id: otherUser.id },
+      detail: '다른 유저 정지',
+      suspendedUntil: null,
+    });
+    const latest = await userSuspensionRepository.save({
+      user: { id: repeatedUser.id },
+      detail: '2차 정지',
+      suspendedUntil: null,
+    });
+
+    // Http when
+    const response = await agent
+      .get(BASE_URL)
+      .query({ lastId: latest.id })
+      .set('Cookie', `sessionId=${sessionKey}`);
+
+    // Http then
+    expect(response.status).toBe(HttpStatus.OK);
+    const { data } = response.body as {
+      data: { result: { id: number }[]; hasMore: boolean };
+    };
+    expect(data.result.map((result) => result.id)).toStrictEqual([other.id]);
+    expect(data.hasMore).toBe(false);
+  });
 });
